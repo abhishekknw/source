@@ -1,0 +1,42 @@
+#!/bin/sh
+
+BASE_DIR=`dirname $0`
+BASE_DIR=`cd $BASE_DIR/.. && pwd`
+
+
+echo $BASE_DIR
+
+
+if [ "$VIRTUAL_ENV" = "" ] ; then
+   if [ -f $BASE_DIR/env/bin/activate ] ; then
+      source $BASE_DIR/env/bin/activate
+   else
+      echo "No activate script found, have you run 'setup_repo'?"
+      exit 1
+   fi
+fi
+
+
+PORT=8108
+if [ "$LOGNAME" = "arunabh" ] ; then
+   PORT=8118
+fi
+
+if [ $# -gt 0 ] ; then
+   PORT=`echo $1 | sed 's/[^0-9]//g'`
+   if [ "$PORT" != "$1" ] ; then
+      echo "Usage: basename $0 <port>"
+      exit 1
+   elif [ $PORT -lt 1024 ] ; then
+      echo "Port $PORT must be above 1024"
+      exit 1
+   fi
+fi
+
+if [ "$PORT" != "" ] ; then
+   cd $BASE_DIR/coreapi
+   exec python manage.py runserver 0.0.0.0:$PORT
+else
+   echo "No port specified"
+   echo "Usage: `basename $0` <port>"
+fi

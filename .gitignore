@@ -1,6 +1,6 @@
 env
 env.bk
-coreapi/static
+coreapi/coreapi/static
 db.sqlite3
 .pyc
 
