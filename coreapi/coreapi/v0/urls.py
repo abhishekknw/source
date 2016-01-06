@@ -4,6 +4,7 @@ from v0 import views
 
 
 urlpatterns = patterns('',
+    url(r'^ui/', include('v0.ui.urls')),
 
     url(r'^masterbannerinventory/(?P<id>[0-9]+)$', views.MasterBannerInventoryAPIView.as_view()),
     url(r'^masterbannerinventory/$', views.MasterBannerInventoryAPIListView.as_view()),

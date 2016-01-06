@@ -604,6 +604,23 @@ class MasterSupplierTypeSociety(models.Model):
     flat_sale_cost_persqft = models.IntegerField(db_column='FLAT_SALE_COST_PERSQFT', blank=True, null=True)  # Field name made lowercase.
     total_ad_spaces = models.IntegerField(db_column='TOTAL_AD_SPACES', blank=True, null=True)  # Field name made lowercase.
 
+    def get_contact_list(self):
+        return MasterContactDetails.objects.filter(supplier_id=self.supplier_id)
+
+    def get_reference(self):
+        return None
+
+    def is_contact_available(self):
+        contacts = self.get_contact_list()
+        if contacts and len(contacts) > 0 :
+            return True
+        return False
+
+    def is_reference_available(self):
+        if self.get_reference():
+            return True
+        return False
+
     class Meta:
         managed = False
         db_table = 'master_supplier_type_society'
