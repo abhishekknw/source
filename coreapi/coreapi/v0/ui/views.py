@@ -2,8 +2,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from serializers import UISocietySerializer, UITowerSerializer
-from v0.serializers import MasterBannerInventorySerializer, MasterCarDisplayInventorySerializer, MasterCommunityHallInfoSerializer, MasterDoorToDoorInfoSerializer, MasterLiftDetailsSerializer, MasterNoticeBoardDetailsSerializer, MasterPosterInventorySerializer, MasterSocietyFlatSerializer, MasterStandeeInventorySerializer, MasterSwimmingPoolInfoSerializer, MasterWallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, MasterContactDetailsSerializer, MasterEventsSerializer, MasterInventoryInfoSerializer, MasterMailboxInfoSerializer, MasterOperationsInfoSerializer, MasterPoleInventorySerializer, MasterPosterInventoryMappingSerializer, MasterRatioDetailsSerializer, MasterSignupSerializer, MasterStallInventorySerializer, MasterStreetFurnitureSerializer, MasterSupplierInfoSerializer, MasterSupplierTypeSocietySerializer, MasterSupplierTypeSocietyTowerSerializer
-from v0.models import MasterBannerInventory, MasterCarDisplayInventory, MasterCommunityHallInfo, MasterDoorToDoorInfo, MasterLiftDetails, MasterNoticeBoardDetails, MasterPosterInventory, MasterSocietyFlat, MasterStandeeInventory, MasterSwimmingPoolInfo, MasterWallInventory, UserInquiry, CommonAreaDetails, MasterContactDetails, MasterEvents, MasterInventoryInfo, MasterMailboxInfo, MasterOperationsInfo, MasterPoleInventory, MasterPosterInventoryMapping, MasterRatioDetails, MasterSignup, MasterStallInventory, MasterStreetFurniture, MasterSupplierInfo, MasterSupplierTypeSociety, MasterSupplierTypeSocietyTower
+from v0.serializers import MasterBannerInventorySerializer, MasterCarDisplayInventorySerializer, MasterCommunityHallInfoSerializer, MasterDoorToDoorInfoSerializer, MasterLiftDetailsSerializer, MasterNoticeBoardDetailsSerializer, MasterPosterInventorySerializer, MasterSocietyFlatSerializer, MasterStandeeInventorySerializer, MasterSwimmingPoolInfoSerializer, MasterWallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, MasterContactDetailsSerializer, MasterEventsSerializer, MasterInventoryInfoSerializer, MasterMailboxInfoSerializer, MasterOperationsInfoSerializer, MasterPoleInventorySerializer, MasterPosterInventoryMappingSerializer, MasterRatioDetailsSerializer, MasterSignupSerializer, MasterStallInventorySerializer, MasterStreetFurnitureSerializer, MasterSupplierInfoSerializer, MasterSupplierTypeSocietySerializer, SocietyTowerSerializer
+from v0.models import MasterBannerInventory, MasterCarDisplayInventory, MasterCommunityHallInfo, MasterDoorToDoorInfo, MasterLiftDetails, MasterNoticeBoardDetails, MasterPosterInventory, MasterSocietyFlat, MasterStandeeInventory, MasterSwimmingPoolInfo, MasterWallInventory, UserInquiry, CommonAreaDetails, MasterContactDetails, MasterEvents, MasterInventoryInfo, MasterMailboxInfo, MasterOperationsInfo, MasterPoleInventory, MasterPosterInventoryMapping, MasterRatioDetails, MasterSignup, MasterStallInventory, MasterStreetFurniture, MasterSupplierInfo, MasterSupplierTypeSociety, SocietyTower
 
 
 
@@ -54,7 +54,7 @@ class TowerAPIView(APIView):
             return Response(serializer.data)
         except MasterSupplierTypeSociety.DoesNotExist:
             return Response(status=404)
-        except MasterSupplierTypeSocietyTower.DoesNotExist:
+        except SocietyTower.DoesNotExist:
             return Response(status=404)
 
     def post(self, request, id, format=None):
@@ -63,55 +63,68 @@ class TowerAPIView(APIView):
         society=MasterSupplierTypeSociety.objects.get(pk=id)
         for key in request.data['TowerDetails']:
             if 'tower_id' in key:
-                item = MasterSupplierTypeSocietyTower.objects.get(pk=key['tower_id'])
-                serializer = MasterSupplierTypeSocietyTowerSerializer(item, data=key)
+                item = SocietyTower.objects.get(pk=key['tower_id'])
+                serializer = SocietyTowerSerializer(item, data=key)
             else:
-                serializer = MasterSupplierTypeSocietyTowerSerializer(data=key)
+                serializer = SocietyTowerSerializer(data=key)
             try:
                 if serializer.is_valid():
                     serializer.save(supplier=society)
-                    print serializer.data
-                    tower_data=serializer.data
+                  #  tower_data=serializer.data
             except:
                 return Response(serializer.errors, status=400)
 
             try:
-                tower = MasterSupplierTypeSocietyTower.objects.get(pk=tower_data['tower_id'])
-            except MasterSupplierTypeSocietyTower.DoesNotExist:
+                tower_data = SocietyTower.objects.get(pk=serializer.data['tower_id'])
+            except SocietyTower.DoesNotExist:
                 return Response(status=404)
+
+            print "testing tower"
+            print tower_data
 
 
             if key['notice_board_details_available']:
                 for notice_board in key['notice_board_details']:
-                    notice_serializer = MasterNoticeBoardDetailsSerializer(data=notice_board)
+                    if 'id' in notice_board:
+                        notice_item = MasterNoticeBoardDetails.objects.get(pk=notice_board['id'])
+                        notice_serializer = MasterNoticeBoardDetailsSerializer(notice_item, data=notice_board)
+                    else:
+                        notice_serializer = MasterNoticeBoardDetailsSerializer(data=notice_board)
 
                     if notice_serializer.is_valid():
-                        notice_serializer.save(tower=tower)
+                        notice_serializer.save(tower=tower_data)
                     else:
                         #transaction.rollback()
                         return Response(notice_serializer.errors, status=400)
 
             if key['lift_details_available']:
                 for lift in key['lift_details']:
-                    lift_serializer = MasterLiftDetailsSerializer(data=lift)
+                    if 'id' in lift:
+                        lift_item = MasterLiftDetails.objects.get(pk=lift['id'])
+                        lift_serializer = MasterLiftDetailsSerializer(lift_item,data=lift)
+                    else:
+                        lift_serializer = MasterLiftDetailsSerializer(data=lift)
+
                     if lift_serializer.is_valid():
-                        lift_serializer.save(tower=tower)
+                        lift_serializer.save(tower=tower_data)
                     else:
                         return Response(lift_serializer.errors, status=400)
 
             if key['flat_details_available']:
                 for flat in key['flat_details']:
-                    flat_serializer = MasterSocietyFlatSerializer(data=flat)
-                    if flat_serializer.is_valid():
-                        try:
-                            flat_serializer.save(tower=tower)
-                        except:
-                             return Response(flat_serializer.errors, status=400)
+                    if 'id' in flat:
+                        flat_item = MasterSocietyFlat.objects.get(pk=flat['id'])
+                        flat_serializer=MasterSocietyFlatSerializer(flat_item,data=flat)
+                    else:
+                        flat_serializer = MasterSocietyFlatSerializer(data=flat)
 
+                    if flat_serializer.is_valid():
+                        flat_serializer.save(tower=tower_data)
                     else:
                         return Response(flat_serializer.errors, status=400)
 
         return Response(status=201)
+
         #here we will start storing contacts
 
 
@@ -121,7 +134,19 @@ class EventAPIView(APIView):
         try:
             events = MasterSupplierTypeSociety.objects.get(pk=id).events.all()
             serializer = MasterEventsSerializer(events, many=True)
-            return Response(serializer.data)
+
+            count = len(serializer.data)
+            if count > 0:
+                event_details_available=True
+            else:
+                event_details_available = False
+
+            response = {}
+            response['events_count_per_year'] = count
+            response['event_details_available'] = event_details_available
+            response['event_details'] = serializer.data
+
+            return Response(response, status=200)
         except MasterSupplierTypeSociety.DoesNotExist:
             return Response(status=404)
         except MasterEvents.DoesNotExist:
@@ -131,6 +156,11 @@ class EventAPIView(APIView):
         print request.data
         serializer={}
         society=MasterSupplierTypeSociety.objects.get(pk=id)
+
+        if request.data['event_details_available']:
+            if request.data['events_count_per_year'] != len(request.data['event_details']):
+                return Response({'message':'No of Events entered does not match event count'},status=400)
+
         for key in request.data['event_details']:
             if 'event_id' in key:
                 print "test loop"
@@ -141,7 +171,6 @@ class EventAPIView(APIView):
             try:
                 if serializer.is_valid():
                     serializer.save(supplier=society)
-                    print serializer.data
             except:
                 return Response(serializer.errors, status=400)
 

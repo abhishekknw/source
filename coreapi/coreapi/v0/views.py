@@ -1,8 +1,8 @@
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from v0.serializers import MasterBannerInventorySerializer, MasterCarDisplayInventorySerializer, MasterCommunityHallInfoSerializer, MasterDoorToDoorInfoSerializer, MasterLiftDetailsSerializer, MasterNoticeBoardDetailsSerializer, MasterPosterInventorySerializer, MasterSocietyFlatSerializer, MasterStandeeInventorySerializer, MasterSwimmingPoolInfoSerializer, MasterWallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, MasterContactDetailsSerializer, MasterEventsSerializer, MasterInventoryInfoSerializer, MasterMailboxInfoSerializer, MasterOperationsInfoSerializer, MasterPoleInventorySerializer, MasterPosterInventoryMappingSerializer, MasterRatioDetailsSerializer, MasterSignupSerializer, MasterStallInventorySerializer, MasterStreetFurnitureSerializer, MasterSupplierInfoSerializer, MasterSupplierTypeSocietySerializer, MasterSupplierTypeSocietyTowerSerializer
-from v0.models import MasterBannerInventory, MasterCarDisplayInventory, MasterCommunityHallInfo, MasterDoorToDoorInfo, MasterLiftDetails, MasterNoticeBoardDetails, MasterPosterInventory, MasterSocietyFlat, MasterStandeeInventory, MasterSwimmingPoolInfo, MasterWallInventory, UserInquiry, CommonAreaDetails, MasterContactDetails, MasterEvents, MasterInventoryInfo, MasterMailboxInfo, MasterOperationsInfo, MasterPoleInventory, MasterPosterInventoryMapping, MasterRatioDetails, MasterSignup, MasterStallInventory, MasterStreetFurniture, MasterSupplierInfo, MasterSupplierTypeSociety, MasterSupplierTypeSocietyTower
+from v0.serializers import MasterBannerInventorySerializer, MasterCarDisplayInventorySerializer, MasterCommunityHallInfoSerializer, MasterDoorToDoorInfoSerializer, MasterLiftDetailsSerializer, MasterNoticeBoardDetailsSerializer, MasterPosterInventorySerializer, MasterSocietyFlatSerializer, MasterStandeeInventorySerializer, MasterSwimmingPoolInfoSerializer, MasterWallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, MasterContactDetailsSerializer, MasterEventsSerializer, MasterInventoryInfoSerializer, MasterMailboxInfoSerializer, MasterOperationsInfoSerializer, MasterPoleInventorySerializer, MasterPosterInventoryMappingSerializer, MasterRatioDetailsSerializer, MasterSignupSerializer, MasterStallInventorySerializer, MasterStreetFurnitureSerializer, MasterSupplierInfoSerializer, MasterSupplierTypeSocietySerializer, SocietyTowerSerializer
+from v0.models import MasterBannerInventory, MasterCarDisplayInventory, MasterCommunityHallInfo, MasterDoorToDoorInfo, MasterLiftDetails, MasterNoticeBoardDetails, MasterPosterInventory, MasterSocietyFlat, MasterStandeeInventory, MasterSwimmingPoolInfo, MasterWallInventory, UserInquiry, CommonAreaDetails, MasterContactDetails, MasterEvents, MasterInventoryInfo, MasterMailboxInfo, MasterOperationsInfo, MasterPoleInventory, MasterPosterInventoryMapping, MasterRatioDetails, MasterSignup, MasterStallInventory, MasterStreetFurniture, MasterSupplierInfo, MasterSupplierTypeSociety, SocietyTower
 
 
 class MasterBannerInventoryAPIView(APIView):
@@ -1227,22 +1227,22 @@ class MasterSupplierTypeSocietyAPIListView(APIView):
         return Response(serializer.errors, status=400)
 
 
-class MasterSupplierTypeSocietyTowerAPIView(APIView):
+class SocietyTowerAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterSupplierTypeSocietyTower.objects.get(pk=id)
-            serializer = MasterSupplierTypeSocietyTowerSerializer(item)
+            item = SocietyTower.objects.get(pk=id)
+            serializer = SocietyTowerSerializer(item)
             return Response(serializer.data)
-        except MasterSupplierTypeSocietyTower.DoesNotExist:
+        except SocietyTower.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterSupplierTypeSocietyTower.objects.get(pk=id)
-        except MasterSupplierTypeSocietyTower.DoesNotExist:
+            item = SocietyTower.objects.get(pk=id)
+        except SocietyTower.DoesNotExist:
             return Response(status=404)
-        serializer = MasterSupplierTypeSocietyTowerSerializer(item, data=request.data)
+        serializer = SocietyTowerSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -1250,24 +1250,24 @@ class MasterSupplierTypeSocietyTowerAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterSupplierTypeSocietyTower.objects.get(pk=id)
-        except MasterSupplierTypeSocietyTower.DoesNotExist:
+            item = TypeSocietyTower.objects.get(pk=id)
+        except SocietyTower.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterSupplierTypeSocietyTowerAPIListView(APIView):
+class SocietyTowerAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterSupplierTypeSocietyTower.objects.all()
+        items = SocietyTower.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterSupplierTypeSocietyTowerSerializer(result_page, many=True)
+        serializer = SocietyTowerSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterSupplierTypeSocietyTowerSerializer(data=request.data)
+        serializer = SocietyTowerSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)

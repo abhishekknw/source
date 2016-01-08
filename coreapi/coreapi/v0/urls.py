@@ -84,7 +84,7 @@ urlpatterns = patterns('',
     url(r'^mastersuppliertypesociety/(?P<id>[A-Za-z0-9]+)$', views.MasterSupplierTypeSocietyAPIView.as_view()),
     url(r'^mastersuppliertypesociety/$', views.MasterSupplierTypeSocietyAPIListView.as_view()),
 
-    url(r'^mastersuppliertypesocietytower/(?P<id>[0-9]+)$', views.MasterSupplierTypeSocietyTowerAPIView.as_view()),
-    url(r'^mastersuppliertypesocietytower/$', views.MasterSupplierTypeSocietyTowerAPIListView.as_view()),
+    url(r'^societytower/(?P<id>[0-9]+)$', views.SocietyTowerAPIView.as_view()),
+    url(r'^societytower/$', views.SocietyTowerAPIListView.as_view()),
 
 )
