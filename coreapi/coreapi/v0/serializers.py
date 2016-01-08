@@ -1,71 +1,71 @@
 from rest_framework.serializers import ModelSerializer
-from v0.models import MasterBannerInventory, MasterCarDisplayInventory, MasterCommunityHallInfo, MasterDoorToDoorInfo, MasterLiftDetails, MasterNoticeBoardDetails, MasterPosterInventory, MasterSocietyFlat, MasterStandeeInventory, MasterSwimmingPoolInfo, MasterWallInventory, UserInquiry, CommonAreaDetails, MasterContactDetails, MasterEvents, MasterInventoryInfo, MasterMailboxInfo, MasterOperationsInfo, MasterPoleInventory, MasterPosterInventoryMapping, MasterRatioDetails, MasterSignup, MasterStallInventory, MasterStreetFurniture, MasterSupplierInfo, MasterSupplierTypeSociety, SocietyTower
+from v0.models import BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower
 
 
-class MasterBannerInventorySerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterBannerInventory
-
-
-class MasterCarDisplayInventorySerializer(ModelSerializer):
+class BannerInventorySerializer(ModelSerializer):
 
     class Meta:
-        model = MasterCarDisplayInventory
+        model = BannerInventory
 
 
-class MasterCommunityHallInfoSerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterCommunityHallInfo
-
-
-class MasterDoorToDoorInfoSerializer(ModelSerializer):
+class CarDisplayInventorySerializer(ModelSerializer):
 
     class Meta:
-        model = MasterDoorToDoorInfo
+        model = CarDisplayInventory
 
 
-class MasterLiftDetailsSerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterLiftDetails
-
-
-class MasterNoticeBoardDetailsSerializer(ModelSerializer):
+class CommunityHallInfoSerializer(ModelSerializer):
 
     class Meta:
-        model = MasterNoticeBoardDetails
+        model = CommunityHallInfo
 
 
-class MasterPosterInventorySerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterPosterInventory
-
-
-class MasterSocietyFlatSerializer(ModelSerializer):
+class DoorToDoorInfoSerializer(ModelSerializer):
 
     class Meta:
-        model = MasterSocietyFlat
+        model = DoorToDoorInfo
 
 
-class MasterStandeeInventorySerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterStandeeInventory
-
-
-class MasterSwimmingPoolInfoSerializer(ModelSerializer):
+class LiftDetailsSerializer(ModelSerializer):
 
     class Meta:
-        model = MasterSwimmingPoolInfo
+        model = LiftDetails
 
 
-class MasterWallInventorySerializer(ModelSerializer):
+class NoticeBoardDetailsSerializer(ModelSerializer):
 
     class Meta:
-        model = MasterWallInventory
+        model = NoticeBoardDetails
+
+
+class PosterInventorySerializer(ModelSerializer):
+
+    class Meta:
+        model = PosterInventory
+
+
+class SocietyFlatSerializer(ModelSerializer):
+
+    class Meta:
+        model = SocietyFlat
+
+
+class StandeeInventorySerializer(ModelSerializer):
+
+    class Meta:
+        model = StandeeInventory
+
+
+class SwimmingPoolInfoSerializer(ModelSerializer):
+
+    class Meta:
+        model = SwimmingPoolInfo
+
+
+class WallInventorySerializer(ModelSerializer):
+
+    class Meta:
+        model = WallInventory
 
 
 class UserInquirySerializer(ModelSerializer):
@@ -80,82 +80,82 @@ class CommonAreaDetailsSerializer(ModelSerializer):
         model = CommonAreaDetails
 
 
-class MasterContactDetailsSerializer(ModelSerializer):
+class ContactDetailsSerializer(ModelSerializer):
 
     class Meta:
-        model = MasterContactDetails
+        model = ContactDetails
 
 
-class MasterEventsSerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterEvents
-
-
-class MasterInventoryInfoSerializer(ModelSerializer):
+class EventsSerializer(ModelSerializer):
 
     class Meta:
-        model = MasterInventoryInfo
+        model = Events
 
 
-class MasterMailboxInfoSerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterMailboxInfo
-
-
-class MasterOperationsInfoSerializer(ModelSerializer):
+class InventoryInfoSerializer(ModelSerializer):
 
     class Meta:
-        model = MasterOperationsInfo
+        model = InventoryInfo
 
 
-class MasterPoleInventorySerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterPoleInventory
-
-
-class MasterPosterInventoryMappingSerializer(ModelSerializer):
+class MailboxInfoSerializer(ModelSerializer):
 
     class Meta:
-        model = MasterPosterInventoryMapping
+        model = MailboxInfo
 
 
-class MasterRatioDetailsSerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterRatioDetails
-
-
-class MasterSignupSerializer(ModelSerializer):
+class OperationsInfoSerializer(ModelSerializer):
 
     class Meta:
-        model = MasterSignup
+        model = OperationsInfo
 
 
-class MasterStallInventorySerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterStallInventory
-
-
-class MasterStreetFurnitureSerializer(ModelSerializer):
+class PoleInventorySerializer(ModelSerializer):
 
     class Meta:
-        model = MasterStreetFurniture
+        model = PoleInventory
 
 
-class MasterSupplierInfoSerializer(ModelSerializer):
-
-    class Meta:
-        model = MasterSupplierInfo
-
-
-class MasterSupplierTypeSocietySerializer(ModelSerializer):
+class PosterInventoryMappingSerializer(ModelSerializer):
 
     class Meta:
-        model = MasterSupplierTypeSociety
+        model = PosterInventoryMapping
+
+
+class RatioDetailsSerializer(ModelSerializer):
+
+    class Meta:
+        model = RatioDetails
+
+
+class SignupSerializer(ModelSerializer):
+
+    class Meta:
+        model = Signup
+
+
+class StallInventorySerializer(ModelSerializer):
+
+    class Meta:
+        model = StallInventory
+
+
+class StreetFurnitureSerializer(ModelSerializer):
+
+    class Meta:
+        model = StreetFurniture
+
+
+class SupplierInfoSerializer(ModelSerializer):
+
+    class Meta:
+        model = SupplierInfo
+
+
+class SupplierTypeSocietySerializer(ModelSerializer):
+
+    class Meta:
+        model = SupplierTypeSociety
 
 
 class SocietyTowerSerializer(ModelSerializer):

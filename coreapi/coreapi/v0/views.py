@@ -1,26 +1,26 @@
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from v0.serializers import MasterBannerInventorySerializer, MasterCarDisplayInventorySerializer, MasterCommunityHallInfoSerializer, MasterDoorToDoorInfoSerializer, MasterLiftDetailsSerializer, MasterNoticeBoardDetailsSerializer, MasterPosterInventorySerializer, MasterSocietyFlatSerializer, MasterStandeeInventorySerializer, MasterSwimmingPoolInfoSerializer, MasterWallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, MasterContactDetailsSerializer, MasterEventsSerializer, MasterInventoryInfoSerializer, MasterMailboxInfoSerializer, MasterOperationsInfoSerializer, MasterPoleInventorySerializer, MasterPosterInventoryMappingSerializer, MasterRatioDetailsSerializer, MasterSignupSerializer, MasterStallInventorySerializer, MasterStreetFurnitureSerializer, MasterSupplierInfoSerializer, MasterSupplierTypeSocietySerializer, SocietyTowerSerializer
-from v0.models import MasterBannerInventory, MasterCarDisplayInventory, MasterCommunityHallInfo, MasterDoorToDoorInfo, MasterLiftDetails, MasterNoticeBoardDetails, MasterPosterInventory, MasterSocietyFlat, MasterStandeeInventory, MasterSwimmingPoolInfo, MasterWallInventory, UserInquiry, CommonAreaDetails, MasterContactDetails, MasterEvents, MasterInventoryInfo, MasterMailboxInfo, MasterOperationsInfo, MasterPoleInventory, MasterPosterInventoryMapping, MasterRatioDetails, MasterSignup, MasterStallInventory, MasterStreetFurniture, MasterSupplierInfo, MasterSupplierTypeSociety, SocietyTower
+from v0.serializers import BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
+from v0.models import BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower
 
 
-class MasterBannerInventoryAPIView(APIView):
+class BannerInventoryAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterBannerInventory.objects.get(pk=id)
-            serializer = MasterBannerInventorySerializer(item)
+            item = BannerInventory.objects.get(pk=id)
+            serializer = BannerInventorySerializer(item)
             return Response(serializer.data)
-        except MasterBannerInventory.DoesNotExist:
+        except BannerInventory.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterBannerInventory.objects.get(pk=id)
-        except MasterBannerInventory.DoesNotExist:
+            item = BannerInventory.objects.get(pk=id)
+        except BannerInventory.DoesNotExist:
             return Response(status=404)
-        serializer = MasterBannerInventorySerializer(item, data=request.data)
+        serializer = BannerInventorySerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -28,46 +28,46 @@ class MasterBannerInventoryAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterBannerInventory.objects.get(pk=id)
-        except MasterBannerInventory.DoesNotExist:
+            item = BannerInventory.objects.get(pk=id)
+        except BannerInventory.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterBannerInventoryAPIListView(APIView):
+class BannerInventoryAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterBannerInventory.objects.all()
+        items = BannerInventory.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterBannerInventorySerializer(result_page, many=True)
+        serializer = BannerInventorySerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterBannerInventorySerializer(data=request.data)
+        serializer = BannerInventorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterCarDisplayInventoryAPIView(APIView):
+class CarDisplayInventoryAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterCarDisplayInventory.objects.get(pk=id)
-            serializer = MasterCarDisplayInventorySerializer(item)
+            item = CarDisplayInventory.objects.get(pk=id)
+            serializer = CarDisplayInventorySerializer(item)
             return Response(serializer.data)
-        except MasterCarDisplayInventory.DoesNotExist:
+        except CarDisplayInventory.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterCarDisplayInventory.objects.get(pk=id)
-        except MasterCarDisplayInventory.DoesNotExist:
+            item = CarDisplayInventory.objects.get(pk=id)
+        except CarDisplayInventory.DoesNotExist:
             return Response(status=404)
-        serializer = MasterCarDisplayInventorySerializer(item, data=request.data)
+        serializer = CarDisplayInventorySerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -75,46 +75,46 @@ class MasterCarDisplayInventoryAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterCarDisplayInventory.objects.get(pk=id)
-        except MasterCarDisplayInventory.DoesNotExist:
+            item = CarDisplayInventory.objects.get(pk=id)
+        except CarDisplayInventory.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterCarDisplayInventoryAPIListView(APIView):
+class CarDisplayInventoryAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterCarDisplayInventory.objects.all()
+        items = CarDisplayInventory.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterCarDisplayInventorySerializer(result_page, many=True)
+        serializer = CarDisplayInventorySerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterCarDisplayInventorySerializer(data=request.data)
+        serializer = CarDisplayInventorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterCommunityHallInfoAPIView(APIView):
+class CommunityHallInfoAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterCommunityHallInfo.objects.get(pk=id)
-            serializer = MasterCommunityHallInfoSerializer(item)
+            item = CommunityHallInfo.objects.get(pk=id)
+            serializer = CommunityHallInfoSerializer(item)
             return Response(serializer.data)
-        except MasterCommunityHallInfo.DoesNotExist:
+        except CommunityHallInfo.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterCommunityHallInfo.objects.get(pk=id)
-        except MasterCommunityHallInfo.DoesNotExist:
+            item = CommunityHallInfo.objects.get(pk=id)
+        except CommunityHallInfo.DoesNotExist:
             return Response(status=404)
-        serializer = MasterCommunityHallInfoSerializer(item, data=request.data)
+        serializer = CommunityHallInfoSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -122,46 +122,46 @@ class MasterCommunityHallInfoAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterCommunityHallInfo.objects.get(pk=id)
-        except MasterCommunityHallInfo.DoesNotExist:
+            item = CommunityHallInfo.objects.get(pk=id)
+        except CommunityHallInfo.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterCommunityHallInfoAPIListView(APIView):
+class CommunityHallInfoAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterCommunityHallInfo.objects.all()
+        items = CommunityHallInfo.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterCommunityHallInfoSerializer(result_page, many=True)
+        serializer = CommunityHallInfoSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterCommunityHallInfoSerializer(data=request.data)
+        serializer = CommunityHallInfoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterDoorToDoorInfoAPIView(APIView):
+class DoorToDoorInfoAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterDoorToDoorInfo.objects.get(pk=id)
-            serializer = MasterDoorToDoorInfoSerializer(item)
+            item = DoorToDoorInfo.objects.get(pk=id)
+            serializer = DoorToDoorInfoSerializer(item)
             return Response(serializer.data)
-        except MasterDoorToDoorInfo.DoesNotExist:
+        except DoorToDoorInfo.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterDoorToDoorInfo.objects.get(pk=id)
-        except MasterDoorToDoorInfo.DoesNotExist:
+            item = DoorToDoorInfo.objects.get(pk=id)
+        except DoorToDoorInfo.DoesNotExist:
             return Response(status=404)
-        serializer = MasterDoorToDoorInfoSerializer(item, data=request.data)
+        serializer = DoorToDoorInfoSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -169,46 +169,46 @@ class MasterDoorToDoorInfoAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterDoorToDoorInfo.objects.get(pk=id)
-        except MasterDoorToDoorInfo.DoesNotExist:
+            item = DoorToDoorInfo.objects.get(pk=id)
+        except DoorToDoorInfo.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterDoorToDoorInfoAPIListView(APIView):
+class DoorToDoorInfoAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterDoorToDoorInfo.objects.all()
+        items = DoorToDoorInfo.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterDoorToDoorInfoSerializer(result_page, many=True)
+        serializer = DoorToDoorInfoSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterDoorToDoorInfoSerializer(data=request.data)
+        serializer = DoorToDoorInfoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterLiftDetailsAPIView(APIView):
+class LiftDetailsAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterLiftDetails.objects.get(pk=id)
-            serializer = MasterLiftDetailsSerializer(item)
+            item = LiftDetails.objects.get(pk=id)
+            serializer = LiftDetailsSerializer(item)
             return Response(serializer.data)
-        except MasterLiftDetails.DoesNotExist:
+        except LiftDetails.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterLiftDetails.objects.get(pk=id)
-        except MasterLiftDetails.DoesNotExist:
+            item = LiftDetails.objects.get(pk=id)
+        except LiftDetails.DoesNotExist:
             return Response(status=404)
-        serializer = MasterLiftDetailsSerializer(item, data=request.data)
+        serializer = LiftDetailsSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -216,46 +216,46 @@ class MasterLiftDetailsAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterLiftDetails.objects.get(pk=id)
-        except MasterLiftDetails.DoesNotExist:
+            item = LiftDetails.objects.get(pk=id)
+        except LiftDetails.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterLiftDetailsAPIListView(APIView):
+class LiftDetailsAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterLiftDetails.objects.all()
+        items = LiftDetails.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterLiftDetailsSerializer(result_page, many=True)
+        serializer = LiftDetailsSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterLiftDetailsSerializer(data=request.data)
+        serializer = LiftDetailsSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterNoticeBoardDetailsAPIView(APIView):
+class NoticeBoardDetailsAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterNoticeBoardDetails.objects.get(pk=id)
-            serializer = MasterNoticeBoardDetailsSerializer(item)
+            item = NoticeBoardDetails.objects.get(pk=id)
+            serializer = NoticeBoardDetailsSerializer(item)
             return Response(serializer.data)
-        except MasterNoticeBoardDetails.DoesNotExist:
+        except NoticeBoardDetails.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterNoticeBoardDetails.objects.get(pk=id)
-        except MasterNoticeBoardDetails.DoesNotExist:
+            item = NoticeBoardDetails.objects.get(pk=id)
+        except NoticeBoardDetails.DoesNotExist:
             return Response(status=404)
-        serializer = MasterNoticeBoardDetailsSerializer(item, data=request.data)
+        serializer = NoticeBoardDetailsSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -263,46 +263,46 @@ class MasterNoticeBoardDetailsAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterNoticeBoardDetails.objects.get(pk=id)
-        except MasterNoticeBoardDetails.DoesNotExist:
+            item = NoticeBoardDetails.objects.get(pk=id)
+        except NoticeBoardDetails.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterNoticeBoardDetailsAPIListView(APIView):
+class NoticeBoardDetailsAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterNoticeBoardDetails.objects.all()
+        items = NoticeBoardDetails.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterNoticeBoardDetailsSerializer(result_page, many=True)
+        serializer = NoticeBoardDetailsSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterNoticeBoardDetailsSerializer(data=request.data)
+        serializer = NoticeBoardDetailsSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterPosterInventoryAPIView(APIView):
+class PosterInventoryAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterPosterInventory.objects.get(pk=id)
-            serializer = MasterPosterInventorySerializer(item)
+            item = PosterInventory.objects.get(pk=id)
+            serializer = PosterInventorySerializer(item)
             return Response(serializer.data)
-        except MasterPosterInventory.DoesNotExist:
+        except PosterInventory.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterPosterInventory.objects.get(pk=id)
-        except MasterPosterInventory.DoesNotExist:
+            item = PosterInventory.objects.get(pk=id)
+        except PosterInventory.DoesNotExist:
             return Response(status=404)
-        serializer = MasterPosterInventorySerializer(item, data=request.data)
+        serializer = PosterInventorySerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -310,46 +310,46 @@ class MasterPosterInventoryAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterPosterInventory.objects.get(pk=id)
-        except MasterPosterInventory.DoesNotExist:
+            item = PosterInventory.objects.get(pk=id)
+        except PosterInventory.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterPosterInventoryAPIListView(APIView):
+class PosterInventoryAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterPosterInventory.objects.all()
+        items = PosterInventory.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterPosterInventorySerializer(result_page, many=True)
+        serializer = PosterInventorySerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterPosterInventorySerializer(data=request.data)
+        serializer = PosterInventorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterSocietyFlatAPIView(APIView):
+class SocietyFlatAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterSocietyFlat.objects.get(pk=id)
-            serializer = MasterSocietyFlatSerializer(item)
+            item = SocietyFlat.objects.get(pk=id)
+            serializer = SocietyFlatSerializer(item)
             return Response(serializer.data)
-        except MasterSocietyFlat.DoesNotExist:
+        except SocietyFlat.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterSocietyFlat.objects.get(pk=id)
-        except MasterSocietyFlat.DoesNotExist:
+            item = SocietyFlat.objects.get(pk=id)
+        except SocietyFlat.DoesNotExist:
             return Response(status=404)
-        serializer = MasterSocietyFlatSerializer(item, data=request.data)
+        serializer = SocietyFlatSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -357,46 +357,46 @@ class MasterSocietyFlatAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterSocietyFlat.objects.get(pk=id)
-        except MasterSocietyFlat.DoesNotExist:
+            item = SocietyFlat.objects.get(pk=id)
+        except SocietyFlat.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterSocietyFlatAPIListView(APIView):
+class SocietyFlatAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterSocietyFlat.objects.all()
+        items = SocietyFlat.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterSocietyFlatSerializer(result_page, many=True)
+        serializer = SocietyFlatSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterSocietyFlatSerializer(data=request.data)
+        serializer = SocietyFlatSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterStandeeInventoryAPIView(APIView):
+class StandeeInventoryAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterStandeeInventory.objects.get(pk=id)
-            serializer = MasterStandeeInventorySerializer(item)
+            item = StandeeInventory.objects.get(pk=id)
+            serializer = StandeeInventorySerializer(item)
             return Response(serializer.data)
-        except MasterStandeeInventory.DoesNotExist:
+        except StandeeInventory.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterStandeeInventory.objects.get(pk=id)
-        except MasterStandeeInventory.DoesNotExist:
+            item = StandeeInventory.objects.get(pk=id)
+        except StandeeInventory.DoesNotExist:
             return Response(status=404)
-        serializer = MasterStandeeInventorySerializer(item, data=request.data)
+        serializer = StandeeInventorySerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -404,46 +404,46 @@ class MasterStandeeInventoryAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterStandeeInventory.objects.get(pk=id)
-        except MasterStandeeInventory.DoesNotExist:
+            item = StandeeInventory.objects.get(pk=id)
+        except StandeeInventory.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterStandeeInventoryAPIListView(APIView):
+class StandeeInventoryAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterStandeeInventory.objects.all()
+        items = StandeeInventory.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterStandeeInventorySerializer(result_page, many=True)
+        serializer = StandeeInventorySerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterStandeeInventorySerializer(data=request.data)
+        serializer = StandeeInventorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterSwimmingPoolInfoAPIView(APIView):
+class SwimmingPoolInfoAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterSwimmingPoolInfo.objects.get(pk=id)
-            serializer = MasterSwimmingPoolInfoSerializer(item)
+            item = SwimmingPoolInfo.objects.get(pk=id)
+            serializer = SwimmingPoolInfoSerializer(item)
             return Response(serializer.data)
-        except MasterSwimmingPoolInfo.DoesNotExist:
+        except SwimmingPoolInfo.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterSwimmingPoolInfo.objects.get(pk=id)
-        except MasterSwimmingPoolInfo.DoesNotExist:
+            item = SwimmingPoolInfo.objects.get(pk=id)
+        except SwimmingPoolInfo.DoesNotExist:
             return Response(status=404)
-        serializer = MasterSwimmingPoolInfoSerializer(item, data=request.data)
+        serializer = SwimmingPoolInfoSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -451,46 +451,46 @@ class MasterSwimmingPoolInfoAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterSwimmingPoolInfo.objects.get(pk=id)
-        except MasterSwimmingPoolInfo.DoesNotExist:
+            item = SwimmingPoolInfo.objects.get(pk=id)
+        except SwimmingPoolInfo.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterSwimmingPoolInfoAPIListView(APIView):
+class SwimmingPoolInfoAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterSwimmingPoolInfo.objects.all()
+        items = SwimmingPoolInfo.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterSwimmingPoolInfoSerializer(result_page, many=True)
+        serializer = SwimmingPoolInfoSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterSwimmingPoolInfoSerializer(data=request.data)
+        serializer = SwimmingPoolInfoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterWallInventoryAPIView(APIView):
+class WallInventoryAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterWallInventory.objects.get(pk=id)
-            serializer = MasterWallInventorySerializer(item)
+            item = WallInventory.objects.get(pk=id)
+            serializer = WallInventorySerializer(item)
             return Response(serializer.data)
-        except MasterWallInventory.DoesNotExist:
+        except WallInventory.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterWallInventory.objects.get(pk=id)
-        except MasterWallInventory.DoesNotExist:
+            item = WallInventory.objects.get(pk=id)
+        except WallInventory.DoesNotExist:
             return Response(status=404)
-        serializer = MasterWallInventorySerializer(item, data=request.data)
+        serializer = WallInventorySerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -498,24 +498,24 @@ class MasterWallInventoryAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterWallInventory.objects.get(pk=id)
-        except MasterWallInventory.DoesNotExist:
+            item = WallInventory.objects.get(pk=id)
+        except WallInventory.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterWallInventoryAPIListView(APIView):
+class WallInventoryAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterWallInventory.objects.all()
+        items = WallInventory.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterWallInventorySerializer(result_page, many=True)
+        serializer = WallInventorySerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterWallInventorySerializer(data=request.data)
+        serializer = WallInventorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
@@ -616,22 +616,22 @@ class CommonAreaDetailsAPIListView(APIView):
         return Response(serializer.errors, status=400)
 
 
-class MasterContactDetailsAPIView(APIView):
+class ContactDetailsAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterContactDetails.objects.get(pk=id)
-            serializer = MasterContactDetailsSerializer(item)
+            item = ContactDetails.objects.get(pk=id)
+            serializer = ContactDetailsSerializer(item)
             return Response(serializer.data)
-        except MasterContactDetails.DoesNotExist:
+        except ContactDetails.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterContactDetails.objects.get(pk=id)
-        except MasterContactDetails.DoesNotExist:
+            item = ContactDetails.objects.get(pk=id)
+        except ContactDetails.DoesNotExist:
             return Response(status=404)
-        serializer = MasterContactDetailsSerializer(item, data=request.data)
+        serializer = ContactDetailsSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -639,46 +639,46 @@ class MasterContactDetailsAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterContactDetails.objects.get(pk=id)
-        except MasterContactDetails.DoesNotExist:
+            item = ContactDetails.objects.get(pk=id)
+        except ContactDetails.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterContactDetailsAPIListView(APIView):
+class ContactDetailsAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterContactDetails.objects.all()
+        items = ContactDetails.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterContactDetailsSerializer(result_page, many=True)
+        serializer = ContactDetailsSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterContactDetailsSerializer(data=request.data)
+        serializer = ContactDetailsSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterEventsAPIView(APIView):
+class EventsAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterEvents.objects.get(pk=id)
-            serializer = MasterEventsSerializer(item)
+            item = Events.objects.get(pk=id)
+            serializer = EventsSerializer(item)
             return Response(serializer.data)
-        except MasterEvents.DoesNotExist:
+        except Events.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterEvents.objects.get(pk=id)
-        except MasterEvents.DoesNotExist:
+            item = Events.objects.get(pk=id)
+        except Events.DoesNotExist:
             return Response(status=404)
-        serializer = MasterEventsSerializer(item, data=request.data)
+        serializer = EventsSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -686,46 +686,46 @@ class MasterEventsAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterEvents.objects.get(pk=id)
-        except MasterEvents.DoesNotExist:
+            item = Events.objects.get(pk=id)
+        except Events.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterEventsAPIListView(APIView):
+class EventsAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterEvents.objects.all()
+        items = Events.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterEventsSerializer(result_page, many=True)
+        serializer = EventsSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterEventsSerializer(data=request.data)
+        serializer = EventsSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterInventoryInfoAPIView(APIView):
+class InventoryInfoAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterInventoryInfo.objects.get(pk=id)
-            serializer = MasterInventoryInfoSerializer(item)
+            item = InventoryInfo.objects.get(pk=id)
+            serializer = InventoryInfoSerializer(item)
             return Response(serializer.data)
-        except MasterInventoryInfo.DoesNotExist:
+        except InventoryInfo.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterInventoryInfo.objects.get(pk=id)
-        except MasterInventoryInfo.DoesNotExist:
+            item = InventoryInfo.objects.get(pk=id)
+        except InventoryInfo.DoesNotExist:
             return Response(status=404)
-        serializer = MasterInventoryInfoSerializer(item, data=request.data)
+        serializer = InventoryInfoSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -733,46 +733,46 @@ class MasterInventoryInfoAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterInventoryInfo.objects.get(pk=id)
-        except MasterInventoryInfo.DoesNotExist:
+            item = InventoryInfo.objects.get(pk=id)
+        except InventoryInfo.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterInventoryInfoAPIListView(APIView):
+class InventoryInfoAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterInventoryInfo.objects.all()
+        items = InventoryInfo.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterInventoryInfoSerializer(result_page, many=True)
+        serializer = InventoryInfoSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterInventoryInfoSerializer(data=request.data)
+        serializer = InventoryInfoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterMailboxInfoAPIView(APIView):
+class MailboxInfoAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterMailboxInfo.objects.get(pk=id)
-            serializer = MasterMailboxInfoSerializer(item)
+            item = MailboxInfo.objects.get(pk=id)
+            serializer = MailboxInfoSerializer(item)
             return Response(serializer.data)
-        except MasterMailboxInfo.DoesNotExist:
+        except MailboxInfo.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterMailboxInfo.objects.get(pk=id)
-        except MasterMailboxInfo.DoesNotExist:
+            item = MailboxInfo.objects.get(pk=id)
+        except MailboxInfo.DoesNotExist:
             return Response(status=404)
-        serializer = MasterMailboxInfoSerializer(item, data=request.data)
+        serializer = MailboxInfoSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -780,46 +780,46 @@ class MasterMailboxInfoAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterMailboxInfo.objects.get(pk=id)
-        except MasterMailboxInfo.DoesNotExist:
+            item = MailboxInfo.objects.get(pk=id)
+        except MailboxInfo.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterMailboxInfoAPIListView(APIView):
+class MailboxInfoAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterMailboxInfo.objects.all()
+        items = MailboxInfo.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterMailboxInfoSerializer(result_page, many=True)
+        serializer = MailboxInfoSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterMailboxInfoSerializer(data=request.data)
+        serializer = MailboxInfoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterOperationsInfoAPIView(APIView):
+class OperationsInfoAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterOperationsInfo.objects.get(pk=id)
-            serializer = MasterOperationsInfoSerializer(item)
+            item = OperationsInfo.objects.get(pk=id)
+            serializer = OperationsInfoSerializer(item)
             return Response(serializer.data)
-        except MasterOperationsInfo.DoesNotExist:
+        except OperationsInfo.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterOperationsInfo.objects.get(pk=id)
-        except MasterOperationsInfo.DoesNotExist:
+            item = OperationsInfo.objects.get(pk=id)
+        except OperationsInfo.DoesNotExist:
             return Response(status=404)
-        serializer = MasterOperationsInfoSerializer(item, data=request.data)
+        serializer = OperationsInfoSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -827,46 +827,46 @@ class MasterOperationsInfoAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterOperationsInfo.objects.get(pk=id)
-        except MasterOperationsInfo.DoesNotExist:
+            item = OperationsInfo.objects.get(pk=id)
+        except OperationsInfo.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterOperationsInfoAPIListView(APIView):
+class OperationsInfoAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterOperationsInfo.objects.all()
+        items = OperationsInfo.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterOperationsInfoSerializer(result_page, many=True)
+        serializer = OperationsInfoSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterOperationsInfoSerializer(data=request.data)
+        serializer = OperationsInfoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterPoleInventoryAPIView(APIView):
+class PoleInventoryAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterPoleInventory.objects.get(pk=id)
-            serializer = MasterPoleInventorySerializer(item)
+            item = PoleInventory.objects.get(pk=id)
+            serializer = PoleInventorySerializer(item)
             return Response(serializer.data)
-        except MasterPoleInventory.DoesNotExist:
+        except PoleInventory.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterPoleInventory.objects.get(pk=id)
-        except MasterPoleInventory.DoesNotExist:
+            item = PoleInventory.objects.get(pk=id)
+        except PoleInventory.DoesNotExist:
             return Response(status=404)
-        serializer = MasterPoleInventorySerializer(item, data=request.data)
+        serializer = PoleInventorySerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -874,46 +874,46 @@ class MasterPoleInventoryAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterPoleInventory.objects.get(pk=id)
-        except MasterPoleInventory.DoesNotExist:
+            item = PoleInventory.objects.get(pk=id)
+        except PoleInventory.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterPoleInventoryAPIListView(APIView):
+class PoleInventoryAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterPoleInventory.objects.all()
+        items = PoleInventory.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterPoleInventorySerializer(result_page, many=True)
+        serializer = PoleInventorySerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterPoleInventorySerializer(data=request.data)
+        serializer = PoleInventorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterPosterInventoryMappingAPIView(APIView):
+class PosterInventoryMappingAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterPosterInventoryMapping.objects.get(pk=id)
-            serializer = MasterPosterInventoryMappingSerializer(item)
+            item = PosterInventoryMapping.objects.get(pk=id)
+            serializer = PosterInventoryMappingSerializer(item)
             return Response(serializer.data)
-        except MasterPosterInventoryMapping.DoesNotExist:
+        except PosterInventoryMapping.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterPosterInventoryMapping.objects.get(pk=id)
-        except MasterPosterInventoryMapping.DoesNotExist:
+            item = PosterInventoryMapping.objects.get(pk=id)
+        except PosterInventoryMapping.DoesNotExist:
             return Response(status=404)
-        serializer = MasterPosterInventoryMappingSerializer(item, data=request.data)
+        serializer = PosterInventoryMappingSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -921,46 +921,46 @@ class MasterPosterInventoryMappingAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterPosterInventoryMapping.objects.get(pk=id)
-        except MasterPosterInventoryMapping.DoesNotExist:
+            item = PosterInventoryMapping.objects.get(pk=id)
+        except PosterInventoryMapping.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterPosterInventoryMappingAPIListView(APIView):
+class PosterInventoryMappingAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterPosterInventoryMapping.objects.all()
+        items = PosterInventoryMapping.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterPosterInventoryMappingSerializer(result_page, many=True)
+        serializer = PosterInventoryMappingSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterPosterInventoryMappingSerializer(data=request.data)
+        serializer = PosterInventoryMappingSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterRatioDetailsAPIView(APIView):
+class RatioDetailsAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterRatioDetails.objects.get(pk=id)
-            serializer = MasterRatioDetailsSerializer(item)
+            item = RatioDetails.objects.get(pk=id)
+            serializer = RatioDetailsSerializer(item)
             return Response(serializer.data)
-        except MasterRatioDetails.DoesNotExist:
+        except RatioDetails.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterRatioDetails.objects.get(pk=id)
-        except MasterRatioDetails.DoesNotExist:
+            item = RatioDetails.objects.get(pk=id)
+        except RatioDetails.DoesNotExist:
             return Response(status=404)
-        serializer = MasterRatioDetailsSerializer(item, data=request.data)
+        serializer = RatioDetailsSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -968,46 +968,46 @@ class MasterRatioDetailsAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterRatioDetails.objects.get(pk=id)
-        except MasterRatioDetails.DoesNotExist:
+            item = RatioDetails.objects.get(pk=id)
+        except RatioDetails.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterRatioDetailsAPIListView(APIView):
+class RatioDetailsAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterRatioDetails.objects.all()
+        items = RatioDetails.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterRatioDetailsSerializer(result_page, many=True)
+        serializer = RatioDetailsSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterRatioDetailsSerializer(data=request.data)
+        serializer = RatioDetailsSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterSignupAPIView(APIView):
+class SignupAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterSignup.objects.get(pk=id)
-            serializer = MasterSignupSerializer(item)
+            item = Signup.objects.get(pk=id)
+            serializer = SignupSerializer(item)
             return Response(serializer.data)
-        except MasterSignup.DoesNotExist:
+        except Signup.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterSignup.objects.get(pk=id)
-        except MasterSignup.DoesNotExist:
+            item = Signup.objects.get(pk=id)
+        except Signup.DoesNotExist:
             return Response(status=404)
-        serializer = MasterSignupSerializer(item, data=request.data)
+        serializer = SignupSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -1015,46 +1015,46 @@ class MasterSignupAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterSignup.objects.get(pk=id)
-        except MasterSignup.DoesNotExist:
+            item = Signup.objects.get(pk=id)
+        except Signup.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterSignupAPIListView(APIView):
+class SignupAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterSignup.objects.all()
+        items = Signup.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterSignupSerializer(result_page, many=True)
+        serializer = SignupSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterSignupSerializer(data=request.data)
+        serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterStallInventoryAPIView(APIView):
+class StallInventoryAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterStallInventory.objects.get(pk=id)
-            serializer = MasterStallInventorySerializer(item)
+            item = StallInventory.objects.get(pk=id)
+            serializer = StallInventorySerializer(item)
             return Response(serializer.data)
-        except MasterStallInventory.DoesNotExist:
+        except StallInventory.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterStallInventory.objects.get(pk=id)
-        except MasterStallInventory.DoesNotExist:
+            item = StallInventory.objects.get(pk=id)
+        except StallInventory.DoesNotExist:
             return Response(status=404)
-        serializer = MasterStallInventorySerializer(item, data=request.data)
+        serializer = StallInventorySerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -1062,46 +1062,46 @@ class MasterStallInventoryAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterStallInventory.objects.get(pk=id)
-        except MasterStallInventory.DoesNotExist:
+            item = StallInventory.objects.get(pk=id)
+        except StallInventory.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterStallInventoryAPIListView(APIView):
+class StallInventoryAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterStallInventory.objects.all()
+        items = StallInventory.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterStallInventorySerializer(result_page, many=True)
+        serializer = StallInventorySerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterStallInventorySerializer(data=request.data)
+        serializer = StallInventorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterStreetFurnitureAPIView(APIView):
+class StreetFurnitureAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterStreetFurniture.objects.get(pk=id)
-            serializer = MasterStreetFurnitureSerializer(item)
+            item = StreetFurniture.objects.get(pk=id)
+            serializer = StreetFurnitureSerializer(item)
             return Response(serializer.data)
-        except MasterStreetFurniture.DoesNotExist:
+        except StreetFurniture.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterStreetFurniture.objects.get(pk=id)
-        except MasterStreetFurniture.DoesNotExist:
+            item = StreetFurniture.objects.get(pk=id)
+        except StreetFurniture.DoesNotExist:
             return Response(status=404)
-        serializer = MasterStreetFurnitureSerializer(item, data=request.data)
+        serializer = StreetFurnitureSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -1109,46 +1109,46 @@ class MasterStreetFurnitureAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterStreetFurniture.objects.get(pk=id)
-        except MasterStreetFurniture.DoesNotExist:
+            item = StreetFurniture.objects.get(pk=id)
+        except StreetFurniture.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterStreetFurnitureAPIListView(APIView):
+class StreetFurnitureAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterStreetFurniture.objects.all()
+        items = StreetFurniture.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterStreetFurnitureSerializer(result_page, many=True)
+        serializer = StreetFurnitureSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterStreetFurnitureSerializer(data=request.data)
+        serializer = StreetFurnitureSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterSupplierInfoAPIView(APIView):
+class SupplierInfoAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterSupplierInfo.objects.get(pk=id)
-            serializer = MasterSupplierInfoSerializer(item)
+            item = SupplierInfo.objects.get(pk=id)
+            serializer = SupplierInfoSerializer(item)
             return Response(serializer.data)
-        except MasterSupplierInfo.DoesNotExist:
+        except SupplierInfo.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterSupplierInfo.objects.get(pk=id)
-        except MasterSupplierInfo.DoesNotExist:
+            item = SupplierInfo.objects.get(pk=id)
+        except SupplierInfo.DoesNotExist:
             return Response(status=404)
-        serializer = MasterSupplierInfoSerializer(item, data=request.data)
+        serializer = SupplierInfoSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -1156,46 +1156,46 @@ class MasterSupplierInfoAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterSupplierInfo.objects.get(pk=id)
-        except MasterSupplierInfo.DoesNotExist:
+            item = SupplierInfo.objects.get(pk=id)
+        except SupplierInfo.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterSupplierInfoAPIListView(APIView):
+class SupplierInfoAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterSupplierInfo.objects.all()
+        items = SupplierInfo.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterSupplierInfoSerializer(result_page, many=True)
+        serializer = SupplierInfoSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterSupplierInfoSerializer(data=request.data)
+        serializer = SupplierInfoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-class MasterSupplierTypeSocietyAPIView(APIView):
+class SupplierTypeSocietyAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-            item = MasterSupplierTypeSociety.objects.get(pk=id)
-            serializer = MasterSupplierTypeSocietySerializer(item)
+            item = SupplierTypeSociety.objects.get(pk=id)
+            serializer = SupplierTypeSocietySerializer(item)
             return Response(serializer.data)
-        except MasterSupplierTypeSociety.DoesNotExist:
+        except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
     def put(self, request, id, format=None):
         try:
-            item = MasterSupplierTypeSociety.objects.get(pk=id)
-        except MasterSupplierTypeSociety.DoesNotExist:
+            item = SupplierTypeSociety.objects.get(pk=id)
+        except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
-        serializer = MasterSupplierTypeSocietySerializer(item, data=request.data)
+        serializer = SupplierTypeSocietySerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -1203,24 +1203,24 @@ class MasterSupplierTypeSocietyAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = MasterSupplierTypeSociety.objects.get(pk=id)
-        except MasterSupplierTypeSociety.DoesNotExist:
+            item = SupplierTypeSociety.objects.get(pk=id)
+        except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
         item.delete()
         return Response(status=204)
 
 
-class MasterSupplierTypeSocietyAPIListView(APIView):
+class SupplierTypeSocietyAPIListView(APIView):
 
     def get(self, request, format=None):
-        items = MasterSupplierTypeSociety.objects.all()
+        items = SupplierTypeSociety.objects.all()
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = MasterSupplierTypeSocietySerializer(result_page, many=True)
+        serializer = SupplierTypeSocietySerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = MasterSupplierTypeSocietySerializer(data=request.data)
+        serializer = SupplierTypeSocietySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
