@@ -2,7 +2,7 @@
 # You'll have to do the following manually to clean this up:
 #   * Rearrange models' order
 #   * Make sure each model has one field with primary_key=True
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
+#   * Remove `` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 #
 # Also note: You'll have to insert the output of 'django-admin sqlcustom [app_label]'
@@ -29,8 +29,8 @@ class BannerInventory(models.Model):
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'MASTER_BANNER_INVENTORY'
+        
+        db_table = 'banner_inventory'
 
 
 class CarDisplayInventory(models.Model):
@@ -49,8 +49,8 @@ class CarDisplayInventory(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'MASTER_CAR_DISPLAY_INVENTORY'
+        
+        db_table = 'car_display_inventory'
 
 
 class CommunityHallInfo(models.Model):
@@ -82,8 +82,8 @@ class CommunityHallInfo(models.Model):
     event_linked = models.CharField(db_column='EVENT_LINKED', max_length=5, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'MASTER_COMMUNITY_HALL_INFO'
+        
+        db_table = 'community_hall_info'
 
 
 class DoorToDoorInfo(models.Model):
@@ -113,8 +113,8 @@ class DoorToDoorInfo(models.Model):
     standee_spaces_count = models.CharField(db_column='STANDEE_SPACES_COUNT', max_length=255, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'MASTER_DOOR_TO_DOOR_INFO'
+        
+        db_table = 'door_to_door_info'
 
 
 class LiftDetails(models.Model):
@@ -131,7 +131,7 @@ class LiftDetails(models.Model):
     tower = models.ForeignKey('SocietyTower', related_name='lifts', db_column='TOWER_ID', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        db_table = 'MASTER_LIFT_DETAILS'
+        db_table = 'lift_details'
 
 
 class NoticeBoardDetails(models.Model):
@@ -151,7 +151,7 @@ class NoticeBoardDetails(models.Model):
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=255, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        db_table = 'MASTER_NOTICE_BOARD_DETAILS'
+        db_table = 'notice_board_details'
 
 
 class PosterInventory(models.Model):
@@ -172,8 +172,8 @@ class PosterInventory(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'MASTER_POSTER_INVENTORY'
+        
+        db_table = 'poster_inventory'
 
 
 class SocietyFlat(models.Model):
@@ -188,7 +188,7 @@ class SocietyFlat(models.Model):
     average_rent_pers_sqft_tower = models.CharField(db_column='AVERAGE_RENT_PERS_SQFT_TOWER', max_length=10, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        db_table = 'MASTER_SOCIETY_FLAT'
+        db_table = 'society_flat'
         unique_together = (('tower', 'flat_type'),)
 
 
@@ -214,8 +214,8 @@ class StandeeInventory(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'MASTER_STANDEE_INVENTORY'
+        
+        db_table = 'standee_inventory'
 
 
 class SwimmingPoolInfo(models.Model):
@@ -244,8 +244,8 @@ class SwimmingPoolInfo(models.Model):
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = '_SWIMMING_POOL_INFO'
+        
+        db_table = 'swimming_pool_info'
 
 
 class WallInventory(models.Model):
@@ -268,8 +268,8 @@ class WallInventory(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'MASTER_WALL_INVENTORY'
+        
+        db_table = 'wall_inventory'
 
 
 class UserInquiry(models.Model):
@@ -281,8 +281,8 @@ class UserInquiry(models.Model):
     inquiry_details = models.TextField(db_column='INQUIRY_DETAILS')  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'USER_INQUIRY'
+        
+        db_table = 'user_inquiry'
 
 
 class CommonAreaDetails(models.Model):
@@ -297,7 +297,7 @@ class CommonAreaDetails(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        
         db_table = 'common_area_details'
 
 
@@ -314,8 +314,8 @@ class ContactDetails(models.Model):
     contact_authority = models.CharField(db_column='CONTACT_AUTHORITY', max_length=5, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_contact_details'
+        
+        db_table = 'contact_details'
 
 
 class Events(models.Model):
@@ -339,8 +339,8 @@ class Events(models.Model):
     event_status = models.CharField(db_column='EVENT_STATUS', max_length=10, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_events'
+        
+        db_table = 'events'
 
 
 class InventoryInfo(models.Model):
@@ -356,8 +356,8 @@ class InventoryInfo(models.Model):
     material_type = models.CharField(db_column='MATERIAL_TYPE', max_length=70, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_inventory_info'
+        
+        db_table = 'inventory_info'
 
 
 class MailboxInfo(models.Model):
@@ -374,8 +374,8 @@ class MailboxInfo(models.Model):
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_mailbox_info'
+        
+        db_table = 'mailbox_info'
 
 
 class OperationsInfo(models.Model):
@@ -390,8 +390,8 @@ class OperationsInfo(models.Model):
     company_address = models.CharField(db_column='COMPANY_ADDRESS', max_length=250, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_operations_info'
+        
+        db_table = 'operations_info'
 
 
 class PoleInventory(models.Model):
@@ -410,8 +410,8 @@ class PoleInventory(models.Model):
     pole_inventory_status = models.CharField(db_column='POLE_INVENTORY_STATUS', max_length=20, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_pole_inventory'
+        
+        db_table = 'pole_inventory'
 
 
 class PosterInventoryMapping(models.Model):
@@ -423,8 +423,8 @@ class PosterInventoryMapping(models.Model):
     stall_adinventory_id = models.CharField(db_column='STALL_ADINVENTORY_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_poster_inventory_mapping'
+        
+        db_table = 'poster_inventory_mapping'
 
 
 class RatioDetails(models.Model):
@@ -438,8 +438,8 @@ class RatioDetails(models.Model):
     major_event_count = models.IntegerField(db_column='MAJOR_EVENT_COUNT', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_ratio_details'
+        
+        db_table = 'ratio_details'
         unique_together = (('supplier_id', 'machadalo_index'),)
 
 
@@ -457,8 +457,8 @@ class Signup(models.Model):
     signup_status = models.CharField(db_column='SIGNUP_STATUS', max_length=255, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_signup'
+        
+        db_table = 'signup'
 
 
 class StallInventory(models.Model):
@@ -484,8 +484,8 @@ class StallInventory(models.Model):
     event_linked = models.CharField(db_column='EVENT_LINKED', max_length=45, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_stall_inventory'
+        
+        db_table = 'stall_inventory'
 
 
 class StreetFurniture(models.Model):
@@ -501,8 +501,8 @@ class StreetFurniture(models.Model):
     furniture_status = models.CharField(db_column='FURNITURE_STATUS', max_length=10, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_street_furniture'
+        
+        db_table = 'street_furniture'
 
 
 class SupplierInfo(models.Model):
@@ -527,8 +527,8 @@ class SupplierInfo(models.Model):
     current_status = models.DateField(db_column='CURRENT_STATUS', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
-        db_table = 'master_supplier_info'
+        
+        db_table = 'supplier_info'
 
 
 class SupplierTypeSociety(models.Model):
@@ -619,8 +619,8 @@ class SupplierTypeSociety(models.Model):
         return False
 
     class Meta:
-        managed = False
-        db_table = 'master_supplier_type_society'
+        
+        db_table = 'supplier_society'
 
 
 class SocietyTower(models.Model):
@@ -669,5 +669,5 @@ class SocietyTower(models.Model):
 
 
     class Meta:
-        managed = False
-        db_table = 'master_supplier_type_society_tower'
+        
+        db_table = 'society_tower'
