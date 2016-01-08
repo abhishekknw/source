@@ -128,7 +128,7 @@ class MasterLiftDetails(models.Model):
     lift_advt_walls_count = models.IntegerField(db_column='LIFT_ADVT_WALLS_COUNT', blank=True, null=True)  # Field name made lowercase.
     photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True, null=True)  # Field name made lowercase.
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
-    tower = models.ForeignKey('MasterSupplierTypeSocietyTower', db_column='TOWER_ID', blank=True, null=True)  # Field name made lowercase.
+    tower = models.ForeignKey('MasterSupplierTypeSocietyTower', related_name='lifts', db_column='TOWER_ID', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         managed = False
@@ -143,7 +143,7 @@ class MasterNoticeBoardDetails(models.Model):
     total_poster_per_notice_board = models.IntegerField(db_column='TOTAL_POSTER_PER_NOTICE_BOARD', blank=True, null=True)  # Field name made lowercase.
     poster_location_notice_board = models.CharField(db_column='POSTER_LOCATION_NOTICE_BOARD', max_length=5, blank=True, null=True)  # Field name made lowercase.
     notice_board_lit = models.CharField(db_column='NOTICE_BOARD_LIT', max_length=1)  # Field name made lowercase.
-    tower = models.ForeignKey('MasterSupplierTypeSocietyTower', db_column='TOWER_ID', blank=True, null=True)  # Field name made lowercase.
+    tower = models.ForeignKey('MasterSupplierTypeSocietyTower', related_name='notice_boards', db_column='TOWER_ID', blank=True, null=True)  # Field name made lowercase.
     notice_board_size_length = models.CharField(db_column='NOTICE_BOARD_SIZE_length', max_length=10, blank=True, null=True)  # Field name made lowercase.
     notice_board_size_breadth = models.CharField(db_column='NOTICE_BOARD_SIZE_BREADTH', max_length=10, blank=True, null=True)  # Field name made lowercase.
     notice_board_size_area = models.CharField(db_column='NOTICE_BOARD_SIZE_AREA', max_length=10, blank=True, null=True)  # Field name made lowercase.
@@ -179,7 +179,7 @@ class MasterPosterInventory(models.Model):
 
 
 class MasterSocietyFlat(models.Model):
-    tower = models.ForeignKey('MasterSupplierTypeSocietyTower', db_column='TOWER_ID')  # Field name made lowercase.
+    tower = models.ForeignKey('MasterSupplierTypeSocietyTower', related_name='flats', db_column='TOWER_ID')  # Field name made lowercase.
     flat_type = models.CharField(db_column='FLAT_TYPE', max_length=20)  # Field name made lowercase.
     flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)  # Field name made lowercase.
     flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
@@ -190,7 +190,6 @@ class MasterSocietyFlat(models.Model):
     average_rent_pers_sqft_tower = models.CharField(db_column='AVERAGE_RENT_PERS_SQFT_TOWER', max_length=10, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
         db_table = 'MASTER_SOCIETY_FLAT'
         unique_together = (('tower', 'flat_type'),)
 
@@ -323,12 +322,12 @@ class MasterContactDetails(models.Model):
 
 class MasterEvents(models.Model):
     event_id = models.AutoField(db_column='EVENT_ID', primary_key=True)  # Field name made lowercase.
-    supplier = models.ForeignKey('MasterSupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
+    supplier = models.ForeignKey('MasterSupplierTypeSociety', related_name='events', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
     event_name = models.CharField(db_column='EVENT_NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
     event_location = models.CharField(db_column='EVENT_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
     past_major_events = models.CharField(db_column='PAST_MAJOR_EVENTS', max_length=50, blank=True, null=True)  # Field name made lowercase.
     past_gathering_per_event = models.CharField(db_column='PAST_GATHERING_PER_EVENT', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    no_of_days = models.IntegerField(db_column='NO_OF_DAYS', blank=True, null=True)  # Field name made lowercase.
+    event_duration = models.IntegerField(db_column='NO_OF_DAYS', blank=True, null=True)  # Field name made lowercase.
     activities = models.CharField(db_column='ACTIVITIES', max_length=50, blank=True, null=True)  # Field name made lowercase.
     stall_spaces_count = models.IntegerField(db_column='STALL_SPACES_COUNT', blank=True, null=True)  # Field name made lowercase.
     banner_spaces_count = models.IntegerField(db_column='BANNER_SPACES_COUNT', blank=True, null=True)  # Field name made lowercase.
@@ -604,6 +603,23 @@ class MasterSupplierTypeSociety(models.Model):
     flat_sale_cost_persqft = models.IntegerField(db_column='FLAT_SALE_COST_PERSQFT', blank=True, null=True)  # Field name made lowercase.
     total_ad_spaces = models.IntegerField(db_column='TOTAL_AD_SPACES', blank=True, null=True)  # Field name made lowercase.
 
+    def get_contact_list(self):
+        return MasterContactDetails.objects.filter(supplier_id=self.supplier_id)
+
+    def get_reference(self):
+        return None
+
+    def is_contact_available(self):
+        contacts = self.get_contact_list()
+        if contacts and len(contacts) > 0 :
+            return True
+        return False
+
+    def is_reference_available(self):
+        if self.get_reference():
+            return True
+        return False
+
     class Meta:
         managed = False
         db_table = 'master_supplier_type_society'
@@ -612,7 +628,7 @@ class MasterSupplierTypeSociety(models.Model):
 class MasterSupplierTypeSocietyTower(models.Model):
     tower_id = models.AutoField(db_column='TOWER_ID', primary_key=True)  # Field name made lowercase.
     tower_tag = models.CharField(db_column='TOWER_TAG', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    supplier = models.ForeignKey(MasterSupplierTypeSociety, db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
+    supplier = models.ForeignKey(MasterSupplierTypeSociety, related_name='towers', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
     tower_name = models.CharField(db_column='TOWER_NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
     flat_count_per_tower = models.IntegerField(db_column='FLAT_COUNT_PER_TOWER', blank=True, null=True)  # Field name made lowercase.
     floor_count_per_tower = models.IntegerField(db_column='FLOOR_COUNT_PER_TOWER', blank=True, null=True)  # Field name made lowercase.
@@ -624,6 +640,35 @@ class MasterSupplierTypeSocietyTower(models.Model):
     tower_resident_count = models.IntegerField(db_column='TOWER_RESIDENT_COUNT', blank=True, null=True)  # Field name made lowercase.
     lift_count = models.IntegerField(db_column='LIFT_COUNT', blank=True, null=True)  # Field name made lowercase.
     average_rent_per_sqft = models.IntegerField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
+
+
+    def get_notice_board_list(self):
+        return self.notice_boards.all()
+
+    def get_lift_list(self):
+        return self.lifts.all()
+
+    def get_flat_list(self):
+        return self.flats.all()
+
+    def is_notice_board_available(self):
+        notice_board = self.get_notice_board_list()
+        if notice_board and len(notice_board) > 0 :
+            return True
+        return False
+
+    def is_lift_available(self):
+        lift = self.get_lift_list()
+        if lift and len(lift) > 0:
+            return True
+        return False
+
+    def is_flat_available(self):
+        flat = self.get_flat_list()
+        if flat and len(flat) > 0:
+            return True
+        return False
+
 
     class Meta:
         managed = False
