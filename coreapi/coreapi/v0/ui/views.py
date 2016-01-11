@@ -128,13 +128,54 @@ class TowerAPIView(APIView):
         #here we will start storing contacts
 
 
+class CarDisplayAPIView(APIView):
+    def get(self, request, id, format=None):
+        try:
+            car_displays = SupplierTypeSociety.objects.get(pk=id).car_displays.all()
+            serializer = CarDisplayInventorySerializer(car_displays, many=True)
+            len(serializer.data)
+            if len(serializer.data) > 0:
+                car_display_available=True
+            else:
+                car_display_available = False
+
+            response = {}
+            response['car_display_available'] = car_display_available
+            response['car_display_details'] = serializer.data
+
+            return Response(response, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except CarDisplayInventory.DoesNotExist:
+            return Response(status=404)
+
+    def post(self, request, id, format=None):
+        print request.data
+        society=SupplierTypeSociety.objects.get(pk=id)
+
+        for key in request.data['car_display_details']:
+            if 'id' in key:
+                print "test loop"
+                item = CarDisplayInventory.objects.get(pk=key['id'])
+                serializer = CarDisplayInventorySerializer(item, data=key)
+            else:
+                serializer = CarDisplayInventorySerializer(data=key)
+            try:
+                if serializer.is_valid():
+                    serializer.save(supplier=society)
+            except:
+                return Response(serializer.errors, status=400)
+
+        return Response(serializer.data, status=201)
+        #here we will start storing contacts
+
+
 
 class EventAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             events = SupplierTypeSociety.objects.get(pk=id).events.all()
             serializer = EventsSerializer(events, many=True)
-
             count = len(serializer.data)
             if count > 0:
                 event_details_available=True
@@ -154,16 +195,13 @@ class EventAPIView(APIView):
 
     def post(self, request, id, format=None):
         print request.data
-        serializer={}
         society=SupplierTypeSociety.objects.get(pk=id)
-
         if request.data['event_details_available']:
             if request.data['events_count_per_year'] != len(request.data['event_details']):
                 return Response({'message':'No of Events entered does not match event count'},status=400)
 
         for key in request.data['event_details']:
             if 'event_id' in key:
-                print "test loop"
                 item = Events.objects.get(pk=key['event_id'])
                 serializer = EventsSerializer(item, data=key)
             else:
@@ -174,8 +212,147 @@ class EventAPIView(APIView):
             except:
                 return Response(serializer.errors, status=400)
 
-
-
-
         return Response(serializer.data, status=201)
         #here we will start storing contacts
+
+
+class OtherInventoryAPIView(APIView):
+    def get(self, request, id, format=None):
+        response = {}
+        try:
+            poles = SupplierTypeSociety.objects.get(pk=id).poles.all()
+            serializer = PoleInventorySerializer(poles, many=True)
+            pole_available = get_availability(serializer.data)
+            response['pole_available'] = pole_available
+            response['pole_display_details'] = serializer.data
+
+            walls = SupplierTypeSociety.objects.get(pk=id).walls.all()
+            serializer = WallInventorySerializer(walls, many=True)
+            wall_available = get_availability(serializer.data)
+            response['wall_available'] = wall_available
+            response['wall_display_details'] = serializer.data
+
+            community_halls = SupplierTypeSociety.objects.get(pk=id).community_halls.all()
+            serializer = CommunityHallInfoSerializer(community_halls, many=True)
+            community_hall_available = get_availability(serializer.data)
+            response['community_hall_available'] = community_hall_available
+            response['community_hall_details'] = serializer.data
+
+            swimming_pools = SupplierTypeSociety.objects.get(pk=id).swimming_pools.all()
+            serializer = SwimmingPoolInfoSerializer(swimming_pools, many=True)
+            swimming_pool_available = get_availability(serializer.data)
+            response['swimming_pool_available'] = swimming_pool_available
+            response['swimming_pool_details'] = serializer.data
+
+            mail_boxes = SupplierTypeSociety.objects.get(pk=id).mail_boxes.all()
+            serializer = MailboxInfoSerializer(mail_boxes, many=True)
+            mail_box_available = get_availability(serializer.data)
+            response['mail_box_available'] = mail_box_available
+            response['mail_box_details'] = serializer.data
+
+
+            door_to_doors = SupplierTypeSociety.objects.get(pk=id).door_to_doors.all()
+            serializer = DoorToDoorInfoSerializer(door_to_doors, many=True)
+            door_to_door_allowed = get_availability(serializer.data)
+            response['door_to_door_allowed'] = door_to_door_allowed
+            response['door_to_door_details'] = serializer.data
+
+            street_furniture = SupplierTypeSociety.objects.get(pk=id).street_furniture.all()
+            serializer = StreetFurnitureSerializer(street_furniture, many=True)
+            street_furniture_available = get_availability(serializer.data)
+            response['street_furniture_available'] = street_furniture_available
+            response['street_furniture_details'] = serializer.data
+
+            return Response(response, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except PoleInventory.DoesNotExist:
+            return WallInventory(status=404)
+        except CommunityHallInfo.DoesNotExist:
+            return Response(status=404)
+        except SwimmingPoolInfo.DoesNotExist:
+            return Response(status=404)
+        except MailboxInfo.DoesNotExist:
+            return Response(status=404)
+        except DoorToDoorInfo.DoesNotExist:
+            return Response(status=404)
+        except WallInventory.DoesNotExist:
+            return Response(status=404)
+        except StreetFurniture.DoesNotExist:
+            return Response(status=404)
+
+    def post(self, request, id, format=None):
+        print request.data
+        society = SupplierTypeSociety.objects.get(pk=id)
+
+        if request.data['pole_available']:
+            response = post_data(PoleInventory, PoleInventorySerializer, request.data['pole_display_details'], society)
+            if response == False:
+                return Response(status=400)
+
+        if request.data['wall_available']:
+            response = post_data(WallInventory, WallInventorySerializer, request.data['wall_display_details'], society)
+            if response == False:
+                return Response(status=400)
+
+        if request.data['community_hall_available']:
+            response = post_data(CommunityHallInfo, CommunityHallInfoSerializer, request.data['community_hall_details'], society)
+            if response == False:
+                return Response(status=400)
+
+        if request.data['wall_available']:
+            response = post_data(WallInventory, WallInventorySerializer, request.data['wall_display_details'], society)
+            if response == False:
+                return Response(status=400)
+
+        if request.data['swimming_pool_available']:
+            response = post_data(SwimmingPoolInfo, SwimmingPoolInfoSerializer, request.data['swimming_pool_details'], society)
+            if response == False:
+                return Response(status=400)
+
+        if request.data['mail_box_available']:
+            response = post_data(MailboxInfo, MailboxInfoSerializer, request.data['mail_box_details'], society)
+            if response == False:
+                return Response(status=400)
+
+        if request.data['door_to_door_allowed']:
+            response = post_data(DoorToDoorInfo, DoorToDoorInfoSerializer, request.data['door_to_door_details'], society)
+            if response == False:
+                return Response(status=400)
+
+        if request.data['street_furniture_available']:
+            response = post_data(StreetFurniture, StreetFurnitureSerializer, request.data['street_furniture_details'], society)
+            if response == False:
+                return Response(status=400)
+
+        return Response(status=201)
+        #here we will start storing contacts
+
+
+def post_data(model, model_serializer, inventory_data, foreign_value=None):
+
+    for key in inventory_data:
+        if 'id' in key:
+            item = model.objects.get(pk=key['id'])
+            serializer = model_serializer(item,data=key)
+        else:
+            serializer = model_serializer(data=key)
+        if serializer.is_valid():
+            serializer.save(supplier=foreign_value)
+        else:
+            return False
+    return True
+
+def get_availability(data):
+     if len(data) > 0:
+        return True
+     else:
+         return False
+
+
+
+    
+
+
+
+
