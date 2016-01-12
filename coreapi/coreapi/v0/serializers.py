@@ -1,5 +1,42 @@
 from rest_framework.serializers import ModelSerializer
-from v0.models import BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower
+from v0.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower
+
+
+class InventoryLocationSerializer(ModelSerializer):
+
+    class Meta:
+        model = InventoryLocation
+
+class AdInventoryLocationMappingSerializer(ModelSerializer):
+
+    class Meta:
+        model = AdInventoryLocationMapping
+
+
+class AdInventoryTypeSerializer(ModelSerializer):
+
+    class Meta:
+        model = AdInventoryType
+
+
+class DurationTypeSerializer(ModelSerializer):
+
+    class Meta:
+        model = DurationType
+
+
+
+class PriceMappingDefaultSerializer(ModelSerializer):
+
+    class Meta:
+        model = PriceMappingDefault
+
+
+class PriceMappingSerializer(ModelSerializer):
+
+    class Meta:
+        model = PriceMapping
+
 
 
 class BannerInventorySerializer(ModelSerializer):

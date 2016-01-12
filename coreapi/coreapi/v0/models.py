@@ -11,6 +11,92 @@ from __future__ import unicode_literals
 
 from django.db import models
 
+AD_INVENTORY_CHOICES = (
+    ('PO', 'Poster'),
+    ('SD', 'Standee'),
+    ('ST', 'Stall'),
+    ('BA', 'Banner'),
+)
+
+
+
+class InventoryLocation(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)  # Field n
+    location_id = models.CharField(db_column='LOCATION_ID', max_length=20)  # Field name made lowercase.
+    location_type = models.CharField(db_column='LOCATION_TYPE', max_length=20, blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+        db_table = 'inventory_location'
+
+
+class AdInventoryLocationMapping(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20)  # Field name made lowercase.
+    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=2,
+                                        choices=AD_INVENTORY_CHOICES, default='PO')  # Field name made lowercase.
+    location = models.ForeignKey('InventoryLocation', db_column='INVENTORY_LOCATION_ID', related_name='inventory_locations', blank=True, null=True)
+
+    class Meta:
+        db_table = 'ad_inventory_location_mapping'
+
+
+class AdInventoryType(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=2,
+                                        choices=AD_INVENTORY_CHOICES, default='PO')
+    adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20)  # Field name made lowercase.
+
+    class Meta:
+        db_table = 'ad_inventory_type'
+
+
+class DurationType(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    duration_name = models.CharField(db_column='DURATION_NAME', max_length=20)  # Field name made lowercase.
+    days_count = models.IntegerField(db_column='DAYS_COUNT')  # Field name made lowercase.
+
+    class Meta:
+        db_table = 'duration_type'
+
+
+class PriceMappingDefault(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True)
+    #adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
+    adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True)
+    society_price = models.IntegerField(db_column='SOCIETY_PRICE')
+    business_price = models.IntegerField(db_column='BUSINESS_PRICE')
+    duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
+    class Meta:
+        db_table = 'price_mapping_default'
+
+
+    def get_ad_inventory_type(self):
+        ad_type = AdInventoryType.objects.get(pk)
+        return self.notice_boards.all()
+
+    def get_lift_list(self):
+        return self.lifts.all()
+
+    def get_flat_list(self):
+        return self.flats.all()
+
+
+
+
+
+
+class PriceMapping(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
+    adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True)
+    society_price = models.IntegerField(db_column='SOCIETY_PRICE')
+    business_price = models.IntegerField(db_column='BUSINESS_PRICE')
+    duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
+    class Meta:
+        db_table = 'price_mapping'
+
+
 
 class BannerInventory(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='banners', blank=True, null=True)  # Field name made lowercase.

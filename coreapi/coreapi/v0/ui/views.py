@@ -2,8 +2,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from serializers import UISocietySerializer, UITowerSerializer
-from v0.serializers import BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
-from v0.models import BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower
+from v0.serializers import InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
+from v0.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower
 
 
 
@@ -30,6 +30,8 @@ class SocietyAPIListView(APIView):
             serializer.save()
         else:
             return Response(serializer.errors, status=400)
+
+        print serializer.data
         #here we will start storing contacts
         if request.data and request.data['basic_contact_available']:
             for contact in request.data['basic_contacts']:
@@ -43,7 +45,29 @@ class SocietyAPIListView(APIView):
                 if contact_serializer.is_valid():
                     contact_serializer.save(supplier_id=request.data['supplier_id'])
 
+        society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
+        ad_types = AdInventoryType.objects.all()
+        duration_types = DurationType.objects.all()
+        for type in ad_types:
+            for duration in duration_types:
+                pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                pmdefault.save()
+
         return Response(serializer.data, status=201)
+
+
+
+class BasicPricingAPIView(APIView):
+    def get(self, request, id, format=None):
+        try:
+            basic_prices = SupplierTypeSociety.objects.get(pk=id).default_prices.all()
+            serializer = PriceMappingDefaultSerializer(basic_prices, many=True)
+            return Response(serializer.data)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except PriceMappingDefault.DoesNotExist:
+            return Response(status=404)
+
 
 
 class TowerAPIView(APIView):
@@ -78,9 +102,6 @@ class TowerAPIView(APIView):
                 tower_data = SocietyTower.objects.get(pk=serializer.data['tower_id'])
             except SocietyTower.DoesNotExist:
                 return Response(status=404)
-
-            print "testing tower"
-            print tower_data
 
 
             if key['notice_board_details_available']:

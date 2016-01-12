@@ -1,0 +1,139 @@
+[
+{
+    "fields": {
+        "adinventory_type": "A3",
+        "adinventory_name": "PO"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 1
+},
+{
+    "fields": {
+        "adinventory_type": "A4",
+        "adinventory_name": "PO"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 2
+},
+{
+    "fields": {
+        "adinventory_type": "Small",
+        "adinventory_name": "SD"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 3
+},
+{
+    "fields": {
+        "adinventory_type": "Medium",
+        "adinventory_name": "SD"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 4
+},
+{
+    "fields": {
+        "adinventory_type": "Large",
+        "adinventory_name": "SD"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 5
+},
+{
+    "fields": {
+        "adinventory_type": "Small",
+        "adinventory_name": "BA"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 6
+},
+{
+    "fields": {
+        "adinventory_type": "Medium",
+        "adinventory_name": "BA"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 7
+},
+{
+    "fields": {
+        "adinventory_type": "Large",
+        "adinventory_name": "BA"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 8
+},
+{
+    "fields": {
+        "adinventory_type": "Small",
+        "adinventory_name": "ST"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 9
+},
+{
+    "fields": {
+        "adinventory_type": "Big",
+        "adinventory_name": "ST"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 10
+},
+{
+    "fields": {
+        "adinventory_type": "Canopy",
+        "adinventory_name": "ST"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 11
+},
+{
+    "fields": {
+        "adinventory_type": "Custom",
+        "adinventory_name": "ST"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 12
+},
+{
+    "fields": {
+        "days_count": 1,
+        "duration_name": "daily"
+    },
+    "model": "v0.durationtype",
+    "pk": 1
+},
+{
+    "fields": {
+        "days_count": 7,
+        "duration_name": "weekly"
+    },
+    "model": "v0.durationtype",
+    "pk": 2
+},
+{
+    "fields": {
+        "days_count": 30,
+        "duration_name": "monthly"
+    },
+    "model": "v0.durationtype",
+    "pk": 3
+},
+{
+    "fields": {
+        "days_count": 90,
+        "duration_name": "quaterly"
+    },
+    "model": "v0.durationtype",
+    "pk": 4
+},
+{
+    "fields": {
+        "days_count": 365,
+        "duration_name": "yearly"
+    },
+    "model": "v0.durationtype",
+    "pk": 5
+}
+
+]
