@@ -2,5 +2,10 @@ env
 env.bk
 coreapi/coreapi/static
 db.sqlite3
-.pyc
+*.pyc
+*/*.pyc
+*/*/*.pyc
+*/*/*/*.pyc
+*/*/*/*/*.pyc
+
 
