@@ -71,20 +71,6 @@ class PriceMappingDefault(models.Model):
         db_table = 'price_mapping_default'
 
 
-    def get_ad_inventory_type(self):
-        ad_type = AdInventoryType.objects.get(pk)
-        return self.notice_boards.all()
-
-    def get_lift_list(self):
-        return self.lifts.all()
-
-    def get_flat_list(self):
-        return self.flats.all()
-
-
-
-
-
 
 class PriceMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -99,10 +85,11 @@ class PriceMapping(models.Model):
 
 
 class BannerInventory(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='banners', blank=True, null=True)  # Field name made lowercase.
-    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', primary_key=True, max_length=20)  # Field name made lowercase.
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
     banner_type = models.CharField(db_column='BANNER_TYPE', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    banner_display_location = models.CharField(db_column='BANNER_DISPLAY_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    banner_location = models.CharField(db_column='BANNER_DISPLAY_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
     banner_size = models.CharField(db_column='BANNER_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     banner_weekly_price_society = models.CharField(db_column='BANNER_WEEKLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
     banner_monthly_price_society = models.CharField(db_column='BANNER_MONTHLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
@@ -204,7 +191,7 @@ class DoorToDoorInfo(models.Model):
 
 
 class LiftDetails(models.Model):
-    lift_id = models.CharField(db_column='LIFT_ID', max_length=20)  # Field name made lowercase.
+    lift_tag = models.CharField(db_column='LIFT_TAG', max_length=20, blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
     acrylic_board_available = models.CharField(db_column='ACRYLIC_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase.
     lift_location = models.CharField(db_column='LIFT_LOCATION', max_length=100, blank=True, null=True)  # Field name made lowercase.
@@ -221,7 +208,7 @@ class LiftDetails(models.Model):
 
 
 class NoticeBoardDetails(models.Model):
-    notice_board_id = models.CharField(db_column='NOTICE_BOARD_ID',max_length=20 )  # Field name made lowercase.
+    notice_board_tag = models.CharField(db_column='NOTICE_BOARD_TAG',max_length=20, blank=True, null=True )  # Field name made lowercase.
     notice_board_type = models.CharField(db_column='NOTICE_BOARD_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
     notice_board_type_other = models.CharField(db_column='NOTICE_BOARD_TYPE_OTHER', max_length=30, blank=True, null=True)  # Field name made lowercase.
     notice_board_location = models.CharField(db_column='NOTICE_BOARD_LOCATION', max_length=100, blank=True, null=True)  # Field name made lowercase.
@@ -263,7 +250,8 @@ class PosterInventory(models.Model):
 
 
 class SocietyFlat(models.Model):
-    tower = models.ForeignKey('SocietyTower', related_name='flats', db_column='TOWER_ID')  # Field name made lowercase.
+    flat_tag = models.CharField(db_column='FLAT_TAG',max_length=20, blank=True, null=True)  # Field name made lowercase.
+    tower = models.ForeignKey('SocietyTower', related_name='flats', db_column='TOWER_ID', blank=True, null=True)  # Field name made lowercase.
     flat_type = models.CharField(db_column='FLAT_TYPE', max_length=20)  # Field name made lowercase.
     flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)  # Field name made lowercase.
     flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
@@ -279,7 +267,8 @@ class SocietyFlat(models.Model):
 
 
 class StandeeInventory(models.Model):
-    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', primary_key=True, max_length=20)  # Field name made lowercase.
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
     inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
     inventory_status = models.CharField(db_column='INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase.
     standee_location = models.CharField(db_column='STANDEE_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -297,7 +286,7 @@ class StandeeInventory(models.Model):
     stall_linked = models.CharField(db_column='STALL_LINKED', max_length=5, blank=True, null=True)  # Field name made lowercase.
     stall_id = models.CharField(db_column='STALL_ID', max_length=45, blank=True, null=True)  # Field name made lowercase.
     sides = models.CharField(db_column='SIDES', max_length=255, blank=True, null=True)  # Field name made lowercase.
-    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='standees', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         
@@ -549,8 +538,9 @@ class Signup(models.Model):
 
 
 class StallInventory(models.Model):
-    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
-    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', primary_key=True, max_length=20)  # Field name made lowercase.
+    id = models.AutoField(db_column='ID', primary_key=True)
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='stalls', blank=True, null=True)  # Field name made lowercase.
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20)  # Field name made lowercase.
     stall_types = models.CharField(db_column='STALL_TYPES', max_length=20, blank=True, null=True)  # Field name made lowercase.
     stall_timings_morning = models.CharField(db_column='STALL_TIMINGS_morning', max_length=10, blank=True, null=True)  # Field name made lowercase.
     stall_size_area = models.CharField(db_column='STALL_SIZE_AREA', max_length=10, blank=True, null=True)  # Field name made lowercase.
@@ -654,15 +644,15 @@ class SupplierTypeSociety(models.Model):
     street_furniture_count = models.IntegerField(db_column='STREET_FURNITURE_COUNT', blank=True, null=True)  # Field name made lowercase.
     tower_count = models.IntegerField(db_column='TOWER_COUNT', blank=True, null=True)  # Field name made lowercase.
     standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
-    past_year_collections_stalls = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STALLS', blank=True, null=True)  # Field name made lowercase.
-    past_year_collections_car = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_CAR', blank=True, null=True)  # Field name made lowercase.
-    past_year_collections_poster = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_POSTER', blank=True, null=True)  # Field name made lowercase.
-    past_year_collections_banners = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_BANNERS', blank=True, null=True)  # Field name made lowercase.
-    past_year_collections_standee = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STANDEE', blank=True, null=True)  # Field name made lowercase.
-    past_year_sponsorship_collection_events = models.IntegerField(db_column='PAST_YEAR_SPONSORSHIP_COLLECTION_EVENTS', blank=True, null=True)  # Field name made lowercase.
-    past_year_total_sponsorship = models.IntegerField(db_column='PAST_YEAR_TOTAL_SPONSORSHIP', blank=True, null=True)  # Field name made lowercase.
-    societies_preferred_business_type = models.CharField(db_column='SOCIETIES_PREFERRED_BUSINESS_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    societies_preferred_business_id = models.CharField(db_column='SOCIETIES_PREFERRED_BUSINESS_ID', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    past_collections_stalls = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STALLS', blank=True, null=True)  # Field name made lowercase.
+    past_collections_car = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_CAR', blank=True, null=True)  # Field name made lowercase.
+    past_collections_poster = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_POSTER', blank=True, null=True)  # Field name made lowercase.
+    past_collections_banners = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_BANNERS', blank=True, null=True)  # Field name made lowercase.
+    past_collections_standee = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STANDEE', blank=True, null=True)  # Field name made lowercase.
+    past_sponsorship_collection_events = models.IntegerField(db_column='PAST_YEAR_SPONSORSHIP_COLLECTION_EVENTS', blank=True, null=True)  # Field name made lowercase.
+    past_total_sponsorship = models.IntegerField(db_column='PAST_YEAR_TOTAL_SPONSORSHIP', blank=True, null=True)  # Field name made lowercase.
+    preferred_business_type = models.CharField(db_column='SOCIETIES_PREFERRED_BUSINESS_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    preferred_business_id = models.CharField(db_column='SOCIETIES_PREFERRED_BUSINESS_ID', max_length=50, blank=True, null=True)  # Field name made lowercase.
     business_type_not_allowed = models.CharField(db_column='BUSINESS_TYPE_NOT_ALLOWED', max_length=5, blank=True, null=True)  # Field name made lowercase.
     business_id_not_allowed = models.IntegerField(db_column='BUSINESS_ID_NOT_ALLOWED', blank=True, null=True)  # Field name made lowercase.
     referred_by = models.CharField(db_column='REFERRED_BY', max_length=5, blank=True, null=True)  # Field name made lowercase.

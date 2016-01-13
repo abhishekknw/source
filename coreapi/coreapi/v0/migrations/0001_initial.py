@@ -35,7 +35,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='BannerInventory',
             fields=[
-                ('adinventory_id', models.CharField(max_length=20, serialize=False, primary_key=True, db_column='ADINVENTORY_ID')),
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('adinventory_id', models.CharField(max_length=20, db_column='ADINVENTORY_ID')),
                 ('banner_type', models.CharField(max_length=20, null=True, db_column='BANNER_TYPE', blank=True)),
                 ('banner_display_location', models.CharField(max_length=50, null=True, db_column='BANNER_DISPLAY_LOCATION', blank=True)),
                 ('banner_size', models.CharField(max_length=10, null=True, db_column='BANNER_SIZE', blank=True)),
@@ -242,7 +243,7 @@ class Migration(migrations.Migration):
             name='LiftDetails',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('lift_id', models.CharField(max_length=20, db_column='LIFT_ID')),
+                ('lift_tag', models.CharField(max_length=20, null=True, db_column='LIFT_TAG', blank=True)),
                 ('adinventory_id', models.CharField(max_length=20, null=True, db_column='ADINVENTORY_ID', blank=True)),
                 ('acrylic_board_available', models.CharField(max_length=5, null=True, db_column='ACRYLIC_BOARD_AVAILABLE', blank=True)),
                 ('lift_location', models.CharField(max_length=100, null=True, db_column='LIFT_LOCATION', blank=True)),
@@ -279,7 +280,7 @@ class Migration(migrations.Migration):
             name='NoticeBoardDetails',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('notice_board_id', models.CharField(max_length=20, db_column='NOTICE_BOARD_ID')),
+                ('notice_board_tag', models.CharField(max_length=20, null=True, db_column='NOTICE_BOARD_TAG', blank=True)),
                 ('notice_board_type', models.CharField(max_length=50, null=True, db_column='NOTICE_BOARD_TYPE', blank=True)),
                 ('notice_board_type_other', models.CharField(max_length=30, null=True, db_column='NOTICE_BOARD_TYPE_OTHER', blank=True)),
                 ('notice_board_location', models.CharField(max_length=100, null=True, db_column='NOTICE_BOARD_LOCATION', blank=True)),
@@ -376,8 +377,8 @@ class Migration(migrations.Migration):
             name='PriceMapping',
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
-                ('society_price', models.CharField(max_length=20, db_column='SOCIETY_PRICE')),
-                ('business_price', models.CharField(max_length=20, db_column='BUSINESS_PRICE')),
+                ('society_price', models.IntegerField(db_column='SOCIETY_PRICE')),
+                ('business_price', models.IntegerField(db_column='BUSINESS_PRICE')),
                 ('adinventory_id', models.ForeignKey(related_name='prices', db_column='ADINVENTORY_LOCATION_MAPPING_ID', blank=True, to='v0.AdInventoryLocationMapping', null=True)),
                 ('adinventory_type', models.ForeignKey(db_column='ADINVENTORY_TYPE_ID', blank=True, to='v0.AdInventoryType', null=True)),
                 ('duration_type', models.ForeignKey(db_column='DURATION_ID', blank=True, to='v0.DurationType', null=True)),
@@ -390,8 +391,8 @@ class Migration(migrations.Migration):
             name='PriceMappingDefault',
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
-                ('society_price', models.CharField(max_length=20, db_column='SOCIETY_PRICE')),
-                ('business_price', models.CharField(max_length=20, db_column='BUSINESS_PRICE')),
+                ('society_price', models.IntegerField(db_column='SOCIETY_PRICE')),
+                ('business_price', models.IntegerField(db_column='BUSINESS_PRICE')),
                 ('adinventory_type', models.ForeignKey(db_column='ADINVENTORY_TYPE_ID', blank=True, to='v0.AdInventoryType', null=True)),
                 ('duration_type', models.ForeignKey(db_column='DURATION_ID', blank=True, to='v0.DurationType', null=True)),
             ],
@@ -439,6 +440,7 @@ class Migration(migrations.Migration):
             name='SocietyFlat',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('flat_tag', models.CharField(max_length=20, null=True, db_column='FLAT_TAG', blank=True)),
                 ('flat_type', models.CharField(max_length=20, db_column='FLAT_TYPE')),
                 ('flat_count', models.IntegerField(null=True, db_column='FLAT_COUNT', blank=True)),
                 ('flat_type_count', models.IntegerField(null=True, db_column='FLAT_TYPE_COUNT', blank=True)),
@@ -476,7 +478,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='StallInventory',
             fields=[
-                ('adinventory_id', models.CharField(max_length=20, serialize=False, primary_key=True, db_column='ADINVENTORY_ID')),
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('adinventory_id', models.CharField(max_length=20, db_column='ADINVENTORY_ID')),
                 ('stall_types', models.CharField(max_length=20, null=True, db_column='STALL_TYPES', blank=True)),
                 ('stall_timings_morning', models.CharField(max_length=10, null=True, db_column='STALL_TIMINGS_morning', blank=True)),
                 ('stall_size_area', models.CharField(max_length=10, null=True, db_column='STALL_SIZE_AREA', blank=True)),
@@ -503,7 +506,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='StandeeInventory',
             fields=[
-                ('adinventory_id', models.CharField(max_length=20, serialize=False, primary_key=True, db_column='ADINVENTORY_ID')),
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('adinventory_id', models.CharField(max_length=20, db_column='ADINVENTORY_ID')),
                 ('inventory_type_id', models.CharField(max_length=20, null=True, db_column='INVENTORY_TYPE_ID', blank=True)),
                 ('inventory_status', models.CharField(max_length=15, null=True, db_column='INVENTORY_STATUS', blank=True)),
                 ('standee_location', models.CharField(max_length=50, null=True, db_column='STANDEE_LOCATION', blank=True)),
@@ -725,7 +729,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='standeeinventory',
             name='supplier',
-            field=models.ForeignKey(db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
+            field=models.ForeignKey(related_name='standees', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
         ),
         migrations.AddField(
             model_name='stallinventory',
@@ -740,7 +744,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='societyflat',
             name='tower',
-            field=models.ForeignKey(related_name='flats', db_column='TOWER_ID', to='v0.SocietyTower'),
+            field=models.ForeignKey(related_name='flats', db_column='TOWER_ID', blank=True, to='v0.SocietyTower', null=True),
         ),
         migrations.AlterUniqueTogether(
             name='ratiodetails',
@@ -749,7 +753,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='pricemappingdefault',
             name='supplier',
-            field=models.ForeignKey(db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
+            field=models.ForeignKey(related_name='default_prices', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
         ),
         migrations.AddField(
             model_name='posterinventory',

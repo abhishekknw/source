@@ -45,6 +45,7 @@ class SocietyAPIListView(APIView):
                 if contact_serializer.is_valid():
                     contact_serializer.save(supplier_id=request.data['supplier_id'])
 
+        #populate default pricing table
         society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
         ad_types = AdInventoryType.objects.all()
         duration_types = DurationType.objects.all()
@@ -60,13 +61,34 @@ class SocietyAPIListView(APIView):
 class BasicPricingAPIView(APIView):
     def get(self, request, id, format=None):
         try:
-            basic_prices = SupplierTypeSociety.objects.get(pk=id).default_prices.all()
+            basic_prices = PriceMappingDefault.objects.select_related().filter(supplier__supplier_id=id)
+            #basic_prices = SupplierTypeSociety.objects.get(pk=id).default_prices.all()
             serializer = PriceMappingDefaultSerializer(basic_prices, many=True)
             return Response(serializer.data)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
         except PriceMappingDefault.DoesNotExist:
             return Response(status=404)
+
+
+    def post(self, request, id, format=None):
+        print request.data
+
+
+        for key in request.data:
+            if 'id' in key:
+                item = PriceMappingDefault.objects.get(pk=key['id'])
+                serializer = PriceMappingDefaultSerializer(item, data=key)
+            else:
+                serializer = PriceMappingDefaultSerializer(data=key)
+            try:
+                if serializer.is_valid():
+                    serializer.save()
+            except:
+                return Response(serializer.errors, status=400)
+
+        return Response(serializer.data, status=201)
+        #here we will start storing contacts
 
 
 
@@ -83,7 +105,6 @@ class TowerAPIView(APIView):
 
     def post(self, request, id, format=None):
         print request.data
-        serializer={}
         society=SupplierTypeSociety.objects.get(pk=id)
         for key in request.data['TowerDetails']:
             if 'tower_id' in key:
@@ -103,36 +124,54 @@ class TowerAPIView(APIView):
             except SocietyTower.DoesNotExist:
                 return Response(status=404)
 
+            tag_initial = society.society_name[:3] + tower_data.tower_name[:3]
 
             if key['notice_board_details_available']:
-                for notice_board in key['notice_board_details']:
+                for index, notice_board in enumerate(key['notice_board_details'], start=1):
                     if 'id' in notice_board:
                         notice_item = NoticeBoardDetails.objects.get(pk=notice_board['id'])
                         notice_serializer = NoticeBoardDetailsSerializer(notice_item, data=notice_board)
                     else:
                         notice_serializer = NoticeBoardDetailsSerializer(data=notice_board)
 
+                        #populate location and ad inventory table
+                        notice_tag = generate_location_tag(tag_initial, 'noticeboard', index)
+                        nb_location = InventoryLocation(location_id = notice_tag, location_type='Notice Board')
+                        nb_location.save()
+                        for i in range(notice_board['total_poster_per_notice_board']):
+                            ad_inv = AdInventoryLocationMapping(adinventory_id = notice_tag+'PO'+str(i), adinventory_name = 'PO', location = nb_location)
+                            ad_inv.save()
+
                     if notice_serializer.is_valid():
                         notice_serializer.save(tower=tower_data)
+
                     else:
                         #transaction.rollback()
                         return Response(notice_serializer.errors, status=400)
 
             if key['lift_details_available']:
-                for lift in key['lift_details']:
+                for index, lift in enumerate(key['lift_details'], start=1):
                     if 'id' in lift:
                         lift_item = LiftDetails.objects.get(pk=lift['id'])
                         lift_serializer = LiftDetailsSerializer(lift_item,data=lift)
                     else:
                         lift_serializer = LiftDetailsSerializer(data=lift)
+                        #populate location and ad inventory table
+                        lift_tag = generate_location_tag(tag_initial, 'lift', index)
+                        lift_location = InventoryLocation(location_id = lift_tag, location_type='Lift')
+                        lift_location.save()
+                        ad_inv = AdInventoryLocationMapping(adinventory_id = lift_tag+'PO', adinventory_name = 'PO', location = lift_location)
+                        ad_inv.save()
 
                     if lift_serializer.is_valid():
                         lift_serializer.save(tower=tower_data)
+
+
                     else:
                         return Response(lift_serializer.errors, status=400)
 
             if key['flat_details_available']:
-                for flat in key['flat_details']:
+                for index, flat in enumerate(key['flat_details'], start=1):
                     if 'id' in flat:
                         flat_item = SocietyFlat.objects.get(pk=flat['id'])
                         flat_serializer=SocietyFlatSerializer(flat_item,data=flat)
@@ -141,13 +180,110 @@ class TowerAPIView(APIView):
 
                     if flat_serializer.is_valid():
                         flat_serializer.save(tower=tower_data)
+
                     else:
                         return Response(flat_serializer.errors, status=400)
 
         return Response(status=201)
 
-        #here we will start storing contacts
 
+
+
+class StandeeBannerAPIView(APIView):
+    def get(self, request, id, format=None):
+        response = {}
+        try:
+            standees = SupplierTypeSociety.objects.get(pk=id).standees.all()
+            serializer = StandeeInventorySerializer(standees, many=True)
+            standee_available = get_availability(serializer.data)
+            response['standee_available'] = standee_available
+            response['standee_details'] = serializer.data
+
+            banners = SupplierTypeSociety.objects.get(pk=id).banners.all()
+            serializer = BannerInventorySerializer(banners, many=True)
+            banner_available = get_availability(serializer.data)
+            response['banner_available'] = banner_available
+            response['banner_details'] = serializer.data
+
+            return Response(response, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except StandeeInventory.DoesNotExist:
+            return Response(status=404)
+        except BannerInventory.DoesNotExist:
+            return  Response(status=404)
+
+    def post(self, request, id, format=None):
+        society=SupplierTypeSociety.objects.get(pk=id)
+
+        if request.data['standee_available']:
+            response = post_data(StandeeInventory, StandeeInventorySerializer, request.data['standee_details'], society)
+            if response == False:
+                return Response(status=400)
+
+            for index, key in enumerate(request.data['standee_details'], start=1):
+                if 'id' not in key:
+                    #populate ad inventory tablelift_tag = generate_location_tag(tag_initial, 'lift', index)
+                    loc_tag = society.society_name.upper()[:3] + key['standee_location'].upper()[:3] +'SD' + str(index)
+                    sd_location = InventoryLocation(location_id = loc_tag, location_type='Standee')
+                    sd_location.save()
+
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'SD', location = sd_location)
+                    ad_inv.save()
+
+        if request.data['banner_available']:
+            response = post_data(BannerInventory, BannerInventorySerializer, request.data['banner_details'], society)
+            if response == False:
+                return Response(status=400)
+
+            for index, key in enumerate(request.data['banner_details'], start=1):
+                if 'id' not in key:
+                    #populate ad inventory table
+                    loc_tag = society.society_name.upper()[:3] + key['banner_location'].upper()[:3] +'BA' + str(index)
+                    ba_location = InventoryLocation(location_id = loc_tag, location_type='Banner')
+                    ba_location.save()
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'BA', location = ba_location)
+                    ad_inv.save()
+
+        return Response(status=201)
+
+
+class StallAPIView(APIView):
+    def get(self, request, id, format=None):
+        response = {}
+        try:
+            stalls = SupplierTypeSociety.objects.get(pk=id).stalls.all()
+            serializer = StallInventorySerializer(stalls, many=True)
+            stalls_available = get_availability(serializer.data)
+            response['stalls_available'] = stalls_available
+            response['stall_details'] = serializer.data
+
+            return Response(response, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except StallInventory.DoesNotExist:
+            return Response(status=404)
+
+
+    def post(self, request, id, format=None):
+        print request.data
+        society=SupplierTypeSociety.objects.get(pk=id)
+
+        if request.data['stalls_available']:
+            response = post_data(StallInventory, StandeeInventorySerializer, request.data['stall_details'], society)
+            if response == False:
+                return Response(status=400)
+
+            for index, key in enumerate(request.data['stall_details'], start=1):
+                if 'id' not in key:
+                    #populate ad inventory tablelift_tag = generate_location_tag(tag_initial, 'lift', index)
+                    loc_tag = society.society_name.upper()[:3] + key['stall_location'].upper()[:3] +'ST' + str(index)
+                    st_location = InventoryLocation(location_id = loc_tag, location_type='Stall')
+                    st_location.save()
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'ST', location = st_location)
+                    ad_inv.save()
+
+        return Response(status=201)
 
 class CarDisplayAPIView(APIView):
     def get(self, request, id, format=None):
@@ -176,7 +312,6 @@ class CarDisplayAPIView(APIView):
 
         for key in request.data['car_display_details']:
             if 'id' in key:
-                print "test loop"
                 item = CarDisplayInventory.objects.get(pk=key['id'])
                 serializer = CarDisplayInventorySerializer(item, data=key)
             else:
@@ -188,7 +323,6 @@ class CarDisplayAPIView(APIView):
                 return Response(serializer.errors, status=400)
 
         return Response(serializer.data, status=201)
-        #here we will start storing contacts
 
 
 
@@ -350,8 +484,15 @@ class OtherInventoryAPIView(APIView):
         #here we will start storing contacts
 
 
-def post_data(model, model_serializer, inventory_data, foreign_value=None):
 
+def generate_location_tag(initial_tag, type, index):
+    return ''.join((initial_tag.upper() , type.upper()[:3], str(index)))
+
+
+
+def post_data(model, model_serializer, inventory_data, foreign_value=None):
+    print "data test"
+    print inventory_data
     for key in inventory_data:
         if 'id' in key:
             item = model.objects.get(pk=key['id'])
@@ -361,8 +502,11 @@ def post_data(model, model_serializer, inventory_data, foreign_value=None):
         if serializer.is_valid():
             serializer.save(supplier=foreign_value)
         else:
+            print serializer.errors
             return False
     return True
+
+
 
 def get_availability(data):
      if len(data) > 0:

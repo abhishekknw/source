@@ -30,7 +30,7 @@ class PriceMappingDefaultSerializer(ModelSerializer):
 
     class Meta:
         model = PriceMappingDefault
-
+        depth = 1
 
 class PriceMappingSerializer(ModelSerializer):
 
