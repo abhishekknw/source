@@ -1,10 +1,11 @@
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import filters
 from serializers import UISocietySerializer, UITowerSerializer
 from v0.serializers import InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
 from v0.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower
-
+from django.db.models import Q
 
 
 class SocietyAPIView(APIView):
@@ -13,11 +14,24 @@ class SocietyAPIView(APIView):
             item = SupplierTypeSociety.objects.get(pk=id)
             serializer = UISocietySerializer(item)
             return Response(serializer.data)
+        except :
+            return Response(status=404)
+
+class SocietyAPIListView(APIView):
+    def get(self, request, format=None):
+        try:
+            search_txt = request.query_params.get('search', None)
+            if search_txt:
+                items = SupplierTypeSociety.objects.filter(Q(supplier_id__icontains=search_txt) | Q(society_name__icontains=search_txt)| Q(society_address1__icontains=search_txt)| Q(society_city__icontains=search_txt)| Q(society_state__icontains=search_txt))
+            else:
+                items = SupplierTypeSociety.objects.all()
+            paginator = PageNumberPagination()
+            result_page = paginator.paginate_queryset(items, request)
+            serializer = SupplierTypeSocietySerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
-
-class SocietyAPIListView(APIView):
     def post(self, request, format=None):
         print request.data
         item = SupplierTypeSociety.objects.filter(pk=request.data['supplier_id']).first()
@@ -550,11 +564,3 @@ def get_availability(data):
         return True
      else:
          return False
-
-
-
-    
-
-
-
-
