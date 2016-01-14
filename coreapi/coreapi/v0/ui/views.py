@@ -533,6 +533,12 @@ class OtherInventoryAPIView(APIView):
             if response == False:
                 return Response(status=400)
 
+
+        if request.data['sports_available']:
+            response = post_data(SportsInfra, SportsInfraSerializer, request.data['sports_details'], society)
+            if response == False:
+                return Response(status=400)
+
         return Response(status=201)
         #here we will start storing contacts
 
