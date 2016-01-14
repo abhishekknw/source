@@ -8,6 +8,8 @@
 # Also note: You'll have to insert the output of 'django-admin sqlcustom [app_label]'
 # into your database.
 from __future__ import unicode_literals
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from django.db import models
 
@@ -38,6 +40,33 @@ class AdInventoryLocationMapping(models.Model):
 
     class Meta:
         db_table = 'ad_inventory_location_mapping'
+
+'''def save(self, *args, **kwargs):
+    print self
+    print args
+    print kwargs'''
+
+
+@receiver(post_save, sender=AdInventoryLocationMapping)
+def update_price_mapping(sender, **kwargs):
+    loc_map = kwargs.get('instance')
+    if loc_map.adinventory_name == 'PO':
+        ad_type = AdInventoryType.objects.filter(adinventory_name=loc_map.adinventory_name)
+    else:
+        ad_type = AdInventoryType.objects.filter(adinventory_name=loc_map.adinventory_name) #add type = stall/standee.type
+    print 'adele'
+    default_prices = PriceMappingDefault.objects.filter(adinventory_type__in=ad_type)
+    print default_prices
+    for key in default_prices:
+
+        pm = PriceMapping(adinventory_id = loc_map, adinventory_type=key.adinventory_type,
+                          society_price = key.society_price, business_price=key.business_price,
+                          duration_type = key.duration_type, supplier=key.supplier)
+        pm.save()
+
+
+
+
 
 
 class AdInventoryType(models.Model):
@@ -74,6 +103,7 @@ class PriceMappingDefault(models.Model):
 
 class PriceMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='inv_prices', blank=True, null=True)
     adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True)
     society_price = models.IntegerField(db_column='SOCIETY_PRICE')
@@ -88,7 +118,7 @@ class BannerInventory(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='banners', blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    banner_type = models.CharField(db_column='BANNER_TYPE', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    type = models.CharField(db_column='BANNER_TYPE', max_length=20, blank=True, null=True)  # Field name made lowercase.
     banner_location = models.CharField(db_column='BANNER_DISPLAY_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
     banner_size = models.CharField(db_column='BANNER_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     banner_weekly_price_society = models.CharField(db_column='BANNER_WEEKLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
@@ -272,7 +302,7 @@ class StandeeInventory(models.Model):
     inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
     inventory_status = models.CharField(db_column='INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase.
     standee_location = models.CharField(db_column='STANDEE_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    standee_area = models.CharField(db_column='STANDEE_AREA', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    type = models.CharField(db_column='STANDEE_TYPE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     standee_size = models.CharField(db_column='STANDEE_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     standee_sides = models.CharField(db_column='STANDEE_SIDES', max_length=10, blank=True, null=True)  # Field name made lowercase.
     standee_weekly_price_society = models.CharField(db_column='STANDEE_WEEKLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
@@ -541,7 +571,7 @@ class StallInventory(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='stalls', blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20)  # Field name made lowercase.
-    stall_types = models.CharField(db_column='STALL_TYPES', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    type = models.CharField(db_column='STALL_TYPES', max_length=20, blank=True, null=True)  # Field name made lowercase.
     stall_timings_morning = models.CharField(db_column='STALL_TIMINGS_morning', max_length=10, blank=True, null=True)  # Field name made lowercase.
     stall_size_area = models.CharField(db_column='STALL_SIZE_AREA', max_length=10, blank=True, null=True)  # Field name made lowercase.
     stall_daily_price_stall_society = models.CharField(db_column='STALL_DAILY_PRICE_STALL_SOCIETY', max_length=15, blank=True, null=True)  # Field name made lowercase.
@@ -606,6 +636,34 @@ class SupplierInfo(models.Model):
     class Meta:
         
         db_table = 'supplier_info'
+
+
+class SportsInfra(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
+    sports_infrastructure_id = models.CharField(db_column='SPORTS_INFRASTRUCTURE_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    supplier = models.ForeignKey('SupplierTypeSociety', related_name='sports', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
+    stall_spaces_count = models.IntegerField(db_column='STALL_SPACES_COUNT', blank=True, null=True)  # Field name made lowercase.
+    banner_spaces_count = models.IntegerField(db_column='BANNER_SPACES_COUNT', blank=True, null=True)
+    poster_spaces_count = models.IntegerField(db_column='POSTER_SPACES_COUNT', blank=True, null=True)
+    standee_spaces_count = models.IntegerField(db_column='STANDEE_SPACES_COUNT', blank=True, null=True)
+    sponsorship_amount_society = models.IntegerField(db_column='SPONSORSHIP_AMOUNT_SOCIETY', blank=True, null=True)
+    sponsorship_amount_business = models.IntegerField(db_column='SPONSORSHIP_AMOUNT_BUSINESS)', blank=True, null=True)
+    start_date = models.DateField(db_column='START_DATE', blank=True, null=True)
+    end_date = models.DateField(db_column='END_DATE', blank=True, null=True)
+    outside_participants_allowed = models.CharField(db_column='OUTSIDE_PARTICIPANTS_ALLOWED', max_length=5, blank=True, null=True)
+    lit_unlit = models.CharField(db_column='LIT_UNLIT', max_length=5, blank=True, null=True)
+    daily_infra_charges_society = models.IntegerField(db_column='DAILY_INFRA_CHARGES_SOCIETY', blank=True, null=True)
+    daily_infra_charges_business = models.IntegerField(db_column='DAILY_INFRA_CHARGES_BUSINESS', blank=True, null=True)
+    play_areas_count = models.IntegerField(db_column='PLAY_AREAS_COUNT', blank=True, null=True)
+    play_area_size = models.IntegerField(db_column='PLAY_AREA_SIZE', blank=True, null=True)
+    sports_type = models.CharField(db_column='SPORTS_TYPE', max_length=20, blank=True, null=True)
+    photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True, null=True)  # Field name made lowercase.
+    photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)
+
+    class Meta:
+
+        db_table = 'sports_infra'
+
 
 
 class SupplierTypeSociety(models.Model):

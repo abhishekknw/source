@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from v0.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower
+from v0.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower
 
 
 class InventoryLocationSerializer(ModelSerializer):
@@ -36,7 +36,7 @@ class PriceMappingSerializer(ModelSerializer):
 
     class Meta:
         model = PriceMapping
-
+        depth = 2
 
 
 class BannerInventorySerializer(ModelSerializer):
@@ -187,6 +187,10 @@ class SupplierInfoSerializer(ModelSerializer):
 
     class Meta:
         model = SupplierInfo
+
+class SportsInfraSerializer(ModelSerializer):
+    class Meta:
+        model = SportsInfra
 
 
 class SupplierTypeSocietySerializer(ModelSerializer):

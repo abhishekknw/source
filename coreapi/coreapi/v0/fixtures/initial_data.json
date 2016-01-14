@@ -89,7 +89,7 @@
 },
 {
     "fields": {
-        "adinventory_type": "Custom",
+        "adinventory_type": "Customize",
         "adinventory_name": "ST"
     },
     "model": "v0.adinventorytype",
@@ -126,14 +126,6 @@
     },
     "model": "v0.durationtype",
     "pk": 4
-},
-{
-    "fields": {
-        "days_count": 365,
-        "duration_name": "yearly"
-    },
-    "model": "v0.durationtype",
-    "pk": 5
 }
 
 ]
