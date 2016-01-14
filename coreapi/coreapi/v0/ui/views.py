@@ -47,13 +47,13 @@ class SocietyAPIListView(APIView):
 
         print serializer.data
         #here we will start storing contacts
-        if request.data and request.data['basic_contact_available']:
+        if request.data and 'basic_contact_available' in request.data and request.data['basic_contact_available']:
             for contact in request.data['basic_contacts']:
                 contact_serializer = ContactDetailsSerializer(data=contact)
                 if contact_serializer.is_valid():
                     contact_serializer.save(supplier_id=request.data['supplier_id'])
 
-        if request.data and request.data['basic_reference_available']:
+        if request.data and 'basic_reference_available' in request.data and request.data['basic_reference_available']:
             for contact in request.data['basic_reference_contacts']:
                 contact_serializer = ContactDetailsSerializer(data=contact)
                 if contact_serializer.is_valid():

@@ -1,0 +1,10 @@
+{"expiration": "2020-01-01T00:00:00Z",
+  "conditions": [ 
+    {"bucket": "mdimages"}, 
+    ["starts-with", "$key", ""],
+    {"acl": "public-read"},
+    ["starts-with", "$Content-Type", ""],
+    ["content-length-range", 0, 524288000]
+  ]
+}
+
