@@ -50,15 +50,16 @@ class AdInventoryLocationMapping(models.Model):
 @receiver(post_save, sender=AdInventoryLocationMapping)
 def update_price_mapping(sender, **kwargs):
     loc_map = kwargs.get('instance')
+    type1 = kwargs.get('type')
+    print type1
+    print str(loc_map)
     if loc_map.adinventory_name == 'PO':
         ad_type = AdInventoryType.objects.filter(adinventory_name=loc_map.adinventory_name)
     else:
         ad_type = AdInventoryType.objects.filter(adinventory_name=loc_map.adinventory_name) #add type = stall/standee.type
     print 'adele'
     default_prices = PriceMappingDefault.objects.filter(adinventory_type__in=ad_type)
-    print default_prices
     for key in default_prices:
-
         pm = PriceMapping(adinventory_id = loc_map, adinventory_type=key.adinventory_type,
                           society_price = key.society_price, business_price=key.business_price,
                           duration_type = key.duration_type, supplier=key.supplier)

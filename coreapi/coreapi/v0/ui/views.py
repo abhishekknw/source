@@ -311,7 +311,7 @@ class StallAPIView(APIView):
                     loc_tag = society.society_name.upper()[:3] + key['stall_location'].upper()[:3] +'ST' + str(index)
                     st_location = InventoryLocation(location_id = loc_tag, location_type='Stall')
                     st_location.save()
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'ST', location = st_location)
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'ST', location = st_location, type="Small")
                     ad_inv.save()
 
         return Response(status=201)
