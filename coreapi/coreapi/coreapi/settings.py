@@ -43,9 +43,7 @@ INSTALLED_APPS = (
     'corsheaders',
     'rest_jwt',
     'v0',
-    'drf_generators',
-    'rest_framework_word_filter',
-)
+    'drf_generators')
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -84,11 +82,11 @@ WSGI_APPLICATION = 'coreapi.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+    'sqlite': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
-    'mysql': {
+    'default': {
        'NAME': 'machadalo_dev',
        'ENGINE': 'django.db.backends.mysql',
        'HOST': '127.0.0.1',
