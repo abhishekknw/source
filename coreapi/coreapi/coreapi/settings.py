@@ -44,6 +44,7 @@ INSTALLED_APPS = (
     'rest_jwt',
     'v0',
     'drf_generators',
+    'rest_framework_word_filter',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -83,11 +84,11 @@ WSGI_APPLICATION = 'coreapi.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    'sqlite': {
+    'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
-    'default': {
+    'mysql': {
        'NAME': 'machadalo_dev',
        'ENGINE': 'django.db.backends.mysql',
        'HOST': '127.0.0.1',
@@ -118,29 +119,18 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = '/static/'
 
 # settings for Django Rest Framework
-if AUTH_ENABLED:
-   REST_FRAMEWORK = {
-         'DEFAULT_PERMISSION_CLASSES': (
-            'rest_framework.permissions.IsAuthenticated',
-            ),
-         'DEFAULT_AUTHENTICATION_CLASSES': (
-            'rest_framework.authentication.SessionAuthentication',
-            'rest_framework.authentication.BasicAuthentication',
-            'rest_jwt.authentication.JSONWebTokenAuthentication',
-            ),
-        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-        'PAGE_SIZE': 20
-    }
-else:
-   REST_FRAMEWORK = {
-         'DEFAULT_AUTHENTICATION_CLASSES': (
-            'rest_framework.authentication.SessionAuthentication',
-            'rest_framework.authentication.BasicAuthentication',
-            ),
-        'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-        'PAGE_SIZE': 15
-    }
-
+REST_FRAMEWORK = {
+     'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',
+        ),
+     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_jwt.authentication.JSONWebTokenAuthentication',
+        ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
+}
 
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True
