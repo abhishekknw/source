@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import filters
 from serializers import UISocietySerializer, UITowerSerializer
-from v0.serializers import InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
-from v0.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower
+from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
+from v0.models import ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower
 from django.db.models import Q
 
 
@@ -51,13 +51,13 @@ class SocietyAPIListView(APIView):
             for contact in request.data['basic_contacts']:
                 contact_serializer = ContactDetailsSerializer(data=contact)
                 if contact_serializer.is_valid():
-                    contact_serializer.save(supplier_id=request.data['supplier_id'])
+                    contact_serializer.save(supplier=society)
 
         if request.data and 'basic_reference_available' in request.data and request.data['basic_reference_available']:
             for contact in request.data['basic_reference_contacts']:
                 contact_serializer = ContactDetailsSerializer(data=contact)
                 if contact_serializer.is_valid():
-                    contact_serializer.save(supplier_id=request.data['supplier_id'])
+                    contact_serializer.save(supplier = society)
 
         #populate default pricing table
         society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
@@ -361,10 +361,9 @@ class CarDisplayAPIView(APIView):
                 serializer = CarDisplayInventorySerializer(item, data=key)
             else:
                 serializer = CarDisplayInventorySerializer(data=key)
-            try:
-                if serializer.is_valid():
-                    serializer.save(supplier=society)
-            except:
+            if serializer.is_valid():
+                serializer.save(supplier=society)
+            else:
                 return Response(serializer.errors, status=400)
 
         return Response(serializer.data, status=201)
@@ -406,14 +405,12 @@ class EventAPIView(APIView):
                 serializer = EventsSerializer(item, data=key)
             else:
                 serializer = EventsSerializer(data=key)
-            try:
-                if serializer.is_valid():
-                    serializer.save(supplier=society)
-            except:
+            if serializer.is_valid():
+                serializer.save(supplier=society)
+            else:
                 return Response(serializer.errors, status=400)
 
         return Response(serializer.data, status=201)
-        #here we will start storing contacts
 
 
 class OtherInventoryAPIView(APIView):
@@ -540,7 +537,62 @@ class OtherInventoryAPIView(APIView):
                 return Response(status=400)
 
         return Response(status=201)
-        #here we will start storing contacts
+
+
+class ImageLocationsAPIView(APIView):
+    def get(self, request, id, format=None):
+        try:
+            response = []
+            society = SupplierTypeSociety.objects.get(pk=id)
+            response.append({"location_id":society.supplier_id, "name":society.society_name, "location_type":"Society"})
+            towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
+            for key in towers:
+                response.append({"location_id":key.tower_id, "name":key.tower_name, "location_type":"tower"})
+                nb = key.notice_boards.all()
+                for item in nb:
+                    response.append({"location_id":item.id, "name":key.tower_name + item.notice_board_tag, "location_type":"NoticeBoard"})
+                nb = key.lifts.all()
+                for item in nb:
+                    response.append({"location_id":item.id, "name":key.tower_name + item.lift_tag, "location_type":"Lift"})
+
+            return Response(response, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except SocietyTower.DoesNotExist:
+            return Response(status=404)
+
+        return Response({"response":response}, status=201)
+
+
+class ImageMappingAPIView(APIView):
+    def get(self, request, id, format=None):
+        try:
+            images = SupplierTypeSociety.objects.get(pk=id).images.all()
+            serializer = ImageMappingSerializer(images, many=True)
+
+            return Response(serializer.data, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except ImageMapping.DoesNotExist:
+            return Response(status=404)
+
+    def post(self, request, id, format=None):
+        print request.data
+        society=SupplierTypeSociety.objects.get(pk=id)
+
+        for key in request.data['image_details']:
+            if 'id' in key:
+                item = ImageMapping.objects.get(pk=key['id'])
+                serializer = ImageMappingSerializer(item, data=key)
+            else:
+                serializer = ImageMappingSerializer(data=key)
+
+            if serializer.is_valid():
+                serializer.save(supplier=society)
+            else:
+                return Response(serializer.errors, status=400)
+
+        return Response(serializer.data, status=201)
 
 
 
