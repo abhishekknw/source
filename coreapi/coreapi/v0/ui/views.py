@@ -184,8 +184,8 @@ class TowerAPIView(APIView):
                         nb_location = InventoryLocation(location_id = notice_tag, location_type='Notice Board')
                         nb_location.save()
                         for i in range(notice_board['total_poster_per_notice_board']):
-                            ad_inv = AdInventoryLocationMapping(adinventory_id = notice_tag+'PO'+str(i), adinventory_name = 'PO', location = nb_location)
-                            ad_inv.save()
+                            ad_inv = AdInventoryLocationMapping(adinventory_id = notice_tag+'PO'+str(i), adinventory_name = 'POSTER', location = nb_location)
+                            ad_inv.save("Poster", society)
 
                     if notice_serializer.is_valid():
                         notice_serializer.save(tower=tower_data)
@@ -205,8 +205,8 @@ class TowerAPIView(APIView):
                         lift_tag = generate_location_tag(tag_initial, 'lift', index)
                         lift_location = InventoryLocation(location_id = lift_tag, location_type='Lift')
                         lift_location.save()
-                        ad_inv = AdInventoryLocationMapping(adinventory_id = lift_tag+'PO', adinventory_name = 'PO', location = lift_location)
-                        ad_inv.save()
+                        ad_inv = AdInventoryLocationMapping(adinventory_id = lift_tag+'PO', adinventory_name = 'POSTER', location = lift_location)
+                        ad_inv.save("Poster", society)
 
                     if lift_serializer.is_valid():
                         lift_serializer.save(tower=tower_data)
@@ -273,8 +273,8 @@ class StandeeBannerAPIView(APIView):
                     sd_location = InventoryLocation(location_id = loc_tag, location_type='Standee')
                     sd_location.save()
 
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'SD', location = sd_location)
-                    ad_inv.save()
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'STANDEE', location = sd_location)
+                    ad_inv.save(key['type'], society)
 
         if request.data['banner_available']:
             response = post_data(BannerInventory, BannerInventorySerializer, request.data['banner_details'], society)
@@ -287,8 +287,8 @@ class StandeeBannerAPIView(APIView):
                     loc_tag = society.society_name.upper()[:3] + key['banner_location'].upper()[:3] +'BA' + str(index)
                     ba_location = InventoryLocation(location_id = loc_tag, location_type='Banner')
                     ba_location.save()
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'BA', location = ba_location)
-                    ad_inv.save()
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'BANNER', location = ba_location)
+                    ad_inv.save(key['type'], society)
 
         return Response(status=201)
 
@@ -315,7 +315,7 @@ class StallAPIView(APIView):
         society=SupplierTypeSociety.objects.get(pk=id)
 
         if request.data['stalls_available']:
-            response = post_data(StallInventory, StandeeInventorySerializer, request.data['stall_details'], society)
+            response = post_data(StallInventory, StallInventorySerializer, request.data['stall_details'], society)
             if response == False:
                 return Response(status=400)
 
@@ -325,8 +325,8 @@ class StallAPIView(APIView):
                     loc_tag = society.society_name.upper()[:3] + key['stall_location'].upper()[:3] +'ST' + str(index)
                     st_location = InventoryLocation(location_id = loc_tag, location_type='Stall')
                     st_location.save()
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'ST', location = st_location, type="Small")
-                    ad_inv.save()
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'STALL', location = st_location)
+                    ad_inv.save(key['type'], society)
 
         return Response(status=201)
 
