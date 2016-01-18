@@ -235,10 +235,11 @@ class TowerAPIView(APIView):
                         flat_item = SocietyFlat.objects.get(pk=flat['id'])
                         flat_serializer=SocietyFlatSerializer(flat_item,data=flat)
                     else:
+                        flat['tower'] = tower_data.tower_id
                         flat_serializer = SocietyFlatSerializer(data=flat)
 
                     if flat_serializer.is_valid():
-                        flat_serializer.save(tower=tower_data)
+                        flat_serializer.save()
 
                     else:
                         return Response(flat_serializer.errors, status=400)
