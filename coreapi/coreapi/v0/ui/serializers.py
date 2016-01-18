@@ -8,7 +8,10 @@ class UISocietySerializer(ModelSerializer):
     basic_contact_available = serializers.BooleanField(source='is_contact_available')
     basic_contacts = ContactDetailsSerializer(source='get_contact_list', many=True)
     basic_reference_available = serializers.BooleanField(source='is_reference_available')
-    #basic_reference_contacts = serializers.ListField(source='get_reference')
+    basic_reference_contacts = ContactDetailsSerializer(source='get_reference')
+
+    past_details = serializers.BooleanField(source='is_past_details_available')
+    business_preferences = serializers.BooleanField(source='is_business_preferences_available')
     class Meta:
         model = SupplierTypeSociety
         read_only_fields = (
@@ -16,6 +19,8 @@ class UISocietySerializer(ModelSerializer):
         'basic_contacts',
         'basic_reference_available',
         'basic_reference_contacts',
+        'past_details',
+        'business_preferences'
         )
 
 

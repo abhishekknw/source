@@ -405,14 +405,14 @@ class CommonAreaDetails(models.Model):
 
 
 class ContactDetails(models.Model):
-    contact_id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
+    id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='contacts', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
-    contact_type = models.TextField(db_column='CONTACT_TYPE', blank=True, null=True)  # Field name made lowercase.
-    specify_others = models.TextField(db_column='SPECIFY_OTHERS', blank=True, null=True)  # Field name made lowercase.
-    contact_name = models.TextField(db_column='CONTACT_NAME', blank=True, null=True)  # Field name made lowercase.
-    contact_landline = models.IntegerField(db_column='CONTACT_LANDLINE', blank=True, null=True)  # Field name made lowercase.
-    contact_mobile = models.IntegerField(db_column='CONTACT_MOBILE', blank=True, null=True)  # Field name made lowercase.
-    contact_emailid = models.TextField(db_column='CONTACT_EMAILID', blank=True, null=True)  # Field name made lowercase.
+    contact_type = models.CharField(db_column='CONTACT_TYPE',  max_length=30, blank=True, null=True)  # Field name made lowercase.
+    specify_others = models.CharField(db_column='SPECIFY_OTHERS',  max_length=50, blank=True, null=True)  # Field name made lowercase.
+    name = models.CharField(db_column='CONTACT_NAME',  max_length=50, blank=True, null=True)  # Field name made lowercase.
+    landline = models.IntegerField(db_column='CONTACT_LANDLINE', blank=True, null=True)  # Field name made lowercase.
+    mobile = models.IntegerField(db_column='CONTACT_MOBILE', blank=True, null=True)  # Field name made lowercase.
+    email = models.CharField(db_column='CONTACT_EMAILID',  max_length=50, blank=True, null=True)  # Field name made lowercase.
     spoc = models.CharField(db_column='SPOC', max_length=5, blank=True, null=True)  # Field name made lowercase.
     contact_authority = models.CharField(db_column='CONTACT_AUTHORITY', max_length=5, blank=True, null=True)  # Field name made lowercase.
 
@@ -739,7 +739,10 @@ class SupplierTypeSociety(models.Model):
         return self.contacts.all()
 
     def get_reference(self):
-        return None
+        try:
+            return self.contacts.all().get(contact_type="Reference")
+        except ContactDetails.DoesNotExist:
+            return Response(status=404)
 
     def is_contact_available(self):
         contacts = self.get_contact_list()
@@ -751,6 +754,16 @@ class SupplierTypeSociety(models.Model):
         if self.get_reference():
             return True
         return False
+
+    def is_past_details_available(self):
+        #if set(("past_collections_stalls", "past_collections_car")) <= set(self):
+        return True
+        #else:
+         #   return False
+
+
+    def is_business_preferences_available(self):
+        return True
 
     class Meta:
         

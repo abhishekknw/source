@@ -17,6 +17,56 @@ class SocietyAPIView(APIView):
         except :
             return Response(status=404)
 
+    def post(self, request, format=None):
+        print request.data
+        if 'supplier_id' in request.data:
+            society = SupplierTypeSociety.objects.filter(pk=request.data['supplier_id']).first()
+            serializer = SupplierTypeSocietySerializer(society,data=request.data)
+        else:
+            serializer = SupplierTypeSocietySerializer(data=request.data)
+
+
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return Response(serializer.errors, status=400)
+
+        society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
+
+        #here we will start storing contacts
+        if request.data and 'basic_contact_available' in request.data and request.data['basic_contact_available']:
+            for contact in request.data['basic_contacts']:
+                if 'id' in contact:
+                   item = ContactDetails.objects.filter(pk=contact['id']).first()
+                   contact_serializer = ContactDetailsSerializer(item, data=contact)
+                else:
+                    contact_serializer = ContactDetailsSerializer(data=contact)
+                if contact_serializer.is_valid():
+                    contact_serializer.save(supplier=society)
+
+        if request.data and 'basic_reference_available' in request.data and request.data['basic_reference_available']:
+            contact = request.data['basic_reference_contacts']
+            if 'id' in contact:
+                item = ContactDetails.objects.filter(pk=contact['id']).first()
+                contact_serializer = ContactDetailsSerializer(item, data=contact)
+            else:
+                contact_serializer = ContactDetailsSerializer(data=contact)
+            if contact_serializer.is_valid():
+                contact_serializer.save(supplier = society, contact_type="Reference")
+
+        #populate default pricing table
+        society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
+        ad_types = AdInventoryType.objects.all()
+        duration_types = DurationType.objects.all()
+        for type in ad_types:
+            for duration in duration_types:
+                pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                pmdefault.save()
+
+        return Response(serializer.data, status=201)
+
+
+
 class SocietyAPIListView(APIView):
     def get(self, request, format=None):
         try:
@@ -32,43 +82,6 @@ class SocietyAPIListView(APIView):
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
-    def post(self, request, format=None):
-        print request.data
-        item = SupplierTypeSociety.objects.filter(pk=request.data['supplier_id']).first()
-        if item:
-            serializer = SupplierTypeSocietySerializer(item,data=request.data)
-        else:
-            serializer = SupplierTypeSocietySerializer(data=request.data)
-
-        if serializer.is_valid():
-            serializer.save()
-        else:
-            return Response(serializer.errors, status=400)
-
-        print serializer.data
-        #here we will start storing contacts
-        if request.data and 'basic_contact_available' in request.data and request.data['basic_contact_available']:
-            for contact in request.data['basic_contacts']:
-                contact_serializer = ContactDetailsSerializer(data=contact)
-                if contact_serializer.is_valid():
-                    contact_serializer.save(supplier=society)
-
-        if request.data and 'basic_reference_available' in request.data and request.data['basic_reference_available']:
-            for contact in request.data['basic_reference_contacts']:
-                contact_serializer = ContactDetailsSerializer(data=contact)
-                if contact_serializer.is_valid():
-                    contact_serializer.save(supplier = society)
-
-        #populate default pricing table
-        society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
-        ad_types = AdInventoryType.objects.all()
-        duration_types = DurationType.objects.all()
-        for type in ad_types:
-            for duration in duration_types:
-                pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                pmdefault.save()
-
-        return Response(serializer.data, status=201)
 
 
 
@@ -83,6 +96,7 @@ class BasicPricingAPIView(APIView):
             return Response(status=404)
         except PriceMappingDefault.DoesNotExist:
             return Response(status=404)
+
 
 
     def post(self, request, id, format=None):
