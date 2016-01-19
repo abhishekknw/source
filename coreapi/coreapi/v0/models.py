@@ -154,7 +154,7 @@ class BannerInventory(models.Model):
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'banner_inventory'
 
 
@@ -172,7 +172,7 @@ class CarDisplayInventory(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='car_displays', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'car_display_inventory'
 
 
@@ -203,7 +203,7 @@ class CommunityHallInfo(models.Model):
     banner_count_per_community_hall = models.IntegerField(db_column='BANNER_COUNT_PER_COMMUNITY_HALL', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'community_hall_info'
 
 
@@ -222,7 +222,7 @@ class DoorToDoorInfo(models.Model):
     banner_spaces_count = models.IntegerField(db_column='BANNER_SPACES_COUNT', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'door_to_door_info'
 
 
@@ -277,7 +277,7 @@ class PosterInventory(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'poster_inventory'
 
 
@@ -317,7 +317,7 @@ class StandeeInventory(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='standees', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'standee_inventory'
 
 
@@ -347,7 +347,7 @@ class SwimmingPoolInfo(models.Model):
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'swimming_pool_info'
 
 
@@ -371,7 +371,7 @@ class WallInventory(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='walls', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'wall_inventory'
 
 
@@ -384,7 +384,7 @@ class UserInquiry(models.Model):
     inquiry_details = models.TextField(db_column='INQUIRY_DETAILS')  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'user_inquiry'
 
 
@@ -400,7 +400,7 @@ class CommonAreaDetails(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'common_area_details'
 
 
@@ -417,7 +417,7 @@ class ContactDetails(models.Model):
     contact_authority = models.CharField(db_column='CONTACT_AUTHORITY', max_length=5, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'contact_details'
 
 
@@ -442,7 +442,7 @@ class Events(models.Model):
     event_status = models.CharField(db_column='EVENT_STATUS', max_length=10, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'events'
 
 class InventoryInfo(models.Model):
@@ -458,7 +458,7 @@ class InventoryInfo(models.Model):
     material_type = models.CharField(db_column='MATERIAL_TYPE', max_length=70, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'inventory_info'
 
 
@@ -477,7 +477,7 @@ class MailboxInfo(models.Model):
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'mailbox_info'
 
 
@@ -493,7 +493,7 @@ class OperationsInfo(models.Model):
     company_address = models.CharField(db_column='COMPANY_ADDRESS', max_length=250, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'operations_info'
 
 
@@ -514,7 +514,7 @@ class PoleInventory(models.Model):
     pole_inventory_status = models.CharField(db_column='POLE_INVENTORY_STATUS', max_length=20, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'pole_inventory'
 
 
@@ -527,7 +527,7 @@ class PosterInventoryMapping(models.Model):
     stall_adinventory_id = models.CharField(db_column='STALL_ADINVENTORY_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'poster_inventory_mapping'
 
 
@@ -542,7 +542,7 @@ class RatioDetails(models.Model):
     major_event_count = models.IntegerField(db_column='MAJOR_EVENT_COUNT', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'ratio_details'
         unique_together = (('supplier_id', 'machadalo_index'),)
 
@@ -561,7 +561,7 @@ class Signup(models.Model):
     signup_status = models.CharField(db_column='SIGNUP_STATUS', max_length=255, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'signup'
 
 
@@ -587,7 +587,7 @@ class StallInventory(models.Model):
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'stall_inventory'
 
 
@@ -604,7 +604,7 @@ class StreetFurniture(models.Model):
     furniture_status = models.CharField(db_column='FURNITURE_STATUS', max_length=10, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'street_furniture'
 
 
@@ -630,7 +630,7 @@ class SupplierInfo(models.Model):
     current_status = models.DateField(db_column='CURRENT_STATUS', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        
+
         db_table = 'supplier_info'
 
 
@@ -742,7 +742,7 @@ class SupplierTypeSociety(models.Model):
         try:
             return self.contacts.all().get(contact_type="Reference")
         except ContactDetails.DoesNotExist:
-            return Response(status=404)
+            return None
 
     def is_contact_available(self):
         contacts = self.get_contact_list()
@@ -766,7 +766,7 @@ class SupplierTypeSociety(models.Model):
         return True
 
     class Meta:
-        
+
         db_table = 'supplier_society'
 
 
@@ -818,5 +818,5 @@ class SocietyTower(models.Model):
 
 
     class Meta:
-        
+
         db_table = 'society_tower'
