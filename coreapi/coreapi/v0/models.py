@@ -145,13 +145,13 @@ class PriceMapping(models.Model):
 class BannerInventory(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='banners', blank=True, null=True)  # Field name made lowercase.
-    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    type = models.CharField(db_column='BANNER_TYPE', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    banner_location = models.CharField(db_column='BANNER_DISPLAY_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    banner_size = models.CharField(db_column='BANNER_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    inventory_status = models.CharField(db_column='INVENTORY_STATUS', max_length=15)  # Field name made lowercase.
-    photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True, null=True)  # Field name made lowercase.
-    photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20, blank=True)  # Field name made lowercase.
+    type = models.CharField(db_column='BANNER_TYPE', max_length=20, blank=True)  # Field name made lowercase.
+    banner_location = models.CharField(db_column='BANNER_DISPLAY_LOCATION', max_length=50, blank=True)  # Field name made lowercase.
+    banner_size = models.CharField(db_column='BANNER_SIZE', max_length=10, blank=True)  # Field name made lowercase.
+    inventory_status = models.CharField(db_column='INVENTORY_STATUS', blank=True,  max_length=15)  # Field name made lowercase.
+    photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True)  # Field name made lowercase.
+    photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True)  # Field name made lowercase.
 
     class Meta:
         
@@ -352,7 +352,7 @@ class SwimmingPoolInfo(models.Model):
 
 
 class WallInventory(models.Model):
-    inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20)  # Field name made lowercase.
     wall_size = models.CharField(db_column='WALL_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     wall_frame_size = models.CharField(db_column='WALL_FRAME_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
@@ -504,12 +504,12 @@ class PoleInventory(models.Model):
     pole_hoarding_size = models.CharField(db_column='POLE_HOARDING_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     pole_area = models.CharField(db_column='POLE_AREA', max_length=10, blank=True, null=True)  # Field name made lowercase.
     pole_hoarding_type = models.CharField(db_column='POLE_HOARDING_TYPE', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    pole_lit_status = models.TextField(db_column='POLE_LIT_STATUS', blank=True, null=True)  # Field name made lowercase. This field type is a guess.
+    pole_lit_status = models.CharField(db_column='POLE_LIT_STATUS',  max_length=5, blank=True)  # Field name made lowercase. This field type is a guess.
     pole_sides = models.CharField(db_column='POLE_SIDES', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    pole_monthly_price_society = models.CharField(db_column='POLE_MONTHLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    pole_quarterly_price_society = models.CharField(db_column='POLE_QUARTERLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    pole_monthly_price_business = models.CharField(db_column='POLE_MONTHLY_PRICE_BUSINESS', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    pole_quarterly_price_business = models.CharField(db_column='POLE_QUARTERLY_PRICE_BUSINESS', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    pole_monthly_price_society = models.FloatField(db_column='POLE_MONTHLY_PRICE_SOCIETY', null=True)  # Field name made lowercase.
+    pole_quarterly_price_society = models.FloatField(db_column='POLE_QUARTERLY_PRICE_SOCIETY', null=True)  # Field name made lowercase.
+    pole_monthly_price_business = models.FloatField(db_column='POLE_MONTHLY_PRICE_BUSINESS', null=True)  # Field name made lowercase.
+    pole_quarterly_price_business = models.FloatField(db_column='POLE_QUARTERLY_PRICE_BUSINESS', null=True)  # Field name made lowercase.
     pole_location = models.CharField(db_column='POLE_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
     pole_inventory_status = models.CharField(db_column='POLE_INVENTORY_STATUS', max_length=20, blank=True, null=True)  # Field name made lowercase.
 
@@ -702,13 +702,13 @@ class SupplierTypeSociety(models.Model):
     flat_avg_rental_persqft = models.IntegerField(db_column='FLAT_AVG_RENTAL_PERSQFT', blank=True, null=True)  # Field name made lowercase.
     flat_sale_cost_persqft = models.IntegerField(db_column='FLAT_SALE_COST_PERSQFT', blank=True, null=True)  # Field name made lowercase.
     total_ad_spaces = models.IntegerField(db_column='TOTAL_AD_SPACES', blank=True, null=True)  # Field name made lowercase.
-    past_collections_stalls = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STALLS', blank=True, null=True)  # Field name made lowercase.
-    past_collections_car = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_CAR', blank=True, null=True)  # Field name made lowercase.
-    past_collections_poster = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_POSTER', blank=True, null=True)  # Field name made lowercase.
-    past_collections_banners = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_BANNERS', blank=True, null=True)  # Field name made lowercase.
-    past_collections_standee = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STANDEE', blank=True, null=True)  # Field name made lowercase.
-    past_sponsorship_collection_events = models.IntegerField(db_column='PAST_YEAR_SPONSORSHIP_COLLECTION_EVENTS', blank=True, null=True)  # Field name made lowercase.
-    past_total_sponsorship = models.IntegerField(db_column='PAST_YEAR_TOTAL_SPONSORSHIP', blank=True, null=True)  # Field name made lowercase.
+    past_collections_stalls = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STALLS', null=True)  # Field name made lowercase.
+    past_collections_car = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_CAR', null=True)  # Field name made lowercase.
+    past_collections_poster = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_POSTER', null=True)  # Field name made lowercase.
+    past_collections_banners = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_BANNERS', null=True)  # Field name made lowercase.
+    past_collections_standee = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STANDEE', null=True)  # Field name made lowercase.
+    past_sponsorship_collection_events = models.IntegerField(db_column='PAST_YEAR_SPONSORSHIP_COLLECTION_EVENTS', null=True)  # Field name made lowercase.
+    past_total_sponsorship = models.IntegerField(db_column='PAST_YEAR_TOTAL_SPONSORSHIP', null=True)  # Field name made lowercase.
 
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
@@ -736,13 +736,16 @@ class SupplierTypeSociety(models.Model):
 
 
     def get_contact_list(self):
-        return self.contacts.all()
+        try:
+            return self.contacts.all()
+        except:
+            return None
 
     def get_reference(self):
         try:
             return self.contacts.all().get(contact_type="Reference")
-        except ContactDetails.DoesNotExist:
-            return Response(status=404)
+        except:
+            return None
 
     def is_contact_available(self):
         contacts = self.get_contact_list()
@@ -756,14 +759,15 @@ class SupplierTypeSociety(models.Model):
         return False
 
     def is_past_details_available(self):
-        #if set(("past_collections_stalls", "past_collections_car")) <= set(self):
-        return True
-        #else:
-         #   return False
+        if (self.past_collections_poster is not None or self.past_collections_stalls is not None or self.past_total_sponsorship is not None):
+            return True
+        return False
 
 
     def is_business_preferences_available(self):
-        return True
+        if (self.preferred_business_type is not None or self.business_type_not_allowed is not None):
+            return True
+        return False
 
     class Meta:
         

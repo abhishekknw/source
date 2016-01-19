@@ -21,13 +21,19 @@ class SocietyAPIView(APIView):
         print request.data
         if 'supplier_id' in request.data:
             society = SupplierTypeSociety.objects.filter(pk=request.data['supplier_id']).first()
-            serializer = SupplierTypeSocietySerializer(society,data=request.data)
-        else:
-            serializer = SupplierTypeSocietySerializer(data=request.data)
+            if society:
+                serializer = SupplierTypeSocietySerializer(society,data=request.data)
+                flag = False
+            else:
+                serializer = SupplierTypeSocietySerializer(data=request.data)
+                flag = True
 
 
         if serializer.is_valid():
             serializer.save()
+            #populate default pricing table
+            if flag:
+                set_default_pricing(serializer.data['supplier_id'])
         else:
             return Response(serializer.errors, status=400)
 
@@ -54,16 +60,18 @@ class SocietyAPIView(APIView):
             if contact_serializer.is_valid():
                 contact_serializer.save(supplier = society, contact_type="Reference")
 
-        #populate default pricing table
-        society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
-        ad_types = AdInventoryType.objects.all()
-        duration_types = DurationType.objects.all()
-        for type in ad_types:
-            for duration in duration_types:
-                pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                pmdefault.save()
-
         return Response(serializer.data, status=201)
+
+def set_default_pricing(society_id):
+    society = SupplierTypeSociety.objects.filter(pk=society_id).first()
+    ad_types = AdInventoryType.objects.all()
+    duration_types = DurationType.objects.all()
+    for type in ad_types:
+        for duration in duration_types:
+            pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+            pmdefault.save()
+
+    return
 
 
 
@@ -516,11 +524,6 @@ class OtherInventoryAPIView(APIView):
 
         if request.data['community_hall_available']:
             response = post_data(CommunityHallInfo, CommunityHallInfoSerializer, request.data['community_hall_details'], society)
-            if response == False:
-                return Response(status=400)
-
-        if request.data['wall_available']:
-            response = post_data(WallInventory, WallInventorySerializer, request.data['wall_display_details'], society)
             if response == False:
                 return Response(status=400)
 
