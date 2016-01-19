@@ -2,14 +2,14 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from v0.models import BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower
-from v0.serializers import BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
+from v0.serializers import BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, ImageMappingSerializer
 
 class UISocietySerializer(ModelSerializer):
     basic_contact_available = serializers.BooleanField(source='is_contact_available')
     basic_contacts = ContactDetailsSerializer(source='get_contact_list', many=True)
     basic_reference_available = serializers.BooleanField(source='is_reference_available')
     basic_reference_contacts = ContactDetailsSerializer(source='get_reference')
-
+    society_image = ImageMappingSerializer(source='get_society_image')
     past_details = serializers.BooleanField(source='is_past_details_available')
     business_preferences = serializers.BooleanField(source='is_business_preferences_available')
     class Meta:
@@ -20,7 +20,8 @@ class UISocietySerializer(ModelSerializer):
         'basic_reference_available',
         'basic_reference_contacts',
         'past_details',
-        'business_preferences'
+        'business_preferences',
+        'society_image'
         )
 
 
@@ -42,7 +43,3 @@ class UITowerSerializer(ModelSerializer):
         'notice_board_details',
         'lift_details',
         )
-
-
-
-

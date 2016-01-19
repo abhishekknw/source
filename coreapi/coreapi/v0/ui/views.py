@@ -85,7 +85,7 @@ class SocietyAPIListView(APIView):
                 items = SupplierTypeSociety.objects.all()
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
-            serializer = SupplierTypeSocietySerializer(result_page, many=True)
+            serializer = UISocietySerializer(result_page, many=True)
             return paginator.get_paginated_response(serializer.data)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
@@ -599,7 +599,7 @@ class ImageMappingAPIView(APIView):
         society=SupplierTypeSociety.objects.get(pk=id)
 
         for key in request.data['image_details']:
-            if 'id' in key:
+            if 'id' in request.data['image_details']:
                 item = ImageMapping.objects.get(pk=key['id'])
                 serializer = ImageMappingSerializer(item, data=key)
             else:

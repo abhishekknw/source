@@ -734,6 +734,11 @@ class SupplierTypeSociety(models.Model):
     #standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
 
 
+    def get_society_image(self):
+        image_list = list(self.images.all()[:1])
+        if image_list:
+          return image_list[0]
+        return None
 
     def get_contact_list(self):
         try:
