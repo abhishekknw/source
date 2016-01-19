@@ -23,7 +23,7 @@ AD_INVENTORY_CHOICES = (
 
 class ImageMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    location_id = models.CharField(db_column='LOCATION_ID', max_length=20)  # Field name made lowercase.
+    location_id = models.CharField(db_column='LOCATION_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
     location_type = models.CharField(db_column='LOCATION_TYPE', max_length=20, blank=True, null=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='images', blank=True, null=True)
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
