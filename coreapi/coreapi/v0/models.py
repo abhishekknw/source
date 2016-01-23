@@ -23,7 +23,7 @@ AD_INVENTORY_CHOICES = (
 
 class ImageMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    location_id = models.CharField(db_column='LOCATION_ID', max_length=20)  # Field name made lowercase.
+    location_id = models.CharField(db_column='LOCATION_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
     location_type = models.CharField(db_column='LOCATION_TYPE', max_length=20, blank=True, null=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='images', blank=True, null=True)
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
@@ -56,11 +56,9 @@ class AdInventoryLocationMapping(models.Model):
             ad_type = AdInventoryType.objects.filter(adinventory_name=self.adinventory_name)
         else:
             ad_type = AdInventoryType.objects.filter(adinventory_name=self.adinventory_name, adinventory_type=args[0]) #add type = stall/standee.type
-        print 'adele' + args[0]
         default_prices = PriceMappingDefault.objects.filter(adinventory_type__in=ad_type, supplier=args[1])
 
         for key in default_prices:
-            print "in def"
             pm = PriceMapping(adinventory_id = self, adinventory_type=key.adinventory_type,
                               society_price = key.society_price, business_price=key.business_price,
                               duration_type = key.duration_type, supplier=key.supplier)
@@ -250,7 +248,7 @@ class NoticeBoardDetails(models.Model):
     notice_board_location = models.CharField(db_column='NOTICE_BOARD_LOCATION', max_length=100, blank=True, null=True)  # Field name made lowercase.
     total_poster_per_notice_board = models.IntegerField(db_column='TOTAL_POSTER_PER_NOTICE_BOARD', blank=True, null=True)  # Field name made lowercase.
     poster_location_notice_board = models.CharField(db_column='POSTER_LOCATION_NOTICE_BOARD', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    notice_board_lit = models.CharField(db_column='NOTICE_BOARD_LIT', max_length=1, blank=True, null=True)  # Field name made lowercase.
+    notice_board_lit = models.CharField(db_column='NOTICE_BOARD_LIT', max_length=5, blank=True, null=True)  # Field name made lowercase.
     tower = models.ForeignKey('SocietyTower', related_name='notice_boards', db_column='TOWER_ID', blank=True, null=True)  # Field name made lowercase.
     notice_board_size_length = models.FloatField(db_column='NOTICE_BOARD_SIZE_length', default=0.0, blank=True, null=True)  # Field name made lowercase.
     notice_board_size_breadth = models.FloatField(db_column='NOTICE_BOARD_SIZE_BREADTH', default=0.0, blank=True, null=True)  # Field name made lowercase.
