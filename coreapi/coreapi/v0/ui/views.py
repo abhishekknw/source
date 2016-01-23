@@ -19,12 +19,14 @@ class SocietyAPIView(APIView):
 
     def post(self, request, format=None):
         print request.data
+        current_user = request.user
         if 'supplier_id' in request.data:
             society = SupplierTypeSociety.objects.filter(pk=request.data['supplier_id']).first()
             if society:
                 serializer = SupplierTypeSocietySerializer(society,data=request.data)
                 flag = False
             else:
+                request.data['created_by'] = current_user.id
                 serializer = SupplierTypeSocietySerializer(data=request.data)
                 flag = True
 

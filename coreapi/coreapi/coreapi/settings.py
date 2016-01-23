@@ -16,8 +16,6 @@ import datetime
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-AUTH_ENABLED = False
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -82,11 +80,11 @@ WSGI_APPLICATION = 'coreapi.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    'sqlite': {
+    'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
-    'default': {
+    'mysql': {
        'NAME': 'machadalo_dev',
        'ENGINE': 'django.db.backends.mysql',
        'HOST': '127.0.0.1',
@@ -119,7 +117,7 @@ STATIC_URL = '/static/'
 # settings for Django Rest Framework
 REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAdminUser',
         ),
      'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',

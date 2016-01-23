@@ -12,6 +12,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from django.db import models
+from django.contrib.auth.models import User
+
 
 AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
@@ -707,7 +709,8 @@ class SupplierTypeSociety(models.Model):
     past_collections_standee = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STANDEE', null=True)  # Field name made lowercase.
     past_sponsorship_collection_events = models.IntegerField(db_column='PAST_YEAR_SPONSORSHIP_COLLECTION_EVENTS', null=True)  # Field name made lowercase.
     past_total_sponsorship = models.IntegerField(db_column='PAST_YEAR_TOTAL_SPONSORSHIP', null=True)  # Field name made lowercase.
-
+    created_by = models.ForeignKey(User, related_name='societies', db_column='CREATED_BY', blank=True, null=True)
+    created_on = models.DateTimeField(db_column='CREATED_ON', auto_now_add=True)
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #car_display_available = models.CharField(db_column='CAR_DISPLAY_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
