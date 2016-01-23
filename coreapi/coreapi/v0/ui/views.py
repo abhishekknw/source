@@ -599,7 +599,7 @@ class ImageMappingAPIView(APIView):
         society=SupplierTypeSociety.objects.get(pk=id)
 
         for key in request.data['image_details']:
-            if 'id' in request.data['image_details']:
+            if 'id' in key:
                 item = ImageMapping.objects.get(pk=key['id'])
                 serializer = ImageMappingSerializer(item, data=key)
             else:

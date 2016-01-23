@@ -733,7 +733,10 @@ class SupplierTypeSociety(models.Model):
 
 
     def get_society_image(self):
-        image_list = list(self.images.all()[:1])
+        try:
+            image_list = list(self.images.all().filter(location_type="Society")[:1])
+        except:
+            return None
         if image_list:
           return image_list[0]
         return None
