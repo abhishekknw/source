@@ -17,6 +17,18 @@ class SocietyAPIView(APIView):
         except :
             return Response(status=404)
 
+    def delete(self, request, id, format=None):
+        try:
+            item = SupplierTypeSociety.objects.get(pk=id)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        contacts = item.get_contact_list()
+        for contact in contacts:
+            contact.delete()
+        item.delete()
+        return Response(status=204)
+
+
     def post(self, request, format=None):
         print request.data
         current_user = request.user
@@ -63,6 +75,9 @@ class SocietyAPIView(APIView):
                 contact_serializer.save(supplier = society, contact_type="Reference")
 
         return Response(serializer.data, status=201)
+
+
+
 
 def set_default_pricing(society_id):
     society = SupplierTypeSociety.objects.filter(pk=society_id).first()
