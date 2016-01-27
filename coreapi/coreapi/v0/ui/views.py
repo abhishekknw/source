@@ -272,6 +272,22 @@ class TowerAPIView(APIView):
         return Response(status=201)
 
 
+    def delete(self, request, id, format=None):
+        try:
+            item = SocietyTower.objects.get(pk=id)
+        except SocietyTower.DoesNotExist:
+            return Response(status=404)
+        for key in ['lift', 'notice_board', 'flat']:
+            fn_name = "get_" + key + "_list"
+            func = getattr(item,fn_name)
+            objects = func()
+            for obj in objects:
+                obj.delete()
+        item.delete()
+        return Response(status=204)
+
+
+
 
 
 class StandeeBannerAPIView(APIView):

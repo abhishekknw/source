@@ -1251,7 +1251,7 @@ class SocietyTowerAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            item = TypeSocietyTower.objects.get(pk=id)
+            item = SocietyTower.objects.get(pk=id)
         except SocietyTower.DoesNotExist:
             return Response(status=404)
         item.delete()
