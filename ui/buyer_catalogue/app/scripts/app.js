@@ -56,7 +56,7 @@ angular
           controller: 'SocietyCtrl'
         })
         */
-});
+})
 .run(['$rootScope', '$window', '$location', 'AuthService',
      function ($rootScope, $window, $location, AuthService) {
        $rootScope.globals = $rootScope.globals || {};
