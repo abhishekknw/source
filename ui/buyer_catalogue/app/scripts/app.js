@@ -28,10 +28,20 @@ angular
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
       $routeProvider.otherwise('/');
       $stateProvider
-      .state('catalogue', {
-          url : '/',
+      .state('society', {
+          url : '/society',
           controller: 'CatalogueBaseCtrl',
           templateUrl: 'modules/pages/base/base.tmpl.html'
+        })
+        .state('society.list', {
+          url : '/list', //:societyId/
+          templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
+          controller: 'SocietyListCtrl'
+        })
+        .state('society.details', {
+          url : '/details', //:societyId/
+          templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
+          controller: 'SocietyCtrl'
         })
       .state('login', {
           url : '/login',
@@ -46,7 +56,7 @@ angular
           controller: 'SocietyCtrl'
         })
         */
-})
+});
 .run(['$rootScope', '$window', '$location', 'AuthService',
      function ($rootScope, $window, $location, AuthService) {
        $rootScope.globals = $rootScope.globals || {};
@@ -76,5 +86,3 @@ angular
          }
        });
      }]);
-
-      
