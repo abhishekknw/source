@@ -46,4 +46,35 @@ angular
           controller: 'SocietyCtrl'
         })
         */
-});
+})
+.run(['$rootScope', '$window', '$location', 'AuthService',
+     function ($rootScope, $window, $location, AuthService) {
+       $rootScope.globals = $rootScope.globals || {};
+       $rootScope.globals.currentUser = AuthService.UserInfo();
+
+       var whence = $location.path();
+       $rootScope.$on('$locationChangeStart', function (event, next, current) {
+         var whence = $location.path();
+         console.log("location change start - Whence: " + whence);
+
+         // redirect to login page if not logged in
+         $rootScope.globals.currentUser = AuthService.UserInfo();
+         /*if (!$rootScope.globals.currentUser) {
+           $location.path('/login');
+         }
+         else*/ if ($rootScope.globals.currentUser && $location.path() == '/logout')
+         {
+           AuthService.Logout();
+           $location.path("/login");
+         }
+         else if ($rootScope.globals.currentUser && ($location.path() == '/login' || $location.path() == '/'))
+         {
+           $location.path("/");
+         }
+         else {
+           $location.path(whence);
+         }
+       });
+     }]);
+
+      
