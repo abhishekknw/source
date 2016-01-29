@@ -8,6 +8,10 @@
  *
  * Main module of the application.
  */
+
+var APIBaseUrl = 'http://localhost:8108/';
+
+angular.module('Authentication', []);
 angular
   .module('catalogueApp', [
     'ngAnimate',
@@ -18,7 +22,8 @@ angular
     'ngSanitize',
     'ngTouch',
     'machadaloCommon',
-    'machadaloPages'
+    'machadaloPages',
+    'Authentication'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
       $routeProvider.otherwise('/');
@@ -28,6 +33,12 @@ angular
           controller: 'CatalogueBaseCtrl',
           templateUrl: 'modules/pages/base/base.tmpl.html'
         })
+      .state('login', {
+          url : '/login',
+          controller: 'LoginCtrl',
+          templateUrl: 'modules/pages/login/login.tmpl.html'
+        })
+
         /*
         .state('catalogue.home', {
           url : '/catalogue',
