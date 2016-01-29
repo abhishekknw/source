@@ -23,16 +23,19 @@ angular
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
       $routeProvider.otherwise('/');
       $stateProvider
-      .state('catalogue', {
-          url : '/',
+      .state('society', {
+          url : '/society',
           controller: 'CatalogueBaseCtrl',
           templateUrl: 'modules/pages/base/base.tmpl.html'
         })
-        /*
-        .state('catalogue.home', {
-          url : '/catalogue',
-          templateUrl: 'views/society-home.html',
-          controller: 'SocietyCtrl'
+        .state('society.list', {
+          url : '/list', //:societyId/
+          templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
+          controller: 'SocietyListCtrl'
         })
-        */
+        .state('society.details', {
+          url : '/details', //:societyId/
+          templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
+          controller: 'SocietyCtrl'
+        });
 });
