@@ -1,1 +1,1 @@
-angular.module('machadaloPages', []);
+angular.module('machadaloPages', ['ui.router']);
