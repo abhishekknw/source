@@ -1,9 +1,9 @@
 angular.module('machadaloCommon')
-.directive('stallTab', function() {
+.directive('standeeTab', function() {
   return {
   restrict: 'E',
-  templateUrl: 'modules/common/stalltab/stall-tab.tmpl.html',
+  templateUrl: 'modules/common/standeetab/standee-tab.tmpl.html',
   link: function(scope, element, attrs) {
-    
+
   }};
 });
