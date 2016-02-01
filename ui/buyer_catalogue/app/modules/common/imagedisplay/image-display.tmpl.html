@@ -1,5 +1,5 @@
   <!--<div class="container">check whether we need this -->
-  <div class="container pagecontainer offset-0">
+  <div class="container pagecontainer offset-0" ng-controller="SocietyCtrl">
   <!--Main Header Slider-->
     <div class="col-md-8 cpdd01">
     <div  id="jssor_1" style="position: relative; margin: 0 auto; top: 10px; left: 0px; width: 600px; height: 400px; overflow: hidden; visibility: hidden;">
@@ -63,7 +63,7 @@
 	<!-- END OF container-->
     <div class="col-md-4 detailsright offset-0">
     	 <div class="padding20">
-    			<h4 class="lh1"><p ng-bind="societyName"></p>Nahar Amrit Shakti</h4>
+    			<h4 class="lh1"><p ng-bind="societyName"></p></h4>
     					<p style="color:#c0c0c0;"><img src="images/icon-location.png"> {{societyAddress1}},&nbsp;, {{societyAddress2}}<br>
                 <label>{{societyAddress1 + "&nbsp;" + societyAddress2 + "&nbsp;" +  societyCity}}</label>
               </p>

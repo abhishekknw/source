@@ -39,7 +39,7 @@ angular
           controller: 'SocietyListCtrl'
         })
         .state('society.details', {
-          url : '/details', //:societyId/
+          url : '/:societyId/details', //:societyId/
           templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
           controller: 'SocietyCtrl'
         })
@@ -57,7 +57,7 @@ angular
           url : '/info', //:societyId/
           templateUrl: 'modules/common/infotab/societyinfo-tab.tmpl.html',
           controller: ''
-        })
+        });
 
         /*
         .state('catalogue.home', {
