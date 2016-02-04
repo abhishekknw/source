@@ -3,7 +3,6 @@ angular.module('machadaloPages')
     ['$scope', '$rootScope', '$window', '$location','societyDetailsService',
     function ($scope, $rootScope, $window, $location, societyDetailsService) {
 	    getSociety();
- var id = "njnjn";
       function getSociety(id) {
        societyDetailsService.getSocietyData()
          .success(function (response) {

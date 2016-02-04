@@ -35,11 +35,11 @@ angular
         })
         .state('society.list', {
           url : '/list', //:societyId/
-          templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
+          templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyListCtrl'
         })
         .state('society.details', {
-          url : '/:societyId/details', //:societyId/
+          url : '/details', //:societyId/
           templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
           controller: 'SocietyCtrl'
         })

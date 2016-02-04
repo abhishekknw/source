@@ -1627,8 +1627,8 @@ background:url('../../../images/slider/couple.png') no-repeat;
 .cpadding1{padding: 0px 30px 10px 50px;}
 
 
-
-.filtertip {height:100px; background:#ff0000; padding:0px; color:#fff; position:relative; text-align:center; line-height:10px; font-family:'Open Sans'}
+/*background:Changed from #ff000 to #5bbfbf by Vidhi*/
+.filtertip {height:100px; background:#5bbfbf; padding:0px; color:#fff; position:relative; text-align:center; line-height:10px; font-family:'Open Sans'}
 .filtertip a{color:#fff;}
 .tip-arrow{width:33px; height:9px; background:url('../../../images/tip-arrow.png'); position:absolute; bottom:-9px; left:50%; margin-left:-15px;}
 
