@@ -6,7 +6,8 @@ angular.module('machadaloPages')
          return $http.get('https://maps.googleapis.com/maps/api/geocode/json', {
            params: {
              address: val,
-             sensor: false
+             key: 'AIzaSyDCTq6FNBxVrhd2te_GIrCa8TI8CYwobYg',
+             sensor: true
            }
          }).then(function(response){
            return response.data.results.map(function(item){
