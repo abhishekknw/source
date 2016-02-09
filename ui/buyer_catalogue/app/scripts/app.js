@@ -24,7 +24,8 @@ angular
     'machadaloCommon',
     'machadaloPages',
     'Authentication',
-    'ui-rangeSlider'
+    'rzModule',
+    'ui.bootstrap'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
       $routeProvider.otherwise('/');

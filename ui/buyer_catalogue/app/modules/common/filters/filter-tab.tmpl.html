@@ -13,14 +13,19 @@
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-									<select class="form-control mySelectBoxClass ">
+									<!--<select class="form-control mySelectBoxClass ">
 									  <option selected>Guest rating</option>
 									  <option>5 stars</option>
 									  <option>4 stars</option>
 									  <option>3 stars</option>
 									  <option>2 stars</option>
 									  <option>1 stars</option>
-									</select>
+									</select>-->
+									<input type="text" ng-model="asyncSelected" placeholder = "Search Location" uib-typeahead="address for address in getLocation($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" class="form-control">
+    <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
+    <div ng-show="noResults">
+      <i class="glyphicon glyphicon-remove"></i> No Results Found
+    </div>
 								</div>
 					</div>
 					<div class="clearfix"></div>
@@ -97,9 +102,8 @@
 					</div>
 				</div>-->
 				<!-- End of Price range -->
-				<div range-slider min="demo2.range.min" max="demo2.range.max" model-min="demo2.minPrice" model-max="demo2.maxPrice" filter="currency:'$'" step="100"></div>
-				<!--<div range-slider min="400" max="700"  filter="currency:'$'" step="100"></div>-->
-
+				<!--<div range-slider min="demo2.range.min" max="demo2.range.max" model-min="demo2.minPrice" model-max="demo2.maxPrice" filter="currency:'$'" step="100"></div>-->
+				<rzslider rz-slider-model="slider_translate.minValue" rz-slider-high="slider_translate.maxValue" rz-slider-options="slider_translate.options"></rzslider>
 				<div class="line2"></div>
 				<div class="clearfix"></div>
 				<br/>
