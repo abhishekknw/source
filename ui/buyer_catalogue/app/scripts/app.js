@@ -23,7 +23,8 @@ angular
     'ngTouch',
     'machadaloCommon',
     'machadaloPages',
-    'Authentication'
+    'Authentication',
+    'ui-rangeSlider'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
       $routeProvider.otherwise('/');
