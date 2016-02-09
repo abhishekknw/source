@@ -1,0 +1,23 @@
+.breadcrubStyle{
+    margin-top: 130px !important;
+}
+.filterTrip1{
+    text-align: left !important;
+    background-color: transparent !important;
+    color: black !important;
+}
+.clearall{
+    font-size: 15px;
+    color: firebrick;
+    text-align: right;
+    margin-left: 80px;
+}
+.topmarginlt{
+    margin-top: 17px;
+}
+.shortlist{
+    border-radius:0px; width:160px;
+}
+.viewdetail{
+    border-radius:0px; width:160px; background-color:#fff !important;
+}
