@@ -50,6 +50,33 @@ angular
           controller: 'LoginCtrl',
           templateUrl: 'modules/pages/login/login.tmpl.html'
         })
+      .state('manageCampaign', {
+          url : '/manageCampaign',
+          //controller: '',
+          templateUrl: 'modules/pages/manageCampaign/manage-campaign.tmpl.html'
+        })
+
+      .state('manageCampaign.create', {
+          url : '/create',
+          controller: 'CreateCampaignCtrl',
+          templateUrl: 'modules/pages/createCampaign/create-campaign.tmpl.html'
+        })
+      .state('manageCampaign.shortlisted', {
+          url : '/shortlisted',
+          controller: 'ShortlistedCampaignCtrl',
+          templateUrl: 'modules/pages/manageCampaign/shortlisted/shortlisted.tmpl.html'
+        })
+      .state('manageCampaign.finalize', {
+          url : '/finalize',
+          controller: 'FinalizeCampaignCtrl',
+          templateUrl: 'modules/pages/manageCampaign/finalize/finalize.tmpl.html'
+        })
+      .state('manageCampaign.finalize.finalizeInventory', {
+          url : '/:campaignId/finalizeInventory/',
+          controller: 'FinalizeInventoryCtrl',
+          templateUrl: 'modules/pages/manageCampaign/finalize/finalizeInventory.tmpl.html'
+        })
+
       .state('society.details.poster', {
           url : '/poster', //:societyId/
           templateUrl: 'modules/common/postertab/poster-tab.tmpl.html',
@@ -69,31 +96,33 @@ angular
         })
         */
 });
-// .run(['$rootScope', '$window', '$location', 'AuthService', function ($rootScope, $window, $location, AuthService) {
-//        $rootScope.globals = $rootScope.globals || {};
-//        $rootScope.globals.currentUser = AuthService.UserInfo();
-//
-//        var whence = $location.path();
-//        $rootScope.$on('$locationChangeStart', function (event, next, current) {
-//          var whence = $location.path();
-//          console.log("location change start - Whence: " + whence);
-//
-//          // redirect to login page if not logged in
-//          $rootScope.globals.currentUser = AuthService.UserInfo();
-//          /*if (!$rootScope.globals.currentUser) {
-//            $location.path('/login');
-//          }
-//          else*/ if ($rootScope.globals.currentUser && $location.path() == '/logout')
-//          {
-//            AuthService.Logout();
-//            $location.path("/login");
-//          }
-//          else if ($rootScope.globals.currentUser && ($location.path() == '/login' || $location.path() == '/'))
-//          {
-//            $location.path("/");
-//          }
-//          else {
-//            $location.path(whence);
-//          }
-//        });
-//      }]);
+/*.run(['$rootScope', '$window', '$location', 'AuthService',
+     function ($rootScope, $window, $location, AuthService) {
+       $rootScope.globals = $rootScope.globals || {};
+       $rootScope.globals.currentUser = AuthService.UserInfo();
+
+       var whence = $location.path();
+       $rootScope.$on('$locationChangeStart', function (event, next, current) {
+         var whence = $location.path();
+         console.log("location change start - Whence: " + whence);
+
+         // redirect to login page if not logged in
+         $rootScope.globals.currentUser = AuthService.UserInfo();
+         if (!$rootScope.globals.currentUser) {
+           $location.path('/login');
+         }
+         else if ($rootScope.globals.currentUser && $location.path() == '/logout')
+         {
+           AuthService.Logout();
+           $location.path("/login");
+         }
+         else if ($rootScope.globals.currentUser && ($location.path() == '/login' || $location.path() == '/'))
+         {
+           $location.path("/manageCampaign");
+         }
+         else {
+           $location.path(whence);
+         }
+       });*/
+     }]);
+

@@ -238,6 +238,8 @@ class LiftDetails(models.Model):
     photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True, null=True)  # Field name made lowercase.
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
     tower = models.ForeignKey('SocietyTower', related_name='lifts', db_column='TOWER_ID', blank=True, null=True)  # Field name made lowercase.
+    inventory_status_lift = models.CharField(db_column='INVENTORY_STATUS_LIFT', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    inventory_size = models.CharField(db_column='INVENTORY_SIZE', max_length=30, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         db_table = 'lift_details'
@@ -256,7 +258,7 @@ class NoticeBoardDetails(models.Model):
     notice_board_size_breadth = models.FloatField(db_column='NOTICE_BOARD_SIZE_BREADTH', default=0.0, blank=True, null=True)  # Field name made lowercase.
     photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True, null=True)  # Field name made lowercase.
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
-    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=255, blank=True, null=True)  # Field name made lowercase.
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         db_table = 'notice_board_details'
@@ -287,8 +289,8 @@ class SocietyFlat(models.Model):
     flat_type = models.CharField(db_column='FLAT_TYPE', max_length=20)  # Field name made lowercase.
     flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)  # Field name made lowercase.
     flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
-    flat_size_per_sq_feet_carpet_area = models.FloatField(db_column='FLAT_SIZE_PER_SQ_FEET_CARPET_AREA', blank=True, null=True, default=0.0)  # Field name made lowercase.
-    flat_size_per_sq_feet_builtup_area = models.FloatField(db_column='FLAT_SIZE_PER_SQ_FEET_BUILTUP_AREA', blank=True, null=True, default=0.0)  # Field name made lowercase.
+    flat_size_per_sq_feet_carpet_area = models.FloatField(db_column='FLAT_SIZE_PER_SQ_FEET_CARPET_AREA', blank=True, null=True)  # Field name made lowercase.
+    flat_size_per_sq_feet_builtup_area = models.FloatField(db_column='FLAT_SIZE_PER_SQ_FEET_BUILTUP_AREA', blank=True, null=True)  # Field name made lowercase.
     flat_rent = models.IntegerField(db_column='FLAT_RENT', blank=True, null=True)  # Field name made lowercase.
     rent_per_sqft = models.IntegerField(db_column='RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
     average_rent_pers_sqft_tower = models.IntegerField(db_column='AVERAGE_RENT_PERS_SQFT_TOWER', blank=True, null=True)  # Field name made lowercase.
@@ -427,7 +429,7 @@ class Events(models.Model):
     event_name = models.CharField(db_column='EVENT_NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
     event_location = models.CharField(db_column='EVENT_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
     past_major_events = models.CharField(db_column='PAST_MAJOR_EVENTS', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    past_gathering_per_event = models.CharField(db_column='PAST_GATHERING_PER_EVENT', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    past_gathering_per_event = models.IntegerField(db_column='PAST_GATHERING_PER_EVENT', blank=True, null=True)  # Field name made lowercase.
     event_duration = models.IntegerField(db_column='NO_OF_DAYS', blank=True, null=True)  # Field name made lowercase.
     activities = models.CharField(db_column='ACTIVITIES', max_length=50, blank=True, null=True)  # Field name made lowercase.
     stall_spaces_count = models.IntegerField(db_column='STALL_SPACES_COUNT', blank=True, null=True)  # Field name made lowercase.
@@ -570,21 +572,24 @@ class StallInventory(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='stalls', blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=20)  # Field name made lowercase.
     type = models.CharField(db_column='STALL_TYPES', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    stall_timings_morning = models.CharField(db_column='STALL_TIMINGS_morning', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    stall_size_area = models.FloatField(db_column='STALL_SIZE_AREA', blank=True, null=True, default=0.0)  # Field name made lowercase.
+    #stall_timings_morning = models.CharField(db_column='STALL_TIMINGS_morning', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    #stall_size_area = models.FloatField(db_column='STALL_SIZE_AREA', blank=True, null=True, default=0.0)  # Field name made lowercase.
     #stall_daily_price_stall_society = models.CharField(db_column='STALL_DAILY_PRICE_STALL_SOCIETY', max_length=15, blank=True, null=True)  # Field name made lowercase.
     #stall_daily_price_stall_business = models.CharField(db_column='STALL_DAILY_PRICE_STALL_BUSINESS', max_length=15, blank=True, null=True)  # Field name made lowercase.
-    current_price_stall = models.CharField(db_column='Current_Price_Stall', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    stall_timings_evening = models.TimeField(db_column='STALL_TIMINGS_evening', blank=True, null=True)  # Field name made lowercase.
+    #current_price_stall = models.CharField(db_column='Current_Price_Stall', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    #stall_timings_evening = models.TimeField(db_column='STALL_TIMINGS_evening', blank=True, null=True)  # Field name made lowercase.
+    #photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True, null=True)  # Field name made lowercase.
+    #photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
     stall_location = models.CharField(db_column='STALL_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
     electricity_available_stalls = models.CharField(db_column='ELECTRICITY_AVAILABLE_STALLS', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    electricity_charges_daily = models.CharField(db_column='ELECTRICITY_CHARGES_DAILY', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    electricity_charges_daily = models.FloatField(db_column='ELECTRICITY_CHARGES_DAILY', max_length=50, blank=True, null=True)  # Field name made lowercase.
     sound_system_allowed = models.CharField(db_column='SOUND_SYSTEM_ALLOWED', max_length=50, blank=True, null=True)  # Field name made lowercase.
     stall_furniture_available = models.CharField(db_column='STALL_FURNITURE_AVAILABLE', max_length=50, blank=True, null=True)  # Field name made lowercase.
     stall_furniture_details = models.CharField(db_column='STALL_FURNITURE_DETAILS', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    stall_inventory_status = models.CharField(db_column='STALL_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase.
-    photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True, null=True)  # Field name made lowercase.
-    photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
+    stall_inventory_status = models.CharField(db_column='STALL_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase
+    stall_size = models.CharField(db_column='STALL_SIZE', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    stall_timing = models.CharField(db_column='STALL_TIMINGS', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    stall_availability = models.CharField(db_column='STALL_AVAILABILITY', max_length=10, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
 
@@ -833,3 +838,170 @@ class SocietyTower(models.Model):
     class Meta:
 
         db_table = 'society_tower'
+
+
+
+
+class Business(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    business_type = models.CharField(db_column='TYPE', max_length=20, blank=True)
+    business_sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
+    phone = models.IntegerField(db_column='PHONE', null=True)
+    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+    address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
+    reference = models.CharField(db_column='REFERENCE', max_length=50, blank=True)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+    def get_contact(self):
+        try:
+            return self.contacts.first()
+        except:
+            return None
+
+    class Meta:
+
+        db_table = 'business'
+
+
+class BusinessContact(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
+    phone = models.IntegerField(db_column='PHONE', null=True)
+    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+    business = models.ForeignKey(Business, related_name='contacts', db_column='BUSINESS_ID', null=True)
+    spoc = models.BooleanField(db_column='SPOC', default=False)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+    class Meta:
+
+        db_table = 'business_contact'
+
+
+
+class CampaignTypes(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    type_name = models.CharField(db_column='TYPE_NAME', max_length=20, blank=True) #change to enum
+
+    class Meta:
+
+        db_table = 'campaign_types'
+
+
+
+
+
+class Campaign(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    #campaign_type = models.ForeignKey(CampaignTypes, related_name='campaigns', db_column='CAMPAIGN_TYPE_ID', null=True)
+    business = models.ForeignKey(Business, related_name='campaigns', db_column='BUSINESS_ID', null=True)
+    start_date = models.DateField(db_column='START_DATE', null=True)
+    end_date = models.DateField(db_column='END_DATE', null=True)
+    tentative_cost = models.IntegerField(db_column='TENTATIVE_COST', null=True)
+    booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
+
+    class Meta:
+
+        db_table = 'campaign'
+
+
+class CampaignTypeMapping(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='types', db_column='CAMPAIGN_ID', null=True)
+    type = models.CharField(db_column='TYPE', max_length=20, blank=True) #change to enum
+    sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
+
+
+    class Meta:
+
+        db_table = 'campaign_type_mapping'
+
+
+class CampaignBookingInfo(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='bookings', db_column='CAMPAIGN_ID', null=True)
+    booking_id = models.IntegerField(db_column='BOOKING_ID', null=True)
+    booking_amount = models.FloatField(db_column='BOKING_AMOUNT', null=True)
+    instrument_type = models.CharField(db_column='INSTRUMENT_TYPE', max_length=20, blank=True)
+    instrument_no = models.CharField(db_column='INSTRUMENT_NO', max_length=20, blank=True)
+    date_received = models.DateField(db_column='DATE_RECEIVED', null=True)
+
+    class Meta:
+
+        db_table = 'campaign_booking_info'
+
+
+class CampaignSocietyMapping(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='societies', db_column='CAMPAIGN_ID', null=True)
+    society = models.ForeignKey(SupplierTypeSociety, related_name='campaigns', db_column='SUPPLIER_ID', null=True)
+    booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
+
+
+    class Meta:
+
+        db_table = 'campaign_society_mapping'
+
+
+class SocietyInventoryBooking(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='inventory_bookings', db_column='CAMPAIGN_ID', null=True)
+    society = models.ForeignKey(SupplierTypeSociety, related_name='inventory_bookings', db_column='SUPPLIER_ID', null=True)
+    adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20, blank=True)
+    start_date = models.DateField(db_column='START_DATE', null=True)
+    end_date = models.DateField(db_column='END_DATE', null=True)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+    audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
+
+    class Meta:
+
+        db_table = 'society_inventory_booking'
+
+
+
+class audits(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    society_booking = models.ForeignKey(SocietyInventoryBooking, related_name='audits', db_column='SOCIETY_BOOKING_ID', null=True)
+    latitude = models.FloatField(db_column='LATITUDE', null=True)
+    longitude = models.FloatField(db_column='LONGITUDE', null=True)
+    timestamp = models.DateTimeField(db_column='TIMESTAMP', null=True)
+    barcode = models.FloatField(db_column='BARCODE', null=True) #split to 2 barcode fields
+    audited_by = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
+    audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
+
+    class Meta:
+
+        db_table = 'audits'
+
+
+class AuditorSocietyMapping(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    user_id = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
+    society = models.ForeignKey(SupplierTypeSociety, related_name='auditors', db_column='SUPPLIER_ID', null=True)
+
+    class Meta:
+
+        db_table = 'auditor_society_mapping'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
