@@ -95,8 +95,8 @@ angular
           controller: 'SocietyCtrl'
         })
         */
-})
-.run(['$rootScope', '$window', '$location', 'AuthService',
+});
+/*.run(['$rootScope', '$window', '$location', 'AuthService',
      function ($rootScope, $window, $location, AuthService) {
        $rootScope.globals = $rootScope.globals || {};
        $rootScope.globals.currentUser = AuthService.UserInfo();
@@ -108,10 +108,10 @@ angular
 
          // redirect to login page if not logged in
          $rootScope.globals.currentUser = AuthService.UserInfo();
-         /*if (!$rootScope.globals.currentUser) {
+         if (!$rootScope.globals.currentUser) {
            $location.path('/login');
          }
-         else*/ if ($rootScope.globals.currentUser && $location.path() == '/logout')
+         else if ($rootScope.globals.currentUser && $location.path() == '/logout')
          {
            AuthService.Logout();
            $location.path("/login");
@@ -123,6 +123,6 @@ angular
          else {
            $location.path(whence);
          }
-       });
+       });*/
      }]);
 
