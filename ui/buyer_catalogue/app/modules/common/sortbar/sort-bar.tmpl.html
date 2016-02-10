@@ -31,7 +31,7 @@
 	  </div>
 			<!-- End of padding -->
 			<div class="itemscontainer offset-1">
-				<div class="offset-2">
+				<div class="offset-2" ng-repeat="row in model">
 					<table cellpadding="30" class="hpadding20 table table-bordered">
 					 <tbody>
 						 <tr valign="center">
@@ -41,8 +41,8 @@
 								 </div>
 								 <div class="col-md-8 offset-0 ">
 										<div class="col-md-7 hpadding20" style="margin-top:20px">
-											 <h4>Yarrow nahar, Amrit Shakti</h4>
-											 <p style="color:#949292"><span class="fa fa-map-marker"></span>Hiranandan Garden Golden oak next to railway station</p>
+											 <h4>{{row.societyname}}</h4>
+											 <p style="color:#949292"><span class="fa fa-map-marker"></span>{{row.location}}</p>
 										</div>
 										<div class="col-md-5 hpadding20" style="margin-top:20px">
 											<button type="button" class="shortlist btn btn-danger btn-lg active">SHORTLIST</button><br><br>
