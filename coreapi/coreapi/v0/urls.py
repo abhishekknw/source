@@ -6,6 +6,7 @@ from v0 import views
 urlpatterns = patterns('',
     url(r'^ui/', include('v0.ui.urls')),
 
+
     url(r'^bannerinventory/(?P<id>[0-9]+)$', views.BannerInventoryAPIView.as_view()),
     url(r'^bannerinventory/$', views.BannerInventoryAPIListView.as_view()),
 

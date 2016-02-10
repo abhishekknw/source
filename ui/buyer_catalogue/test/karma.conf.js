@@ -34,6 +34,9 @@ module.exports = function(config) {
       'bower_components/angular-ui-router/release/angular-ui-router.js',
       'bower_components/slick-carousel/slick/slick.min.js',
       'bower_components/angular-slick-carousel/dist/angular-slick.js',
+      'bower_components/angular-rangeslider/angular.rangeSlider.js',
+      'bower_components/angularjs-slider/dist/rzslider.js',
+      'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",

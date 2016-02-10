@@ -23,7 +23,9 @@ angular
     'ngTouch',
     'machadaloCommon',
     'machadaloPages',
-    'Authentication'
+    'Authentication',
+    'rzModule',
+    'ui.bootstrap'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
       $routeProvider.otherwise('/');

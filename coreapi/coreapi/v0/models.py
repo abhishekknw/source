@@ -838,3 +838,170 @@ class SocietyTower(models.Model):
     class Meta:
 
         db_table = 'society_tower'
+
+
+
+
+class Business(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    business_type = models.CharField(db_column='TYPE', max_length=20, blank=True)
+    business_sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
+    phone = models.IntegerField(db_column='PHONE', null=True)
+    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+    address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
+    reference = models.CharField(db_column='REFERENCE', max_length=50, blank=True)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+    def get_contact(self):
+        try:
+            return self.contacts.first()
+        except:
+            return None
+
+    class Meta:
+
+        db_table = 'business'
+
+
+class BusinessContact(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
+    phone = models.IntegerField(db_column='PHONE', null=True)
+    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+    business = models.ForeignKey(Business, related_name='contacts', db_column='BUSINESS_ID', null=True)
+    spoc = models.BooleanField(db_column='SPOC', default=False)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+    class Meta:
+
+        db_table = 'business_contact'
+
+
+
+class CampaignTypes(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    type_name = models.CharField(db_column='TYPE_NAME', max_length=20, blank=True) #change to enum
+
+    class Meta:
+
+        db_table = 'campaign_types'
+
+
+
+
+
+class Campaign(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    #campaign_type = models.ForeignKey(CampaignTypes, related_name='campaigns', db_column='CAMPAIGN_TYPE_ID', null=True)
+    business = models.ForeignKey(Business, related_name='campaigns', db_column='BUSINESS_ID', null=True)
+    start_date = models.DateField(db_column='START_DATE', null=True)
+    end_date = models.DateField(db_column='END_DATE', null=True)
+    tentative_cost = models.IntegerField(db_column='TENTATIVE_COST', null=True)
+    booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
+
+    class Meta:
+
+        db_table = 'campaign'
+
+
+class CampaignTypeMapping(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='types', db_column='CAMPAIGN_ID', null=True)
+    type = models.CharField(db_column='TYPE', max_length=20, blank=True) #change to enum
+    sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
+
+
+    class Meta:
+
+        db_table = 'campaign_type_mapping'
+
+
+class CampaignBookingInfo(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='bookings', db_column='CAMPAIGN_ID', null=True)
+    booking_id = models.IntegerField(db_column='BOOKING_ID', null=True)
+    booking_amount = models.FloatField(db_column='BOKING_AMOUNT', null=True)
+    instrument_type = models.CharField(db_column='INSTRUMENT_TYPE', max_length=20, blank=True)
+    instrument_no = models.CharField(db_column='INSTRUMENT_NO', max_length=20, blank=True)
+    date_received = models.DateField(db_column='DATE_RECEIVED', null=True)
+
+    class Meta:
+
+        db_table = 'campaign_booking_info'
+
+
+class CampaignSocietyMapping(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='societies', db_column='CAMPAIGN_ID', null=True)
+    society = models.ForeignKey(SupplierTypeSociety, related_name='campaigns', db_column='SUPPLIER_ID', null=True)
+    booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
+
+
+    class Meta:
+
+        db_table = 'campaign_society_mapping'
+
+
+class SocietyInventoryBooking(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='inventory_bookings', db_column='CAMPAIGN_ID', null=True)
+    society = models.ForeignKey(SupplierTypeSociety, related_name='inventory_bookings', db_column='SUPPLIER_ID', null=True)
+    adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20, blank=True)
+    start_date = models.DateField(db_column='START_DATE', null=True)
+    end_date = models.DateField(db_column='END_DATE', null=True)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+    audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
+
+    class Meta:
+
+        db_table = 'society_inventory_booking'
+
+
+
+class audits(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    society_booking = models.ForeignKey(SocietyInventoryBooking, related_name='audits', db_column='SOCIETY_BOOKING_ID', null=True)
+    latitude = models.FloatField(db_column='LATITUDE', null=True)
+    longitude = models.FloatField(db_column='LONGITUDE', null=True)
+    timestamp = models.DateTimeField(db_column='TIMESTAMP', null=True)
+    barcode = models.FloatField(db_column='BARCODE', null=True) #split to 2 barcode fields
+    audited_by = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
+    audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
+
+    class Meta:
+
+        db_table = 'audits'
+
+
+class AuditorSocietyMapping(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    user_id = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
+    society = models.ForeignKey(SupplierTypeSociety, related_name='auditors', db_column='SUPPLIER_ID', null=True)
+
+    class Meta:
+
+        db_table = 'auditor_society_mapping'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
