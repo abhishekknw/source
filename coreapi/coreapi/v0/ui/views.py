@@ -17,6 +17,18 @@ class SocietyAPIView(APIView):
         except :
             return Response(status=404)
 
+    def delete(self, request, id, format=None):
+        try:
+            item = SupplierTypeSociety.objects.get(pk=id)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        contacts = item.get_contact_list()
+        for contact in contacts:
+            contact.delete()
+        item.delete()
+        return Response(status=204)
+
+
     def post(self, request, format=None):
         print request.data
         current_user = request.user
@@ -63,6 +75,9 @@ class SocietyAPIView(APIView):
                 contact_serializer.save(supplier = society, contact_type="Reference")
 
         return Response(serializer.data, status=201)
+
+
+
 
 def set_default_pricing(society_id):
     society = SupplierTypeSociety.objects.filter(pk=society_id).first()
@@ -255,6 +270,22 @@ class TowerAPIView(APIView):
                         return Response(flat_serializer.errors, status=400)
 
         return Response(status=201)
+
+
+    def delete(self, request, id, format=None):
+        try:
+            item = SocietyTower.objects.get(pk=id)
+        except SocietyTower.DoesNotExist:
+            return Response(status=404)
+        for key in ['lift', 'notice_board', 'flat']:
+            fn_name = "get_" + key + "_list"
+            func = getattr(item,fn_name)
+            objects = func()
+            for obj in objects:
+                obj.delete()
+        item.delete()
+        return Response(status=204)
+
 
 
 
