@@ -1,0 +1,35 @@
+<div style="margin-top:30px"></div>
+<div>
+<div ui-view="">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <th  style = "text-align:center">Society Name</th>
+            <th  style = "text-align:center">Contact No</th>
+            <th  style = "text-align:center">Inventory Types</th>
+            <th  style = "text-align:center">Start Date</th>
+            <th  style = "text-align:center">End Date</th>
+            <th  style = "text-align:center">Status</th>
+            <th  style = "text-align:center">Adjusted Price</th>
+            <th  style = "text-align:center">Comments</th>
+            <th  style = "text-align:center">Remove Society</th>
+            
+        </thead>
+        <tbody>
+        <tr ng-repeat="row in model" >
+            <td style = "text-align: -webkit-center"><span>{{row.name}}</span></td>
+            <td style = "text-align: -webkit-center"><span>{{row.name}}</span></td>
+            <td style = "text-align: -webkit-center"><span>{{row.name}}</span></td>
+            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.society_price" /></td>
+            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.business_price" /></td>
+             <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.society_price" /></td>
+            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.business_price" /></td>
+            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.business_price" /></td>
+            <td style = "text-align: -webkit-center"><input type="button" class="btn btn-primary" ng-click="viewInventory(1)" value="Remove Society"></td>
+
+        </tr>
+       
+        </tbody>
+    </table>
+</div>
+    
+</div>
