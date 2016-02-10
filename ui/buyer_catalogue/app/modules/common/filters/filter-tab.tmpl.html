@@ -1,0 +1,114 @@
+<link rel="stylesheet" href="modules/common/filters/filter-tab.tmpl.css"/>
+<body id="top">
+<!-- FILTERS -->
+			<div class="col-md-3 filters offset-0">
+			     <div class="padding20title"><h3 class="opensans dark">Filter by<span class="clearall">clear all</span></h3></div>
+				<div class="line2"></div>
+
+				<!-- Location ratings -->
+				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse1">
+				  Location <span class="collapsearrow"></span>
+				</button>
+
+				<div id="collapse1" class="collapse in">
+					<div class="hpadding20 topmarginlt">
+						<div class="left wh70percent">
+									<!--<select class="form-control mySelectBoxClass ">
+									  <option selected>Guest rating</option>
+									  <option>5 stars</option>
+									  <option>4 stars</option>
+									  <option>3 stars</option>
+									  <option>2 stars</option>
+									  <option>1 stars</option>
+									</select>-->
+									<input type="text" ng-model="asyncSelected" placeholder = "Search Location" uib-typeahead="address for address in getLocation($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" class="form-control">
+    <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
+    <div ng-show="noResults">
+      <i class="glyphicon glyphicon-remove"></i> No Results Found
+    </div>
+								</div>
+					</div>
+					<div class="clearfix"></div>
+				</div>
+                <!--End Location Rating-->
+
+                <!-- Society name-->
+                <button type="button" class="collapsebtn topmarginlt" data-toggle="collapse" data-target="#collapse1">
+				  Society  <span class="collapsearrow"></span>
+				</button>
+
+				<div id="collapse1" class="collapse in">
+					<div class="hpadding20 topmarginlt">
+						<div class="left wh70percent">
+									<select class="form-control mySelectBoxClass ">
+									  <option selected>Select Society Name</option>
+									  <option>5 stars</option>
+									  <option>4 stars</option>
+									  <option>3 stars</option>
+									  <option>2 stars</option>
+									  <option>1 stars</option>
+									</select>
+								</div>
+					</div>
+					<div class="clearfix"></div>
+				</div>
+				<!-- End of Society Names -->
+
+				<div class="line2"></div>
+				<!-- Inventory Type -->
+				<button type="button" class="collapsebtn last" data-toggle="collapse" data-target="#collapse4">
+				  Hotel Preferences <span class="collapsearrow"></span>
+				</button>
+				<div id="collapse4" class="collapse in">
+					<div class="hpadding20">
+						<div class="checkbox">
+							<label>
+							  <input type="checkbox">Poster Caimpaign
+							</label>
+						</div>
+						<div class="checkbox">
+							<label>
+							  <input type="checkbox">Standee Caimpaign
+							</label>
+						</div>
+						<div class="checkbox">
+							<label>
+							  <input type="checkbox">Stall Campaign
+							</label>
+						</div>
+						<div class="checkbox">
+							<label>
+							  <input type="checkbox">Event Campaign
+							</label>
+						</div>
+					</div>
+					<div class="clearfix"></div>
+				</div>
+				<!-- End of Inventory Type -->
+
+				<!-- Price range -->
+				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse2">
+				  Price range <span class="collapsearrow"></span>
+				</button>
+
+			<!--	<div id="collapse2" class="collapse in">
+					<div class="padding20">
+						<div class="layout-slider wh100percent">
+						<span class="cstyle09"><input id="Slider1" type="slider" name="price" value="400;700" /></span>
+						</div>
+						<script type="text/javascript" >
+						  jQuery("#Slider1").slider({ from: 100, to: 1000, step: 5, smooth: true, round: 0, dimension: "&nbsp;$", skin: "round" });
+						</script>
+					</div>
+				</div>-->
+				<!-- End of Price range -->
+				<!--<div range-slider min="demo2.range.min" max="demo2.range.max" model-min="demo2.minPrice" model-max="demo2.maxPrice" filter="currency:'$'" step="100"></div>-->
+				<rzslider rz-slider-model="slider_translate.minValue" rz-slider-high="slider_translate.maxValue" rz-slider-options="slider_translate.options"></rzslider>
+				<div class="line2"></div>
+				<div class="clearfix"></div>
+				<br/>
+				<br/>
+				<br/>
+		</div>
+			<!-- END OF FILTERS -->
+			<sort-bar><sort-bar>
