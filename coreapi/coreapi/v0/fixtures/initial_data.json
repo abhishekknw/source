@@ -126,6 +126,23 @@
     },
     "model": "v0.durationtype",
     "pk": 4
-}
+},
+{
+    "fields": {
+        "days_count": 7,
+        "duration_name": "Campaign Weekly"
+    },
+    "model": "v0.durationtype",
+    "pk": 5
+},
+{
+    "fields": {
+        "days_count": 30,
+        "duration_name": "Campaign Monthly"
+    },
+    "model": "v0.durationtype",
+    "pk": 6
+},
+
 
 ]

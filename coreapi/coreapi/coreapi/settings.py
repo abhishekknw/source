@@ -85,11 +85,11 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
     'default': {
-       'NAME': 'ebdb',
+       'NAME': 'machadalo_dev',
        'ENGINE': 'django.db.backends.mysql',
-       'HOST': 'aa12skfe6g08ukb.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-       'USER': 'machadalo',
-       'PASSWORD': 'djanGo12',
+       'HOST': '127.0.0.1',
+       'USER': 'root',
+       'PASSWORD': '',
     }
 }
 
