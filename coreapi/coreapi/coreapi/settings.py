@@ -115,7 +115,15 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = '/static/'
 
 # settings for Django Rest Framework
+
 REST_FRAMEWORK = {
+    # other settings...
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [],
+}
+
+'''REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAdminUser',
         ),
@@ -126,7 +134,7 @@ REST_FRAMEWORK = {
         ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20
-}
+}'''
 
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True

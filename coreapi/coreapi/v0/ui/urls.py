@@ -2,6 +2,9 @@ from django.conf.urls import include, url
 from v0.ui import views
 
 urlpatterns = [
+
+    url(r'^website/', include('v0.ui.website.urls')),
+
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/tower/$', views.TowerAPIView.as_view()),
     #url(r'^society/(?P<id>[A-Z_a-z0-9]+)/tower/(?P<tower_id>[A-Z_a-z0-9]+)$', views.TowerAPIView.as_view()),
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)$', views.SocietyAPIView.as_view()),

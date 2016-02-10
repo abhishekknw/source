@@ -18,6 +18,9 @@ class Migration(migrations.Migration):
                 ('user_id', models.IntegerField(null=True, db_column='USER_ID')),
                 ('society', models.ForeignKey(related_name='auditors', db_column='SUPPLIER_ID', to='v0.SupplierTypeSociety', null=True)),
             ],
+            options={
+                'db_table': 'auditor_society_mapping',
+            },
         ),
         migrations.CreateModel(
             name='audits',
@@ -30,6 +33,9 @@ class Migration(migrations.Migration):
                 ('audited_by', models.IntegerField(null=True, db_column='USER_ID')),
                 ('audit_type', models.CharField(max_length=20, db_column='AUDIT_TYPE', blank=True)),
             ],
+            options={
+                'db_table': 'audits',
+            },
         ),
         migrations.CreateModel(
             name='Business',
@@ -37,10 +43,13 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
                 ('name', models.CharField(max_length=50, db_column='NAME', blank=True)),
                 ('business_type', models.CharField(max_length=20, db_column='TYPE', blank=True)),
-                ('mobile', models.IntegerField(null=True, db_column='MOBILE')),
+                ('phone', models.IntegerField(null=True, db_column='PHONE')),
                 ('email', models.CharField(max_length=50, db_column='EMAILID', blank=True)),
                 ('address', models.CharField(max_length=100, db_column='ADDRESS', blank=True)),
             ],
+            options={
+                'db_table': 'business',
+            },
         ),
         migrations.CreateModel(
             name='Campaign',
@@ -48,6 +57,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
                 ('business', models.ForeignKey(related_name='campaigns', db_column='BUSINESS_ID', to='v0.Business', null=True)),
             ],
+            options={
+                'db_table': 'campaign',
+            },
         ),
         migrations.CreateModel(
             name='CampaignBookingInfo',
@@ -57,6 +69,9 @@ class Migration(migrations.Migration):
                 ('campaign_amount', models.FloatField(null=True, db_column='CAMPAIGN_AMOUNT')),
                 ('campaign', models.ForeignKey(related_name='bookings', db_column='CAMPAIGN_ID', to='v0.Campaign', null=True)),
             ],
+            options={
+                'db_table': 'campaign_booking_info',
+            },
         ),
         migrations.CreateModel(
             name='CampaignSocietyMapping',
@@ -65,6 +80,9 @@ class Migration(migrations.Migration):
                 ('campaign', models.ForeignKey(related_name='societies', db_column='CAMPAIGN_ID', to='v0.Campaign', null=True)),
                 ('society', models.ForeignKey(related_name='campaigns', db_column='SUPPLIER_ID', to='v0.SupplierTypeSociety', null=True)),
             ],
+            options={
+                'db_table': 'campaign_society_mapping',
+            },
         ),
         migrations.CreateModel(
             name='CampaignTypes',
@@ -72,6 +90,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
                 ('type_name', models.CharField(max_length=20, db_column='TYPE_NAME', blank=True)),
             ],
+            options={
+                'db_table': 'campaign_types',
+            },
         ),
         migrations.CreateModel(
             name='SocietyInventoryBooking',
@@ -84,6 +105,9 @@ class Migration(migrations.Migration):
                 ('campaign', models.ForeignKey(related_name='inventory_bookings', db_column='CAMPAIGN_ID', to='v0.Campaign', null=True)),
                 ('society', models.ForeignKey(related_name='inventory_bookings', db_column='SUPPLIER_ID', to='v0.SupplierTypeSociety', null=True)),
             ],
+            options={
+                'db_table': 'society_inventory_booking',
+            },
         ),
         migrations.AddField(
             model_name='campaign',
