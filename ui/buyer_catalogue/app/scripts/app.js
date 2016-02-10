@@ -23,7 +23,9 @@ angular
     'ngTouch',
     'machadaloCommon',
     'machadaloPages',
-    'Authentication'
+    'Authentication',
+    'rzModule',
+    'ui.bootstrap'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
       $routeProvider.otherwise('/');
@@ -35,7 +37,7 @@ angular
         })
         .state('society.list', {
           url : '/list', //:societyId/
-          templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
+          templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyListCtrl'
         })
         .state('society.details', {
@@ -75,6 +77,16 @@ angular
           templateUrl: 'modules/pages/manageCampaign/finalize/finalizeInventory.tmpl.html'
         })
 
+      .state('society.details.poster', {
+          url : '/poster', //:societyId/
+          templateUrl: 'modules/common/postertab/poster-tab.tmpl.html',
+          controller: ''
+        })
+      .state('society.details.info', {
+          url : '/info', //:societyId/
+          templateUrl: 'modules/common/infotab/societyinfo-tab.tmpl.html',
+          controller: ''
+        });
 
         /*
         .state('catalogue.home', {
@@ -113,3 +125,4 @@ angular
          }
        });
      }]);
+
