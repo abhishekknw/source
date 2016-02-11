@@ -1,6 +1,6 @@
 angular.module('machadaloPages')
 .controller('SocietyListCtrl',
-    ['$scope', '$rootScope', '$window', '$location',
+    ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
     function ($scope, $rootScope, $window, $location, $http, societyListService) {
       //Start: for filter functionality
       $scope.getLocation = function(val) {
@@ -8,7 +8,7 @@ angular.module('machadaloPages')
            params: {
              address: val,
              key: 'AIzaSyDCTq6FNBxVrhd2te_GIrCa8TI8CYwobYg',
-             sensor: true
+             sensor: false
            }
          }).then(function(response){
            return response.data.results.map(function(item){
@@ -16,9 +16,7 @@ angular.module('machadaloPages')
            });
          });
        };// End: filter functionality
-
   $scope.model = {};
-
   var dummyData = [
    {
        "societyname":"23C_Tower1_1401",
@@ -30,5 +28,17 @@ angular.module('machadaloPages')
    }
   ];
   $scope.model = dummyData;
+  //  societyListService.getSocietyInfo('10')
+  //    .success(function (response){
+  //        $scope.model = [response];
+  //        console.log(response);
+  //    });
+   $scope.shortlistThis = function(society) {
+    alert('vidhi1');
+   }
+   $scope.catalogue = function(){
+     $location.path('/society/details');
+   }
 
-    }]);
+
+}]);// Controller Functions end
