@@ -60,9 +60,6 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
        $rootScope.campaignId = null;
      }
    };
- 
-
-
 
    return pagesService;
 }]);
