@@ -4,7 +4,6 @@
     <table class="table table-bordered table-hover">
         <thead>
             <th  style = "text-align:center">Business Name</th>
-            <th  style = "text-align:center">Campaign Name</th>
             <th  style = "text-align:center">Campaign Types</th>
             <th  style = "text-align:center">Start Date</th>
             <th  style = "text-align:center">End Date</th>
@@ -13,12 +12,12 @@
         </thead>
         <tbody>
         <tr ng-repeat="row in model" >
-            <td style = "text-align: -webkit-center"><span>{{row.name}}</span></td>
-            <td style = "text-align: -webkit-center"><span>{{row.name}}</span></td>
-            <td style = "text-align: -webkit-center"><span>{{row.name}}</span></td>
-            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.society_price" /></td>
-            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.business_price" /></td>
-            <td style = "text-align: -webkit-center"><input type="button" class="btn btn-primary" ng-click="viewInventory(1)" value="View Inventory"></td>
+            <td style = "text-align: -webkit-center"><span>{{row.business.name}}</span></td>
+            <td style = "text-align: -webkit-center">
+            <div ng-repeat="key in row.types">{{key.type}} - {{key.sub_type}}</div></td>
+            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.start_date" /></td>
+            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.end_date" /></td>
+            <td style = "text-align: -webkit-center"><input type="button" class="btn btn-primary" ng-click="viewInventory(row.id)" value="View Inventory"></td>
         </tr>
        
         </tbody>

@@ -39,6 +39,18 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
        return machadaloHttp.post(url, data);
       };
 
+    pagesService.getRequestedCampaigns = function () {
+       var url = url_base + "finalizeCampaign/";
+       return machadaloHttp.get(url);
+      };
+
+    pagesService.getRequestedInventory = function (id) {
+       var url = url_base + "campaign/" + id + "/inventories/";
+       return machadaloHttp.get(url);
+      };
+
+      
+
     pagesService.processParam = function(){
      if($stateParams.campaignId)
      {

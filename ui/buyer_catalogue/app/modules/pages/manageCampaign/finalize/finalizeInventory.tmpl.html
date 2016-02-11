@@ -16,9 +16,10 @@
         </thead>
         <tbody>
         <tr ng-repeat="row in model" >
+            <td style = "text-align: -webkit-center"><span>{{row.society.society_name}}</span></td>
             <td style = "text-align: -webkit-center"><span>{{row.name}}</span></td>
-            <td style = "text-align: -webkit-center"><span>{{row.name}}</span></td>
-            <td style = "text-align: -webkit-center"><span>{{row.name}}</span></td>
+            <td style = "text-align: -webkit-center">
+                <div ng-repeat="key in row.campaign.types">{{key.type}} - {{key.sub_type}}</div></td>
             <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.society_price" /></td>
             <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.business_price" /></td>
              <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.society_price" /></td>
