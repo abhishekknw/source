@@ -3,25 +3,21 @@ angular.module('machadaloPages')
     ['$scope', '$rootScope', '$window', '$location', 'pagesService',
     function ($scope, $rootScope, $window, $location, pagesService) {
 
-       
-        $scope.model = [{"name":"POwai Poster campaign"}]
-    	
 
     	$scope.viewInventory = function(id) {
             $location.path("/manageCampaign/finalize/" + id + "/finalizeInventory/"); 
 	    	
 	    };
 
-    	$scope.getBusiness = function() {
-    		pagesService.getBusiness($scope.bsSelect)
-	    	.success(function (response, status) {
-	    		    console.log(response);
-	            $scope.business = response;
-	            $scope.contact = response.business_contact[0]
-	            $scope.choice_new = "selected";
-	       });
+    	
+		pagesService.getRequestedCampaigns()
+    	.success(function (response, status) {
+    		console.log(response);
+            $scope.model = response;
+            
+       });
 
-    	};
+    	
     
 
     	$scope.create = function() {

@@ -35,11 +35,18 @@ angular
           controller: 'CatalogueBaseCtrl',
           templateUrl: 'modules/pages/base/base.tmpl.html'
         })
-        .state('society.list', {
-          url : '/list', //:societyId/
+        .state('campaign', {
+          url : '/campaign/:campaignId', //:societyId/
+          templateUrl: 'index.html',
+          controller: ''
+        })
+        
+        .state('campaign.societyList', {
+          url : '/societyList', //:societyId/
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyListCtrl'
         })
+
         .state('society.details', {
           url : '/details', //:societyId/
           templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
@@ -107,11 +114,12 @@ angular
          console.log("location change start - Whence: " + whence);
 
          // redirect to login page if not logged in
-         $rootScope.globals.currentUser = AuthService.UserInfo();
-         //if (!$rootScope.globals.currentUser) {
-        //   $location.path('/login');
-        // }
-          if ($rootScope.globals.currentUser && $location.path() == '/logout')
+         /*$rootScope.globals.currentUser = AuthService.UserInfo();
+         if (!$rootScope.globals.currentUser) {
+           $location.path('/login');
+         }
+         else*/ if ($rootScope.globals.currentUser && $location.path() == '/logout')
+
          {
            AuthService.Logout();
            $location.path("/login");

@@ -10,7 +10,8 @@ angular.module('machadaloPages')
     		'Poster': ['A4', 'A3'],
     		'Standee': ['Small', 'Medium', 'Large'],
     		'Stall':['Small', 'Medium', 'Large','Canopy'],
-    		'CarDisplay':['Normal', 'Premium']
+    		'CarDisplay':['Normal', 'Premium'],
+            'Fliers': ['Normal']
     	}
     	$scope.campaign_type = {}
 
@@ -38,14 +39,15 @@ angular.module('machadaloPages')
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {
             console.log(response, status);
+            console.log(response);
             if (status == '201') {
-                 $location.path("/manageCampaign/finalize");  
+                 $location.path("/campaign/" + response.id + "/societyList");  
             }
         }).error(function(response, status){
             
              $rootScope.errorMsg = response.message ;
              console.log(status);           
         })
-        }
+        };
       //[TODO] implement this
     }]);
