@@ -10,6 +10,7 @@ angular.module('machadaloCommon')
 
    angular.forEach(['get', 'delete', 'head', 'jsonp'], function (name) {
       machadaloHttp[name] = function(url, config) {
+         alert(name);
          config = config || {};
          extendHeaders(config);
          return $http[name](machadaloHttp.baseURL + url, config);
