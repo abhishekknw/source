@@ -85,11 +85,11 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
     'default': {
-       'NAME': 'ebdb',
+       'NAME': 'machadalo_dev',
        'ENGINE': 'django.db.backends.mysql',
-       'HOST': 'aa12skfe6g08ukb.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-       'USER': 'machadalo',
-       'PASSWORD': 'djanGo12',
+       'HOST': '127.0.0.1',
+       'USER': 'root',
+       'PASSWORD': 'khush123',
     }
 }
 
@@ -123,7 +123,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [],
 }
 
-'''REST_FRAMEWORK = {
+REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAdminUser',
         ),
@@ -132,6 +132,11 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_jwt.authentication.JSONWebTokenAuthentication',
         ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
+}
+
+'''REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20
 }'''
