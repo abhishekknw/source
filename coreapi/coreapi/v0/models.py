@@ -96,7 +96,6 @@ def update_price_mapping(sender, **kwargs):
 '''
 
 
-
 class AdInventoryType(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=10,
@@ -903,6 +902,13 @@ class Campaign(models.Model):
     tentative_cost = models.IntegerField(db_column='TENTATIVE_COST', null=True)
     booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
 
+    def get_types(self):
+        try:
+            return self.types.all()
+        except:
+            return None
+
+
     class Meta:
 
         db_table = 'campaign'
@@ -918,6 +924,7 @@ class CampaignTypeMapping(models.Model):
     class Meta:
 
         db_table = 'campaign_type_mapping'
+
 
 
 class CampaignBookingInfo(models.Model):
@@ -940,6 +947,18 @@ class CampaignSocietyMapping(models.Model):
     society = models.ForeignKey(SupplierTypeSociety, related_name='campaigns', db_column='SUPPLIER_ID', null=True)
     booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
 
+    def get_campaign(self):
+        try:
+            print self.campaign
+            return self.campaign
+        except:
+            return None
+
+    def get_society(self):
+        try:
+            return self.society
+        except:
+            return None
 
     class Meta:
 

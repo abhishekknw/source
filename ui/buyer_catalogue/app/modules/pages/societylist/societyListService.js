@@ -9,7 +9,8 @@
  */
 
 angular.module('machadaloPages')
-.factory('societyListService', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location', function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
+.factory('societyListService', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location',
+  function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
 
   //var url_base = 'http://machadalocore.ap-southeast-1.elasticbeanstalk.com/';
   var url_base = 'v0/ui/';
@@ -19,16 +20,30 @@ angular.module('machadaloPages')
   societyListService.getSocietyInfo = function (id) {
         var url = url_base + "society/" + 10;
         return machadaloHttp.get(url);
-     };
+  };
 
-     societyListService.listSocieties = function (sObj) {
+  societyListService.listSocieties = function (sObj) {
      var url = url_base + "society/list/";
      if(sObj && sObj != "")
       url += "?search="+sObj
      return machadaloHttp.get(url);
    };
 
+  //for adding shortlisted societies
+  societyListService.addShortlistedSociety = function(campaign_id, society_id){
+    alert('inside service');
+    var url = url_base + "website/campaign/society/shortlist/";
+    var data = {campaign_id, society_id};
+    return machadaloHttp.post(url, data);
+  }
 
+  societyListService.processParam = function(){
+   if($stateParams.campaignId){
+     $rootScope.campaignId = $stateParams.campaignId;
+   }else {
+     $rootScope.campaignId = null;
+    }
+  };
 
   return societyListService;
 }]);

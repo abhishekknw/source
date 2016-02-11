@@ -2,6 +2,7 @@ angular.module('machadaloPages')
 .controller('SocietyListCtrl',
     ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
     function ($scope, $rootScope, $window, $location, $http, societyListService) {
+      societyListService.processParam();
       //Start: for filter functionality
       $scope.getLocation = function(val) {
          return $http.get('https://maps.googleapis.com/maps/api/geocode/json', {
@@ -27,18 +28,35 @@ angular.module('machadaloPages')
        "location":"next to theo"
    }
   ];
-  $scope.model = dummyData;
+   //$scope.model = dummyData;
   //  societyListService.getSocietyInfo('10')
-  //    .success(function (response){
-  //        $scope.model = [response];
-  //        console.log(response);
+  //   .success(function (response){
+  //     $scope.model = [response];
+  //       console.log(response);
   //    });
-   $scope.shortlistThis = function(society) {
-    alert('vidhi1');
-   }
+
+   var sObj = '';
+   societyListService.listSocieties(sObj)
+    .success(function (response) {
+     $scope.model = response.results;
+     console.log(response);
+ })
+
+   //Start:For adding shortlisted society
+   if($rootScope.campaignId){
+     $scope.shortlistThis = function() {
+     alert('vidhi1');
+     societyListService.addShortlistedSociety($rootScope.campaignId, '10')
+      .success(function (response){
+          $scope.model = response;
+            console.log(response);
+     });
+   }}//End: For adding shortlisted society
+
+   //Start: To navigate to catalogue page
    $scope.catalogue = function(){
      $location.path('/society/details');
-   }
+   }//End: To navigate to catalogue page
 
 
 }]);// Controller Functions end

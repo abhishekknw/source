@@ -40,7 +40,7 @@ angular
           templateUrl: 'index.html',
           controller: ''
         })
-        
+
         .state('campaign.societyList', {
           url : '/societyList', //:societyId/
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
