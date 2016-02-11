@@ -21,13 +21,17 @@ angular.module('machadaloPages')
         return machadaloHttp.get(url);
      };
 
-     societyListService.listSocieties = function (sObj) {
+  societyListService.listSocieties = function (sObj) {
      var url = url_base + "society/list/";
      if(sObj && sObj != "")
       url += "?search="+sObj
      return machadaloHttp.get(url);
    };
-
+  //for adding shortlisted societies
+  societyListService.addShortlistedSociety = function(){
+    alert('inside service');
+  return machadaloHttp.post(url, data);
+  }
 
 
   return societyListService;

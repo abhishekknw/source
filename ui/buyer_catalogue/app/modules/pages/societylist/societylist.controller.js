@@ -27,18 +27,27 @@ angular.module('machadaloPages')
        "location":"next to theo"
    }
   ];
-  $scope.model = dummyData;
-  //  societyListService.getSocietyInfo('10')
-  //    .success(function (response){
-  //        $scope.model = [response];
-  //        console.log(response);
-  //    });
+  //$scope.model = dummyData;
+  societyListService.getSocietyInfo('10')
+    .success(function (response){
+      $scope.model = [response];
+        console.log(response);
+     });
+
+   //Start:For adding shortlisted society
    $scope.shortlistThis = function(society) {
     alert('vidhi1');
-   }
+    societyListService.addShortlistedSociety()
+     .success(function (response){
+       $scope.model = response;
+       console.log(response);
+     });
+   }//End: For adding shortlisted society
+
+   //Start: To navigate to catalogue page
    $scope.catalogue = function(){
      $location.path('/society/details');
-   }
+   }//End: To navigate to catalogue page
 
 
 }]);// Controller Functions end
