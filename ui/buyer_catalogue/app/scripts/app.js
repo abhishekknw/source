@@ -9,7 +9,7 @@
  * Main module of the application.
  */
 
-var APIBaseUrl = 'http://localhost:8108/';
+var APIBaseUrl = 'http://192.168.1.101:8108/';
 
 angular.module('Authentication', []);
 angular
@@ -119,6 +119,7 @@ angular
            $location.path('/login');
          }
          else*/ if ($rootScope.globals.currentUser && $location.path() == '/logout')
+
          {
            AuthService.Logout();
            $location.path("/login");
@@ -132,4 +133,3 @@ angular
          }
        });
      }]);
-
