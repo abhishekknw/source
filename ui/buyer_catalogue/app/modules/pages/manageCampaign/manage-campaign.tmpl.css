@@ -9,7 +9,10 @@
   margin-top:40px;
 
 }
-
+.content-pane{
+	overflow:auto;
+	min-height:600px;
+}
 /*dashboard-tabs*/
 
 .dashboard-tabs{
