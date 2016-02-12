@@ -1,3 +1,9 @@
+.container1{
+  height:500px; 
+  margin-top:55px;
+  background-image:url(img/background.png);
+  background-repeat: no-repeat;
+}
 .submit-btn{
 	background-color: #cd2632;
   width: 232px;
@@ -16,12 +22,14 @@
 }
 #login-panel{
 	width:281px;
+  margin-top: 20px;
 }
 .quote{
   color:#ccc;
   font-style:italic;
   font-stretch: inherit;
-  font-size:30px
+  font-size:30px;
+  margin-top: 60px;
 }
 .extras{
   margin-left:22px;

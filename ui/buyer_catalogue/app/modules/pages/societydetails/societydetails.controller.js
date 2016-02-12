@@ -8,7 +8,6 @@ angular.module('machadaloPages')
          .success(function (response) {
            $scope.society = response;
            console.log($scope.society)
-
-         });
+        });
      }
     }]);

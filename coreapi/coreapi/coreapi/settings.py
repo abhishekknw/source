@@ -89,7 +89,8 @@ DATABASES = {
        'ENGINE': 'django.db.backends.mysql',
        'HOST': '127.0.0.1',
        'USER': 'root',
-       'PASSWORD': '',
+       'PASSWORD': 'khush123',
+
     }
 }
 
@@ -123,7 +124,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [],
 }
 
-'''REST_FRAMEWORK = {
+REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAdminUser',
         ),
@@ -132,6 +133,11 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_jwt.authentication.JSONWebTokenAuthentication',
         ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
+}
+
+'''REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20
 }'''

@@ -7,5 +7,8 @@ urlpatterns = [
     url(r'^businesses/$', views.BusinessAPIListView.as_view()),
     url(r'^business/(?P<id>[A-Z_a-z0-9]+)$', views.BusinessAPIView.as_view()),
     url(r'^newCampaign/$', views.NewCampaignAPIView.as_view()),
+    url(r'^finalizeCampaign/$', views.FinalizeCampaignAPIView.as_view()),
+    url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/inventories/$', views.CampaignInventoryAPIView.as_view()),
+    url(r'^campaign/society/shortlist/$', views.SocietyShortlistAPIView.as_view()),
 
 ]

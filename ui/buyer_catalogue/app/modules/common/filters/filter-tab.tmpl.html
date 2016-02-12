@@ -40,13 +40,8 @@
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-									<select class="form-control mySelectBoxClass ">
-									  <option selected>Select Society Name</option>
-									  <option>5 stars</option>
-									  <option>4 stars</option>
-									  <option>3 stars</option>
-									  <option>2 stars</option>
-									  <option>1 stars</option>
+									<select class="form-control mySelectBoxClass">
+									  <option selected ng-repeat = "row in model" ng-model = "filter">{{row.society_name}}</option>
 									</select>
 								</div>
 					</div>
@@ -57,7 +52,7 @@
 				<div class="line2"></div>
 				<!-- Inventory Type -->
 				<button type="button" class="collapsebtn last" data-toggle="collapse" data-target="#collapse4">
-				  Hotel Preferences <span class="collapsearrow"></span>
+				  Inventory Type <span class="collapsearrow"></span>
 				</button>
 				<div id="collapse4" class="collapse in">
 					<div class="hpadding20">
@@ -90,25 +85,15 @@
 				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse2">
 				  Price range <span class="collapsearrow"></span>
 				</button>
-
-			<!--	<div id="collapse2" class="collapse in">
-					<div class="padding20">
-						<div class="layout-slider wh100percent">
-						<span class="cstyle09"><input id="Slider1" type="slider" name="price" value="400;700" /></span>
-						</div>
-						<script type="text/javascript" >
-						  jQuery("#Slider1").slider({ from: 100, to: 1000, step: 5, smooth: true, round: 0, dimension: "&nbsp;$", skin: "round" });
-						</script>
-					</div>
-				</div>-->
-				<!-- End of Price range -->
-				<!--<div range-slider min="demo2.range.min" max="demo2.range.max" model-min="demo2.minPrice" model-max="demo2.maxPrice" filter="currency:'$'" step="100"></div>-->
 				<rzslider rz-slider-model="slider_translate.minValue" rz-slider-high="slider_translate.maxValue" rz-slider-options="slider_translate.options"></rzslider>
 				<div class="line2"></div>
 				<div class="clearfix"></div>
 				<br/>
 				<br/>
 				<br/>
+				<button type="submit" class="btn btn-default" ng-click="filter()">Apply</button>
+				  <!--Apply <span class="collapsearrow"></span>-->
+				</button>
 		</div>
 			<!-- END OF FILTERS -->
 			<sort-bar><sort-bar>

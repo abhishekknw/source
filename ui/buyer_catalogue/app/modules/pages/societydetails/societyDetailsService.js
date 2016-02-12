@@ -12,8 +12,7 @@ angular.module('machadaloPages')
 .factory('societyDetailsService', ['$http', function ($http) {
 
   //var url_base = 'http://machadalocore.ap-southeast-1.elasticbeanstalk.com/';
-  var url_base = 'http://192.168.1.10:8108/v0/ui/';
-  //var url_base1 = "v0/ui/";
+  var url_base = "v0/ui/";
 	var societyDetailsService = {};
 
 	societyDetailsService.getSocietyData = function(id) {
