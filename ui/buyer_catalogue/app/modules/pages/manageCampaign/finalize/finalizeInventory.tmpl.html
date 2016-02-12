@@ -17,31 +17,40 @@
             
         </thead>
         <tbody>
-        <tr ng-repeat="row in model" >
+        <tr class="society-row" ng-repeat="row in model" >
             <td style = "text-align: -webkit-center"><span>{{row.society.society_name}}</span></td>
             <td style = "text-align: -webkit-center">
                 <div class="table_cell" ng-repeat="key in row.society.basic_contacts">{{key.contact_type}} - {{key.name}} - {{key.mobile}}</div>
             </td>
-            <td style = "text-align: -webkit-center">
-                <div ng-repeat="key in row.campaign.types">{{key.type}} - {{key.sub_type}}</div></td>
+            <td colspan="3">
+              <table class="table table-bordered">
+                
+              <tbody>
+
+                <tr ng-repeat="key in row.inventories">
+                  <td>{{key.type.type}} - {{key.type.sub_type}}</td>
 
             <td style = "text-align: -webkit-center">
             <p class="input-group">
-              <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="dt" is-open="popup1.opened" min-date="minDate" max-date="maxDate" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+              <input type="text" ng-init="key.opened1=false" class="form-control" uib-datepicker-popup="{{format}}" ng-model="key.start_date" is-open="key.opened1" min-date="today" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
               <span class="input-group-btn">
-                <button type="button" class="btn btn-default" ng-click="open1()"><i class="glyphicon glyphicon-calendar"></i></button>
+                <button type="button" class="btn btn-default" ng-click="key.opened1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
               </span>
             </p>
             </td>
 
             <td style = "text-align: -webkit-center">
             <p class="input-group">
-              <input type="text" class="form-control" uib-datepicker-popup ng-model="dt" is-open="popup2.opened" min-date="minDate" max-date="maxDate" datepicker-options="dateOptions"  ng-required="true" close-text="Close" />
+              <input type="text" ng-init="key.opened2=false" class="form-control" uib-datepicker-popup ng-model="key.end_date" is-open="key.opened2" min-date="key.start_date" datepicker-options="dateOptions"  ng-required="true" close-text="Close" />
               <span class="input-group-btn">
-                <button type="button" class="btn btn-default" ng-click="open2()"><i class="glyphicon glyphicon-calendar"></i></button>
+                <button type="button" class="btn btn-default" ng-click="key.opened2 = true"><i class="glyphicon glyphicon-calendar"></i></button>
               </span>
             </p>
             </td>
+
+            </tr>
+            <tbody>
+          </table>
 
              <td style = "text-align: -webkit-center">
                 <select ng-change="" ng-model="model.campaign_type[type]">
@@ -54,9 +63,18 @@
             <td style = "text-align: -webkit-center"><input type="button" class="btn btn-primary" ng-click="viewInventory(1)" value="Remove Society"></td>
 
         </tr>
+        <hr>
        
         </tbody>
     </table>
+    <tr>
+      <td colspan="3">
+        <input type="button" class="btn btn-primary" ng-click="save()" value="Save">
+      </td>
+      <td colspan="3">
+         <input type="button" class="btn btn-primary" ng-click="submit()" value="Submit">
+      </td>
+    </tr>
 </div>
     
 </div>
