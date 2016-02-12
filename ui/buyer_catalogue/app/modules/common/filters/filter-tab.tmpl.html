@@ -40,13 +40,8 @@
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-									<select class="form-control mySelectBoxClass ">
-									  <option selected>Select Society Name</option>
-									  <option>5 stars</option>
-									  <option>4 stars</option>
-									  <option>3 stars</option>
-									  <option>2 stars</option>
-									  <option>1 stars</option>
+									<select class="form-control mySelectBoxClass">
+									  <option selected ng-repeat = "row in model" ng-model = "filter">{{row.society_name}}</option>
 									</select>
 								</div>
 					</div>
@@ -96,6 +91,9 @@
 				<br/>
 				<br/>
 				<br/>
+				<button type="submit" class="btn btn-default" ng-click="filter()">Apply</button>
+				  <!--Apply <span class="collapsearrow"></span>-->
+				</button>
 		</div>
 			<!-- END OF FILTERS -->
 			<sort-bar><sort-bar>
