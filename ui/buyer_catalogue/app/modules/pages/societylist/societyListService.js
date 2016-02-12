@@ -17,10 +17,10 @@ angular.module('machadaloPages')
   //var url_base1 = "v0/ui/";
 	var societyListService = {};
 
-  societyListService.getSocietyInfo = function (id) {
-        var url = url_base + "society/" + 10;
-        return machadaloHttp.get(url);
-  };
+  // societyListService.getSocietyInfo = function (id) {
+  //       var url = url_base + "society/" + 10;
+  //       return machadaloHttp.get(url);
+  // // };
 
   societyListService.listSocieties = function (sObj) {
      var url = url_base + "society/list/";
