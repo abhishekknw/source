@@ -325,11 +325,12 @@ class StandeeBannerAPIView(APIView):
             for index, key in enumerate(request.data['standee_details'], start=1):
                 if 'id' not in key:
                     #populate ad inventory tablelift_tag = generate_location_tag(tag_initial, 'lift', index)
-                    loc_tag = society.society_name.upper()[:3] + key['standee_location'].upper()[:3] +'SD' + str(index)
+                    #loc_tag = society.society_name.upper()[:3] + key['standee_location'].upper()[:3] +'SD' + str(index)
+                    loc_tag = key['adinventory_id'].upper()[:18]
                     sd_location = InventoryLocation(location_id = loc_tag, location_type='Standee')
                     sd_location.save()
 
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'STANDEE', location = sd_location)
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = key['adinventory_id'], adinventory_name = 'STANDEE', location = sd_location)
                     ad_inv.save(key['type'], society)
 
         if request.data['banner_available']:
@@ -378,10 +379,11 @@ class StallAPIView(APIView):
             for index, key in enumerate(request.data['stall_details'], start=1):
                 if 'id' not in key:
                     #populate ad inventory tablelift_tag = generate_location_tag(tag_initial, 'lift', index)
-                    loc_tag = society.society_name.upper()[:3] + key['stall_location'].upper()[:3] +'ST' + str(index)
+                    #loc_tag = society.society_name.upper()[:3] + key['stall_location'].upper()[:3] +'ST' + str(index)
+                    loc_tag = key['adinventory_id'].upper()[:18]
                     st_location = InventoryLocation(location_id = loc_tag, location_type='Stall')
                     st_location.save()
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'STALL', location = st_location)
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = key['adinventory_id'], adinventory_name = 'STALL', location = st_location)
                     ad_inv.save(key['type'], society)
 
         return Response(status=201)
