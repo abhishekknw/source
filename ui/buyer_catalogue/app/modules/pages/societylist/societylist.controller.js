@@ -58,5 +58,16 @@ angular.module('machadaloPages')
      $location.path('/society/details');
    }//End: To navigate to catalogue page
 
+   $scope.filter = function() {
+     alert('njnjnj');
+  }
 
-}]);// Controller Functions end
+
+}])// SocietyListCtrl Controller Functions end
+ .controller('SocietyFilterCtrl',
+     ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
+     function ($scope, $rootScope, $window, $location, $http, societyListService) {
+ // $scope.filter = function() {
+ //   alert('bhbh');
+ // }
+ }]);

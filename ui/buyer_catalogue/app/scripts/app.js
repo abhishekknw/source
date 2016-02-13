@@ -9,7 +9,7 @@
  * Main module of the application.
  */
 
-var APIBaseUrl = 'http://192.168.1.101:8108/';
+var APIBaseUrl = 'http://localhost:8108/';
 
 angular.module('Authentication', []);
 angular
@@ -45,6 +45,12 @@ angular
           url : '/societyList', //:societyId/
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyListCtrl'
+        })
+
+        .state('campaign.societyList.filter', {
+          url : '/societyList/:filter', //:societyId/for filter
+          templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
+          controller: 'SocietyFilterCtrl'
         })
 
         .state('society.details', {
