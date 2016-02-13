@@ -23,4 +23,6 @@ urlpatterns = [
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/image_mapping/$', views.ImageMappingAPIView.as_view()),
 
 
+
+
 ]

@@ -2,8 +2,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from serializers import UIBusinessSerializer, FinalizeCampaignSerializer, FinalizeInventorySerializer
-from v0.serializers import CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
-from v0.models import CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower
+from v0.serializers import SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
+from v0.models import SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower
 from django.db.models import Q
 
 
@@ -180,12 +180,65 @@ class CampaignInventoryAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             campaign = Campaign.objects.get(pk=id)
-            items = campaign.societies.all().filter(booking_status='Requested')
+            items = campaign.societies.all().filter(booking_status__in=['Requested', 'Finalized'])
             serializer = FinalizeInventorySerializer(items, many=True)
             return Response(serializer.data, status=200)
         except :
             return Response(status=404)
 
+    def post(self, request, id, format=None):
+
+        print request.data
+        try:
+            print "hi"
+
+            for society in request.data['inventory']:
+                if 'id' in society:
+                    campaign_society = CampaignSocietyMapping.objects.get(pk=society['id'])
+                    serializer = CampaignSocietyMappingSerializer(campaign_society,data=society)
+                else:
+                    #request.data['created_by'] = current_user.id
+                    serializer = CampaignSocietyMappingSerializer(data=society)
+
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors, status=400)
+
+                for inv in society['inventories']:
+                    if 'id' in inv:
+                        society_inv = SocietyInventoryBooking.objects.get(pk=inv['id'])
+                        serializer = SocietyInventoryBookingSerializer(society_inv,data=inv)
+                    else:
+                        serializer = SocietyInventoryBookingSerializer(data=inv)
+
+                    if serializer.is_valid():
+                        serializer.save()
+                    else:
+                        return Response(serializer.errors, status=400)
+
+            save_type = request.data['type']
+            print save_type
+            if save_type and save_type=='submit':
+                campaign = Campaign.objects.get(pk=id)
+                campaign.booking_status = 'Finalized'
+                campaign.save()
+
+            return Response(status=200)
+        except:
+            return Response(status=404)
+
+
+    def delete(self, request, id, format=None):
+        try:
+            item = CampaignSocietyMapping.objects.get(pk=id)
+        except CampaignSocietyMapping.DoesNotExist:
+            return Response({'message':'Requested Inventory Does not Exist'}, status=404)
+
+        item.booking_status = 'Removed'
+        item.save()
+
+        return Response(status=200)
 
 
 
@@ -222,6 +275,10 @@ class SocietyShortlistAPIView(APIView):
 
         campaign_society = CampaignSocietyMapping(campaign=campaign, society=society, booking_status='Shortlisted')
         campaign_society.save()
+
+        for key in campaign.get_types():
+            inventory = SocietyInventoryBooking(campaign=campaign, society=society, adinventory_type=key)
+            inventory.save()
 
 
         return Response({"message": "Society Shortlisted"}, status=200)

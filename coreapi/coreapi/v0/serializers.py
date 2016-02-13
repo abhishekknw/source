@@ -1,5 +1,6 @@
 from rest_framework.serializers import ModelSerializer
-from v0.models import CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower
+from v0.models import SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower
+
 
 
 
@@ -7,6 +8,19 @@ class CampaignTypeMappingSerializer(ModelSerializer):
 
     class Meta:
         model = CampaignTypeMapping
+
+
+class SocietyInventoryBookingSerializer(ModelSerializer):
+
+    type = CampaignTypeMappingSerializer(source='get_type')
+
+    class Meta:
+        model = SocietyInventoryBooking
+        read_only_fields = (
+        'type'
+        )
+
+
 
 
 class CampaignSerializer(ModelSerializer):

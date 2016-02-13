@@ -941,15 +941,43 @@ class CampaignBookingInfo(models.Model):
         db_table = 'campaign_booking_info'
 
 
+class SocietyInventoryBooking(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='inventory_bookings', db_column='CAMPAIGN_ID', null=True)
+    society = models.ForeignKey(SupplierTypeSociety, related_name='inventory_bookings', db_column='SUPPLIER_ID', null=True)
+    adinventory_type = models.ForeignKey(CampaignTypeMapping, db_column='ADINVENTORY_TYPE', null=True)
+    start_date = models.DateTimeField(db_column='START_DATE', null=True)
+    end_date = models.DateTimeField(db_column='END_DATE', null=True)
+    audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
+
+    def get_type(self):
+        try:
+            return self.adinventory_type
+        except:
+            return None
+
+
+    class Meta:
+
+        db_table = 'society_inventory_booking'
+
 class CampaignSocietyMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     campaign = models.ForeignKey(Campaign, related_name='societies', db_column='CAMPAIGN_ID', null=True)
     society = models.ForeignKey(SupplierTypeSociety, related_name='campaigns', db_column='SUPPLIER_ID', null=True)
     booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
+    adjusted_price = models.IntegerField(db_column='ADJUSTED_PRICE', null=True)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+    def get_inventories(self):
+        try:
+            return SocietyInventoryBooking.objects.filter(campaign=self.campaign, society=self.society)
+        except:
+            return None
 
     def get_campaign(self):
         try:
-            print self.campaign
             return self.campaign
         except:
             return None
@@ -964,20 +992,6 @@ class CampaignSocietyMapping(models.Model):
 
         db_table = 'campaign_society_mapping'
 
-
-class SocietyInventoryBooking(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
-    campaign = models.ForeignKey(Campaign, related_name='inventory_bookings', db_column='CAMPAIGN_ID', null=True)
-    society = models.ForeignKey(SupplierTypeSociety, related_name='inventory_bookings', db_column='SUPPLIER_ID', null=True)
-    adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20, blank=True)
-    start_date = models.DateField(db_column='START_DATE', null=True)
-    end_date = models.DateField(db_column='END_DATE', null=True)
-    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
-    audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
-
-    class Meta:
-
-        db_table = 'society_inventory_booking'
 
 
 
