@@ -59,6 +59,11 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       return machadaloHttp.delete(url);
     };
 
+    pagesService.getShortlistedCampaigns = function () {
+       var url = url_base + "shortlistedCampaigns/";
+       return machadaloHttp.get(url);
+      };
+
       
 
     pagesService.processParam = function(){

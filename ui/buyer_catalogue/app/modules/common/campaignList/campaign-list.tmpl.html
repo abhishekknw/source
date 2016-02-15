@@ -7,7 +7,8 @@
 				 <div class="col-md-4 offset-0">
 					 <div class="left mt7"><b>Sort by:</b></div>
 					 		<div class="right wh70percent">
-								<button class="popularbtn">Alphabetically</button>
+								<button class="popularbtn" ng-click="order('society_name')">Alphabetically</button>
+								<span class="sortorder" ng-show="predicate === 'society_name'" ng-class="{reverse:reverse}"></span>
 							</div>
 					</div>
 					<div class="col-md-4">
@@ -18,11 +19,12 @@
 						</div>
 						<div class="w50percentlast">
 							<div class="wh90percent">
-								<select class="form-control mySelectBoxClass ">
+								<button class="popularbtn">Date Added</button>
+								<!--<select class="form-control mySelectBoxClass ">
 									<option selected>Date Added</option>
 									<option>A to Z</option>
 									<option>Z to A</option>
-								</select>
+								</select>-->
 							</div>
 						</div>
 					</div>
@@ -31,7 +33,7 @@
 	  </div>
 			<!-- End of padding -->
 			<div class="itemscontainer offset-1">
-				<div class="offset-2" ng-repeat="row in model">
+				<div class="offset-2" ng-repeat="row in model | orderBy:predicate:reverse">
 					<table cellpadding="30" class="hpadding20 table table-bordered">
 					 <tbody>
 						 <tr valign="center">
@@ -41,20 +43,20 @@
 								 </div>
 								 <div class="col-md-8 offset-0 ">
 										<div class="col-md-7 hpadding20" style="margin-top:20px">
-											 <h4>{{row.society_name}},{{row.society_address1}}</h4>
-											 <p style="color:#949292"><span class="fa fa-map-marker"></span>{{row.society_location}}</p>
+											 <h4>{{row.business.name}} Ad Campaign</h4>
+											 <p style="color:#949292"><span class="fa fa-map-marker"></span>{{Address}}</p>
 										</div>
 										<div class="col-md-5 hpadding20" style="margin-top:20px">
-											<button type="button" class="shortlist btn btn-danger btn-lg active" ng-click = "shortlistThis($parent.$index)">SHORTLIST</button><br><br>
+											<button type="button" class="shortlist btn btn-danger btn-lg active" ng-click = "shortlistThis($parent.$index)">BOOK</button><br><br>
 											<button type="button" class="viewdetail btn btn-default btn-lg active" ng-click = "catalogue()" >VIEW DETAILS</button>
 										</div>
 								 </div>
 								</td>
 							</tr>
 							<tr align="center">
-								 <td><h4>{{row.society_type_quality}}</h4><p style="color:#949292">Type of society</p></td>
-								 <td><h4>{{row.locality_rating}}</h4><p style="color:#949292">Locality rating</p></td>
-								 <td><h4>{{row.machadalo_index}}</h4><p style="color:#949292">Machadalo Index</p></td>
+								 <td><h4>{{row.society_count}}</h4><p style="color:#949292">No Of Societies</p></td>
+								 <td><h4>{{row.society_count}}</h4><p style="color:#949292">No of Flats</p></td>
+								 <td><h4>{{row.}}</h4><p style="color:#949292">Machadalo Index</p></td>
 								 <td><h4>{{row.total_adspaces}}</h4><p style="color:#949292">Ad Spaces</p></td>
 							</tr>
 						</tbody>

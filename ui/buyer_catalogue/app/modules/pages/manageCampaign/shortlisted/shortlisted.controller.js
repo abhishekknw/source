@@ -5,13 +5,12 @@ angular.module('machadaloPages')
 
     	$scope.businesses = [];
 
-    	$scope.getAllBusinesses = function() {
-	    	pagesService.getAllBusinesses()
-	    	.success(function (response, status) {
-	    		    console.log(response);
-	            $scope.businesses = response;
-	       });
-	    };
+    	pagesService.getShortlistedCampaigns()
+    	.success(function (response, status) {
+    		console.log(response);
+            $scope.model = response;
+            
+       });
 
     	$scope.getBusiness = function() {
     		pagesService.getBusiness($scope.bsSelect)
