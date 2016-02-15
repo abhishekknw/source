@@ -11,4 +11,5 @@ urlpatterns = [
     url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/inventories/$', views.CampaignInventoryAPIView.as_view()),
     url(r'^campaign/society/shortlist/$', views.SocietyShortlistAPIView.as_view()),
 
+
 ]

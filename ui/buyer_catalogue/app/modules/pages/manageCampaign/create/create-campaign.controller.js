@@ -13,6 +13,31 @@ angular.module('machadaloPages')
     		'CarDisplay':['Normal', 'Premium'],
             'Fliers': ['Normal']
     	}
+
+        $scope.clear = function() {
+        $scope.dt = null;
+      };
+
+      $scope.maxDate = new Date(2020, 5, 22);
+      $scope.today = new Date();
+      $scope.popup1 = false;
+      $scope.popup2 = false;
+
+     
+      $scope.setDate = function(year, month, day) {
+        $scope.dt = new Date(year, month, day);
+      };
+
+      $scope.dateOptions = {
+        formatYear: 'yy',
+        startingDay: 1
+      };
+
+      $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+      $scope.format = $scope.formats[1];
+      $scope.altInputFormats = ['M!/d!/yyyy'];
+
+        $scope.phoneNumberPattern = /^[1-9]{1}[0-9]{9}$/
     	$scope.campaign_type = {}
 
     	$scope.getAllBusinesses = function() {

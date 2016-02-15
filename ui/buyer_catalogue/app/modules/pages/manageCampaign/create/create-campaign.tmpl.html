@@ -58,7 +58,7 @@
 	           </div>
 	           <div class="form-group">
 	              <label>Business Phone</label>
-	              <input type="number" name="phone" id="phone" ng-minlength="10" ng-maxlength="10" class="form-control" ng-model="model.business.phone"/>
+	              <input type="text" name="phone" id="phone" class="form-control" ng-pattern="phoneNumberPattern" ng-model="model.business.phone"/>
 	           </div>
 	           <div class="form-group">
 	              <label>Business Address</label>
@@ -96,7 +96,7 @@
 	           </div>
 	           <div class="form-group">
 	              <label>Phone</label>
-	              <input type="number" name="phone" id="phone" ng-minlength="10" ng-maxlength="10" class="form-control" required ng-model="model.business.contact.phone"/>
+	              <input type="text" name="phone" id="phone" class="form-control" required ng-pattern="phoneNumberPattern" ng-model="model.business.contact.phone"/>
 	           </div>
 	           <div class="form-group">
 	            <label>Single Point of Contact?</label>
@@ -120,8 +120,28 @@
 		          </span>
 	          </div>
             </br>
-			      <div class="Cost" >
-			        Tentative Campaign Cost: <input type="number" ng-model="model.campaign_cost"/>  
+            <div class="row form-group">
+            	<span class="col-md-4">Start Date:</span>
+              <span class="col-md-6">
+              	<input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+              </span>
+	              <span class="input-group-btn">
+	                <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+	              </span>
+	            
+            </div>
+            <div class="row form-group">
+            	<span class="col-md-4">End Date: </span>
+              <span class="col-md-6">
+              	<input type="text" ng-model="model.tentative.end_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup2" min-date="key.start_date" datepicker-options="dateOptions"  ng-required="true" close-text="Close" /></span>
+	              <span class="input-group-btn">
+	                <button type="button" class="btn btn-default" ng-click="popup2 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+	              </span>
+	            
+            </div>
+
+			      <div class="row Cost" >
+			        <span class="col-md-4">Tentative Campaign Cost: </span><span class="col-md-6"><input type="number" ng-model="model.tentative.campaign_cost"/>  </span>
 		        </div>
 	      </div>
 	      </br>
