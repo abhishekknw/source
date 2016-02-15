@@ -72,7 +72,7 @@ angular
       .state('manageCampaign.create', {
           url : '/create',
           controller: 'CreateCampaignCtrl',
-          templateUrl: 'modules/pages/createCampaign/create-campaign.tmpl.html'
+          templateUrl: 'modules/pages/manageCampaign/create/create-campaign.tmpl.html'
         })
       .state('manageCampaign.shortlisted', {
           url : '/shortlisted',

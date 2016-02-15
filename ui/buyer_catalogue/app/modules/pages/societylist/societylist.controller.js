@@ -46,7 +46,7 @@ angular.module('machadaloPages')
    if($rootScope.campaignId){
      $scope.shortlistThis = function() {
      alert('vidhi1');
-     societyListService.addShortlistedSociety($rootScope.campaignId, '10')
+     societyListService.addShortlistedSociety($rootScope.campaignId, 'MUMPOHNRSOC2')
       .success(function (response){
           $scope.model = response;
             console.log(response);
