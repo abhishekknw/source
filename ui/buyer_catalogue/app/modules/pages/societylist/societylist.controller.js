@@ -9,7 +9,7 @@ angular.module('machadaloPages')
            params: {
              address: val,
              key: 'AIzaSyDCTq6FNBxVrhd2te_GIrCa8TI8CYwobYg',
-             sensor: false
+             sensor: true
            }
          }).then(function(response){
            return response.data.results.map(function(item){
@@ -20,33 +20,32 @@ angular.module('machadaloPages')
   $scope.model = {};
   var dummyData = [
    {
-       "societyname":"23C_Tower1_1401",
-       "location":"next to baskin"
+       "society_name":"abc",
+       "society_address1":"next to baskin"
    },
    {
-       "societyname":"23C_Tower1_1402",
-       "location":"next to theo"
+       "society_name":"bcd",
+       "society_address1":"next to theo"
    }
   ];
-   //$scope.model = dummyData;
+   $scope.model = dummyData;
   //  societyListService.getSocietyInfo('10')
   //   .success(function (response){
   //     $scope.model = [response];
   //       console.log(response);
   //    });
 
-   var sObj = '';
-   societyListService.listSocieties(sObj)
-    .success(function (response) {
-     $scope.model = response.results;
-     console.log(response);
- })
+   //var sObj = '';
+   //societyListService.listSocieties(sObj)
+    //.success(function (response) {
+    // $scope.model = response.results;
+    // console.log(response);
+ //})
 
    //Start:For adding shortlisted society
    if($rootScope.campaignId){
      $scope.shortlistThis = function() {
-     alert('vidhi1');
-     societyListService.addShortlistedSociety($rootScope.campaignId, '10')
+     societyListService.addShortlistedSociety($rootScope.campaignId, 'MUMPOHNRSOC2')
       .success(function (response){
           $scope.model = response;
             console.log(response);
@@ -61,6 +60,14 @@ angular.module('machadaloPages')
    $scope.filter = function() {
      alert('njnjnj');
   }
+  //Start: Sort Functionality
+  $scope.predicate = 'society_name';
+  $scope.reverse = true;
+  $scope.order = function(predicate) {
+    $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;
+    $scope.predicate = predicate;
+  }
+  //End: Sort Functionality
 
 
 }])// SocietyListCtrl Controller Functions end

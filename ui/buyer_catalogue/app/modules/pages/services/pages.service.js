@@ -45,9 +45,19 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       };
 
     pagesService.getRequestedInventory = function (id) {
-       var url = url_base + "campaign/" + id + "/inventories/";
+       var url = url_base + "campaign/" + id + "/inventories/";//The id here referes to campaign id
        return machadaloHttp.get(url);
       };
+
+    pagesService.saveFinalizedInventory = function (data) {
+      var url = url_base + "campaign/" + data.inventory[0].inventories[0].campaign + "/inventories/";
+      return machadaloHttp.post(url, data);
+    };
+
+    pagesService.removeFinalizedInventory = function (id) {
+      var url = url_base + "campaign/" + id + "/inventories/"; //The id here referes to societybooking id to be deleted, not campaign id
+      return machadaloHttp.delete(url);
+    };
 
       
 

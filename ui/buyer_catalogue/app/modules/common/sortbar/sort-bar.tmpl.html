@@ -7,7 +7,8 @@
 				 <div class="col-md-4 offset-0">
 					 <div class="left mt7"><b>Sort by:</b></div>
 					 		<div class="right wh70percent">
-								<button class="popularbtn">Alphabetically</button>
+								<button class="popularbtn" ng-click="order('society_name')">Alphabetically</button>
+								<span class="sortorder" ng-show="predicate === 'society_name'" ng-class="{reverse:reverse}"></span>
 							</div>
 					</div>
 					<div class="col-md-4">
@@ -18,11 +19,12 @@
 						</div>
 						<div class="w50percentlast">
 							<div class="wh90percent">
-								<select class="form-control mySelectBoxClass ">
+								<button class="popularbtn">Date Added</button>
+								<!--<select class="form-control mySelectBoxClass ">
 									<option selected>Date Added</option>
 									<option>A to Z</option>
 									<option>Z to A</option>
-								</select>
+								</select>-->
 							</div>
 						</div>
 					</div>
@@ -31,7 +33,7 @@
 	  </div>
 			<!-- End of padding -->
 			<div class="itemscontainer offset-1">
-				<div class="offset-2" ng-repeat="row in model">
+				<div class="offset-2" ng-repeat="row in model | orderBy:predicate:reverse">
 					<table cellpadding="30" class="hpadding20 table table-bordered">
 					 <tbody>
 						 <tr valign="center">
@@ -53,7 +55,7 @@
 							</tr>
 							<tr align="center">
 								 <td><h4>{{row.society_type_quality}}</h4><p style="color:#949292">Type of society</p></td>
-								 <td><h4>{{row.locality_rating}}</h4><p style="color:#949292">Locality rating</p></td>
+								 <td><h4>{{row.society_locality}}</h4><p style="color:#949292">Locality rating</p></td>
 								 <td><h4>{{row.machadalo_index}}</h4><p style="color:#949292">Machadalo Index</p></td>
 								 <td><h4>{{row.total_adspaces}}</h4><p style="color:#949292">Ad Spaces</p></td>
 							</tr>

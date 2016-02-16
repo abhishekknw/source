@@ -2,9 +2,9 @@
 <body id="top">
 <!-- FILTERS -->
 			<div class="col-md-3 filters offset-0">
-			     <div class="padding20title"><h3 class="opensans dark">Filter by<span class="clearall">clear all</span></h3></div>
+			     <div class="padding20title"><h3 class="opensans dark">Filter by<span class="clearall">
+						 <a href = "#" uib-tooltip="Clear all filters">clear all</span></a></h3></div>
 				<div class="line2"></div>
-
 				<!-- Location ratings -->
 				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse1">
 				  Location <span class="collapsearrow"></span>
@@ -13,42 +13,37 @@
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-									<!--<select class="form-control mySelectBoxClass ">
-									  <option selected>Guest rating</option>
-									  <option>5 stars</option>
-									  <option>4 stars</option>
-									  <option>3 stars</option>
-									  <option>2 stars</option>
-									  <option>1 stars</option>
-									</select>-->
-									<input type="text" ng-model="asyncSelected" placeholder = "Search Location" uib-typeahead="address for address in getLocation($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" class="form-control">
-    <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
-    <div ng-show="noResults">
-      <i class="glyphicon glyphicon-remove"></i> No Results Found
-    </div>
-								</div>
-					</div>
+									<select class="form-control mySelectBoxClass ">
+									  <option selected>Search Location</option>
+										<!--| unique:'society_location_type' for displaying unique values -->
+									  <option ng-repeat = "row in model  "  ng-model = "filter">{{row.society_location_type}}</option>
+									</select>
+						 <!--<input type="text" ng-model="asyncSelected" placeholder = "Search Location" uib-typeahead="address for address in getLocation($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" class="form-control">
+                 <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
+    				 			<div ng-show="noResults">
+      							<i class="glyphicon glyphicon-remove"></i> No Results Found
+    						</div>-->
+					 </div>
+				</div>
 					<div class="clearfix"></div>
 				</div>
-                <!--End Location Rating-->
-
-                <!-- Society name-->
-                <button type="button" class="collapsebtn topmarginlt" data-toggle="collapse" data-target="#collapse1">
+    <!--End Location Rating-->
+    <!-- Society name-->
+    <button type="button" class="collapsebtn topmarginlt" data-toggle="collapse" data-target="#collapse1">
 				  Society  <span class="collapsearrow"></span>
-				</button>
-
+	  </button>
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
 									<select class="form-control mySelectBoxClass">
-									  <option selected ng-repeat = "row in model" ng-model = "filter">{{row.society_name}}</option>
+										<option selected>Select Society</option>
+									  <option ng-repeat = "row in model" ng-model = "filter">{{row.society_name}}</option>
 									</select>
 								</div>
 					</div>
 					<div class="clearfix"></div>
 				</div>
 				<!-- End of Society Names -->
-
 				<div class="line2"></div>
 				<!-- Inventory Type -->
 				<button type="button" class="collapsebtn last" data-toggle="collapse" data-target="#collapse4">
