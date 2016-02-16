@@ -15,3 +15,9 @@
   -webkit-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
           transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
 }
+.list-button{
+  text-align: center;
+  width: 130px;
+  height: 35px;
+  font-size: 15px;
+}

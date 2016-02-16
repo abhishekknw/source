@@ -9,11 +9,8 @@
  * Main module of the application.
  */
 
-<<<<<<< HEAD
-var APIBaseUrl = 'http://192.168.1.106:8108/';
-=======
+
 var APIBaseUrl = 'http://localhost:8108/';
->>>>>>> 343c32dba234702b4930b8d85533d3bd08f0982c
 
 angular.module('Authentication', []);
 angular
@@ -82,6 +79,11 @@ angular
           url : '/shortlisted',
           controller: 'ShortlistedCampaignCtrl',
           templateUrl: 'modules/pages/manageCampaign/shortlisted/shortlisted.tmpl.html'
+        })
+      .state('manageCampaign.shortlisted.societies', {
+          url : '/:campaignId/societies',
+          controller: 'ShortlistedSocietiesCtrl',
+          templateUrl: 'modules/pages/manageCampaign/shortlisted/shortlisted-societies.tmpl.html'
         })
       .state('manageCampaign.finalize', {
           url : '/finalize',

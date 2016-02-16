@@ -20,7 +20,11 @@
 						<div class="w50percentlast">
 							<div class="wh90percent">
 								<button class="popularbtn">Date Added</button>
-								
+								<!--<select class="form-control mySelectBoxClass ">
+									<option selected>Date Added</option>
+									<option>A to Z</option>
+									<option>Z to A</option>
+								</select>-->
 							</div>
 						</div>
 					</div>
@@ -35,29 +39,29 @@
 						 <tr valign="center">
 								<td colspan="4" >
 									<div class="col-md-4 offset-0">
-								 		<img style="height: 175px;width: 230px;" ng-src = "http://mdimages.s3.amazonaws.com/MD_MUMTOBHRSJH_3dm0frxabW" alt=""/>
+								 		<img style="height: 175px;width: 230px;" ng-src = "http://mdimages.s3.amazonaws.com/{{row.society.society_image.image_url}}" alt=""/>
 								 </div>
 								 <div class="col-md-8 offset-0" style="padding-left:8px;">
 										<div class="col-md-7 hpadding20">
-											 <h4>{{row.business.name}} Ad Campaign</h4>
-											 <div style="color:#949292">
-											   <p >Business Type: {{row.business.business_type}} , {{row.business.business_sub_type}}</p>
-											   <p>Campaign Types:</p> 
-											   <p ng-repeat="key in row.types">{{key.type}} - {{key.sub_type}}</p>
-											  </div>
+											<h4>{{row.society.society_name}}</h4>
+											<div style="color:#949292">
+												<p><span class="fa fa-map-marker"></span>{{row.society.society_address1}} , {{row.society.society_address2}}</p>
+											  <p >Start Date: {{row.start_date}}</p>
+											  <p>End date: {{row.end_date}}</p>
+											 </div> 
 										</div>
 										<div class="col-md-5 hpadding20" style="margin-top:20px">
-											<!--<button type="button" class="shortlist btn btn-danger btn-lg active" ng-click = "shortlistThis($parent.$index)">BOOK</button><br><br>-->
-											<button type="button" class="list-button btn btn-default btn-lg active" ng-click = "societyList(row.id)">VIEW DETAILS</button>
+											<button type="button" class="list-button btn btn-danger btn-lg active" ng-click = "removeThis(row.id)"> REMOVE </button><br><br>
+											<button type="button" class="list-button btn btn-default btn-lg active" ng-click ="catalogue(row.id)" >VIEW DETAILS</button>
 										</div>
 								 </div>
 								</td>
 							</tr>
-							<tr align="center">
-								 <td><h4>{{row.society_count}}</h4><p style="color:#949292">No Of Societies</p></td>
-								 <td><h4>{{row.start_date}}</h4><p style="color:#949292">Start date</p></td>
-								 <td><h4>{{row.end_date}}</h4><p style="color:#949292">End Date</p></td>
-								 <td><h4>{{row.tentative_cost}}</h4><p style="color:#949292">Tentative Cost</p></td>
+							<tr align="center" >
+								 <td><h4>{{row.society.society_type_quality}}</h4><p style="color:#949292">Type of society</p></td>
+								 <td><h4>{{row.society.society_locality}}</h4><p style="color:#949292">Locality rating</p></td>
+								 <td><h4>{{row.society.machadalo_index}}</h4><p style="color:#949292">Machadalo Index</p></td>
+								 <td><h4>{{row.society.total_adspaces}}</h4><p style="color:#949292">Ad Spaces</p></td>
 							</tr>
 						</tbody>
 					</table>

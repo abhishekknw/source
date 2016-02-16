@@ -1,29 +1,49 @@
 angular.module('machadaloPages')
 .controller('ShortlistedCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'pagesService',
-    function ($scope, $rootScope, $window, $location, pagesService) {
+  ['$scope', '$rootScope', '$window', '$location', 'pagesService',
+  function ($scope, $rootScope, $window, $location, pagesService) {
 
-    	$scope.businesses = [];
+    $scope.businesses = [];
 
-    	pagesService.getShortlistedCampaigns()
-    	.success(function (response, status) {
-    		console.log(response);
-            $scope.model = response;
-            
-       });
+	pagesService.getCampaigns('Shortlisted')
+	.success(function (response, status) {
+	  console.log(response);
+      $scope.model = response;
+        
+     });
 
-    	$scope.getBusiness = function() {
-    		pagesService.getBusiness($scope.bsSelect)
-	    	.success(function (response, status) {
-	    		    console.log(response);
-	            $scope.business = response;
-	            $scope.contact = response.business_contact[0]
-	            $scope.choice_new = "selected";
-	       });
+	$scope.societyList = function(campaign_id) {
+	  $location.path("manageCampaign/shortlisted/" + campaign_id + "/societies");  
+	};
 
-    	};
+}])
 
-    	$scope.create = function() {
-        $location.path("/society/inventory");    	}
-      //[TODO] implement this
-    }]);
+.controller('ShortlistedSocietiesCtrl',
+['$scope', '$rootScope', '$window', '$location', 'pagesService',
+function ($scope, $rootScope, $window, $location, pagesService) {
+
+  pagesService.processParam();
+  $scope.model = {};
+
+  pagesService.getSocietyInventory($rootScope.campaignId)
+  .success(function (response, status) {
+    console.log(response);
+    $scope.model = response;
+    
+  })
+
+   $scope.catalogue = function(society_id){
+     $location.path('/society/details');
+   }//End: To navigate to catalogue page
+
+   $scope.removeThis = function(society_id){
+     pagesService.removeThisSociety(society_id, 'Permanent')
+     .success(function (response, status) {
+        if (status == '200') {
+          $window.location.reload(); 
+        }
+     })
+   }
+
+
+}]);
