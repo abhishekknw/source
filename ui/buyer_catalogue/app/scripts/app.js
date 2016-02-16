@@ -9,11 +9,9 @@
  * Main module of the application.
  */
 
-<<<<<<< HEAD
 var APIBaseUrl = 'http://192.168.1.106:8108/';
-=======
-var APIBaseUrl = 'http://localhost:8108/';
->>>>>>> 343c32dba234702b4930b8d85533d3bd08f0982c
+
+//var APIBaseUrl = 'http://localhost:8108/';
 
 angular.module('Authentication', []);
 angular
