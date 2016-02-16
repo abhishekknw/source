@@ -13,6 +13,7 @@ from django.dispatch import receiver
 
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import date
 
 
 AD_INVENTORY_CHOICES = (
@@ -850,7 +851,7 @@ class Business(models.Model):
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     business_type = models.CharField(db_column='TYPE', max_length=20, blank=True)
     business_sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
-    phone = models.IntegerField(db_column='PHONE', null=True)
+    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
     reference = models.CharField(db_column='REFERENCE', max_length=50, blank=True)
@@ -872,7 +873,7 @@ class BusinessContact(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
-    phone = models.IntegerField(db_column='PHONE', null=True)
+    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     business = models.ForeignKey(Business, related_name='contacts', db_column='BUSINESS_ID', null=True)
     spoc = models.BooleanField(db_column='SPOC', default=False)
@@ -901,14 +902,20 @@ class Campaign(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     #campaign_type = models.ForeignKey(CampaignTypes, related_name='campaigns', db_column='CAMPAIGN_TYPE_ID', null=True)
     business = models.ForeignKey(Business, related_name='campaigns', db_column='BUSINESS_ID', null=True)
-    start_date = models.DateField(db_column='START_DATE', null=True)
-    end_date = models.DateField(db_column='END_DATE', null=True)
+    start_date = models.DateTimeField(db_column='START_DATE', null=True)
+    end_date = models.DateTimeField(db_column='END_DATE', null=True)
     tentative_cost = models.IntegerField(db_column='TENTATIVE_COST', null=True)
     booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
 
     def get_types(self):
         try:
             return self.types.all()
+        except:
+            return None
+
+    def get_society_count(self):
+        try:
+            return self.societies.all().count()
         except:
             return None
 
@@ -950,8 +957,9 @@ class SocietyInventoryBooking(models.Model):
     campaign = models.ForeignKey(Campaign, related_name='inventory_bookings', db_column='CAMPAIGN_ID', null=True)
     society = models.ForeignKey(SupplierTypeSociety, related_name='inventory_bookings', db_column='SUPPLIER_ID', null=True)
     adinventory_type = models.ForeignKey(CampaignTypeMapping, db_column='ADINVENTORY_TYPE', null=True)
-    start_date = models.DateTimeField(db_column='START_DATE', null=True)
-    end_date = models.DateTimeField(db_column='END_DATE', null=True)
+    ad_location = models.CharField(db_column='AD_LOCATION', max_length=50, blank=True) #ops to enter the location during finalization
+    start_date = models.DateField(db_column='START_DATE', null=True)
+    end_date = models.DateField(db_column='END_DATE', null=True)
     audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
 
     def get_type(self):
@@ -959,6 +967,23 @@ class SocietyInventoryBooking(models.Model):
             return self.adinventory_type
         except:
             return None
+
+    def get_society(self):
+        try:
+            return self.society
+        except:
+            return None
+
+    def get_audit_type(self):
+        if (self.start_date == date.today()):
+            return 'Release'
+        elif (self.audit_date == date.today()):
+            return 'Audit'
+        else:
+            return None
+
+    def get_status(self):
+        return 'Pending'
 
 
     class Meta:

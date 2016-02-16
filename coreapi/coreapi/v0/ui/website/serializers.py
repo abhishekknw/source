@@ -15,19 +15,21 @@ class UIBusinessSerializer(ModelSerializer):
         )
 
 
-class FinalizeCampaignSerializer(ModelSerializer):
+class CampaignListSerializer(ModelSerializer):
     types = CampaignTypeMappingSerializer(source='get_types', many=True)
+    society_count = serializers.IntegerField(source='get_society_count')
 
     class Meta:
         model = Campaign
         depth=1
         read_only_fields = (
-        'types'
+        'types',
+        'society_count'
         )
 
 class FinalizeInventorySerializer(ModelSerializer):
     inventories = SocietyInventoryBookingSerializer(source='get_inventories', many=True)
-    campaign = FinalizeCampaignSerializer(source='get_campaign')
+    campaign = CampaignListSerializer(source='get_campaign')
     society = UISocietySerializer(source='get_society')
 
     class Meta:
