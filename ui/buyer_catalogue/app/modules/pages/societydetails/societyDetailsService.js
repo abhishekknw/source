@@ -16,9 +16,17 @@ angular.module('machadaloPages')
   var url_base = "v0/ui/";
 	var societyDetailsService = {};
 
-  societyDetailsService.getSociety = function (id) {
+   societyDetailsService.getSociety = function (id) {
       var url = url_base + "society/" + id;
       return machadaloHttp.get(url);
+   };
+
+   societyDetailsService.processParam = function(){
+    if($stateParams.campaignId){
+      $rootScope.campaignId = $stateParams.campaignId;
+    }else {
+      $rootScope.campaignId = null;
+     }
    };
 
   return societyDetailsService;
