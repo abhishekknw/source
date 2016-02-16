@@ -28,24 +28,24 @@ angular.module('machadaloPages')
        "society_address1":"next to theo"
    }
   ];
-   $scope.model = dummyData;
+   //$scope.model = dummyData;
   //  societyListService.getSocietyInfo('10')
   //   .success(function (response){
   //     $scope.model = [response];
   //       console.log(response);
   //    });
 
-   //var sObj = '';
-   //societyListService.listSocieties(sObj)
-    //.success(function (response) {
-    // $scope.model = response.results;
-    // console.log(response);
- //})
-
+  var sObj = '';
+   societyListService.listSocieties(sObj)
+    .success(function (response) {
+    $scope.model = response.results;
+     console.log(response);
+ })
+ 
    //Start:For adding shortlisted society
    if($rootScope.campaignId){
+     alert($rootScope.campaignId);
      $scope.shortlistThis = function() {
-
      societyListService.addShortlistedSociety($rootScope.campaignId, 'MUMPOHNRSOC2')
       .success(function (response){
           $scope.model = response;
@@ -55,7 +55,9 @@ angular.module('machadaloPages')
 
    //Start: To navigate to catalogue page
    $scope.catalogue = function(){
-     $location.path('/society/details');
+     alert('123');
+     alert($rootScope.campaignId);
+     $location.path('campaign/' + $rootScope.campaignId +'/societyDetails/MUMPOHNRSOC2');
    }//End: To navigate to catalogue page
 
    $scope.filter = function() {

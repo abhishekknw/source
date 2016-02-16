@@ -31,7 +31,6 @@ angular.module('machadaloPages')
 
   //for adding shortlisted societies
   societyListService.addShortlistedSociety = function(campaign_id, society_id){
-    alert('inside service');
     var url = url_base + "website/campaign/society/shortlist/";
     var data = {campaign_id, society_id};
     return machadaloHttp.post(url, data);

@@ -48,17 +48,18 @@ angular
           controller: 'SocietyListCtrl'
         })
 
+        .state('campaign.societyDetails', {
+          url : '/societyDetails/:societyId', //:societyId/
+          templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
+          controller: 'SocietyCtrl'
+        })
+        
         .state('campaign.societyList.filter', {
           url : '/societyList/:filter', //:societyId/for filter
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyFilterCtrl'
         })
 
-        .state('society.details', {
-          url : '/details', //:societyId/
-          templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
-          controller: 'SocietyCtrl'
-        })
       .state('login', {
           url : '/login',
           controller: 'LoginCtrl',
