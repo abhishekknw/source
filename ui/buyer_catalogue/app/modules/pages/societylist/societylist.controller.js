@@ -28,34 +28,31 @@ angular.module('machadaloPages')
        "society_address1":"next to theo"
    }
   ];
-   $scope.model = dummyData;
-  //  societyListService.getSocietyInfo('10')
-  //   .success(function (response){
-  //     $scope.model = [response];
-  //       console.log(response);
-  //    });
+   //$scope.model = dummyData;
 
-   //var sObj = '';
-   //societyListService.listSocieties(sObj)
-    //.success(function (response) {
-    // $scope.model = response.results;
-    // console.log(response);
- //})
+    var sObj = '';
+      societyListService.listSocieties(sObj)
+        .success(function (response) {
+           $scope.model = response.results;
+           console.log(response);
+    })
 
    //Start:For adding shortlisted society
    if($rootScope.campaignId){
-     $scope.shortlistThis = function() {
-     societyListService.addShortlistedSociety($rootScope.campaignId, 'MUMPOHNRSOC2')
+     $scope.shortlistThis = function(id) {
+       alert(id);
+     societyListService.addShortlistedSociety($rootScope.campaignId, id)
       .success(function (response){
-          $scope.model = response;
-            console.log(response);
+          console.log(response);
      });
    }}//End: For adding shortlisted society
 
    //Start: To navigate to catalogue page
-   $scope.catalogue = function(){
-     $location.path('/society/details');
-   }//End: To navigate to catalogue page
+   if($rootScope.campaignId){
+   $scope.catalogue = function(id){
+     alert(id);
+     $location.path('campaign/' + $rootScope.campaignId +'/societyDetails/' + id);
+   }}//End: To navigate to catalogue page
 
    $scope.filter = function() {
      alert('njnjnj');
@@ -74,7 +71,7 @@ angular.module('machadaloPages')
  .controller('SocietyFilterCtrl',
      ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
      function ($scope, $rootScope, $window, $location, $http, societyListService) {
- // $scope.filter = function() {
+      //$scope.filter = function() {
  //   alert('bhbh');
  // }
  }]);

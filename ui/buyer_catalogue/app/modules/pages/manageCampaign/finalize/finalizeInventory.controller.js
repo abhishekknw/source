@@ -7,7 +7,7 @@ angular.module('machadaloPages')
       $scope.model = {};
 
       if($rootScope.campaignId){
-         pagesService.getRequestedInventory($rootScope.campaignId)
+         pagesService.getSocietyInventory($rootScope.campaignId)
           .success(function (response, status) {
               console.log(response);
               $scope.model = response;
@@ -45,11 +45,10 @@ angular.module('machadaloPages')
         });
       };
 
-      $scope.removeSociety = function(id) {
+      $scope.removeSociety = function(society_id) {
         var result = confirm("Want to delete?");
         if (result){
-        
-          pagesService.removeFinalizedInventory(id)
+          pagesService.removeThisSociety(society_id, 'Temporary')
               .success(function (response, status) {
               if (status == '200') {
                 $window.location.reload(); 
@@ -62,10 +61,6 @@ angular.module('machadaloPages')
           });
         }
       };
-
-
-
-
 
   $scope.statuses = ['Requested', 'Finalized'];
 
