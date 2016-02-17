@@ -84,12 +84,20 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
-    'default': {
+    'local': {
        'NAME': 'machadalodev',
        'ENGINE': 'django.db.backends.mysql',
        'HOST': '127.0.0.1',
        'USER': 'root',
        'PASSWORD': 'khush123',
+
+    },
+    'default': {
+       'NAME': 'ebdb',
+       'ENGINE': 'django.db.backends.mysql',
+       'HOST': 'aa12skfe6g08ukb.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+       'USER': 'machadalo',
+       'PASSWORD': 'djanGo12',
 
     }
 }
@@ -124,7 +132,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [],
 }
 
-'''REST_FRAMEWORK = {
+REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAdminUser',
         ),
@@ -141,7 +149,7 @@ REST_FRAMEWORK = {
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20
-}
+}'''
 
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True

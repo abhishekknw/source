@@ -720,6 +720,7 @@ class SupplierTypeSociety(models.Model):
     past_total_sponsorship = models.IntegerField(db_column='PAST_YEAR_TOTAL_SPONSORSHIP', null=True)  # Field name made lowercase.
     created_by = models.ForeignKey(User, related_name='societies', db_column='CREATED_BY', blank=True, null=True)
     created_on = models.DateTimeField(db_column='CREATED_ON', auto_now_add=True)
+    total_ad_spaces = models.IntegerField(db_column='TOTAL_AD_SPACES', null=True)
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #car_display_available = models.CharField(db_column='CAR_DISPLAY_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
@@ -1022,9 +1023,19 @@ class CampaignSocietyMapping(models.Model):
         db_table = 'campaign_society_mapping'
 
 
+'''class AssignedAudits(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    ad_inventory_id = models.CharField(db_column='AD_INVENTORY_ID', max-blank=True)
+    latitude = models.FloatField(db_column='LATITUDE', null=True)
+    longitude = models.FloatField(db_column='LONGITUDE', null=True)
+    timestamp = models.DateTimeField(db_column='TIMESTAMP', null=True)
+    barcode = models.FloatField(db_column='BARCODE', null=True) #split to 2 barcode fields
+    audited_by = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
+    audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
+    image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)'''
 
 
-class audits(models.Model):
+class Audits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     society_booking = models.ForeignKey(SocietyInventoryBooking, related_name='audits', db_column='SOCIETY_BOOKING_ID', null=True)
     latitude = models.FloatField(db_column='LATITUDE', null=True)
@@ -1033,6 +1044,7 @@ class audits(models.Model):
     barcode = models.FloatField(db_column='BARCODE', null=True) #split to 2 barcode fields
     audited_by = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
     audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
+    image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)
 
     class Meta:
 

@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import SocietyInventoryBooking, Campaign, CampaignTypeMapping, CampaignSocietyMapping
+from v0.models import Audits, SocietyInventoryBooking, Campaign, CampaignTypeMapping, CampaignSocietyMapping
 from v0.ui.serializers import UISocietySerializer
 from v0.serializers import SocietyInventoryBookingSerializer, CampaignSerializer, CampaignTypeMappingSerializer
 
@@ -24,3 +24,8 @@ class AssignedAuditSerializer(ModelSerializer):
         'submit_status'
 
         )
+
+class AuditSerializer(ModelSerializer):
+
+    class Meta:
+        model = Audits
