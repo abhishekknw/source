@@ -18,6 +18,10 @@ class SocietyAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, format=None):
+        """
+
+        :type request: object
+        """
         print request.data
         current_user = request.user
         if 'supplier_id' in request.data:
@@ -61,6 +65,16 @@ class SocietyAPIView(APIView):
                 contact_serializer = ContactDetailsSerializer(data=contact)
             if contact_serializer.is_valid():
                 contact_serializer.save(supplier = society, contact_type="Reference")
+
+
+        towercount = SocietyTower.objects.filter(supplier = society).count()
+        if request.data['tower_count'] > towercount:
+          abc = request.data['tower_count'] - towercount
+        #if 'tower_count' in request.data:
+          for i in range(abc):
+                tower = SocietyTower(supplier = society)
+                tower.save()
+
 
         return Response(serializer.data, status=201)
 
@@ -132,6 +146,7 @@ class InventoryPricingAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             inv_prices = PriceMapping.objects.select_related().filter(supplier__supplier_id=id)
+            #count = PriceMapping.objects.filter(supplier__supplier_id=id).count()
             #basic_prices = SupplierTypeSociety.objects.get(pk=id).default_prices.all()
             serializer = PriceMappingSerializer(inv_prices, many=True)
             return Response(serializer.data)
