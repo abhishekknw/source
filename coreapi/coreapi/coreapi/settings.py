@@ -84,14 +84,6 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
-    'local': {
-       'NAME': 'machadalodev',
-       'ENGINE': 'django.db.backends.mysql',
-       'HOST': '127.0.0.1',
-       'USER': 'root',
-       'PASSWORD': 'khush123',
-
-    },
     'default': {
        'NAME': 'ebdb',
        'ENGINE': 'django.db.backends.mysql',
@@ -124,13 +116,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = '/static/'
 
 # settings for Django Rest Framework
-
-REST_FRAMEWORK = {
-    # other settings...
-
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
-    'DEFAULT_PERMISSION_CLASSES': [],
-}
 
 REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
