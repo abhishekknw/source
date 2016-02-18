@@ -10,7 +10,7 @@ angular.module('machadaloPages')
 	    };
 
     	
-		pagesService.getRequestedCampaigns()
+		pagesService.getCampaigns('Requested')
     	.success(function (response, status) {
     		console.log(response);
             $scope.model = response;

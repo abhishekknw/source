@@ -13,6 +13,7 @@ from django.dispatch import receiver
 
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import date
 
 
 AD_INVENTORY_CHOICES = (
@@ -735,6 +736,9 @@ class SupplierTypeSociety(models.Model):
     past_total_sponsorship = models.IntegerField(db_column='PAST_YEAR_TOTAL_SPONSORSHIP', null=True)  # Field name made lowercase.
     created_by = models.ForeignKey(User, related_name='societies', db_column='CREATED_BY', blank=True, null=True)
     created_on = models.DateTimeField(db_column='CREATED_ON', auto_now_add=True)
+    total_ad_spaces = models.IntegerField(db_column='TOTAL_AD_SPACES', null=True)
+    tower_count = models.IntegerField(db_column='TOWER_COUNT', blank=True, null=True)  # Field name made lowercase.
+
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #car_display_available = models.CharField(db_column='CAR_DISPLAY_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
@@ -755,7 +759,6 @@ class SupplierTypeSociety(models.Model):
     #sports_facility_available = models.CharField(db_column='SPORTS_FACILITY_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase.
     #swimming_pool_available = models.CharField(db_column='SWIMMING_POOL_AVAILABEL', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #street_furniture_count = models.IntegerField(db_column='STREET_FURNITURE_COUNT', blank=True, null=True)  # Field name made lowercase.
-    #tower_count = models.IntegerField(db_column='TOWER_COUNT', blank=True, null=True)  # Field name made lowercase.
     #standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
 
 
@@ -866,7 +869,7 @@ class Business(models.Model):
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     business_type = models.CharField(db_column='TYPE', max_length=20, blank=True)
     business_sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
-    phone = models.IntegerField(db_column='PHONE', null=True)
+    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
     reference = models.CharField(db_column='REFERENCE', max_length=50, blank=True)
@@ -888,7 +891,7 @@ class BusinessContact(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
-    phone = models.IntegerField(db_column='PHONE', null=True)
+    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     business = models.ForeignKey(Business, related_name='contacts', db_column='BUSINESS_ID', null=True)
     spoc = models.BooleanField(db_column='SPOC', default=False)
@@ -917,14 +920,20 @@ class Campaign(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     #campaign_type = models.ForeignKey(CampaignTypes, related_name='campaigns', db_column='CAMPAIGN_TYPE_ID', null=True)
     business = models.ForeignKey(Business, related_name='campaigns', db_column='BUSINESS_ID', null=True)
-    start_date = models.DateField(db_column='START_DATE', null=True)
-    end_date = models.DateField(db_column='END_DATE', null=True)
+    start_date = models.DateTimeField(db_column='START_DATE', null=True)
+    end_date = models.DateTimeField(db_column='END_DATE', null=True)
     tentative_cost = models.IntegerField(db_column='TENTATIVE_COST', null=True)
     booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
 
     def get_types(self):
         try:
             return self.types.all()
+        except:
+            return None
+
+    def get_society_count(self):
+        try:
+            return self.societies.all().count()
         except:
             return None
 
@@ -961,15 +970,61 @@ class CampaignBookingInfo(models.Model):
         db_table = 'campaign_booking_info'
 
 
+class SocietyInventoryBooking(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='inventory_bookings', db_column='CAMPAIGN_ID', null=True)
+    society = models.ForeignKey(SupplierTypeSociety, related_name='inventory_bookings', db_column='SUPPLIER_ID', null=True)
+    adinventory_type = models.ForeignKey(CampaignTypeMapping, db_column='ADINVENTORY_TYPE', null=True)
+    ad_location = models.CharField(db_column='AD_LOCATION', max_length=50, blank=True) #ops to enter the location during finalization
+    start_date = models.DateField(db_column='START_DATE', null=True)
+    end_date = models.DateField(db_column='END_DATE', null=True)
+    audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
+
+    def get_type(self):
+        try:
+            return self.adinventory_type
+        except:
+            return None
+
+    def get_society(self):
+        try:
+            return self.society
+        except:
+            return None
+
+    def get_audit_type(self):
+        if (self.start_date == date.today()):
+            return 'Release'
+        elif (self.audit_date == date.today()):
+            return 'Audit'
+        else:
+            return None
+
+    def get_status(self):
+        return 'Pending'
+
+
+    class Meta:
+
+        db_table = 'society_inventory_booking'
+
 class CampaignSocietyMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     campaign = models.ForeignKey(Campaign, related_name='societies', db_column='CAMPAIGN_ID', null=True)
     society = models.ForeignKey(SupplierTypeSociety, related_name='campaigns', db_column='SUPPLIER_ID', null=True)
     booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
+    adjusted_price = models.IntegerField(db_column='ADJUSTED_PRICE', null=True)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+    def get_inventories(self):
+        try:
+            return SocietyInventoryBooking.objects.filter(campaign=self.campaign, society=self.society)
+        except:
+            return None
 
     def get_campaign(self):
         try:
-            print self.campaign
             return self.campaign
         except:
             return None
@@ -985,23 +1040,19 @@ class CampaignSocietyMapping(models.Model):
         db_table = 'campaign_society_mapping'
 
 
-class SocietyInventoryBooking(models.Model):
+'''class AssignedAudits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    campaign = models.ForeignKey(Campaign, related_name='inventory_bookings', db_column='CAMPAIGN_ID', null=True)
-    society = models.ForeignKey(SupplierTypeSociety, related_name='inventory_bookings', db_column='SUPPLIER_ID', null=True)
-    adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20, blank=True)
-    start_date = models.DateField(db_column='START_DATE', null=True)
-    end_date = models.DateField(db_column='END_DATE', null=True)
-    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
-    audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
-
-    class Meta:
-
-        db_table = 'society_inventory_booking'
+    ad_inventory_id = models.CharField(db_column='AD_INVENTORY_ID', max-blank=True)
+    latitude = models.FloatField(db_column='LATITUDE', null=True)
+    longitude = models.FloatField(db_column='LONGITUDE', null=True)
+    timestamp = models.DateTimeField(db_column='TIMESTAMP', null=True)
+    barcode = models.FloatField(db_column='BARCODE', null=True) #split to 2 barcode fields
+    audited_by = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
+    audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
+    image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)'''
 
 
-
-class audits(models.Model):
+class Audits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     society_booking = models.ForeignKey(SocietyInventoryBooking, related_name='audits', db_column='SOCIETY_BOOKING_ID', null=True)
     latitude = models.FloatField(db_column='LATITUDE', null=True)
@@ -1010,6 +1061,7 @@ class audits(models.Model):
     barcode = models.FloatField(db_column='BARCODE', null=True) #split to 2 barcode fields
     audited_by = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
     audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
+    image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)
 
     class Meta:
 

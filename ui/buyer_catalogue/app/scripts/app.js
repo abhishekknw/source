@@ -9,6 +9,7 @@
  * Main module of the application.
  */
 
+
 var APIBaseUrl = 'http://localhost:8108/';
 
 angular.module('Authentication', []);
@@ -47,17 +48,18 @@ angular
           controller: 'SocietyListCtrl'
         })
 
+        .state('campaign.societyDetails', {
+          url : '/societyDetails/:societyId', //:societyId/
+          templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
+          controller: 'SocietyCtrl'
+        })
+
         .state('campaign.societyList.filter', {
           url : '/societyList/:filter', //:societyId/for filter
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyFilterCtrl'
         })
 
-        .state('society.details', {
-          url : '/details', //:societyId/
-          templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
-          controller: 'SocietyCtrl'
-        })
       .state('login', {
           url : '/login',
           controller: 'LoginCtrl',
@@ -72,12 +74,17 @@ angular
       .state('manageCampaign.create', {
           url : '/create',
           controller: 'CreateCampaignCtrl',
-          templateUrl: 'modules/pages/createCampaign/create-campaign.tmpl.html'
+          templateUrl: 'modules/pages/manageCampaign/create/create-campaign.tmpl.html'
         })
       .state('manageCampaign.shortlisted', {
           url : '/shortlisted',
           controller: 'ShortlistedCampaignCtrl',
           templateUrl: 'modules/pages/manageCampaign/shortlisted/shortlisted.tmpl.html'
+        })
+      .state('manageCampaign.shortlisted.societies', {
+          url : '/:campaignId/societies',
+          controller: 'ShortlistedSocietiesCtrl',
+          templateUrl: 'modules/pages/manageCampaign/shortlisted/shortlisted-societies.tmpl.html'
         })
       .state('manageCampaign.finalize', {
           url : '/finalize',

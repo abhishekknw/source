@@ -85,13 +85,12 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
     'default': {
-       'NAME': 'machadalo_dev',
+       'NAME':'test',
        'ENGINE': 'django.db.backends.mysql',
        'HOST': '127.0.0.1',
        'USER': 'root',
-       'PASSWORD': '',
-
-    }
+       'PASSWORD': 'vidhi',
+   }
 }
 
 
@@ -137,7 +136,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20
 }
 
-'''REST_FRAMEWORK = {
+'''
+REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20
 }'''
