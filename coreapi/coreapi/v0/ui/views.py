@@ -17,6 +17,18 @@ class SocietyAPIView(APIView):
         except :
             return Response(status=404)
 
+    def delete(self, request, id, format=None):
+        try:
+            item = SupplierTypeSociety.objects.get(pk=id)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        contacts = item.get_contact_list()
+        for contact in contacts:
+            contact.delete()
+        item.delete()
+        return Response(status=204)
+
+
     def post(self, request, format=None):
         """
 
@@ -77,6 +89,9 @@ class SocietyAPIView(APIView):
 
 
         return Response(serializer.data, status=201)
+
+
+
 
 def set_default_pricing(society_id):
     society = SupplierTypeSociety.objects.filter(pk=society_id).first()
@@ -272,6 +287,22 @@ class TowerAPIView(APIView):
         return Response(status=201)
 
 
+    def delete(self, request, id, format=None):
+        try:
+            item = SocietyTower.objects.get(pk=id)
+        except SocietyTower.DoesNotExist:
+            return Response(status=404)
+        for key in ['lift', 'notice_board', 'flat']:
+            fn_name = "get_" + key + "_list"
+            func = getattr(item,fn_name)
+            objects = func()
+            for obj in objects:
+                obj.delete()
+        item.delete()
+        return Response(status=204)
+
+
+
 
 
 class StandeeBannerAPIView(APIView):
@@ -309,11 +340,12 @@ class StandeeBannerAPIView(APIView):
             for index, key in enumerate(request.data['standee_details'], start=1):
                 if 'id' not in key:
                     #populate ad inventory tablelift_tag = generate_location_tag(tag_initial, 'lift', index)
-                    loc_tag = society.society_name.upper()[:3] + key['standee_location'].upper()[:3] +'SD' + str(index)
+                    #loc_tag = society.society_name.upper()[:3] + key['standee_location'].upper()[:3] +'SD' + str(index)
+                    loc_tag = key['adinventory_id'].upper()[:18]
                     sd_location = InventoryLocation(location_id = loc_tag, location_type='Standee')
                     sd_location.save()
 
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'STANDEE', location = sd_location)
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = key['adinventory_id'], adinventory_name = 'STANDEE', location = sd_location)
                     ad_inv.save(key['type'], society)
 
         if request.data['banner_available']:
@@ -362,10 +394,11 @@ class StallAPIView(APIView):
             for index, key in enumerate(request.data['stall_details'], start=1):
                 if 'id' not in key:
                     #populate ad inventory tablelift_tag = generate_location_tag(tag_initial, 'lift', index)
-                    loc_tag = society.society_name.upper()[:3] + key['stall_location'].upper()[:3] +'ST' + str(index)
+                    #loc_tag = society.society_name.upper()[:3] + key['stall_location'].upper()[:3] +'ST' + str(index)
+                    loc_tag = key['adinventory_id'].upper()[:18]
                     st_location = InventoryLocation(location_id = loc_tag, location_type='Stall')
                     st_location.save()
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'STALL', location = st_location)
+                    ad_inv = AdInventoryLocationMapping(adinventory_id = key['adinventory_id'], adinventory_name = 'STALL', location = st_location)
                     ad_inv.save(key['type'], society)
 
         return Response(status=201)

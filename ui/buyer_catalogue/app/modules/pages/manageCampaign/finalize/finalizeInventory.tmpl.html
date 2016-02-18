@@ -1,0 +1,78 @@
+<link rel="stylesheet" href="modules/pages/manageCampaign/finalize/finalizeInventory.tmpl.css" />
+
+<div style="margin-top:30px"></div>
+<div>
+<div ui-view="">
+    <table class="table table-bordered table-hover finalize-table">
+        <thead>
+            <th  style = "text-align:center">Society Name</th>
+            <th  style = "text-align:center">Contact No</th>
+            <th  style = "text-align:center">Inventory Types</th>
+            <th  style = "text-align:center">Start Date</th>
+            <th  style = "text-align:center">End Date</th>
+            <th  style = "text-align:center">Status</th>
+            <th  style = "text-align:center">Adjusted Price</th>
+            <th  style = "text-align:center">Comments</th>
+            <th  style = "text-align:center">Remove Society</th>
+            
+        </thead>
+        <tbody>
+        <tr class="society-row" ng-repeat="row in model" >
+            <td style = "text-align: -webkit-center"><span>{{row.society.society_name}}</span></td>
+            <td style = "text-align: -webkit-center">
+                <div class="table_cell" ng-repeat="key in row.society.basic_contacts">{{key.contact_type}} - {{key.name}} - {{key.mobile}}</div>
+            </td>
+            <td colspan="3">
+              <table class="table table-bordered">
+              <tbody>
+                <tr ng-repeat="key in row.inventories">
+                  <td>{{key.type.type}} - {{key.type.sub_type}}</td>
+
+            <td style = "text-align: -webkit-center">
+            <p class="input-group">
+              <input type="text" ng-model="key.start_date" ng-init="key.opened1=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string"  is-open="key.opened1" min-date="today" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default" ng-click="key.opened1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+              </span>
+            </p>
+            </td>
+
+            <td style = "text-align: -webkit-center">
+            <p class="input-group">
+              <input type="text" ng-model="key.end_date" ng-init="key.opened2=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string" is-open="key.opened2" min-date="key.start_date" datepicker-options="dateOptions"  ng-required="true" close-text="Close" />
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default" ng-click="key.opened2 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+              </span>
+            </p>
+            </td>
+
+            </tr>
+            <tbody>
+          </table>
+
+             <td style = "text-align: -webkit-center">
+                <select ng-change="" ng-model="row.booking_status">
+                  <option  ng-repeat="status in statuses" 
+               value="{{status}}">{{status}}</option> 
+               </select>
+             </td>
+            <td style = "text-align: -webkit-center"><input type="number" style="text-align: center" ng-model="row.adjusted_price" /></td>
+            <td style = "text-align: -webkit-center"><textarea style="text-align: center" ng-model="row.comments" /></textarea></td>
+            <td style = "text-align: -webkit-center"><input type="button" class="btn btn-primary" ng-click="removeSociety(row.id)" value="Remove Society"></td>
+
+        </tr>
+        <hr>
+       
+        </tbody>
+    </table>
+    <tr>
+      <td colspan="3">
+        <input type="button" class="btn btn-primary" ng-click="save('save')" value="Save">
+      </td>
+      <td colspan="3">
+         <input type="button" class="btn btn-primary" ng-click="save('submit')" value="Submit">
+      </td>
+    </tr>
+</div>
+    
+</div>

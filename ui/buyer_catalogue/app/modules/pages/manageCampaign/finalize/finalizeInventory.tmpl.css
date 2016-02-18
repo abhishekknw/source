@@ -1,0 +1,11 @@
+.table-cell{
+	min-width: 100px;
+}
+.finalize-table{
+	min-width: 150%;
+	border:3px solid #ddd ;
+}
+.society-row{
+	border:3px solid #ddd ;
+	margin-top: 15px;
+}

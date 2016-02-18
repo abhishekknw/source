@@ -1,0 +1,84 @@
+<link rel="stylesheet" href="modules/common/campaignList/campaign-list.tmpl.css"/>
+<!-- LIST CONTENT-->
+		<div class="rightcontent col-md-9 offset-0">
+			<div class="hpadding20">
+				<!-- Top filters -->
+				<div class="topsortby">
+				 <div class="col-md-4 offset-0">
+					 <div class="left mt7"><b>Sort by:</b></div>
+					 		<div class="right wh70percent">
+								<button class="popularbtn" ng-click="order('society_name')">Alphabetically</button>
+								<span class="sortorder" ng-show="predicate === 'society_name'" ng-class="{reverse:reverse}"></span>
+							</div>
+					</div>
+					<div class="col-md-4">
+						<div class="w50percent">
+							<div class="wh90percent">
+								<button class="popularbtn">Shortlisted</button>
+							</div>
+						</div>
+						<div class="w50percentlast">
+							<div class="wh90percent">
+								<button class="popularbtn">Date Added</button>
+								<!--<select class="form-control mySelectBoxClass ">
+									<option selected>Date Added</option>
+									<option>A to Z</option>
+									<option>Z to A</option>
+								</select>-->
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- End of topfilters-->
+	  </div>
+			<!-- End of padding -->
+			<div class="itemscontainer offset-1">
+				<div class="offset-2" ng-repeat="row in model | orderBy:predicate:reverse">
+					<table cellpadding="30" class="hpadding20 table table-bordered">
+					 <tbody>
+						 <tr valign="center">
+								<td colspan="4" >
+									<div class="col-md-4 offset-0">
+								 		<img style="height: 175px;width: 230px;" ng-src = "http://mdimages.s3.amazonaws.com/{{row.society.society_image.image_url}}" alt=""/>
+								 </div>
+								 <div class="col-md-8 offset-0" style="padding-left:8px;">
+										<div class="col-md-7 hpadding20">
+											<h4>{{row.society.society_name}}</h4>
+											<div style="color:#949292">
+												<p><span class="fa fa-map-marker"></span>{{row.society.society_address1}} , {{row.society.society_address2}}</p>
+											  <p >Start Date: {{row.start_date}}</p>
+											  <p>End date: {{row.end_date}}</p>
+											 </div> 
+										</div>
+										<div class="col-md-5 hpadding20" style="margin-top:20px">
+											<button type="button" class="list-button btn btn-danger btn-lg active" ng-click = "removeThis(row.id)"> REMOVE </button><br><br>
+											<button type="button" class="list-button btn btn-default btn-lg active" ng-click ="catalogue(row.id)" >VIEW DETAILS</button>
+										</div>
+								 </div>
+								</td>
+							</tr>
+							<tr align="center" >
+								 <td><h4>{{row.society.society_type_quality}}</h4><p style="color:#949292">Type of society</p></td>
+								 <td><h4>{{row.society.society_locality}}</h4><p style="color:#949292">Locality rating</p></td>
+								 <td><h4>{{row.society.machadalo_index}}</h4><p style="color:#949292">Machadalo Index</p></td>
+								 <td><h4>{{row.society.total_adspaces}}</h4><p style="color:#949292">Ad Spaces</p></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="clearfix"></div>
+			</div>
+			<!-- End of offset1-->
+			<div class="hpadding20">
+				<ul class="pagination right paddingbtm20">
+					<li class="disabled"><a href="#">&laquo;</a></li>
+					<li><a href="#">1</a></li>
+					<li><a href="#">2</a></li>
+					<li><a href="#">3</a></li>
+					<li><a href="#">4</a></li>
+					<li><a href="#">5</a></li>
+					<li><a href="#">&raquo;</a></li>
+				</ul>
+			</div>
+		</div>
+		<!-- END OF LIST CONTENT-->

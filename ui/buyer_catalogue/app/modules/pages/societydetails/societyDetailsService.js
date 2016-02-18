@@ -9,23 +9,32 @@
  */
 
 angular.module('machadaloPages')
-.factory('societyDetailsService', ['$http', function ($http) {
+.factory('societyDetailsService', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location',
+  function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
 
   //var url_base = 'http://machadalocore.ap-southeast-1.elasticbeanstalk.com/';
-  var url_base = 'http://192.168.1.10:8108/v0/ui/';
-  //var url_base1 = "v0/ui/";
+  var url_base = "v0/ui/";
 	var societyDetailsService = {};
 
-	societyDetailsService.getSocietyData = function(id) {
-		return $http({
-      method: 'GET',
-      url: url_base + "society/" + "HIMPOW",
-      headers: {'Accept': 'application/json',
-      	        'Content-Type': 'application/json'
-                },
-      data: ""
-    })
+   societyDetailsService.getSociety = function (id) {
+      var url = url_base + "society/" + id;
+      return machadaloHttp.get(url);
+   };
+
+   societyDetailsService.processParam = function(){
+    if($stateParams.campaignId){
+      $rootScope.campaignId = $stateParams.campaignId;
+    }else {
+      $rootScope.campaignId = null;
+     }
+
+     if($stateParams.societyId){
+      $rootScope.societyId = $stateParams.societyId;
+    }else {
+      $rootScope.societyId = null;
+    }
 
    };
+
   return societyDetailsService;
 }]);

@@ -1,1 +1,1 @@
-angular.module('machadaloPages', ['ui.router']);
+angular.module('machadaloPages', ['ui.router','slickCarousel']);

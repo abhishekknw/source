@@ -1,0 +1,49 @@
+<link rel="stylesheet" href="modules/pages/manageCampaign/manage-campaign.tmpl.css" />
+
+<div><nav-bar></nav-bar></div>
+
+<div class="campaignTabs">
+	<div class="col-md-3">
+    <div class="dashboard-left offset-0 textcenter">
+
+    <br/><br/>
+    
+    <span class="size12 grey lh5">Welcome to the Admin Panel</span><br/>
+    <a href="#"><img src="../images/dash/avatar.jpg" class="dash-avatar" alt=""/></a><br/>
+    <span class="size12 dark">Administrator</span><br/>
+    <a href="#"><img src="../images/dash/logout.png" alt=""/></a><br/>
+    <br/><br/>
+          
+	
+    <div class="collapse navbar-collapse" class = "divpadding">
+      <ul class="nav dashboard-tabs nav-stacked" style="font-size:14px">
+        <li ng-class="{active: isActive('/manageCampaign/create')}"><a ng-href="/#/manageCampaign/create" class="lipadding">Create New Campaign</a></li>
+        <li class="dropdown">
+          <a class="dropdown-toggle" data-toggle="dropdown" ng-href="#">Leads <span class="caret"></span></a>
+          <ul class="dropdown-menu lftwidth">
+            <li><a href="/#/manageCampaign/shortlisted" data-toggle="tab">Shortlisted Leads</a></li>
+            <li><a href="#tab_d2" data-toggle="tab">Requested Leads</a></li>
+            <li><a href="#tab_d1" data-toggle="tab">Finalized Leads</a></li>
+
+          </ul><!-- end of dropdown menu -->
+        </li>
+
+        <li ng-class="{ active: isActive('/#/manageCampaign/finalize')}"><a ng-href="/#/manageCampaign/finalize" class = "lipadding">Finalize Campaigns</a></li>
+
+        <li ng-class="{ active: isActive('/#/manageCampaign/finalize')}"><a ng-href="/#/manageCampaign/finalize" class = "lipadding">Upcoming Campaigns</a></li>
+        <li ng-class="{ active: isActive('/society/{{societyId}}/basicPricing')}"><a ng-href="#/society/{{societyId}}/basicPricing" class = "lipadding">Ongoing Campaigns</a></li>
+        <li ng-class="{ active: isActive('/society/{{societyId}}/standeeBanners')}"><a ng-href="#/society/{{societyId}}/standeeBanners" class = "lipadding">Completed Campaigns</a></li>
+        <li ng-class="{ active: isActive('/society/{{societyId}}/stalls')}"><a ng-href="#/society/{{societyId}}/stalls" class = "lipadding">Booked Campaigns</a></li>
+       </ul>
+    </div>
+  </div>
+  </div>
+
+
+  <div class="col-md-9" style="overflow:auto;min-height:600px;"><div ui-view=""></div></div>
+</div>
+
+
+
+
+
