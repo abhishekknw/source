@@ -788,7 +788,6 @@ class MailboxInfoAPIView(APIView):
 
 
 class MailboxInfoAPIListView(APIView):
-
     def get(self, request, format=None):
         items = MailboxInfo.objects.all()
         paginator = PageNumberPagination()
@@ -1269,6 +1268,52 @@ class SocietyTowerAPIListView(APIView):
 
     def post(self, request, format=None):
         serializer = SocietyTowerSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+class FlatTypeAPIView(APIView):
+
+    def get(self, request, id, format=None):
+        try:
+            item = FlatType.objects.get(pk=id)
+            serializer = FlatTypeSerializer(item)
+            return Response(serializer.data)
+        except FlatType.DoesNotExist:
+            return Response(status=404)
+
+    def put(self, request, id, format=None):
+        try:
+            item = FlatType.objects.get(pk=id)
+        except FlatType.DoesNotExist:
+            return Response(status=404)
+        serializer = FlatTypeSerializer(item, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, id, format=None):
+        try:
+            item = FlatType.objects.get(pk=id)
+        except FlatType.DoesNotExist:
+            return Response(status=404)
+        item.delete()
+        return Response(status=204)
+
+
+class FlatTypeAPIListView(APIView):
+
+    def get(self, request, format=None):
+        items = FlatType.objects.all()
+        paginator = PageNumberPagination()
+        result_page = paginator.paginate_queryset(items, request)
+        serializer = FlatTypeSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = FlatTypeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
