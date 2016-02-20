@@ -245,6 +245,27 @@ class TowerAPIView(APIView):
         except SocietyTower.DoesNotExist:
             return Response(status=404)
 
+            flatType = SupplierTypeSociety.objects.get(pk=id).towers.all()
+            serializer = UITowerSerializer(towers, many=True)
+            flatCount = len(serializer.data)
+
+            if flatCount > 0:
+                flat_type_details_available=True
+            else:
+                flat_type_details_available = False
+
+                response = {}
+                response['flat_type_count'] = flatCount
+                response['flat_type_details_available'] = flat_type_details_available
+                response['flat_type_details'] = serializer.data
+
+                return Response(response, status=200)
+            except SupplierTypeSociety.DoesNotExist:
+                return Response(status=404)
+            except FlatType.DoesNotExist:
+                return Response(status=404)
+
+
     def post(self, request, id, format=None):
         print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
@@ -312,8 +333,8 @@ class TowerAPIView(APIView):
                     else:
                         return Response(lift_serializer.errors, status=400)
 
-            if key['flat_details_available']:
-                for index, flat in enumerate(key['flat_details'], start=1):
+            if key['flat_type_details_available']:
+                for index, flat in enumerate(key['flat_type_details'], start=1):
                     if 'id' in flat:
                         flat_item = SocietyFlat.objects.get(pk=flat['id'])
                         flat_serializer=SocietyFlatSerializer(flat_item,data=flat)
