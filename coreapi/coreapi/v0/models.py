@@ -329,7 +329,6 @@ class StandeeInventory(models.Model):
     standee_inventory_status = models.TextField(db_column='STANDEE_INVENTORY_STATUS', blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     sides = models.CharField(db_column='SIDES', max_length=255, blank=True, null=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='standees', blank=True, null=True)  # Field name made lowercase.
-
     class Meta:
 
         db_table = 'standee_inventory'
@@ -426,7 +425,7 @@ class ContactDetails(models.Model):
     name = models.CharField(db_column='CONTACT_NAME',  max_length=50, blank=True, null=True)  # Field name made lowercase.
     salutation = models.CharField(db_column='SALUTATION',  max_length=50, blank=True, null=True)  # Field name made lowercase.
     landline = models.BigIntegerField(db_column='CONTACT_LANDLINE', blank=True, null=True)  # Field name made lowercase.
-    std_code = models.IntegerField(db_column='STD_CODE', blank=True, null=True)  # Field name made lowercase.
+    std_code = models.CharField(db_column='STD_CODE',max_length=6, blank=True, null=True)  # Field name made lowercase.
     mobile = models.BigIntegerField(db_column='CONTACT_MOBILE', blank=True, null=True)  # Field name made lowercase.
     country_code = models.CharField(db_column='COUNTRY_CODE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     email = models.CharField(db_column='CONTACT_EMAILID',  max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -735,6 +734,9 @@ class SupplierTypeSociety(models.Model):
     created_on = models.DateTimeField(db_column='CREATED_ON', auto_now_add=True)
     total_ad_spaces = models.IntegerField(db_column='TOTAL_AD_SPACES', null=True)
     tower_count = models.IntegerField(db_column='TOWER_COUNT', blank=True, null=True)  # Field name made lowercase.
+    standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
+    stall_count = models.IntegerField(db_column='STALL_COUNT', blank=True, null=True)  # Field name made lowercase.
+    banner_count = models.IntegerField(db_column='BANNER_COUNT', blank=True, null=True)  # Field name made lowercase.
 
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
