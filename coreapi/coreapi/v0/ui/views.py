@@ -360,12 +360,16 @@ class StandeeBannerAPIView(APIView):
             standees = SupplierTypeSociety.objects.get(pk=id).standees.all()
             serializer = StandeeInventorySerializer(standees, many=True)
             standee_available = get_availability(serializer.data)
+            standeeCount = SupplierTypeSociety.objects.get(pk=id).standee_count
+            response['standee_count'] = standeeCount
             response['standee_available'] = standee_available
             response['standee_details'] = serializer.data
 
             banners = SupplierTypeSociety.objects.get(pk=id).banners.all()
             serializer = BannerInventorySerializer(banners, many=True)
             banner_available = get_availability(serializer.data)
+            bannerCount = SupplierTypeSociety.objects.get(pk=id).banner_count
+            response['banner_count'] = bannerCount
             response['banner_available'] = banner_available
             response['banner_details'] = serializer.data
 
@@ -379,6 +383,12 @@ class StandeeBannerAPIView(APIView):
 
     def post(self, request, id, format=None):
         society=SupplierTypeSociety.objects.get(pk=id)
+
+        #MyModel.objects.filter(pk=some_value).update(field1='some value')
+
+        if 'standee_count' in request.data:
+           society.standee_count = request.data['standee_count']
+           society.save()
 
         if request.data['standee_available']:
             response = post_data(StandeeInventory, StandeeInventorySerializer, request.data['standee_details'], society)
@@ -395,6 +405,10 @@ class StandeeBannerAPIView(APIView):
 
                     ad_inv = AdInventoryLocationMapping(adinventory_id = key['adinventory_id'], adinventory_name = 'STANDEE', location = sd_location)
                     ad_inv.save(key['type'], society)
+
+        if 'banner_count' in request.data:
+           society.banner_count = request.data['banner_count']
+           society.save()
 
         if request.data['banner_available']:
             response = post_data(BannerInventory, BannerInventorySerializer, request.data['banner_details'], society)
@@ -420,6 +434,8 @@ class StallAPIView(APIView):
             stalls = SupplierTypeSociety.objects.get(pk=id).stalls.all()
             serializer = StallInventorySerializer(stalls, many=True)
             stalls_available = get_availability(serializer.data)
+            stallCount = SupplierTypeSociety.objects.get(pk=id).stall_count
+            response['stall_count'] = stallCount
             response['stalls_available'] = stalls_available
             response['stall_details'] = serializer.data
 
@@ -433,6 +449,10 @@ class StallAPIView(APIView):
     def post(self, request, id, format=None):
         print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
+
+        if 'stall_count' in request.data:
+           society.stall_count = request.data['stall_count']
+           society.save()
 
         if request.data['stalls_available']:
             response = post_data(StallInventory, StallInventorySerializer, request.data['stall_details'], society)
