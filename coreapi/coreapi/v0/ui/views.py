@@ -258,7 +258,7 @@ class TowerAPIView(APIView):
             if 'tower_id' in key:
                 item = SocietyTower.objects.get(pk=key['tower_id'])
                 serializer = SocietyTowerSerializer(item, data=key)
-                
+
             else:
                 serializer = SocietyTowerSerializer(data=key)
 
@@ -282,6 +282,11 @@ class TowerAPIView(APIView):
                     if 'id' in notice_board:
                         notice_item = NoticeBoardDetails.objects.get(pk=notice_board['id'])
                         notice_serializer = NoticeBoardDetailsSerializer(notice_item, data=notice_board)
+                        nbLen = len(key['notice_board_details'])
+                        nb = key['notice_board_count_per_tower']
+                        if nb!=nbLen:
+                            return Response({'message':'No of notice board details entered does not match notice board count'},status=400)
+
                     else:
                         notice_serializer = NoticeBoardDetailsSerializer(data=notice_board)
 
@@ -305,6 +310,10 @@ class TowerAPIView(APIView):
                     if 'id' in lift:
                         lift_item = LiftDetails.objects.get(pk=lift['id'])
                         lift_serializer = LiftDetailsSerializer(lift_item,data=lift)
+                        liftLen = len(key['lift_details'])
+                        lift = key['lift_count']
+                        if lift!=liftLen:
+                            return Response({'message':'No of lift details entered does not match lift count'},status=400)
                     else:
                         lift_serializer = LiftDetailsSerializer(data=lift)
                         #populate location and ad inventory table
@@ -326,10 +335,16 @@ class TowerAPIView(APIView):
                     if 'id' in flat:
                         flat_item = SocietyFlat.objects.get(pk=flat['id'])
                         flat_serializer=SocietyFlatSerializer(flat_item,data=flat)
+                        flatLen = len(key['flat_type_details'])
+                        flat = key['flat_type_count']
+                        if flat!=flatLen:
+                            return Response({'message':'No of flat details entered does not match flat type count'},status=400)
 
                     else:
                         flat['tower'] = tower_data.tower_id
                         flat_serializer = SocietyFlatSerializer(data=flat)
+
+
 
         #            if tower_data.flat_type_count != len(request.data['flat_type_details']):
         #                return Response({'message':'No of flats entered does not match flat type count'},status=400)
