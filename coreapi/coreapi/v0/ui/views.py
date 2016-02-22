@@ -149,7 +149,14 @@ class FlatTypeAPIView(APIView):
         print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
         if request.data['flat_details_available']:
-    #        request.data['size_carpet_area'] = request.data['size_builtup_area']/1.2
+            for key in request.data['flat_details']:
+                if 'size_builtup_area' in key:
+                    builtup = key['size_builtup_area']
+                    builtup = builtup/1.2
+                    key['size_carpet_area'] = builtup
+                    rent = key['flat_rent']
+                    area = key['size_builtup_area']
+                    key['average_rent_per_sqft'] = rent/area
             if request.data['flat_type_count'] != len(request.data['flat_details']):
                 return Response({'message':'No of Flats entered does not match flat type count'},status=400)
 
@@ -251,6 +258,7 @@ class TowerAPIView(APIView):
             if 'tower_id' in key:
                 item = SocietyTower.objects.get(pk=key['tower_id'])
                 serializer = SocietyTowerSerializer(item, data=key)
+                
             else:
                 serializer = SocietyTowerSerializer(data=key)
 
