@@ -128,9 +128,7 @@ class FlatTypeAPIView(APIView):
             flatType = SupplierTypeSociety.objects.get(pk=id).flatTypes.all()
             serializer = FlatTypeSerializer(flatType, many=True)
             count = len(serializer.data)
-    #        societyFlatType = SupplierTypeSociety.objects.get(pk=id)
-    #        societyFlatType(flat_type_count=count)
-    #        societyFlatType.save()
+
             if count > 0:
                 flat_details_available=True
             else:
@@ -151,6 +149,7 @@ class FlatTypeAPIView(APIView):
         print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
         if request.data['flat_details_available']:
+    #        request.data['size_carpet_area'] = request.data['size_builtup_area']/1.2
             if request.data['flat_type_count'] != len(request.data['flat_details']):
                 return Response({'message':'No of Flats entered does not match flat type count'},status=400)
 
@@ -245,7 +244,6 @@ class TowerAPIView(APIView):
         except SocietyTower.DoesNotExist:
             return Response(status=404)
 
-
     def post(self, request, id, format=None):
         print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
@@ -255,8 +253,10 @@ class TowerAPIView(APIView):
                 serializer = SocietyTowerSerializer(item, data=key)
             else:
                 serializer = SocietyTowerSerializer(data=key)
+
             try:
                 if serializer.is_valid():
+
                     serializer.save(supplier=society)
                   #  tower_data=serializer.data
             except:
@@ -318,9 +318,13 @@ class TowerAPIView(APIView):
                     if 'id' in flat:
                         flat_item = SocietyFlat.objects.get(pk=flat['id'])
                         flat_serializer=SocietyFlatSerializer(flat_item,data=flat)
+
                     else:
                         flat['tower'] = tower_data.tower_id
                         flat_serializer = SocietyFlatSerializer(data=flat)
+
+        #            if tower_data.flat_type_count != len(request.data['flat_type_details']):
+        #                return Response({'message':'No of flats entered does not match flat type count'},status=400)
 
                     if flat_serializer.is_valid():
                         flat_serializer.save()
