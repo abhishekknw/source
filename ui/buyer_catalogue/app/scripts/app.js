@@ -86,6 +86,29 @@ angular
           controller: 'ShortlistedSocietiesCtrl',
           templateUrl: 'modules/pages/manageCampaign/shortlisted/shortlisted-societies.tmpl.html'
         })
+
+      .state('manageCampaign.requested', {
+          url : '/requested',
+          controller: 'RequestedCampaignCtrl',
+          templateUrl: 'modules/pages/manageCampaign/shortlisted/shortlisted.tmpl.html'
+        })
+      .state('manageCampaign.requested.societies', {
+          url : '/:campaignId/societies',
+          controller: 'RequestedSocietiesCtrl',
+          templateUrl: 'modules/pages/manageCampaign/shortlisted/shortlisted-societies.tmpl.html'
+        })
+
+      .state('manageCampaign.finalized', {
+          url : '/finalized',
+          controller: 'FinalizedCampaignCtrl',
+          templateUrl: 'modules/pages/manageCampaign/shortlisted/shortlisted.tmpl.html'
+        })
+      .state('manageCampaign.finalized.societies', {
+          url : '/:campaignId/societies',
+          controller: 'FinalizedSocietiesCtrl',
+          templateUrl: 'modules/pages/manageCampaign/shortlisted/shortlisted-societies.tmpl.html'
+        })
+
       .state('manageCampaign.finalize', {
           url : '/finalize',
           controller: 'FinalizeCampaignCtrl',
@@ -139,7 +162,7 @@ angular
          }
          else if ($rootScope.globals.currentUser && ($location.path() == '/login' || $location.path() == '/'))
          {
-           $location.path("/manageCampaign");
+           $location.path("/manageCampaign/create");
          }
          else {
            $location.path(whence);

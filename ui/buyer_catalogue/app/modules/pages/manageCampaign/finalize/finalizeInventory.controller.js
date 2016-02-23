@@ -10,14 +10,13 @@ angular.module('machadaloPages')
          pagesService.getSocietyInventory($rootScope.campaignId)
           .success(function (response, status) {
               console.log(response);
-              $scope.model = response;
+              $scope.model = response.inventories;
 
           });
       }
           
      
     	$scope.save = function(type) {
-          alert(type);
         $scope.data = $scope.model;
         console.log("data");
         for(var i=0; i<$scope.data.length; i++){

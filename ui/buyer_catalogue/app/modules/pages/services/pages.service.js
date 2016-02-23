@@ -61,6 +61,11 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       return machadaloHttp.delete(url);
      }
 
+     pagesService.book = function (campaign_id, new_status) {
+      var url = url_base + "campaign/" + campaign_id+ "/book/?status=" + new_status;
+      return machadaloHttp.get(url);
+    };
+
 
     pagesService.processParam = function(){
      if($stateParams.campaignId)
