@@ -44,13 +44,7 @@ angular.module('machadaloPages')
     }
   };
 
-  societyListService.processParam = function(){
-   if($stateParams.societyId){
-     $rootScope.societyId = $stateParams.societyId;
-   }else {
-     $rootScope.societyId = null;
-    }
-  };
+
 
   return societyListService;
 }]);

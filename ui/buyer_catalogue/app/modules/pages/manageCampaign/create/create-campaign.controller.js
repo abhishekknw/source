@@ -3,7 +3,7 @@ angular.module('machadaloPages')
     ['$scope', '$rootScope', '$window', '$location', 'pagesService',
     function ($scope, $rootScope, $window, $location, pagesService) {
 
-        $scope.model = {};
+      $scope.model = {};
     	$scope.businesses = [];
     	$scope.campaign_types = ['Poster', 'Standee', 'Stall', 'CarDisplay', 'Fliers']
     	$scope.campaign_sub_types = {
@@ -23,7 +23,7 @@ angular.module('machadaloPages')
       $scope.popup1 = false;
       $scope.popup2 = false;
 
-     
+
       $scope.setDate = function(year, month, day) {
         $scope.dt = new Date(year, month, day);
       };
@@ -57,7 +57,7 @@ angular.module('machadaloPages')
 	       });
 
     	};
-    
+
 
     	$scope.create = function() {
         	console.log($scope.model);
@@ -66,12 +66,12 @@ angular.module('machadaloPages')
             console.log(response, status);
             console.log(response);
             if (status == '201') {
-                 $location.path("/campaign/" + response.id + "/societyList");  
+                 $location.path("/campaign/" + response.id + "/societyList");
             }
         }).error(function(response, status){
-            
+
              $rootScope.errorMsg = response.message ;
-             console.log(status);           
+             console.log(status);
         })
         };
       //[TODO] implement this

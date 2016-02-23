@@ -27,6 +27,13 @@ angular.module('machadaloPages')
     }else {
       $rootScope.campaignId = null;
      }
+
+     if($stateParams.societyId){
+      $rootScope.societyId = $stateParams.societyId;
+    }else {
+      $rootScope.societyId = null;
+    }
+
    };
 
   return societyDetailsService;

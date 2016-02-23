@@ -113,11 +113,15 @@ class NewCampaignAPIView(APIView):
 
 
 
-class FinalizeCampaignAPIView(APIView):
+class CampaignAPIView(APIView):
 
     def get(self, request, format=None):
         try:
-            items = Campaign.objects.all().filter(booking_status='Requested')
+            status = request.query_params.get('status', None)
+            if status:
+                items = Campaign.objects.filter(booking_status=status)
+            else:
+                items = Campaign.objects.all()
             serializer = CampaignListSerializer(items, many=True)
             return Response(serializer.data)
         except :
@@ -141,7 +145,7 @@ class CampaignInventoryAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             campaign = Campaign.objects.get(pk=id)
-            items = campaign.societies.all().filter(booking_status__in=['Requested', 'Finalized'])
+            items = campaign.societies.all().filter(booking_status__in=['Shortlisted','Requested', 'Finalized'])
             serializer = FinalizeInventorySerializer(items, many=True)
             return Response(serializer.data, status=200)
         except :
@@ -190,17 +194,26 @@ class CampaignInventoryAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
+            type = request.query_params.get('type', None)
             item = CampaignSocietyMapping.objects.get(pk=id)
         except CampaignSocietyMapping.DoesNotExist:
             return Response({'message':'Requested Inventory Does not Exist'}, status=404)
 
-        item.booking_status = 'Removed'
-        item.save()
+        if type and (type=='Permanent'):
+            inventories = SocietyInventoryBooking.objects.filter(campaign=item.campaign, society=item.society)
+            for key in inventories:
+                key.delete()
+            item.delete()
+        elif type and (type=='Temporary'):
+            item.booking_status = 'Removed'
+            item.save()
+        else:
+            return Response({'message':'Specify a correct type/mode of deletion'}, status=400)
 
         return Response(status=200)
 
 
-class SocietyShortlistAPIView(APIView):
+class ShortlistSocietyAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
@@ -240,26 +253,6 @@ class SocietyShortlistAPIView(APIView):
         return Response({"message": "Society Shortlisted"}, status=200)
 
 
-class ShortlistedCampaignAPIView(APIView):
-
-    def get(self, request, format=None):
-        try:
-            items = Campaign.objects.all().filter(booking_status='Shortlisted')
-            serializer = CampaignListSerializer(items, many=True)
-            return Response(serializer.data)
-        except :
-            return Response(status=404)
-
-    def delete(self, request, id, format=None):
-        try:
-            item = SupplierTypeSociety.objects.get(pk=id)
-        except SupplierTypeSociety.DoesNotExist:
-            return Response(status=404)
-        contacts = item.get_contact_list()
-        for contact in contacts:
-            contact.delete()
-        item.delete()
-        return Response(status=204)
 
 
 

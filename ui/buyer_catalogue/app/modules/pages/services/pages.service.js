@@ -8,9 +8,10 @@
  * Service in the mdopsApp.
  */
 
-angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location', function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
+angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location',
+ function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
 
-    
+
    var url_base = "v0/ui/website/";
    var pagesService = {};
 
@@ -44,7 +45,7 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
        return machadaloHttp.get(url);
       };
 
-  
+
     pagesService.saveFinalizedInventory = function (data) {
       var url = url_base + "campaign/" + data.inventory[0].inventories[0].campaign + "/inventories/";
       return machadaloHttp.post(url, data);
@@ -68,11 +69,9 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
 
 
     pagesService.processParam = function(){
-     if($stateParams.campaignId)
-     {
+     if($stateParams.campaignId){
        $rootScope.campaignId = $stateParams.campaignId;
-     }
-     else {
+     }else {
        $rootScope.campaignId = null;
      }
    };

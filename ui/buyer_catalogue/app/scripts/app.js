@@ -53,7 +53,7 @@ angular
           templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
           controller: 'SocietyCtrl'
         })
-        
+
         .state('campaign.societyList.filter', {
           url : '/societyList/:filter', //:societyId/for filter
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
