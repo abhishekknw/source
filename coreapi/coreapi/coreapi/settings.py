@@ -85,11 +85,11 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
     'default': {
-       'NAME':'test',
+       'NAME':'machadalo_dev',
        'ENGINE': 'django.db.backends.mysql',
        'HOST': '127.0.0.1',
        'USER': 'root',
-       'PASSWORD': 'vidhi',
+       'PASSWORD': '',
    }
 }
 
@@ -136,11 +136,19 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20
 }
 
-'''
+'''REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+         'rest_framework.permissions.IsAdminUser'
+    ),
+   'DEFAULT_AUTHENTICATION_CLASSES': (
+       'rest_framework.authentication.TokenAuthentication',
+   ),
+}'''
+
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20
-}'''
+}
 
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True

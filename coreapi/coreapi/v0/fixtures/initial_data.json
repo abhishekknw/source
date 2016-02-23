@@ -101,7 +101,7 @@
         "duration_name": "daily"
     },
     "model": "v0.durationtype",
-    "pk": 1
+    "pk": 5
 },
 {
     "fields": {
@@ -109,7 +109,7 @@
         "duration_name": "weekly"
     },
     "model": "v0.durationtype",
-    "pk": 2
+    "pk": 3
 },
 {
     "fields": {
@@ -117,7 +117,7 @@
         "duration_name": "monthly"
     },
     "model": "v0.durationtype",
-    "pk": 3
+    "pk": 4
 },
 {
     "fields": {
@@ -125,7 +125,7 @@
         "duration_name": "quaterly"
     },
     "model": "v0.durationtype",
-    "pk": 4
+    "pk": 6
 },
 {
     "fields": {
@@ -133,7 +133,7 @@
         "duration_name": "Campaign Weekly"
     },
     "model": "v0.durationtype",
-    "pk": 5
+    "pk": 1
 },
 {
     "fields": {
@@ -141,6 +141,6 @@
         "duration_name": "Campaign Monthly"
     },
     "model": "v0.durationtype",
-    "pk": 6
+    "pk": 2
 }
 ]

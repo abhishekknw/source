@@ -20,6 +20,8 @@ AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
     ('STANDEE', 'Standee'),
     ('STALL', 'Stall'),
+    ('CAR DISPLAY', 'Car Display'),
+    ('FLIER', 'Flier'),
     ('BANNER', 'Banner'),
 )
 
@@ -99,7 +101,7 @@ def update_price_mapping(sender, **kwargs):
 
 class AdInventoryType(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=10,
+    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=20,
                                         choices=AD_INVENTORY_CHOICES, default='POSTER')
     adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20)  # Field name made lowercase.
 
@@ -110,7 +112,7 @@ class AdInventoryType(models.Model):
 class DurationType(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     duration_name = models.CharField(db_column='DURATION_NAME', max_length=20)  # Field name made lowercase.
-    days_count = models.IntegerField(db_column='DAYS_COUNT')  # Field name made lowercase.
+    days_count = models.CharField(db_column='DAYS_COUNT', max_length=10)  # Field name made lowercase.
 
     class Meta:
         db_table = 'duration_type'
@@ -121,8 +123,8 @@ class PriceMappingDefault(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True)
     #adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True)
-    society_price = models.IntegerField(db_column='SOCIETY_PRICE')
-    business_price = models.IntegerField(db_column='BUSINESS_PRICE')
+    society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
+    business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
     class Meta:
         db_table = 'price_mapping_default'
@@ -134,8 +136,8 @@ class PriceMapping(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='inv_prices', blank=True, null=True)
     adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True)
-    society_price = models.IntegerField(db_column='SOCIETY_PRICE')
-    business_price = models.IntegerField(db_column='BUSINESS_PRICE')
+    society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
+    business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
     class Meta:
         db_table = 'price_mapping'

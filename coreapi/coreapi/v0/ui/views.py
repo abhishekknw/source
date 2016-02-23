@@ -186,7 +186,6 @@ class BasicPricingAPIView(APIView):
             return Response(status=404)
 
 
-
     def post(self, request, id, format=None):
         print request.data
 
