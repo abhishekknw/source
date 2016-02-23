@@ -79,13 +79,13 @@ class SocietyAPIView(APIView):
                 contact_serializer.save(supplier = society, contact_type="Reference")
 
 
-        towercount = SocietyTower.objects.filter(supplier = society).count()
-        if request.data['tower_count'] > towercount:
-          abc = request.data['tower_count'] - towercount
+        #towercount = SocietyTower.objects.filter(supplier = society).count()
+        #if request.data['tower_count'] > towercount:
+        #  abc = request.data['tower_count'] - towercount
         #if 'tower_count' in request.data:
-          for i in range(abc):
-                tower = SocietyTower(supplier = society)
-                tower.save()
+          #for i in range(abc):
+            #    tower = SocietyTower(supplier = society)
+            #    tower.save()
 
 
         return Response(serializer.data, status=201)
