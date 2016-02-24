@@ -34,7 +34,7 @@ class SocietyAPIView(APIView):
 
         :type request: object
         """
-        print request.data
+        #print request.data
         current_user = request.user
         if 'supplier_id' in request.data:
             society = SupplierTypeSociety.objects.filter(pk=request.data['supplier_id']).first()
@@ -146,8 +146,10 @@ class FlatTypeAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        #print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
+        num = 0.0
+        den = 0.0
         if request.data['flat_details_available']:
             for key in request.data['flat_details']:
                 if 'size_builtup_area' in key:
@@ -157,6 +159,16 @@ class FlatTypeAPIView(APIView):
                     rent = key['flat_rent']
                     area = key['size_builtup_area']
                     key['average_rent_per_sqft'] = rent/area
+
+                count = key['flat_count']
+                avgRent = key['average_rent_per_sqft']
+                num = num+(count*avgRent)
+                den = den+count
+
+            avgRentpsf = num/den
+            society.average_rent = avgRentpsf
+            society.save()
+
             if request.data['flat_type_count'] != len(request.data['flat_details']):
                 return Response({'message':'No of Flats entered does not match flat type count'},status=400)
 
@@ -187,7 +199,7 @@ class BasicPricingAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
 
 
         for key in request.data:
@@ -220,7 +232,7 @@ class InventoryPricingAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
 
 
         for key in request.data:
@@ -251,7 +263,7 @@ class TowerAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
         for key in request.data['TowerDetails']:
             if 'tower_id' in key:
@@ -469,7 +481,7 @@ class StallAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
 
         if 'stall_count' in request.data:
@@ -515,7 +527,7 @@ class CarDisplayAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
 
         for key in request.data['car_display_details']:
@@ -556,7 +568,7 @@ class EventAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
         if request.data['event_details_available']:
             if request.data['events_count_per_year'] != len(request.data['event_details']):
@@ -650,7 +662,7 @@ class OtherInventoryAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
         society = SupplierTypeSociety.objects.get(pk=id)
 
         if request.data['pole_available']:
@@ -735,7 +747,7 @@ class ImageMappingAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        #print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
 
         for key in request.data['image_details']:
@@ -769,7 +781,7 @@ def post_data(model, model_serializer, inventory_data, foreign_value=None):
         if serializer.is_valid():
             serializer.save(supplier=foreign_value)
         else:
-            print serializer.errors
+            ##print serializer.errors
             return False
     return True
 
