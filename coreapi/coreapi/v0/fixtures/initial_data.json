@@ -1,15 +1,15 @@
 [
-{
+  {
+      "fields": {
+          "adinventory_type": "A4",
+          "adinventory_name": "POSTER"
+      },
+      "model": "v0.adinventorytype",
+      "pk": 1
+  },
+  {
     "fields": {
         "adinventory_type": "A3",
-        "adinventory_name": "POSTER"
-    },
-    "model": "v0.adinventorytype",
-    "pk": 1
-},
-{
-    "fields": {
-        "adinventory_type": "A4",
         "adinventory_name": "POSTER"
     },
     "model": "v0.adinventorytype",
@@ -41,16 +41,16 @@
 },
 {
     "fields": {
-        "adinventory_type": "Small",
-        "adinventory_name": "BANNER"
+        "adinventory_type": "Canopy",
+        "adinventory_name": "STALL"
     },
     "model": "v0.adinventorytype",
     "pk": 6
 },
 {
     "fields": {
-        "adinventory_type": "Medium",
-        "adinventory_name": "BANNER"
+        "adinventory_type": "Small",
+        "adinventory_name": "STALL"
     },
     "model": "v0.adinventorytype",
     "pk": 7
@@ -58,34 +58,10 @@
 {
     "fields": {
         "adinventory_type": "Large",
-        "adinventory_name": "BANNER"
+        "adinventory_name": "STALL"
     },
     "model": "v0.adinventorytype",
     "pk": 8
-},
-{
-    "fields": {
-        "adinventory_type": "Small",
-        "adinventory_name": "STALL"
-    },
-    "model": "v0.adinventorytype",
-    "pk": 9
-},
-{
-    "fields": {
-        "adinventory_type": "Big",
-        "adinventory_name": "STALL"
-    },
-    "model": "v0.adinventorytype",
-    "pk": 10
-},
-{
-    "fields": {
-        "adinventory_type": "Canopy",
-        "adinventory_name": "STALL"
-    },
-    "model": "v0.adinventorytype",
-    "pk": 11
 },
 {
     "fields": {
@@ -93,15 +69,80 @@
         "adinventory_name": "STALL"
     },
     "model": "v0.adinventorytype",
+    "pk": 9
+},
+{
+    "fields": {
+        "adinventory_type": "Standard",
+        "adinventory_name": "CAR DISPLAY"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 10
+},
+{
+    "fields": {
+        "adinventory_type": "Premium",
+        "adinventory_name": "CAR DISPLAY"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 11
+},
+{
+    "fields": {
+        "adinventory_type": "Door-to-Door",
+        "adinventory_name": "FLIER"
+    },
+    "model": "v0.adinventorytype",
     "pk": 12
 },
 {
     "fields": {
-        "days_count": 1,
-        "duration_name": "daily"
+        "adinventory_type": "Mailbox",
+        "adinventory_name": "FLIER"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 13
+},
+{
+    "fields": {
+        "adinventory_type": "Small",
+        "adinventory_name": "BANNER"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 14
+},
+{
+    "fields": {
+        "adinventory_type": "Medium",
+        "adinventory_name": "BANNER"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 15
+},
+{
+    "fields": {
+        "adinventory_type": "Large",
+        "adinventory_name": "BANNER"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 16
+},
+
+{
+    "fields": {
+        "days_count": 7,
+        "duration_name": "Campaign Weekly"
     },
     "model": "v0.durationtype",
-    "pk": 5
+    "pk": 1
+},
+{
+    "fields": {
+        "days_count": 30,
+        "duration_name": "Campaign Monthly"
+    },
+    "model": "v0.durationtype",
+    "pk": 2
 },
 {
     "fields": {
@@ -121,26 +162,18 @@
 },
 {
     "fields": {
+        "days_count": 1,
+        "duration_name": "daily"
+    },
+    "model": "v0.durationtype",
+    "pk": 5
+},
+{
+    "fields": {
         "days_count": 90,
         "duration_name": "quaterly"
     },
     "model": "v0.durationtype",
     "pk": 6
-},
-{
-    "fields": {
-        "days_count": 7,
-        "duration_name": "Campaign Weekly"
-    },
-    "model": "v0.durationtype",
-    "pk": 1
-},
-{
-    "fields": {
-        "days_count": 30,
-        "duration_name": "Campaign Monthly"
-    },
-    "model": "v0.durationtype",
-    "pk": 2
 }
 ]
