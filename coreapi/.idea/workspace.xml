@@ -57,7 +57,7 @@
         <entry file="file://$PROJECT_DIR$/.ebextensions/02_python.config">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.20618556">
-              <caret line="8" column="92" selection-start-line="8" selection-start-column="92" selection-end-line="8" selection-end-column="92" />
+              <caret line="8" column="65" selection-start-line="8" selection-start-column="65" selection-end-line="8" selection-end-column="65" />
               <folding />
             </state>
           </provider>
@@ -899,7 +899,7 @@
     <entry file="file://$PROJECT_DIR$/.ebextensions/02_python.config">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.20618556">
-          <caret line="8" column="92" selection-start-line="8" selection-start-column="92" selection-end-line="8" selection-end-column="92" />
+          <caret line="8" column="65" selection-start-line="8" selection-start-column="65" selection-end-line="8" selection-end-column="65" />
           <folding />
         </state>
       </provider>
