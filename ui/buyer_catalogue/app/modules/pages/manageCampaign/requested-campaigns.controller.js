@@ -1,7 +1,21 @@
 angular.module('machadaloPages')
+.controller('RequestedCampaignCtrl',
+  ['$scope', '$rootScope', '$window', '$location', 'pagesService',
+  function ($scope, $rootScope, $window, $location, pagesService) {
 
+	pagesService.getCampaigns('Requested')
+	.success(function (response, status) {
+	  console.log(response);
+      $scope.model = response;
+        
+     });
 
-.controller('ShortlistedSocietiesCtrl',
+	$scope.societyList = function(campaign_id) {
+	  $location.path("manageCampaign/requested/" + campaign_id + "/societies");  
+	};
+
+}])
+.controller('RequestedSocietiesCtrl',
 ['$scope', '$rootScope', '$window', '$location', 'pagesService',
 function ($scope, $rootScope, $window, $location, pagesService) {
 
@@ -32,17 +46,20 @@ function ($scope, $rootScope, $window, $location, pagesService) {
 
    $scope.addSocieties = function(campaign_id){
      $location.path("/campaign/" + campaign_id + "/societyList");
-   }//
+   }
 
    $scope.book = function(campaign_id){
-     pagesService.book(campaign_id, 'Requested')
+     pagesService.book(campaign_id, 'Finalized')
      .success(function (response, status) {
         if (status == '200') {
-          $location.path("/manageCampaign/requested/" + campaign_id + "/societies");
+          $location.path("/manageCampaign/finalized/" + campaign_id + "/societies");
         }
      })
      
    }//
 
+  }])
 
-}]);
+
+
+

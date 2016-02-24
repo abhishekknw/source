@@ -20,6 +20,8 @@ AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
     ('STANDEE', 'Standee'),
     ('STALL', 'Stall'),
+    ('CAR DISPLAY', 'Car Display'),
+    ('FLIER', 'Flier'),
     ('BANNER', 'Banner'),
 )
 
@@ -99,7 +101,7 @@ def update_price_mapping(sender, **kwargs):
 
 class AdInventoryType(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=10,
+    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=20,
                                         choices=AD_INVENTORY_CHOICES, default='POSTER')
     adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20)  # Field name made lowercase.
 
@@ -110,7 +112,7 @@ class AdInventoryType(models.Model):
 class DurationType(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     duration_name = models.CharField(db_column='DURATION_NAME', max_length=20)  # Field name made lowercase.
-    days_count = models.IntegerField(db_column='DAYS_COUNT')  # Field name made lowercase.
+    days_count = models.CharField(db_column='DAYS_COUNT', max_length=10)  # Field name made lowercase.
 
     class Meta:
         db_table = 'duration_type'
@@ -121,8 +123,8 @@ class PriceMappingDefault(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True)
     #adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True)
-    society_price = models.IntegerField(db_column='SOCIETY_PRICE')
-    business_price = models.IntegerField(db_column='BUSINESS_PRICE')
+    society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
+    business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
     class Meta:
         db_table = 'price_mapping_default'
@@ -134,8 +136,8 @@ class PriceMapping(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='inv_prices', blank=True, null=True)
     adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True)
-    society_price = models.IntegerField(db_column='SOCIETY_PRICE')
-    business_price = models.IntegerField(db_column='BUSINESS_PRICE')
+    society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
+    business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
     class Meta:
         db_table = 'price_mapping'
@@ -284,20 +286,32 @@ class PosterInventory(models.Model):
 
 
 class SocietyFlat(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
     flat_tag = models.CharField(db_column='FLAT_TAG',max_length=20, blank=True, null=True)  # Field name made lowercase.
     tower = models.ForeignKey('SocietyTower', related_name='flats', db_column='TOWER_ID', blank=True, null=True)  # Field name made lowercase.
     flat_type = models.CharField(db_column='FLAT_TYPE', max_length=20)  # Field name made lowercase.
     flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)  # Field name made lowercase.
-    flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
-    flat_size_per_sq_feet_carpet_area = models.FloatField(db_column='FLAT_SIZE_PER_SQ_FEET_CARPET_AREA', blank=True, null=True)  # Field name made lowercase.
-    flat_size_per_sq_feet_builtup_area = models.FloatField(db_column='FLAT_SIZE_PER_SQ_FEET_BUILTUP_AREA', blank=True, null=True)  # Field name made lowercase.
-    flat_rent = models.IntegerField(db_column='FLAT_RENT', blank=True, null=True)  # Field name made lowercase.
-    rent_per_sqft = models.IntegerField(db_column='RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
-    average_rent_pers_sqft_tower = models.IntegerField(db_column='AVERAGE_RENT_PERS_SQFT_TOWER', blank=True, null=True)  # Field name made lowercase.
+    #flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         db_table = 'society_flat'
         unique_together = (('tower', 'flat_type'),)
+
+
+class FlatType(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    society = models.ForeignKey('SupplierTypeSociety', related_name='flatTypes', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
+    flat_type = models.CharField(db_column='FLAT_TYPE', max_length=20)  # Field name made lowercase.
+    flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)  # Field name made lowercase.
+    flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
+    size_carpet_area = models.FloatField(db_column='SIZE_CARPET_AREA', blank=True, null=True)  # Field name made lowercase.
+    size_builtup_area = models.FloatField(db_column='SIZE_BUILTUP_AREA', blank=True, null=True)  # Field name made lowercase.
+    flat_rent = models.IntegerField(db_column='FLAT_RENT', blank=True, null=True)  # Field name made lowercase.
+    average_rent_per_sqft = models.FloatField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
+
+
+    class Meta:
+        db_table = 'flat_type'
 
 
 class StandeeInventory(models.Model):
@@ -317,7 +331,6 @@ class StandeeInventory(models.Model):
     standee_inventory_status = models.TextField(db_column='STANDEE_INVENTORY_STATUS', blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     sides = models.CharField(db_column='SIDES', max_length=255, blank=True, null=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='standees', blank=True, null=True)  # Field name made lowercase.
-
     class Meta:
 
         db_table = 'standee_inventory'
@@ -414,9 +427,9 @@ class ContactDetails(models.Model):
     name = models.CharField(db_column='CONTACT_NAME',  max_length=50, blank=True, null=True)  # Field name made lowercase.
     salutation = models.CharField(db_column='SALUTATION',  max_length=50, blank=True, null=True)  # Field name made lowercase.
     landline = models.BigIntegerField(db_column='CONTACT_LANDLINE', blank=True, null=True)  # Field name made lowercase.
-    std_code = models.IntegerField(db_column='STD_CODE', blank=True, null=True)  # Field name made lowercase.
+    std_code = models.CharField(db_column='STD_CODE',max_length=6, blank=True, null=True)  # Field name made lowercase.
     mobile = models.BigIntegerField(db_column='CONTACT_MOBILE', blank=True, null=True)  # Field name made lowercase.
-    country_code = models.IntegerField(db_column='COUNTRY_CODE', blank=True, null=True)  # Field name made lowercase.
+    country_code = models.CharField(db_column='COUNTRY_CODE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     email = models.CharField(db_column='CONTACT_EMAILID',  max_length=50, blank=True, null=True)  # Field name made lowercase.
     spoc = models.CharField(db_column='SPOC', max_length=5, blank=True, null=True)  # Field name made lowercase.
     contact_authority = models.CharField(db_column='CONTACT_AUTHORITY', max_length=5, blank=True, null=True)  # Field name made lowercase.
@@ -707,6 +720,7 @@ class SupplierTypeSociety(models.Model):
     count_36_50 = models.IntegerField(db_column='COUNT_36-50', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
     count_50to65 = models.IntegerField(db_column='COUNT_50to65', blank=True, null=True)  # Field name made lowercase.
     count_65above = models.IntegerField(db_column='COUNT_65above', blank=True, null=True)  # Field name made lowercase.
+    flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
     flat_avg_size = models.IntegerField(db_column='FLAT_AVG_SIZE', blank=True, null=True)  # Field name made lowercase.
     flat_avg_rental_persqft = models.IntegerField(db_column='FLAT_AVG_RENTAL_PERSQFT', blank=True, null=True)  # Field name made lowercase.
     flat_sale_cost_persqft = models.IntegerField(db_column='FLAT_SALE_COST_PERSQFT', blank=True, null=True)  # Field name made lowercase.
@@ -721,6 +735,11 @@ class SupplierTypeSociety(models.Model):
     created_by = models.ForeignKey(User, related_name='societies', db_column='CREATED_BY', blank=True, null=True)
     created_on = models.DateTimeField(db_column='CREATED_ON', auto_now_add=True)
     total_ad_spaces = models.IntegerField(db_column='TOTAL_AD_SPACES', null=True)
+    tower_count = models.IntegerField(db_column='TOWER_COUNT', blank=True, null=True)  # Field name made lowercase.
+    standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
+    stall_count = models.IntegerField(db_column='STALL_COUNT', blank=True, null=True)  # Field name made lowercase.
+    banner_count = models.IntegerField(db_column='BANNER_COUNT', blank=True, null=True)  # Field name made lowercase.
+
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #car_display_available = models.CharField(db_column='CAR_DISPLAY_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
@@ -741,7 +760,6 @@ class SupplierTypeSociety(models.Model):
     #sports_facility_available = models.CharField(db_column='SPORTS_FACILITY_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase.
     #swimming_pool_available = models.CharField(db_column='SWIMMING_POOL_AVAILABEL', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #street_furniture_count = models.IntegerField(db_column='STREET_FURNITURE_COUNT', blank=True, null=True)  # Field name made lowercase.
-    #tower_count = models.IntegerField(db_column='TOWER_COUNT', blank=True, null=True)  # Field name made lowercase.
     #standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
 
 
@@ -809,6 +827,7 @@ class SocietyTower(models.Model):
     tower_location = models.CharField(db_column='TOWER_LOCATION', max_length=100, blank=True, null=True)  # Field name made lowercase.
     tower_resident_count = models.IntegerField(db_column='TOWER_RESIDENT_COUNT', blank=True, null=True)  # Field name made lowercase.
     lift_count = models.IntegerField(db_column='LIFT_COUNT', blank=True, null=True)  # Field name made lowercase.
+    flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
     average_rent_per_sqft = models.IntegerField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
 
 
