@@ -85,16 +85,24 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
     'default': {
+       'NAME': 'machadalo',
+       'ENGINE': 'django.db.backends.mysql',
+       'HOST': '127.0.0.1',
+       'USER': 'root',
+       'PASSWORD': 'khush123',
+
+    }
+
+}
+
+''''default': {
        'NAME': 'ebdb',
        'ENGINE': 'django.db.backends.mysql',
        'HOST': 'aa12skfe6g08ukb.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
        'USER': 'machadalo',
        'PASSWORD': 'djanGo12',
 
-    }
-
-}
-
+    }'''
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
