@@ -2,8 +2,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import filters
-from serializers import AssignedAuditSerializer,AuditSerializer
-from v0.models import SocietyInventoryBooking
+from serializers import AssignedAuditSerializer,AuditSerializer, AssignedAuditsTempSerializer
+from v0.models import SocietyInventoryBooking, AssignedAudits, Audits
 from v0.serializers import SocietyInventoryBookingSerializer
 from datetime import date
 from django.db.models import Q
@@ -50,4 +50,11 @@ class AssignedAuditAPIListView(APIView):
         return Response({"message": "Audit saved"}, status=200)
 
 
+
+class AssignedAuditTempAPIListView(APIView):
+
+    def get(self, request, format=None):
+        items = AssignedAudits.objects #.filter(date=date.today()).order_by('supplier_name')
+        serializer = AssignedAuditsTempSerializer(items, many=True)
+        return Response({'result':serializer.data}, status=200)
 

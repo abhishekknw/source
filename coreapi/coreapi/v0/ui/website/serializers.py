@@ -27,9 +27,9 @@ class CampaignListSerializer(ModelSerializer):
         'society_count'
         )
 
-class FinalizeInventorySerializer(ModelSerializer):
+class CampaignInventorySerializer(ModelSerializer):
     inventories = SocietyInventoryBookingSerializer(source='get_inventories', many=True)
-    campaign = CampaignListSerializer(source='get_campaign')
+    campaign = CampaignSerializer(source='get_campaign')
     society = UISocietySerializer(source='get_society')
 
     class Meta:

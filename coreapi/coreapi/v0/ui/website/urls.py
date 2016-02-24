@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^getCampaigns/$', views.CampaignAPIView.as_view()),
     url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/inventories/$', views.CampaignInventoryAPIView.as_view()),
     url(r'^campaign/society/shortlist/$', views.ShortlistSocietyAPIView.as_view()),
+    url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/book/$', views.BookCampaignAPIView.as_view()),
 
 
 ]

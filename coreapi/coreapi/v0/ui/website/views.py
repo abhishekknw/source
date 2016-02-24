@@ -1,7 +1,7 @@
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from serializers import UIBusinessSerializer, CampaignListSerializer, FinalizeInventorySerializer
+from serializers import UIBusinessSerializer, CampaignListSerializer, CampaignInventorySerializer
 from v0.serializers import SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
 from v0.models import SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower
 from django.db.models import Q
@@ -145,9 +145,11 @@ class CampaignInventoryAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             campaign = Campaign.objects.get(pk=id)
-            items = campaign.societies.all().filter(booking_status__in=['Shortlisted','Requested', 'Finalized'])
-            serializer = FinalizeInventorySerializer(items, many=True)
-            return Response(serializer.data, status=200)
+            campaign_serializer = CampaignListSerializer(campaign)
+            items = campaign.societies.all().filter(booking_status__in=['Shortlisted','Requested', 'Finalized', 'Removed'])
+            serializer = CampaignInventorySerializer(items, many=True)
+            response={'inventories':serializer.data, 'campaign':campaign_serializer.data}
+            return Response(response, status=200)
         except :
             return Response(status=404)
 
@@ -251,6 +253,21 @@ class ShortlistSocietyAPIView(APIView):
             inventory.save()
 
         return Response({"message": "Society Shortlisted"}, status=200)
+
+
+class BookCampaignAPIView(APIView):
+
+    def get(self, request, id, format=None):
+        try:
+            status = request.query_params.get('status', None)
+            if status:
+                campaign = Campaign.objects.get(pk=id)
+                campaign.booking_status = status
+                campaign.save()
+
+            return Response(status=200)
+        except :
+            return Response(status=404)
 
 
 

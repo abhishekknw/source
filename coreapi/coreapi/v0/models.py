@@ -1023,16 +1023,19 @@ class CampaignSocietyMapping(models.Model):
         db_table = 'campaign_society_mapping'
 
 
-'''class AssignedAudits(models.Model):
+class AssignedAudits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    ad_inventory_id = models.CharField(db_column='AD_INVENTORY_ID', max-blank=True)
-    latitude = models.FloatField(db_column='LATITUDE', null=True)
-    longitude = models.FloatField(db_column='LONGITUDE', null=True)
-    timestamp = models.DateTimeField(db_column='TIMESTAMP', null=True)
-    barcode = models.FloatField(db_column='BARCODE', null=True) #split to 2 barcode fields
-    audited_by = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
+    ad_inventory_id = models.CharField(db_column='AD_INVENTORY_ID', max_length=50, blank=True)
+    ad_inventory_type = models.CharField(db_column='AD_INVENTORY_TYPE', null=True, max_length=50, blank=True)
+    supplier_name = models.CharField(db_column='SUPPLIER_NAME', max_length=50, blank=True)
+    ad_location = models.CharField(db_column='AD_LOCATION', max_length=50, blank=True) #ops to enter the location during finalization
+    address = models.CharField(db_column='ADDRESS', max_length=100, blank=True)
+    date = models.DateField(db_column='DATE', null=True)
+    business_name = models.CharField(db_column='BUSINESS_NAME', max_length=50, blank=True)
     audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
-    image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)'''
+    image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)
+
+    db_table = 'assigned_audits'
 
 
 class Audits(models.Model):
