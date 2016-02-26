@@ -90,7 +90,6 @@ DATABASES = {
        'HOST': 'aa1js1j6b4rosn2.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
        'USER': 'machadalo',
        'PASSWORD': 'machadalo',
-
     }
 
 }
