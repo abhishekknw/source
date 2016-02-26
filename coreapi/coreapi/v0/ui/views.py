@@ -80,10 +80,11 @@ class SocietyAPIView(APIView):
 
 
         towercount = SocietyTower.objects.filter(supplier = society).count()
+        abc = 0
         if request.data['tower_count'] > towercount:
-          abc = request.data['tower_count'] - towercount
+            abc = request.data['tower_count'] - towercount
         if 'tower_count' in request.data:
-         for i in range(abc):
+            for i in range(abc):
                 tower = SocietyTower(supplier = society)
                 tower.save()
 
@@ -99,11 +100,37 @@ def set_default_pricing(society_id):
     duration_types = DurationType.objects.all()
     for type in ad_types:
         for duration in duration_types:
-            pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-            pmdefault.save()
+            if (type.adinventory_name=='POSTER'):
+                if((duration.duration_name=='Daily')|(duration.duration_name=='Quaterly')):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
+                    pmdefault.save()
+                else:
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                    pmdefault.save()
+            if ((type.adinventory_name=='STANDEE')&(duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Weekly')|(duration.duration_name=='Monthly')):
+                if(type.adinventory_type=='Large'):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
+                    pmdefault.save()
+                else:
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                    pmdefault.save()
+            if ((type.adinventory_name=='STALL')&(duration.duration_name=='Daily')):
+                if ((type.adinventory_type=='Canopy')|(type.adinventory_type=='Small')|(type.adinventory_type=='Large')):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                    pmdefault.save()
+                if(type.adinventory_type=='Customize'):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
+                    pmdefault.save()
+            if ((type.adinventory_name=='CAR DISPLAY')&(duration.duration_name=='Daily')):
+                if ((type.adinventory_type=='Standard')|(type.adinventory_type=='Premium')):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                    pmdefault.save()
+            if ((type.adinventory_name=='FLIER')&(duration.duration_name=='Daily')):
+                if ((type.adinventory_type=='Door-to-Door')|(type.adinventory_type=='Mailbox')):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                    pmdefault.save()
 
     return
-
 
 
 class SocietyAPIListView(APIView):
