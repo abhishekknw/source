@@ -88,4 +88,6 @@ urlpatterns = patterns('',
     url(r'^societytower/(?P<id>[0-9]+)$', views.SocietyTowerAPIView.as_view()),
     url(r'^societytower/$', views.SocietyTowerAPIListView.as_view()),
 
+    url(r'^flat/(?P<id>[0-9]+)$', views.FlatTypeAPIView.as_view()),
+    url(r'^flat/$', views.FlatTypeAPIListView.as_view()),
 )

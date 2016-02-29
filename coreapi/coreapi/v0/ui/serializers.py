@@ -28,8 +28,8 @@ class UISocietySerializer(ModelSerializer):
 class UITowerSerializer(ModelSerializer):
     notice_board_details_available = serializers.BooleanField(source='is_notice_board_available')
     notice_board_details = NoticeBoardDetailsSerializer(source='get_notice_board_list', many=True)
-    flat_details_available = serializers.BooleanField(source='is_flat_available')
-    flat_details = SocietyFlatSerializer(source='get_flat_list', many=True)
+    flat_type_details_available = serializers.BooleanField(source='is_flat_available')
+    flat_type_details = SocietyFlatSerializer(source='get_flat_list', many=True)
     lift_details_available = serializers.BooleanField(source='is_lift_available')
     lift_details = LiftDetailsSerializer(source='get_lift_list', many=True)
     #basic_reference_contacts = serializers.ListField(source='get_reference')
@@ -37,9 +37,9 @@ class UITowerSerializer(ModelSerializer):
         model = SocietyTower
         read_only_fields = (
         'notice_board_details_available',
-        'flat_details_available',
+        'flat_type_details_available',
         'lift_details_available',
-        'flat_details',
+        'flat_type_details',
         'notice_board_details',
         'lift_details',
         )
