@@ -11,10 +11,15 @@ angular.module('machadaloPages')
           .success(function (response, status) {
               console.log(response);
               $scope.model = response.inventories;
+              $scope.campaign = response.campaign;
 
           });
       }
-          
+
+      $scope.addSocieties = function(campaign_id){
+          alert(campaign_id);
+          $location.path("/campaign/" + campaign_id + "/societyList");
+        }          
      
     	$scope.save = function(type) {
         $scope.data = $scope.model;
@@ -29,6 +34,7 @@ angular.module('machadaloPages')
             } 
           }*/
         }
+
         $scope.post_data = {"inventory":$scope.data, "type":type}
         console.log($scope.post_data);
         pagesService.saveFinalizedInventory($scope.post_data)

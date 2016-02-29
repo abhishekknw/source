@@ -150,11 +150,11 @@ angular
          console.log("location change start - Whence: " + whence);
 
          // redirect to login page if not logged in
-         /*$rootScope.globals.currentUser = AuthService.UserInfo();
+         $rootScope.globals.currentUser = AuthService.UserInfo();
          if (!$rootScope.globals.currentUser) {
            $location.path('/login');
          }
-         else*/ if ($rootScope.globals.currentUser && $location.path() == '/logout')
+         else if ($rootScope.globals.currentUser && $location.path() == '/logout')
 
          {
            AuthService.Logout();

@@ -14,7 +14,7 @@
 						 <div class="col-md-8 offset-0" style="padding-left:8px;">
 							<div class="col-md-7 hpadding20">
 								 <h4>{{campaign.business.name}} Ad Campaign</h4>
-								 <span style="margin-botton:4px" class="badge">{{campaign.booking_status}}</span>
+								 <div style="margin-botton:4px" class="badge">{{campaign.booking_status}}</div>
 								 <div style="color:#949292">
 								   <p >Business Type: {{campaign.business.business_type}} , {{campaign.business.business_sub_type}}</p>
 								   <p>Campaign Types:</p> 
@@ -58,6 +58,7 @@
 								 <div class="col-md-8 offset-0" style="padding-left:8px;">
 										<div class="col-md-7 hpadding20">
 											<h4>{{row.society.society_name}}</h4>
+											<div class="badge">{{row.booking_status}}</div>
 											<div style="color:#949292">
 												<p><span class="fa fa-map-marker"></span>{{row.society.society_address1}} , {{row.society.society_address2}}</p>
 											  <p >Start Date: {{row.start_date}}</p>
