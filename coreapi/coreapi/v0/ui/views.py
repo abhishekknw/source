@@ -214,10 +214,13 @@ class FlatTypeAPIView(APIView):
 
 class BasicPricingAPIView(APIView):
     def get(self, request, id, format=None):
+        response = {}
         try:
             basic_prices = PriceMappingDefault.objects.select_related().filter(supplier__supplier_id=id)
             #basic_prices = SupplierTypeSociety.objects.get(pk=id).default_prices.all()
+            towercount = SupplierTypeSociety.objects.get(pk=id).tower_count
             serializer = PriceMappingDefaultSerializer(basic_prices, many=True)
+            response['tower_count'] = towercount
             return Response(serializer.data)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
@@ -226,8 +229,7 @@ class BasicPricingAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        ##print request.data
-
+        #print request.data
 
         for key in request.data:
             if 'id' in key:
@@ -261,7 +263,6 @@ class InventoryPricingAPIView(APIView):
     def post(self, request, id, format=None):
         ##print request.data
 
-
         for key in request.data:
             if 'id' in key:
                 item = PriceMapping.objects.get(pk=key['id'])
@@ -290,7 +291,7 @@ class TowerAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        ##print request.data
+        #print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
         for key in request.data['TowerDetails']:
             if 'tower_id' in key:
@@ -381,11 +382,6 @@ class TowerAPIView(APIView):
                     else:
                         flat['tower'] = tower_data.tower_id
                         flat_serializer = SocietyFlatSerializer(data=flat)
-
-
-
-        #            if tower_data.flat_type_count != len(request.data['flat_type_details']):
-        #                return Response({'message':'No of flats entered does not match flat type count'},status=400)
 
                     if flat_serializer.is_valid():
                         flat_serializer.save()

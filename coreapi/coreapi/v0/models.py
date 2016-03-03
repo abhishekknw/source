@@ -126,6 +126,13 @@ class PriceMappingDefault(models.Model):
     society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
     business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
+
+    def get_tower_count(self):
+        try:
+            return self.tower_count
+        except:
+            return None
+
     class Meta:
         db_table = 'price_mapping_default'
 
@@ -987,6 +994,7 @@ class SocietyInventoryBooking(models.Model):
             return self.adinventory_type
         except:
             return None
+
 
     def get_society(self):
         try:

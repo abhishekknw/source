@@ -78,13 +78,6 @@ class DurationTypeSerializer(ModelSerializer):
         model = DurationType
 
 
-
-class PriceMappingDefaultSerializer(ModelSerializer):
-
-    class Meta:
-        model = PriceMappingDefault
-        depth = 1
-
 class PriceMappingSerializer(ModelSerializer):
 
     class Meta:
@@ -262,3 +255,12 @@ class FlatTypeSerializer(ModelSerializer):
 
     class Meta:
         model = FlatType
+
+
+class PriceMappingDefaultSerializer(ModelSerializer):
+
+    tower = SupplierTypeSocietySerializer(source='get_tower_count')
+
+    class Meta:
+        model = PriceMappingDefault
+        depth = 1
