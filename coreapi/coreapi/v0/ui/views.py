@@ -104,23 +104,25 @@ def set_default_pricing(society_id):
                 if((duration.duration_name=='Daily')|(duration.duration_name=='Quaterly')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
                     pmdefault.save()
-                else:
+                if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Monthly')|(duration.duration_name=='Weekly')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
                     pmdefault.save()
-            if ((type.adinventory_name=='STANDEE')&(duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Weekly')|(duration.duration_name=='Monthly')):
-                if(type.adinventory_type=='Large'):
-                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
-                    pmdefault.save()
-                else:
-                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                    pmdefault.save()
-            if ((type.adinventory_name=='STALL')&(duration.duration_name=='Daily')):
-                if ((type.adinventory_type=='Canopy')|(type.adinventory_type=='Small')|(type.adinventory_type=='Large')):
-                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                    pmdefault.save()
-                if(type.adinventory_type=='Customize'):
-                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
-                    pmdefault.save()
+            if (type.adinventory_name=='STANDEE'):
+                if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Weekly')):
+                    if(type.adinventory_type=='Large'):
+                        pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
+                        pmdefault.save()
+                    else:
+                        pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                        pmdefault.save()
+            if (type.adinventory_name=='STALL'):
+                if(duration.duration_name=='Daily'):
+                    if ((type.adinventory_type=='Canopy')|(type.adinventory_type=='Small')|(type.adinventory_type=='Large')):
+                        pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                        pmdefault.save()
+                    if(type.adinventory_type=='Customize'):
+                        pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
+                        pmdefault.save()
             if ((type.adinventory_name=='CAR DISPLAY')&(duration.duration_name=='Daily')):
                 if ((type.adinventory_type=='Standard')|(type.adinventory_type=='Premium')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
@@ -222,6 +224,7 @@ class BasicPricingAPIView(APIView):
             serializer = PriceMappingDefaultSerializer(basic_prices, many=True)
             response['tower_count'] = towercount
             return Response(serializer.data)
+            
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
         except PriceMappingDefault.DoesNotExist:
