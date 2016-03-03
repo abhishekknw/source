@@ -34,7 +34,7 @@ class SocietyAPIView(APIView):
 
         :type request: object
         """
-        print request.data
+        #print request.data
         current_user = request.user
         if 'supplier_id' in request.data:
             society = SupplierTypeSociety.objects.filter(pk=request.data['supplier_id']).first()
@@ -80,10 +80,11 @@ class SocietyAPIView(APIView):
 
 
         towercount = SocietyTower.objects.filter(supplier = society).count()
+        abc = 0
         if request.data['tower_count'] > towercount:
-          abc = request.data['tower_count'] - towercount
-        #if 'tower_count' in request.data:
-          for i in range(abc):
+            abc = request.data['tower_count'] - towercount
+        if 'tower_count' in request.data:
+            for i in range(abc):
                 tower = SocietyTower(supplier = society)
                 tower.save()
 
@@ -99,11 +100,37 @@ def set_default_pricing(society_id):
     duration_types = DurationType.objects.all()
     for type in ad_types:
         for duration in duration_types:
-            pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-            pmdefault.save()
+            if (type.adinventory_name=='POSTER'):
+                if((duration.duration_name=='Daily')|(duration.duration_name=='Quaterly')):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
+                    pmdefault.save()
+                else:
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                    pmdefault.save()
+            if ((type.adinventory_name=='STANDEE')&(duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Weekly')|(duration.duration_name=='Monthly')):
+                if(type.adinventory_type=='Large'):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
+                    pmdefault.save()
+                else:
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                    pmdefault.save()
+            if ((type.adinventory_name=='STALL')&(duration.duration_name=='Daily')):
+                if ((type.adinventory_type=='Canopy')|(type.adinventory_type=='Small')|(type.adinventory_type=='Large')):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                    pmdefault.save()
+                if(type.adinventory_type=='Customize'):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
+                    pmdefault.save()
+            if ((type.adinventory_name=='CAR DISPLAY')&(duration.duration_name=='Daily')):
+                if ((type.adinventory_type=='Standard')|(type.adinventory_type=='Premium')):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                    pmdefault.save()
+            if ((type.adinventory_name=='FLIER')&(duration.duration_name=='Daily')):
+                if ((type.adinventory_type=='Door-to-Door')|(type.adinventory_type=='Mailbox')):
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                    pmdefault.save()
 
     return
-
 
 
 class SocietyAPIListView(APIView):
@@ -146,8 +173,10 @@ class FlatTypeAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        #print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
+        num = 0.0
+        den = 0.0
         if request.data['flat_details_available']:
             for key in request.data['flat_details']:
                 if 'size_builtup_area' in key:
@@ -157,6 +186,16 @@ class FlatTypeAPIView(APIView):
                     rent = key['flat_rent']
                     area = key['size_builtup_area']
                     key['average_rent_per_sqft'] = rent/area
+
+                count = key['flat_count']
+                avgRent = key['average_rent_per_sqft']
+                num = num+(count*avgRent)
+                den = den+count
+
+            avgRentpsf = num/den
+            society.average_rent = avgRentpsf
+            society.save()
+
             if request.data['flat_type_count'] != len(request.data['flat_details']):
                 return Response({'message':'No of Flats entered does not match flat type count'},status=400)
 
@@ -186,9 +225,8 @@ class BasicPricingAPIView(APIView):
             return Response(status=404)
 
 
-
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
 
 
         for key in request.data:
@@ -221,7 +259,7 @@ class InventoryPricingAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
 
 
         for key in request.data:
@@ -252,7 +290,7 @@ class TowerAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
         for key in request.data['TowerDetails']:
             if 'tower_id' in key:
@@ -470,7 +508,7 @@ class StallAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
 
         if 'stall_count' in request.data:
@@ -516,7 +554,7 @@ class CarDisplayAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
 
         for key in request.data['car_display_details']:
@@ -557,7 +595,7 @@ class EventAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
         if request.data['event_details_available']:
             if request.data['events_count_per_year'] != len(request.data['event_details']):
@@ -651,7 +689,7 @@ class OtherInventoryAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        ##print request.data
         society = SupplierTypeSociety.objects.get(pk=id)
 
         if request.data['pole_available']:
@@ -736,7 +774,7 @@ class ImageMappingAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        print request.data
+        #print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
 
         for key in request.data['image_details']:
@@ -770,7 +808,7 @@ def post_data(model, model_serializer, inventory_data, foreign_value=None):
         if serializer.is_valid():
             serializer.save(supplier=foreign_value)
         else:
-            print serializer.errors
+            ##print serializer.errors
             return False
     return True
 

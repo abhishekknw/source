@@ -20,6 +20,8 @@ AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
     ('STANDEE', 'Standee'),
     ('STALL', 'Stall'),
+    ('CAR DISPLAY', 'Car Display'),
+    ('FLIER', 'Flier'),
     ('BANNER', 'Banner'),
 )
 
@@ -99,7 +101,7 @@ def update_price_mapping(sender, **kwargs):
 
 class AdInventoryType(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=10,
+    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=20,
                                         choices=AD_INVENTORY_CHOICES, default='POSTER')
     adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20)  # Field name made lowercase.
 
@@ -110,7 +112,7 @@ class AdInventoryType(models.Model):
 class DurationType(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     duration_name = models.CharField(db_column='DURATION_NAME', max_length=20)  # Field name made lowercase.
-    days_count = models.IntegerField(db_column='DAYS_COUNT')  # Field name made lowercase.
+    days_count = models.CharField(db_column='DAYS_COUNT', max_length=10)  # Field name made lowercase.
 
     class Meta:
         db_table = 'duration_type'
@@ -121,8 +123,8 @@ class PriceMappingDefault(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True)
     #adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True)
-    society_price = models.IntegerField(db_column='SOCIETY_PRICE')
-    business_price = models.IntegerField(db_column='BUSINESS_PRICE')
+    society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
+    business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
     class Meta:
         db_table = 'price_mapping_default'
@@ -134,8 +136,8 @@ class PriceMapping(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='inv_prices', blank=True, null=True)
     adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True)
-    society_price = models.IntegerField(db_column='SOCIETY_PRICE')
-    business_price = models.IntegerField(db_column='BUSINESS_PRICE')
+    society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
+    business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
     class Meta:
         db_table = 'price_mapping'
@@ -701,7 +703,7 @@ class SupplierTypeSociety(models.Model):
     luxury_cars_count = models.IntegerField(db_column='LUXURY_CARS_COUNT', blank=True, null=True)  # Field name made lowercase.
     lift_count = models.IntegerField(db_column='LIFT_COUNT', blank=True, null=True)  # Field name made lowercase.
     machadalo_index = models.FloatField(db_column='MACHADALO_INDEX', blank=True, null=True, default=0.0)  # Field name made lowercase.
-    average_rent = models.IntegerField(db_column='AVERAGE_RENT', blank=True, null=True)  # Field name made lowercase.
+    average_rent = models.FloatField(db_column='AVERAGE_RENT', blank=True, null=True)  # Field name made lowercase.
     food_tasting_allowed = models.CharField(db_column='FOOD_TASTING_ALLOWED', max_length=5, blank=True, null=True)  # Field name made lowercase.
     events_occurance = models.CharField(db_column='EVENTS_OCCURANCE', max_length=5, blank=True, null=True)  # Field name made lowercase.
     preferred_business_type = models.CharField(db_column='SOCIETIES_PREFERRED_BUSINESS_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -867,12 +869,14 @@ class SocietyTower(models.Model):
 class Business(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
-    business_type = models.CharField(db_column='TYPE', max_length=20, blank=True)
-    business_sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
+    type = models.CharField(db_column='TYPE', max_length=20, blank=True)
+    sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
-    reference = models.CharField(db_column='REFERENCE', max_length=50, blank=True)
+    reference_name = models.CharField(db_column='REFERENCE_NAME', max_length=50, blank=True)
+    reference_phone = models.CharField(db_column='REFERENCE_PHONE', max_length=10, blank=True)
+    reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
 
 
@@ -891,6 +895,7 @@ class BusinessContact(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
+    department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     business = models.ForeignKey(Business, related_name='contacts', db_column='BUSINESS_ID', null=True)
@@ -941,6 +946,18 @@ class Campaign(models.Model):
     class Meta:
 
         db_table = 'campaign'
+
+
+class CampaignSupplierTypes(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='supplier_types', db_column='CAMPAIGN_ID', null=True)
+    supplier_type = models.CharField(db_column='SUPPLIER_TYPE', max_length=20, blank=True) #change to enum
+    count = models.IntegerField(db_column='COUNT', null=True)
+
+
+    class Meta:
+
+        db_table = 'campaign_type_mapping'
 
 
 class CampaignTypeMapping(models.Model):
@@ -1040,16 +1057,19 @@ class CampaignSocietyMapping(models.Model):
         db_table = 'campaign_society_mapping'
 
 
-'''class AssignedAudits(models.Model):
+class AssignedAudits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    ad_inventory_id = models.CharField(db_column='AD_INVENTORY_ID', max-blank=True)
-    latitude = models.FloatField(db_column='LATITUDE', null=True)
-    longitude = models.FloatField(db_column='LONGITUDE', null=True)
-    timestamp = models.DateTimeField(db_column='TIMESTAMP', null=True)
-    barcode = models.FloatField(db_column='BARCODE', null=True) #split to 2 barcode fields
-    audited_by = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
+    ad_inventory_id = models.CharField(db_column='AD_INVENTORY_ID', max_length=50, blank=True)
+    ad_inventory_type = models.CharField(db_column='AD_INVENTORY_TYPE', null=True, max_length=50, blank=True)
+    supplier_name = models.CharField(db_column='SUPPLIER_NAME', max_length=50, blank=True)
+    ad_location = models.CharField(db_column='AD_LOCATION', max_length=50, blank=True) #ops to enter the location during finalization
+    address = models.CharField(db_column='ADDRESS', max_length=100, blank=True)
+    date = models.DateField(db_column='DATE', null=True)
+    business_name = models.CharField(db_column='BUSINESS_NAME', max_length=50, blank=True)
     audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
-    image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)'''
+    image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)
+
+    db_table = 'assigned_audits'
 
 
 class Audits(models.Model):
