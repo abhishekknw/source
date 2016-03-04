@@ -265,8 +265,6 @@ class FlatTypeSerializer(ModelSerializer):
 
 class PriceMappingDefaultSerializer(ModelSerializer):
 
-    tower = SupplierTypeSocietySerializer(source='get_tower_count')
-
     class Meta:
         model = PriceMappingDefault
         depth = 1

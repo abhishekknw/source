@@ -223,8 +223,9 @@ class BasicPricingAPIView(APIView):
             towercount = SupplierTypeSociety.objects.get(pk=id).tower_count
             serializer = PriceMappingDefaultSerializer(basic_prices, many=True)
             response['tower_count'] = towercount
-            return Response(serializer.data)
-            
+            response['prices'] = serializer.data
+            return Response(response)
+
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
         except PriceMappingDefault.DoesNotExist:
@@ -232,7 +233,7 @@ class BasicPricingAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        #print request.data
+        print request.data
 
         for key in request.data:
             if 'id' in key:
