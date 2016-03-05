@@ -318,60 +318,7 @@ class TowerAPIView(APIView):
             except SocietyTower.DoesNotExist:
                 return Response(status=404)
 
-            tag_initial = society.society_name[:3] + tower_data.tower_name[:3]
-
-            if key['notice_board_details_available']:
-                for index, notice_board in enumerate(key['notice_board_details'], start=1):
-                    if 'id' in notice_board:
-                        notice_item = NoticeBoardDetails.objects.get(pk=notice_board['id'])
-                        notice_serializer = NoticeBoardDetailsSerializer(notice_item, data=notice_board)
-                        nbLen = len(key['notice_board_details'])
-                        nb = key['notice_board_count_per_tower']
-                        if nb!=nbLen:
-                            return Response({'message':'No of notice board details entered does not match notice board count'},status=400)
-
-                    else:
-                        notice_serializer = NoticeBoardDetailsSerializer(data=notice_board)
-
-                        #populate location and ad inventory table
-                        notice_tag = generate_location_tag(tag_initial, 'noticeboard', index)
-                        nb_location = InventoryLocation(location_id = notice_tag, location_type='Notice Board')
-                        nb_location.save()
-                        for i in range(notice_board['total_poster_per_notice_board']):
-                            ad_inv = AdInventoryLocationMapping(adinventory_id = notice_tag+'PO'+str(i), adinventory_name = 'POSTER', location = nb_location)
-                            ad_inv.save("Poster", society)
-
-                    if notice_serializer.is_valid():
-                        notice_serializer.save(tower=tower_data)
-
-                    else:
-                        #transaction.rollback()
-                        return Response(notice_serializer.errors, status=400)
-
-            if key['lift_details_available']:
-                for index, lift in enumerate(key['lift_details'], start=1):
-                    if 'id' in lift:
-                        lift_item = LiftDetails.objects.get(pk=lift['id'])
-                        lift_serializer = LiftDetailsSerializer(lift_item,data=lift)
-                        liftLen = len(key['lift_details'])
-                        lift = key['lift_count']
-                        if lift!=liftLen:
-                            return Response({'message':'No of lift details entered does not match lift count'},status=400)
-                    else:
-                        lift_serializer = LiftDetailsSerializer(data=lift)
-                        #populate location and ad inventory table
-                        lift_tag = generate_location_tag(tag_initial, 'lift', index)
-                        lift_location = InventoryLocation(location_id = lift_tag, location_type='Lift')
-                        lift_location.save()
-                        ad_inv = AdInventoryLocationMapping(adinventory_id = lift_tag+'PO', adinventory_name = 'POSTER', location = lift_location)
-                        ad_inv.save("Poster", society)
-
-                    if lift_serializer.is_valid():
-                        lift_serializer.save(tower=tower_data)
-
-
-                    else:
-                        return Response(lift_serializer.errors, status=400)
+            #tag_initial = society.society_name[:3] + tower_data.tower_name[:3]
 
             if key['flat_type_details_available']:
                 for index, flat in enumerate(key['flat_type_details'], start=1):
@@ -401,7 +348,7 @@ class TowerAPIView(APIView):
             item = SocietyTower.objects.get(pk=id)
         except SocietyTower.DoesNotExist:
             return Response(status=404)
-        for key in ['lift', 'notice_board', 'flat']:
+        for key in ['flat']:
             fn_name = "get_" + key + "_list"
             func = getattr(item,fn_name)
             objects = func()
@@ -411,6 +358,89 @@ class TowerAPIView(APIView):
         return Response(status=204)
 
 
+
+
+class PosterAPIView(APIView):
+    def get(self, request, id, format=None):
+        response = {}
+        try:
+            lift_item = LiftDetails.objects.get(pk=lift['id'])
+            lift_serializer = LiftDetailsSerializer(lift_item,many=true)
+            lift_details_available = get_availability(serializer.data)
+            response['lift_details_available'] = nb_a4_available
+            response['lift_details'] = serializer.data
+
+            notice_item = NoticeBoardDetails.objects.get(pk=notice_board['id'])
+            notice_serializer = NoticeBoardDetailsSerializer(notice_item, many=true)
+            nb_a4_available = get_availability(serializer.data)
+            response['nb_a4_available'] = nb_a4_available
+            response['nb_details'] = serializer.data
+
+            return Response(response, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except MailboxInfo.DoesNotExist:
+            return Response(status=404)
+        except DoorToDoorInfo.DoesNotExist:
+            return Response(status=404)
+
+    def post(self, request, id, format=None):
+            #print request.data
+            society = SupplierTypeSociety.objects.get(pk=id)
+            if request.data['lift_details_available']:
+                response = post_data(LiftDetails, LiftDetailsSerializer, request.data['lift_details'], society)
+                if response == False:
+                    return Response(status=400)
+
+            if request.data['nb_a4_available']:
+                response = post_data(NoticeBoardDetails, NoticeBoardDetailsSerializer, request.data['nb_details'], society)
+                if response == False:
+                    return Response(status=400)
+
+            return Response(status=201)
+
+
+
+
+class FlierAPIView(APIView):
+    def get(self, request, id, format=None):
+        response = {}
+        try:
+            mail_boxes = SupplierTypeSociety.objects.get(pk=id).mail_boxes.all()
+            serializer = MailboxInfoSerializer(mail_boxes, many=True)
+            mail_box_available = get_availability(serializer.data)
+            response['mail_box_available'] = mail_box_available
+            response['mail_box_details'] = serializer.data
+
+
+            door_to_doors = SupplierTypeSociety.objects.get(pk=id).door_to_doors.all()
+            serializer = DoorToDoorInfoSerializer(door_to_doors, many=True)
+            door_to_door_allowed = get_availability(serializer.data)
+            response['door_to_door_allowed'] = door_to_door_allowed
+            response['door_to_door_details'] = serializer.data
+
+            return Response(response, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except MailboxInfo.DoesNotExist:
+            return Response(status=404)
+        except DoorToDoorInfo.DoesNotExist:
+            return Response(status=404)
+
+    def post(self, request, id, format=None):
+            #print request.data
+            society = SupplierTypeSociety.objects.get(pk=id)
+            if request.data['mail_box_available']:
+                response = post_data(MailboxInfo, MailboxInfoSerializer, request.data['mail_box_details'], society)
+                if response == False:
+                    return Response(status=400)
+
+            if request.data['door_to_door_allowed']:
+                response = post_data(DoorToDoorInfo, DoorToDoorInfoSerializer, request.data['door_to_door_details'], society)
+                if response == False:
+                    return Response(status=400)
+
+            return Response(status=201)
 
 
 
@@ -643,19 +673,6 @@ class OtherInventoryAPIView(APIView):
             response['swimming_pool_available'] = swimming_pool_available
             response['swimming_pool_details'] = serializer.data
 
-            mail_boxes = SupplierTypeSociety.objects.get(pk=id).mail_boxes.all()
-            serializer = MailboxInfoSerializer(mail_boxes, many=True)
-            mail_box_available = get_availability(serializer.data)
-            response['mail_box_available'] = mail_box_available
-            response['mail_box_details'] = serializer.data
-
-
-            door_to_doors = SupplierTypeSociety.objects.get(pk=id).door_to_doors.all()
-            serializer = DoorToDoorInfoSerializer(door_to_doors, many=True)
-            door_to_door_allowed = get_availability(serializer.data)
-            response['door_to_door_allowed'] = door_to_door_allowed
-            response['door_to_door_details'] = serializer.data
-
             street_furniture = SupplierTypeSociety.objects.get(pk=id).street_furniture.all()
             serializer = StreetFurnitureSerializer(street_furniture, many=True)
             street_furniture_available = get_availability(serializer.data)
@@ -712,15 +729,6 @@ class OtherInventoryAPIView(APIView):
             if response == False:
                 return Response(status=400)
 
-        if request.data['mail_box_available']:
-            response = post_data(MailboxInfo, MailboxInfoSerializer, request.data['mail_box_details'], society)
-            if response == False:
-                return Response(status=400)
-
-        if request.data['door_to_door_allowed']:
-            response = post_data(DoorToDoorInfo, DoorToDoorInfoSerializer, request.data['door_to_door_details'], society)
-            if response == False:
-                return Response(status=400)
 
         if request.data['street_furniture_available']:
             response = post_data(StreetFurniture, StreetFurnitureSerializer, request.data['street_furniture_details'], society)

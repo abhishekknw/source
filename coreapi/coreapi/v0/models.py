@@ -127,12 +127,6 @@ class PriceMappingDefault(models.Model):
     business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
 
-    def get_tower_count(self):
-        try:
-            return self.tower_count
-        except:
-            return None
-
     class Meta:
         db_table = 'price_mapping_default'
 
@@ -226,7 +220,7 @@ class DoorToDoorInfo(models.Model):
     door_to_door_price_business = models.FloatField(db_column='DOOR_TO_DOOR_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
     master_door_to_door_flyer_price_society = models.FloatField(db_column='MASTER_DOOR_TO_DOOR_FLYER_PRICE_SOCIETY', default=0.0, blank=True, null=True)  # Field name made lowercase.
     master_door_to_door_flyer_price_business = models.FloatField(db_column='MASTER_DOOR_TO_DOOR_FLYER_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
-    leaflet_handover = models.CharField(db_column='LEAFLET_HANDOVER', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    leaflet_handover = models.CharField(db_column='LEAFLET_HANDOVER', max_length=50, blank=True, null=True)  # Field name made lowercase.
     activities = models.CharField(db_column='ACTIVITIES', max_length=255, blank=True, null=True)  # Field name made lowercase.
     banner_spaces_count = models.IntegerField(db_column='BANNER_SPACES_COUNT', blank=True, null=True)  # Field name made lowercase.
 
