@@ -88,7 +88,6 @@ class SocietyAPIView(APIView):
                 tower = SocietyTower(supplier = society)
                 tower.save()
 
-
         return Response(serializer.data, status=201)
 
 

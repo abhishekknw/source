@@ -715,12 +715,12 @@ class SupplierTypeSociety(models.Model):
     contact_person_count = models.IntegerField(db_column='CONTACT_PERSON_COUNT', blank=True, null=True)  # Field name made lowercase.
     walking_area_available = models.CharField(db_column='WALKING_AREA_AVAILABLE', max_length=45, blank=True, null=True)  # Field name made lowercase.
     walking_area_size = models.CharField(db_column='WALKING_AREA_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    count_0to6 = models.IntegerField(db_column='COUNT_0TO6', blank=True, null=True)  # Field name made lowercase.
-    count_6_18 = models.IntegerField(db_column='COUNT_6-18', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    count_19_35 = models.IntegerField(db_column='COUNT_19-35', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    count_36_50 = models.IntegerField(db_column='COUNT_36-50', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    count_50to65 = models.IntegerField(db_column='COUNT_50to65', blank=True, null=True)  # Field name made lowercase.
-    count_65above = models.IntegerField(db_column='COUNT_65above', blank=True, null=True)  # Field name made lowercase.
+    count_0_6 = models.IntegerField(db_column='COUNT_0-6', blank=True, null=True)  # Field name made lowercase.
+    count_7_15 = models.IntegerField(db_column='COUNT_7-15', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    count_16_30 = models.IntegerField(db_column='COUNT_16-30', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    count_31_45 = models.IntegerField(db_column='COUNT_31-45', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    count_46_60 = models.IntegerField(db_column='COUNT_46-60', blank=True, null=True)  # Field name made lowercase.
+    count_60above = models.IntegerField(db_column='count_60above', blank=True, null=True)  # Field name made lowercase.
     flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
     flat_avg_size = models.IntegerField(db_column='FLAT_AVG_SIZE', blank=True, null=True)  # Field name made lowercase.
     flat_avg_rental_persqft = models.IntegerField(db_column='FLAT_AVG_RENTAL_PERSQFT', blank=True, null=True)  # Field name made lowercase.
@@ -801,6 +801,10 @@ class SupplierTypeSociety(models.Model):
             return True
         return False
 
+    def is_demographic_details_available(self):
+        if (self.count_0_6 is not None or self.count_7_15 is not None or self.count_16_30 is not None or self.count_31_45 is not None or self.count_46_60 is not None or self.count_60above is not None):
+            return True
+        return False
 
     def is_business_preferences_available(self):
         if (self.preferred_business_type is not None or self.business_type_not_allowed is not None):
