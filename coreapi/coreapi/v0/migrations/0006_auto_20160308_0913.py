@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('campaign', models.ForeignKey(related_name='supplier_types', db_column='CAMPAIGN_ID', to='v0.Campaign', null=True)),
             ],
             options={
-                'db_table': 'campaign_type_mapping',
+                'db_table': 'campaign_supplier_types',
             },
         ),
         migrations.RenameField(

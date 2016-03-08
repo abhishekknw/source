@@ -957,7 +957,7 @@ class CampaignSupplierTypes(models.Model):
 
     class Meta:
 
-        db_table = 'campaign_type_mapping'
+        db_table = 'campaign_supplier_types'
 
 
 class CampaignTypeMapping(models.Model):
