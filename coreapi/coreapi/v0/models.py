@@ -947,6 +947,24 @@ class Campaign(models.Model):
         except:
             return None
 
+    def get_info(self):
+        info = {}
+        flats = 0
+        residents = 0
+        try:
+            societies = self.societies.all()
+            for key in societies:
+                flats += key.society.flat_count
+                print key.society.flat_count
+                print 'hi'
+                residents += key.society.resident_count
+
+            info['flat_count'] = flats
+            info['resident_count'] = residents
+            return info
+
+        except:
+            return {}
 
     class Meta:
 
