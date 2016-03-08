@@ -18,13 +18,15 @@ class UIBusinessSerializer(ModelSerializer):
 class CampaignListSerializer(ModelSerializer):
     types = CampaignTypeMappingSerializer(source='get_types', many=True)
     society_count = serializers.IntegerField(source='get_society_count')
+    info = serializers.DictField(source='get_info')
 
     class Meta:
         model = Campaign
         depth=1
         read_only_fields = (
         'types',
-        'society_count'
+        'society_count',
+        'info'
         )
 
 class CampaignInventorySerializer(ModelSerializer):
