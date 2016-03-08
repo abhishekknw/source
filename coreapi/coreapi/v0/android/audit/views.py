@@ -57,4 +57,3 @@ class AssignedAuditTempAPIListView(APIView):
         items = AssignedAudits.objects #.filter(date=date.today()).order_by('supplier_name')
         serializer = AssignedAuditsTempSerializer(items, many=True)
         return Response({'result':serializer.data}, status=200)
-
