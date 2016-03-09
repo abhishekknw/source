@@ -59,7 +59,6 @@ angular.module('machadaloPages')
 
 
     	$scope.create = function() {
-        
         	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {

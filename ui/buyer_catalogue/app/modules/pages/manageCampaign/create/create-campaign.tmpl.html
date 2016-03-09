@@ -7,9 +7,9 @@
 	      <label for="existing">Select existing Business</label>
 		    <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
 
-		  <span class = "" ng-show="choice == 'existing'">
+		  <span class = "" ng-show ="choice == 'existing'">
 		   	<select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
-		      <option  ng-repeat="business in businesses"
+		      <option  ng-repeat = "business in businesses"
            value="{{business.id}}">{{business.name}}</option>
 	      </select><br>
 	    </span>
@@ -136,7 +136,6 @@
 	              <span class="input-group-btn">
 	                <button type="button" class="btn btn-default" ng-click="popup2 = true"><i class="glyphicon glyphicon-calendar"></i></button>
 	              </span>
-
             </div>
 
 			      <div class="row Cost" >
