@@ -7,6 +7,7 @@ angular.module('machadaloPages')
      societyDetailsService.getSociety($rootScope.societyId)
       .success(function (response) {
         $scope.society = response;
+        $rootScope.societyName1 = response.society_name;
        console.log(response);
      });
 
