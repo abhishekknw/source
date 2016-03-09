@@ -4,7 +4,7 @@ angular.module('machadaloCommon')
   restrict: 'E',
   templateUrl: 'modules/common/infobar/info-bar.tmpl.html',
   link: function(scope, element, attrs) {
-    scope.campaignname = attrs.campaignname;
+    //scope.campaignname = attrs.campaignname;
     scope.societyname = attrs.societyname;
   }};
 });

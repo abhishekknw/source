@@ -35,7 +35,7 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       };
 
     pagesService.createBusinessCampaign = function (data) {
-      console.log(data);
+        $rootScope.businessName = data.business.name;
        var url = url_base + "newCampaign/";
        return machadaloHttp.post(url, data);
       };

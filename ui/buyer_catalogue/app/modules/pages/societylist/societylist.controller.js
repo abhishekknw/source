@@ -1,7 +1,8 @@
 angular.module('machadaloPages')
 .controller('SocietyListCtrl',
-    ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
-    function ($scope, $rootScope, $window, $location, $http, societyListService) {
+    ['$scope', '$rootScope', '$window', '$location', '$http','societyListService', 'pagesService',
+    function ($scope, $rootScope, $window, $location, $http, societyListService, pagesService) {
+      alert($rootScope.businessName);
       societyListService.processParam();
       //Start: for filter functionality
       $scope.getLocation = function(val) {
