@@ -7,13 +7,13 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('v0', '0013_auto_20160206_0805'),
+        ('v0', '0006_auto_20160308_0913'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='noticeboarddetails',
-            name='adinventory_id',
-            field=models.CharField(max_length=20, null=True, db_column='ADINVENTORY_ID', blank=True),
+            model_name='doortodoorinfo',
+            name='leaflet_handover',
+            field=models.CharField(max_length=50, null=True, db_column='LEAFLET_HANDOVER', blank=True),
         ),
     ]

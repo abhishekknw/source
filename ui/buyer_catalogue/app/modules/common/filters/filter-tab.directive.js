@@ -11,7 +11,7 @@ angular.module('machadaloCommon')
            ceil: 500,
            floor: 0,
            translate: function (value) {
-               return '$' + value;
+               return 'Rs' + value;
            }
        }
    };

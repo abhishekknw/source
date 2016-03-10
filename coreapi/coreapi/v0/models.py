@@ -126,6 +126,7 @@ class PriceMappingDefault(models.Model):
     society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
     business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True)
+
     class Meta:
         db_table = 'price_mapping_default'
 
@@ -219,7 +220,7 @@ class DoorToDoorInfo(models.Model):
     door_to_door_price_business = models.FloatField(db_column='DOOR_TO_DOOR_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
     master_door_to_door_flyer_price_society = models.FloatField(db_column='MASTER_DOOR_TO_DOOR_FLYER_PRICE_SOCIETY', default=0.0, blank=True, null=True)  # Field name made lowercase.
     master_door_to_door_flyer_price_business = models.FloatField(db_column='MASTER_DOOR_TO_DOOR_FLYER_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
-    leaflet_handover = models.CharField(db_column='LEAFLET_HANDOVER', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    leaflet_handover = models.CharField(db_column='LEAFLET_HANDOVER', max_length=50, blank=True, null=True)  # Field name made lowercase.
     activities = models.CharField(db_column='ACTIVITIES', max_length=255, blank=True, null=True)  # Field name made lowercase.
     banner_spaces_count = models.IntegerField(db_column='BANNER_SPACES_COUNT', blank=True, null=True)  # Field name made lowercase.
 
@@ -703,7 +704,7 @@ class SupplierTypeSociety(models.Model):
     luxury_cars_count = models.IntegerField(db_column='LUXURY_CARS_COUNT', blank=True, null=True)  # Field name made lowercase.
     lift_count = models.IntegerField(db_column='LIFT_COUNT', blank=True, null=True)  # Field name made lowercase.
     machadalo_index = models.FloatField(db_column='MACHADALO_INDEX', blank=True, null=True, default=0.0)  # Field name made lowercase.
-    average_rent = models.IntegerField(db_column='AVERAGE_RENT', blank=True, null=True)  # Field name made lowercase.
+    average_rent = models.FloatField(db_column='AVERAGE_RENT', blank=True, null=True)  # Field name made lowercase.
     food_tasting_allowed = models.CharField(db_column='FOOD_TASTING_ALLOWED', max_length=5, blank=True, null=True)  # Field name made lowercase.
     events_occurance = models.CharField(db_column='EVENTS_OCCURANCE', max_length=5, blank=True, null=True)  # Field name made lowercase.
     preferred_business_type = models.CharField(db_column='SOCIETIES_PREFERRED_BUSINESS_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -714,12 +715,12 @@ class SupplierTypeSociety(models.Model):
     contact_person_count = models.IntegerField(db_column='CONTACT_PERSON_COUNT', blank=True, null=True)  # Field name made lowercase.
     walking_area_available = models.CharField(db_column='WALKING_AREA_AVAILABLE', max_length=45, blank=True, null=True)  # Field name made lowercase.
     walking_area_size = models.CharField(db_column='WALKING_AREA_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    count_0to6 = models.IntegerField(db_column='COUNT_0TO6', blank=True, null=True)  # Field name made lowercase.
-    count_6_18 = models.IntegerField(db_column='COUNT_6-18', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    count_19_35 = models.IntegerField(db_column='COUNT_19-35', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    count_36_50 = models.IntegerField(db_column='COUNT_36-50', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    count_50to65 = models.IntegerField(db_column='COUNT_50to65', blank=True, null=True)  # Field name made lowercase.
-    count_65above = models.IntegerField(db_column='COUNT_65above', blank=True, null=True)  # Field name made lowercase.
+    count_0_6 = models.IntegerField(db_column='COUNT_0-6', blank=True, null=True)  # Field name made lowercase.
+    count_7_15 = models.IntegerField(db_column='COUNT_7-15', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    count_16_30 = models.IntegerField(db_column='COUNT_16-30', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    count_31_45 = models.IntegerField(db_column='COUNT_31-45', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    count_46_60 = models.IntegerField(db_column='COUNT_46-60', blank=True, null=True)  # Field name made lowercase.
+    count_60above = models.IntegerField(db_column='count_60above', blank=True, null=True)  # Field name made lowercase.
     flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
     flat_avg_size = models.IntegerField(db_column='FLAT_AVG_SIZE', blank=True, null=True)  # Field name made lowercase.
     flat_avg_rental_persqft = models.IntegerField(db_column='FLAT_AVG_RENTAL_PERSQFT', blank=True, null=True)  # Field name made lowercase.
@@ -800,6 +801,10 @@ class SupplierTypeSociety(models.Model):
             return True
         return False
 
+    def is_demographic_details_available(self):
+        if (self.count_0_6 is not None or self.count_7_15 is not None or self.count_16_30 is not None or self.count_31_45 is not None or self.count_46_60 is not None or self.count_60above is not None):
+            return True
+        return False
 
     def is_business_preferences_available(self):
         if (self.preferred_business_type is not None or self.business_type_not_allowed is not None):
@@ -869,12 +874,14 @@ class SocietyTower(models.Model):
 class Business(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
-    business_type = models.CharField(db_column='TYPE', max_length=20, blank=True)
-    business_sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
+    type = models.CharField(db_column='TYPE', max_length=20, blank=True)
+    sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
-    reference = models.CharField(db_column='REFERENCE', max_length=50, blank=True)
+    reference_name = models.CharField(db_column='REFERENCE_NAME', max_length=50, blank=True)
+    reference_phone = models.CharField(db_column='REFERENCE_PHONE', max_length=10, blank=True)
+    reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
 
 
@@ -893,6 +900,7 @@ class BusinessContact(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
+    department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     business = models.ForeignKey(Business, related_name='contacts', db_column='BUSINESS_ID', null=True)
@@ -939,10 +947,40 @@ class Campaign(models.Model):
         except:
             return None
 
+    def get_info(self):
+        info = {}
+        flats = 0
+        residents = 0
+        try:
+            societies = self.societies.all()
+            for key in societies:
+                flats += key.society.flat_count
+                print key.society.flat_count
+                print 'hi'
+                residents += key.society.resident_count
+
+            info['flat_count'] = flats
+            info['resident_count'] = residents
+            return info
+
+        except:
+            return {}
 
     class Meta:
 
         db_table = 'campaign'
+
+
+class CampaignSupplierTypes(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='supplier_types', db_column='CAMPAIGN_ID', null=True)
+    supplier_type = models.CharField(db_column='SUPPLIER_TYPE', max_length=20, blank=True) #change to enum
+    count = models.IntegerField(db_column='COUNT', null=True)
+
+
+    class Meta:
+
+        db_table = 'campaign_supplier_types'
 
 
 class CampaignTypeMapping(models.Model):
@@ -987,6 +1025,7 @@ class SocietyInventoryBooking(models.Model):
             return self.adinventory_type
         except:
             return None
+
 
     def get_society(self):
         try:
@@ -1042,16 +1081,19 @@ class CampaignSocietyMapping(models.Model):
         db_table = 'campaign_society_mapping'
 
 
-'''class AssignedAudits(models.Model):
+class AssignedAudits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    ad_inventory_id = models.CharField(db_column='AD_INVENTORY_ID', max-blank=True)
-    latitude = models.FloatField(db_column='LATITUDE', null=True)
-    longitude = models.FloatField(db_column='LONGITUDE', null=True)
-    timestamp = models.DateTimeField(db_column='TIMESTAMP', null=True)
-    barcode = models.FloatField(db_column='BARCODE', null=True) #split to 2 barcode fields
-    audited_by = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
+    ad_inventory_id = models.CharField(db_column='AD_INVENTORY_ID', max_length=50, blank=True)
+    ad_inventory_type = models.CharField(db_column='AD_INVENTORY_TYPE', null=True, max_length=50, blank=True)
+    supplier_name = models.CharField(db_column='SUPPLIER_NAME', max_length=50, blank=True)
+    ad_location = models.CharField(db_column='AD_LOCATION', max_length=50, blank=True) #ops to enter the location during finalization
+    address = models.CharField(db_column='ADDRESS', max_length=100, blank=True)
+    date = models.DateField(db_column='DATE', null=True)
+    business_name = models.CharField(db_column='BUSINESS_NAME', max_length=50, blank=True)
     audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
-    image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)'''
+    image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)
+
+    db_table = 'assigned_audits'
 
 
 class Audits(models.Model):

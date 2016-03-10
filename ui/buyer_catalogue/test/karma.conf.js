@@ -37,6 +37,7 @@ module.exports = function(config) {
       'bower_components/angular-rangeslider/angular.rangeSlider.js',
       'bower_components/angularjs-slider/dist/rzslider.js',
       'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
+      'bower_components/angular-filter/dist/angular-filter.min.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",

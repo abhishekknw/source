@@ -11,6 +11,7 @@ class UISocietySerializer(ModelSerializer):
     basic_reference_contacts = ContactDetailsSerializer(source='get_reference')
     society_image = ImageMappingSerializer(source='get_society_image')
     past_details = serializers.BooleanField(source='is_past_details_available')
+    demographic_details_available = serializers.BooleanField(source='is_demographic_details_available')
     business_preferences = serializers.BooleanField(source='is_business_preferences_available')
     class Meta:
         model = SupplierTypeSociety

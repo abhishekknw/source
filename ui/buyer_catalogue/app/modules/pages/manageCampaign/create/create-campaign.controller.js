@@ -82,7 +82,7 @@ angular.module('machadaloPages')
 
 
     	$scope.create = function() {
-        	console.log($scope.model);
+        	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {
             console.log(response, status);
@@ -91,7 +91,6 @@ angular.module('machadaloPages')
                  $location.path("/campaign/" + response.id + "/societyList");
             }
         }).error(function(response, status){
-
              $rootScope.errorMsg = response.message ;
              console.log(status);
         })

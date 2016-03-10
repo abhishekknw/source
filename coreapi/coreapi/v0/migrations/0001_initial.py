@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
             name='AdInventoryType',
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
-                ('adinventory_name', models.CharField(default='POSTER', max_length=10, db_column='ADINVENTORY_NAME', choices=[('POSTER', 'Poster'), ('STANDEE', 'Standee'), ('STALL', 'Stall'), ('BANNER', 'Banner')])),
+                ('adinventory_name', models.CharField(default='POSTER', max_length=20, db_column='ADINVENTORY_NAME', choices=[('POSTER', 'Poster'), ('STANDEE', 'Standee'), ('STALL', 'Stall'), ('BANNER', 'Banner')])),
                 ('adinventory_type', models.CharField(max_length=20, db_column='ADINVENTORY_TYPE')),
             ],
             options={

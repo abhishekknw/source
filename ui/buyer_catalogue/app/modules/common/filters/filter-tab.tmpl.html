@@ -14,9 +14,9 @@
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
 									<select class="form-control mySelectBoxClass ">
-									  <option selected>Search Location</option>
+									  <option selected>Select Location</option>
 										<!--| unique:'society_location_type' for displaying unique values -->
-									  <option ng-repeat = "row in model  "  ng-model = "filter">{{row.society_location_type}}</option>
+									  <option ng-repeat = "row in model| unique:'society_location_type'"  ng-model = "filter">{{row.society_location_type}}</option>
 									</select>
 						 <!--<input type="text" ng-model="asyncSelected" placeholder = "Search Location" uib-typeahead="address for address in getLocation($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" class="form-control">
                  <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
@@ -28,16 +28,16 @@
 					<div class="clearfix"></div>
 				</div>
     <!--End Location Rating-->
-    <!-- Society name-->
+    <!-- Society Type-->
     <button type="button" class="collapsebtn topmarginlt" data-toggle="collapse" data-target="#collapse1">
-				  Society  <span class="collapsearrow"></span>
+				  Society Type  <span class="collapsearrow"></span>
 	  </button>
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
 									<select class="form-control mySelectBoxClass">
-										<option selected>Select Society</option>
-									  <option ng-repeat = "row in model" ng-model = "filter">{{row.society_name}}</option>
+										<option selected>Select Society Type</option>
+									  <option ng-repeat = "row in model| unique:'society_locality'" ng-model = "filter">{{row.society_locality}}</option>
 									</select>
 								</div>
 					</div>
@@ -69,6 +69,11 @@
 						<div class="checkbox">
 							<label>
 							  <input type="checkbox">Event Campaign
+							</label>
+						</div>
+						<div class="checkbox">
+							<label>
+								<input type="checkbox">Flier Campaign
 							</label>
 						</div>
 					</div>

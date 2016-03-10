@@ -79,18 +79,27 @@ WSGI_APPLICATION = 'coreapi.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
+
 DATABASES = {
     'sqlite': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
-    'default': {
-       'NAME':'machadalo_dev',
+    'default1': {
+       'NAME': 'machadalo_dev',
        'ENGINE': 'django.db.backends.mysql',
        'HOST': '127.0.0.1',
        'USER': 'root',
-       'PASSWORD': '',
-   }
+       'PASSWORD': 'khush123',
+    },
+    'default': {
+        'NAME':'test',
+         'ENGINE': 'django.db.backends.mysql',
+         'HOST': '127.0.0.1',
+         'USER': 'root',
+         'PASSWORD': 'vidhi',
+     }
+
 }
 
 
@@ -122,7 +131,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [],
     'DEFAULT_PERMISSION_CLASSES': [],
 }
-
+'''
 REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAdminUser',
@@ -136,19 +145,22 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20
 }
 
-'''REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-         'rest_framework.permissions.IsAdminUser'
-    ),
-   'DEFAULT_AUTHENTICATION_CLASSES': (
-       'rest_framework.authentication.TokenAuthentication',
-   ),
-}'''
+
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+   'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAdminUser'
+   ),
+  'DEFAULT_AUTHENTICATION_CLASSES': (
+      'rest_framework.authentication.TokenAuthentication',
+  ),
 }
+'''
+REST_FRAMEWORK = {
+   'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+   'PAGE_SIZE': 20
+}
+
 
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True

@@ -1,7 +1,13 @@
 from rest_framework.serializers import ModelSerializer
 
-from v0.models import CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower, FlatType
-from v0.models import SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower, FlatType
+
+
+
+class CampaignSupplierTypesSerializer(ModelSerializer):
+
+    class Meta:
+        model = CampaignSupplierTypes
 
 
 class CampaignTypeMappingSerializer(ModelSerializer):
@@ -77,13 +83,6 @@ class DurationTypeSerializer(ModelSerializer):
     class Meta:
         model = DurationType
 
-
-
-class PriceMappingDefaultSerializer(ModelSerializer):
-
-    class Meta:
-        model = PriceMappingDefault
-        depth = 1
 
 class PriceMappingSerializer(ModelSerializer):
 
@@ -262,3 +261,10 @@ class FlatTypeSerializer(ModelSerializer):
 
     class Meta:
         model = FlatType
+
+
+class PriceMappingDefaultSerializer(ModelSerializer):
+
+    class Meta:
+        model = PriceMappingDefault
+        depth = 1

@@ -35,7 +35,6 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       };
 
     pagesService.createBusinessCampaign = function (data) {
-      console.log(data);
        var url = url_base + "newCampaign/";
        return machadaloHttp.post(url, data);
       };
@@ -73,6 +72,11 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
      }else {
        $rootScope.campaignId = null;
      }
+     if($stateParams.societyId){
+      $rootScope.societyId = $stateParams.societyId;
+     }else{
+      $rootScope.societyId = null;
+    }
    };
 
    return pagesService;
