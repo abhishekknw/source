@@ -2,8 +2,23 @@ angular.module('machadaloPages')
 .controller('SocietyListCtrl',
     ['$scope', '$rootScope', '$window', '$location', '$http','societyListService', 'pagesService',
     function ($scope, $rootScope, $window, $location, $http, societyListService, pagesService) {
-      alert($rootScope.businessName);
       societyListService.processParam();
+      $scope.example14model = [];
+$scope.example14data = [
+    {id: 1, label: "Powai"},
+    {id: 2, label: "Andheri(East)"},
+    {id: 3, label: "Andheri(West)"},
+    {id: 4, label: "Bhandup(East)"},
+    {id: 5, label: "Bhandup(West)"},
+    {id: 6, label: "Kandivali(East)"},
+    {id: 7, label: "Kandivali(West)"}
+];
+
+$scope.example14settings = {
+    scrollableHeight: '100px',
+    scrollable: true
+};
+$scope.example5customTexts = {buttonDefaultText: 'Select Location'};
       //Start: for filter functionality
       $scope.getLocation = function(val) {
          return $http.get('https://maps.googleapis.com/maps/api/geocode/json', {
@@ -67,12 +82,27 @@ angular.module('machadaloPages')
   }
   //End: Sort Functionality
 
+  /*//pagination starts here
+  $scope.totalItems = 64;
+  $scope.currentPage = 4;
 
-}])// SocietyListCtrl Controller Functions end
- .controller('SocietyFilterCtrl',
-     ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
-     function ($scope, $rootScope, $window, $location, $http, societyListService) {
+  $scope.setPage = function (pageNo) {
+    $scope.currentPage = pageNo;
+  };
+
+  $scope.pageChanged = function() {
+   alert('gvg');
+  };
+  $scope.maxSize = 5;
+  $scope.bigTotalItems = 175;
+  $scope.bigCurrentPage = 1;
+    //pagination ends here
+*/
+}]);// SocietyListCtrl Controller Functions end
+// .controller('SocietyFilterCtrl',
+//     ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
+//     function ($scope, $rootScope, $window, $location, $http, societyListService) {
       //$scope.filter = function() {
  //   alert('bhbh');
  // }
- }]);
+ //}]);

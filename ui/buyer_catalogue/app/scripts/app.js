@@ -27,7 +27,9 @@ angular
     'Authentication',
     'rzModule',
     'ui.bootstrap',
-    'angular.filter'
+    'angular.filter',
+    'angularUtils.directives.dirPagination',
+    'angularjs-dropdown-multiselect',
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
       $routeProvider.otherwise('/');
