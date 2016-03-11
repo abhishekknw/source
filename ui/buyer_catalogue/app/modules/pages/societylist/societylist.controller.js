@@ -16,9 +16,14 @@ $scope.example14data = [
 
 $scope.example14settings = {
     scrollableHeight: '100px',
-    scrollable: true
+    scrollable: true,
+    dynamicTitle: false
 };
-$scope.example5customTexts = {buttonDefaultText: 'Select Location'};
+$scope.example5customTexts = {
+  buttonDefaultText: 'Select Location',
+  checkAll: 'Select All',
+  uncheckAll: 'Select None'
+};
       //Start: for filter functionality
       $scope.getLocation = function(val) {
          return $http.get('https://maps.googleapis.com/maps/api/geocode/json', {

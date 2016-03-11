@@ -14,16 +14,6 @@
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
 							<div ng-dropdown-multiselect="" options="example14data" selected-model="example14model" extra-settings="example14settings" translation-texts="example5customTexts"></div>
-									<!--Vidhi<select class="form-control mySelectBoxClass">
-									  <option selected>Select Location</option>
-										| unique:'society_location_type' for displaying unique values
-									  <option ng-repeat = "row in model| unique:'society_location_type'"  ng-model = "filter">{{row.society_location_type}}</option>
-									</select>-->
-						 <!--<input type="text" ng-model="asyncSelected" placeholder = "Search Location" uib-typeahead="address for address in getLocation($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" class="form-control">
-                 <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
-    				 			<div ng-show="noResults">
-      							<i class="glyphicon glyphicon-remove"></i> No Results Found
-    						</div>-->
 					 </div>
 				</div>
 					<div class="clearfix"></div>
@@ -36,15 +26,17 @@
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-									<select class="form-control mySelectBoxClass">
-										<option selected>Select Society Type</option>
-									  <option ng-repeat = "row in model| unique:'society_locality'" ng-model = "filter">{{row.society_locality}}</option>
-									</select>
+								<div ng-dropdown-multiselect="" options="example14data"
+									selected-model="example14model"
+									extra-settings="example14settings"
+									checkboxes="true"
+									translation-texts="example5customTexts">
 								</div>
+						</div>
 					</div>
 					<div class="clearfix"></div>
 				</div>
-				<!-- End of Society Names -->
+				<!-- End of Society Type -->
 				<div class="line2"></div>
 				<!-- Inventory Type -->
 				<button type="button" class="collapsebtn last" data-toggle="collapse" data-target="#collapse4">
@@ -56,6 +48,7 @@
 							<label>
 							  <input type="checkbox">Poster Caimpaign
 							</label>
+							<!--<rzslider rz-slider-model="slider_translate.minValue" rz-slider-high="slider_translate.maxValue" rz-slider-options="slider_translate.options"></rzslider>-->
 						</div>
 						<div class="checkbox">
 							<label>
@@ -69,7 +62,7 @@
 						</div>
 						<div class="checkbox">
 							<label>
-							  <input type="checkbox">Event Campaign
+							  <input type="checkbox">Car Display Campaign
 							</label>
 						</div>
 						<div class="checkbox">
@@ -83,7 +76,7 @@
 				<!-- End of Inventory Type -->
 
 				<!-- Price range -->
-				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse2">
+				<!--<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse2">
 				  Price range <span class="collapsearrow"></span>
 				</button>
 				<rzslider rz-slider-model="slider_translate.minValue" rz-slider-high="slider_translate.maxValue" rz-slider-options="slider_translate.options"></rzslider>
@@ -91,7 +84,7 @@
 				<div class="clearfix"></div>
 				<br/>
 				<br/>
-				<br/>
+				<br/>-->
 				<button type="submit" class="btn btn-default" ng-click="filter()">Apply</button>
 				  <!--Apply <span class="collapsearrow"></span>-->
 				</button>
