@@ -4,7 +4,9 @@ angular.module('machadaloPages')
     function ($scope, $rootScope, $window, $location, pagesService) {
 
       $scope.model = {};
+      $scope.model.business = {};
     	$scope.businesses = [];
+      $scope.supplier_types = ['Society', 'Corporate', 'Club', 'Mall', 'School/College']
     	$scope.campaign_types = ['Poster', 'Standee', 'Stall', 'CarDisplay', 'Fliers']
     	$scope.campaign_sub_types = {
     		'Poster': ['A4', 'A3'],
@@ -36,8 +38,29 @@ angular.module('machadaloPages')
       $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
       $scope.format = $scope.formats[1];
       $scope.altInputFormats = ['M!/d!/yyyy'];
+
       $scope.phoneNumberPattern = /^[1-9]{1}[0-9]{9}$/
     	$scope.campaign_type = {}
+
+      $scope.contact = {
+        name: '',
+        designation: '',
+        department: '',
+        email: '',
+        phone: '',
+        spoc: ''
+      };
+
+      
+      $scope.model.business.contacts = [$scope.contact];
+
+      $scope.addNew = function() {
+        $scope.model.business.contacts.push($scope.contact)
+      };
+
+       $scope.remove = function(index) {
+        $scope.model.business.contacts.splice(index, 1);
+      };
 
     	$scope.getAllBusinesses = function() {
 	    	pagesService.getAllBusinesses()
