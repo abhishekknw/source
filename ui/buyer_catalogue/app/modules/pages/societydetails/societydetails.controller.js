@@ -7,7 +7,8 @@ angular.module('machadaloPages')
      societyDetailsService.getSociety($rootScope.societyId)
       .success(function (response) {
         $scope.society = response;
-       console.log(response);
+        $rootScope.societyname = response.society_name;
+        console.log(response);
      });
 
      //Start:For adding shortlisted society

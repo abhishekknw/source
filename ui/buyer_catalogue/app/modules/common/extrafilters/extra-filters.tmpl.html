@@ -1,0 +1,35 @@
+<link rel="stylesheet" href="modules/common/extrafilters/extra-filters.tmpl.css"/>
+<!-- LIST CONTENT-->
+		<div class="rightcontent col-md-9 offset-0">
+			<div class="hpadding20">
+				<!-- Top filters -->
+				<div class="topsortby">
+				 <div class="col-md-4 offset-0">
+					 <div class="left mt7"><b>Sort by:</b></div>
+					 		<div class="right wh70percent">
+								<button class="popularbtn" ng-click="order('society_name')">Alphabetically</button>
+								<span class="sortorder" ng-show="predicate === 'society_name'" ng-class="{reverse:reverse}"></span>
+							</div>
+					</div>
+					<div class="col-md-4">
+						<div class="w50percent">
+							<div class="wh90percent">
+								<button class="popularbtn">Date</button>
+							</div>
+						</div>
+						<div class="w50percentlast">
+							<div class="wh90percent">
+								<button class="popularbtn">No Of Flats</button>
+								<!--<select class="form-control mySelectBoxClass ">
+									<option selected>Date Added</option>
+									<option>A to Z</option>
+									<option>Z to A</option>
+								</select>-->
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- End of topfilters-->
+	  </div>
+			<!-- End of padding -->
+			 

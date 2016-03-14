@@ -35,7 +35,6 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       };
 
     pagesService.createBusinessCampaign = function (data) {
-      console.log(data);
        var url = url_base + "newCampaign/";
        return machadaloHttp.post(url, data);
       };
@@ -57,7 +56,6 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       };
 
     pagesService.removeThisSociety = function(society_id, type) {
-      alert("here");
       var url = url_base + "campaign/" + society_id + "/inventories/?type=" + type; //The id here referes to societybooking id to be deleted, not campaign id
       return machadaloHttp.delete(url);
      }
@@ -74,6 +72,11 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
      }else {
        $rootScope.campaignId = null;
      }
+     if($stateParams.societyId){
+      $rootScope.societyId = $stateParams.societyId;
+     }else{
+      $rootScope.societyId = null;
+    }
    };
 
    return pagesService;

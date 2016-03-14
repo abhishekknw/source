@@ -43,14 +43,12 @@ color:#333;
 
 .dashboard-left{
 background:#F2F2F2;
-position:fixed;
 height:100%;
 width:100%;
 }
 @media (min-width: 800px) {
 	.dashboard-left{
-	position:fixed;
-	width:20%;
+	width:100%;
 	}
 
 	.dtxt{display:block;}
@@ -62,5 +60,3 @@ width:100%;
 	}
 	.cpadding40{padding:40px;}
 }
-
-

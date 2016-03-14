@@ -14,7 +14,7 @@
 						 <div class="col-md-8 offset-0" style="padding-left:8px;">
 							<div class="col-md-7 hpadding20">
 								 <h4>{{campaign.business.name}} Ad Campaign</h4>
-								 <span style="margin-botton:4px" class="badge">{{campaign.booking_status}}</span>
+								 <div style="margin-botton:4px;background-color:#c9302c;color:#fff;" class="badge">{{campaign.booking_status}}</div>
 								 <div style="color:#949292">
 								   <p >Business Type: {{campaign.business.business_type}} , {{campaign.business.business_sub_type}}</p>
 								   <p>Campaign Types:</p> 
@@ -37,11 +37,11 @@
 
 				<tr align="center">
 					<td><h4>{{campaign.society_count}}</h4><p style="color:#949292">Society Count</p></td>
-				 <td><h4>{{campaign.tentative}}</h4><p style="color:#949292">Tentative Cost</p></td>
-				 <td><h4>{{society.machadalo_index}}</h4><p style="color:#949292">No of Flats</p></td>
-				 <td><h4>{{society.total_adspaces}}</h4><p style="color:#949292">No of Residents</p></td>
+				 <td><h4>{{campaign.info.flat_count}}</h4><p style="color:#949292">No of Flats</p></td>
+				 <td><h4>{{campaign.info.resident_count}}</h4><p style="color:#949292">Estimated Residents</p></td>
+				 <td><h4>{{campaign.info.ad_spaces}}</h4><p style="color:#949292">Total Ad Spaces</p></td>
 				</tr>	
-		  </tbody>
+		  </tbody>s
 		</table>
 	</div>
 <!-- LIST CONTENT-->
@@ -58,10 +58,13 @@
 								 <div class="col-md-8 offset-0" style="padding-left:8px;">
 										<div class="col-md-7 hpadding20">
 											<h4>{{row.society.society_name}}</h4>
+											<div class="badge" style="background-color:#c9302c;color:#fff;">{{row.booking_status}}</div>
 											<div style="color:#949292">
 												<p><span class="fa fa-map-marker"></span>{{row.society.society_address1}} , {{row.society.society_address2}}</p>
-											  <p >Start Date: {{row.start_date}}</p>
-											  <p>End date: {{row.end_date}}</p>
+											  <p >No of flats: {{row.society.flat_count}}</p>
+											  <p>Estimated Residents: {{row.society.resident_count}}</p>
+											  <p>Average Flat Size: {{row.society.flat_avg_size}}</p>
+
 											 </div> 
 										</div>
 										<div class="col-md-5 hpadding20" style="margin-top:20px">
@@ -75,7 +78,7 @@
 								 <td><h4>{{row.society.society_type_quality}}</h4><p style="color:#949292">Type of society</p></td>
 								 <td><h4>{{row.society.society_locality}}</h4><p style="color:#949292">Locality rating</p></td>
 								 <td><h4>{{row.society.machadalo_index}}</h4><p style="color:#949292">Machadalo Index</p></td>
-								 <td><h4>{{row.society.total_adspaces}}</h4><p style="color:#949292">Ad Spaces</p></td>
+								 <td><h4>{{row.society.total_ad_spaces}}</h4><p style="color:#949292">Ad Spaces</p></td>
 							</tr>
 						</tbody>
 					</table>

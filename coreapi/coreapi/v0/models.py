@@ -947,24 +947,6 @@ class Campaign(models.Model):
         except:
             return None
 
-    def get_info(self):
-        info = {}
-        flats = 0
-        residents = 0
-        try:
-            societies = self.societies.all()
-            for key in societies:
-                flats += key.society.flat_count
-                print key.society.flat_count
-                print 'hi'
-                residents += key.society.resident_count
-
-            info['flat_count'] = flats
-            info['resident_count'] = residents
-            return info
-
-        except:
-            return {}
 
     class Meta:
 
@@ -980,7 +962,7 @@ class CampaignSupplierTypes(models.Model):
 
     class Meta:
 
-        db_table = 'campaign_supplier_types'
+        db_table = 'campaign_supplier_mapping'
 
 
 class CampaignTypeMapping(models.Model):
@@ -1120,3 +1102,64 @@ class AuditorSocietyMapping(models.Model):
     class Meta:
 
         db_table = 'auditor_society_mapping'
+
+class State(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    state_name = models.CharField(db_column='STATE_NAME', max_length=20, null=True)
+    state_code = models.CharField(db_column='STATE_CODE', max_length=5, null=True)
+
+    class Meta:
+
+        db_table = 'state'
+
+
+class City(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    city_name = models.CharField(db_column='CITY_NAME', max_length=20, null=True)
+    city_code = models.CharField(db_column='CITY_CODE', max_length=5, null=True)
+    state_code = models.ForeignKey(State, related_name='statecode', db_column='STATE_CODE', null=True)
+
+    class Meta:
+
+        db_table = 'city'
+
+class CityArea(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    area_name = models.CharField(db_column='AREA_NAME', max_length=20, null=True)
+    area_code = models.CharField(db_column='AREA_CODE', max_length=5, null=True)
+    city_code = models.ForeignKey(City, related_name='citycode', db_column='CITY_CODE', null=True)
+
+    class Meta:
+
+        db_table = 'city_area'
+
+class CitySubArea(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    subarea_name = models.CharField(db_column='SUBAREA_NAME', max_length=20, null=True)
+    subarea_code = models.CharField(db_column='SUBAREA_CODE', max_length=5, null=True)
+    area_code = models.ForeignKey(CityArea, related_name='areacode', db_column='AREA_CODE', null=True)
+    city_code = models.ForeignKey(City, related_name='citycodes', db_column='CITY_CODE', null=True)
+
+    class Meta:
+
+        db_table = 'city_area_subarea'
+        unique_together = (('area_code','city_code'),)
+
+
+class SupplierTypeCode(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=20, null=True)
+    supplier_type_code = models.CharField(db_column='SUPPLIER_TYPE_CODE', max_length=5, null=True)
+
+    class Meta:
+
+        db_table = 'supplier_type_code'
+
+class FlatTypeCode(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    flat_type_name = models.CharField(db_column='FLAT_TYPE_NAME', max_length=20, null=True)
+    flat_type_code = models.CharField(db_column='FLAT_TYPE_CODE', max_length=5, null=True)
+
+    class Meta:
+
+        db_table = 'flat_type_code'
