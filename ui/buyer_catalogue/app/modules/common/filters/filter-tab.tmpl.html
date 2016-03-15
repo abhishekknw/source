@@ -3,58 +3,84 @@
 <!-- FILTERS -->
 			<div class="col-md-3 filters offset-0">
 			     <div class="padding20title"><h3 class="opensans dark">Filter by<span class="clearall">
-						 <a href = "#" uib-tooltip="Clear all filters">clear all</span></a></h3></div>
+						 <a href = "#" uib-tooltip="Clear All filters">Clear All</span></a></h3></div>
 				<div class="line2"></div>
 				<!-- Location ratings -->
 				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse1">
 				  Location <span class="collapsearrow"></span>
 				</button>
-
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-									<select class="form-control mySelectBoxClass ">
-									  <option selected>Search Location</option>
-										<!--| unique:'society_location_type' for displaying unique values -->
-									  <option ng-repeat = "row in model  "  ng-model = "filter">{{row.society_location_type}}</option>
-									</select>
-						 <!--<input type="text" ng-model="asyncSelected" placeholder = "Search Location" uib-typeahead="address for address in getLocation($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" class="form-control">
-                 <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
-    				 			<div ng-show="noResults">
-      							<i class="glyphicon glyphicon-remove"></i> No Results Found
-    						</div>-->
+							<div ng-dropdown-multiselect="" options="locationValue"
+								selected-model="locationValueModel"
+								extra-settings="locationValueSettings"
+								translation-texts="locationcustomTexts">
+							</div>
 					 </div>
 				</div>
 					<div class="clearfix"></div>
 				</div>
     <!--End Location Rating-->
-    <!-- Society name-->
+    <!-- Society Type-->
     <button type="button" class="collapsebtn topmarginlt" data-toggle="collapse" data-target="#collapse1">
-				  Society  <span class="collapsearrow"></span>
+				  Society Type  <span class="collapsearrow"></span>
 	  </button>
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-									<select class="form-control mySelectBoxClass">
-										<option selected>Select Society</option>
-									  <option ng-repeat = "row in model" ng-model = "filter">{{row.society_name}}</option>
-									</select>
+								<div ng-dropdown-multiselect="" options="example14data"
+									selected-model="example14model"
+									extra-settings="example14settings"
+									checkboxes="true"
+									translation-texts="example5customTexts">
 								</div>
+						</div>
 					</div>
 					<div class="clearfix"></div>
 				</div>
-				<!-- End of Society Names -->
+				<!-- End of Society Type -->
 				<div class="line2"></div>
+		<button type="button" class="collapsebtn topmarginlt" data-toggle="collapse" data-target="#collapse1">
+						  Flat Count  <span class="collapsearrow"></span>
+		</button>
+		<div id="collapse4" class="collapse in">
+			<div class="hpadding20">
+				<div class="checkbox">
+					<label>
+						<input type="checkbox">Small(Less than 75)
+					</label>
+				</div>
+				<div class="checkbox">
+					<label>
+						<input type="checkbox">Medium(Between 75 & 150)
+					</label>
+				</div>
+				<div class="checkbox">
+					<label>
+						<input type="checkbox">Large(Between 150 & 300)
+					</label>
+				</div>
+				<div class="checkbox">
+					<label>
+						<input type="checkbox">Very large(More Than 300)
+					</label>
+				</div>
+			</div>
+			<div class="clearfix"></div>
+		</div>
+		<!-- End of Flat Count -->
 				<!-- Inventory Type -->
-				<button type="button" class="collapsebtn last" data-toggle="collapse" data-target="#collapse4">
+		<button type="button" class="collapsebtn last" data-toggle="collapse" data-target="#collapse4">
 				  Inventory Type <span class="collapsearrow"></span>
-				</button>
+		</button>
 				<div id="collapse4" class="collapse in">
 					<div class="hpadding20">
 						<div class="checkbox">
 							<label>
 							  <input type="checkbox">Poster Caimpaign
 							</label>
+							<!--<rzslider rz-slider-model="slider_translate.minValue" rz-slider-high="slider_translate.maxValue" rz-slider-options="slider_translate.options"></rzslider>-->
 						</div>
 						<div class="checkbox">
 							<label>
@@ -68,7 +94,12 @@
 						</div>
 						<div class="checkbox">
 							<label>
-							  <input type="checkbox">Event Campaign
+							  <input type="checkbox">Car Display Campaign
+							</label>
+						</div>
+						<div class="checkbox">
+							<label>
+								<input type="checkbox">Flier Campaign
 							</label>
 						</div>
 					</div>
@@ -77,7 +108,7 @@
 				<!-- End of Inventory Type -->
 
 				<!-- Price range -->
-				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse2">
+				<!--<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse2">
 				  Price range <span class="collapsearrow"></span>
 				</button>
 				<rzslider rz-slider-model="slider_translate.minValue" rz-slider-high="slider_translate.maxValue" rz-slider-options="slider_translate.options"></rzslider>
@@ -85,7 +116,7 @@
 				<div class="clearfix"></div>
 				<br/>
 				<br/>
-				<br/>
+				<br/>-->
 				<button type="submit" class="btn btn-default" ng-click="filter()">Apply</button>
 				  <!--Apply <span class="collapsearrow"></span>-->
 				</button>
