@@ -1,17 +1,31 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import Business, BusinessContact, Campaign, CampaignTypeMapping, CampaignSocietyMapping
+from v0.models import Business, BusinessContact, Campaign, CampaignTypeMapping, CampaignSocietyMapping, SocietyInventoryBooking
 from v0.ui.serializers import UISocietySerializer
-from v0.serializers import SocietyInventoryBookingSerializer, BusinessSerializer, BusinessContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer
+from v0.serializers import SocietyInventoryBookingSerializer, BusinessSerializer, BusinessContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer
+
+
+class UISocietyInventorySerializer(ModelSerializer):
+    inventory_price = serializers.IntegerField(source='get_price')
+    type = CampaignTypeMappingSerializer(source='get_type')
+
+    class Meta:
+
+        model = SocietyInventoryBooking
+        read_only_fields = (
+        'inventory_price',
+        'type'
+        )
+
 
 class UIBusinessSerializer(ModelSerializer):
-    contact = BusinessContactSerializer(source='get_contact')
+    contacts = BusinessContactSerializer(source='get_contact', many=True)
 
     class Meta:
         model = Business
         read_only_fields = (
-        'contact'
+        'contacts'
         )
 
 
@@ -30,8 +44,8 @@ class CampaignListSerializer(ModelSerializer):
         )
 
 class CampaignInventorySerializer(ModelSerializer):
-    inventories = SocietyInventoryBookingSerializer(source='get_inventories', many=True)
-    campaign = CampaignSerializer(source='get_campaign')
+    inventories = UISocietyInventorySerializer(source='get_inventories', many=True)
+    campaign = CampaignListSerializer(source='get_campaign')
     society = UISocietySerializer(source='get_society')
 
     class Meta:

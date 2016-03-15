@@ -10,8 +10,8 @@
  */
 
 
-//var APIBaseUrl = 'http://localhost:8108/';
-var APIBaseUrl = 'http://192.168.1.6:8108/';
+
+var APIBaseUrl = 'http://localhost:8108/';
 //var APIBaseUrl = 'http://coreapi-dev-test.ap-southeast-1.elasticbeanstalk.com/'
 
 angular.module('Authentication', []);
@@ -28,7 +28,10 @@ angular
     'machadaloPages',
     'Authentication',
     'rzModule',
-    'ui.bootstrap'
+    'ui.bootstrap',
+    'angular.filter',
+    'angularUtils.directives.dirPagination',
+    'angularjs-dropdown-multiselect',
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
       $routeProvider.otherwise('/');
@@ -152,11 +155,11 @@ angular
          console.log("location change start - Whence: " + whence);
 
          // redirect to login page if not logged in
-         /*$rootScope.globals.currentUser = AuthService.UserInfo();
+         $rootScope.globals.currentUser = AuthService.UserInfo();
          if (!$rootScope.globals.currentUser) {
            $location.path('/login');
          }
-         else*/ if ($rootScope.globals.currentUser && $location.path() == '/logout')
+         else if ($rootScope.globals.currentUser && $location.path() == '/logout')
 
          {
            AuthService.Logout();

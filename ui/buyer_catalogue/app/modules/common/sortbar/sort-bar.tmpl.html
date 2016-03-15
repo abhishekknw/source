@@ -11,15 +11,15 @@
 								<span class="sortorder" ng-show="predicate === 'society_name'" ng-class="{reverse:reverse}"></span>
 							</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6">
 						<div class="w50percent">
 							<div class="wh90percent">
-								<button class="popularbtn">Shortlisted</button>
+								<button class="popularbtn">Last Booked Campaign</button>
 							</div>
 						</div>
 						<div class="w50percentlast">
 							<div class="wh90percent">
-								<button class="popularbtn">Date Added</button>
+								<button class="popularbtn">Total Campaign Done</button>
 								<!--<select class="form-control mySelectBoxClass ">
 									<option selected>Date Added</option>
 									<option>A to Z</option>
@@ -66,15 +66,8 @@
 			</div>
 			<!-- End of offset1-->
 			<div class="hpadding20">
-				<ul class="pagination right paddingbtm20">
-					<li class="disabled"><a href="#">&laquo;</a></li>
-					<li><a href="#">1</a></li>
-					<li><a href="#">2</a></li>
-					<li><a href="#">3</a></li>
-					<li><a href="#">4</a></li>
-					<li><a href="#">5</a></li>
-					<li><a href="#">&raquo;</a></li>
-				</ul>
+				<dir-pagination-controls max-size="10" direction-links="true" boundary-links="true" ></dir-pagination-controls>
+				<!--<uib-pagination total-items="totalItems" ng-model="currentPage" class="pagination-sm" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></uib-pagination>-->
 			</div>
 		</div>
 		<!-- END OF LIST CONTENT-->

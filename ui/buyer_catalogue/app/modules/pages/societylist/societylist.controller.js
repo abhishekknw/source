@@ -1,36 +1,46 @@
 angular.module('machadaloPages')
 .controller('SocietyListCtrl',
-    ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
-    function ($scope, $rootScope, $window, $location, $http, societyListService) {
+    ['$scope', '$rootScope', '$window', '$location', '$http','societyListService', 'pagesService',
+    function ($scope, $rootScope, $window, $location, $http, societyListService, pagesService) {
       societyListService.processParam();
-      //Start: for filter functionality
-      $scope.getLocation = function(val) {
-         return $http.get('https://maps.googleapis.com/maps/api/geocode/json', {
-           params: {
-             address: val,
-             key: 'AIzaSyDCTq6FNBxVrhd2te_GIrCa8TI8CYwobYg',
-             sensor: true
-           }
-         }).then(function(response){
-           return response.data.results.map(function(item){
-             return item.formatted_address;
-           });
-         });
-       };// End: filter functionality
-  $scope.model = {};
-  var dummyData = [
-   {
-       "society_name":"abc",
-       "society_address1":"next to baskin"
-   },
-   {
-       "society_name":"bcd",
-       "society_address1":"next to theo"
-   }
-  ];
-   //$scope.model = dummyData;
+    //Start: For displaying filter values
+      $scope.locationValueModel = [];
+      $scope.locationValue = [];
+      $scope.typeValue = [];
+      $scope.typeValuemodel = [];
+      $scope.locationValueSettings = {
+        scrollableHeight: '100px',
+        scrollable: true,
+        dynamicTitle: false
+      };
+      $scope.locationcustomTexts = {
+        buttonDefaultText: 'Select Location',
+        checkAll: 'Select All',
+        uncheckAll: 'Select None'
+      };
+      $scope.typeValue = [
+       {id: 1, label: "Ultra High"},
+       {id: 2, label: "High"},
+       {id: 3, label: "Medium"},
+       {id: 4, label: "Standard"}
+      ];
+      $scope.typecustomTexts = {
+        buttonDefaultText: 'Select Society Type',
+        checkAll: 'Select All',
+        uncheckAll: 'Select None'
+      };
+      societyListService.listFilterValues()
+      .success(function (response){
+        $scope.locationValue = response;
+        console.log(response);
+      })
 
-    var sObj = '';
+      $scope.filterSocieties = function() {
+        alert('hellovidhi');
+      }
+      //End: For displaying filter values
+      $scope.model = {};
+      var sObj = '';
       societyListService.listSocieties(sObj)
         .success(function (response) {
            $scope.model = response.results;
@@ -54,9 +64,6 @@ angular.module('machadaloPages')
      $location.path('campaign/' + $rootScope.campaignId +'/societyDetails/' + id);
    }}//End: To navigate to catalogue page
 
-   $scope.filter = function() {
-     alert('njnjnj');
-  }
   //Start: Sort Functionality
   $scope.predicate = 'society_name';
   $scope.reverse = true;
@@ -66,12 +73,20 @@ angular.module('machadaloPages')
   }
   //End: Sort Functionality
 
+  /*//pagination starts here
+  $scope.totalItems = 64;
+  $scope.currentPage = 4;
 
-}])// SocietyListCtrl Controller Functions end
- .controller('SocietyFilterCtrl',
-     ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
-     function ($scope, $rootScope, $window, $location, $http, societyListService) {
-      //$scope.filter = function() {
- //   alert('bhbh');
- // }
- }]);
+  $scope.setPage = function (pageNo) {
+    $scope.currentPage = pageNo;
+  };
+
+  $scope.pageChanged = function() {
+   alert('gvg');
+  };
+  $scope.maxSize = 5;
+  $scope.bigTotalItems = 175;
+  $scope.bigCurrentPage = 1;
+    //pagination ends here
+*/
+}]);
