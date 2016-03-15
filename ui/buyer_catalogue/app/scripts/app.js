@@ -10,7 +10,9 @@
  */
 
 
-var APIBaseUrl = 'http://localhost:8108/';
+//var APIBaseUrl = 'http://localhost:8108/';
+var APIBaseUrl = 'http://192.168.1.6:8108/';
+//var APIBaseUrl = 'http://coreapi-dev-test.ap-southeast-1.elasticbeanstalk.com/'
 
 angular.module('Authentication', []);
 angular

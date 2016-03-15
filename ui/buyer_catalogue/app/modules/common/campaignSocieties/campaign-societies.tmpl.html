@@ -1,9 +1,9 @@
-<link rel="stylesheet" href="modules/common/campaignList/campaign-list.tmpl.css"/>
+<link rel="stylesheet" href="modules/common/campaignSocieties/campaign-societies.tmpl.css"/>
 
 <!--campaign info -->
 
  <div style="margin-top:30px">
-	<table cellpadding="30" class="hpadding20 table table-bordered" style="border-left-style:hidden;border-right-style:hidden;">
+	<table  cellpadding="30" class="hpadding20 table table-bordered noborderright noborderleft " >
 		 <tbody>
 			 <tr valign="center">
 					<td colspan="4" >
@@ -33,22 +33,24 @@
 					 </div>
 					</td>
 				</tr>
-				<tr><td colspan="4"> <b>Key Data Points :</b></td></tr>
+				<tr><td colspan="4" style="border-bottom-style:hidden;" > <b>Key Data Points :</b></td></tr>
 
 				<tr align="center">
 					<td><h4>{{campaign.society_count}}</h4><p style="color:#949292">Society Count</p></td>
-				 <td><h4>{{campaign.tentative}}</h4><p style="color:#949292">Tentative Cost</p></td>
-				 <td><h4>{{society.machadalo_index}}</h4><p style="color:#949292">No of Flats</p></td>
+				 <td style="border-left-style:hidden;border-right-style:hidden;"><h4>{{campaign.tentative}}</h4><p style="color:#949292">Tentative Cost</p></td>
+				 <td style="border-right-style:hidden;"><h4>{{society.machadalo_index}}</h4><p style="color:#949292">No of Flats</p></td>
 				 <td><h4>{{society.total_adspaces}}</h4><p style="color:#949292">No of Residents</p></td>
 				</tr>	
 		  </tbody>
 		</table>
 	</div>
 <!-- LIST CONTENT-->
-		<div class="rightcontent col-md-9 offset-0">
-			<div class="itemscontainer offset-1">
+		<div class="rightcontent col-md-10 offset-0"  >
+            <b>&nbsp;Campaign Societies </b><br/><br/>
+          
+			<div class="itemscontainer offset-1" >
 				<div class="offset-2" ng-repeat="row in model | orderBy:predicate:reverse">
-					<table cellpadding="30" class="hpadding20 table table-bordered">
+					<table cellpadding="30" class="hpadding20 table table-bordered align"  >
 					 <tbody>
 						 <tr valign="center">
 								<td colspan="4" >
@@ -58,6 +60,7 @@
 								 <div class="col-md-8 offset-0" style="padding-left:8px;">
 										<div class="col-md-7 hpadding20">
 											<h4>{{row.society.society_name}}</h4>
+                                            <div class="badge aligntop" style="background-color:#c9302c ;color:#fff;">{{row.booking_status}}</div>
 											<div style="color:#949292">
 												<p><span class="fa fa-map-marker"></span>{{row.society.society_address1}} , {{row.society.society_address2}}</p>
 											  <p >Start Date: {{row.start_date}}</p>
