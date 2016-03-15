@@ -7,12 +7,13 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('v0', '0010_auto_20160308_1141'),
+        ('v0', '0014_inventorysummary'),
     ]
 
     operations = [
-        migrations.AlterModelTable(
-            name='campaignsuppliertypes',
-            table='campaign_supplier_types',
+        migrations.RenameField(
+            model_name='inventorysummary',
+            old_name='total_posters_nb',
+            new_name='total_poster_nb',
         ),
     ]
