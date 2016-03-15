@@ -23,6 +23,12 @@ angular.module('machadaloPages')
      return machadaloHttp.get(url);
    };
 
+   societyListService.getSocietyList = function(data) {
+     var url = url_base + "society/filterList/";
+     url += "?search="+data
+     return machadaloHttp.get(url);
+   };
+
    societyListService.listFilterValues = function(){
      var url = url_base + "society/filter/";
      return machadaloHttp.get(url);
@@ -42,6 +48,6 @@ angular.module('machadaloPages')
      $rootScope.campaignId = null;
     }
   };
-  
+
   return societyListService;
 }]);

@@ -4,6 +4,7 @@ angular.module('machadaloPages')
     function ($scope, $rootScope, $window, $location, $http, societyListService, pagesService) {
       societyListService.processParam();
     //Start: For displaying filter values
+      $scope.otherFilters = [];
       $scope.locationValueModel = [];
       $scope.locationValue = [];
       $scope.typeValue = [];
@@ -29,14 +30,42 @@ angular.module('machadaloPages')
         checkAll: 'Select All',
         uncheckAll: 'Select None'
       };
+      $scope.checkboxes = [];
+      var flattype = [
+        {"name":"Small (Less than 75)", checked: false},
+        {"name":"Medium (Between 75 to 150)", checked: false},
+        {"name":"Large (Between 150 to 300)", checked: false},
+        {"name":"Very Large (More than 300)", checked: false}
+    ];
+    $scope.checkboxes = flattype;
+    $scope.types = [];
+    var inventorytype = [
+      {"inventoryname": "Poster Campaign", checked: false},
+      {"inventoryname": "Standee Caimpaign", checked: false},
+      {"inventoryname": "Stall Campaign", checked: false},
+      {"inventoryname": "Car Display Campaign", checked: false},
+      {"inventoryname": "Flier Campaign", checked: false}
+    ];
+    $scope.types = inventorytype;
+
       societyListService.listFilterValues()
       .success(function (response){
         $scope.locationValue = response;
         console.log(response);
       })
 
-      $scope.filterSocieties = function() {
-        alert('hellovidhi');
+      $scope.filterSocieties = function(typeValuemodel, locationValueModel, checkboxes, types) {
+        var mySource1 = {typeValuemodel};
+        var mySource2 = {locationValueModel};
+        var mySource3 = {checkboxes};
+        var mySource4 = {types}
+        var myDest = {}
+        angular.extend(myDest, mySource1, mySource2, mySource3, mySource4)
+        console.log(myDest);
+        societyListService.getSocietyList()
+         .success(function (response){
+
+        });
       }
       //End: For displaying filter values
       $scope.model = {};
