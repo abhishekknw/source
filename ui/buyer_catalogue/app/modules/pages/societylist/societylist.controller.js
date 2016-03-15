@@ -3,37 +3,44 @@ angular.module('machadaloPages')
     ['$scope', '$rootScope', '$window', '$location', '$http','societyListService', 'pagesService',
     function ($scope, $rootScope, $window, $location, $http, societyListService, pagesService) {
       societyListService.processParam();
+    //Start: For displaying filter values
       $scope.locationValueModel = [];
-      /*$scope.locationValue = [
-      {id: 1, label: "Powai"},
-      {id: 2, label: "Andheri(East)"},
-      {id: 3, label: "Andheri(West)"},
-      {id: 4, label: "Bhandup(East)"},
-      {id: 5, label: "Bhandup(West)"},
-      {id: 6, label: "Kandivali(East)"},
-      {id: 7, label: "Kandivali(West)"}
-    ];*/
-$scope.locationValueSettings = {
-    scrollableHeight: '100px',
-    scrollable: true,
-    dynamicTitle: false
-};
-$scope.locationcustomTexts = {
-  buttonDefaultText: 'Select Location',
-  checkAll: 'Select All',
-  uncheckAll: 'Select None'
-};
-//Start: For displaying filter values
-$scope.locationValue = [];
-societyListService.listFilterValues()
- .success(function (response){
-   $scope.locationValue = response;
-   console.log(response);
- })
-//End: For displaying filter values
+      $scope.locationValue = [];
+      $scope.typeValue = [];
+      $scope.typeValuemodel = [];
+      $scope.locationValueSettings = {
+        scrollableHeight: '100px',
+        scrollable: true,
+        dynamicTitle: false
+      };
+      $scope.locationcustomTexts = {
+        buttonDefaultText: 'Select Location',
+        checkAll: 'Select All',
+        uncheckAll: 'Select None'
+      };
+      $scope.typeValue = [
+       {id: 1, label: "Ultra High"},
+       {id: 2, label: "High"},
+       {id: 3, label: "Medium"},
+       {id: 4, label: "Standard"}
+      ];
+      $scope.typecustomTexts = {
+        buttonDefaultText: 'Select Society Type',
+        checkAll: 'Select All',
+        uncheckAll: 'Select None'
+      };
+      societyListService.listFilterValues()
+      .success(function (response){
+        $scope.locationValue = response;
+        console.log(response);
+      })
 
-  $scope.model = {};
-  var sObj = '';
+      $scope.filterSocieties = function() {
+        alert('hellovidhi');
+      }
+      //End: For displaying filter values
+      $scope.model = {};
+      var sObj = '';
       societyListService.listSocieties(sObj)
         .success(function (response) {
            $scope.model = response.results;
@@ -57,9 +64,6 @@ societyListService.listFilterValues()
      $location.path('campaign/' + $rootScope.campaignId +'/societyDetails/' + id);
    }}//End: To navigate to catalogue page
 
-   $scope.filter = function() {
-     alert('njnjnj');
-  }
   //Start: Sort Functionality
   $scope.predicate = 'society_name';
   $scope.reverse = true;
@@ -85,11 +89,4 @@ societyListService.listFilterValues()
   $scope.bigCurrentPage = 1;
     //pagination ends here
 */
-}]);// SocietyListCtrl Controller Functions end
-// .controller('SocietyFilterCtrl',
-//     ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
-//     function ($scope, $rootScope, $window, $location, $http, societyListService) {
-      //$scope.filter = function() {
- //   alert('bhbh');
- // }
- //}]);
+}]);
