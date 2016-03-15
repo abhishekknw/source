@@ -725,7 +725,6 @@ class SupplierTypeSociety(models.Model):
     flat_avg_size = models.IntegerField(db_column='FLAT_AVG_SIZE', blank=True, null=True)  # Field name made lowercase.
     flat_avg_rental_persqft = models.IntegerField(db_column='FLAT_AVG_RENTAL_PERSQFT', blank=True, null=True)  # Field name made lowercase.
     flat_sale_cost_persqft = models.IntegerField(db_column='FLAT_SALE_COST_PERSQFT', blank=True, null=True)  # Field name made lowercase.
-    total_ad_spaces = models.IntegerField(db_column='TOTAL_AD_SPACES', blank=True, null=True)  # Field name made lowercase.
     past_collections_stalls = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STALLS', null=True)  # Field name made lowercase.
     past_collections_car = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_CAR', null=True)  # Field name made lowercase.
     past_collections_poster = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_POSTER', null=True)  # Field name made lowercase.
@@ -887,7 +886,7 @@ class Business(models.Model):
 
     def get_contact(self):
         try:
-            return self.contacts.first()
+            return self.contacts.all()
         except:
             return None
 
@@ -947,6 +946,27 @@ class Campaign(models.Model):
         except:
             return None
 
+    def get_info(self):
+        info = {}
+        flats = 0
+        residents = 0
+        ad_spaces = 0
+        try:
+            societies = self.societies.all()
+            for key in societies:
+                flats += key.society.flat_count
+                residents += key.society.resident_count
+                if key.society.total_ad_spaces is not None:
+                    ad_spaces += key.society.total_ad_spaces
+
+            info['flat_count'] = flats
+            info['resident_count'] = residents
+            info['ad_spaces'] = ad_spaces
+
+            return info
+
+        except:
+            return {}
 
     class Meta:
 
@@ -962,7 +982,7 @@ class CampaignSupplierTypes(models.Model):
 
     class Meta:
 
-        db_table = 'campaign_supplier_mapping'
+        db_table = 'campaign_supplier_types'
 
 
 class CampaignTypeMapping(models.Model):
@@ -1025,6 +1045,14 @@ class SocietyInventoryBooking(models.Model):
 
     def get_status(self):
         return 'Pending'
+
+    def get_price(self):
+        try:
+            price = PriceMappingDefault.objects.filter(supplier=self.society, adinventory_type__adinventory_name=self.adinventory_type.type.upper()).first().society_price
+            return price
+        except:
+            return None
+
 
 
     class Meta:
