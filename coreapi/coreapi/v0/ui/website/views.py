@@ -63,7 +63,7 @@ class NewCampaignAPIView(APIView):
         with transaction.atomic():
             if 'id' in business_data:
                 business = Business.objects.get(pk=business_data['id'])
-                serializer = BusinessSerializer(business,data=request.data)
+                serializer = BusinessSerializer(business,data=business_data)
             else:
                 #request.data['created_by'] = current_user.id
                 serializer = BusinessSerializer(data=business_data)
@@ -160,7 +160,6 @@ class CampaignInventoryAPIView(APIView):
 
     def post(self, request, id, format=None):
 
-        print request.data
         try:
             for society in request.data['inventory']:
                 if 'id' in society:
