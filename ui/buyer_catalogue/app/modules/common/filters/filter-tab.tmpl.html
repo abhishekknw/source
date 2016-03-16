@@ -15,6 +15,7 @@
 							<div ng-dropdown-multiselect="" options="locationValue"
 								selected-model="locationValueModel"
 								extra-settings="locationValueSettings"
+								checkboxes="true"
 								translation-texts="locationcustomTexts">
 							</div>
 					 </div>
@@ -29,11 +30,11 @@
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-								<div ng-dropdown-multiselect="" options="example14data"
-									selected-model="example14model"
-									extra-settings="example14settings"
+								<div ng-dropdown-multiselect="" options="typeValue"
+									selected-model="typeValuemodel"
+									extra-settings="locationValueSettings"
 									checkboxes="true"
-									translation-texts="example5customTexts">
+									translation-texts="typecustomTexts">
 								</div>
 						</div>
 					</div>
@@ -117,8 +118,8 @@
 				<br/>
 				<br/>
 				<br/>-->
-				<button type="submit" class="btn btn-default" ng-click="filter()">Apply</button>
-				  <!--Apply <span class="collapsearrow"></span>-->
+				<button type="submit" class="btn btn-default" ng-click="filterSocieties()">Apply</button>
+					<!--Apply <span class="collapsearrow"></span>-->
 				</button>
 		</div>
 			<!-- END OF FILTERS -->
