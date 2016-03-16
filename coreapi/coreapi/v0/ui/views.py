@@ -30,10 +30,6 @@ class SocietyAPIView(APIView):
 
 
     def post(self, request, format=None):
-        """
-
-        :type request: object
-        """
         #print request.data
         current_user = request.user
         if 'supplier_id' in request.data:
