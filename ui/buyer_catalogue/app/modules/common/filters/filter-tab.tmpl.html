@@ -3,7 +3,7 @@
 <!-- FILTERS -->
 			<div class="col-md-3 filters offset-0">
 			     <div class="padding20title"><h3 class="opensans dark">Filter by<span class="clearall">
-						 <a href = "#" uib-tooltip="Clear All filters">Clear All</span></a></h3></div>
+						 <a uib-tooltip="Clear All filters" ng-click = "clearFilter()" >Clear All</span></a></h3></div>
 				<div class="line2"></div>
 				<!-- Location ratings -->
 				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse1">
@@ -49,7 +49,7 @@
 			<div class="hpadding20">
 				<div class="checkbox"  ng-repeat = "checkbox in checkboxes">
 					<label>
-						<input type="checkbox" ng-model =  "checkbox.checked">{{checkbox.name}}
+						<input type="checkbox" ng-model = "checkbox.checked">{{checkbox.name}}
 					</label>
 				</div>
 			</div>

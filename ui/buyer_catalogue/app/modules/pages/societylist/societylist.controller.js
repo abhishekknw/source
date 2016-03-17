@@ -13,12 +13,13 @@ angular.module('machadaloPages')
         scrollableHeight: '100px',
         scrollable: true,
         externalIdProp: '',
-        dynamicTitle: false
+        dynamicTitle: true,
       };
       $scope.locationcustomTexts = {
         buttonDefaultText: 'Select Location',
         checkAll: 'Select All',
-        uncheckAll: 'Select None'
+        uncheckAll: 'Select None',
+        dynamicButtonTextSuffix: 'Value'
       };
       $scope.typeValue = [
        {id: 1, label: "Ultra High"},
@@ -54,9 +55,14 @@ angular.module('machadaloPages')
         $scope.locationValue = response;
         console.log(response);
       })
-
+      $scope.model = {};
+        var sObj = '';
+        societyListService.listSocieties(sObj)
+          .success(function (response) {
+             $scope.model = response.results;
+             console.log(response);
+      });
       $scope.filterResult = {};
-
       $scope.filterSocieties = function(typeValuemodel, locationValueModel, checkboxes, types) {
         var mySource1 = {locationValueModel};
         var mySource2 = {typeValuemodel};
@@ -71,13 +77,26 @@ angular.module('machadaloPages')
         });
       }
       //End: For displaying filter values
-    $scope.model = {};
-      var sObj = '';
-      societyListService.listSocieties(sObj)
-        .success(function (response) {
-           $scope.model = response.results;
-           console.log(response);
-    })
+
+    $scope.clearFilter = function (){
+      $scope.locationValueModel = [];
+      $scope.typeValuemodel = [];
+      var flattype = [
+        {"name":"Small", checked: false},
+        {"name":"Medium", checked: false},
+        {"name":"Large", checked: false},
+        {"name":"Very Large", checked: false}
+      ];
+      $scope.checkboxes = flattype;
+      var inventorytype = [
+        {"inventoryname": "Poster Campaign", checked: false},
+        {"inventoryname": "Standee Caimpaign", checked: false},
+        {"inventoryname": "Stall Campaign", checked: false},
+        {"inventoryname": "Car Display Campaign", checked: false},
+        {"inventoryname": "Flier Campaign", checked: false}
+      ];
+      $scope.types = inventorytype;
+    }
 
    //Start:For adding shortlisted society
    if($rootScope.campaignId){
