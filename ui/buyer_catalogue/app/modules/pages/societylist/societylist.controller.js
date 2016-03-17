@@ -3,55 +3,76 @@ angular.module('machadaloPages')
     ['$scope', '$rootScope', '$window', '$location', '$http','societyListService', 'pagesService',
     function ($scope, $rootScope, $window, $location, $http, societyListService, pagesService) {
       societyListService.processParam();
-      $scope.example14model = [];
-$scope.example14data = [
-    {id: 1, label: "Powai"},
-    {id: 2, label: "Andheri(East)"},
-    {id: 3, label: "Andheri(West)"},
-    {id: 4, label: "Bhandup(East)"},
-    {id: 5, label: "Bhandup(West)"},
-    {id: 6, label: "Kandivali(East)"},
-    {id: 7, label: "Kandivali(West)"}
-];
+    //Start: For displaying filter values
+      $scope.otherFilters = [];
+      $scope.locationValueModel = [];
+      $scope.locationValue = [];
+      $scope.typeValue = [];
+      $scope.typeValuemodel = [];
+      $scope.locationValueSettings = {
+        scrollableHeight: '100px',
+        scrollable: true,
+        externalIdProp: '',
+        dynamicTitle: false
+      };
+      $scope.locationcustomTexts = {
+        buttonDefaultText: 'Select Location',
+        checkAll: 'Select All',
+        uncheckAll: 'Select None'
+      };
+      $scope.typeValue = [
+       {id: 1, label: "Ultra High"},
+       {id: 2, label: "High"},
+       {id: 3, label: "Medium"},
+       {id: 4, label: "Standard"}
+      ];
+      $scope.typecustomTexts = {
+        buttonDefaultText: 'Select Society Type',
+        checkAll: 'Select All',
+        uncheckAll: 'Select None'
+      };
+      $scope.checkboxes = [];
+      var flattype = [
+        {"name":"Small", checked: false},
+        {"name":"Medium", checked: false},
+        {"name":"Large", checked: false},
+        {"name":"Very Large", checked: false}
+    ];
+    $scope.checkboxes = flattype;
+    $scope.types = [];
+    var inventorytype = [
+      {"inventoryname": "Poster Campaign", checked: false},
+      {"inventoryname": "Standee Caimpaign", checked: false},
+      {"inventoryname": "Stall Campaign", checked: false},
+      {"inventoryname": "Car Display Campaign", checked: false},
+      {"inventoryname": "Flier Campaign", checked: false}
+    ];
+    $scope.types = inventorytype;
 
-$scope.example14settings = {
-    scrollableHeight: '100px',
-    scrollable: true,
-    dynamicTitle: false
-};
-$scope.example5customTexts = {
-  buttonDefaultText: 'Select Location',
-  checkAll: 'Select All',
-  uncheckAll: 'Select None'
-};
-      //Start: for filter functionality
-      $scope.getLocation = function(val) {
-         return $http.get('https://maps.googleapis.com/maps/api/geocode/json', {
-           params: {
-             address: val,
-             key: 'AIzaSyDCTq6FNBxVrhd2te_GIrCa8TI8CYwobYg',
-             sensor: true
-           }
-         }).then(function(response){
-           return response.data.results.map(function(item){
-             return item.formatted_address;
-           });
-         });
-       };// End: filter functionality
-  $scope.model = {};
-  var dummyData = [
-   {
-       "society_name":"abc",
-       "society_address1":"next to baskin"
-   },
-   {
-       "society_name":"bcd",
-       "society_address1":"next to theo"
-   }
-  ];
-   //$scope.model = dummyData;
+      societyListService.listFilterValues()
+      .success(function (response){
+        $scope.locationValue = response;
+        console.log(response);
+      })
 
-    var sObj = '';
+      $scope.filterResult = {};
+
+      $scope.filterSocieties = function(typeValuemodel, locationValueModel, checkboxes, types) {
+        var mySource1 = {locationValueModel};
+        var mySource2 = {typeValuemodel};
+        var mySource3 = {checkboxes};
+        var mySource4 = {types}
+        var myDest = {}
+        angular.extend(myDest, mySource1, mySource2, mySource3, mySource4)
+        console.log(myDest);
+        societyListService.getSocietyList(myDest)
+         .success(function (response){
+           $scope.filterResult = response.results;
+        });
+      }
+      //End: For displaying filter values
+    $scope.model = {};
+      var sObj = '';
       societyListService.listSocieties(sObj)
         .success(function (response) {
            $scope.model = response.results;
@@ -75,9 +96,6 @@ $scope.example5customTexts = {
      $location.path('campaign/' + $rootScope.campaignId +'/societyDetails/' + id);
    }}//End: To navigate to catalogue page
 
-   $scope.filter = function() {
-     alert('njnjnj');
-  }
   //Start: Sort Functionality
   $scope.predicate = 'society_name';
   $scope.reverse = true;
@@ -103,11 +121,4 @@ $scope.example5customTexts = {
   $scope.bigCurrentPage = 1;
     //pagination ends here
 */
-}]);// SocietyListCtrl Controller Functions end
-// .controller('SocietyFilterCtrl',
-//     ['$scope', '$rootScope', '$window', '$location', '$http','societyListService',
-//     function ($scope, $rootScope, $window, $location, $http, societyListService) {
-      //$scope.filter = function() {
- //   alert('bhbh');
- // }
- //}]);
+}]);

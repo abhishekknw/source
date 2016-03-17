@@ -9,11 +9,15 @@
 				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse1">
 				  Location <span class="collapsearrow"></span>
 				</button>
-
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-							<div ng-dropdown-multiselect="" options="example14data" selected-model="example14model" extra-settings="example14settings" translation-texts="example5customTexts"></div>
+							<div ng-dropdown-multiselect="" options="locationValue"
+								selected-model="locationValueModel"
+								extra-settings="locationValueSettings"
+								checkboxes="true"
+								translation-texts="locationcustomTexts">
+							</div>
 					 </div>
 				</div>
 					<div class="clearfix"></div>
@@ -26,11 +30,11 @@
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-								<div ng-dropdown-multiselect="" options="example14data"
-									selected-model="example14model"
-									extra-settings="example14settings"
+								<div ng-dropdown-multiselect="" options="typeValue"
+									selected-model="typeValuemodel"
+									extra-settings="locationValueSettings"
 									checkboxes="true"
-									translation-texts="example5customTexts">
+									translation-texts="typecustomTexts">
 								</div>
 						</div>
 					</div>
@@ -38,37 +42,31 @@
 				</div>
 				<!-- End of Society Type -->
 				<div class="line2"></div>
+		<button type="button" class="collapsebtn topmarginlt" data-toggle="collapse" data-target="#collapse1">
+						  Flat Quantity  <span class="collapsearrow"></span>
+		</button>
+		<div id="collapse4" class="collapse in">
+			<div class="hpadding20">
+				<div class="checkbox"  ng-repeat = "checkbox in checkboxes">
+					<label>
+						<input type="checkbox" ng-model =  "checkbox.checked">{{checkbox.name}}
+					</label>
+				</div>
+			</div>
+			<div class="clearfix"></div>
+		</div>
+		<!-- End of Flat Count -->
 				<!-- Inventory Type -->
-				<button type="button" class="collapsebtn last" data-toggle="collapse" data-target="#collapse4">
+		<button type="button" class="collapsebtn last" data-toggle="collapse" data-target="#collapse4">
 				  Inventory Type <span class="collapsearrow"></span>
-				</button>
+		</button>
 				<div id="collapse4" class="collapse in">
 					<div class="hpadding20">
-						<div class="checkbox">
+						<div class="checkbox" ng-repeat = "type in types">
 							<label>
-							  <input type="checkbox">Poster Caimpaign
+							  <input type="checkbox" ng-model = "type.checked">{{type.inventoryname}}
 							</label>
 							<!--<rzslider rz-slider-model="slider_translate.minValue" rz-slider-high="slider_translate.maxValue" rz-slider-options="slider_translate.options"></rzslider>-->
-						</div>
-						<div class="checkbox">
-							<label>
-							  <input type="checkbox">Standee Caimpaign
-							</label>
-						</div>
-						<div class="checkbox">
-							<label>
-							  <input type="checkbox">Stall Campaign
-							</label>
-						</div>
-						<div class="checkbox">
-							<label>
-							  <input type="checkbox">Car Display Campaign
-							</label>
-						</div>
-						<div class="checkbox">
-							<label>
-								<input type="checkbox">Flier Campaign
-							</label>
 						</div>
 					</div>
 					<div class="clearfix"></div>
@@ -85,8 +83,8 @@
 				<br/>
 				<br/>
 				<br/>-->
-				<button type="submit" class="btn btn-default" ng-click="filter()">Apply</button>
-				  <!--Apply <span class="collapsearrow"></span>-->
+				<button type="submit" class="btn btn-default" ng-click="filterSocieties(typeValuemodel, locationValueModel, checkboxes, types)">Apply</button>
+					<!--Apply <span class="collapsearrow"></span>-->
 				</button>
 		</div>
 			<!-- END OF FILTERS -->

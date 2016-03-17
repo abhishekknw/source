@@ -1,5 +1,4 @@
 'use strict';
-
 /**
  * @ngdoc function
  * @name machadaloPages.controller:AboutCtrl
@@ -17,15 +16,20 @@ angular.module('machadaloPages')
   //var url_base1 = "v0/ui/";
 	var societyListService = {};
 
-  // societyListService.getSocietyInfo = function (id) {
-  //       var url = url_base + "society/" + 10;
-  //       return machadaloHttp.get(url);
-  // // };
-
   societyListService.listSocieties = function (sObj) {
      var url = url_base + "society/list/";
      if(sObj && sObj != "")
       url += "?search="+sObj
+     return machadaloHttp.get(url);
+   };
+
+   societyListService.getSocietyList = function(data) {
+     var url = url_base + "society/filterList/";
+     return machadaloHttp.post(url, data);
+   };
+
+   societyListService.listFilterValues = function(data){
+     var url = url_base + "society/filter/";
      return machadaloHttp.get(url);
    };
 
@@ -43,8 +47,6 @@ angular.module('machadaloPages')
      $rootScope.campaignId = null;
     }
   };
-
-
 
   return societyListService;
 }]);
