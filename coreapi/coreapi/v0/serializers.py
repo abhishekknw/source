@@ -11,12 +11,6 @@ class CitySubAreaSerializer(ModelSerializer):
         model = CitySubArea
 
 
-class CityAreaSerializer(ModelSerializer):
-
-    class Meta:
-        model = CityArea
-
-
 class CitySerializer(ModelSerializer):
 
     class Meta:
@@ -287,3 +281,9 @@ class PriceMappingDefaultSerializer(ModelSerializer):
     class Meta:
         model = PriceMappingDefault
         depth = 1
+
+
+class CityAreaSerializer(ModelSerializer):
+
+    class Meta:
+        model = CityArea

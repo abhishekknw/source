@@ -115,12 +115,21 @@ class SocietyAPIView(APIView):
         return Response(serializer.data, status=201)
 
 
+class SocietyAPIFiltersView(APIView):
+
+     def get(self, request, format=None):
+        try:
+            item = CityArea.objects.all()
+            serializer = CityAreaSerializer(item, many=True)
+            return Response(serializer.data)
+        except CityArea.DoesNotExist:
+            return Response(status=404)
 
 
 def set_default_pricing(society_id):
     society = SupplierTypeSociety.objects.filter(pk=society_id).first()
     ad_types = AdInventoryType.objects.all()
-    duration_types = DurationType.objects.all()
+    duration_types = DurationType.object.s.all()
     for type in ad_types:
         for duration in duration_types:
             if (type.adinventory_name=='POSTER'):
@@ -170,6 +179,35 @@ class SocietyAPIListView(APIView):
             result_page = paginator.paginate_queryset(items, request)
             serializer = UISocietySerializer(result_page, many=True)
             return paginator.get_paginated_response(serializer.data)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+
+class SocietyAPIFiltersListView(APIView):
+    def post(self, request, format=None):
+        try:
+            cityArea = []
+            societytype = []
+            flatquantity = []
+            if request.data['locationValueModel']:
+                for key in request.data['locationValueModel']:
+                    cityArea.append(key['label'])
+                print cityArea
+
+            if request.data['typeValuemodel']:
+                for key in request.data['typeValuemodel']:
+                    societytype.append(key['label'])
+                print societytype
+
+            if request.data['checkboxes']:
+                for key in request.data['checkboxes']:
+                    if key['checked']:
+                     flatquantity.append(key['name'])
+                print flatquantity
+
+                items = SupplierTypeSociety.objects.filter(Q(society_location_type__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+                serializer = UISocietySerializer(items, many= True)
+            return Response(serializer.data, status = 200)
+
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
@@ -869,3 +907,5 @@ def get_availability(data):
         return True
      else:
          return False
+
+
