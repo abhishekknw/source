@@ -832,6 +832,7 @@ class SocietyTower(models.Model):
     tower_resident_count = models.IntegerField(db_column='TOWER_RESIDENT_COUNT', blank=True, null=True)  # Field name made lowercase.
     lift_count = models.IntegerField(db_column='LIFT_COUNT', blank=True, null=True)  # Field name made lowercase.
     flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
+    standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
     average_rent_per_sqft = models.IntegerField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
 
 
@@ -1191,3 +1192,32 @@ class FlatTypeCode(models.Model):
     class Meta:
 
         db_table = 'flat_type_code'
+
+class InventorySummary(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    supplier = models.ForeignKey(SupplierTypeSociety, related_name='tower', db_column='SUPPLIER_ID', blank=True, null=True)
+    posterAllowedNB = models.BooleanField(db_column='POSTER_ALLOWED_NB', default=False)
+    posterAllowedLift = models.BooleanField(db_column='POSTER_ALLOWED_LIFT', default=False)
+    standeeAllowed = models.BooleanField(db_column='STANDEE_ALLOWED', default=False)
+    stallAllowed = models.BooleanField(db_column='STALL_ALLOWED', default=False)
+    poster_type_nb = models.CharField(db_column='POSTER_TYPE_NB', max_length=5, null=True)
+    nb_count = models.IntegerField(db_column='NB_COUNT', null=True)
+    poster_per_nb = models.IntegerField(db_column='POSTER_PER_NB', null=True)
+    total_poster_nb = models.IntegerField(db_column='TOTAL_POSTERS_NB', null=True)
+    poster_type_lift = models.CharField(db_column='POSTER_TYPE_LIFT', max_length=5, null=True)
+    lift_count = models.IntegerField(db_column='LIFT_COUNT', null=True)
+    total_poster_count = models.IntegerField(db_column='TOTAL_POSTER_COUNT', null=True)
+    total_poster_campaigns = models.IntegerField(db_column='TOTAL_POSTER_CAMPAIGNS', null=True)
+    total_standee_count = models.IntegerField(db_column='TOTAL_STANDEE_COUNT', null=True)
+    total_standee_campaigns = models.IntegerField(db_column='TOTAL_STANDEE_CAMPAIGNS', null=True)
+    standee_type = models.CharField(db_column='STANDEE_TYPE', max_length=20, null=True)
+    stall_type = models.CharField(db_column='STALL_TYPE', max_length=20, null=True)
+    total_stall_count = models.IntegerField(db_column='TOTAL_STALL_COUNT', null=True)
+    timing = models.CharField(db_column='STALL_TIMING', max_length=20, null=True)
+    furniture = models.BooleanField(db_column='FURNITURE_AVAILABLE', default=False)
+    electricity = models.BooleanField(db_column='ELECTRICITY_SEPARATE', default=False)
+
+
+    class meta:
+
+        db_table = 'inventory_summary'
