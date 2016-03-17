@@ -25,11 +25,10 @@ angular.module('machadaloPages')
 
    societyListService.getSocietyList = function(data) {
      var url = url_base + "society/filterList/";
-     url += "?search="+data
-     return machadaloHttp.get(url);
+     return machadaloHttp.post(url, data);
    };
 
-   societyListService.listFilterValues = function(){
+   societyListService.listFilterValues = function(data){
      var url = url_base + "society/filter/";
      return machadaloHttp.get(url);
    };

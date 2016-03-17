@@ -12,6 +12,7 @@ angular.module('machadaloPages')
       $scope.locationValueSettings = {
         scrollableHeight: '100px',
         scrollable: true,
+        externalIdProp: '',
         dynamicTitle: false
       };
       $scope.locationcustomTexts = {
@@ -32,10 +33,10 @@ angular.module('machadaloPages')
       };
       $scope.checkboxes = [];
       var flattype = [
-        {"name":"Small (Less than 75)", checked: false},
-        {"name":"Medium (Between 75 to 150)", checked: false},
-        {"name":"Large (Between 150 to 300)", checked: false},
-        {"name":"Very Large (More than 300)", checked: false}
+        {"name":"Small", checked: false},
+        {"name":"Medium", checked: false},
+        {"name":"Large", checked: false},
+        {"name":"Very Large", checked: false}
     ];
     $scope.checkboxes = flattype;
     $scope.types = [];
@@ -54,21 +55,23 @@ angular.module('machadaloPages')
         console.log(response);
       })
 
+      $scope.filterResult = {};
+
       $scope.filterSocieties = function(typeValuemodel, locationValueModel, checkboxes, types) {
-        var mySource1 = {typeValuemodel};
-        var mySource2 = {locationValueModel};
+        var mySource1 = {locationValueModel};
+        var mySource2 = {typeValuemodel};
         var mySource3 = {checkboxes};
         var mySource4 = {types}
         var myDest = {}
         angular.extend(myDest, mySource1, mySource2, mySource3, mySource4)
         console.log(myDest);
-        societyListService.getSocietyList()
+        societyListService.getSocietyList(myDest)
          .success(function (response){
-
+           $scope.filterResult = response.results;
         });
       }
       //End: For displaying filter values
-      $scope.model = {};
+    $scope.model = {};
       var sObj = '';
       societyListService.listSocieties(sObj)
         .success(function (response) {
