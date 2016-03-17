@@ -5,7 +5,34 @@ from rest_framework import filters
 from serializers import UISocietySerializer, UITowerSerializer
 from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
 from v0.models import ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType
+from v0.models import City, CityArea, CitySubArea
+from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer
 from django.db.models import Q
+
+
+class getCitiesAPIView(APIView):
+    def get(self, request, format=None):
+        try:
+            items = City.objects.all()
+            serializer = CitySerializer(items, many=True)
+            return Response(serializer.data)
+        except :
+            return Response(status=404)
+
+
+class getLocationsAPIView(APIView):
+    def get(self, request, id, format=None):
+        try:
+            type = request.query_params.get('type', None)
+            if type=='areas':
+                items = CityArea.objects.filter(city_code__id=id)
+                serializer = CityAreaSerializer(items, many=True)
+            elif type=='sub_areas':
+                items = CitySubArea.objects.filter(area_code__id=id)
+                serializer = CitySubAreaSerializer(items, many=True)
+            return Response(serializer.data)
+        except :
+            return Response(status=404)
 
 
 class SocietyAPIView(APIView):
