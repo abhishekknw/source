@@ -12,28 +12,20 @@ angular.module('machadaloPages')
         $scope.documenttypes = doctype;
       //End: for document type in modal window
 
-      $scope.companies = [
-                    { 'name':'Infosys Technologies',
-                    	'employees': 125000,
-                    	'headoffice': 'Bangalore'},
-                    	{ 'name':'Cognizant Technologies',
-	                    	'employees': 100000,
-	                    	'headoffice': 'Bangalore'},
-	                    	{ 'name':'Wipro',
-		                    	'employees': 115000,
-		                    	'headoffice': 'Bangalore'},
-		                    	{ 'name':'Tata Consultancy Services (TCS)',
-			                    	'employees': 150000,
-			                    	'headoffice': 'Bangalore'},
-			                    	{ 'name':'HCL Technologies',
-				                    	'employees': 90000,
-				                    	'headoffice': 'Noida'},
-      ];
-      $scope.addRow = function(){
-  	$scope.companies.push({ 'name':$scope.name, 'employees': $scope.employees, 'headoffice':$scope.headoffice });
-  	$scope.name='';
-  	$scope.employees='';
-  	$scope.headoffice='';
+      $scope.payments = [
+      {
+        'amount':'2500',
+        'payment_mode': 'cheque',
+        'payment_detail': '',
+        'payment_date': '27-05-1988'
+      }
+	  ];
+    $scope.addRow = function(){
+  	$scope.payments.push({ 'amount':$scope.amount, 'payment_mode': $scope.payment_mode, 'payment_detail':$scope.payment_detail, 'payment_date': $scope.payment_date });
+  	$scope.amount = '';
+  	$scope.payment_mode = '';
+    $scope.payment_detail = '';
+  	$scope.payment_date = '';
   };
 
 

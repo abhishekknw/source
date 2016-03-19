@@ -27,7 +27,6 @@
             <table class="table table-bordered table-condensed">
               <thead>
                 <tr>
-                  <th>S.No</th>
                   <th>Amount</th>
                   <th>Payment Mode</th>
                   <th>Payment Detail</th>
@@ -35,23 +34,36 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>John</td>
+                <tr ng-repeat="payment in payments">
                   <td>
-                    <select>
-                      <option></option>
-                      <option>Cheque</option>
-                      <option>Cash</option>
-                      <option>Demand Draft</option>
-                    </select>
+                    <p class="input-group">
+                      <input type="text" ng-model = "payment.amount"/>
+                    </p>
                   </td>
-                  <td>johncarter@mail.com</td>
-                  <td>8787</td>
-                </tr>
+		                <td>
+                      <select ng-model = "payment.payment_mode">
+                        <option>Cheque</option>
+                        <option>Cash</option>
+                        <option>Demand Draft</option>
+                      </select>
+                    </td>
+		                <td>
+                      <p class="input-group">
+                        <input type="text" ng-model = "payment.payment_detail"/>
+                      </p>
+                    </td>
+                    <td>
+                      <p class="input-group">
+                        <input type="text" ng-model = "payment.payment_date" ng-init="key.opened1=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string"  is-open="key.opened1" min-date="today" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+                        <span class="input-group-btn">
+                          <button type="button" class="btn btn-default" ng-click="key.opened1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                      </p>
+                    </td>
+	             </tr>
              </tbody>
            </table>
-           <button type="button" class="btn btn-danger active btn-sm">Add <span class="glyphicon glyphicon-plus"></span></button>
+           <button type="button" class="btn btn-danger active btn-sm" ng-click = "addRow()">Add <span class="glyphicon glyphicon-plus"></span></button>
          </div>
        </div>
        <hr>

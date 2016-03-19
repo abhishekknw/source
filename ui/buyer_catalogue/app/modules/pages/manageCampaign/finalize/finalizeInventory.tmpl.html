@@ -47,18 +47,18 @@
                   </p>
                   </td>
 
-                  <td>{{key.inventory_price}}</td>                  
+                  <td>{{key.inventory_price}}</td>
             </tr>
             <tbody>
           </table>
              <td style = "text-align: -webkit-center"><input type="number" style="text-align: center" ng-model="row.adjusted_price" /></td>
              <td style = "text-align: -webkit-center">
                 <select ng-change="" ng-model="row.booking_status">
-                  <option  ng-repeat="status in statuses" 
-               value="{{status}}">{{status}}</option> 
+                  <option  ng-repeat="status in statuses"
+               value="{{status}}">{{status}}</option>
                </select>
              </td>
-            
+
             <td style = "text-align: -webkit-center"><textarea style="text-align: center" ng-model="row.comments" /></textarea></td>
             <td style = "text-align: -webkit-center"><input type="button" class="btn btn-primary" ng-click="removeSociety(row.id)" value="Remove Society"></td>
         </tr>
@@ -76,5 +76,5 @@
          <input type="button" class="btn btn-primary" ng-click="save('submit')" value="Submit">
       </td>
     </tr>
-</div>  
+</div>
 </div>
