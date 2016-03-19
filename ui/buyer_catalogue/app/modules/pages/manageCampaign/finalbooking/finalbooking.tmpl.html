@@ -1,0 +1,116 @@
+<link rel="stylesheet" href="modules/pages/manageCampaign/finalbooking/finalbooking.tmpl.css" />
+  <div class="rightcontent col-md-9 offset-0">
+			<div class="hpadding20">
+				<div class="topsortby">
+				 <div class="col-md-4 offset-0">
+					 <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Booking Id</b><br>MAC1234</div>
+					</div>
+          <div class = "col-md-4 offset-0">
+            <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Campaign Start Date</b><br>27-05-2016</div>
+          </div>
+          <div class = "col-md-4 offset-0">
+            <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Campaign End Date</b><br>31-05-2016</div>
+          </div>
+				</div>
+	     </div>
+       <div class="hpadding20">
+ 				 <div class="col-md-4 offset-0">
+ 					 <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Payment Details</b>
+             <br>
+             <div class="left mt7">Total Amount</div>
+           </div>
+ 					</div>
+            <br>
+            <br>
+          <div class="table-responsive">
+          <div style = "margin: 20px;">
+            <table class="table table-bordered table-condensed">
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>Amount</th>
+                  <th>Payment Mode</th>
+                  <th>Payment Detail</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>John</td>
+                  <td>
+                    <select>
+                      <option></option>
+                      <option>Cheque</option>
+                      <option>Cash</option>
+                      <option>Demand Draft</option>
+                    </select>
+                  </td>
+                  <td>johncarter@mail.com</td>
+                  <td>8787</td>
+                </tr>
+             </tbody>
+           </table>
+           <button type="button" class="btn btn-danger active btn-sm">Add <span class="glyphicon glyphicon-plus"></span></button>
+         </div>
+       </div>
+       <hr>
+ 	    </div>
+      <div class="hpadding20">
+        <div class="col-md-8 offset-0">
+          <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Summary Details</b>
+            <br><br>
+            <div class="row form-group">
+              <span class="col-md-6" style="margin-top: 8px;">Total Campaign Cost:</span>
+              <span class="col-md-6">
+                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              </span>
+              <br><br>
+              <span class="col-md-6" style="margin-top: 8px;">Discount Given</span>
+              <span class="col-md-6">
+                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              </span>
+              <br><br>
+              <span class="col-md-6" style="margin-top: 8px;">Total Amount Paid</span>
+              <span class="col-md-6">
+                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              </span>
+              <br><br>
+              <span class="col-md-6" style="margin-top: 8px;">Amount Payable</span>
+              <span class="col-md-6">
+                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              </span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-danger active">Book Campaign</button>
+          <div style = "margin-bottom: 25px; margin-top: 15px;" >
+              <!-- Button HTML (to Trigger Modal) -->
+              <!--<a href="#myModal" class="btn btn-lg btn-primary" data-toggle="modal">Upload</a>-->
+              <a href="#myModal" class="btn btn-danger  active" data-toggle="modal">Upload <span class="glyphicon glyphicon-upload"></span></a>
+              <!-- Modal HTML -->
+              <div id="myModal" class="modal fade">
+                  <div class="modal-dialog">
+                      <div class="modal-content">
+                          <div class="modal-header">
+                              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                              <h4 class="modal-title">Upload Files</h4>
+                          </div>
+                          <div class="modal-body">
+                              <!--<p>Do you want to save changes you made to document before closing</p>-->
+                              <p class="text-warning"><small>If you don't save, your changes will be lost.</small></p>
+                              <button type = "file" class="btn btn-sm"
+                              ngf-select = "uploadFiles($files, $invalidFiles)"
+                              multiple accept = "image/*" ngf-max-height = "5000"
+                              ngf-max-size = "5MB" >Browse</button>
+                          </div>
+                          <div class="modal-footer">
+                              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                              <button type="button" class="btn btn-primary">Save changes</button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+         </div>
+      </div>
+    </div>

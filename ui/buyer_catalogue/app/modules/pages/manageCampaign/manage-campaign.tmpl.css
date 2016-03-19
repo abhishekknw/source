@@ -44,11 +44,11 @@ color:#333;
 .dashboard-left{
 background:#F2F2F2;
 height:100%;
-width:100%;
+width:75%;//Changed by vidhi
 }
 @media (min-width: 800px) {
 	.dashboard-left{
-	width:100%;
+	width:75%;
 	}
 
 	.dtxt{display:block;}
