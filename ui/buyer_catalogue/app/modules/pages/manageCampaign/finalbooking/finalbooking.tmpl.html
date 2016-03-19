@@ -88,20 +88,27 @@
               <!--<a href="#myModal" class="btn btn-lg btn-primary" data-toggle="modal">Upload</a>-->
               <a href="#myModal" class="btn btn-danger  active" data-toggle="modal">Upload <span class="glyphicon glyphicon-upload"></span></a>
               <!-- Modal HTML -->
-              <div id="myModal" class="modal fade">
+                <div id="myModal" class="modal fade">
                   <div class="modal-dialog">
                       <div class="modal-content">
                           <div class="modal-header">
                               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                              <h4 class="modal-title">Upload Files</h4>
+                              <h4 class="modal-title">Upload Documents</h4>
                           </div>
-                          <div class="modal-body">
-                              <!--<p>Do you want to save changes you made to document before closing</p>-->
-                              <p class="text-warning"><small>If you don't save, your changes will be lost.</small></p>
-                              <button type = "file" class="btn btn-sm"
-                              ngf-select = "uploadFiles($files, $invalidFiles)"
-                              multiple accept = "image/*" ngf-max-height = "5000"
-                              ngf-max-size = "5MB" >Browse</button>
+                          <div class="modal-body" style = "height: 200px;">
+                             <button type = "file" class="btn btn-sm"
+                               ngf-select = "uploadFiles($files, $invalidFiles)"
+                               multiple accept = "image/*" ngf-max-height = "5000"
+                               ngf-max-size = "5MB" >Select Documents
+                             </button>
+                              <div class = "dropdown">
+                                <a data-toggle = "dropdown" class="dropdown-toggle"> Tag Documents <b class="caret"></b></a>
+                                  <ul class = "dropdown-menu">
+                                    <li ng-repeat = "documenttype in documenttypes">
+                                      <a >{{documenttype.name}}</a>
+                                    </li>
+                                  </ul>
+                              </div>
                           </div>
                           <div class="modal-footer">
                               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -109,7 +116,7 @@
                           </div>
                       </div>
                   </div>
-              </div>
+                </div>
           </div>
          </div>
       </div>
