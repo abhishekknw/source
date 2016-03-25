@@ -51,7 +51,7 @@ angular.module('machadaloPages')
         spoc: ''
       };
 
-      
+
       $scope.model.business.contacts = [$scope.contact];
 
       $scope.addNew = function() {
@@ -80,6 +80,7 @@ angular.module('machadaloPages')
       };
 
     	$scope.create = function() {
+        alert('vidhi');
         	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {

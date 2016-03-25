@@ -27,7 +27,7 @@
             <table class="table table-bordered table-condensed">
               <thead>
                 <tr>
-                  <th>Amount</th>
+                  <th>Booking Amount</th>
                   <th>Payment Mode</th>
                   <th>Payment Detail</th>
                   <th>Date</th>
@@ -37,7 +37,7 @@
                 <tr ng-repeat="payment in payments">
                   <td>
                     <p class="input-group">
-                      <input type="text" ng-model = "payment.amount"/>
+                      <input type="text" ng-model = "payment.booking_amount"/>
                     </p>
                   </td>
 		                <td>
@@ -94,7 +94,7 @@
               </span>
             </div>
           </div>
-          <button type="button" class="btn btn-danger active">Book Campaign</button>
+          <button type="button" class="btn btn-danger active" ng-click = "finalBooking()">Book Campaign</button>
           <div style = "margin-bottom: 25px; margin-top: 15px;" >
               <!-- Button HTML (to Trigger Modal) -->
               <!--<a href="#myModal" class="btn btn-lg btn-primary" data-toggle="modal">Upload</a>-->
