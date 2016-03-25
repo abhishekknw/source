@@ -39,7 +39,7 @@ angular.module('machadaloPages')
       $scope.format = $scope.formats[1];
       $scope.altInputFormats = ['M!/d!/yyyy'];
 
-      $scope.phoneNumberPattern = /^[1-9]{1}[0-9]{9}$/
+      //$scope.phoneNumberPattern = /^[1-9]{1}[0-9]{9}$/
     	$scope.campaign_type = {}
 
       $scope.contact = {
@@ -77,9 +77,7 @@ angular.module('machadaloPages')
 	            $scope.model.business = response;
 	            $scope.choice_new = "selected";
 	       });
-
-    	};
-
+      };
 
     	$scope.create = function() {
         alert('vidhi');
