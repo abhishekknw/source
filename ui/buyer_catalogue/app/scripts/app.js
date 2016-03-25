@@ -8,7 +8,7 @@
  *
  * Main module of the application.
  */
-var APIBaseUrl = 'http://localhost:8108/';
+var APIBaseUrl = 'http://192.168.1.106:8108/';
 //var APIBaseUrl = 'http://coreapi-dev-test.ap-southeast-1.elasticbeanstalk.com/'
 
 angular.module('Authentication', []);
@@ -32,7 +32,7 @@ angular
     'ngFileUpload'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
-      $routeProvider.otherwise('/');
+     // $routeProvider.otherwise('/');
       $stateProvider
       .state('society', {
           url : '/society',

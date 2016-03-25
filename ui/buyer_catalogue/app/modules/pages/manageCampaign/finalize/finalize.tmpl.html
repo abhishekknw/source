@@ -15,8 +15,8 @@
             <td style = "text-align: -webkit-center"><span>{{row.business.name}}</span></td>
             <td style = "text-align: -webkit-center">
             <div ng-repeat="key in row.types">{{key.type}} - {{key.sub_type}}</div></td>
-            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.start_date" /></td>
-            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.end_date" /></td>
+            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.start_date"  disabled="true" /></td>
+            <td style = "text-align: -webkit-center"><input type="text" style="text-align: center" ng-model="row.end_date" disabled="true"/></td>
             <td style = "text-align: -webkit-center"><input type="button" class="btn btn-primary" ng-click="viewInventory(row.id)" value="View Inventory"></td>
         </tr>
        
