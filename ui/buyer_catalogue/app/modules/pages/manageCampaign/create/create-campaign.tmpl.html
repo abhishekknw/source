@@ -7,8 +7,8 @@
 	      <label for="existing">Select existing Business</label>
 		    <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
 
-		  <span class = "" ng-show ="choice == 'existing'">
-		   	<select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
+		  <span class = "" ng-show = "choice == 'existing'">
+		   	<select name="bsSelect" id = "bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
 		      <option  ng-repeat = "business in businesses"
            value="{{business.id}}">{{business.name}}</option>
 	      </select><br>
