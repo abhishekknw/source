@@ -75,12 +75,19 @@ angular.module('machadaloPages')
 	    	.success(function (response, status) {
 	    		    console.log(response);
 	            $scope.model.business = response;
-	            $scope.choice_new = "selected";
+	            $scope.choice = "selected";
 	       });
       };
 
+      $scope.readMore = function() {
+              $scope.seeMore = "true";
+      };
+
+      $scope.readLess = function() {
+              $scope.seeMore = "false";
+      };
+
     	$scope.create = function() {
-        alert('vidhi');
         	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {

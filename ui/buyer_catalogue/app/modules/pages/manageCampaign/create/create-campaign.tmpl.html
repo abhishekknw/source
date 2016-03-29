@@ -1,69 +1,123 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
   <div class="page-container">
-    <div class="col-md-2"></div>
     <div class="col-md-6">
     	<form class="choices">
 	    <div class="form-group">
-	      <label for="existing">Select existing Business</label>
-		    <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
-
-		  <span class = "" ng-show = "choice == 'existing'">
-		   	<select name="bsSelect" id = "bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
-		      <option  ng-repeat = "business in businesses"
-           value="{{business.id}}">{{business.name}}</option>
-	      </select><br>
+	    	<div class="row">
+		      	<div class="col-md-4">
+		      		<label for="existing">Select existing Business</label>
+		      	</div>
+			    <div class="col-md-2">
+			    	<input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
+			    </div>
+			    <div class="col-md-6">
+				  	<span class = "" ng-show ="choice == 'existing'">
+				   	<select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
+				    <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
+			      	</select>
+		      		</span>
+	      		</div>
+	      </div>
 	      </div>
 
 	      <div class="form-group">
-	      <label for="new">Create New Business</label>
-	      <input id="new" type="radio" name="choice" ng-model="choice" value="new">
-	    </div>
+	      	<div class="row">
+		      	<div class="col-md-4">
+	      			<label for="new">Create New Business</label>
+	      		</div>
+	      		<div class="col-md-4">
+	      			<input id="new" type="radio" name="choice" ng-model="choice" value="new">
+	      		</div>
+	      		<div class="col-md-4"></div>
+	    	</div>
+	      </div>
    		</form>
 
-	      <form name="showform" ng-show="choice_new == 'selected'" class="">
+	      <form name="form" ng-show="choice == 'selected'" class="">
 	      <div class="panel panel-default business-panel">
-	      <table>
+	      <table  border=0 class="table">
 	      	<tr>
 	      		<td><label>Business Name</label></td>
-	      		<td>{{business.name}}</td>
+	      		<td>{{model.business.name}}</td>
 	      	</tr>
 	      	<tr>
 	      		<td><label>Business Type</label></td>
-	      		<td></td>
+	      		<td>{{model.business.type}}</td>
 	      	</tr>
 	      	<tr>
 	      		<td><label>Business Sub-Type</label></td>
-	      		<td></td>
+	      		<td>{{model.business.sub_type}}</td>
 	      	</tr>
 	      	<tr>
 	      		<td><label>Business Email</label></td>
-	      		<td></td>
+	      		<td>{{model.business.email}}</td>
 	      	</tr>
 	      	<tr>
 	      		<td><label>Business Phone</label></td>
-	      		<td></td>
+	      		<td>{{model.business.phone}}</td>
 	      	</tr>
 	      	<tr>
 	      		<td><label>Business Address</label></td>
-	      		<td></td>
+	      		<td>{{model.business.address}}</td>
 	      	</tr>
 	      	<tr>
 	      		<td><label>Reference Contact Name</label></td>
-	      		<td></td>
+	      		<td>{{model.business.reference_name}}</td>
 	      	</tr>
 	      	<tr>
 	      		<td><label>Reference Contact Phone</label></td>
-	      		<td></td>
+	      		<td>{{model.business.reference_phone}}</td>
 	      	</tr>
 	      	<tr>
 	      		<td><label>Reference Contact Email</label></td>
-	      		<td></td>
+	      		<td>{{model.business.reference_email}}</td>
 	      	</tr>
 	      	<tr>
 	      		<td><label>Comments</label></td>
+	      		<td>{{model.business.comments}}</td>
+	      	</tr>
+	      	<tr>
+	      		<td><a href="#" ng-model="seeMore" ng-click="readMore()">see more..</a></td>
 	      		<td></td>
 	      	</tr>
-	      </table>
+	      	</table>
+	      	<hr/>
+
+	      	<!-- For loop to fetch the contact array -->
+	      	<table class = "table" ng-show="seeMore=='true'" ng-repeat="contact in model.business.contacts track by $index">
+	      	<tr>
+	      		<td><h3>Business Contact Details</h3></td>
+	      	</tr>
+	      	<tr>
+	      		<td><label>Name</label></td>
+	      		<td>{{contact.name}}</td>
+	      	</tr>
+	      	<tr>
+	      		<td><label>Designation</label></td>
+	      		<td>{{contact.designation}}</td>
+	      	</tr>
+	      	<tr>
+	      		<td><label>Department</label></td>
+	      		<td>{{contact.department}}</td>
+	      	</tr>
+	      	<tr>
+	      		<td><label>Email</label></td>
+	      		<td>{{contact.email}}</td>
+	      	</tr>
+	      	<tr>
+	      		<td><label>Phone</label></td>
+	      		<td>{{contact.phone}}</td>
+	      	</tr>
+	      	<tr>
+	      		<td><label>Single Point of Contact</label></td>
+	      		<td>{{contact.spoc}}</td>
+	      	</tr>
+	      	</div>
+	      	</table>
+	      	<hr/>
+
+	      	<input class="btn pull-right" id="edit" type="button" name="edit" ng-model="edit" value="Edit Details">
+
 	      </div>
 	      </form>
 
@@ -87,7 +141,7 @@
 	            <div ng-show="error" class="error">{{error}}</div>
 	         </div>
 	           <div class="form-group">
-	           	<table>
+	           	<table class = "table">
 	           		<tr>
 	              		<td><label>Business Name </label></td>
 	             		<td><input type="text" name="businessname" id="businessname" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.name" ng-required="true" />
@@ -178,10 +232,10 @@
 
        <div ng-repeat="contact in model.business.contacts track by $index">
 	      <div class="panel panel-default business-panel">
-        	<h3>Contact of Business</h3>
+        	<h3>Business Contact</h3>
 
 	           <div class="form-group">
-	              <table>
+	              <table class = "table">
 	           		<tr>
 	              		<td><label>Name</label></td>
 	              		<td><input type="text" name="contact_name" id="contact_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/" ng-model="contact.name" />
@@ -227,11 +281,16 @@
 						</div>
 				</table>
 				<div>
-				    <button class="btn btn-primary" ng-click="remove($index)">Remove</button>
-				  </div>
+				<table>
+				<tr>
+				    <td><button class="btn btn-primary" ng-click="remove($index)">Remove</button></td>
+				    <td><button class="btn pull-right" ng-click="addNew()">Add New Contact</button></td>
+				</tr>
+				</table>
+				</div>
 				</div>
 	     </div>
-	     <button class="btn btn-primary" ng-click="addNew()">Add New Contact</button>
+
 
 	       <div class="panel panel-default business-panel">
         	<h3>Campaign Details</h3>
@@ -288,4 +347,5 @@
         </div>
 	    </form>
 	  </div>
-  </div>
+	  <div class="col-md-2"></div>
+</div>
