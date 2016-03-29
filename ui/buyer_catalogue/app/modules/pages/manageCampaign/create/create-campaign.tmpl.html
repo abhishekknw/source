@@ -117,10 +117,10 @@
 	      	<hr/>
 
 	      	<input class="btn pull-right" id="edit" type="button" name="edit" ng-model="edit" value="Edit Details">
-	      	
+
 	      </div>
 	      </form>
-	   
+
 		<!--    <span class = "dropdown" ng-show="choice == 'existing'">
           <a data-toggle = "dropdown" class="dropdown-toggle">Select Business <b class="caret"></b></a>
           <ul class = "dropdown-menu">
@@ -129,12 +129,9 @@
 		        </li>
           </ul>
         </span>
-      --> 
-      
+      -->
 
-      
-
-      <form name="form" ng-show="choice == 'new'" class="" ng-submit="create()" role="form">
+      <form name="form" ng-show = "choice == 'new' || choice_new == 'selected'" class="" ng-submit="create()" role="form">
 
       	<div class="panel panel-default business-panel">
         	<h3>Create Business</h3>
@@ -153,77 +150,77 @@
 	           </div>
 
 	           <div class="form-group">
-	           
+
 	           		<tr>
 	              		<td><label >Business Type</label></td>
 	              		<td><input type="text" name="type" id="type" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.type" ng-required = "true" />
 	              		<span class="show-error" ng-show="form.type.$error.pattern">Please Enter Valid Business Type</span></td>
 	            	</tr>
-	  
+
 	           </div>
 	           <div class="form-group">
-	           
+
 	           		<tr>
 	              		<td><label >Business Sub-Type</label></td>
 	             		<td><input type="text" name="subtype" id="subtype" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.sub_type" />
 	              		<span class="show-error" ng-show="form.subtype.$error.pattern">Please Enter Valid Business Sub-Type</span></td>
 	              	</tr>
-	            
+
 	           </div>
 	           <div class="form-group">
-	              
+
 	           		<tr>
 	              		<td><label>Business Email</label></td>
 	              		<td><input type="email" name="business_email" id="business_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.business.email" ng-required="true" />
 	              		<span class="show-error" ng-show="form.business_email.$error.pattern">Please Enter Valid Email Id</span></td>
 	              	</tr>
-	             
+
 	           </div>
 	           <div class="form-group">
-	              
+
 	           		<tr>
 	              		<td><label>Business Phone</label></td>
 	              		<td><input type="text" name="business_phone" id="business_phone" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="model.business.phone"/>
 	              		<span class="show-error" ng-show="form.business_phone.$error.pattern">Please Enter Valid Phone Number</span></td>
 	              	</tr>
-	              
+
 	           </div>
 	           <div class="form-group">
-	              
+
 	           		<tr>
 	              		<td><label>Business Address</label></td>
 	              		<td><input type="text" name="address" id="address" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.address" />
 	              		<span class="show-error" ng-show="form.address.$error.pattern">Please Enter Valid Address</span></td>
 	              	</tr>
-	             
+
 	           </div>
 	           <div class="form-group">
-	              
+
 	           		<tr>
 	              		<td><label >Reference Contact Name</label></td>
 	              		<td><input type="text" name="reference_name" id="reference_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/"  ng-model="model.business.reference_name"/>
 	              		<span class="show-error" ng-show="form.reference_name.$error.pattern">Please Enter Valid Name</span></td>
 	              	</tr>
-	              
+
 	           </div>
 	           <div class="form-group">
-     
+
 	           		<tr>
 	              		<td><label >Reference Contact Phone</label></td>
 	              		<td><input type="text" name="reference_phn" id="reference_phn" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="model.business.reference_phone"/>
 	              		<span class="show-error" ng-show="form.reference_phn.$error.pattern">Please Enter Valid Phone Number</span></td>
 	           </div>
 	           <div class="form-group">
-	              
+
 	           		<tr>
 	              		<td><label >Reference Contact Email</label></td>
 	              		<td><input type="text" name="reference_email" id="reference_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.business.reference_email"/>
 	              		<span class="show-error" ng-show="form.reference_email.$error.pattern">Please Enter Valid Email Id</span></td>
 	              	</tr>
-	              
+
 	           </div>
 	           <div class="form-group">
-	              
+
 	           		<tr>
 	              		<td><label>Comments</label></td>
 	              		<td><textarea name="comments" id="comments" class="form-control" ng-model="model.business.comments"></textarea></td>
@@ -293,7 +290,7 @@
 				</div>
 				</div>
 	     </div>
-	     
+
 
 	       <div class="panel panel-default business-panel">
         	<h3>Campaign Details</h3>
@@ -338,7 +335,7 @@
             </div>
 
 			<div class="row Cost" >
-			   <span class = "col-md-4">Tentative Campaign Cost: </span><span class = "col-md-6"><input type = "number" name = "tentativecost" 
+			   <span class = "col-md-4">Tentative Campaign Cost: </span><span class = "col-md-6"><input type = "number" name = "tentativecost"
 			   id = " tentativecost" ng-pattern="/^[0-9.]+$/" ng-model = "model.tentative.campaign_cost"/></span>
 			   <span class = "show-error" ng-show="form.tentativecost.$error.pattern">Please Enter Valid Cost</span>
 	      	</div>
@@ -352,4 +349,3 @@
 	  </div>
 	  <div class="col-md-2"></div>
 </div>
-
