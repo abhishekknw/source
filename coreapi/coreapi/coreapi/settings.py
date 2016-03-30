@@ -87,11 +87,11 @@ DATABASES = {
     },
     
     'default': {
-         'NAME':'machadalo',
+         'NAME':'machadalo_dev',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': '127.0.0.1',
          'USER': 'root',
-         'PASSWORD': '',
+         'PASSWORD': 'khush123',
      }
     }
 
@@ -118,12 +118,12 @@ STATIC_URL = '/static/'
 
 # settings for Django Rest Framework
 
-REST_FRAMEWORK = {
+'''REST_FRAMEWORK = {
     # other settings...
 
     'DEFAULT_AUTHENTICATION_CLASSES': [],
     'DEFAULT_PERMISSION_CLASSES': [],
-}
+}'''
 '''
 REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (

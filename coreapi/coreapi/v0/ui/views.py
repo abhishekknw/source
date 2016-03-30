@@ -5,19 +5,24 @@ from rest_framework import filters
 from serializers import UISocietySerializer, UITowerSerializer
 from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
 from v0.models import ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType
-from v0.models import City, CityArea, CitySubArea
-from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer
+from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary
+from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer
 from django.db.models import Q
 
 
-class getCitiesAPIView(APIView):
+class getInitialDataAPIView(APIView):
     def get(self, request, format=None):
         try:
-            items = City.objects.all()
-            serializer = CitySerializer(items, many=True)
-            return Response(serializer.data)
+            cities = City.objects.all()
+            serializer = CitySerializer(cities, many=True)
+            items = SupplierTypeCode.objects.all()
+            serializer1 = SupplierTypeCodeSerializer(items, many=True)
+            result = {'cities':serializer.data, 'supplier_types':serializer1.data}
+            return Response(result, status=200)
         except :
             return Response(status=404)
+
+
 
 
 class getLocationsAPIView(APIView):
@@ -30,6 +35,46 @@ class getLocationsAPIView(APIView):
             elif type=='sub_areas':
                 items = CitySubArea.objects.filter(area_code__id=id)
                 serializer = CitySubAreaSerializer(items, many=True)
+            return Response(serializer.data)
+        except :
+            return Response(status=404)
+
+class checkSupplierCodeAPIView(APIView):
+    def get(self, request, code, format=None):
+        try:
+            society = SupplierTypeSociety.objects.get(supplier_code=code)
+            if society:
+                return Response(status=200)
+        except SupplierTypeSociety.DoesNotExist :
+            return Response(status=404)
+
+
+class generateSupplierIdAPIView(APIView):
+    def post(self, request, format=None):
+        try:
+            city = City.objects.get(pk=request.data['city_id'])
+            area = CityArea.objects.get(pk=request.data['area_id'])
+            sub_area = CitySubArea.objects.get(pk=request.data['subarea_id'])
+
+            try:
+                society = SupplierTypeSociety.objects.get(supplier_code=request.data['supplier_code'], society_locality=area.area_name)
+                if society:
+                    return Response(status=409)
+            except:
+                print "No such society"
+            supplier_id = city.city_code + area.area_code + sub_area.subarea_code + request.data['supplier_type'] + request.data['supplier_code']
+            supplier = {'supplier_id':supplier_id,
+                        'society_name':request.data['supplier_name'],
+                        'society_city':city.city_name,
+                        'society_locality':area.area_name
+                        }
+            serializer = SupplierTypeSocietySerializer(data=supplier)
+            if serializer.is_valid():
+                serializer.save()
+                #populate default pricing table
+                set_default_pricing(serializer.data['supplier_id'])
+            else:
+                return Response(serializer.errors, status=400)
             return Response(serializer.data)
         except :
             return Response(status=404)
@@ -63,18 +108,13 @@ class SocietyAPIView(APIView):
             society = SupplierTypeSociety.objects.filter(pk=request.data['supplier_id']).first()
             if society:
                 serializer = SupplierTypeSocietySerializer(society,data=request.data)
-                flag = False
             else:
                 request.data['created_by'] = current_user.id
                 serializer = SupplierTypeSocietySerializer(data=request.data)
-                flag = True
 
 
         if serializer.is_valid():
             serializer.save()
-            #populate default pricing table
-            if flag:
-                set_default_pricing(serializer.data['supplier_id'])
         else:
             return Response(serializer.errors, status=400)
 
@@ -110,8 +150,6 @@ class SocietyAPIView(APIView):
             for i in range(abc):
                 tower = SocietyTower(supplier = society)
                 tower.save()
-
-
         return Response(serializer.data, status=201)
 
 
@@ -245,6 +283,36 @@ class FlatTypeAPIView(APIView):
 
         return Response(serializer.data, status=201)
 
+
+class InventorySummaryAPIView(APIView):
+    def get(self, request, id, format=None):
+        try:
+            inv_summary = InventorySummary.objects.select_related().filter(supplier__supplier_id=id).first()
+            serializer = InventorySummarySerializer(inv_summary)
+            return Response(serializer.data)
+        except InventorySummary.DoesNotExist:
+            return Response(status=404)
+
+
+    def post(self, request, id, format=None):
+        print request.data
+        try:
+            society = SupplierTypeSociety.objects.get(pk=id)
+            if 'id' in request.data:
+                item = InventorySummary.objects.get(pk=request.data['id'])
+                serializer = InventorySummarySerializer(item, data=request.data)
+            else:
+                serializer = InventorySummarySerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(supplier=society)
+                return Response(serializer.data, status=200)
+            else:
+                return Response(serializer.errors, status=400)
+
+        except:
+            return Response(status=404)
+
+
 class BasicPricingAPIView(APIView):
     def get(self, request, id, format=None):
         response = {}
@@ -327,18 +395,24 @@ class TowerAPIView(APIView):
 
     def post(self, request, id, format=None):
         #print request.data
+        flag = True
         society=SupplierTypeSociety.objects.get(pk=id)
         for key in request.data['TowerDetails']:
             if 'tower_id' in key:
+                flag = False
                 item = SocietyTower.objects.get(pk=key['tower_id'])
+                if item.lift_count < key['lift_count']:
+                    self.save_lift_locations(item.lift_count, key['lift_count'], item)
+                if item.notice_board_count_per_tower < key['notice_board_count_per_tower']:
+                    self.save_nb_locations(item.notice_board_count_per_tower, key['notice_board_count_per_tower'], item)
+                if item.standee_count < key['standee_count']:
+                    self.save_standee_locations(item.standee_count, key['standee_count'], item)
                 serializer = SocietyTowerSerializer(item, data=key)
-
             else:
                 serializer = SocietyTowerSerializer(data=key)
 
             try:
                 if serializer.is_valid():
-
                     serializer.save(supplier=society)
                   #  tower_data=serializer.data
             except:
@@ -349,63 +423,12 @@ class TowerAPIView(APIView):
             except SocietyTower.DoesNotExist:
                 return Response(status=404)
 
-            #tag_initial = society.society_name[:3] + tower_data.tower_name[:3]
-            tag_initial = society.society_name[:3] + tower_data.tower_name[:3]
+            if flag:
+                self.save_lift_locations(0, key['lift_count'], tower_data)
+                self.save_nb_locations(0, key['notice_board_count_per_tower'], tower_data)
+                self.save_standee_locations(0, key['standee_count'], tower_data)
 
-            if key['notice_board_details_available']:
-                 for index, notice_board in enumerate(key['notice_board_details'], start=1):
-                     if 'id' in notice_board:
-                         notice_item = NoticeBoardDetails.objects.get(pk=notice_board['id'])
-                         notice_serializer = NoticeBoardDetailsSerializer(notice_item, data=notice_board)
-                         nbLen = len(key['notice_board_details'])
-                         nb = key['notice_board_count_per_tower']
-                         if nb!=nbLen:
-                             return Response({'message':'No of notice board details entered does not match notice board count'},status=400)
-
-                     else:
-                         notice_serializer = NoticeBoardDetailsSerializer(data=notice_board)
-
-                         #populate location and ad inventory table
-                         notice_tag = generate_location_tag(tag_initial, 'noticeboard', index)
-                         nb_location = InventoryLocation(location_id = notice_tag, location_type='Notice Board')
-                         nb_location.save()
-                         for i in range(notice_board['total_poster_per_notice_board']):
-                             ad_inv = AdInventoryLocationMapping(adinventory_id = notice_tag+'PO'+str(i), adinventory_name = 'POSTER', location = nb_location)
-                             ad_inv.save("Poster", society)
-
-                     if notice_serializer.is_valid():
-                         notice_serializer.save(tower=tower_data)
-
-                     else:
-                         #transaction.rollback()
-                         return Response(notice_serializer.errors, status=400)
-
-            if key['lift_details_available']:
-                 for index, lift in enumerate(key['lift_details'], start=1):
-                     if 'id' in lift:
-                         lift_item = LiftDetails.objects.get(pk=lift['id'])
-                         lift_serializer = LiftDetailsSerializer(lift_item,data=lift)
-                         liftLen = len(key['lift_details'])
-                         lift = key['lift_count']
-                         if lift!=liftLen:
-                             return Response({'message':'No of lift details entered does not match lift count'},status=400)
-                     else:
-                         lift_serializer = LiftDetailsSerializer(data=lift)
-                         #populate location and ad inventory table
-                         lift_tag = generate_location_tag(tag_initial, 'lift', index)
-                         lift_location = InventoryLocation(location_id = lift_tag, location_type='Lift')
-                         lift_location.save()
-                         ad_inv = AdInventoryLocationMapping(adinventory_id = lift_tag+'PO', adinventory_name = 'POSTER', location = lift_location)
-                         ad_inv.save("Poster", society)
-
-                     if lift_serializer.is_valid():
-                         lift_serializer.save(tower=tower_data)
-
-
-                     else:
-                         return Response(lift_serializer.errors, status=400)
-
-            if key['flat_type_details_available']:
+            '''if key['flat_type_details_available']:
                 for index, flat in enumerate(key['flat_type_details'], start=1):
                     if 'id' in flat:
                         flat_item = SocietyFlat.objects.get(pk=flat['id'])
@@ -423,7 +446,8 @@ class TowerAPIView(APIView):
                         flat_serializer.save()
 
                     else:
-                        return Response(flat_serializer.errors, status=400)
+                        return Response(flat_serializer.errors, status=400)'''
+
 
         return Response(status=201)
 
@@ -441,6 +465,93 @@ class TowerAPIView(APIView):
                 obj.delete()
         item.delete()
         return Response(status=204)
+
+    def save_lift_locations(self, c1, c2, tower):
+        i = c1 + 1
+        while i <= c2:
+            lift_tag = tower.tower_tag + "00L" + str(i)
+            lift = LiftDetails(lift_tag=lift_tag, tower=tower)
+            lift.save()
+            i += 1
+
+    def save_nb_locations(self, c1, c2, tower):
+        i = c1 + 1
+        while i <= c2:
+            nb_tag = tower.tower_tag + "00N" + str(i)
+            nb = NoticeBoardDetails(notice_board_tag=nb_tag, tower=tower)
+            nb.save()
+            i += 1
+
+    def save_standee_locations(self, c1, c2, tower):
+        i = c1 + 1
+        while i <= c2:
+            sd_tag = tower.tower_tag + "0000SD" + str(i).zfill(2)
+            sd = StandeeInventory(adinventory_id=sd_tag, tower=tower)
+            sd.save()
+            i += 1
+
+
+
+class PosterAPIView(APIView):
+    def get(self, request, id, format=None):
+        lifts = []
+        notice_boards = []
+        try:
+            towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
+            for tower in towers:
+                lifts.extend(tower.lifts.all())
+                notice_boards.extend(tower.notice_boards.all())
+            if len(lifts) > 0:
+                lifts_available = True
+            else:
+                lifts_available = False
+            if len(notice_boards) > 0:
+                nb_available = True
+            else:
+                nb_available = False
+            serializer = LiftDetailsSerializer(lifts, many=True)
+            result = {"lift_details_available": lifts_available, "lift_details": serializer.data, "nb_a4_available":nb_available}
+            serializer = NoticeBoardDetailsSerializer(notice_boards, many = True)
+            result['nb_details'] = serializer.data
+            return Response(result, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+
+    def post(self, request, id, format=None):
+            if request.data['nb_a4_available']:
+                 for notice_board in request.data['nb_details']:
+                     data = request.data['nb_common_details']
+                     data.update(notice_board)
+                     if 'id' in notice_board:
+                         notice_item = NoticeBoardDetails.objects.get(pk=notice_board['id'])
+                         notice_serializer = NoticeBoardDetailsSerializer(notice_item, data=data)
+                     else:
+                         notice_serializer = NoticeBoardDetailsSerializer(data=data)
+                         #populate location and ad inventory table
+                         '''for i in range(notice_board['total_poster_per_notice_board']):
+                             ad_inv = AdInventoryLocationMapping(adinventory_id = notice_tag+'PO'+str(i), adinventory_name = 'POSTER', location = nb_location)
+                             ad_inv.save("Poster", society)'''
+                     if notice_serializer.is_valid():
+                         notice_serializer.save()
+                     else:
+                         #transaction.rollback()
+                         return Response(notice_serializer.errors, status=400)
+
+            if request.data['lift_details_available']:
+                 for lift in request.data['lift_details']:
+                     if 'id' in lift:
+                         lift_item = LiftDetails.objects.get(pk=lift['id'])
+                         lift_serializer = LiftDetailsSerializer(lift_item,data=lift)
+                         #if lift!=liftLen:
+                          #   return Response({'message':'No of lift details entered does not match lift count'},status=400)
+                     else:
+                         lift_serializer = LiftDetailsSerializer(data=lift)
+                         #populate location and ad inventory table
+                     if lift_serializer.is_valid():
+                         lift_serializer.save()
+                     else:
+                         return Response(lift_serializer.errors, status=400)
+            return Response(status=200)
 
 
 

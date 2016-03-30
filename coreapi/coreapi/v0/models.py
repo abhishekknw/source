@@ -244,6 +244,12 @@ class LiftDetails(models.Model):
     inventory_status_lift = models.CharField(db_column='INVENTORY_STATUS_LIFT', max_length=20, blank=True, null=True)  # Field name made lowercase.
     inventory_size = models.CharField(db_column='INVENTORY_SIZE', max_length=30, blank=True, null=True)  # Field name made lowercase.
 
+    def get_tower_name(self):
+        try:
+            return self.tower.tower_name
+        except:
+            return None
+
     class Meta:
         db_table = 'lift_details'
 
@@ -263,8 +269,16 @@ class NoticeBoardDetails(models.Model):
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
 
+    def get_tower_name(self):
+        try:
+            return self.tower.tower_name
+        except:
+            return None
+
     class Meta:
         db_table = 'notice_board_details'
+
+
 
 
 class PosterInventory(models.Model):
@@ -331,7 +345,7 @@ class StandeeInventory(models.Model):
     standee_location_in_tower = models.CharField(db_column='STANDEE_LOCATION_IN_TOWER', max_length=50, blank=True, null=True)  # Field name made lowercase.
     standee_inventory_status = models.TextField(db_column='STANDEE_INVENTORY_STATUS', blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     sides = models.CharField(db_column='SIDES', max_length=255, blank=True, null=True)  # Field name made lowercase.
-    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='standees', blank=True, null=True)  # Field name made lowercase.
+    tower = models.ForeignKey('SocietyTower', db_column='TOWER_ID', related_name='standees', blank=True, null=True)  # Field name made lowercase.
     class Meta:
 
         db_table = 'standee_inventory'
@@ -686,6 +700,7 @@ class SportsInfra(models.Model):
 
 class SupplierTypeSociety(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
+    supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
     society_name = models.CharField(db_column='SOCIETY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
     society_address1 = models.CharField(db_column='SOCIETY_ADDRESS1', max_length=250, blank=True, null=True)  # Field name made lowercase.
     society_address2 = models.CharField(db_column='SOCIETY_ADDRESS2', max_length=250, blank=True, null=True)  # Field name made lowercase.
@@ -824,15 +839,15 @@ class SocietyTower(models.Model):
     tower_name = models.CharField(db_column='TOWER_NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
     flat_count_per_tower = models.IntegerField(db_column='FLAT_COUNT_PER_TOWER', blank=True, null=True)  # Field name made lowercase.
     floor_count_per_tower = models.IntegerField(db_column='FLOOR_COUNT_PER_TOWER', blank=True, null=True)  # Field name made lowercase.
-    notice_board_count_per_tower = models.IntegerField(db_column='NOTICE_BOARD_COUNT_PER_TOWER', blank=True, null=True)  # Field name made lowercase.
+    notice_board_count_per_tower = models.IntegerField(db_column='NOTICE_BOARD_COUNT_PER_TOWER', default=0)  # Field name made lowercase.
     standee_location_count_per_tower = models.IntegerField(db_column='STANDEE_LOCATION_COUNT_PER_TOWER', blank=True, null=True)  # Field name made lowercase.
     mailbox_count_per_tower = models.IntegerField(db_column='MAILBOX_COUNT_PER_TOWER', blank=True, null=True)  # Field name made lowercase.
     stall_count_per_tower = models.IntegerField(db_column='STALL_COUNT_PER_TOWER', blank=True, null=True)  # Field name made lowercase.
     tower_location = models.CharField(db_column='TOWER_LOCATION', max_length=100, blank=True, null=True)  # Field name made lowercase.
     tower_resident_count = models.IntegerField(db_column='TOWER_RESIDENT_COUNT', blank=True, null=True)  # Field name made lowercase.
-    lift_count = models.IntegerField(db_column='LIFT_COUNT', blank=True, null=True)  # Field name made lowercase.
-    flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
-    standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
+    lift_count = models.IntegerField(db_column='LIFT_COUNT', default=0)  # Field name made lowercase.
+    flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', default=0)  # Field name made lowercase.
+    standee_count = models.IntegerField(db_column='STANDEE_COUNT', default=0)  # Field name made lowercase.
     average_rent_per_sqft = models.IntegerField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
 
 
@@ -1162,6 +1177,7 @@ class CityArea(models.Model):
 
         db_table = 'city_area'
 
+
 class CitySubArea(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     subarea_name = models.CharField(db_column='SUBAREA_NAME', max_length=20, null=True)
@@ -1195,29 +1211,41 @@ class FlatTypeCode(models.Model):
 
 class InventorySummary(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    supplier = models.ForeignKey(SupplierTypeSociety, related_name='tower', db_column='SUPPLIER_ID', blank=True, null=True)
-    posterAllowedNB = models.BooleanField(db_column='POSTER_ALLOWED_NB', default=False)
-    posterAllowedLift = models.BooleanField(db_column='POSTER_ALLOWED_LIFT', default=False)
-    standeeAllowed = models.BooleanField(db_column='STANDEE_ALLOWED', default=False)
-    stallAllowed = models.BooleanField(db_column='STALL_ALLOWED', default=False)
-    poster_type_nb = models.CharField(db_column='POSTER_TYPE_NB', max_length=5, null=True)
+    supplier = models.ForeignKey(SupplierTypeSociety, related_name='inventoy_summary', db_column='SUPPLIER_ID', blank=True, null=True)
+    poster_allowed_nb = models.BooleanField(db_column='POSTER_ALLOWED_NB', default=False)
+    poster_allowed_lift = models.BooleanField(db_column='POSTER_ALLOWED_LIFT', default=False)
+    standee_allowed = models.BooleanField(db_column='STANDEE_ALLOWED', default=False)
+    stall_allowed = models.BooleanField(db_column='STALL_ALLOWED', default=False)
+    car_display_allowed = models.BooleanField(db_column='CAR_DISPLAY_ALLOWED', default=False)
+    flier_allowed = models.BooleanField(db_column='FLIER_ALLOWED', default=False)
+    nb_A4_allowed = models.BooleanField(db_column='NB_A4_ALLOWED', default=False)
+    nb_A3_allowed = models.BooleanField(db_column='NB_A3_ALLOWED', default=False)
+    poster_price_week = models.IntegerField(db_column='POSTER_PRICE_WEEK', null=True)
+    standee_price_week = models.IntegerField(db_column='STANDEE_PRICE_WEEK', null=True)
+    stall_price_day = models.IntegerField(db_column='STALL_PRICE_DAY', null=True)
+    cd_price_day = models.IntegerField(db_column='CD_PRICE_DAY', null=True)
+    flier_price_day = models.IntegerField(db_column='FLIER_PRICE_DAY', null=True)
     nb_count = models.IntegerField(db_column='NB_COUNT', null=True)
-    poster_per_nb = models.IntegerField(db_column='POSTER_PER_NB', null=True)
     total_poster_nb = models.IntegerField(db_column='TOTAL_POSTERS_NB', null=True)
-    poster_type_lift = models.CharField(db_column='POSTER_TYPE_LIFT', max_length=5, null=True)
     lift_count = models.IntegerField(db_column='LIFT_COUNT', null=True)
     total_poster_count = models.IntegerField(db_column='TOTAL_POSTER_COUNT', null=True)
     total_poster_campaigns = models.IntegerField(db_column='TOTAL_POSTER_CAMPAIGNS', null=True)
+    standee_small = models.BooleanField(db_column='STANDEE_SMALL', default=False)
+    standee_medium = models.BooleanField(db_column='STANDEE_MEDIUM', default=False)
     total_standee_count = models.IntegerField(db_column='TOTAL_STANDEE_COUNT', null=True)
     total_standee_campaigns = models.IntegerField(db_column='TOTAL_STANDEE_CAMPAIGNS', null=True)
-    standee_type = models.CharField(db_column='STANDEE_TYPE', max_length=20, null=True)
-    stall_type = models.CharField(db_column='STALL_TYPE', max_length=20, null=True)
+    stall_canopy = models.BooleanField(db_column='STALL_CANOPY', default=False)
+    stall_small = models.BooleanField(db_column='STALL_SMALL', default=False)
+    stall_large = models.BooleanField(db_column='STALL_LARGE', default=False)
+    cd_standard = models.BooleanField(db_column='CD_STANDARD', default=False)
+    cd_premium = models.BooleanField(db_column='CD_PREMIUM', default=False)
     total_stall_count = models.IntegerField(db_column='TOTAL_STALL_COUNT', null=True)
     timing = models.CharField(db_column='STALL_TIMING', max_length=20, null=True)
-    furniture = models.BooleanField(db_column='FURNITURE_AVAILABLE', default=False)
-    electricity = models.BooleanField(db_column='ELECTRICITY_SEPARATE', default=False)
+    furniture_available = models.BooleanField(db_column='FURNITURE_AVAILABLE', default=False)
+    electricity_available = models.BooleanField(db_column='ELECTRICITY_SEPARATE', default=False)
+    mailbox_allowed = models.BooleanField(db_column='MAILBOX_ALLOWED', default=False)
+    d2d_allowed = models.BooleanField(db_column='D2D_ALLOWED', default=False)
 
-
-    class meta:
+    class Meta:
 
         db_table = 'inventory_summary'
