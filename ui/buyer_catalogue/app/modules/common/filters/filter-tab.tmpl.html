@@ -3,7 +3,7 @@
 <!-- FILTERS -->
 			<div class="col-md-3 filters offset-0">
 			     <div class="padding20title"><h3 class="opensans dark">Filter by<span class="clearall">
-						 <a href = "#" uib-tooltip="Clear All filters">Clear All</span></a></h3></div>
+						 <a uib-tooltip="Clear All filters" ng-click = "clearFilter()" >Clear All</span></a></h3></div>
 				<div class="line2"></div>
 				<!-- Location ratings -->
 				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse1">
@@ -43,28 +43,13 @@
 				<!-- End of Society Type -->
 				<div class="line2"></div>
 		<button type="button" class="collapsebtn topmarginlt" data-toggle="collapse" data-target="#collapse1">
-						  Flat Count  <span class="collapsearrow"></span>
+						  Flat Quantity  <span class="collapsearrow"></span>
 		</button>
 		<div id="collapse4" class="collapse in">
 			<div class="hpadding20">
-				<div class="checkbox">
+				<div class="checkbox"  ng-repeat = "checkbox in checkboxes">
 					<label>
-						<input type="checkbox">Small(Less than 75)
-					</label>
-				</div>
-				<div class="checkbox">
-					<label>
-						<input type="checkbox">Medium(Between 75 & 150)
-					</label>
-				</div>
-				<div class="checkbox">
-					<label>
-						<input type="checkbox">Large(Between 150 & 300)
-					</label>
-				</div>
-				<div class="checkbox">
-					<label>
-						<input type="checkbox">Very large(More Than 300)
+						<input type="checkbox" ng-model = "checkbox.checked">{{checkbox.name}}
 					</label>
 				</div>
 			</div>
@@ -77,31 +62,11 @@
 		</button>
 				<div id="collapse4" class="collapse in">
 					<div class="hpadding20">
-						<div class="checkbox">
+						<div class="checkbox" ng-repeat = "type in types">
 							<label>
-							  <input type="checkbox">Poster Caimpaign
+							  <input type="checkbox" ng-model = "type.checked">{{type.inventoryname}}
 							</label>
 							<!--<rzslider rz-slider-model="slider_translate.minValue" rz-slider-high="slider_translate.maxValue" rz-slider-options="slider_translate.options"></rzslider>-->
-						</div>
-						<div class="checkbox">
-							<label>
-							  <input type="checkbox">Standee Caimpaign
-							</label>
-						</div>
-						<div class="checkbox">
-							<label>
-							  <input type="checkbox">Stall Campaign
-							</label>
-						</div>
-						<div class="checkbox">
-							<label>
-							  <input type="checkbox">Car Display Campaign
-							</label>
-						</div>
-						<div class="checkbox">
-							<label>
-								<input type="checkbox">Flier Campaign
-							</label>
 						</div>
 					</div>
 					<div class="clearfix"></div>
@@ -118,7 +83,7 @@
 				<br/>
 				<br/>
 				<br/>-->
-				<button type="submit" class="btn btn-default" ng-click="filterSocieties()">Apply</button>
+				<button type="submit" class="btn btn-default" ng-click="filterSocieties(typeValuemodel, locationValueModel, checkboxes, types)">Apply</button>
 					<!--Apply <span class="collapsearrow"></span>-->
 				</button>
 		</div>

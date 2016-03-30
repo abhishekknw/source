@@ -39,7 +39,7 @@ angular.module('machadaloPages')
       $scope.format = $scope.formats[1];
       $scope.altInputFormats = ['M!/d!/yyyy'];
 
-      $scope.phoneNumberPattern = /^[1-9]{1}[0-9]{9}$/
+      //$scope.phoneNumberPattern = /^[1-9]{1}[0-9]{9}$/
     	$scope.campaign_type = {}
 
       $scope.contact = {
@@ -51,7 +51,7 @@ angular.module('machadaloPages')
         spoc: ''
       };
 
-      
+
       $scope.model.business.contacts = [$scope.contact];
 
       $scope.addNew = function() {
@@ -75,11 +75,17 @@ angular.module('machadaloPages')
 	    	.success(function (response, status) {
 	    		    console.log(response);
 	            $scope.model.business = response;
-	            $scope.choice_new = "selected";
+	            $scope.choice = "selected";
 	       });
+      };
 
-    	};
+      $scope.readMore = function() {
+              $scope.seeMore = "true";
+      };
 
+      $scope.readLess = function() {
+              $scope.seeMore = "false";
+      };
 
     	$scope.create = function() {
         	  console.log($scope.model);

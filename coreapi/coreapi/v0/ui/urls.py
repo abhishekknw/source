@@ -11,6 +11,8 @@ urlpatterns = [
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)$', views.SocietyAPIView.as_view()),
     url(r'^society/$', views.SocietyAPIView.as_view()),
     url(r'^society/list/$', views.SocietyAPIListView.as_view()),
+    url(r'^society/filter/$', views.SocietyAPIFiltersView.as_view()),
+    url(r'^society/filterList/$', views.SocietyAPIFiltersListView.as_view()),
 
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/car_display/$', views.CarDisplayAPIView.as_view()),
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/other_inventory/$', views.OtherInventoryAPIView.as_view()),

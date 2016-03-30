@@ -1,0 +1,135 @@
+<link rel="stylesheet" href="modules/pages/manageCampaign/finalbooking/finalbooking.tmpl.css" />
+  <div class="rightcontent col-md-9 offset-0">
+			<div class="hpadding20">
+				<div class="topsortby">
+				 <div class="col-md-4 offset-0">
+					 <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Booking Id</b><br>MAC1234</div>
+					</div>
+          <div class = "col-md-4 offset-0">
+            <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Campaign Start Date</b><br>27-05-2016</div>
+          </div>
+          <div class = "col-md-4 offset-0">
+            <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Campaign End Date</b><br>31-05-2016</div>
+          </div>
+				</div>
+	     </div>
+       <div class="hpadding20">
+ 				 <div class="col-md-4 offset-0">
+ 					 <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Payment Details</b>
+             <br>
+             <div class="left mt7">Total Amount</div>
+           </div>
+ 					</div>
+            <br>
+            <br>
+          <div class="table-responsive">
+          <div style = "margin: 20px;">
+            <table class="table table-bordered table-condensed">
+              <thead>
+                <tr>
+                  <th>Booking Amount</th>
+                  <th>Payment Mode</th>
+                  <th>Payment Detail</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="payment in payments">
+                  <td>
+                    <p class="input-group">
+                      <input type="text" ng-model = "payment.booking_amount"/>
+                    </p>
+                  </td>
+		                <td>
+                      <select ng-model = "payment.payment_mode">
+                        <option>Cheque</option>
+                        <option>Cash</option>
+                        <option>Demand Draft</option>
+                      </select>
+                    </td>
+		                <td>
+                      <p class="input-group">
+                        <input type="text" ng-model = "payment.payment_detail"/>
+                      </p>
+                    </td>
+                    <td>
+                      <p class="input-group">
+                        <input type="text" ng-model = "payment.payment_date" ng-init="key.opened1=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string"  is-open="key.opened1" min-date="today" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+                        <span class="input-group-btn">
+                          <button type="button" class="btn btn-default" ng-click="key.opened1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                      </p>
+                    </td>
+	             </tr>
+             </tbody>
+           </table>
+           <button type="button" class="btn btn-danger active btn-sm" ng-click = "addRow()">Add <span class="glyphicon glyphicon-plus"></span></button>
+         </div>
+       </div>
+       <hr>
+ 	    </div>
+      <div class="hpadding20">
+        <div class="col-md-8 offset-0">
+          <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Summary Details</b>
+            <br><br>
+            <div class="row form-group">
+              <span class="col-md-6" style="margin-top: 8px;">Total Campaign Cost:</span>
+              <span class="col-md-6">
+                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              </span>
+              <br><br>
+              <span class="col-md-6" style="margin-top: 8px;">Discount Given</span>
+              <span class="col-md-6">
+                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              </span>
+              <br><br>
+              <span class="col-md-6" style="margin-top: 8px;">Total Amount Paid</span>
+              <span class="col-md-6">
+                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              </span>
+              <br><br>
+              <span class="col-md-6" style="margin-top: 8px;">Amount Payable</span>
+              <span class="col-md-6">
+                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              </span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-danger active" ng-click = "finalBooking()">Book Campaign</button>
+          <div style = "margin-bottom: 25px; margin-top: 15px;" >
+              <!-- Button HTML (to Trigger Modal) -->
+              <!--<a href="#myModal" class="btn btn-lg btn-primary" data-toggle="modal">Upload</a>-->
+              <a href="#myModal" class="btn btn-danger  active" data-toggle="modal">Upload <span class="glyphicon glyphicon-upload"></span></a>
+              <!-- Modal HTML -->
+                <div id="myModal" class="modal fade">
+                  <div class="modal-dialog">
+                      <div class="modal-content">
+                          <div class="modal-header">
+                              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                              <h4 class="modal-title">Upload Documents</h4>
+                          </div>
+                          <div class="modal-body" style = "height: 200px;">
+                             <button type = "file" class="btn btn-sm"
+                               ngf-select = "uploadFiles($files, $invalidFiles)"
+                               multiple accept = "image/*" ngf-max-height = "5000"
+                               ngf-max-size = "5MB" >Select Documents
+                             </button>
+                              <div class = "dropdown">
+                                <a data-toggle = "dropdown" class="dropdown-toggle"> Tag Documents <b class="caret"></b></a>
+                                  <ul class = "dropdown-menu">
+                                    <li ng-repeat = "documenttype in documenttypes">
+                                      <a >{{documenttype.name}}</a>
+                                    </li>
+                                  </ul>
+                              </div>
+                          </div>
+                          <div class="modal-footer">
+                              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                              <button type="button" class="btn btn-primary">Save changes</button>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+          </div>
+         </div>
+      </div>
+    </div>

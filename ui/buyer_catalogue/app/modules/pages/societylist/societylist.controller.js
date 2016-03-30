@@ -4,6 +4,7 @@ angular.module('machadaloPages')
     function ($scope, $rootScope, $window, $location, $http, societyListService, pagesService) {
       societyListService.processParam();
     //Start: For displaying filter values
+      $scope.otherFilters = [];
       $scope.locationValueModel = [];
       $scope.locationValue = [];
       $scope.typeValue = [];
@@ -11,12 +12,14 @@ angular.module('machadaloPages')
       $scope.locationValueSettings = {
         scrollableHeight: '100px',
         scrollable: true,
-        dynamicTitle: false
+        externalIdProp: '',
+        dynamicTitle: true,
       };
       $scope.locationcustomTexts = {
         buttonDefaultText: 'Select Location',
         checkAll: 'Select All',
-        uncheckAll: 'Select None'
+        uncheckAll: 'Select None',
+        dynamicButtonTextSuffix: 'Value'
       };
       $scope.typeValue = [
        {id: 1, label: "Ultra High"},
@@ -29,23 +32,71 @@ angular.module('machadaloPages')
         checkAll: 'Select All',
         uncheckAll: 'Select None'
       };
+      $scope.checkboxes = [];
+      var flattype = [
+        {"name":"Small", checked: false},
+        {"name":"Medium", checked: false},
+        {"name":"Large", checked: false},
+        {"name":"Very Large", checked: false}
+    ];
+    $scope.checkboxes = flattype;
+    $scope.types = [];
+    var inventorytype = [
+      {"inventoryname": "Poster Campaign", checked: false},
+      {"inventoryname": "Standee Caimpaign", checked: false},
+      {"inventoryname": "Stall Campaign", checked: false},
+      {"inventoryname": "Car Display Campaign", checked: false},
+      {"inventoryname": "Flier Campaign", checked: false}
+    ];
+    $scope.types = inventorytype;
+
       societyListService.listFilterValues()
       .success(function (response){
         $scope.locationValue = response;
         console.log(response);
       })
-
-      $scope.filterSocieties = function() {
-        alert('hellovidhi');
+      $scope.model = {};
+        var sObj = '';
+        societyListService.listSocieties(sObj)
+          .success(function (response) {
+             $scope.model = response.results;
+             console.log(response);
+      });
+      $scope.filterResult = {};
+      $scope.filterSocieties = function(typeValuemodel, locationValueModel, checkboxes, types) {
+        var mySource1 = {locationValueModel};
+        var mySource2 = {typeValuemodel};
+        var mySource3 = {checkboxes};
+        var mySource4 = {types}
+        var myDest = {}
+        angular.extend(myDest, mySource1, mySource2, mySource3, mySource4)
+        console.log(myDest);
+        societyListService.getSocietyList(myDest)
+         .success(function (response){
+           $scope.filterResult = response.results;
+        });
       }
       //End: For displaying filter values
-      $scope.model = {};
-      var sObj = '';
-      societyListService.listSocieties(sObj)
-        .success(function (response) {
-           $scope.model = response.results;
-           console.log(response);
-    })
+
+    $scope.clearFilter = function (){
+      $scope.locationValueModel = [];
+      $scope.typeValuemodel = [];
+      var flattype = [
+        {"name":"Small", checked: false},
+        {"name":"Medium", checked: false},
+        {"name":"Large", checked: false},
+        {"name":"Very Large", checked: false}
+      ];
+      $scope.checkboxes = flattype;
+      var inventorytype = [
+        {"inventoryname": "Poster Campaign", checked: false},
+        {"inventoryname": "Standee Caimpaign", checked: false},
+        {"inventoryname": "Stall Campaign", checked: false},
+        {"inventoryname": "Car Display Campaign", checked: false},
+        {"inventoryname": "Flier Campaign", checked: false}
+      ];
+      $scope.types = inventorytype;
+    }
 
    //Start:For adding shortlisted society
    if($rootScope.campaignId){

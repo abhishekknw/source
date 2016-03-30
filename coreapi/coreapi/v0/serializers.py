@@ -5,8 +5,6 @@ from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySu
 
 
 
-
-
 class ImageMappingSerializer(ModelSerializer):
 
     class Meta:
@@ -260,8 +258,6 @@ class SocietyInventoryBookingSerializer(ModelSerializer):
         )
 
 
-
-
 class CampaignSerializer(ModelSerializer):
 
     class Meta:
@@ -311,13 +307,6 @@ class SupplierTypeCodeSerializer(ModelSerializer):
 
     class Meta:
         model = SupplierTypeCode
-
-
-
-
-
-
-
 
 
 

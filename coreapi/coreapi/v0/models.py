@@ -1169,7 +1169,7 @@ class City(models.Model):
 
 class CityArea(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    area_name = models.CharField(db_column='AREA_NAME', max_length=20, null=True)
+    label = models.CharField(db_column='AREA_NAME', max_length=20, null=True)
     area_code = models.CharField(db_column='AREA_CODE', max_length=5, null=True)
     city_code = models.ForeignKey(City, related_name='citycode', db_column='CITY_CODE', null=True)
 
