@@ -172,14 +172,14 @@ def set_default_pricing(society_id):
     for type in ad_types:
         for duration in duration_types:
             if (type.adinventory_name=='POSTER'):
-                if((duration.duration_name=='Daily')):
+                if((duration.duration_name=='Unit Daily')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
                     pmdefault.save()
-                if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Monthly')|(duration.duration_name=='Weekly')):
+                if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Unit Monthly')|(duration.duration_name=='Unit Weekly')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
                     pmdefault.save()
             if (type.adinventory_name=='STANDEE'):
-                if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Weekly')):
+                if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Unit Weekly')):
                     if(type.adinventory_type=='Large'):
                         pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
                         pmdefault.save()
@@ -187,18 +187,18 @@ def set_default_pricing(society_id):
                         pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
                         pmdefault.save()
             if (type.adinventory_name=='STALL'):
-                if(duration.duration_name=='Daily'):
+                if(duration.duration_name=='Unit Daily'):
                     if ((type.adinventory_type=='Canopy')|(type.adinventory_type=='Small')|(type.adinventory_type=='Large')):
                         pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
                         pmdefault.save()
                     if(type.adinventory_type=='Customize'):
                         pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
                         pmdefault.save()
-            if ((type.adinventory_name=='CAR DISPLAY')&(duration.duration_name=='Daily')):
+            if ((type.adinventory_name=='CAR DISPLAY')&(duration.duration_name=='Unit Daily')):
                 if ((type.adinventory_type=='Standard')|(type.adinventory_type=='Premium')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
                     pmdefault.save()
-            if ((type.adinventory_name=='FLIER')&(duration.duration_name=='Daily')):
+            if ((type.adinventory_name=='FLIER')&(duration.duration_name=='Unit Daily')):
                 if ((type.adinventory_type=='Door-to-Door')|(type.adinventory_type=='Mailbox')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
                     pmdefault.save()
@@ -1022,5 +1022,3 @@ def get_availability(data):
         return True
      else:
          return False
-
-
