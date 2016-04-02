@@ -708,13 +708,22 @@ class SupplierTypeSociety(models.Model):
     society_city = models.CharField(db_column='SOCIETY_CITY', max_length=250, blank=True, null=True)  # Field name made lowercase.
     society_state = models.CharField(db_column='SOCIETY_STATE', max_length=250, blank=True, null=True)  # Field name made lowercase.
     society_longitude = models.FloatField(db_column='SOCIETY_LONGITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
+    society_locality = models.CharField(db_column='SOCIETY_LOCALITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
     society_latitude = models.FloatField(db_column='SOCIETY_LATITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
     society_location_type = models.CharField(db_column='SOCIETY_LOCATION_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
     society_type_quality = models.CharField(db_column='SOCIETY_TYPE_QUALITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
-    society_locality = models.CharField(db_column='SOCIETY_LOCALITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
     society_type_quantity = models.CharField(db_column='SOCIETY_TYPE_QUANTITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
-    flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)  # Field name made lowercase.
-    resident_count = models.IntegerField(db_column='RESIDENT_COUNT', blank=True, null=True)  # Field name made lowercase.
+    society_weekly_off = models.CharField(db_column='SOCIETY_WEEKLY_OFF', max_length=30, blank=True, null=True)
+    flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)
+    resident_count = models.IntegerField(db_column='RESIDENT_COUNT', blank=True, null=True)
+    vacant_flat_count = models.IntegerField(db_column='VACANT_FLAT_COUNT', null=True)
+    avg_household_occupants = models.IntegerField(db_column='AVG_HOUSEHOLD_OCCUPANTS', null=True)
+    service_household_count = models.IntegerField(db_column='SERVICE_HOUSEHOLD_COUNT', null=True)
+    working_women_count = models.IntegerField(db_column='WORKING_WOMEN_COUNT', null=True)
+    bachelor_tenants_allowed = models.BooleanField(db_column='BACHELOR_TENANTS_ALLOWED', default=False)
+    pg_flat_count = models.IntegerField(db_column='PG_FLAT_COUNT', null=True)
+    women_occupants = models.IntegerField(db_column='WOMEN_OCCUPANTS', null=True)
+    avg_pg_occupancy = models.IntegerField(db_column='AVG_PG_OCCUPANCY', null=True)
     cars_count = models.IntegerField(db_column='CARS_COUNT', blank=True, null=True)  # Field name made lowercase.
     luxury_cars_count = models.IntegerField(db_column='LUXURY_CARS_COUNT', blank=True, null=True)  # Field name made lowercase.
     lift_count = models.IntegerField(db_column='LIFT_COUNT', blank=True, null=True)  # Field name made lowercase.
@@ -730,16 +739,16 @@ class SupplierTypeSociety(models.Model):
     contact_person_count = models.IntegerField(db_column='CONTACT_PERSON_COUNT', blank=True, null=True)  # Field name made lowercase.
     walking_area_available = models.CharField(db_column='WALKING_AREA_AVAILABLE', max_length=45, blank=True, null=True)  # Field name made lowercase.
     walking_area_size = models.CharField(db_column='WALKING_AREA_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    count_0_6 = models.IntegerField(db_column='COUNT_0-6', blank=True, null=True)  # Field name made lowercase.
-    count_7_15 = models.IntegerField(db_column='COUNT_7-15', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    count_16_30 = models.IntegerField(db_column='COUNT_16-30', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    count_31_45 = models.IntegerField(db_column='COUNT_31-45', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
-    count_46_60 = models.IntegerField(db_column='COUNT_46-60', blank=True, null=True)  # Field name made lowercase.
+    count_0_5 = models.IntegerField(db_column='COUNT_0-5', blank=True, null=True)  # Field name made lowercase.
+    count_5_15 = models.IntegerField(db_column='COUNT_5-15', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    count_15_25 = models.IntegerField(db_column='COUNT_15-25', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
+    count_25_60 = models.IntegerField(db_column='COUNT_25-60', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
     count_60above = models.IntegerField(db_column='count_60above', blank=True, null=True)  # Field name made lowercase.
     flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
     flat_avg_size = models.IntegerField(db_column='FLAT_AVG_SIZE', blank=True, null=True)  # Field name made lowercase.
     flat_avg_rental_persqft = models.IntegerField(db_column='FLAT_AVG_RENTAL_PERSQFT', blank=True, null=True)  # Field name made lowercase.
-    flat_sale_cost_persqft = models.IntegerField(db_column='FLAT_SALE_COST_PERSQFT', blank=True, null=True)  # Field name made lowercase.
+    flat_sale_cost_persqft = models.IntegerField(db_column='FLAT_SALE_COST_PERSQFT', blank=True, null=True)
+    past_campaign_occurred = models.BooleanField(db_column='PAST_CAMPAIGN_OCCURRED', default=False)
     past_collections_stalls = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STALLS', null=True)  # Field name made lowercase.
     past_collections_car = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_CAR', null=True)  # Field name made lowercase.
     past_collections_poster = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_POSTER', null=True)  # Field name made lowercase.
@@ -816,7 +825,7 @@ class SupplierTypeSociety(models.Model):
         return False
 
     def is_demographic_details_available(self):
-        if (self.count_0_6 is not None or self.count_7_15 is not None or self.count_16_30 is not None or self.count_31_45 is not None or self.count_46_60 is not None or self.count_60above is not None):
+        if (self.count_0_5 is not None or self.count_5_15 is not None or self.count_15_25 is not None or self.count_25_60 is not None or self.count_60above is not None):
             return True
         return False
 
@@ -1226,7 +1235,7 @@ class InventorySummary(models.Model):
     cd_price_day = models.IntegerField(db_column='CD_PRICE_DAY', null=True)
     flier_price_day = models.IntegerField(db_column='FLIER_PRICE_DAY', null=True)
     nb_count = models.IntegerField(db_column='NB_COUNT', null=True)
-    total_poster_nb = models.IntegerField(db_column='TOTAL_POSTERS_NB', null=True)
+    total_poster_nb = models.IntegerField(db_column='TOTAL_POSTERS_NB',null=True)
     lift_count = models.IntegerField(db_column='LIFT_COUNT', null=True)
     total_poster_count = models.IntegerField(db_column='TOTAL_POSTER_COUNT', null=True)
     total_poster_campaigns = models.IntegerField(db_column='TOTAL_POSTER_CAMPAIGNS', null=True)
@@ -1240,7 +1249,7 @@ class InventorySummary(models.Model):
     cd_standard = models.BooleanField(db_column='CD_STANDARD', default=False)
     cd_premium = models.BooleanField(db_column='CD_PREMIUM', default=False)
     total_stall_count = models.IntegerField(db_column='TOTAL_STALL_COUNT', null=True)
-    timing = models.CharField(db_column='STALL_TIMING', max_length=20, null=True)
+    timing = models.CharField(db_column='STALL_TIMING', max_length=20, blank = True, null=True)
     furniture_available = models.BooleanField(db_column='FURNITURE_AVAILABLE', default=False)
     electricity_available = models.BooleanField(db_column='ELECTRICITY_SEPARATE', default=False)
     mailbox_allowed = models.BooleanField(db_column='MAILBOX_ALLOWED', default=False)

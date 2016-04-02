@@ -57,7 +57,7 @@ class generateSupplierIdAPIView(APIView):
             sub_area = CitySubArea.objects.get(pk=request.data['subarea_id'])
 
             try:
-                society = SupplierTypeSociety.objects.get(supplier_code=request.data['supplier_code'], society_locality=area.area_name)
+                society = SupplierTypeSociety.objects.get(supplier_code=request.data['supplier_code'], society_locality=area.label)
                 if society:
                     return Response(status=409)
             except:
@@ -66,16 +66,17 @@ class generateSupplierIdAPIView(APIView):
             supplier = {'supplier_id':supplier_id,
                         'society_name':request.data['supplier_name'],
                         'society_city':city.city_name,
-                        'society_locality':area.area_name
+                        'society_locality':area.label,
+                        'society_state' : city.state_code.state_name
                         }
             serializer = SupplierTypeSocietySerializer(data=supplier)
             if serializer.is_valid():
                 serializer.save()
                 #populate default pricing table
                 set_default_pricing(serializer.data['supplier_id'])
+                return Response(serializer.data, status=200)
             else:
                 return Response(serializer.errors, status=400)
-            return Response(serializer.data)
         except :
             return Response(status=404)
 
@@ -165,13 +166,13 @@ class SocietyAPIFiltersView(APIView):
 
 
 def set_default_pricing(society_id):
-    society = SupplierTypeSociety.objects.filter(pk=society_id).first()
+    society = SupplierTypeSociety.objects.get(pk=society_id)
     ad_types = AdInventoryType.objects.all()
-    duration_types = DurationType.object.s.all()
+    duration_types = DurationType.objects.all()
     for type in ad_types:
         for duration in duration_types:
             if (type.adinventory_name=='POSTER'):
-                if((duration.duration_name=='Daily')|(duration.duration_name=='Quaterly')):
+                if((duration.duration_name=='Daily')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
                     pmdefault.save()
                 if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Monthly')|(duration.duration_name=='Weekly')):
@@ -202,6 +203,7 @@ def set_default_pricing(society_id):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
                     pmdefault.save()
 
+
     return
 
 
@@ -229,18 +231,15 @@ class SocietyAPIFiltersListView(APIView):
             if request.data['locationValueModel']:
                 for key in request.data['locationValueModel']:
                     cityArea.append(key['label'])
-                print cityArea
 
             if request.data['typeValuemodel']:
                 for key in request.data['typeValuemodel']:
                     societytype.append(key['label'])
-                print societytype
 
             if request.data['checkboxes']:
                 for key in request.data['checkboxes']:
                     if key['checked']:
                      flatquantity.append(key['name'])
-                print flatquantity
 
                 items = SupplierTypeSociety.objects.filter(Q(society_location_type__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
                 serializer = UISocietySerializer(items, many= True)
@@ -279,32 +278,37 @@ class FlatTypeAPIView(APIView):
         num = 0.0
         den = 0.0
         totalFlats = 0
+        flag = True
         if request.data['flat_details_available']:
             for key in request.data['flat_details']:
-                if 'size_builtup_area' in key:
-                    builtup = key['size_builtup_area']
-                    builtup = builtup/1.2
-                    key['size_carpet_area'] = builtup
+                if 'size_builtup_area' in key and 'flat_rent' in key and key['size_builtup_area'] > 0 and key['flat_rent'] > 0:
                     rent = key['flat_rent']
                     area = key['size_builtup_area']
                     key['average_rent_per_sqft'] = rent/area
+                    if 'flat_count' in key:
+                        count = key['flat_count']
+                        num = num+(count*key['average_rent_per_sqft'])
+                        den = den+count
+                    else:
+                        flag = False
+                else:
+                    flag = False
 
-                if 'flat_count' in key:
-                    flats = key['flat_count']
-                    totalFlats = totalFlats+flats
+                if 'size_builtup_area' in key and key['size_builtup_area'] > 0:
+                    builtup = key['size_builtup_area']/1.2
+                    key['size_carpet_area'] = builtup
 
-                count = key['flat_count']
-                avgRent = key['average_rent_per_sqft']
-                num = num+(count*avgRent)
-                den = den+count
+                if 'flat_count' in key and key['flat_count'] > 0:
+                    totalFlats = totalFlats+key['flat_count']
 
-            avgRentpsf = num/den
-            society.average_rent = avgRentpsf
-            society.save()
+            if flag:
+                avgRentpsf = num/den
+                society.average_rent = avgRentpsf
+                society.save()
 
             if request.data['flat_type_count'] != len(request.data['flat_details']):
                 return Response({'message':'No of Flats entered does not match flat type count'},status=400)
-            if society.flat_count != totalFlats:
+            if totalFlats > 0 and society.flat_count != totalFlats:
                 return Response({'message':'No of Flats entered does not match total flat count of society'},status=400)
 
 
@@ -319,7 +323,7 @@ class FlatTypeAPIView(APIView):
             else:
                 return Response(serializer.errors, status=400)
 
-        return Response(serializer.data, status=201)
+        return Response(status=201)
 
 
 class InventorySummaryAPIView(APIView):
@@ -466,7 +470,7 @@ class TowerAPIView(APIView):
                 self.save_nb_locations(0, key['notice_board_count_per_tower'], tower_data)
                 self.save_standee_locations(0, key['standee_count'], tower_data)
 
-            '''if key['flat_type_details_available']:
+            if key['flat_type_details_available']:
                 for index, flat in enumerate(key['flat_type_details'], start=1):
                     if 'id' in flat:
                         flat_item = SocietyFlat.objects.get(pk=flat['id'])
@@ -484,7 +488,7 @@ class TowerAPIView(APIView):
                         flat_serializer.save()
 
                     else:
-                        return Response(flat_serializer.errors, status=400)'''
+                        return Response(flat_serializer.errors, status=400)
 
 
         return Response(status=201)
