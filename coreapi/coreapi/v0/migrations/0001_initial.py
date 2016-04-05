@@ -252,7 +252,6 @@ class Migration(migrations.Migration):
                 ('subarea_name', models.CharField(max_length=20, null=True, db_column='SUBAREA_NAME')),
                 ('subarea_code', models.CharField(max_length=5, null=True, db_column='SUBAREA_CODE')),
                 ('area_code', models.ForeignKey(related_name='areacode', db_column='AREA_CODE', to='v0.CityArea', null=True)),
-                ('city_code', models.ForeignKey(related_name='citycodes', db_column='CITY_CODE', to='v0.City', null=True)),
             ],
             options={
                 'db_table': 'city_area_subarea',
@@ -1156,6 +1155,10 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='citysubarea',
+            unique_together=set([('area_code', 'subarea_code')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='cityarea',
             unique_together=set([('area_code', 'city_code')]),
         ),
     ]
