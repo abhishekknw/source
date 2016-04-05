@@ -1185,6 +1185,7 @@ class CityArea(models.Model):
     class Meta:
 
         db_table = 'city_area'
+        unique_together = (('area_code','city_code'),)
 
 
 class CitySubArea(models.Model):
@@ -1192,12 +1193,11 @@ class CitySubArea(models.Model):
     subarea_name = models.CharField(db_column='SUBAREA_NAME', max_length=20, null=True)
     subarea_code = models.CharField(db_column='SUBAREA_CODE', max_length=5, null=True)
     area_code = models.ForeignKey(CityArea, related_name='areacode', db_column='AREA_CODE', null=True)
-    city_code = models.ForeignKey(City, related_name='citycodes', db_column='CITY_CODE', null=True)
 
     class Meta:
 
         db_table = 'city_area_subarea'
-        unique_together = (('area_code','city_code'),)
+        unique_together = (('area_code','subarea_code'),)
 
 
 class SupplierTypeCode(models.Model):

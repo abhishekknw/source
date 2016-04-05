@@ -147,7 +147,7 @@
 {
     "fields": {
         "days_count": 7,
-        "duration_name": "Weekly"
+        "duration_name": "Unit Weekly"
     },
     "model": "v0.durationtype",
     "pk": 3
@@ -155,7 +155,7 @@
 {
     "fields": {
         "days_count": 30,
-        "duration_name": "Monthly"
+        "duration_name": "Unit Monthly"
     },
     "model": "v0.durationtype",
     "pk": 4
@@ -163,7 +163,7 @@
 {
     "fields": {
         "days_count": 1,
-        "duration_name": "Daily"
+        "duration_name": "Unit Daily"
     },
     "model": "v0.durationtype",
     "pk": 5
@@ -171,7 +171,7 @@
 {
     "fields": {
         "days_count": 90,
-        "duration_name": "Quaterly"
+        "duration_name": "Unit Quaterly"
     },
     "model": "v0.durationtype",
     "pk": 6
