@@ -1233,8 +1233,10 @@ class InventorySummary(models.Model):
     nb_A3_allowed = models.BooleanField(db_column='NB_A3_ALLOWED', default=False)
     poster_price_week = models.IntegerField(db_column='POSTER_PRICE_WEEK', null=True)
     standee_price_week = models.IntegerField(db_column='STANDEE_PRICE_WEEK', null=True)
-    stall_price_day = models.IntegerField(db_column='STALL_PRICE_DAY', null=True)
-    cd_price_day = models.IntegerField(db_column='CD_PRICE_DAY', null=True)
+    stall_price_day_small = models.IntegerField(db_column='STALL_PRICE_DAY_SMALL', null=True)
+    stall_price_day_large = models.IntegerField(db_column='STALL_PRICE_DAY_LARGE', null=True)
+    cd_price_day_standard = models.IntegerField(db_column='CD_PRICE_DAY_STANDARD', null=True)
+    cd_price_day_premium = models.IntegerField(db_column='CD_PRICE_DAY_PREMIUM', null=True)
     flier_price_day = models.IntegerField(db_column='FLIER_PRICE_DAY', null=True)
     nb_count = models.IntegerField(db_column='NB_COUNT', null=True)
     total_poster_nb = models.IntegerField(db_column='TOTAL_POSTERS_NB',null=True)
@@ -1256,6 +1258,7 @@ class InventorySummary(models.Model):
     electricity_available = models.BooleanField(db_column='ELECTRICITY_SEPARATE', default=False)
     mailbox_allowed = models.BooleanField(db_column='MAILBOX_ALLOWED', default=False)
     d2d_allowed = models.BooleanField(db_column='D2D_ALLOWED', default=False)
+    flier_frequency = models.IntegerField(db_column='FLIER_FREQUENCY', null=True)
 
     class Meta:
 
