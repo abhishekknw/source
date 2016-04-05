@@ -393,6 +393,8 @@ class InventorySummaryAPIView(APIView):
             else:
                 return Response(serializer.errors, status=400)
 
+            return Response(serializer.data, status=200)
+
         except:
             return Response(status=404)
 
@@ -406,7 +408,6 @@ class BasicPricingAPIView(APIView):
         response = {}
         try:
             basic_prices = PriceMappingDefault.objects.select_related().filter(supplier__supplier_id=id)
-            #basic_prices = SupplierTypeSociety.objects.get(pk=id).default_prices.all()
             towercount = SupplierTypeSociety.objects.get(pk=id).tower_count
             serializer = PriceMappingDefaultSerializer(basic_prices, many=True)
             response['tower_count'] = towercount
@@ -511,6 +512,7 @@ class TowerAPIView(APIView):
             except SocietyTower.DoesNotExist:
                 return Response(status=404)
 
+            #create automated IDs for lift, notice boards, standees
             if flag:
                 self.save_lift_locations(0, key['lift_count'], tower_data)
                 self.save_nb_locations(0, key['notice_board_count_per_tower'], tower_data)
