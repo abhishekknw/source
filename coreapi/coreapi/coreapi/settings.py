@@ -89,7 +89,7 @@ DATABASES = {
     'default': {
          'NAME':'ebdb',
          'ENGINE': 'django.db.backends.mysql',
-         'HOST': 'aa1js1j6b4rosn2.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+         'HOST': 'aa4mz0qlg2vf4d.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
          'USER': 'machadalo',
          'PASSWORD': 'machadalo',
      }
