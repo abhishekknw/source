@@ -340,6 +340,8 @@ class InventorySummaryAPIView(APIView):
         print request.data
         try:
             society = SupplierTypeSociety.objects.get(pk=id)
+            towercount = SupplierTypeSociety.objects.get(pk=id).tower_count
+
             if 'id' in request.data:
                 item = InventorySummary.objects.get(pk=request.data['id'])
                 serializer = InventorySummarySerializer(item, data=request.data)
@@ -347,6 +349,47 @@ class InventorySummaryAPIView(APIView):
                 serializer = InventorySummarySerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save(supplier=society)
+
+                if request.data['poster_price_week']!=None:
+                    posPrice = request.data['poster_price_week']
+                    #change_price(id, 'POSTER', 'A3','Campaign Weekly', posPrice)
+                    if request.data['poster_allowed_nb']==True:
+                        if request.data['nb_A3_allowed']== True:
+                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A3', duration_type__duration_name='Campaign Weekly')
+                            price.business_price = posPrice
+                            price.save()
+                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A3', duration_type__duration_name='Unit Weekly')
+                            price.business_price = posPrice/towercount
+                            price.save()
+
+                        if request.data['nb_A4_allowed']== True:
+                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A4', duration_type__duration_name='Campaign Weekly')
+                            price.business_price = posPrice
+                            price.save()
+                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A4', duration_type__duration_name='Unit Weekly')
+                            price.business_price = posPrice/towercount
+                            price.save()
+
+                    if request.data['standee_price_week']!=None:
+                        stanPrice = request.data['standee_price_week']
+                        if request.data['standee_allowed']==True:
+                            if request.data['standee_small']== True:
+                                price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Small', duration_type__duration_name='Campaign Weekly')
+                                price.business_price = stanPrice
+                                price.save()
+                                price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Small', duration_type__duration_name='Unit Weekly')
+                                price.business_price = stanPrice/towercount
+                                price.save()
+
+                            if request.data['standee_medium']== True:
+                                price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Medium', duration_type__duration_name='Campaign Weekly')
+                                price.business_price = stanPrice
+                                price.save()
+                                price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Medium', duration_type__duration_name='Unit Weekly')
+                                price.business_price = stanPrice/towercount
+                                price.save()
+
+                return Response(serializer.data, status=200)
             else:
                 return Response(serializer.errors, status=400)
 
@@ -355,6 +398,10 @@ class InventorySummaryAPIView(APIView):
         except:
             return Response(status=404)
 
+'''def change_price(supplier_id, ad_name, ad_type, duration, price):
+    price = PriceMappingDefault.objects.get(supplier__supplier_id=supplier_id, adinventory_type__adinventory_name=ad_name,adinventory_type__adinventory_type=ad_type, duration_type__duration_name=duration)
+    price.business_price = price
+    price.save()'''
 
 class BasicPricingAPIView(APIView):
     def get(self, request, id, format=None):
@@ -406,7 +453,7 @@ class InventoryPricingAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        ##print request.data
+        #print request.data
 
         for key in request.data:
             if 'id' in key:
