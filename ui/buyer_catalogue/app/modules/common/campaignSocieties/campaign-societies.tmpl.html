@@ -16,7 +16,7 @@
 								 <h4>{{campaign.business.name}} Ad Campaign</h4>
 								 <div style="margin-botton:4px;background-color:#c9302c;color:#fff;" class="badge">{{campaign.booking_status}}</div>
 								 <div style="color:#949292">
-								   <p >Business Type: {{campaign.business.business_type}} , {{campaign.business.business_sub_type}}</p>
+								   <p >Business Type: {{campaign.business.type}} , {{campaign.business.sub_type}}</p>
 								   <p>Campaign Types:</p> 
 								   <p ng-repeat="key in campaign.types">{{key.type}} - {{key.sub_type}}</p>
 								    <p >Start Date: {{campaign.start_date}}</p>
@@ -37,7 +37,6 @@
 
 				<tr align="center">
 					<td><h4>{{campaign.society_count}}</h4><p style="color:#949292">Society Count</p></td>
-				 <td style="border-left-style:hidden;border-right-style:hidden;"><h4>{{campaign.tentative}}</h4><p style="color:#949292">Tentative Cost</p></td>
 				 <td style="border-right-style:hidden;"><h4>{{society.machadalo_index}}</h4><p style="color:#949292">No of Flats</p></td>
 				 <td><h4>{{campaign.info.resident_count}}</h4><p style="color:#949292">Estimated Residents</p></td>
 				 <td><h4>{{campaign.info.ad_spaces}}</h4><p style="color:#949292">Total Ad Spaces</p></td>
