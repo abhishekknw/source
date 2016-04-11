@@ -389,6 +389,51 @@ class InventorySummaryAPIView(APIView):
                                 price.business_price = stanPrice/towercount
                                 price.save()
 
+                    if request.data['stall_allowed']==True:
+                        if request.data['stall_small']== True:
+                            if request.data['stall_price_day_small']!=None:
+                                stallPrice = request.data['stall_price_day_small']
+                                price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STALL',adinventory_type__adinventory_type='Small', duration_type__duration_name='Unit Daily')
+                                price.business_price = stallPrice
+                                price.save()
+                                price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STALL',adinventory_type__adinventory_type='Canopy', duration_type__duration_name='Unit Daily')
+                                price.business_price = stallPrice
+                                price.save()
+
+                        if request.data['stall_large']== True:
+                            if request.data['stall_price_day_large']!=None:
+                                stallPrice = request.data['stall_price_day_large']
+                                price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STALL',adinventory_type__adinventory_type='Large', duration_type__duration_name='Unit Daily')
+                                price.business_price = stallPrice
+                                price.save()
+
+                    if request.data['car_display_allowed']==True:
+                        if request.data['cd_standard']== True:
+                            if request.data['cd_price_day_standard']!=None:
+                                cdPrice = request.data['cd_price_day_standard']
+                                price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='CAR DISPLAY',adinventory_type__adinventory_type='Standard', duration_type__duration_name='Unit Daily')
+                                price.business_price = cdPrice
+                                price.save()
+
+                        if request.data['cd_premium']== True:
+                            if request.data['cd_price_day_premium']!=None:
+                                cdPrice = request.data['cd_price_day_premium']
+                                price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='CAR DISPLAY',adinventory_type__adinventory_type='Premium', duration_type__duration_name='Unit Daily')
+                                price.business_price = cdPrice
+                                price.save()
+
+                if request.data['flier_price_day']!=None:
+                    flierPrice = request.data['flier_price_day']
+                    if request.data['mailbox_allowed']== True:
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='FLIER',adinventory_type__adinventory_type='Mailbox', duration_type__duration_name='Unit Daily')
+                        price.business_price = flierPrice
+                        price.save()
+
+                    if request.data['d2d_allowed']== True:
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='FLIER',adinventory_type__adinventory_type='Door-to-Door', duration_type__duration_name='Unit Daily')
+                        price.business_price = flierPrice
+                        price.save()
+
                 return Response(serializer.data, status=200)
             else:
                 return Response(serializer.errors, status=400)

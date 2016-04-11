@@ -5,7 +5,7 @@ angular.module('machadaloCommon')
 
    var extendHeaders = function(config) {
       config.headers = config.headers || {};
-      //config.headers['Authorization'] = 'JWT ' + $rootScope.globals.currentUser.token;
+      config.headers['Authorization'] = 'JWT ' + $rootScope.globals.currentUser.token;
    }
 
    angular.forEach(['get', 'delete', 'head', 'jsonp'], function (name) {
