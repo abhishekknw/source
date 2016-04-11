@@ -713,6 +713,7 @@ class SupplierTypeSociety(models.Model):
     society_location_type = models.CharField(db_column='SOCIETY_LOCATION_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
     society_type_quality = models.CharField(db_column='SOCIETY_TYPE_QUALITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
     society_type_quantity = models.CharField(db_column='SOCIETY_TYPE_QUANTITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
+    society_off = models.BooleanField(db_column='SOCIETY_OFF', default=False)
     society_weekly_off = models.CharField(db_column='SOCIETY_WEEKLY_OFF', max_length=30, blank=True, null=True)
     society_count = models.BooleanField(db_column='SOCIETY_COUNT', default=True)
     society_ratings = models.BooleanField(db_column='SOCIETY_RATINGS', default=True)
@@ -722,7 +723,7 @@ class SupplierTypeSociety(models.Model):
     avg_household_occupants = models.IntegerField(db_column='AVG_HOUSEHOLD_OCCUPANTS', null=True)
     service_household_count = models.IntegerField(db_column='SERVICE_HOUSEHOLD_COUNT', null=True)
     working_women_count = models.IntegerField(db_column='WORKING_WOMEN_COUNT', null=True)
-    bachelor_tenants_allowed = models.BooleanField(db_column='BACHELOR_TENANTS_ALLOWED', default=False)
+    bachelor_tenants_allowed = models.CharField(db_column='BACHELOR_TENANTS_ALLOWED', max_length=5, null=True)
     pg_flat_count = models.IntegerField(db_column='PG_FLAT_COUNT', null=True)
     women_occupants = models.IntegerField(db_column='WOMEN_OCCUPANTS', null=True)
     avg_pg_occupancy = models.IntegerField(db_column='AVG_PG_OCCUPANCY', null=True)
@@ -750,7 +751,7 @@ class SupplierTypeSociety(models.Model):
     flat_avg_size = models.IntegerField(db_column='FLAT_AVG_SIZE', blank=True, null=True)  # Field name made lowercase.
     flat_avg_rental_persqft = models.IntegerField(db_column='FLAT_AVG_RENTAL_PERSQFT', blank=True, null=True)  # Field name made lowercase.
     flat_sale_cost_persqft = models.IntegerField(db_column='FLAT_SALE_COST_PERSQFT', blank=True, null=True)
-    past_campaign_occurred = models.BooleanField(db_column='PAST_CAMPAIGN_OCCURRED', default=False)
+    past_campaign_occurred = models.CharField(db_column='PAST_CAMPAIGN_OCCURRED', max_length=5, null=True)
     past_collections_stalls = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STALLS', null=True)  # Field name made lowercase.
     past_collections_car = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_CAR', null=True)  # Field name made lowercase.
     past_collections_poster = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_POSTER', null=True)  # Field name made lowercase.
