@@ -28,7 +28,7 @@
 										<div class="col-md-7 hpadding20">
 											 <h4>{{row.business.name}} Ad Campaign</h4>
 											 <div style="color:#949292">
-											   <p >Business Type: {{row.business.business_type}} , {{row.business.business_sub_type}}</p>
+											   <p >Business Type: {{row.business.type}} , {{row.business.sub_type}}</p>
 											   <p>Campaign Types:</p>
 											   <p ng-repeat="key in row.types">{{key.type}} - {{key.sub_type}}</p>
 
@@ -37,7 +37,7 @@
 										</div>
 										<div class="col-md-5 hpadding20" style="margin-top:20px">
 											<!--<button type="button" class="shortlist btn btn-danger btn-lg active" ng-click = "shortlistThis($parent.$index)">BOOK</button><br><br>-->
-											<button type="button" class="list-button btn btn-danger btn-lg active" ng-click = "societyList(row.id)">View Details</button>
+											<button type="button" class="list-button btn btn-danger btn-lg active" ng-click = "societyList(row.id)">View Societies</button>
 										</div>
 										<div class="col-md-5 hpadding20" style="margin-top:20px">
 											<button type="button" class="list-button btn btn-danger btn-lg active" ng-click = "bookCampaign(row.id)">Book Campaign</button>
