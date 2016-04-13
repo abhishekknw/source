@@ -83,9 +83,10 @@ angular.module('machadaloPages')
               $scope.seeMore = "true";
       };
 
-      $scope.readLess = function() {
-              $scope.seeMore = "false";
+      $scope.editDetails = function() {
+              $scope.choice = "selected";
       };
+
 
     	$scope.create = function() {
         	  console.log($scope.model);
