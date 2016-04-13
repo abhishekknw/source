@@ -5,8 +5,8 @@ from rest_framework import filters
 from serializers import UISocietySerializer, UITowerSerializer
 from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
 from v0.models import ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType
-from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary
-from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer
+from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents
+from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer
 from django.db.models import Q
 
 
@@ -51,7 +51,7 @@ class checkSupplierCodeAPIView(APIView):
 
 class generateSupplierIdAPIView(APIView):
     def post(self, request, format=None):
-        try:
+       # try:
             city = City.objects.get(pk=request.data['city_id'])
             area = CityArea.objects.get(pk=request.data['area_id'])
             sub_area = CitySubArea.objects.get(pk=request.data['subarea_id'])
@@ -77,8 +77,8 @@ class generateSupplierIdAPIView(APIView):
                 return Response(serializer.data, status=200)
             else:
                 return Response(serializer.errors, status=400)
-        except :
-            return Response(status=404)
+        #except :
+         #   return Response(status=404)
 
 
 class SocietyAPIView(APIView):
@@ -900,9 +900,12 @@ class EventAPIView(APIView):
                 event_details_available=True
             else:
                 event_details_available = False
+            society_events = SupplierTypeSociety.objects.get(pk=id).society_events.first()
+            serializer1 = SocietyMajorEventsSerializer(society_events)
 
             response = {}
-            response['events_count_per_year'] = count
+            response['society_events'] = serializer1.data
+            response['past_major_events'] = serializer1.data['past_major_events']
             response['event_details_available'] = event_details_available
             response['event_details'] = serializer.data
 
@@ -915,10 +918,10 @@ class EventAPIView(APIView):
     def post(self, request, id, format=None):
         ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
-        if request.data['event_details_available']:
+        '''if request.data['event_details_available']:
             if request.data['events_count_per_year'] != len(request.data['event_details']):
                 return Response({'message':'No of Events entered does not match event count'},status=400)
-
+        '''
         for key in request.data['event_details']:
             if 'event_id' in key:
                 item = Events.objects.get(pk=key['event_id'])
@@ -929,6 +932,22 @@ class EventAPIView(APIView):
                 serializer.save(supplier=society)
             else:
                 return Response(serializer.errors, status=400)
+
+        data = {}
+        if 'society_events' in request.data:
+            data = request.data['society_events']
+        if 'past_major_events' in request.data:
+            data['past_major_events'] = request.data['past_major_events']
+        if 'id' in request.data['society_events']:
+            events = SocietyMajorEvents.objects.get(pk=request.data['society_events']['id'])
+            serializer = SocietyMajorEventsSerializer(events, data=data)
+        else:
+            serializer = SocietyMajorEventsSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(supplier=society)
+        else:
+            return Response(serializer.errors, status=400)
+
 
         return Response(serializer.data, status=201)
 
