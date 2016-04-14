@@ -49,7 +49,7 @@
 	      		<div class = "col-md-3"><label>Business Address</label></div>
 	      		<div class = "col-md-3">{{model.business.address}}</div>
 	      	</div>
-	    <!--  	<div class = "row">
+	      	<div class = "row">
 	      		<div class = "col-md-3"><label>Reference Contact Name</label></div>
 	      		<div class = "col-md-3">{{model.business.reference_name}}</div>
 	      		<div class = "col-md-3"><label>Reference Contact Phone</label></div>
@@ -58,8 +58,6 @@
 	      	<div class = "row">
 	      		<div class = "col-md-3"><label>Reference Contact Email</label></div>
 	      		<div class = "col-md-3">{{model.business.reference_email}}</div>
-          </div> -->
-          <div class = "row">
 	      		<div class = "col-md-3"><label>Comments</label></div>
 	      		<div class = "col-md-3">{{model.business.comments}}</div>
 	      	</div>
@@ -74,8 +72,8 @@
       </div>
     </form>
 
-      <form name="form" ng-show = "choice == 'selected'" class="" ng-submit="create()" role="form">
 	      <!-- Modal Window to view the contact details -->
+
       <div id="detailModal" class="modal fade">
         <div class="modal-dialog">
           <div class="modal-content">
@@ -111,9 +109,8 @@
           </div>
         </div>
       </div>
-	  </form>
 
-      <form name="form" ng-show = "choice == 'new'" class="" ng-submit="create()" role="form">
+      <form name="form" ng-show = "choice == 'select'|| choice == 'new'" class="" ng-submit="create()" role="form">
       	<div class="panel panel-default business-panel">
         	<h3 class = "panel-heading">Create Business</h3>
 	         <div class="errorMessages">
@@ -153,7 +150,7 @@
 	              		<span class="show-error" ng-show="form.business_phone.$error.pattern">Please Enter Valid Phone Number</span></div>
 
                     <div class = "col-md-3"><label>Business Address</label></div>
-	              		<div class = "col-md-3"><input type="text" name="address" id="address" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.address" />
+	              		<div class = "col-md-3"><input type="text" name="address" id="address" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\,\.\s]+$/" ng-model="model.business.address" />
 	              		<span class="show-error" ng-show="form.address.$error.pattern">Please Enter Valid Address</span></div>
 	              </div>
 	           </div>
@@ -222,8 +219,8 @@
 	              	<span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span></div>
 
                   <div class = "col-md-3"><label>Single Point of Contact?</label></div>
-	            		<div class = "col-md-3"><input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=true>Yes &nbsp
-	            		<input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=false>No </div>
+	            		<div class = "col-md-3"><input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value="Yes">Yes &nbsp
+	            		<input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value="No">No </div>
 	            </div>
 	          </div>
           </div>
@@ -249,7 +246,7 @@
 	            <div class = "col-md-3"><label>{{type}}</label></div>
 	        	  <div class = "col-md-1"><input type="checkbox"  id="{{type}}" name="{{type}}" ng-model="supplier_type1"/></div>
 							<span class = "" ng-show="supplier_type1">
-						   	<div class = "col-md-3"><input type="number" name="count" id="count" class="form-control" ng-model="model.supplier_type[type]"/></div>
+						   	<div class = "col-md-3  textbox"><input type="number" name="count" id="count" class="form-control" ng-model="model.supplier_type[type]"/></div>
 		          </span>
 	        </div>
           </div>
@@ -264,7 +261,7 @@
 	        	  <div class = "col-md-1"><input type="checkbox"  id="{{type}}" name="{{type}}" ng-model="campaign_type1"/></div>
 							<span class = "" ng-show="campaign_type1">
 						   	<select ng-change="" ng-model="model.campaign_type[type]">
-						      <div class = "col-md-3"><option  ng-repeat="name in campaign_sub_types[type]"
+						      <div class = "col-md-3"><option ng-repeat="name in campaign_sub_types[type]"
 				           value="{{name}}">{{name}}</option></div>
 					      </select>
 		          </span>

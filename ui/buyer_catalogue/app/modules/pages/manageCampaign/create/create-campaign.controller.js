@@ -84,7 +84,12 @@ angular.module('machadaloPages')
       };
 
       $scope.editDetails = function() {
-              $scope.choice = "selected";
+              $scope.choice = "select";
+      };
+
+      $scope.newBusiness = function() {
+              $scope.model = {};
+              $scope.choice = "new";
       };
 
 
