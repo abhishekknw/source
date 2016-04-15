@@ -51,7 +51,7 @@ angular.module('machadaloPages')
         spoc: ''
       };
 
-
+      var contactCopy = angular.copy($scope.contact);
       $scope.model.business.contacts = [$scope.contact];
 
       $scope.addNew = function() {
@@ -88,8 +88,11 @@ angular.module('machadaloPages')
       };
 
       $scope.newBusiness = function() {
-              $scope.model = {};
               $scope.choice = "new";
+              $scope.contact = angular.copy(contactCopy);
+              $scope.form.$setPristine();
+              $scope.model.business = {};
+              $scope.model.business.contacts = [$scope.contact];
       };
 
 
