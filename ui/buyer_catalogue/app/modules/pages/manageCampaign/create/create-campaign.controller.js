@@ -94,8 +94,7 @@ angular.module('machadaloPages')
               $scope.model.business = {};
               $scope.model.business.contacts = [$scope.contact];
       };
-
-
+      
     	$scope.create = function() {
         	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)
