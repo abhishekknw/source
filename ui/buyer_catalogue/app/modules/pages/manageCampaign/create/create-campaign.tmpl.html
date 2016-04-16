@@ -222,20 +222,31 @@
 	            		<div class = "col-md-3"><input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=true>Yes &nbsp
 	            		<input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=false>No </div>
 	            </div>
+                <div class = "row">
+                  <div class = "col-md-4"></div>
+                  <div class = "col-md-6"></div>
+                  <div class = "col-md-1"><button class="btn btn-danger" ng-click="remove($index)">Remove</button></div>
+                </div>
 	          </div>
           </div>
           <hr/>
 		    </div>
         <div class = "table">
           <div class = "row">
-            <div class = "col-md-4"><button class="btn btn-primary" ng-click="addNew()">Add New Contact</button></div>
-            <div class = "col-md-2"></div>
-            <div class = "col-md-2"></div>
-            <div class = "col-md-4"><button class="btn btn-primary" ng-click="remove($index)">Remove Contact</button></div>
+            <div class = "col-md-4"><button class="btn btn-danger" ng-click="addNew()">Add New Contact</button></div>
           </div>
       </div>
 	  </div>
+  </form>
 
+  <form form name="form" ng-show = "choice == 'select'" class="" ng-submit="create()" role="form">
+    <div>
+       <span class="create_button">
+           <button type="submit" class="btn btn-danger" class="UIbutton">Save Details</button>
+      </span>
+    </div>
+  </form>
+  <form form name="form" ng-show = "choice == 'selected'|| choice == 'new'" class="" ng-submit="create()" role="form">
 	   <div class="panel panel-default business-panel">
        <h3 class = "panel-heading">Campaign Details</h3>
          <div class = "table">
@@ -295,10 +306,10 @@
 	    </br>
 	    <div>
 	       <span class="create_button">
-	           <button type="submit" class="btn btn-primary" class="UIbutton">Create & Continue</button>
+	           <button type="submit" class="btn btn-danger" class="UIbutton">Create & Continue</button>
 	      </span>
       </div>
     </div>
-	</form>
+  </form>
 <div class="col-md-2"></div>
 </div>
