@@ -105,6 +105,9 @@ angular.module('machadaloPages')
             if (status == '201') {
                  $location.path("/campaign/" + response.id + "/societyList");
             }
+            if (status == '200'){
+                 alert("The Business Has Been Created Successfully");
+            }
         }).error(function(response, status){
              $rootScope.errorMsg = response.message ;
              console.log(status);
