@@ -56,66 +56,66 @@ class NewCampaignAPIView(APIView):
 
     def post(self, request, format=None):
 
-        print request.data
-        #current_user = request.user
+            print request.data
+            #current_user = request.user
 
-        business_data = request.data['business']
-        with transaction.atomic():
-            if 'id' in business_data:
-                business = Business.objects.get(pk=business_data['id'])
-                serializer = BusinessSerializer(business,data=business_data)
-            else:
-                #request.data['created_by'] = current_user.id
-                serializer = BusinessSerializer(data=business_data)
-
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                return Response(serializer.errors, status=400)
-
-            business = Business.objects.get(pk=serializer.data['id'])
-
-            #here we will start storing contacts
-            #if 'contact' in business_data and business_data['contact']:
-            for contact in business_data['contacts']:
-                if 'id' in contact:
-                    item = BusinessContact.objects.get(pk=contact['id'])
-                    contact_serializer = BusinessContactSerializer(item, data=contact)
+            business_data = request.data['business']
+            with transaction.atomic():
+                if 'id' in business_data:
+                    business = Business.objects.get(pk=business_data['id'])
+                    serializer = BusinessSerializer(business,data=business_data)
                 else:
-                    contact_serializer = BusinessContactSerializer(data=contact)
-                if contact_serializer.is_valid():
-                    contact_serializer.save(business=business)
+                    #request.data['created_by'] = current_user.id
+                    serializer = BusinessSerializer(data=business_data)
+
+                if serializer.is_valid():
+                    serializer.save()
                 else:
-                    return Response(contact_serializer.errors, status=400)
+                    return Response(serializer.errors, status=400)
+
+                business = Business.objects.get(pk=serializer.data['id'])
+
+                #here we will start storing contacts
+                #if 'contact' in business_data and business_data['contact']:
+                for contact in business_data['contacts']:
+                    if 'id' in contact:
+                        item = BusinessContact.objects.get(pk=contact['id'])
+                        contact_serializer = BusinessContactSerializer(item, data=contact)
+                    else:
+                        contact_serializer = BusinessContactSerializer(data=contact)
+                    if contact_serializer.is_valid():
+                        contact_serializer.save(business=business)
+                    else:
+                        return Response(contact_serializer.errors, status=400)
+
+                if 'campaign_type' in request.data or 'supplier_type' in request.data:
+                    campaign_data = {'booking_status':'Shortlisted'}
+                    if 'tentative' in request.data:
+                        for key in request.data['tentative']:
+                            campaign_data[key] = request.data['tentative'][key]
+
+                    campaign_serializer = CampaignSerializer(data=campaign_data)
+                    if campaign_serializer.is_valid():
+                        campaign_serializer.save(business=business)
+                    else:
+                        return Response(campaign_serializer.errors, status=400)
+
+                    campaign = Campaign.objects.get(pk=campaign_serializer.data['id'])
 
 
-            campaign_data = {'booking_status':'Shortlisted'}
-            if 'tentative' in request.data:
-                for key in request.data['tentative']:
-                    campaign_data[key] = request.data['tentative'][key]
+                    if 'campaign_type' in request.data:
+                        for key, value in request.data['campaign_type'].iteritems():
+                            campaign_type_map = CampaignTypeMapping(campaign=campaign, type=key, sub_type=value)
+                            campaign_type_map.save()
 
+                    if 'suplier_type' in request.data:
+                        for key, value in request.data['supplier_type'].iteritems():
+                            supplier_type_map = CampaignSupplierTypes(campaign=campaign, supplier_type=key, count=value)
+                            supplier_type_map.save()
 
-            campaign_serializer = CampaignSerializer(data=campaign_data)
-            if campaign_serializer.is_valid():
-                campaign_serializer.save(business=business)
-            else:
-                return Response(campaign_serializer.errors, status=400)
+                    return  Response(campaign_serializer.data, status=201)
 
-            campaign = Campaign.objects.get(pk=campaign_serializer.data['id'])
-
-
-            if 'campaign_type' in request.data:
-                for key, value in request.data['campaign_type'].iteritems():
-                    campaign_type_map = CampaignTypeMapping(campaign=campaign, type=key, sub_type=value)
-                    campaign_type_map.save()
-
-            if 'suplier_type' in request.data:
-                for key, value in request.data['supplier_type'].iteritems():
-                    supplier_type_map = CampaignSupplierTypes(campaign=campaign, supplier_type=key, count=value)
-                    supplier_type_map.save()
-
-            return  Response(campaign_serializer.data, status=201)
-
+            return Response(status=200)
 
 
 class CampaignAPIView(APIView):
@@ -272,13 +272,3 @@ class BookCampaignAPIView(APIView):
             return Response(status=200)
         except :
             return Response(status=404)
-
-
-
-
-
-
-
-
-
-
