@@ -124,6 +124,10 @@ angular.module('machadaloPages')
   }
   //End: Sort Functionality
 
+  $scope.societyList = function() {
+    alert('vidhi');
+	  $location.path("manageCampaign/shortlisted/" + '5' + "/societies");
+	};
   /*//pagination starts here
   $scope.totalItems = 64;
   $scope.currentPage = 4;

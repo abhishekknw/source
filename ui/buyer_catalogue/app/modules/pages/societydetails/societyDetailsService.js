@@ -33,8 +33,13 @@ angular.module('machadaloPages')
     }else {
       $rootScope.societyId = null;
     }
-
    };
 
+   //for adding shortlisted societies
+   societyDetailsService.addShortlistedSociety = function(campaign_id, society_id){
+     var url = url_base + "website/campaign/society/shortlist/";
+     var data = {campaign_id, society_id};
+     return machadaloHttp.post(url, data);
+   }
   return societyDetailsService;
 }]);
