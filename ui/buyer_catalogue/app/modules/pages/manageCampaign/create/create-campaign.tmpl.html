@@ -27,7 +27,7 @@
 	      </div>
    		</form>
 
-	    <form name = "form" ng-show="choice == 'selected'" class="">
+	    <form name = "form1" ng-show="choice == 'selected'" class="">
 	      <div class = "panel panel-default business-panel">
 	      <div class = "table">
 	      	<div class = "row">
@@ -109,7 +109,7 @@
           </div>
         </div>
       </div>
-      <form name = "form" ng-show="choice == 'selected'" class="">
+      <form name = "form2" ng-show="choice == 'selected'" class="">
         <div class = "panel panel-default business-panel">
           <h3 class "panel-heading">Campaign Details</h3>
           <ul class = "nav nav-pills" >
@@ -266,14 +266,14 @@
 	  </div>
   </form>
 
-  <form form name="form" ng-show = "choice == 'select'" class="" ng-submit="create()" role="form">
+  <form name="form3" ng-show = "choice == 'select'" class="" ng-submit="create()" role="form">
     <div>
        <span class="create_button">
            <button type="submit" class="btn btn-danger" class="UIbutton">Save Details</button>
       </span>
     </div>
   </form>
-  <form form name="form" ng-show = "choice == 'selected'|| choice == 'new'" class="" ng-submit="create()" role="form">
+  <form name="form4" ng-show = "choice == 'selected'|| choice == 'new'" class="" ng-submit="create()" role="form">
 	   <div class="panel panel-default business-panel">
        <h3 class = "panel-heading">Create Campaign</h3>
          <div class = "table">
