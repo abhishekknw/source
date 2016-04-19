@@ -28,23 +28,18 @@
                 <tr ng-repeat="key in row.inventories">
                 <!--  <div class="col-xs-3"> -->
                   <td colspan="2">{{key.type.type}} - {{key.type.sub_type}}</td>
-
                   <td style = "text-align: -webkit-center">
-
-
-                    <input type="text" class = "col-xs-6" ng-pattern = "/^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/" ng-model="key.start_date" ng-init="key.opened1=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string"  is-open="key.opened1" min-date="today" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+                  <td><input type="text" class = "col-xs-6" ng-pattern = "/^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/" ng-model="key.start_date" ng-init="key.opened1=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string"  is-open="key.opened1" min-date="today" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
                     <span class="show-error">
                       <button type="button" class="btn btn-default" ng-click="key.opened1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
-                    </span>
-
+                    </span></td>
                   </td>
-
                   <td style = "text-align: -webkit-center">
-
-                    <input type="text" class = "col-xs-6" ng-pattern = "/^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/" ng-model="key.end_date" ng-init="key.opened2=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string" is-open="key.opened2" min-date="key.start_date" datepicker-options="dateOptions"  ng-required="true" close-text="Close" />
+                  <td><input type="text" class = "col-xs-6" ng-pattern = "/^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/" ng-model="key.end_date" ng-init="key.opened2=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string" is-open="key.opened2" min-date="key.start_date" datepicker-options="dateOptions"  ng-required="true" close-text="Close" />
                     <span class="show-error">
                       <button type="button" class="btn btn-default" ng-click="key.opened2 = true"><i class="glyphicon glyphicon-calendar"></i></button>
                     </span>
+                  </td>
                   </td>
 
                   <td>{{key.inventory_price}}</td>
