@@ -28,7 +28,7 @@
 	  </div>
 			<!-- End of padding -->
 			<div class="itemscontainer offset-1">
-				<div class="offset-2" ng-repeat="row in model | orderBy:predicate:reverse">
+				<div class="offset-2" ng-repeat="row in model | orderBy:predicate:reverse" dir-paginate="row in model | itemsPerPage:2">
 					<table cellpadding="30" class="hpadding20 table table-bordered">
 					 <tbody>
 						 <tr valign="center">
