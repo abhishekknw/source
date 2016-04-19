@@ -735,30 +735,16 @@ class FlierAPIView(APIView):
 class StandeeBannerAPIView(APIView):
     def get(self, request, id, format=None):
         response = {}
-        try:
-            standees = SupplierTypeSociety.objects.get(pk=id).standees.all()
-            serializer = StandeeInventorySerializer(standees, many=True)
-            standee_available = get_availability(serializer.data)
-            standeeCount = SupplierTypeSociety.objects.get(pk=id).standee_count
-            response['standee_count'] = standeeCount
-            response['standee_available'] = standee_available
-            response['standee_details'] = serializer.data
+        standees = []
 
-            banners = SupplierTypeSociety.objects.get(pk=id).banners.all()
-            serializer = BannerInventorySerializer(banners, many=True)
-            banner_available = get_availability(serializer.data)
-            bannerCount = SupplierTypeSociety.objects.get(pk=id).banner_count
-            response['banner_count'] = bannerCount
-            response['banner_available'] = banner_available
-            response['banner_details'] = serializer.data
+        towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
+        for tower in towers:
+            standees.extend(tower.standees.all())
+        serializer = StandeeInventorySerializer(standees, many=True)
+        response['standee_details'] = serializer.data
 
-            return Response(response, status=200)
-        except SupplierTypeSociety.DoesNotExist:
-            return Response(status=404)
-        except StandeeInventory.DoesNotExist:
-            return Response(status=404)
-        except BannerInventory.DoesNotExist:
-            return  Response(status=404)
+        return Response(response, status=200)
+
 
     def post(self, request, id, format=None):
         society=SupplierTypeSociety.objects.get(pk=id)
