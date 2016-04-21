@@ -94,7 +94,7 @@ angular.module('machadaloPages')
               $scope.model.business = {};
               $scope.model.business.contacts = [$scope.contact];
       };
-      
+
     	$scope.create = function() {
         	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)
@@ -105,7 +105,7 @@ angular.module('machadaloPages')
                  $location.path("/campaign/" + response.id + "/societyList");
             }
             if (status == '200'){
-                 alert("The Business Has Been Created Successfully");
+              $scope.choice = "selected";
             }
         }).error(function(response, status){
              $rootScope.errorMsg = response.message ;

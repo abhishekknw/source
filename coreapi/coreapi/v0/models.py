@@ -782,6 +782,8 @@ class SupplierTypeSociety(models.Model):
     standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
     stall_count = models.IntegerField(db_column='STALL_COUNT', blank=True, null=True)  # Field name made lowercase.
     banner_count = models.IntegerField(db_column='BANNER_COUNT', blank=True, null=True)  # Field name made lowercase.
+    total_campaign = models.IntegerField(db_column='TOTAL_CAMPAIGN', blank=True, null=True)  # Field name made lowercase.
+
 
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
@@ -1046,9 +1048,9 @@ class CampaignBookingInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     campaign = models.ForeignKey(Campaign, related_name='bookings', db_column='CAMPAIGN_ID', null=True)
     booking_id = models.IntegerField(db_column='BOOKING_ID', null=True)
-    booking_amount = models.FloatField(db_column='BOKING_AMOUNT', null=True)
-    instrument_type = models.CharField(db_column='INSTRUMENT_TYPE', max_length=20, blank=True)
-    instrument_no = models.CharField(db_column='INSTRUMENT_NO', max_length=20, blank=True)
+    booking_amount = models.FloatField(db_column='BOOKING_AMOUNT', null=True)
+    payment_mode = models.CharField(db_column='PAYMENT_MODE', max_length=20, blank=True)
+    payment_no = models.CharField(db_column='PAYMENT_NO', max_length=20, blank=True)
     date_received = models.DateField(db_column='DATE_RECEIVED', null=True)
 
     class Meta:
@@ -1277,7 +1279,10 @@ class InventorySummary(models.Model):
     d2d_allowed = models.BooleanField(db_column='D2D_ALLOWED', default=False)
     flier_frequency = models.IntegerField(db_column='FLIER_FREQUENCY', null=True)
     flier_lobby_allowed = models.BooleanField(db_column='FLIER_LOBBY_ALLOWED', default=False)
-
+    poster_campaign = models.IntegerField(db_column='POSTER_CAMPAIGN', blank=True, null=True)  # Field name made lowercase.
+    standee_campaign = models.IntegerField(db_column='STANDEE_CAMPAIGN', blank=True, null=True)  # Field name made lowercase.
+    stall_or_cd_campaign = models.IntegerField(db_column='STALL_OR_CD_CAMPAIGN', blank=True, null=True)  # Field name made lowercase.
+    flier_campaign = models.IntegerField(db_column='FLIER_CAMPAIGN', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
 
