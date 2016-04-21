@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelTable(
             name='campaignsuppliertypes',
-            table='campaign_supplier_mapping',
+            table='campaign_supplier_types',
         ),
     ]

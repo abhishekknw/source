@@ -172,9 +172,9 @@ class SocietyAPIListView(APIView):
         try:
             search_txt = request.query_params.get('search', None)
             if search_txt:
-                items = SupplierTypeSociety.objects.filter(Q(supplier_id__icontains=search_txt) | Q(society_name__icontains=search_txt)| Q(society_address1__icontains=search_txt)| Q(society_city__icontains=search_txt)| Q(society_state__icontains=search_txt))
+                items = SupplierTypeSociety.objects.filter(Q(supplier_id__icontains=search_txt) | Q(society_name__icontains=search_txt)| Q(society_address1__icontains=search_txt)| Q(society_city__icontains=search_txt)| Q(society_state__icontains=search_txt)).order_by('society_name')
             else:
-                items = SupplierTypeSociety.objects.all()
+                items = SupplierTypeSociety.objects.all().order_by('society_name')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             serializer = UISocietySerializer(result_page, many=True)
@@ -188,24 +188,41 @@ class SocietyAPIFiltersListView(APIView):
             cityArea = []
             societytype = []
             flatquantity = []
+            inventorytype = []
+            filter_present = False
             if request.data['locationValueModel']:
                 for key in request.data['locationValueModel']:
                     cityArea.append(key['label'])
+                    filter_present = True
                 print cityArea
 
             if request.data['typeValuemodel']:
                 for key in request.data['typeValuemodel']:
                     societytype.append(key['label'])
+                    filter_present = True
                 print societytype
 
             if request.data['checkboxes']:
                 for key in request.data['checkboxes']:
                     if key['checked']:
                      flatquantity.append(key['name'])
+                     filter_present = True
                 print flatquantity
 
-                items = SupplierTypeSociety.objects.filter(Q(society_location_type__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
-                serializer = UISocietySerializer(items, many= True)
+            if request.data['types']:
+                for key in request.data['types']:
+                    if key['checked']:
+                     inventorytype.append(key['inventoryname'])
+                     filter_present = True
+                print inventorytype
+
+            if filter_present:
+                    items = SupplierTypeSociety.objects.filter(Q(society_location_type__in = cityArea) | Q(society_type_quality__in = societytype) | Q(society_type_quantity__in = flatquantity))
+                    serializer = UISocietySerializer(items, many= True)
+            else:
+                    items = SupplierTypeSociety.objects.all()
+                    serializer = UISocietySerializer(items, many= True)
+
             return Response(serializer.data, status = 200)
 
         except SupplierTypeSociety.DoesNotExist:
