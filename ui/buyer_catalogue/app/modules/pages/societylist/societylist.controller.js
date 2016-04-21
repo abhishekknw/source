@@ -53,16 +53,15 @@ angular.module('machadaloPages')
       societyListService.listFilterValues()
       .success(function (response){
         $scope.locationValue = response;
-        console.log(response);
       })
       $scope.model = {};
         var sObj = '';
-        societyListService.listSocieties(sObj)
+       societyListService.listSocieties(sObj)
           .success(function (response) {
              $scope.model = response.results;
              console.log(response);
       });
-      $scope.filterResult = {};
+    /*  $scope.filterResult = {};
       $scope.filterSocieties = function(typeValuemodel, locationValueModel, checkboxes, types) {
         var mySource1 = {locationValueModel};
         var mySource2 = {typeValuemodel};
@@ -73,9 +72,11 @@ angular.module('machadaloPages')
         console.log(myDest);
         societyListService.getSocietyList(myDest)
          .success(function (response){
-           $scope.filterResult = response.results;
+           $scope.model = response;
+           console.log(response);
+           //$scope.model = response;
         });
-      }
+      }*/
       //End: For displaying filter values
 
     $scope.clearFilter = function (){
@@ -125,7 +126,6 @@ angular.module('machadaloPages')
   //End: Sort Functionality
 
   $scope.societyList = function() {
-    alert('vidhi');
 	  $location.path("manageCampaign/shortlisted/" + '5' + "/societies");
 	};
   /*//pagination starts here
