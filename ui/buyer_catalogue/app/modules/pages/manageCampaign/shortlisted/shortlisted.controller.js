@@ -9,13 +9,11 @@ angular.module('machadaloPages')
 	.success(function (response, status) {
 	  console.log(response);
       $scope.model = response;
-        
+
      });
 
 	$scope.societyList = function(campaign_id) {
-	  $location.path("manageCampaign/shortlisted/" + campaign_id + "/societies");  
+	  $location.path("manageCampaign/shortlisted/" + campaign_id + "/societies");
 	};
 
 }]);
-
-

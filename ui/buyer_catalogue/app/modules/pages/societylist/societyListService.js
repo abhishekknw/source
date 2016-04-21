@@ -47,6 +47,5 @@ angular.module('machadaloPages')
      $rootScope.campaignId = null;
     }
   };
-
   return societyListService;
 }]);

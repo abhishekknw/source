@@ -39,7 +39,7 @@ angular.module('machadaloPages')
       $scope.format = $scope.formats[1];
       $scope.altInputFormats = ['M!/d!/yyyy'];
 
-      $scope.phoneNumberPattern = /^[1-9]{1}[0-9]{9}$/
+      //$scope.phoneNumberPattern = /^[1-9]{1}[0-9]{9}$/
     	$scope.campaign_type = {}
 
       $scope.contact = {
@@ -51,7 +51,7 @@ angular.module('machadaloPages')
         spoc: ''
       };
 
-      
+      var contactCopy = angular.copy($scope.contact);
       $scope.model.business.contacts = [$scope.contact];
 
       $scope.addNew = function() {
@@ -75,11 +75,25 @@ angular.module('machadaloPages')
 	    	.success(function (response, status) {
 	    		    console.log(response);
 	            $scope.model.business = response;
-	            $scope.choice_new = "selected";
+	            $scope.choice = "selected";
 	       });
+      };
 
-    	};
+      $scope.readMore = function() {
+              $scope.seeMore = "true";
+      };
 
+      $scope.editDetails = function() {
+              $scope.choice = "select";
+      };
+
+      $scope.newBusiness = function() {
+              $scope.choice = "new";
+              $scope.contact = angular.copy(contactCopy);
+              $scope.form.$setPristine();
+              $scope.model.business = {};
+              $scope.model.business.contacts = [$scope.contact];
+      };
 
     	$scope.create = function() {
         	  console.log($scope.model);
@@ -89,6 +103,9 @@ angular.module('machadaloPages')
             console.log(response);
             if (status == '201') {
                  $location.path("/campaign/" + response.id + "/societyList");
+            }
+            if (status == '200'){
+              $scope.choice = "selected";
             }
         }).error(function(response, status){
              $rootScope.errorMsg = response.message ;
