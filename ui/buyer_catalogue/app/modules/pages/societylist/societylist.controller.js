@@ -56,12 +56,13 @@ angular.module('machadaloPages')
       })
       $scope.model = {};
         var sObj = '';
-       societyListService.listSocieties(sObj)
+       societyListService.getSocietyList(sObj)
           .success(function (response) {
-             $scope.model = response.results;
-             console.log(response);
+             $scope.model = response;
+             console.log($scope.model);
+
       });
-    /*  $scope.filterResult = {};
+     $scope.filterResult = {};
       $scope.filterSocieties = function(typeValuemodel, locationValueModel, checkboxes, types) {
         var mySource1 = {locationValueModel};
         var mySource2 = {typeValuemodel};
@@ -74,9 +75,10 @@ angular.module('machadaloPages')
          .success(function (response){
            $scope.model = response;
            console.log(response);
+           console.log($scope.model);
            //$scope.model = response;
         });
-      }*/
+      }
       //End: For displaying filter values
 
     $scope.clearFilter = function (){
@@ -97,6 +99,12 @@ angular.module('machadaloPages')
         {"inventoryname": "Flier Campaign", checked: false}
       ];
       $scope.types = inventorytype;
+      societyListService.getSocietyList(sObj)
+         .success(function (response) {
+            $scope.model = response;
+            console.log($scope.model);
+
+     });
     }
 
    //Start:For adding shortlisted society

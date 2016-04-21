@@ -28,7 +28,7 @@
 	  </div>
 			<!-- End of padding -->
 			<div class="itemscontainer offset-1">
-				<div class="offset-2" ng-repeat="row in model | orderBy:predicate:reverse" dir-paginate="row in model | itemsPerPage:2">
+				<div class="offset-2"  dir-paginate="row in model | itemsPerPage:4">
 					<table cellpadding="30" class="hpadding20 table table-bordered">
 					 <tbody>
 						 <tr valign="center">
@@ -50,7 +50,7 @@
 							</tr>
 							<tr align="center">
 								 <td><h4>{{row.society_type_quality}}</h4><p style="color:#949292">Type of society</p></td>
-								 <td><h4>{{row.society_locality}}</h4><p style="color:#949292">Locality rating</p></td>
+								 <td><h4>{{row.society_location_type}}</h4><p style="color:#949292">Locality rating</p></td>
 								 <td><h4>{{row.machadalo_index}}</h4><p style="color:#949292">Machadalo Index</p></td>
 								 <td><h4>{{row.total_adspaces}}</h4><p style="color:#949292">Ad Spaces</p></td>
 							</tr>
