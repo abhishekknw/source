@@ -8,4 +8,7 @@ angular.module('machadaloPages')
         $scope.viewDetails = function() {
                 $scope.show = "details";
         };
+        $scope.hideDetails = function() {
+                $scope.show = "default";
+        };
   }]);
