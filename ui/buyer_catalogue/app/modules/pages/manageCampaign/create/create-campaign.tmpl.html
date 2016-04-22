@@ -1,16 +1,14 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
   <div class="page-container">
-    <div class="col-md-8">
+    <div class="col-md-10">
     	<form class="choices">
 	    <div class="form-group">
 	    	<div class="row">
 		      	<div class="col-md-4">
 		      		<label for="existing">Select existing Business</label>
-		      	</div>
-			    <div class="col-md-2">
-			    	<input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
+			    	  <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
 			    </div>
-			    <div class="col-md-6">
+			    <div class="col-md-4">
 				  	<span class = "" ng-show ="choice == 'existing'">
 				   	<select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
 				    <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
@@ -19,8 +17,6 @@
 	      		</div>
             <div class="col-md-4">
 	      			<label for="new">Create New Business</label>
-	      		</div>
-	      		<div class="col-md-2">
 	      			<input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
             </div>
 	      </div>
@@ -109,7 +105,8 @@
           </div>
         </div>
       </div>
-      <form name = "form2" ng-show="choice == 'selected'" class="">
+
+      <form name = "campaignform" ng-show="choice == 'selected'" class="">
         <div class = "panel panel-default business-panel">
           <h3 class "panel-heading">Campaign Details</h3>
           <ul class = "nav nav-pills" >

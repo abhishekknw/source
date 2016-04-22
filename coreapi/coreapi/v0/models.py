@@ -1048,9 +1048,9 @@ class CampaignBookingInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     campaign = models.ForeignKey(Campaign, related_name='bookings', db_column='CAMPAIGN_ID', null=True)
     booking_id = models.IntegerField(db_column='BOOKING_ID', null=True)
-    booking_amount = models.FloatField(db_column='BOKING_AMOUNT', null=True)
-    instrument_type = models.CharField(db_column='INSTRUMENT_TYPE', max_length=20, blank=True)
-    instrument_no = models.CharField(db_column='INSTRUMENT_NO', max_length=20, blank=True)
+    booking_amount = models.FloatField(db_column='BOOKING_AMOUNT', null=True)
+    payment_mode = models.CharField(db_column='PAYMENT_MODE', max_length=20, blank=True)
+    payment_no = models.CharField(db_column='PAYMENT_NO', max_length=20, blank=True)
     date_received = models.DateField(db_column='DATE_RECEIVED', null=True)
 
     class Meta:

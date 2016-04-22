@@ -272,3 +272,21 @@ class BookCampaignAPIView(APIView):
             return Response(status=200)
         except :
             return Response(status=404)
+<<<<<<< HEAD
+
+
+class FinalCampaignBookingAPIView(APIView):
+
+    def post(self, request, format=None):
+
+        if 'campaign_id' in request.data:
+            try:
+                campaign = Campaign.objects.get(pk=request.data['campaign_id'])
+            except Campaign.DoesNotExist:
+                return Response(status=404)
+        else:
+            return Response(status=400)
+
+        return Response({"message": "Campaign Booked Successfully"}, status=200)
+=======
+>>>>>>> d0be1e8560899da026c3999a1f4d21a1cf5dfd7b
