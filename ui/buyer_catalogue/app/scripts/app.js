@@ -129,8 +129,12 @@ angular
           url : '/info', //:societyId/
           templateUrl: 'modules/common/infotab/societyinfo-tab.tmpl.html',
           controller: ''
-        });
-        /*
+        })
+        .state('manageCampaign.ongoingcampaign', {
+            url : '/ongoingcampaign',
+            controller: 'OngoingCampaignCtrl',
+            templateUrl: 'modules/pages/manageCampaign/ongoingcampaign/ongoing-campaign.tmpl.html'
+          });        /*
         .state('catalogue.home', {
           url : '/catalogue',
           templateUrl: 'views/society-home.html',
