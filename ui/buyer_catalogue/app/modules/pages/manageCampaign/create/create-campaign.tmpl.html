@@ -240,7 +240,8 @@
               <div class = "row">
 	              	<div class = "col-md-3"><label>Phone</label></div>
 	              	<div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-required="true" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="contact.phone"/>
-	              	<span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span></div>
+	              	 <span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span>
+                  </div>
 
                   <div class = "col-md-3"><label>Single Point of Contact?</label></div>
 	            		<div class = "col-md-3"><input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=true>Yes &nbsp
