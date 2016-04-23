@@ -74,9 +74,6 @@ angular.module('machadaloPages')
         societyListService.getSocietyList(myDest)
          .success(function (response){
            $scope.model = response;
-           console.log(response);
-           console.log($scope.model);
-           //$scope.model = response;
         });
       }
       //End: For displaying filter values
@@ -108,11 +105,17 @@ angular.module('machadaloPages')
     }
 
    //Start:For adding shortlisted society
+   $scope.disable = false;
    if($rootScope.campaignId){
      $scope.shortlistThis = function(id) {
-       alert(id);
      societyListService.addShortlistedSociety($rootScope.campaignId, id)
       .success(function (response){
+        //for disabling shortlisted society button
+          $scope.disable = function(id){
+            if(response.id == id){
+                return true;
+            }
+          }
           console.log(response);
      });
    }}//End: For adding shortlisted society
