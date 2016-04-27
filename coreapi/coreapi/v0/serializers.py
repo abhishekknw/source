@@ -75,6 +75,11 @@ class LiftDetailsSerializer(ModelSerializer):
         )
 
 
+class StandeeInventorySerializer(ModelSerializer):
+    class Meta:
+        model = StandeeInventory
+
+
 
 class NoticeBoardDetailsSerializer(ModelSerializer):
 

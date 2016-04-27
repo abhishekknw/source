@@ -54,3 +54,11 @@ class UIPosterSerializer(ModelSerializer):
         #'lift_details',
         )
 
+class StandeeSerializer(ModelSerializer):
+    tower_name = serializers.CharField(source='get_tower_name1')
+    class Meta:
+        model = StandeeInventory
+        depth=1
+        read_only_fields = (
+        'tower_name'
+        )

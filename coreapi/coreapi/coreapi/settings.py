@@ -87,11 +87,11 @@ DATABASES = {
     },
 
     'default': {
-         'NAME':'vidhitest',
+         'NAME':'machadalo_tech',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': '127.0.0.1',
          'USER': 'root',
-         'PASSWORD': 'vidhi',
+         'PASSWORD': '',
      }
     }
 

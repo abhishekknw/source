@@ -343,9 +343,17 @@ class StandeeInventory(models.Model):
     #standee_weekly_price_business = models.CharField(db_column='STANDEE_WEEKLY_PRICE_BUSINESS', max_length=5, blank=True, null=True)  # Field name made lowercase.
     #standee_monthly_price_business = models.CharField(db_column='STANDEE_MONTHLY_PRICE_BUSINESS', max_length=5, blank=True, null=True)  # Field name made lowercase.
     tower = models.ForeignKey('SocietyTower', db_column='TOWER_ID', related_name='standees', blank=True, null=True)  # Field name made lowercase.
-    class Meta:
 
+    def get_tower_name1(self):
+        try:
+            return self.tower.tower_name
+        except:
+            return None
+
+    class Meta:
         db_table = 'standee_inventory'
+
+
 
 
 class SwimmingPoolInfo(models.Model):

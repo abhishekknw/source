@@ -124,6 +124,7 @@ class CampaignAPIView(APIView):
         try:
             status = request.query_params.get('status', None)
             if status:
+                print status
                 items = Campaign.objects.filter(booking_status=status)
             else:
                 items = Campaign.objects.all()
@@ -272,7 +273,7 @@ class BookCampaignAPIView(APIView):
             return Response(status=200)
         except :
             return Response(status=404)
-<<<<<<< HEAD
+
 
 
 class FinalCampaignBookingAPIView(APIView):
@@ -288,5 +289,3 @@ class FinalCampaignBookingAPIView(APIView):
             return Response(status=400)
 
         return Response({"message": "Campaign Booked Successfully"}, status=200)
-=======
->>>>>>> d0be1e8560899da026c3999a1f4d21a1cf5dfd7b
