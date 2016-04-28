@@ -311,9 +311,9 @@ class FlatTypeAPIView(APIView):
                 else:
                     flag = False
 
-                if 'size_builtup_area' in key and key['size_builtup_area'] > 0:
+                '''if 'size_builtup_area' in key and key['size_builtup_area'] > 0:
                     builtup = key['size_builtup_area']/1.2
-                    key['size_carpet_area'] = builtup
+                    key['size_carpet_area'] = builtup'''
 
                 if 'flat_count' in key and key['flat_count'] > 0:
                     totalFlats = totalFlats+key['flat_count']
@@ -354,7 +354,6 @@ class InventorySummaryAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        print request.data
         try:
             society = SupplierTypeSociety.objects.get(pk=id)
             towercount = SupplierTypeSociety.objects.get(pk=id).tower_count
@@ -386,8 +385,8 @@ class InventorySummaryAPIView(APIView):
                     flier_campaign = request.data['flier_frequency']
                     request.data['flier_campaign'] = flier_campaign
 
-            society = SupplierTypeSociety.objects.get(supplier__supplier_id=id)
-            society.total_campaign = poster_campaign+standee_campaign+stall_campaign+flier_campaign
+            societyId = SupplierTypeSociety.objects.get(pk=id)
+            societyId.total_campaign = poster_campaign+standee_campaign+stall_campaign+flier_campaign
             society.save()
 
             if 'id' in request.data:
@@ -398,8 +397,8 @@ class InventorySummaryAPIView(APIView):
             if serializer.is_valid():
                 serializer.save(supplier=society)
 
-                if request.data['poster_price_week']!=None:
-                    posPrice = request.data['poster_price_week']
+                if request.data['poster_price_week_nb']!=None:
+                    posPrice = request.data['poster_price_week_nb']
                     #change_price(id, 'POSTER', 'A3','Campaign Weekly', posPrice)
                     if request.data['poster_allowed_nb']==True:
                         if request.data['nb_A3_allowed']== True:
