@@ -229,6 +229,22 @@ class DoorToDoorInfo(models.Model):
         db_table = 'door_to_door_info'
 
 
+class FlierThroughLobbyInfo(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
+    supplier = models.ForeignKey('SupplierTypeSociety', related_name='flier_lobby', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
+    flier_distribution_frequency_lobby = models.CharField(db_column='FLIER_DISTRIBUTION_FREQUENCY_LOBBY', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    flier_lobby_inventory_status = models.CharField(db_column='FLIER_LOBBY_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase.
+    flier_lobby_price_society = models.FloatField(db_column='FLIER_LOBBY_PRICE_SOCIETY', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    flier_lobby_price_business = models.FloatField(db_column='FLIER_LOBBY_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    master_flier_lobby_price_society = models.FloatField(db_column='MASTER_FLIER_LOBBY_PRICE_SOCIETY', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    master_flier_lobby_price_business = models.FloatField(db_column='MASTER_FLIER_LOBBY_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+
+        db_table = 'flier_through_lobby_info'
+
+
 class LiftDetails(models.Model):
     lift_tag = models.CharField(db_column='LIFT_TAG', max_length=20, blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
@@ -473,7 +489,7 @@ class SocietyMajorEvents(models.Model):
     AnnualDay = models.BooleanField(db_column='AnnualDay', default=False)
     Christmas = models.BooleanField(db_column='Christmas', default=False)
     NewYear = models.BooleanField(db_column='NewYear', default=False)
-    past_major_events = models.CharField(db_column='past_major_events', max_length=60, blank=True, null=True)
+    past_major_events = models.IntegerField(db_column='PAST_MAJOR_EVENTS', blank=True, null=True)
 
 
 class Events(models.Model):
@@ -536,6 +552,7 @@ class MailboxInfo(models.Model):
     class Meta:
 
         db_table = 'mailbox_info'
+
 
 
 class OperationsInfo(models.Model):

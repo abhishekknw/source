@@ -194,6 +194,13 @@ def set_default_pricing(society_id):
                     if(type.adinventory_type=='Customize'):
                         pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
                         pmdefault.save()
+                if(duration.duration_name=='2 Days'):
+                    if ((type.adinventory_type=='Canopy')|(type.adinventory_type=='Small')|(type.adinventory_type=='Large')):
+                        pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
+                        pmdefault.save()
+                    if(type.adinventory_type=='Customize'):
+                        pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
+                        pmdefault.save()
             if ((type.adinventory_name=='CAR DISPLAY')&(duration.duration_name=='Unit Daily')):
                 if ((type.adinventory_type=='Standard')|(type.adinventory_type=='Premium')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
@@ -755,12 +762,20 @@ class FlierAPIView(APIView):
             response['door_to_door_allowed'] = door_to_door_allowed
             response['door_to_door_details'] = serializer.data
 
+            flier_lobby = SupplierTypeSociety.objects.get(pk=id).flier_lobby.all()
+            serializer = FlierThroughLobbyInfoSerializer(flier_lobby, many=True)
+            flier_lobby_allowed = get_availability(serializer.data)
+            response['flier_lobby_allowed'] = flier_lobby_allowed
+            response['flier_lobby_details'] = serializer.data
+
             return Response(response, status=200)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
         except MailboxInfo.DoesNotExist:
             return Response(status=404)
         except DoorToDoorInfo.DoesNotExist:
+            return Response(status=404)
+        except FlierThroughLobbyInfo.DoesNotExist:
             return Response(status=404)
 
     def post(self, request, id, format=None):
