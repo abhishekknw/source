@@ -161,7 +161,7 @@ class BannerInventory(models.Model):
         db_table = 'banner_inventory'
 
 
-class CarDisplayInventory(models.Model):
+'''class CarDisplayInventory(models.Model):
     inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
     car_display_location = models.CharField(db_column='CAR_DISPLAY_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -176,7 +176,7 @@ class CarDisplayInventory(models.Model):
 
     class Meta:
 
-        db_table = 'car_display_inventory'
+        db_table = 'car_display_inventory'  '''
 
 
 class CommunityHallInfo(models.Model):
@@ -643,7 +643,24 @@ class StallInventory(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='stalls', blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22)  # Field name made lowercase.
-    type = models.CharField(db_column='STALL_TYPES', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    stall_small = models.BooleanField(db_column='STALL_SMALL', default=False)
+    stall_canopy = models.BooleanField(db_column='STALL_CANOPY', default=False)
+    stall_medium = models.BooleanField(db_column='STALL_MEDIUM', default=False)
+    car_standard = models.BooleanField(db_column='CAR_STANDARD', default=False)
+    car_premium = models.BooleanField(db_column='CAR_PREMIUM', default=False)
+    stall_morning = models.BooleanField(db_column='STALL_MORNING', default=False)
+    stall_evening = models.BooleanField(db_column='STALL_EVENING', default=False)
+    stall_time_both = models.BooleanField(db_column='STALL_TIME_BOTH', default=False)
+    stall_location = models.CharField(db_column='STALL_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    electricity_available = models.BooleanField(db_column='ELECTRICITY_AVAILABLE_STALLS', default=False)  # Field name made lowercase.
+    electricity_charges_daily = models.FloatField(db_column='ELECTRICITY_CHARGES_DAILY', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    sound_system_allowed = models.BooleanField(db_column='SOUND_SYSTEM_ALLOWED', default=False)  # Field name made lowercase.
+    furniture_available = models.BooleanField(db_column='STALL_FURNITURE_AVAILABLE', default=False)  # Field name made lowercase.
+    furniture_details = models.CharField(db_column='STALL_FURNITURE_DETAILS', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    stall_size = models.CharField(db_column='STALL_SIZE', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    stall_timing = models.CharField(db_column='STALL_TIMINGS', max_length=20, blank=True, null=True)  # Field name made lowercase.
+
+    #type = models.CharField(db_column='STALL_TYPES', max_length=20, blank=True, null=True)  # Field name made lowercase.
     #stall_timings_morning = models.CharField(db_column='STALL_TIMINGS_morning', max_length=10, blank=True, null=True)  # Field name made lowercase.
     #stall_size_area = models.FloatField(db_column='STALL_SIZE_AREA', blank=True, null=True, default=0.0)  # Field name made lowercase.
     #stall_daily_price_stall_society = models.CharField(db_column='STALL_DAILY_PRICE_STALL_SOCIETY', max_length=15, blank=True, null=True)  # Field name made lowercase.
@@ -652,16 +669,8 @@ class StallInventory(models.Model):
     #stall_timings_evening = models.TimeField(db_column='STALL_TIMINGS_evening', blank=True, null=True)  # Field name made lowercase.
     #photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True, null=True)  # Field name made lowercase.
     #photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
-    stall_location = models.CharField(db_column='STALL_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    electricity_available_stalls = models.CharField(db_column='ELECTRICITY_AVAILABLE_STALLS', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    electricity_charges_daily = models.FloatField(db_column='ELECTRICITY_CHARGES_DAILY', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    sound_system_allowed = models.CharField(db_column='SOUND_SYSTEM_ALLOWED', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    stall_furniture_available = models.CharField(db_column='STALL_FURNITURE_AVAILABLE', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    stall_furniture_details = models.CharField(db_column='STALL_FURNITURE_DETAILS', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    stall_inventory_status = models.CharField(db_column='STALL_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase
-    stall_size = models.CharField(db_column='STALL_SIZE', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    stall_timing = models.CharField(db_column='STALL_TIMINGS', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    stall_availability = models.CharField(db_column='STALL_AVAILABILITY', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    #stall_availability = models.CharField(db_column='STALL_AVAILABILITY', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    #stall_inventory_status = models.CharField(db_column='STALL_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase
 
     class Meta:
 
