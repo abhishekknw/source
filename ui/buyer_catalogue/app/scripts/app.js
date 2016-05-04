@@ -75,6 +75,11 @@ angular
           controller: 'CreateCampaignCtrl',
           templateUrl: 'modules/pages/manageCampaign/create/create-campaign.tmpl.html'
         })
+        .state('manageCampaign.proposal', {
+            url : '/proposal',
+            controller: 'CreateProposalCtrl',
+            templateUrl: 'modules/pages/manageCampaign/createproposal/create-proposal.tmpl.html'
+          })
       .state('manageCampaign.shortlisted', {
           url : '/shortlisted',
           controller: 'ShortlistedCampaignCtrl',
@@ -130,7 +135,7 @@ angular
           templateUrl: 'modules/common/infotab/societyinfo-tab.tmpl.html',
           controller: ''
         })
-        .state('manageCampaign.ongoingcampaign', {
+      .state('manageCampaign.ongoingcampaign', {
             url : '/ongoingcampaign',
             controller: 'OngoingCampaignCtrl',
             templateUrl: 'modules/pages/manageCampaign/ongoingcampaign/ongoing-campaign.tmpl.html'
