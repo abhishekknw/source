@@ -610,7 +610,7 @@ class TowerAPIView(APIView):
             if flag:
                 self.save_lift_locations(0, key['lift_count'], tower_data)
                 self.save_nb_locations(0, key['notice_board_count_per_tower'], tower_data)
-                self.save_standee_locations(0, key['standee_count'], tower_data)
+                self.save_standee_locations(0, key['standee_count'], tower_data, society)
 
             if key['flat_type_details_available']:
                 for index, flat in enumerate(key['flat_type_details'], start=1):
@@ -666,10 +666,10 @@ class TowerAPIView(APIView):
             nb.save()
             i += 1
 
-    def save_standee_locations(self, c1, c2, tower):
+    def save_standee_locations(self, c1, c2, tower, society):
         i = c1 + 1
         while i <= c2:
-            sd_tag = tower.tower_tag + "0000SD" + str(i).zfill(2)
+            sd_tag = society.supplier_id + tower.tower_tag + "0000SD" + str(i).zfill(2)
             sd = StandeeInventory(adinventory_id=sd_tag, tower=tower)
             sd.save()
             i += 1
