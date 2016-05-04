@@ -10,8 +10,8 @@ urlpatterns = patterns('',
     url(r'^bannerinventory/(?P<id>[0-9]+)$', views.BannerInventoryAPIView.as_view()),
     url(r'^bannerinventory/$', views.BannerInventoryAPIListView.as_view()),
 
-    url(r'^cardisplayinventory/(?P<id>[0-9]+)$', views.CarDisplayInventoryAPIView.as_view()),
-    url(r'^cardisplayinventory/$', views.CarDisplayInventoryAPIListView.as_view()),
+    #url(r'^cardisplayinventory/(?P<id>[0-9]+)$', views.CarDisplayInventoryAPIView.as_view()),
+    #url(r'^cardisplayinventory/$', views.CarDisplayInventoryAPIListView.as_view()),
 
     url(r'^communityhallinfo/(?P<id>[0-9]+)$', views.CommunityHallInfoAPIView.as_view()),
     url(r'^communityhallinfo/$', views.CommunityHallInfoAPIListView.as_view()),
