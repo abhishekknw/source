@@ -290,7 +290,7 @@ class NoticeBoardDetails(models.Model):
             return self.tower.tower_name
         except:
             return None
-
+    
     class Meta:
         db_table = 'notice_board_details'
 
@@ -1331,6 +1331,7 @@ class InventorySummary(models.Model):
     premium_price_confidence = models.CharField(db_column='PREMIUM_PRICE_CONFIDENCE', max_length=20, blank = True, null=True)
     flier_price_confidence = models.CharField(db_column='FLIER_PRICE_CONFIDENCE', max_length=20, blank = True, null=True)
     poster_count_per_tower = models.IntegerField(db_column='POSTER_COUNT_PER_TOWER', null=True)
+    poster_count_per_nb = models.IntegerField(db_column='POSTER_COUNT_PER_NB', null=True)
     standee_count_per_tower = models.IntegerField(db_column='STANDEE_COUNT_PER_TOWER', null=True)
 
 
