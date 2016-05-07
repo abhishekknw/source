@@ -87,12 +87,11 @@ DATABASES = {
     },
 
     'default': {
-         'NAME':'machadalo',
+         'NAME':'machadalo_tech',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': '127.0.0.1',
          'USER': 'root',
-
-         'PASSWORD': 'khush123',
+         'PASSWORD': '',
      }
     }
 
@@ -110,7 +109,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
@@ -121,7 +119,6 @@ STATIC_URL = '/static/'
 
 '''REST_FRAMEWORK = {
     # other settings...
-
     'DEFAULT_AUTHENTICATION_CLASSES': [],
     'DEFAULT_PERMISSION_CLASSES': [],
 }'''

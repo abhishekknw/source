@@ -1,5 +1,5 @@
 .page-container{
-	padding: 15px;
+	padding: 5px;
 	position: relative;
 }
 .business-panel{
@@ -26,4 +26,8 @@
 }
 .submit-button{
 	padding-top: 10px;
+}
+.textbox
+{
+		padding: 5px;
 }

@@ -51,7 +51,7 @@ angular.module('machadaloPages')
         spoc: ''
       };
 
-
+      var contactCopy = angular.copy($scope.contact);
       $scope.model.business.contacts = [$scope.contact];
 
       $scope.addNew = function() {
@@ -83,8 +83,16 @@ angular.module('machadaloPages')
               $scope.seeMore = "true";
       };
 
-      $scope.readLess = function() {
-              $scope.seeMore = "false";
+      $scope.editDetails = function() {
+              $scope.choice = "select";
+      };
+
+      $scope.newBusiness = function() {
+              $scope.choice = "new";
+              $scope.contact = angular.copy(contactCopy);
+              $scope.form.$setPristine();
+              $scope.model.business = {};
+              $scope.model.business.contacts = [$scope.contact];
       };
 
     	$scope.create = function() {
@@ -95,6 +103,9 @@ angular.module('machadaloPages')
             console.log(response);
             if (status == '201') {
                  $location.path("/campaign/" + response.id + "/societyList");
+            }
+            if (status == '200'){
+              $scope.choice = "selected";
             }
         }).error(function(response, status){
              $rootScope.errorMsg = response.message ;

@@ -65,7 +65,6 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       return machadaloHttp.get(url);
     };
 
-
     pagesService.processParam = function(){
      if($stateParams.campaignId){
        $rootScope.campaignId = $stateParams.campaignId;

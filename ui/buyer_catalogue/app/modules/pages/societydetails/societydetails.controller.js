@@ -11,15 +11,18 @@ angular.module('machadaloPages')
         console.log(response);
      });
 
+     $scope.societyList = function() {
+       $location.path("manageCampaign/shortlisted/" + $rootScope.campaignId + "/societies");
+     };
+
      //Start:For adding shortlisted society
      if($rootScope.campaignId){
-       $scope.shortlistThis = function() {
-         alert('bhvidhi');
-       societyListService.addShortlistedSociety($rootScope.campaignId, id)
+       $scope.shortlistThis = function(id) {
+       societyDetailsService.addShortlistedSociety($rootScope.campaignId, id)
         .success(function (response){
             $scope.model = response;
               console.log(response);
+              $location.path("manageCampaign/shortlisted/" + $rootScope.campaignId + "/societies");
        });
      }}//End: For adding shortlisted society
-
    }]);//Controller function ends here

@@ -3,45 +3,45 @@
 			<div class="hpadding20">
 				<div class="topsortby">
 				 <div class="col-md-4 offset-0">
-					 <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Booking Id</b><br>MAC1234</div>
+					 <div class="left mt7"><b class = "details">Campaign Id</b><br>MAC123</div>
 					</div>
           <div class = "col-md-4 offset-0">
-            <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Campaign Start Date</b><br>27-05-2016</div>
+            <div class="left mt7"><b class = "details">Campaign Start Date</b><br>15-04-2016</div>
           </div>
           <div class = "col-md-4 offset-0">
-            <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Campaign End Date</b><br>31-05-2016</div>
+            <div class="left mt7"><b class = "details">Campaign End Date</b><br>20-04-2016</div>
           </div>
 				</div>
 	     </div>
        <div class="hpadding20">
  				 <div class="col-md-4 offset-0">
- 					 <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Payment Details</b>
+ 					 <div class="left mt7"><b class = "details">Payment Details</b>
              <br>
              <div class="left mt7">Total Amount</div>
            </div>
  					</div>
             <br>
             <br>
-          <div class="table-responsive">
+          <div class="table-responsive col-md-12">
           <div style = "margin: 20px;">
             <table class="table table-bordered table-condensed">
               <thead>
                 <tr>
-                  <th>Booking Amount</th>
-                  <th>Payment Mode</th>
-                  <th>Payment Detail</th>
-                  <th>Date</th>
+                  <th class = "col-md-3">Booking Amount</th>
+                  <th class = "col-md-3">Payment Mode</th>
+                  <th class = "col-md-3">Payment Detail</th>
+                  <th class = "col-md-3">Date</th>
                 </tr>
               </thead>
               <tbody>
                 <tr ng-repeat="payment in payments">
                   <td>
                     <p class="input-group">
-                      <input type="text" ng-model = "payment.booking_amount"/>
+                      <input type="number" class = "form-control" ng-model = "payment.booking_amount"/>
                     </p>
                   </td>
 		                <td>
-                      <select ng-model = "payment.payment_mode">
+                      <select ng-model = "payment.payment_mode" class = "form-control">
                         <option>Cheque</option>
                         <option>Cash</option>
                         <option>Demand Draft</option>
@@ -49,7 +49,7 @@
                     </td>
 		                <td>
                       <p class="input-group">
-                        <input type="text" ng-model = "payment.payment_detail"/>
+                        <input type="text" class = "form-control" ng-model = "payment.payment_detail"/>
                       </p>
                     </td>
                     <td>
@@ -69,28 +69,26 @@
        <hr>
  	    </div>
       <div class="hpadding20">
-        <div class="col-md-8 offset-0">
-          <div class="left mt7"><b style = "color: #949292; text-align: -webkit-center">Summary Details</b>
+        <div class="col-md-12 offset-0">
+          <div class="left mt7"><b class = "details">Summary Details</b>
             <br><br>
-            <div class="row form-group">
-              <span class="col-md-6" style="margin-top: 8px;">Total Campaign Cost:</span>
-              <span class="col-md-6">
-                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+            <div class = "row form-group">
+              <span class = "col-md-3 paymentdetails">Total Campaign Cost:</span>
+              <span class = "col-md-3">
+                <input type = "number" class="form-control"/>
+              </span>
+              <span class="col-md-3 paymentdetails">Discount Given:</span>
+              <span class="col-md-3">
+                <input type="number" class="form-control"/>
               </span>
               <br><br>
-              <span class="col-md-6" style="margin-top: 8px;">Discount Given</span>
-              <span class="col-md-6">
-                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              <span class="col-md-3 paymentdetails">Total Amount Paid</span>
+              <span class="col-md-3">
+                <input type="number" class="form-control"/>
               </span>
-              <br><br>
-              <span class="col-md-6" style="margin-top: 8px;">Total Amount Paid</span>
-              <span class="col-md-6">
-                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
-              </span>
-              <br><br>
-              <span class="col-md-6" style="margin-top: 8px;">Amount Payable</span>
-              <span class="col-md-6">
-                <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              <span class="col-md-3 paymentdetails">Amount Payable</span>
+              <span class="col-md-3">
+                <input type="number" class="form-control"/>
               </span>
             </div>
           </div>

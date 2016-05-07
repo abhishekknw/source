@@ -1,16 +1,14 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
   <div class="page-container">
-    <div class="col-md-8">
+    <div class="col-md-10">
     	<form class="choices">
 	    <div class="form-group">
 	    	<div class="row">
 		      	<div class="col-md-4">
 		      		<label for="existing">Select existing Business</label>
-		      	</div>
-			    <div class="col-md-2">
-			    	<input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
+			    	  <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
 			    </div>
-			    <div class="col-md-6">
+			    <div class="col-md-4">
 				  	<span class = "" ng-show ="choice == 'existing'">
 				   	<select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
 				    <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
@@ -19,15 +17,13 @@
 	      		</div>
             <div class="col-md-4">
 	      			<label for="new">Create New Business</label>
-	      		</div>
-	      		<div class="col-md-2">
 	      			<input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
             </div>
 	      </div>
 	      </div>
    		</form>
 
-	    <form name = "form" ng-show="choice == 'selected'" class="">
+	    <form name = "form1" ng-show="choice == 'selected'" class="">
 	      <div class = "panel panel-default business-panel">
 	      <div class = "table">
 	      	<div class = "row">
@@ -49,7 +45,7 @@
 	      		<div class = "col-md-3"><label>Business Address</label></div>
 	      		<div class = "col-md-3">{{model.business.address}}</div>
 	      	</div>
-	    <!--  	<div class = "row">
+	      	<div class = "row">
 	      		<div class = "col-md-3"><label>Reference Contact Name</label></div>
 	      		<div class = "col-md-3">{{model.business.reference_name}}</div>
 	      		<div class = "col-md-3"><label>Reference Contact Phone</label></div>
@@ -58,8 +54,6 @@
 	      	<div class = "row">
 	      		<div class = "col-md-3"><label>Reference Contact Email</label></div>
 	      		<div class = "col-md-3">{{model.business.reference_email}}</div>
-          </div> -->
-          <div class = "row">
 	      		<div class = "col-md-3"><label>Comments</label></div>
 	      		<div class = "col-md-3">{{model.business.comments}}</div>
 	      	</div>
@@ -74,34 +68,35 @@
       </div>
     </form>
 
-      <form name="form" ng-show = "choice == 'selected'" class="" ng-submit="create()" role="form">
 	      <!-- Modal Window to view the contact details -->
+
       <div id="detailModal" class="modal fade">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title">Business Contact Details</h4>
+                <hr/>
                 <!-- For loop to fetch the contact array -->
-                <div class = "modal-body" style = "height: 500px;">
-	               <div class = "table" ng-repeat = "contact in model.business.contacts track by $index">
+                <div class = "modal-body" style = "height: 300px;">
+	               <div class = "table" ng-repeat="contact in model.business.contacts track by $index">
 	      	           <div class = "row">
-                       <div><label>Name</label></div>
-	      		            <div>{{contact.name}}</div>
-	      		            <div><label>Designation</label></div>
-	      		            <div>{{contact.designation}}</div>
+                       <div class = "col-md-3"><label>Name</label></div>
+	      		            <div class = "col-md-3">{{contact.name}}</div>
+	      		            <div class = "col-md-3"><label>Designation</label></div>
+	      		            <div class = "col-md-3">{{contact.designation}}</div>
 	      	            </div>
 	      	            <div class = "row">
-	      		            <div><label>Department</label></div>
-	      		            <div>{{contact.department}}</div>
-	      		            <div><label>Email</label></div>
-	      		            <div>{{contact.email}}</div>
+	      		            <div class = "col-md-3"><label>Department</label></div>
+	      		            <div class = "col-md-3">{{contact.department}}</div>
+	      		            <div class = "col-md-3"><label>Email</label></div>
+	      		            <div class = "col-md-3">{{contact.email}}</div>
 	      	            </div>
 	      	            <div class = "row">
-	      		            <div><label>Phone</label></div>
-	      		            <div>{{contact.phone}}</div>
-	      		            <div><label>Single Point of Contact</label></div>
-	      		            <div>{{contact.spoc}}</div>
+	      		            <div class = "col-md-3"><label>Phone</label></div>
+	      		            <div class = "col-md-3">{{contact.phone}}</div>
+	      		            <div class = "col-md-3"><label>Single Point of Contact</label></div>
+	      		            <div class = "col-md-3">{{contact.spoc}}</div>
 	      	            </div>
                       <br>
 	               </div>
@@ -110,10 +105,37 @@
           </div>
         </div>
       </div>
-	  </form>
 
-      <form name="form" ng-show = "choice == 'new'" class="" ng-submit="create()" role="form">
-      	<div class="panel panel-default business-panel">
+      <form name = "campaignform" ng-show="choice == 'selected'" class="">
+        <div class = "panel panel-default business-panel">
+          <h3 class "panel-heading">Campaign Details</h3>
+          <ul class = "nav nav-pills" >
+            <li class="active"><a data-toggle="tab" href="#1a"><span class="hidetext">Ongoing Campaign</span>&nbsp;</a></li>
+            <li><a data-toggle="tab" href="#2a"><span class="hidetext">Upcoming Campaign</span>&nbsp;</a></li>
+            <li><a data-toggle="tab" href="#3a"><span class="hidetext">Completed Campaign</span>&nbsp;</a></li>
+          </ul>
+          <div class="tab-content clearfix">
+          <div id = "1a" class = "tab-pane fade active in">
+            <h3>List of Ongoing Campaign</h3>
+            <div class="row">
+              <div class="col-md-8"></div>
+              <div class="col-md-4">
+                <button type="button" class="shortlist btn btn-danger btn-lg active" ng-click = "shortlistThis(row.supplier_id)">Edit</button><br><br>
+                <button type="button" class="viewdetail btn btn-default btn-lg active" ng-click = "catalogue(row.supplier_id)" >Details</button>
+              </div>
+            </div>
+          </div>
+          <div id = "2a" class = "tab-pane fade in">
+            <h3>List of Upcoming Campaign</h3>
+          </div>
+          <div id = "3a" class = "tab-pane fade in">
+            <h3>List of completed Campaign</h3>
+          </div>
+        </div>
+        </div>
+     </form>
+      <form name = "form" ng-show = "choice == 'select'|| choice == 'new'" class="" ng-submit="create()" role="form">
+      	<div class = "panel panel-default business-panel">
         	<h3 class = "panel-heading">Create Business</h3>
 	         <div class="errorMessages">
 	            <span ng-show="form.username.$dirty && form.username.$error.required" class="help-block">Username is required</span>
@@ -152,7 +174,7 @@
 	              		<span class="show-error" ng-show="form.business_phone.$error.pattern">Please Enter Valid Phone Number</span></div>
 
                     <div class = "col-md-3"><label>Business Address</label></div>
-	              		<div class = "col-md-3"><input type="text" name="address" id="address" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.address" />
+	              		<div class = "col-md-3"><input type="text" name="address" id="address" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\,\.\s]+$/" ng-model="model.business.address" />
 	              		<span class="show-error" ng-show="form.address.$error.pattern">Please Enter Valid Address</span></div>
 	              </div>
 	           </div>
@@ -186,9 +208,9 @@
           </div>
        </div>
 
-       <div ng-repeat="contact in model.business.contacts track by $index">
-	      <div class="panel panel-default business-panel">
-        	<h3 class = "panel-heading">Business Contact</h3>
+       <div class="panel panel-default business-panel">
+         <h3 class = "panel-heading">Business Contact</h3>
+            <div ng-repeat="contact in model.business.contacts track by $index">
               <div class = "table">
                 <div class="form-group">
    	           		<div class = "row">
@@ -218,27 +240,40 @@
               <div class = "row">
 	              	<div class = "col-md-3"><label>Phone</label></div>
 	              	<div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-required="true" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="contact.phone"/>
-	              	<span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span></div>
+	              	 <span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span>
+                  </div>
 
                   <div class = "col-md-3"><label>Single Point of Contact?</label></div>
 	            		<div class = "col-md-3"><input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=true>Yes &nbsp
 	            		<input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=false>No </div>
 	            </div>
+                <div class = "row">
+                  <div class = "col-md-4"></div>
+                  <div class = "col-md-6"></div>
+                  <div class = "col-md-1"><button class="btn btn-danger" ng-click="remove($index)">Remove</button></div>
+                </div>
 	          </div>
           </div>
-				    <div class = "table">
-				      <div class = "row">
-                <div class = "col-md-4"><button class="btn btn-primary" ng-click="addNew()">Add New Contact</button></div>
-                <div class = "col-md-2"></div>
-                <div class = "col-md-2"></div>
-                <div class = "col-md-4"><button class="btn btn-primary" ng-click="remove($index)">Remove Contact</button></div>
-				      </div>
-          </div>
+          <hr/>
 		    </div>
-	     </div>
+        <div class = "table">
+          <div class = "row">
+            <div class = "col-md-4"><button class="btn btn-danger" ng-click="addNew()">Add New Contact</button></div>
+          </div>
+      </div>
+	  </div>
+  </form>
 
+  <form name="form3" ng-show = "choice == 'select'" class="" ng-submit="create()" role="form">
+    <div>
+       <span class="create_button">
+           <button type="submit" class="btn btn-danger" class="UIbutton">Save Details</button>
+      </span>
+    </div>
+  </form>
+  <form name="form4" ng-show = "choice == 'selected'|| choice == 'new'" class="" ng-submit="create()" role="form">
 	   <div class="panel panel-default business-panel">
-       <h3 class = "panel-heading">Campaign Details</h3>
+       <h3 class = "panel-heading">Create Campaign</h3>
          <div class = "table">
            <div class = "row">
         	    <div class = "col-md-8"><h4><mark>Select Supplier Type and Count<mark></h4></div>
@@ -247,9 +282,9 @@
 	            <div class = "col-md-3"><label>{{type}}</label></div>
 	        	  <div class = "col-md-1"><input type="checkbox"  id="{{type}}" name="{{type}}" ng-model="supplier_type1"/></div>
 							<span class = "" ng-show="supplier_type1">
-						   	<div class = "col-md-3"><input type="number" name="count" id="count" class="form-control" ng-model="model.supplier_type[type]"/></div>
+						   	<div class = "col-md-3  textbox"><input type="number" name="count" id="count" class="form-control" ng-model="model.supplier_type[type]"/></div>
 		          </span>
-	          </div>
+	        </div>
           </div>
           <br>
           <br>
@@ -259,10 +294,10 @@
             </div>
             <div class = "row" ng-repeat="type in campaign_types">
 	            <div class = "col-md-3"><label>{{type}}</label></div>
-	        	  <div class = "col-md-3"><input type="checkbox"  id="{{type}}" name="{{type}}" ng-model="campaign_type1"/></div>
+	        	  <div class = "col-md-1"><input type="checkbox"  id="{{type}}" name="{{type}}" ng-model="campaign_type1"/></div>
 							<span class = "" ng-show="campaign_type1">
 						   	<select ng-change="" ng-model="model.campaign_type[type]">
-						      <div class = "col-md-3"><option  ng-repeat="name in campaign_sub_types[type]"
+						      <div class = "col-md-3"><option ng-repeat="name in campaign_sub_types[type]"
 				           value="{{name}}">{{name}}</option></div>
 					      </select>
 		          </span>
@@ -296,10 +331,10 @@
 	    </br>
 	    <div>
 	       <span class="create_button">
-	           <button type="submit" class="btn btn-primary" class="UIbutton">Create & Continue</button>
+	           <button type="submit" class="btn btn-danger" class="UIbutton">Create & Continue</button>
 	      </span>
       </div>
-	</form>
-</div>
+    </div>
+  </form>
 <div class="col-md-2"></div>
 </div>

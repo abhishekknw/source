@@ -170,10 +170,19 @@
 },
 {
     "fields": {
+        "days_count": 2,
+        "duration_name": "2 Days"
+    },
+    "model": "v0.durationtype",
+    "pk": 6
+},
+
+{
+    "fields": {
         "days_count": 90,
         "duration_name": "Unit Quaterly"
     },
     "model": "v0.durationtype",
-    "pk": 6
+    "pk": 7
 }
 ]
