@@ -389,6 +389,7 @@ class InventorySummaryAPIView(APIView):
 
             flag = True
             if 'id' in request.data:
+                print "hi"
                 flag = False
                 item = InventorySummary.objects.get(pk=id)
                 if item.total_stall_count < request.data['total_stall_count']:
