@@ -865,7 +865,7 @@ class SupplierTypeSociety(models.Model):
 
 class SocietyTower(models.Model):
     tower_id = models.AutoField(db_column='TOWER_ID', primary_key=True)  # Field name made lowercase.
-    tower_tag = models.CharField(db_column='TOWER_TAG', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    tower_tag = models.CharField(db_column='TOWER_TAG', max_length=30, blank=True, null=True)  # Field name made lowercase.
     supplier = models.ForeignKey(SupplierTypeSociety, related_name='towers', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
     tower_name = models.CharField(db_column='TOWER_NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
     flat_count_per_tower = models.IntegerField(db_column='FLAT_COUNT_PER_TOWER', blank=True, null=True)  # Field name made lowercase.
@@ -1285,3 +1285,11 @@ class InventorySummary(models.Model):
     class Meta:
 
         db_table = 'inventory_summary'
+
+
+class JMN_society(models.Model):
+
+
+    class Meta:
+
+        db_table = 'jmn_society'

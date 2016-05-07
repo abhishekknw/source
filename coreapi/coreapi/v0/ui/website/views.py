@@ -17,6 +17,7 @@ class BusinessAPIListView(APIView):
         except :
             return Response(status=404)
 
+    # the delete api is not being used
     def delete(self, request, id, format=None):
         try:
             item = SupplierTypeSociety.objects.get(pk=id)
@@ -39,6 +40,7 @@ class BusinessAPIView(APIView):
         except :
             return Response(status=404)
 
+    # the delete api is not being used
     def delete(self, request, id, format=None):
         try:
             item = SupplierTypeSociety.objects.get(pk=id)
@@ -109,7 +111,7 @@ class NewCampaignAPIView(APIView):
                     campaign_type_map = CampaignTypeMapping(campaign=campaign, type=key, sub_type=value)
                     campaign_type_map.save()
 
-            if 'suplier_type' in request.data:
+            if 'supplier_type' in request.data:
                 for key, value in request.data['supplier_type'].iteritems():
                     supplier_type_map = CampaignSupplierTypes(campaign=campaign, supplier_type=key, count=value)
                     supplier_type_map.save()
@@ -132,6 +134,7 @@ class CampaignAPIView(APIView):
         except :
             return Response(status=404)
 
+    # the delete api is not being used
     def delete(self, request, id, format=None):
         try:
             item = SupplierTypeSociety.objects.get(pk=id)

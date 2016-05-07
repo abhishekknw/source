@@ -10,6 +10,7 @@ from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerial
 from django.db.models import Q
 
 
+
 class getInitialDataAPIView(APIView):
     def get(self, request, format=None):
         try:
@@ -21,8 +22,6 @@ class getInitialDataAPIView(APIView):
             return Response(result, status=200)
         except :
             return Response(status=404)
-
-
 
 
 class getLocationsAPIView(APIView):
@@ -62,12 +61,14 @@ class generateSupplierIdAPIView(APIView):
                     return Response(status=409)
             except:
                 print "No such society"
+            current_user = request.user
             supplier_id = city.city_code + area.area_code + sub_area.subarea_code + request.data['supplier_type'] + request.data['supplier_code']
             supplier = {'supplier_id':supplier_id,
                         'society_name':request.data['supplier_name'],
                         'society_city':city.city_name,
                         'society_locality':area.label,
-                        'society_state' : city.state_code.state_name
+                        'society_state' : city.state_code.state_name,
+                        'created_by': current_user.id
                         }
             serializer = SupplierTypeSocietySerializer(data=supplier)
             if serializer.is_valid():
@@ -84,9 +85,13 @@ class generateSupplierIdAPIView(APIView):
 class SocietyAPIView(APIView):
     def get(self, request, id, format=None):
         try:
+            user = request.user
             item = SupplierTypeSociety.objects.get(pk=id)
-            serializer = UISocietySerializer(item)
-            return Response(serializer.data)
+            if user.is_superuser or item.created_by == user:
+                serializer = UISocietySerializer(item)
+                return Response(serializer.data)
+            else:
+                return Response(status=403)
         except :
             return Response(status=404)
 
@@ -110,10 +115,8 @@ class SocietyAPIView(APIView):
             if society:
                 serializer = SupplierTypeSocietySerializer(society,data=request.data)
             else:
-                request.data['created_by'] = current_user.id
+
                 serializer = SupplierTypeSocietySerializer(data=request.data)
-
-
         if serializer.is_valid():
             serializer.save()
         else:
@@ -210,11 +213,15 @@ def set_default_pricing(society_id):
 class SocietyAPIListView(APIView):
     def get(self, request, format=None):
         try:
+            user = request.user
             search_txt = request.query_params.get('search', None)
             if search_txt:
                 items = SupplierTypeSociety.objects.filter(Q(supplier_id__icontains=search_txt) | Q(society_name__icontains=search_txt)| Q(society_address1__icontains=search_txt)| Q(society_city__icontains=search_txt)| Q(society_state__icontains=search_txt))
             else:
-                items = SupplierTypeSociety.objects.all()
+                if user.is_superuser:
+                    items = SupplierTypeSociety.objects.all()
+                else:
+                    items = SupplierTypeSociety.objects.filter(created_by=user.id)
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             serializer = UISocietySerializer(result_page, many=True)
