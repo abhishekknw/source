@@ -389,7 +389,6 @@ class InventorySummaryAPIView(APIView):
 
             flag = True
             if 'id' in request.data:
-                print "hi"
                 flag = False
                 item = InventorySummary.objects.get(pk=id)
                 if item.total_stall_count < request.data['total_stall_count']:
@@ -670,11 +669,12 @@ class TowerAPIView(APIView):
 
     def save_lift_locations(self, c1, c2, tower, society):
         i = c1 + 1
+        tow_name = tower.tower_name
         while i <= c2:
             lift_tag = tower.tower_tag + "00L" + str(i)
-            adId = society.supplier_id + "PO01"
-            lift = LiftDetails(lift_tag=lift_tag, tower=tower)
-            lift_inv = PosterInventory(adinventory_id=adId, notice_board_id=lift_tag, supplier_id=society.supplier_id)
+            adId = society.supplier_id + lift_tag + "PO01"
+            lift = LiftDetails(adinventory_id=adId, lift_tag=lift_tag, tower=tower)
+            lift_inv = PosterInventory(adinventory_id=adId, location_id=lift_tag, tower_name=tow_name, supplier=society)
             lift.save()
             lift_inv.save()
             i += 1
@@ -702,8 +702,13 @@ class PosterAPIView(APIView):
     def get(self, request, id, format=None):
         lifts = []
         notice_boards = []
+
+
         try:
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
+            society = SupplierTypeSociety.objects.get(pk=id)
+            posters = PosterInventory.objects.filter(supplier=society)
+
             for tower in towers:
                 lifts.extend(tower.lifts.all())
                 notice_boards.extend(tower.notice_boards.all())
@@ -719,6 +724,8 @@ class PosterAPIView(APIView):
             result = {"lift_details_available": lifts_available, "lift_details": serializer.data, "nb_a4_available":nb_available}
             serializer = NoticeBoardDetailsSerializer(notice_boards, many = True)
             result['nb_details'] = serializer.data
+            serializer = PosterInventorySerializer(posters, many = True)
+            result['poster_details'] = serializer.data
             return Response(result, status=200)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
@@ -767,10 +774,13 @@ class PosterAPIView(APIView):
 
     def adId_nb(self, count, nb, society):
        nb_tag = nb['notice_board_tag']
+       nb_tower = nb['tower_name']
+       print nb_tower
        pos = int(count) + 1
        for i in range(1, pos):
            nb_id = society.supplier_id + nb_tag + "PO" + str(i).zfill(2)
-           nb = PosterInventory(adinventory_id=nb_id, notice_board_id=nb_tag, supplier_id=society.supplier_id)
+           print nb_id
+           nb = PosterInventory(adinventory_id=nb_id, location_id=nb_tag, tower_name=nb_tower, supplier=society)
            nb.save()
 
 
