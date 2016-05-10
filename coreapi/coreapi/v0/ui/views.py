@@ -702,12 +702,12 @@ class PosterAPIView(APIView):
     def get(self, request, id, format=None):
         lifts = []
         notice_boards = []
-
-
+        disable = {}
         try:
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
             society = SupplierTypeSociety.objects.get(pk=id)
             posters = PosterInventory.objects.filter(supplier=society)
+            item = InventorySummary.objects.get(supplier=society)
 
             for tower in towers:
                 lifts.extend(tower.lifts.all())
@@ -720,12 +720,16 @@ class PosterAPIView(APIView):
                 nb_available = True
             else:
                 nb_available = False
+
+
+            serializer1 = InventorySummarySerializer(item, many=True)
             serializer = LiftDetailsSerializer(lifts, many=True)
-            result = {"lift_details_available": lifts_available, "lift_details": serializer.data, "nb_a4_available":nb_available}
+            result = {"lift_details_available": lifts_available, "lift_details": serializer.data, "nb_a4_available":nb_available, "disable_nb": item.poster_allowed_nb, "disable_lift": item.poster_allowed_lift}
             serializer = NoticeBoardDetailsSerializer(notice_boards, many = True)
             result['nb_details'] = serializer.data
             serializer = PosterInventorySerializer(posters, many = True)
             result['poster_details'] = serializer.data
+
             return Response(result, status=200)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
@@ -832,9 +836,14 @@ class StandeeBannerAPIView(APIView):
         standees = []
 
         towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
+        society = SupplierTypeSociety.objects.get(pk=id)
         for tower in towers:
             standees.extend(tower.standees.all())
 
+        item = InventorySummary.objects.get(supplier=society)
+
+        serializer1 = InventorySummarySerializer(item, many=True)
+        response = {"disable_standee": item.standee_allowed}
         serializer = StandeeInventorySerializer(standees, many=True)
         response['standee_details'] = serializer.data
 
@@ -883,9 +892,14 @@ class StallAPIView(APIView):
         stalls = []
 
         stalls = SupplierTypeSociety.objects.get(pk=id).stalls.all()
+        society = SupplierTypeSociety.objects.get(pk=id)
         for stall in stalls:
             stalls.extend(stall.stalls.all())
 
+        item = InventorySummary.objects.get(supplier=society)
+
+        serializer1 = InventorySummarySerializer(item, many=True)
+        response = {"disable_stall": item.stall_allowed}
         serializer = StallInventorySerializer(stalls, many=True)
         response['stall_details'] = serializer.data
 
