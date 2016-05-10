@@ -1339,3 +1339,56 @@ class InventorySummary(models.Model):
     class Meta:
 
         db_table = 'inventory_summary'
+
+
+class JMN_society(models.Model):
+    soc_id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='society_name',  max_length=100, blank = True, null=True)
+    flats = models.CharField(db_column='flats',  max_length=15, blank = True, null=True)
+    population = models.CharField(db_column='population',  max_length=10, blank = True, null=True)
+    type = models.CharField(db_column='type',  max_length=20, blank = True, null=True)
+    incomeGroup = models.CharField(db_column='incomeGroup',  max_length=15, blank = True, null=True)
+    address = models.CharField(db_column='address',  max_length=200, blank = True, null=True)
+    city = models.CharField(db_column='city',  max_length=20, blank = True, null=True)
+    noticeBoard1 = models.CharField(db_column='noticeBoard1',  max_length=10, blank = True, null=True)
+    noticeBoard1LastDt = models.CharField(db_column='noticeBoard1LastDt',  max_length=25, blank = True, null=True)
+    noticeBoard1Count = models.CharField(db_column='noticeBoard1Count',  max_length=10, blank = True, null=True)
+    noticeBoard1Duration = models.CharField(db_column='noticeBoard1Duration',  max_length=10, blank = True, null=True)
+    kiosk = models.CharField(db_column='kiosk',  max_length=10, blank = True, null=True)
+    kioskLastDt = models.CharField(db_column='kioskLastDt',  max_length=25, blank = True, null=True)
+    carDisplay = models.CharField(db_column='carDisplay',  max_length=10, blank = True, null=True)
+    carDisplayLastDt = models.CharField(db_column='carDisplayLastDt',  max_length=25, blank = True, null=True)
+    festivalStall = models.CharField(db_column='festivalStall',  max_length=10, blank = True, null=True)
+    festivalStallLastDt = models.CharField(db_column='festivalStallLastDt',  max_length=25, blank = True, null=True)
+    flyer = models.CharField(db_column='flyer',  max_length=10, blank = True, null=True)
+    flyerDistributionMode = models.CharField(db_column='flyerDistributionMode',  max_length=20, blank = True, null=True)
+    flyerLastDt = models.CharField(db_column='flyerLastDt',  max_length=25, blank = True, null=True)
+    billJacketLastDt = models.CharField(db_column='billJacketLastDt',  max_length=25, blank = True, null=True)
+    mainGate = models.CharField(db_column='mainGate',  max_length=10, blank = True, null=True)
+    mainGateLastDt = models.CharField(db_column='mainGateLastDt',  max_length=20, blank = True, null=True)
+    guardCharge = models.CharField(db_column='guardCharge',  max_length=10, blank = True, null=True)
+    lat = models.CharField(db_column='latitude',  max_length=15, blank = True, null=True)
+    lon = models.CharField(db_column='longitude',  max_length=15, blank = True, null=True)
+    region = models.CharField(db_column='region',  max_length=70, blank = True, null=True)
+    active = models.CharField(db_column='active',  max_length=5, blank = True, null=True)
+    lastDt = models.CharField(db_column='lastDt',  max_length=25, blank = True, null=True)
+    photo = models.CharField(db_column='photo',  max_length=100, blank = True, null=True)
+    contact1Name = models.CharField(db_column='contact1Name',  max_length=30, blank = True, null=True)
+    contact1Designation = models.CharField(db_column='contact1Designation',  max_length=15, blank = True, null=True)
+    contact1Email = models.CharField(db_column='contact1Email',  max_length=50, blank = True, null=True)
+    contact1Mobile = models.CharField(db_column='contact1Mobile',  max_length=15, blank = True, null=True)
+    contact2Name = models.CharField(db_column='contact2Name',  max_length=30, blank = True, null=True)
+    contact2Designation = models.CharField(db_column='contact2Designation',  max_length=15, blank = True, null=True)
+    contact2Email = models.CharField(db_column='contact2Email',  max_length=50, blank = True, null=True)
+    contact2Mobile = models.CharField(db_column='contact2Mobile',  max_length=15, blank = True, null=True)
+    referredBy = models.CharField(db_column='referredBy',  max_length=20, blank = True, null=True)
+    referredByEmail = models.CharField(db_column='referredByEmail',  max_length=40, blank = True, null=True)
+    notPermitted = models.CharField(db_column='notPermitted',  max_length=30, blank = True, null=True)
+    paymentMode = models.CharField(db_column='paymentMode',  max_length=20, blank = True, null=True)
+    paymentDetail = models.CharField(db_column='paymentDetail',  max_length=20, blank = True, null=True)
+
+
+
+    class Meta:
+
+        db_table = 'jmn_society'
