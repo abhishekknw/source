@@ -979,6 +979,10 @@ class Campaign(models.Model):
     end_date = models.DateTimeField(db_column='END_DATE', null=True)
     tentative_cost = models.IntegerField(db_column='TENTATIVE_COST', null=True)
     booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
+    total_campaign_cost = models.IntegerField(db_column = 'TOTAL_CAMPAIGN_COST', null = True)
+    discount_given = models.IntegerField(db_column = 'DISCOUNT', null = True)
+    total_amount_paid = models.IntegerField(db_column = 'TOTAL_AMOUNT_PAID', null = True)
+    amount_payable = models.IntegerField(db_column = 'AMOUNT_PAYABLE', null = True)
 
     def get_types(self):
         try:

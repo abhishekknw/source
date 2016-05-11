@@ -243,6 +243,7 @@ class ShortlistSocietyAPIView(APIView):
 
         if 'society_id' in request.data:
             try:
+                society_id = request.data['society_id']
                 society = SupplierTypeSociety.objects.get(pk=request.data['society_id'])
             except SupplierTypeSociety.DoesNotExist:
                 return Response(status=404)
@@ -256,7 +257,7 @@ class ShortlistSocietyAPIView(APIView):
             inventory = SocietyInventoryBooking(campaign=campaign, society=society, adinventory_type=key)
             inventory.save()
 
-        return Response({"message": "Society Shortlisted"}, status=200)
+        return Response({"message": "Society Shortlisted", "id": society_id}, status=200)
 
 
 class BookCampaignAPIView(APIView):
@@ -276,15 +277,12 @@ class BookCampaignAPIView(APIView):
 
 class FinalCampaignBookingAPIView(APIView):
 
-    def post(self, request, format=None):
+    def get(self, request, id, format=None):
 
-        if 'campaign_id' in request.data:
-            try:
-                campaign = Campaign.objects.get(pk=request.data['campaign_id'])
-            except Campaign.DoesNotExist:
-                return Response(status=404)
-        else:
-            return Response(status=400)
-
-        return Response({"message": "Campaign Booked Successfully"}, status=200)
+        try:
+            campaign = Campaign.objects.get(pk=id)
+            serializer = CampaignSerializer(campaign)
+            return Response(serializer.data)
+        except :
+            return Response(status=404)
 
