@@ -104,19 +104,11 @@ class SocietyFlatSerializer(ModelSerializer):
         model = SocietyFlat
 
 
-'''class StandeeInventorySerializer(ModelSerializer):
-
-    class Meta:
-        model = StandeeInventory
-'''
-
 class StandeeInventorySerializer(ModelSerializer):
-    tower_name = serializers.CharField(source='get_tower_name')
+
     class Meta:
         model = StandeeInventory
-        read_only_fields = (
-        'tower_name'
-        )
+
 
 class SwimmingPoolInfoSerializer(ModelSerializer):
 
