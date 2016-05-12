@@ -1,8 +1,14 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower, FlatType
-from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower, FlatType
+from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society
 
+
+
+class JMN_societySerializer(ModelSerializer):
+
+    class Meta:
+        model = JMN_society
 
 
 class ImageMappingSerializer(ModelSerializer):
@@ -48,10 +54,10 @@ class BannerInventorySerializer(ModelSerializer):
         model = BannerInventory
 
 
-class CarDisplayInventorySerializer(ModelSerializer):
+'''class CarDisplayInventorySerializer(ModelSerializer):
 
     class Meta:
-        model = CarDisplayInventory
+        model = CarDisplayInventory'''
 
 
 class CommunityHallInfoSerializer(ModelSerializer):
@@ -98,11 +104,19 @@ class SocietyFlatSerializer(ModelSerializer):
         model = SocietyFlat
 
 
-class StandeeInventorySerializer(ModelSerializer):
+'''class StandeeInventorySerializer(ModelSerializer):
 
     class Meta:
         model = StandeeInventory
+'''
 
+class StandeeInventorySerializer(ModelSerializer):
+    tower_name = serializers.CharField(source='get_tower_name')
+    class Meta:
+        model = StandeeInventory
+        read_only_fields = (
+        'tower_name'
+        )
 
 class SwimmingPoolInfoSerializer(ModelSerializer):
 
@@ -226,6 +240,7 @@ class InventorySummarySerializer(ModelSerializer):
 
     class Meta:
         model = InventorySummary
+
 
 
 class PriceMappingDefaultSerializer(ModelSerializer):

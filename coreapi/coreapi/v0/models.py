@@ -161,7 +161,7 @@ class BannerInventory(models.Model):
         db_table = 'banner_inventory'
 
 
-class CarDisplayInventory(models.Model):
+'''class CarDisplayInventory(models.Model):
     inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
     car_display_location = models.CharField(db_column='CAR_DISPLAY_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -176,7 +176,7 @@ class CarDisplayInventory(models.Model):
 
     class Meta:
 
-        db_table = 'car_display_inventory'
+        db_table = 'car_display_inventory'  '''
 
 
 class CommunityHallInfo(models.Model):
@@ -229,6 +229,22 @@ class DoorToDoorInfo(models.Model):
         db_table = 'door_to_door_info'
 
 
+class FlierThroughLobbyInfo(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
+    supplier = models.ForeignKey('SupplierTypeSociety', related_name='flier_lobby', db_column='SUPPLIER_ID', blank=True, null=True)  # Field name made lowercase.
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
+    flier_distribution_frequency_lobby = models.CharField(db_column='FLIER_DISTRIBUTION_FREQUENCY_LOBBY', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    flier_lobby_inventory_status = models.CharField(db_column='FLIER_LOBBY_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase.
+    flier_lobby_price_society = models.FloatField(db_column='FLIER_LOBBY_PRICE_SOCIETY', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    flier_lobby_price_business = models.FloatField(db_column='FLIER_LOBBY_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    master_flier_lobby_price_society = models.FloatField(db_column='MASTER_FLIER_LOBBY_PRICE_SOCIETY', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    master_flier_lobby_price_business = models.FloatField(db_column='MASTER_FLIER_LOBBY_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+
+        db_table = 'flier_through_lobby_info'
+
+
 class LiftDetails(models.Model):
     lift_tag = models.CharField(db_column='LIFT_TAG', max_length=20, blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
@@ -263,7 +279,7 @@ class NoticeBoardDetails(models.Model):
     poster_location_notice_board = models.CharField(db_column='POSTER_LOCATION_NOTICE_BOARD', max_length=5, blank=True, null=True)  # Field name made lowercase.
     notice_board_lit = models.CharField(db_column='NOTICE_BOARD_LIT', max_length=5, blank=True, null=True)  # Field name made lowercase.
     tower = models.ForeignKey('SocietyTower', related_name='notice_boards', db_column='TOWER_ID', blank=True, null=True)  # Field name made lowercase.
-    notice_board_size_length = models.FloatField(db_column='NOTICE_BOARD_SIZE_length', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    notice_board_size_length = models.FloatField(db_column='NOTICE_BOARD_SIZE_LENGTH', default=0.0, blank=True, null=True)  # Field name made lowercase.
     notice_board_size_breadth = models.FloatField(db_column='NOTICE_BOARD_SIZE_BREADTH', default=0.0, blank=True, null=True)  # Field name made lowercase.
     photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True, null=True)  # Field name made lowercase.
     photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
@@ -283,7 +299,8 @@ class NoticeBoardDetails(models.Model):
 
 class PosterInventory(models.Model):
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', primary_key=True, max_length=22)  # Field name made lowercase.
-    notice_board_id = models.CharField(db_column='NOTICE_BOARD_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    location_id = models.CharField(db_column='LOCATION_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    tower_name = models.CharField(db_column='TOWER_NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
     poster_location = models.CharField(db_column='POSTER_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
     poster_area = models.CharField(db_column='POSTER_AREA', max_length=10, blank=True, null=True)  # Field name made lowercase.
     #poster_weekly_price_society = models.CharField(db_column='POSTER_WEEKLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
@@ -343,9 +360,17 @@ class StandeeInventory(models.Model):
     #standee_weekly_price_business = models.CharField(db_column='STANDEE_WEEKLY_PRICE_BUSINESS', max_length=5, blank=True, null=True)  # Field name made lowercase.
     #standee_monthly_price_business = models.CharField(db_column='STANDEE_MONTHLY_PRICE_BUSINESS', max_length=5, blank=True, null=True)  # Field name made lowercase.
     tower = models.ForeignKey('SocietyTower', db_column='TOWER_ID', related_name='standees', blank=True, null=True)  # Field name made lowercase.
-    class Meta:
 
+    def get_tower_name1(self):
+        try:
+            return self.tower.tower_name
+        except:
+            return None
+
+    class Meta:
         db_table = 'standee_inventory'
+
+
 
 
 class SwimmingPoolInfo(models.Model):
@@ -465,7 +490,7 @@ class SocietyMajorEvents(models.Model):
     AnnualDay = models.BooleanField(db_column='AnnualDay', default=False)
     Christmas = models.BooleanField(db_column='Christmas', default=False)
     NewYear = models.BooleanField(db_column='NewYear', default=False)
-    past_major_events = models.CharField(db_column='past_major_events', max_length=60, blank=True, null=True)
+    past_major_events = models.IntegerField(db_column='PAST_MAJOR_EVENTS', blank=True, null=True)
 
 
 class Events(models.Model):
@@ -528,6 +553,7 @@ class MailboxInfo(models.Model):
     class Meta:
 
         db_table = 'mailbox_info'
+
 
 
 class OperationsInfo(models.Model):
@@ -618,7 +644,24 @@ class StallInventory(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='stalls', blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22)  # Field name made lowercase.
-    type = models.CharField(db_column='STALL_TYPES', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    stall_small = models.BooleanField(db_column='STALL_SMALL', default=False)
+    stall_canopy = models.BooleanField(db_column='STALL_CANOPY', default=False)
+    stall_medium = models.BooleanField(db_column='STALL_MEDIUM', default=False)
+    car_standard = models.BooleanField(db_column='CAR_STANDARD', default=False)
+    car_premium = models.BooleanField(db_column='CAR_PREMIUM', default=False)
+    stall_morning = models.BooleanField(db_column='STALL_MORNING', default=False)
+    stall_evening = models.BooleanField(db_column='STALL_EVENING', default=False)
+    stall_time_both = models.BooleanField(db_column='STALL_TIME_BOTH', default=False)
+    stall_location = models.CharField(db_column='STALL_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    electricity_available = models.BooleanField(db_column='ELECTRICITY_AVAILABLE_STALLS', default=False)  # Field name made lowercase.
+    electricity_charges_daily = models.FloatField(db_column='ELECTRICITY_CHARGES_DAILY', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    sound_system_allowed = models.BooleanField(db_column='SOUND_SYSTEM_ALLOWED', default=False)  # Field name made lowercase.
+    furniture_available = models.BooleanField(db_column='STALL_FURNITURE_AVAILABLE', default=False)  # Field name made lowercase.
+    furniture_details = models.CharField(db_column='STALL_FURNITURE_DETAILS', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    stall_size = models.CharField(db_column='STALL_SIZE', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    stall_timing = models.CharField(db_column='STALL_TIMINGS', max_length=20, blank=True, null=True)  # Field name made lowercase.
+
+    #type = models.CharField(db_column='STALL_TYPES', max_length=20, blank=True, null=True)  # Field name made lowercase.
     #stall_timings_morning = models.CharField(db_column='STALL_TIMINGS_morning', max_length=10, blank=True, null=True)  # Field name made lowercase.
     #stall_size_area = models.FloatField(db_column='STALL_SIZE_AREA', blank=True, null=True, default=0.0)  # Field name made lowercase.
     #stall_daily_price_stall_society = models.CharField(db_column='STALL_DAILY_PRICE_STALL_SOCIETY', max_length=15, blank=True, null=True)  # Field name made lowercase.
@@ -627,16 +670,8 @@ class StallInventory(models.Model):
     #stall_timings_evening = models.TimeField(db_column='STALL_TIMINGS_evening', blank=True, null=True)  # Field name made lowercase.
     #photograph_1 = models.CharField(db_column='PHOTOGRAPH_1', max_length=45, blank=True, null=True)  # Field name made lowercase.
     #photograph_2 = models.CharField(db_column='PHOTOGRAPH_2', max_length=45, blank=True, null=True)  # Field name made lowercase.
-    stall_location = models.CharField(db_column='STALL_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    electricity_available_stalls = models.CharField(db_column='ELECTRICITY_AVAILABLE_STALLS', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    electricity_charges_daily = models.FloatField(db_column='ELECTRICITY_CHARGES_DAILY', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    sound_system_allowed = models.CharField(db_column='SOUND_SYSTEM_ALLOWED', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    stall_furniture_available = models.CharField(db_column='STALL_FURNITURE_AVAILABLE', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    stall_furniture_details = models.CharField(db_column='STALL_FURNITURE_DETAILS', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    stall_inventory_status = models.CharField(db_column='STALL_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase
-    stall_size = models.CharField(db_column='STALL_SIZE', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    stall_timing = models.CharField(db_column='STALL_TIMINGS', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    stall_availability = models.CharField(db_column='STALL_AVAILABILITY', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    #stall_availability = models.CharField(db_column='STALL_AVAILABILITY', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    #stall_inventory_status = models.CharField(db_column='STALL_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase
 
     class Meta:
 
@@ -783,6 +818,7 @@ class SupplierTypeSociety(models.Model):
     stall_count = models.IntegerField(db_column='STALL_COUNT', blank=True, null=True)  # Field name made lowercase.
     banner_count = models.IntegerField(db_column='BANNER_COUNT', blank=True, null=True)  # Field name made lowercase.
     total_campaign = models.IntegerField(db_column='TOTAL_CAMPAIGN', blank=True, null=True)  # Field name made lowercase.
+    age_of_society = models.FloatField(db_column='AGE_OF_SOCIETY', blank=True, null=True)  # Field name made lowercase.
 
 
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
@@ -979,10 +1015,6 @@ class Campaign(models.Model):
     end_date = models.DateTimeField(db_column='END_DATE', null=True)
     tentative_cost = models.IntegerField(db_column='TENTATIVE_COST', null=True)
     booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
-    total_campaign_cost = models.IntegerField(db_column = 'TOTAL_CAMPAIGN_COST', null = True)
-    discount_given = models.IntegerField(db_column = 'DISCOUNT', null = True)
-    total_amount_paid = models.IntegerField(db_column = 'TOTAL_AMOUNT_PAID', null = True)
-    amount_payable = models.IntegerField(db_column = 'AMOUNT_PAYABLE', null = True)
 
     def get_types(self):
         try:
@@ -1254,7 +1286,8 @@ class InventorySummary(models.Model):
     flier_allowed = models.BooleanField(db_column='FLIER_ALLOWED', default=False)
     nb_A4_allowed = models.BooleanField(db_column='NB_A4_ALLOWED', default=False)
     nb_A3_allowed = models.BooleanField(db_column='NB_A3_ALLOWED', default=False)
-    poster_price_week = models.IntegerField(db_column='POSTER_PRICE_WEEK', null=True)
+    poster_price_week_lift = models.IntegerField(db_column='POSTER_PRICE_WEEK_LIFT', null=True)
+    poster_price_week_nb = models.IntegerField(db_column='POSTER_PRICE_WEEK_NB', null=True)
     standee_price_week = models.IntegerField(db_column='STANDEE_PRICE_WEEK', null=True)
     stall_price_day_small = models.IntegerField(db_column='STALL_PRICE_DAY_SMALL', null=True)
     stall_price_day_large = models.IntegerField(db_column='STALL_PRICE_DAY_LARGE', null=True)
@@ -1287,7 +1320,75 @@ class InventorySummary(models.Model):
     standee_campaign = models.IntegerField(db_column='STANDEE_CAMPAIGN', blank=True, null=True)  # Field name made lowercase.
     stall_or_cd_campaign = models.IntegerField(db_column='STALL_OR_CD_CAMPAIGN', blank=True, null=True)  # Field name made lowercase.
     flier_campaign = models.IntegerField(db_column='FLIER_CAMPAIGN', blank=True, null=True)  # Field name made lowercase.
+    standee_per_campaign = models.IntegerField(db_column='STANDEE_PER_CAMPAIGN', null=True)
+    poster_per_campaign = models.IntegerField(db_column='POSTER_PER_CAMPAIGN', null=True)
+    campaign_count = models.IntegerField(db_column='CAMPAIGN_COUNT', null=True)
+    nb_price_confidence = models.CharField(db_column='NB_PRICE_CONFIDENCE', max_length=20, blank = True, null=True)
+    lift_price_confidence = models.CharField(db_column='LIFT_PRICE_CONFIDENCE', max_length=20, blank = True, null=True)
+    standee_price_confidence = models.CharField(db_column='STANDEE_PRICE_CONFIDENCE', max_length=20, blank = True, null=True)
+    smallStall_price_confidence = models.CharField(db_column='SMALLSTALL_PRICE_CONFIDENCE', max_length=20, blank = True, null=True)
+    largeStall_price_confidence = models.CharField(db_column='LARGESTALL_PRICE_CONFIDENCE', max_length=20, blank = True, null=True)
+    standard_price_confidence = models.CharField(db_column='STANDARD_PRICE_CONFIDENCE', max_length=20, blank = True, null=True)
+    premium_price_confidence = models.CharField(db_column='PREMIUM_PRICE_CONFIDENCE', max_length=20, blank = True, null=True)
+    flier_price_confidence = models.CharField(db_column='FLIER_PRICE_CONFIDENCE', max_length=20, blank = True, null=True)
+    poster_count_per_tower = models.IntegerField(db_column='POSTER_COUNT_PER_TOWER', null=True)
+    poster_count_per_nb = models.IntegerField(db_column='POSTER_COUNT_PER_NB', null=True)
+    standee_count_per_tower = models.IntegerField(db_column='STANDEE_COUNT_PER_TOWER', null=True)
+
 
     class Meta:
 
         db_table = 'inventory_summary'
+
+
+class JMN_society(models.Model):
+    soc_id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='society_name',  max_length=100, blank = True, null=True)
+    flats = models.CharField(db_column='flats',  max_length=15, blank = True, null=True)
+    population = models.CharField(db_column='population',  max_length=10, blank = True, null=True)
+    type = models.CharField(db_column='type',  max_length=20, blank = True, null=True)
+    incomeGroup = models.CharField(db_column='incomeGroup',  max_length=15, blank = True, null=True)
+    address = models.CharField(db_column='address',  max_length=200, blank = True, null=True)
+    city = models.CharField(db_column='city',  max_length=20, blank = True, null=True)
+    noticeBoard1 = models.CharField(db_column='noticeBoard1',  max_length=10, blank = True, null=True)
+    noticeBoard1LastDt = models.CharField(db_column='noticeBoard1LastDt',  max_length=25, blank = True, null=True)
+    noticeBoard1Count = models.CharField(db_column='noticeBoard1Count',  max_length=10, blank = True, null=True)
+    noticeBoard1Duration = models.CharField(db_column='noticeBoard1Duration',  max_length=10, blank = True, null=True)
+    kiosk = models.CharField(db_column='kiosk',  max_length=10, blank = True, null=True)
+    kioskLastDt = models.CharField(db_column='kioskLastDt',  max_length=25, blank = True, null=True)
+    carDisplay = models.CharField(db_column='carDisplay',  max_length=10, blank = True, null=True)
+    carDisplayLastDt = models.CharField(db_column='carDisplayLastDt',  max_length=25, blank = True, null=True)
+    festivalStall = models.CharField(db_column='festivalStall',  max_length=10, blank = True, null=True)
+    festivalStallLastDt = models.CharField(db_column='festivalStallLastDt',  max_length=25, blank = True, null=True)
+    flyer = models.CharField(db_column='flyer',  max_length=10, blank = True, null=True)
+    flyerDistributionMode = models.CharField(db_column='flyerDistributionMode',  max_length=20, blank = True, null=True)
+    flyerLastDt = models.CharField(db_column='flyerLastDt',  max_length=25, blank = True, null=True)
+    billJacketLastDt = models.CharField(db_column='billJacketLastDt',  max_length=25, blank = True, null=True)
+    mainGate = models.CharField(db_column='mainGate',  max_length=10, blank = True, null=True)
+    mainGateLastDt = models.CharField(db_column='mainGateLastDt',  max_length=20, blank = True, null=True)
+    guardCharge = models.CharField(db_column='guardCharge',  max_length=10, blank = True, null=True)
+    lat = models.CharField(db_column='latitude',  max_length=15, blank = True, null=True)
+    lon = models.CharField(db_column='longitude',  max_length=15, blank = True, null=True)
+    region = models.CharField(db_column='region',  max_length=70, blank = True, null=True)
+    active = models.CharField(db_column='active',  max_length=5, blank = True, null=True)
+    lastDt = models.CharField(db_column='lastDt',  max_length=25, blank = True, null=True)
+    photo = models.CharField(db_column='photo',  max_length=100, blank = True, null=True)
+    contact1Name = models.CharField(db_column='contact1Name',  max_length=30, blank = True, null=True)
+    contact1Designation = models.CharField(db_column='contact1Designation',  max_length=15, blank = True, null=True)
+    contact1Email = models.CharField(db_column='contact1Email',  max_length=50, blank = True, null=True)
+    contact1Mobile = models.CharField(db_column='contact1Mobile',  max_length=15, blank = True, null=True)
+    contact2Name = models.CharField(db_column='contact2Name',  max_length=30, blank = True, null=True)
+    contact2Designation = models.CharField(db_column='contact2Designation',  max_length=15, blank = True, null=True)
+    contact2Email = models.CharField(db_column='contact2Email',  max_length=50, blank = True, null=True)
+    contact2Mobile = models.CharField(db_column='contact2Mobile',  max_length=15, blank = True, null=True)
+    referredBy = models.CharField(db_column='referredBy',  max_length=20, blank = True, null=True)
+    referredByEmail = models.CharField(db_column='referredByEmail',  max_length=40, blank = True, null=True)
+    notPermitted = models.CharField(db_column='notPermitted',  max_length=30, blank = True, null=True)
+    paymentMode = models.CharField(db_column='paymentMode',  max_length=20, blank = True, null=True)
+    paymentDetail = models.CharField(db_column='paymentDetail',  max_length=20, blank = True, null=True)
+
+
+
+    class Meta:
+
+        db_table = 'jmn_society'

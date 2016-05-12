@@ -3,11 +3,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import filters
 from serializers import UISocietySerializer, UITowerSerializer
-from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CarDisplayInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
-from v0.models import ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CarDisplayInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType
+from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
+from v0.models import ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType
 from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer
 from django.db.models import Q
+
 
 
 class getInitialDataAPIView(APIView):
@@ -21,8 +22,6 @@ class getInitialDataAPIView(APIView):
             return Response(result, status=200)
         except :
             return Response(status=404)
-
-
 
 
 class getLocationsAPIView(APIView):
@@ -62,12 +61,14 @@ class generateSupplierIdAPIView(APIView):
                     return Response(status=409)
             except:
                 print "No such society"
+            current_user = request.user
             supplier_id = city.city_code + area.area_code + sub_area.subarea_code + request.data['supplier_type'] + request.data['supplier_code']
             supplier = {'supplier_id':supplier_id,
                         'society_name':request.data['supplier_name'],
                         'society_city':city.city_name,
                         'society_locality':area.label,
-                        'society_state' : city.state_code.state_name
+                        'society_state' : city.state_code.state_name,
+                        'created_by': current_user.id
                         }
             serializer = SupplierTypeSocietySerializer(data=supplier)
             if serializer.is_valid():
@@ -84,9 +85,13 @@ class generateSupplierIdAPIView(APIView):
 class SocietyAPIView(APIView):
     def get(self, request, id, format=None):
         try:
+            user = request.user
             item = SupplierTypeSociety.objects.get(pk=id)
-            serializer = UISocietySerializer(item)
-            return Response(serializer.data)
+            if user.is_superuser or item.created_by == user:
+                serializer = UISocietySerializer(item)
+                return Response(serializer.data)
+            else:
+                return Response(status=403)
         except :
             return Response(status=404)
 
@@ -110,10 +115,8 @@ class SocietyAPIView(APIView):
             if society:
                 serializer = SupplierTypeSocietySerializer(society,data=request.data)
             else:
-                request.data['created_by'] = current_user.id
+
                 serializer = SupplierTypeSocietySerializer(data=request.data)
-
-
         if serializer.is_valid():
             serializer.save()
         else:
@@ -210,11 +213,16 @@ def set_default_pricing(society_id):
 class SocietyAPIListView(APIView):
     def get(self, request, format=None):
         try:
+            user = request.user
             search_txt = request.query_params.get('search', None)
             if search_txt:
                 items = SupplierTypeSociety.objects.filter(Q(supplier_id__icontains=search_txt) | Q(society_name__icontains=search_txt)| Q(society_address1__icontains=search_txt)| Q(society_city__icontains=search_txt)| Q(society_state__icontains=search_txt)).order_by('society_name')
             else:
-                items = SupplierTypeSociety.objects.all().order_by('society_name')
+                if user.is_superuser:
+                    items = SupplierTypeSociety.objects.all().order_by('society_name')
+                else:
+                    items = SupplierTypeSociety.objects.filter(created_by=user.id)
+
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             serializer = UISocietySerializer(result_page, many=True)
@@ -355,7 +363,6 @@ class InventorySummaryAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        print request.data
         try:
             society = SupplierTypeSociety.objects.get(pk=id)
             towercount = SupplierTypeSociety.objects.get(pk=id).tower_count
@@ -368,7 +375,7 @@ class InventorySummaryAPIView(APIView):
 
             if request.data['poster_allowed_nb']:
                 if request.data['nb_count'] > 0:
-                    poster_campaign = request.data['nb_count']
+                    poster_campaign = request.data['nb_count'] * request.data['poster_count_per_nb']
                     request.data['poster_campaign'] = poster_campaign
             if request.data['poster_allowed_lift']:
                 if request.data['lift_count'] > 0:
@@ -387,15 +394,29 @@ class InventorySummaryAPIView(APIView):
                     flier_campaign = request.data['flier_frequency']
                     request.data['flier_campaign'] = flier_campaign
 
-            society = SupplierTypeSociety.objects.get(supplier__supplier_id=id)
+            society = SupplierTypeSociety.objects.get(pk=id)
             society.total_campaign = poster_campaign+standee_campaign+stall_campaign+flier_campaign
             society.save()
 
+            flag = True
             if 'id' in request.data:
-                item = InventorySummary.objects.get(pk=request.data['id'])
-                serializer = InventorySummarySerializer(item, data=request.data)
+                flag = False
+                item = InventorySummary.objects.get(pk=id)
+                if item.total_stall_count < request.data['total_stall_count']:
+                    self.save_stall_locations(item.total_stall_count, key['total_stall_count'], item, society)
             else:
-                serializer = InventorySummarySerializer(data=request.data)
+                if flag:
+                    self.save_stall_locations(0, request.data['total_stall_count'], society)
+                serializer = SocietyTowerSerializer(data=key)
+
+                try:
+                    if serializer.is_valid():
+                        serializer.save(supplier=society)
+
+                except:
+                    return Response(serializer.errors, status=400)
+
+
             if serializer.is_valid():
                 serializer.save(supplier=society)
 
@@ -489,13 +510,19 @@ class InventorySummaryAPIView(APIView):
 
             return Response(serializer.data, status=200)
 
+
         except:
             return Response(status=404)
 
-'''def change_price(supplier_id, ad_name, ad_type, duration, price):
-    price = PriceMappingDefault.objects.get(supplier__supplier_id=supplier_id, adinventory_type__adinventory_name=ad_name,adinventory_type__adinventory_type=ad_type, duration_type__duration_name=duration)
-    price.business_price = price
-    price.save()'''
+
+    def save_stall_locations(self, c1, c2, society):
+        count = int(c2) + 1
+        for i in range(1, count):
+            stall_id = society.supplier_id + "CA0000ST" + str(i).zfill(2)
+            print stall_id
+            stall = StallInventory(adinventory_id=stall_id, supplier_id=society.supplier_id)
+            stall.save()
+
 
 class BasicPricingAPIView(APIView):
     def get(self, request, id, format=None):
@@ -580,16 +607,17 @@ class TowerAPIView(APIView):
         #print request.data
         flag = True
         society=SupplierTypeSociety.objects.get(pk=id)
+
         for key in request.data['TowerDetails']:
             if 'tower_id' in key:
                 flag = False
                 item = SocietyTower.objects.get(pk=key['tower_id'])
                 if item.lift_count < key['lift_count']:
-                    self.save_lift_locations(item.lift_count, key['lift_count'], item)
+                    self.save_lift_locations(item.lift_count, key['lift_count'], item, society)
                 if item.notice_board_count_per_tower < key['notice_board_count_per_tower']:
-                    self.save_nb_locations(item.notice_board_count_per_tower, key['notice_board_count_per_tower'], item)
+                    self.save_nb_locations(item.notice_board_count_per_tower, key['notice_board_count_per_tower'], item, society)
                 if item.standee_count < key['standee_count']:
-                    self.save_standee_locations(item.standee_count, key['standee_count'], item)
+                    self.save_standee_locations(item.standee_count, key['standee_count'], item, society)
                 serializer = SocietyTowerSerializer(item, data=key)
             else:
                 serializer = SocietyTowerSerializer(data=key)
@@ -608,9 +636,9 @@ class TowerAPIView(APIView):
 
             #create automated IDs for lift, notice boards, standees
             if flag:
-                self.save_lift_locations(0, key['lift_count'], tower_data)
-                self.save_nb_locations(0, key['notice_board_count_per_tower'], tower_data)
-                self.save_standee_locations(0, key['standee_count'], tower_data)
+                self.save_lift_locations(0, key['lift_count'], tower_data, society)
+                self.save_nb_locations(0, key['notice_board_count_per_tower'], tower_data, society)
+                self.save_standee_locations(0, key['standee_count'], tower_data, society)
 
             if key['flat_type_details_available']:
                 for index, flat in enumerate(key['flat_type_details'], start=1):
@@ -650,26 +678,31 @@ class TowerAPIView(APIView):
         item.delete()
         return Response(status=204)
 
-    def save_lift_locations(self, c1, c2, tower):
+    def save_lift_locations(self, c1, c2, tower, society):
         i = c1 + 1
+        tow_name = tower.tower_name
         while i <= c2:
             lift_tag = tower.tower_tag + "00L" + str(i)
-            lift = LiftDetails(lift_tag=lift_tag, tower=tower)
+            adId = society.supplier_id + lift_tag + "PO01"
+            lift = LiftDetails(adinventory_id=adId, lift_tag=lift_tag, tower=tower)
+            lift_inv = PosterInventory(adinventory_id=adId, location_id=lift_tag, tower_name=tow_name, supplier=society)
             lift.save()
+            lift_inv.save()
             i += 1
 
-    def save_nb_locations(self, c1, c2, tower):
+    def save_nb_locations(self, c1, c2, tower, society):
         i = c1 + 1
         while i <= c2:
             nb_tag = tower.tower_tag + "00N" + str(i)
             nb = NoticeBoardDetails(notice_board_tag=nb_tag, tower=tower)
             nb.save()
+
             i += 1
 
-    def save_standee_locations(self, c1, c2, tower):
+    def save_standee_locations(self, c1, c2, tower, society):
         i = c1 + 1
         while i <= c2:
-            sd_tag = tower.tower_tag + "0000SD" + str(i).zfill(2)
+            sd_tag = society.supplier_id + tower.tower_tag + "0000SD" + str(i).zfill(2)
             sd = StandeeInventory(adinventory_id=sd_tag, tower=tower)
             sd.save()
             i += 1
@@ -680,8 +713,13 @@ class PosterAPIView(APIView):
     def get(self, request, id, format=None):
         lifts = []
         notice_boards = []
+        disable = {}
         try:
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
+            society = SupplierTypeSociety.objects.get(pk=id)
+            posters = PosterInventory.objects.filter(supplier=society)
+            item = InventorySummary.objects.get(supplier=society)
+
             for tower in towers:
                 lifts.extend(tower.lifts.all())
                 notice_boards.extend(tower.notice_boards.all())
@@ -693,28 +731,39 @@ class PosterAPIView(APIView):
                 nb_available = True
             else:
                 nb_available = False
+
+
+            serializer1 = InventorySummarySerializer(item, many=True)
             serializer = LiftDetailsSerializer(lifts, many=True)
-            result = {"lift_details_available": lifts_available, "lift_details": serializer.data, "nb_a4_available":nb_available}
+            result = {"lift_details_available": lifts_available, "lift_details": serializer.data, "nb_a4_available":nb_available, "disable_nb": item.poster_allowed_nb, "disable_lift": item.poster_allowed_lift}
             serializer = NoticeBoardDetailsSerializer(notice_boards, many = True)
             result['nb_details'] = serializer.data
+            serializer = PosterInventorySerializer(posters, many = True)
+            result['poster_details'] = serializer.data
+
             return Response(result, status=200)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
     def post(self, request, id, format=None):
+            society=SupplierTypeSociety.objects.get(pk=id)
             if request.data['nb_a4_available']:
                  for notice_board in request.data['nb_details']:
                      data = request.data['nb_common_details']
                      data.update(notice_board)
                      if 'id' in notice_board:
                          notice_item = NoticeBoardDetails.objects.get(pk=notice_board['id'])
+                         posCount =  notice_board['total_poster_per_notice_board']
+                         if posCount != None:
+                             self.adId_nb(posCount, notice_board, society)
+
                          notice_serializer = NoticeBoardDetailsSerializer(notice_item, data=data)
                      else:
                          notice_serializer = NoticeBoardDetailsSerializer(data=data)
                          #populate location and ad inventory table
-                         '''for i in range(notice_board['total_poster_per_notice_board']):
-                             ad_inv = AdInventoryLocationMapping(adinventory_id = notice_tag+'PO'+str(i), adinventory_name = 'POSTER', location = nb_location)
-                             ad_inv.save("Poster", society)'''
+                     '''for i in range(notice_board['total_poster_per_notice_board']):
+                        ad_inv = AdInventoryLocationMapping(adinventory_id = notice_tag+'PO'+str(i), adinventory_name = 'POSTER', location = nb_location)
+                        ad_inv.save("Poster", society)'''
                      if notice_serializer.is_valid():
                          notice_serializer.save()
                      else:
@@ -737,6 +786,17 @@ class PosterAPIView(APIView):
                          return Response(lift_serializer.errors, status=400)
             return Response(status=200)
 
+
+    def adId_nb(self, count, nb, society):
+       nb_tag = nb['notice_board_tag']
+       nb_tower = nb['tower_name']
+       print nb_tower
+       pos = int(count) + 1
+       for i in range(1, pos):
+           nb_id = society.supplier_id + nb_tag + "PO" + str(i).zfill(2)
+           print nb_id
+           nb = PosterInventory(adinventory_id=nb_id, location_id=nb_tag, tower_name=nb_tower, supplier=society)
+           nb.save()
 
 
 class FlierAPIView(APIView):
@@ -787,9 +847,14 @@ class StandeeBannerAPIView(APIView):
         standees = []
 
         towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
+        society = SupplierTypeSociety.objects.get(pk=id)
         for tower in towers:
             standees.extend(tower.standees.all())
 
+        item = InventorySummary.objects.get(supplier=society)
+
+        serializer1 = InventorySummarySerializer(item, many=True)
+        response = {"disable_standee": item.standee_allowed}
         serializer = StandeeInventorySerializer(standees, many=True)
         response['standee_details'] = serializer.data
 
@@ -797,7 +862,6 @@ class StandeeBannerAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        print "hi2"
         for standee in request.data['standee_details']:
             if 'id' in standee:
                 standee_item = StandeeInventory.objects.get(pk=lift['id'])
@@ -833,52 +897,43 @@ class StandeeBannerAPIView(APIView):
 
         return Response(status=201)'''
 
-
 class StallAPIView(APIView):
     def get(self, request, id, format=None):
         response = {}
-        try:
-            stalls = SupplierTypeSociety.objects.get(pk=id).stalls.all()
-            serializer = StallInventorySerializer(stalls, many=True)
-            stalls_available = get_availability(serializer.data)
-            stallCount = SupplierTypeSociety.objects.get(pk=id).stall_count
-            response['stall_count'] = stallCount
-            response['stalls_available'] = stalls_available
-            response['stall_details'] = serializer.data
+        stalls = []
 
-            return Response(response, status=200)
-        except SupplierTypeSociety.DoesNotExist:
-            return Response(status=404)
-        except StallInventory.DoesNotExist:
-            return Response(status=404)
+        stalls = SupplierTypeSociety.objects.get(pk=id).stalls.all()
+        society = SupplierTypeSociety.objects.get(pk=id)
+        for stall in stalls:
+            stalls.extend(stall.stalls.all())
+
+        item = InventorySummary.objects.get(supplier=society)
+
+        serializer1 = InventorySummarySerializer(item, many=True)
+        response = {"disable_stall": item.stall_allowed}
+        serializer = StallInventorySerializer(stalls, many=True)
+        response['stall_details'] = serializer.data
+
+        return Response(response, status=200)
 
 
     def post(self, request, id, format=None):
-        ##print request.data
-        society=SupplierTypeSociety.objects.get(pk=id)
+        for stall in request.data['stall_details']:
+            if 'id' in stall:
+                stall_item = StallInventory.objects.get(pk=stall['id'])
+                stall_serializer = StallInventorySerializer(stall_item,data=stall)
 
-        if 'stall_count' in request.data:
-           society.stall_count = request.data['stall_count']
-           society.save()
+            else:
+                stall_serializer = StallInventorySerializer(data=stall)
 
-        if request.data['stalls_available']:
-            response = post_data(StallInventory, StallInventorySerializer, request.data['stall_details'], society)
-            if response == False:
-                return Response(status=400)
+            if stall_serializer.is_valid():
+                stall_serializer.save()
+            else:
+                return Response(stall_serializer.errors, status=400)
 
-            for index, key in enumerate(request.data['stall_details'], start=1):
-                if 'id' not in key:
-                    #populate ad inventory tablelift_tag = generate_location_tag(tag_initial, 'lift', index)
-                    #loc_tag = society.society_name.upper()[:3] + key['stall_location'].upper()[:3] +'ST' + str(index)
-                    loc_tag = key['adinventory_id'].upper()[:18]
-                    st_location = InventoryLocation(location_id = loc_tag, location_type='Stall')
-                    st_location.save()
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = key['adinventory_id'], adinventory_name = 'STALL', location = st_location)
-                    ad_inv.save(key['type'], society)
+        return Response(status=200)
 
-        return Response(status=201)
-
-class CarDisplayAPIView(APIView):
+'''class CarDisplayAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             car_displays = SupplierTypeSociety.objects.get(pk=id).car_displays.all()
@@ -914,7 +969,7 @@ class CarDisplayAPIView(APIView):
             else:
                 return Response(serializer.errors, status=400)
 
-        return Response(serializer.data, status=201)
+        return Response(serializer.data, status=201)'''
 
 
 
@@ -1151,7 +1206,7 @@ def post_data(model, model_serializer, inventory_data, foreign_value=None):
         if serializer.is_valid():
             serializer.save(supplier=foreign_value)
         else:
-            ##print serializer.errors
+            #print serializer.errors
             return False
     return True
 

@@ -8,8 +8,7 @@
  *
  * Main module of the application.
  */
- var APIBaseUrl = 'http://localhost:8108/';
-//var APIBaseUrl = 'http://192.168.1.102:8108/';
+  var APIBaseUrl = 'http://localhost:8108/';
 //var APIBaseUrl = 'http://coreapi-dev-test.ap-southeast-1.elasticbeanstalk.com/'
 
 angular.module('Authentication', []);
@@ -75,6 +74,11 @@ angular
           controller: 'CreateCampaignCtrl',
           templateUrl: 'modules/pages/manageCampaign/create/create-campaign.tmpl.html'
         })
+        .state('manageCampaign.proposal', {
+            url : '/proposal',
+            controller: 'CreateProposalCtrl',
+            templateUrl: 'modules/pages/manageCampaign/createproposal/create-proposal.tmpl.html'
+          })
       .state('manageCampaign.shortlisted', {
           url : '/shortlisted',
           controller: 'ShortlistedCampaignCtrl',
@@ -129,8 +133,12 @@ angular
           url : '/info', //:societyId/
           templateUrl: 'modules/common/infotab/societyinfo-tab.tmpl.html',
           controller: ''
-        });
-        /*
+        })
+      .state('manageCampaign.ongoingcampaign', {
+            url : '/ongoingcampaign',
+            controller: 'OngoingCampaignCtrl',
+            templateUrl: 'modules/pages/manageCampaign/ongoingcampaign/ongoing-campaign.tmpl.html'
+          });        /*
         .state('catalogue.home', {
           url : '/catalogue',
           templateUrl: 'views/society-home.html',
