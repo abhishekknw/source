@@ -875,26 +875,7 @@ class StandeeBannerAPIView(APIView):
 
         return Response(status=200)
 
-    '''    if 'banner_count' in request.data:
-           society.banner_count = request.data['banner_count']
-           society.save()
-
-        if request.data['banner_available']:
-            response = post_data(BannerInventory, BannerInventorySerializer, request.data['banner_details'], society)
-            if response == False:
-                return Response(status=400)
-
-            for index, key in enumerate(request.data['banner_details'], start=1):
-                if 'id' not in key:
-                    #populate ad inventory table
-                    loc_tag = society.society_name.upper()[:3] + key['banner_location'].upper()[:3] +'BA' + str(index)
-                    ba_location = InventoryLocation(location_id = loc_tag, location_type='Banner')
-                    ba_location.save()
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'BANNER', location = ba_location)
-                    ad_inv.save(key['type'], society)
-
-        return Response(status=201)'''
-
+    
 class StallAPIView(APIView):
     def get(self, request, id, format=None):
         response = {}
