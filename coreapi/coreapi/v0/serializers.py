@@ -234,6 +234,7 @@ class InventorySummarySerializer(ModelSerializer):
         model = InventorySummary
 
 
+
 class PriceMappingDefaultSerializer(ModelSerializer):
 
     class Meta:
