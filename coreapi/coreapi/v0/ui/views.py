@@ -1,6 +1,8 @@
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import permissions
+from v0.permissions import IsOwnerOrManager
 from rest_framework import filters
 from serializers import UISocietySerializer, UITowerSerializer
 from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
@@ -83,17 +85,16 @@ class generateSupplierIdAPIView(APIView):
 
 
 class SocietyAPIView(APIView):
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrManager,)
+
     def get(self, request, id, format=None):
-        try:
-            user = request.user
+        #try:
             item = SupplierTypeSociety.objects.get(pk=id)
-            if user.is_superuser or item.created_by == user:
-                serializer = UISocietySerializer(item)
-                return Response(serializer.data)
-            else:
-                return Response(status=403)
-        except :
-            return Response(status=404)
+            self.check_object_permissions(self.request, item)
+            serializer = UISocietySerializer(item)
+            return Response(serializer.data)
+        #except :
+         #   return Response(status=404)
 
     def delete(self, request, id, format=None):
         try:
