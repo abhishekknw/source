@@ -1396,3 +1396,37 @@ class JMN_society(models.Model):
     class Meta:
 
         db_table = 'jmn_society'
+
+
+class  UserProfile(models.Model):
+    user = models.ForeignKey(User, unique=True, related_name='user_profile', db_column='user_id', null=False)
+    is_city_manager = models.BooleanField(db_column='is_city_manager', default=False)
+    is_cluster_manager = models.BooleanField(db_column='is_cluster_manager', default=False)
+
+    class Meta:
+        db_table = 'user_profile'
+
+
+class UserCities(models.Model):
+    user = models.ForeignKey(User, related_name='cities', db_column='user_id', null=False)
+    city = models.ForeignKey(City, db_column='city_id', null=True)
+
+    class Meta:
+        db_table = 'user_cities'
+
+
+
+class UserAreas(models.Model):
+    user = models.ForeignKey(User, related_name='clusters', db_column='user_id', null=False)
+    area = models.ForeignKey(CityArea, db_column='area_id')
+
+    class Meta:
+        db_table = 'user_areas'
+
+
+
+
+
+
+
+

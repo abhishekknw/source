@@ -87,11 +87,11 @@ DATABASES = {
     },
 
     'default': {
-         'NAME':'machadalo_tech',
+         'NAME':'machadalodev',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': '127.0.0.1',
          'USER': 'root',
-         'PASSWORD': '',
+         'PASSWORD': 'khush123',
      }
     }
 
@@ -125,7 +125,7 @@ STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
         ),
      'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
