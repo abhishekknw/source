@@ -818,8 +818,12 @@ class SupplierTypeSociety(models.Model):
     stall_count = models.IntegerField(db_column='STALL_COUNT', blank=True, null=True)  # Field name made lowercase.
     banner_count = models.IntegerField(db_column='BANNER_COUNT', blank=True, null=True)  # Field name made lowercase.
     total_campaign = models.IntegerField(db_column='TOTAL_CAMPAIGN', blank=True, null=True)  # Field name made lowercase.
+    payment_details_available = models.BooleanField(db_column='PAYMENT_DETAILS_AVAILABLE', default=False)
     age_of_society = models.FloatField(db_column='AGE_OF_SOCIETY', blank=True, null=True)  # Field name made lowercase.
-
+    name_for_payment = models.CharField(db_column='NAME_FOR_PAYMENT', max_length=100, blank=True, null=True)  # Field name made lowercase.
+    ifsc_code = models.CharField(db_column='IFSC_CODE', max_length=100, blank=True, null=True)  # Field name made lowercase.
+    bank_name = models.CharField(db_column='BANK_NAME', max_length=100, blank=True, null=True)  # Field name made lowercase.
+    account_no = models.IntegerField(db_column='ACCOUNT_NUMBER', blank=True, null=True)  # Field name made lowercase.
 
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
@@ -1392,3 +1396,37 @@ class JMN_society(models.Model):
     class Meta:
 
         db_table = 'jmn_society'
+
+
+class  UserProfile(models.Model):
+    user = models.ForeignKey(User, unique=True, related_name='user_profile', db_column='user_id', null=False)
+    is_city_manager = models.BooleanField(db_column='is_city_manager', default=False)
+    is_cluster_manager = models.BooleanField(db_column='is_cluster_manager', default=False)
+
+    class Meta:
+        db_table = 'user_profile'
+
+
+class UserCities(models.Model):
+    user = models.ForeignKey(User, related_name='cities', db_column='user_id', null=False)
+    city = models.ForeignKey(City, db_column='city_id', null=True)
+
+    class Meta:
+        db_table = 'user_cities'
+
+
+
+class UserAreas(models.Model):
+    user = models.ForeignKey(User, related_name='clusters', db_column='user_id', null=False)
+    area = models.ForeignKey(CityArea, db_column='area_id')
+
+    class Meta:
+        db_table = 'user_areas'
+
+
+
+
+
+
+
+

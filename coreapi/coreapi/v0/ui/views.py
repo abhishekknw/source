@@ -1,6 +1,8 @@
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import permissions
+from v0.permissions import IsOwnerOrManager
 from rest_framework import filters
 from serializers import UISocietySerializer, UITowerSerializer
 from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
@@ -83,17 +85,16 @@ class generateSupplierIdAPIView(APIView):
 
 
 class SocietyAPIView(APIView):
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrManager,)
+
     def get(self, request, id, format=None):
-        try:
-            user = request.user
+        #try:
             item = SupplierTypeSociety.objects.get(pk=id)
-            if user.is_superuser or item.created_by == user:
-                serializer = UISocietySerializer(item)
-                return Response(serializer.data)
-            else:
-                return Response(status=403)
-        except :
-            return Response(status=404)
+            self.check_object_permissions(self.request, item)
+            serializer = UISocietySerializer(item)
+            return Response(serializer.data)
+        #except :
+         #   return Response(status=404)
 
     def delete(self, request, id, format=None):
         try:
@@ -875,26 +876,7 @@ class StandeeBannerAPIView(APIView):
 
         return Response(status=200)
 
-    '''    if 'banner_count' in request.data:
-           society.banner_count = request.data['banner_count']
-           society.save()
-
-        if request.data['banner_available']:
-            response = post_data(BannerInventory, BannerInventorySerializer, request.data['banner_details'], society)
-            if response == False:
-                return Response(status=400)
-
-            for index, key in enumerate(request.data['banner_details'], start=1):
-                if 'id' not in key:
-                    #populate ad inventory table
-                    loc_tag = society.society_name.upper()[:3] + key['banner_location'].upper()[:3] +'BA' + str(index)
-                    ba_location = InventoryLocation(location_id = loc_tag, location_type='Banner')
-                    ba_location.save()
-                    ad_inv = AdInventoryLocationMapping(adinventory_id = loc_tag, adinventory_name = 'BANNER', location = ba_location)
-                    ad_inv.save(key['type'], society)
-
-        return Response(status=201)'''
-
+    
 class StallAPIView(APIView):
     def get(self, request, id, format=None):
         response = {}
