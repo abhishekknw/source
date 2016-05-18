@@ -665,26 +665,26 @@ class TowerAPIView(APIView):
 
 
     def delete(self, request, id, format=None):
-        #try:
+        try:
             society = SupplierTypeSociety.objects.get(pk=id)
-            tower = SocietyTower.objects.get(tower_id=14).tower_name
+            tower = SocietyTower.objects.get(tower_id=9).tower_name
             posters = PosterInventory.objects.filter(supplier=society, tower_name=tower)
             posters.delete()
 
-            towerId = 14 #request.query_params.get('towId', None)
+            towerId = 9 #request.query_params.get('towId', None)
             item = SocietyTower.objects.get(pk=towerId)
             item.delete()
 
             return Response(status=204)
-        #except SocietyTower.DoesNotExist:
-        #    return Response(status=404)
+        except SocietyTower.DoesNotExist:
+            return Response(status=404)
 
 
     def save_lift_locations(self, c1, c2, tower, society):
         i = c1 + 1
         tow_name = tower.tower_name
         while i <= c2:
-            lift_tag = tower.tower_tag + "00L" + str(i)
+            lift_tag = tower.tower_tag + "00L" + str(i).zfill(2)
             adId = society.supplier_id + lift_tag + "PO01"
             lift = LiftDetails(adinventory_id=adId, lift_tag=lift_tag, tower=tower)
             lift_inv = PosterInventory(adinventory_id=adId, poster_location=lift_tag, tower_name=tow_name, supplier=society)
@@ -695,7 +695,7 @@ class TowerAPIView(APIView):
     def save_nb_locations(self, c1, c2, tower, society):
         i = c1 + 1
         while i <= c2:
-            nb_tag = tower.tower_tag + "00N" + str(i)
+            nb_tag = tower.tower_tag + "00N" + str(i).zfill(2)
             nb = NoticeBoardDetails(notice_board_tag=nb_tag, tower=tower)
             nb.save()
 
@@ -797,6 +797,25 @@ class PosterAPIView(APIView):
            nb_id = society.supplier_id + nb_tag + "PO" + str(i).zfill(2)
            nb = PosterInventory(adinventory_id=nb_id, poster_location=nb_tag, tower_name=nb_tower, supplier=society)
            nb.save()
+
+    def delete(self, request, id, format=None):
+        try:
+            tag = request.query_params.get('notice_board_tag', None)
+            towName = request.query_params.get('tower_name', None)
+
+            society = SupplierTypeSociety.objects.get(pk=id)
+            posters = PosterInventory.objects.filter(supplier=society, poster_location=tag)
+            posters.delete()
+
+            tower = SocietyTower.objects.get(supplier=society, tower_name=towName).tower_id
+            item = NoticeBoardDetails.objects.get(tower_id=tower, notice_board_tag=tag)
+            item.delete()
+
+            return Response(status=204)
+        except SocietyTower.DoesNotExist:
+            return Response(status=404)
+        except NoticeBoardDetails.DoesNotExist:
+            return Response(status=404)
 
 
 class FlierAPIView(APIView):
