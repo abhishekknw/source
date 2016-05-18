@@ -800,21 +800,30 @@ class PosterAPIView(APIView):
 
     def delete(self, request, id, format=None):
         try:
-            tag = request.query_params.get('notice_board_tag', None)
-            towName = request.query_params.get('tower_name', None)
-
+            invId = request.query_params.get('invId', None)
+            invType = request.query_params.get('type', None)
             society = SupplierTypeSociety.objects.get(pk=id)
-            posters = PosterInventory.objects.filter(supplier=society, poster_location=tag)
-            posters.delete()
 
-            tower = SocietyTower.objects.get(supplier=society, tower_name=towName).tower_id
-            item = NoticeBoardDetails.objects.get(tower_id=tower, notice_board_tag=tag)
-            item.delete()
-
+            if invType=='lift':
+                item = LiftDetails.objects.get(pk=invId)
+                tag = item.lift_tag
+                posters = PosterInventory.objects.filter(supplier=society, poster_location=tag)
+                posters.delete()
+                item.delete()
+            if invType=='notice':
+                item = NoticeBoardDetails.objects.get(pk=invId)
+                tag = item.notice_board_tag
+                posters = PosterInventory.objects.filter(supplier=society, poster_location=tag)
+                posters.delete()
+                item.delete()
             return Response(status=204)
-        except SocietyTower.DoesNotExist:
+        except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
         except NoticeBoardDetails.DoesNotExist:
+            return Response(status=404)
+        except LiftDetails.DoesNotExist:
+            return Response(status=404)
+        except PosterInventory.DoesNotExist:
             return Response(status=404)
 
 
