@@ -364,7 +364,7 @@ class InventorySummaryAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        try:
+        #try:
             society = SupplierTypeSociety.objects.get(pk=id)
             towercount = society.tower_count
 
@@ -511,17 +511,31 @@ class InventorySummaryAPIView(APIView):
             return Response(serializer.data, status=200)
 
 
-        except:
-            return Response(status=404)
+        #except:
+        #    return Response(status=404)
 
 
     def save_stall_locations(self, c1, c2, society):
         count = int(c2) + 1
-        for i in range(1, count):
+        for i in range(c1+1, count):
             stall_id = society.supplier_id + "CA0000ST" + str(i).zfill(2)
             print stall_id
             stall = StallInventory(adinventory_id=stall_id, supplier_id=society.supplier_id)
             stall.save()
+
+    def delete(self, request, id, format=None):
+        try:
+            print "hi"
+            invId = request.query_params.get('invId', None)
+            print invId
+            stall = StallInventory.objects.get(pk=invId)
+            print stall
+            stall.delete()
+
+            return Response(status=204)
+        except StallInventory.DoesNotExist:
+            return Response(status=404)
+
 
 
 class BasicPricingAPIView(APIView):
