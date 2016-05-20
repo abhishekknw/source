@@ -54,6 +54,19 @@ angular.module('machadaloPages')
       var contactCopy = angular.copy($scope.contact);
       $scope.model.business.contacts = [$scope.contact];
 
+      pagesService.loadBusinessTypes()
+      .success(function (response){
+          $scope.busTypes = response;
+        });
+
+        $scope.getSubTypes = function() {
+          var id = $scope.model.business.type;
+          pagesService.getSubTypes(id)
+          .success(function (response){
+              $scope.sub_types = response;
+            });
+        }
+
       $scope.addNew = function() {
         $scope.model.business.contacts.push($scope.contact)
       };
@@ -66,7 +79,7 @@ angular.module('machadaloPages')
 	    	pagesService.getAllBusinesses()
 	    	.success(function (response, status) {
 	    		    console.log(response);
-	            $scope.businesses = response;
+	            $scope.businesses = response.businesses;
 	       });
 	    };
 
