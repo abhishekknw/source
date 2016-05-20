@@ -11,5 +11,6 @@ urlpatterns = [
     url(r'^campaign/society/shortlist/$', views.ShortlistSocietyAPIView.as_view()),
     url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/book/$', views.BookCampaignAPIView.as_view()),
     url(r'^finalbooking/(?P<id>[A-Z_a-z0-9]+)/$', views.FinalCampaignBookingAPIView.as_view()),
-
+    url(r'^create_business/load_business_types/$', views.getBusinessTypesAPIView.as_view()),
+    url(r'^subtypes/(?P<id>[A-Z_a-z0-9]+)/$', views.getBusinessSubTypesAPIView.as_view()),
 ]
