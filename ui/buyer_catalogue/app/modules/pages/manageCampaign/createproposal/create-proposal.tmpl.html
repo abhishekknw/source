@@ -1,1 +1,117 @@
-<h1>vidhi</h1>
+<link rel="stylesheet" href="modules/pages/manageCampaign/createproposal/create-proposal.tmpl.css" />
+<div style="margin-top:30px"></div>
+<div class = "container">
+  <div class="row">
+    <div class="rightcontent col-md-9">
+      <div class = "panel panel-default">
+        <div class = "row">
+          <div><h3 class = "panel-heading" style = "margin-top: 0px;">Summary Details</h3></div>
+          <div class = "col-md-3"><label>Inventory Booking Cost</label></div>
+          <div class = "col-md-3"><a href = "#inventoryPricingModal" data-toggle="modal" uib-tooltip="View Inventory Pricing">1000</a></div>
+          <div class = "col-md-3"><label>Execution Cost</label></div>
+          <div class = "col-md-3"><a href = "#executionCostModal" data-toggle="modal" uib-tooltip="View Execution Cost">1000</a></div>
+          <div class = "col-md-4"><label>Other Cost</label></div>
+          <div class = "col-md-3"><a href = "#otherCostModal" data-toggle="modal" uib-tooltip="Other Cost">1000</a></div>
+        </div>
+      </div>
+      <!--<div class="table-responsive">
+      <div class = "col-md-4"><a href="#detailModal" data-toggle="modal">View Contact Details</a></div>
+         <table class="table table-bordered table-hover">
+           <thead>
+           <tr>
+             <th>Society Name</th>
+             <th>Flat Count</th>
+             <th>Tower Count</th>
+             <th>Inventory Count</th>
+             <th>Campaign Inventory Price(Society)</th>
+             <th>Factor</th>
+             <th>Campaign Inventory Price(Business)</th>
+           </tr>
+          </thead>
+         </table>
+      </div>-->
+      <button ng-click="clickToOpen()">My Modal</button>
+         <script type="text/ng-template" id="templateId">
+        <div>
+          Click here
+        </div>
+    </script>
+</div>
+
+      <div id="inventoryPricingModal" class="modal fade">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Inventory Pricing Details</h4>
+                <hr/>
+                <!-- For loop to fetch the contact array -->
+                <div class = "modal-body" style = "height: 300px;">
+	               <!--<div class = "table">-->
+                   <table class="table table-bordered table-hover">
+                     <thead>
+                     <tr>
+                       <th>Inventory Type</th>
+                       <th>Total Societies</th>
+                       <th>Total Count</th>
+                       <th>Total Cost</th>
+                     </tr>
+                    </thead>
+                   </table>
+	      	            <br>
+	              <!-- </div>-->
+	            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="executionCostModal" class="modal fade">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Execution Cost Details</h4>
+                <hr/>
+                <div class = "modal-body" style = "height: 300px;">
+                   <table class="table table-bordered table-hover">
+                     <thead>
+                     <tr>
+                       <th>Execution Cost Inventory Type</th>
+                       <th>Total Societies</th>
+                       <th>Total Count</th>
+                       <th>Total Cost</th>
+                     </tr>
+                    </thead>
+                   </table>
+	      	            <br>
+	            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="otherCostModal" class="modal fade">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Other Cost Details</h4>
+                <hr/>
+                <div class = "modal-body" style = "height: 300px;">
+                  <div class = "row">
+  	              		<div class = "col-md-3"><label>Content Deveoplment Cost </label></div>
+  	             		  <div class = "col-md-3"><input type = "number" name="contentcost" id="contentcost" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.name" ng-required="true" />
+  	               		<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>
+
+                      <div class = "col-md-3"><label >Business Type</label></div>
+  	              		<div class = "col-md-3"><input type="text" name="type" id="type" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.type" ng-required = "true" />
+  	              		<span class="show-error" ng-show="form.type.$error.pattern">Please Enter Valid Business Type</span></div>
+  	            	</div>
+  	           </div>
+	              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
