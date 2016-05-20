@@ -31,3 +31,7 @@
 {
 		padding: 5px;
 }
+.input-size{
+	width: 100% !important;
+	align-self: right !important;
+}

@@ -10,11 +10,11 @@
 			    </div>
 			    <div class="col-md-4">
 				  	<span class = "" ng-show ="choice == 'existing'">
-				   	<select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
-				    <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
-			      	</select>
-		      		</span>
-	      		</div>
+				   	    <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
+				            <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
+			          </select>
+		      	</span>
+	      	</div>
             <div class="col-md-4">
 	      			<label for="new">Create New Business</label>
 	      			<input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
@@ -150,16 +150,24 @@
 	               		<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>
 
                     <div class = "col-md-3"><label >Business Type</label></div>
-	              		<div class = "col-md-3"><input type="text" name="type" id="type" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.type" ng-required = "true" />
-	              		<span class="show-error" ng-show="form.type.$error.pattern">Please Enter Valid Business Type</span></div>
+                    <div class = "col-md-3">
+                      <select class="form-control input-size" name="bstype" ng-model="model.business.type" ng-change="getSubTypes()">
+                        <option value="">Select Business Type</option   >
+                        <option  ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.type_name}}</option>
+    			          </select>
+                  </div>
 	            	</div>
 	           </div>
 
 	           <div class="form-group">
                <div class = "row">
 	              		<div class = "col-md-3"><label >Business Sub-Type</label></div>
-	             		  <div class = "col-md-3"><input type="text" name="subtype" id="subtype" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.sub_type" />
-	              		<span class="show-error" ng-show="form.subtype.$error.pattern">Please Enter Valid Business Sub-Type</span></div>
+                    <div class = "col-md-3">
+                      <select class="form-control input-size" name="sub_type" ng-model="model.business.sub_type" ng-change="getSubTypes()">
+                        <option value="">Select Business Sub-Type</option>
+                        <option  ng-repeat = "subtype in sub_types">{{subtype.sub_type}}</option>
+    			            </select>
+                    </div>
 
                     <div class = "col-md-3"><label>Business Email</label></div>
 	              		<div class = "col-md-3"><input type="email" name="business_email" id="business_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.business.email" ng-required="true" />

@@ -958,8 +958,8 @@ class SocietyTower(models.Model):
 class Business(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
-    type = models.CharField(db_column='TYPE', max_length=20, blank=True)
-    sub_type = models.CharField(db_column='SUB_TYPE', max_length=20, blank=True)
+    type = models.CharField(db_column='TYPE', max_length=100, blank=True)
+    sub_type = models.CharField(db_column='SUB_TYPE', max_length=100, blank=True)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
@@ -996,6 +996,22 @@ class BusinessContact(models.Model):
 
         db_table = 'business_contact'
 
+class BusinessTypes(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    type_name = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
+
+    class Meta:
+
+        db_table = 'business_types'
+
+
+class BusinessSubTypes(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    sub_type = models.CharField(db_column='SUBTYPE', max_length=100, blank=True)
+    business = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE', null=True, on_delete=models.CASCADE)
+    class Meta:
+
+        db_table = 'business_subtypes'
 
 
 class CampaignTypes(models.Model):

@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from v0.models import Business, BusinessContact, Campaign, CampaignTypeMapping, CampaignSocietyMapping, SocietyInventoryBooking
 from v0.ui.serializers import UISocietySerializer
-from v0.serializers import SocietyInventoryBookingSerializer, BusinessSerializer, BusinessContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer
+from v0.serializers import SocietyInventoryBookingSerializer, BusinessSerializer, BusinessTypesSerializer, BusinessContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer
 
 
 class UISocietyInventorySerializer(ModelSerializer):
