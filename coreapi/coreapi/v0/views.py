@@ -3,6 +3,20 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer
 from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea
+from v0.serializers import JMN_societySerializer
+from v0.societies import societies
+
+class SaveSocietyAPIView(APIView):
+
+    def get(self, request, format=None):
+        for society in societies:
+            serializer = JMN_societySerializer(data=society)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors, status=400)
+        return Response(status=200)
+
 
 
 class BannerInventoryAPIView(APIView):

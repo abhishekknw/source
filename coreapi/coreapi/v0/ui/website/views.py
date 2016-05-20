@@ -17,6 +17,7 @@ class BusinessAPIListView(APIView):
         except :
             return Response(status=404)
 
+    # the delete api is not being used
     def delete(self, request, id, format=None):
         try:
             item = SupplierTypeSociety.objects.get(pk=id)
@@ -39,6 +40,7 @@ class BusinessAPIView(APIView):
         except :
             return Response(status=404)
 
+    # the delete api is not being used
     def delete(self, request, id, format=None):
         try:
             item = SupplierTypeSociety.objects.get(pk=id)
@@ -108,7 +110,7 @@ class NewCampaignAPIView(APIView):
                             campaign_type_map = CampaignTypeMapping(campaign=campaign, type=key, sub_type=value)
                             campaign_type_map.save()
 
-                    if 'suplier_type' in request.data:
+                    if 'supplier_type' in request.data:
                         for key, value in request.data['supplier_type'].iteritems():
                             supplier_type_map = CampaignSupplierTypes(campaign=campaign, supplier_type=key, count=value)
                             supplier_type_map.save()
@@ -133,6 +135,7 @@ class CampaignAPIView(APIView):
         except :
             return Response(status=404)
 
+    # the delete api is not being used
     def delete(self, request, id, format=None):
         try:
             item = SupplierTypeSociety.objects.get(pk=id)
@@ -244,6 +247,7 @@ class ShortlistSocietyAPIView(APIView):
 
         if 'society_id' in request.data:
             try:
+                society_id = request.data['society_id']
                 society = SupplierTypeSociety.objects.get(pk=request.data['society_id'])
             except SupplierTypeSociety.DoesNotExist:
                 return Response(status=404)
@@ -257,7 +261,7 @@ class ShortlistSocietyAPIView(APIView):
             inventory = SocietyInventoryBooking(campaign=campaign, society=society, adinventory_type=key)
             inventory.save()
 
-        return Response({"message": "Society Shortlisted"}, status=200)
+        return Response({"message": "Society Shortlisted", "id": society_id}, status=200)
 
 
 class BookCampaignAPIView(APIView):
@@ -274,18 +278,16 @@ class BookCampaignAPIView(APIView):
         except :
             return Response(status=404)
 
-
-
 class FinalCampaignBookingAPIView(APIView):
 
-    def post(self, request, format=None):
+    def get(self, request, id, format=None):
 
-        if 'campaign_id' in request.data:
-            try:
-                campaign = Campaign.objects.get(pk=request.data['campaign_id'])
-            except Campaign.DoesNotExist:
-                return Response(status=404)
-        else:
-            return Response(status=400)
+        try:
+            campaign = Campaign.objects.get(pk=id)
+            serializer = CampaignSerializer(campaign)
+            return Response(serializer.data)
+        except :
+            return Response(status=404)
 
         return Response({"message": "Campaign Booked Successfully"}, status=200)
+

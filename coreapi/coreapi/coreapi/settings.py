@@ -92,9 +92,8 @@ DATABASES = {
          'HOST': '127.0.0.1',
          'USER': 'root',
          'PASSWORD': '',
-     }
+         }
     }
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -125,7 +124,7 @@ STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAdminUser',
+        'rest_framework.permissions.IsAuthenticated',
         ),
      'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
