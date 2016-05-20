@@ -1,10 +1,8 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/createproposal/create-proposal.tmpl.css" />
 <div style="margin-top:30px"></div>
-<div class = "container">
-  <div class="row">
-    <div class="rightcontent col-md-9">
-      <div class = "panel panel-default">
-        <div class = "row">
+<!-- Start Summary Section-->
+    <div class = "col-md-10">
+      <div class = "panel panel-default row">
           <div><h3 class = "panel-heading" style = "margin-top: 0px;">Summary Details</h3></div>
           <div class = "col-md-3"><label>Inventory Booking Cost</label></div>
           <div class = "col-md-3"><a data-target = "#inventoryPricingModal" data-toggle="modal" uib-tooltip="View Inventory Pricing">1000</a></div>
@@ -12,25 +10,54 @@
           <div class = "col-md-3"><a data-target = "#executionCostModal" data-toggle="modal" uib-tooltip="View Execution Cost">1000</a></div>
           <div class = "col-md-4"><label>Other Cost</label></div>
           <div class = "col-md-3"><a data-target = "#otherCostModal" data-toggle="modal" uib-tooltip="Other Cost">1000</a></div>
-        </div>
       </div>
-      <!--<div class="table-responsive">=
-      <div class = "col-md-4"><a href="#detailModal" data-toggle="modal">View Contact Details</a></div>
-         <table class="table table-bordered table-hover">
-           <thead>
-           <tr>
-             <th>Society Name</th>
-             <th>Flat Count</th>
-             <th>Tower Count</th>
-             <th>Inventory Count</th>
-             <th>Campaign Inventory Price(Society)</th>
-             <th>Factor</th>
-             <th>Campaign Inventory Price(Business)</th>
-           </tr>
-          </thead>
-         </table>
-      </div>-->
     </div>
+<!-- End Summary Section-->
+<!-- Start table Section-->
+<div class = "containner">
+    <div class = "row col-md-12">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th>Society Name</th>
+              <th>Flat Count</th>
+              <th>Tower Count</th>
+              <th>Inventory Type</th>
+              <th>Inventory Count</th>
+              <th>Campaign Inventory Price(Society)</th>
+              <th>Factor</th>
+              <th>Campaign Inventory Price(Business)</th>
+              <th>Action</th>
+              <th>View Details</th>
+              <th>Last Booked Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Palaazip CHS</td>
+              <td>40</td>
+              <td>4</td>
+              <td>Poster</td>
+              <td>7</td>
+              <td>1000</td>
+              <td>
+                <p class="input-group">
+                  <input type="number" class = "form-control"/>
+                </p>
+             </td>
+              <td>70000</td>
+              <td>Delete</td>
+              <td>View Details></td>
+              <td>27-05-1986</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<!-- End Table Section>
+<!-- Start code for Modal Windows-->
 
       <div id="inventoryPricingModal" class="modal fade">
         <div class="modal-dialog">
@@ -123,7 +150,4 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- End code for Modal Windows-->
