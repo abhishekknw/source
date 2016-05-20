@@ -1,36 +1,39 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/createproposal/create-proposal.tmpl.css" />
 <div style="margin-top:30px"></div>
 <!-- Start Summary Section-->
-    <div class = "col-md-10">
-      <div class = "panel panel-default row">
-          <div><h3 class = "panel-heading" style = "margin-top: 0px;">Summary Details</h3></div>
-          <div class = "col-md-3"><label>Inventory Booking Cost</label></div>
-          <div class = "col-md-3"><a data-target = "#inventoryPricingModal" data-toggle="modal" uib-tooltip="View Inventory Pricing">1000</a></div>
-          <div class = "col-md-3"><label>Execution Cost</label></div>
-          <div class = "col-md-3"><a data-target = "#executionCostModal" data-toggle="modal" uib-tooltip="View Execution Cost">1000</a></div>
-          <div class = "col-md-4"><label>Other Cost</label></div>
-          <div class = "col-md-3"><a data-target = "#otherCostModal" data-toggle="modal" uib-tooltip="Other Cost">1000</a></div>
+      <div class = "panel panel-default business-panel">
+          <h3 class = "panel-heading">Summary Details</h3>
+          <div class = "table">
+            <div class = "row">
+              <div class = "col-md-3"><label>Inventory Booking Cost</label></div>
+              <div class = "col-md-3"><a data-target = "#inventoryPricingModal" data-toggle="modal" uib-tooltip="View Inventory Pricing">1000</a></div>
+              <div class = "col-md-3"><label>Execution Cost</label></div>
+              <div class = "col-md-3"><a data-target = "#executionCostModal" data-toggle="modal" uib-tooltip="View Execution Cost">1000</a></div>
+            </div>
+            <div class = "row">
+              <div class = "col-md-3"><label>Other Cost</label></div>
+              <div class = "col-md-3"><a data-target = "#otherCostModal" data-toggle="modal" uib-tooltip="Other Cost">1000</a></div>
+            </div>
       </div>
     </div>
 <!-- End Summary Section-->
 <!-- Start table Section-->
-<div class = "containner">
-    <div class = "row col-md-12">
+    <div class = "container table-position">
       <div class="table-responsive">
         <table class="table table-bordered table-hover">
           <thead>
             <tr>
-              <th>Society Name</th>
-              <th>Flat Count</th>
-              <th>Tower Count</th>
-              <th>Inventory Type</th>
-              <th>Inventory Count</th>
-              <th>Campaign Inventory Price(Society)</th>
-              <th>Factor</th>
-              <th>Campaign Inventory Price(Business)</th>
-              <th>Action</th>
-              <th>View Details</th>
-              <th>Last Booked Date</th>
+              <th class="col-md-1 table-heading">Society Name</th>
+              <th class="col-md-1 table-heading">Flat Count</th>
+              <th class="col-md-1 table-heading">Tower Count</th>
+              <th class="col-md-1 table-heading">Inventory Type</th>
+              <th class="col-md-1 table-heading">Inventory Count</th>
+              <th class="col-md-2 table-heading">Campaign Inventory Price(Society)</th>
+              <th class="col-md-1 table-heading">Factor</th>
+              <th class="col-md-2 table-heading">Campaign Inventory Price(Business)</th>
+              <th class="col-md-1 table-heading">Action</th>
+              <th class="col-md-1 table-heading">View Details</th>
+              <th class="col-md-1 table-heading">Last Booked Date</th>
             </tr>
           </thead>
           <tbody>
@@ -55,9 +58,7 @@
         </table>
       </div>
     </div>
-  </div>
-<!-- End Table Section>
-<!-- Start code for Modal Windows-->
+
 
       <div id="inventoryPricingModal" class="modal fade">
         <div class="modal-dialog">

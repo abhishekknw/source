@@ -1,3 +1,18 @@
 .fields{
   margin-bottom: 10px;
 }
+.business-panel{
+	margin-top: 0px;
+	padding-right: 10px;
+  padding-left: 10px;
+  padding-bottom: 10px;
+	width: 900px;
+	align-self: center;
+}
+.table-heading{
+  background-color: #f2f2f2;
+  text-align: left;
+}
+.table-position{
+  padding-left: 0px !important;
+}
