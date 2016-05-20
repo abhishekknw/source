@@ -29,8 +29,7 @@ angular
     'angular.filter',
     'angularUtils.directives.dirPagination',
     'angularjs-dropdown-multiselect',
-    'ngFileUpload',
-    'ngDialog'
+    'ngFileUpload'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
      // $routeProvider.otherwise('/');
