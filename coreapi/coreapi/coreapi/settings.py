@@ -88,11 +88,11 @@ DATABASES = {
     },
 
     'default': {
-         'NAME':'machadalo_tech',
+         'NAME':'ebdb',
          'ENGINE': 'django.db.backends.mysql',
-         'HOST': '127.0.0.1',
-         'USER': 'root',
-         'PASSWORD': '',
+         'HOST': 'aa4mz0qlg2vf4d.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+         'USER': 'machadalo',
+         'PASSWORD': 'machadalo',
          }
     }
 
