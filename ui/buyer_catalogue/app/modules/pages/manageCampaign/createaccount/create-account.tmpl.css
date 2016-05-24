@@ -1,0 +1,38 @@
+.page-container{
+	padding: 5px;
+	position: relative;
+}
+.business-panel{
+	margin-top: 0px;
+	padding: 10px;
+	width: 900px;
+	align-self: center;
+}
+.form{
+	padding: 9px;
+}
+.choices{
+	font-size: 15px;
+	margin-top: 40px;
+}
+.choices.form-group {
+	padding: 20px;
+}
+.show-error{
+	font-size: 15px;
+	color: red;
+}
+.submit-button{
+	padding-top: 10px;
+}
+.textbox
+{
+		padding: 5px;
+}
+.input-size{
+	width: 100% !important;
+	align-self: right !important;
+}
+.btn-space{
+	margin-bottom: 10px;
+}

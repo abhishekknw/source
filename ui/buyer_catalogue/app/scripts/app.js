@@ -75,6 +75,11 @@ angular
           controller: 'CreateCampaignCtrl',
           templateUrl: 'modules/pages/manageCampaign/create/create-campaign.tmpl.html'
         })
+      .state('manageCampaign.createaccount', {
+            url : '/createAccount',
+            controller: 'CreateAccountCtrl',
+            templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html'
+        })
         .state('manageCampaign.proposal', {
             url : '/proposal',
             controller: 'CreateProposalCtrl',

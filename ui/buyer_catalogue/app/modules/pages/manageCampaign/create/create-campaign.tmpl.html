@@ -25,9 +25,9 @@
 
 	    <form name = "form1" ng-show="choice == 'selected'" class="">
 	      <div class = "panel panel-default business-panel">
+        <h3 class = "panel-heading">Business Details</h3>
 	      <div class = "table">
 	      	<div class = "row">
-            <div><h3 class = "panel-heading">Business Details</h3></div>
 	      		<div class = "col-md-3"><label>Business Name</label></div>
 	      		<div class = "col-md-3">{{model.business.name}}</div>
 	      		<div class = "col-md-3"><label>Business Type</label></div>
@@ -137,11 +137,6 @@
       <form name = "form" ng-show = "choice == 'select'|| choice == 'new'" class="" ng-submit="create()" role="form">
       	<div class = "panel panel-default business-panel">
         	<h3 class = "panel-heading">Create Business</h3>
-	         <div class="errorMessages">
-	            <span ng-show="form.username.$dirty && form.username.$error.required" class="help-block">Username is required</span>
-	            <span ng-show="form.password.$dirty && form.password.$error.required" class="help-block">Password is required</span>
-	            <div ng-show="error" class="error">{{error}}</div>
-	         </div>
            <div class = "table">
 	           <div class="form-group">
 	           		<div class = "row">
@@ -290,7 +285,7 @@
 	            <div class = "col-md-3"><label>{{type}}</label></div>
 	        	  <div class = "col-md-1"><input type="checkbox"  id="{{type}}" name="{{type}}" ng-model="supplier_type1"/></div>
 							<span class = "" ng-show="supplier_type1">
-						   	<div class = "col-md-3  textbox"><input type="number" name="count" id="count" class="form-control" ng-model="model.supplier_type[type]"/></div>
+						   	<div class = "col-md-3 textbox"><input type="number" name="count" id="count" class="form-control" ng-model="model.supplier_type[type]"/></div>
 		          </span>
 	        </div>
           </div>
