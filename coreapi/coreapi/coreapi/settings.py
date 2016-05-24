@@ -140,6 +140,24 @@ REST_FRAMEWORK = {
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True
 
+CORS_ALLOW_HEADERS = (
+    'x-requested-with',
+    'content-type',
+    'accept',
+    'origin',
+    'authorization',
+    'x-csrftoken'
+)
+
+CORS_ALLOW_METHODS = (
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS'
+)
+
 
 # Authentication
 JWT_AUTH = {
