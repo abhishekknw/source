@@ -79,7 +79,7 @@ angular.module('machadaloPages')
 	    	pagesService.getAllBusinesses()
 	    	.success(function (response, status) {
 	    		    console.log(response);
-	            $scope.businesses = response.businesses;
+	            $scope.businesses = response;
 	       });
 	    };
 

@@ -118,28 +118,34 @@
                 <hr/>
                 <div class = "modal-body" style = "height: 300px;">
                   <div class = "row">
-  	              		<div class = "col-md-5"><label>Content Deveoplment Cost </label></div>
-  	             		  <div class = "col-md-3"><input type = "number" name="contentcost" id="contentcost" class="form-control" ng-model="model.business.name" ng-required="true" />
+  	              		<div class = "col-md-5"><label>Content Development Cost </label></div>
+                      <div class = "col-md-1"></div>
+  	             		  <div class = "col-md-3"><input type = "number" name="contentcost" id="contentcost" class="form-control textbox" ng-model="model.business.name" ng-required="true" />
                   </div>
                   <div class = "row">
-                    <div class = "col-md-5"><label>Project Management Cost</label></div>
-                    <div class = "col-md-3"><input type = "number" name = "projectcost" id = "projectcost" class="form-control"  ng-model="model.business.type" ng-required = "true" />
+                    <div class = "col-md-5"><label class = "modal-align1">Project Management Cost</label></div>
+                    <div class = "col-md-1"></div>
+                    <div class = "col-md-3"><input type = "number" name = "projectcost" id = "projectcost" class="form-control textbox"  ng-model="model.business.type" ng-required="true" />
                   </div>
                   <div class = "row">
-                    <div class = "col-md-3"><label>Data Analytics</label></div>
-                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control" ng-pattern = "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.type" ng-required = "true" />
+                    <div class = "col-md-5"><label class = "modal-align">Data Analytics</label></div>
+                    <div class = "col-md-1"></div>
+                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control textbox" ng-pattern = "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.type" ng-required = "true" />
                     <span class="show-error" ng-show="form.type.$error.pattern">Please Enter Valid Business Type</span></div>
                   </div>
                   <div class = "row">
-                    <div class = "col-md-3"><label>Printing Cost</label></div>
-                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control" ng-pattern = "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.type" ng-required = "true" />
+                    <div class = "col-md-5"><label class = "modal-align">Printing Cost</label></div>
+                    <div class = "col-md-1"></div>
+                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control textbox" ng-pattern = "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.type" ng-required = "true" />
                     <span class="show-error" ng-show="form.type.$error.pattern">Please Enter Valid Business Type</span></div>
                   </div>
                   <div class = "row">
-                    <div class = "col-md-3"><label>Digital Campaign Cost</label></div>
-                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control" ng-pattern = "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.type" ng-required = "true" />
+                    <div class = "col-md-5"><label class = "modal-align">Digital Campaign Cost</label></div>
+                    <div class = "col-md-1"></div>
+                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control textbox" ng-pattern = "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.type" ng-required = "true" />
                     <span class="show-error" ng-show="form.type.$error.pattern">Please Enter Valid Business Type</span></div>
                   </div>
+                  <br>
                   <div class="modal-footer">
                       <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                       <button type="button" class="btn btn-primary">Save changes</button>

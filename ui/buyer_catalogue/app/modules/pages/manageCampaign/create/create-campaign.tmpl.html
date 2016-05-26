@@ -148,7 +148,7 @@
                     <div class = "col-md-3">
                       <select class="form-control input-size" name="bstype" ng-model="model.business.type" ng-change="getSubTypes()">
                         <option value="">Select Business Type</option   >
-                        <option  ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.type_name}}</option>
+                        <option  ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.type}}</option>
     			          </select>
                   </div>
 	            	</div>
@@ -262,7 +262,9 @@
         <div class = "table">
           <div class = "row">
             <div class = "col-md-4"><button class="btn btn-danger" ng-click="addNew()">Add New Contact</button></div>
-          </div>
+            <div class = "col-md-4"></div>
+            <div class = "col-md-4"><button type="submit" class="btn btn-danger" class="UIbutton">Create & Continue</button></div>
+        </div>
       </div>
 	  </div>
   </form>
@@ -274,7 +276,7 @@
       </span>
     </div>
   </form>
-  <form name="form4" ng-show = "choice == 'selected'|| choice == 'new'" class="" ng-submit="create()" role="form">
+<!--  <form name="form4" ng-show = "choice == 'selected'|| choice == 'new'" class="" ng-submit="create()" role="form">
 	   <div class="panel panel-default business-panel">
        <h3 class = "panel-heading">Create Campaign</h3>
          <div class = "table">
@@ -338,6 +340,6 @@
 	      </span>
       </div>
     </div>
-  </form>
+  </form>-->
 <div class="col-md-2"></div>
 </div>
