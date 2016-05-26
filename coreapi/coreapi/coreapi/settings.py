@@ -88,11 +88,11 @@ DATABASES = {
     },
 
     'default': {
-         'NAME':'machadalo_tech',
+         'NAME':'ebdb',
          'ENGINE': 'django.db.backends.mysql',
-         'HOST': '127.0.0.1',
-         'USER': 'root',
-         'PASSWORD': '',
+         'HOST': 'aa4mz0qlg2vf4d.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+         'USER': 'machadalo',
+         'PASSWORD': 'machadalo',
          }
     }
 
@@ -139,6 +139,24 @@ REST_FRAMEWORK = {
 
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOW_HEADERS = (
+    'x-requested-with',
+    'content-type',
+    'accept',
+    'origin',
+    'authorization',
+    'x-csrftoken'
+)
+
+CORS_ALLOW_METHODS = (
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS'
+)
 
 
 # Authentication

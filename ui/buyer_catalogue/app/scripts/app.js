@@ -9,7 +9,8 @@
  * Main module of the application.
  */
   var APIBaseUrl = 'http://localhost:8108/';
-//var APIBaseUrl = 'http://coreapi-dev-test.ap-southeast-1.elasticbeanstalk.com/'
+  //var APIBaseUrl = 'http://coreapi-dev-test.ap-southeast-1.elasticbeanstalk.com/';
+  //var APIBaseUrl = 'http://coreapi-dev.ap-southeast-1.elasticbeanstalk.com/';
 
 angular.module('Authentication', []);
 angular
@@ -124,6 +125,11 @@ angular
           controller: 'FinalizeCampaignCtrl',
           templateUrl: 'modules/pages/manageCampaign/finalize/finalize.tmpl.html'
         })
+        .state('manageCampaign.release', {
+            url : '/release',
+            controller: 'ReleaseCampaignCtrl',
+            templateUrl: 'modules/pages/manageCampaign/release/release.tmpl.html'
+          })
       .state('manageCampaign.finalize.finalizeInventory', {
           url : '/:campaignId/finalizeInventory/',
           controller: 'FinalizeInventoryCtrl',

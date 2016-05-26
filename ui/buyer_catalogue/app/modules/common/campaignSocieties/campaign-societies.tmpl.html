@@ -1,16 +1,10 @@
 <link rel="stylesheet" href="modules/common/campaignSocieties/campaign-societies.tmpl.css"/>
-
 <!--campaign info -->
-
  <div style="margin-top:30px">
 	<table  cellpadding="30" class="hpadding20 table table-bordered noborderright noborderleft " >
 		 <tbody>
-			 <tr valign="center">
-					<td colspan="4" >
-						<div class="col-md-4 offset-0">
-					 		<img style="height: 175px;width: 230px;" ng-src = "http://mdimages.s3.amazonaws.com/MD_MUMTOBHRSJH_3dm0frxabW" alt=""/>
-					  </div>
-
+			 <tr><!--removed valign="center"-->
+					<td colspan="4">
 						 <div class="col-md-8 offset-0" style="padding-left:8px;">
 							<div class="col-md-7 hpadding20">
 								 <h4>{{campaign.business.name}} Ad Campaign</h4>
@@ -54,9 +48,6 @@
 					 <tbody>
 						 <tr valign="center">
 								<td colspan="4" >
-									<div class="col-md-4 offset-0">
-								 		<img style="height: 175px;width: 230px;" ng-src = "http://mdimages.s3.amazonaws.com/{{row.society.society_image.image_url}}" alt=""/>
-								 </div>
 								 <div class="col-md-8 offset-0" style="padding-left:8px;">
 										<div class="col-md-7 hpadding20">
 											<h4>{{row.society.society_name}}</h4>
@@ -88,16 +79,5 @@
 				<div class="clearfix"></div>
 			</div>
 			<!-- End of offset1-->
-			<div class="hpadding20">
-				<ul class="pagination right paddingbtm20">
-					<li class="disabled"><a href="#">&laquo;</a></li>
-					<li><a href="#">1</a></li>
-					<li><a href="#">2</a></li>
-					<li><a href="#">3</a></li>
-					<li><a href="#">4</a></li>
-					<li><a href="#">5</a></li>
-					<li><a href="#">&raquo;</a></li>
-				</ul>
-			</div>
 		</div>
 		<!-- END OF LIST CONTENT-->

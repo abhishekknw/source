@@ -17,8 +17,15 @@
       </div>
     </div>
 <!-- End Summary Section-->
+<!-- Start: Code for master factor-->
+<div class = "col-md-8">
+    <div class = "col-md-4"><label>Master Factor </label></div>
+    <div class = "col-md-3"><input type = "number" name="masterfactor" id="masterfactor" ng-model = "masterfactor" class="form-control fields"/></div>
+</div>
+<!-- End: Code for master factor-->
 <!-- Start table Section-->
-    <div class = "container table-position">
+<div class = "col-md-12">
+    <div class = "table-position">
       <div class="table-responsive">
         <table class="table table-bordered table-hover">
           <thead>
@@ -46,19 +53,19 @@
               <td>1000</td>
               <td>
                 <p>
-                  <input type="number" class = "form-control"/>
+                  <input type="number" class = "form-control" ng-model = "masterfactor"/>
                 </p>
              </td>
               <td>70000</td>
-              <td>Delete</td>
-              <td>View Details</td>
+              <td><a href = "">Delete</a></td>
+              <td><a href = "">View Details</a></td>
               <td>27-05-2015</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-
+</div>
 
       <div id="inventoryPricingModal" class="modal fade">
         <div class="modal-dialog">
