@@ -1,9 +1,9 @@
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from serializers import UIBusinessSerializer, CampaignListSerializer, CampaignInventorySerializer
-from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, BusinessSubTypes
+from serializers import UIBusinessSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountSerializer
+from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountSerializer, AccountContactSerializer
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, BusinessSubTypes, Account, AccountContact
 from django.db.models import Q
 from django.db import transaction
 
@@ -51,7 +51,6 @@ class getBusinessSubTypesAPIView(APIView):
             return Response(status=404)
 
 
-
 class BusinessAPIView(APIView):
     def get(self, request, id, format=None):
         try:
@@ -75,8 +74,34 @@ class BusinessAPIView(APIView):
 
 
 
+class AccountAPIListView(APIView):
+    def get(self, request, format=None):
+        try:
+            items = Account.objects.all()
+            serializer = AccountSerializer(items, many=True)
+            return Response(serializer.data, status=200)
+        except :
+            return Response(status=404)
+
+
+class AccountAPIView(APIView):
+    def get(self, request, id, format=None):
+        #try:
+            account = Account.objects.get(pk=id)
+            serializer1 = UIAccountSerializer(account)
+            business = Business.objects.get(pk=account.business_id)
+            serializer2 = BusinessSerializer(business)
+            '''contacts = AccountContact.objects.filter(account=account)
+            serializer3 = AccountContactSerializer(contacts, many=True)'''
+
+            serializer = {'account':serializer1.data, 'business':serializer2.data}
+            return Response(serializer, status=200)
+        #except :
+        #    return Response(status=404)
+
+
 class NewCampaignAPIView(APIView):
-    def post(self, request, format=None):
+     def post(self, request, format=None):
 
             print request.data
             #current_user = request.user
@@ -110,6 +135,43 @@ class NewCampaignAPIView(APIView):
                     else:
                         return Response(contact_serializer.errors, status=400)
 
+            return Response(status=200)
+            
+
+class CreateCampaignAPIView(APIView):
+    def post(self, request, format=None):
+            print request.data
+            #current_user = request.user
+
+            account_data = request.data['account']
+            with transaction.atomic():
+                if 'id' in account_data:
+                    account = Account.objects.get(pk=account_data['id'])
+                    serializer = AccountSerializer(account,data=account_data)
+                else:
+                    #request.data['created_by'] = current_user.id
+                    serializer = AccountSerializer(data=account_data)
+
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors, status=400)
+
+                account = Account.objects.get(pk=serializer.data['id'])
+
+                #here we will start storing contacts
+                #if 'contact' in business_data and business_data['contact']:
+                for contact in account_data['contacts']:
+                    if 'id' in contact:
+                        item = AccountContact.objects.get(pk=contact['id'])
+                        contact_serializer = AccountContactSerializer(item, data=contact)
+                    else:
+                        contact_serializer = AccountContactSerializer(data=contact)
+                    if contact_serializer.is_valid():
+                        contact_serializer.save(account=account)
+                    else:
+                        return Response(contact_serializer.errors, status=400)
+
                 if 'campaign_type' in request.data or 'supplier_type' in request.data:
                     campaign_data = {'booking_status':'Shortlisted'}
                     if 'tentative' in request.data:
@@ -118,7 +180,7 @@ class NewCampaignAPIView(APIView):
 
                     campaign_serializer = CampaignSerializer(data=campaign_data)
                     if campaign_serializer.is_valid():
-                        campaign_serializer.save(business=business)
+                        campaign_serializer.save(account=account)
                     else:
                         return Response(campaign_serializer.errors, status=400)
 

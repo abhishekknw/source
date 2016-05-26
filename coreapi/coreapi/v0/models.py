@@ -1014,6 +1014,47 @@ class BusinessSubTypes(models.Model):
         db_table = 'business_subtypes'
 
 
+class Account(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
+    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+    address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
+    reference_name = models.CharField(db_column='REFERENCE_NAME', max_length=50, blank=True)
+    reference_phone = models.CharField(db_column='REFERENCE_PHONE', max_length=10, blank=True)
+    reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+    business = models.ForeignKey(Business, related_name='business', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
+
+
+    def get_contact(self):
+        try:
+            return self.contacts.all()
+        except:
+            return None
+
+    class Meta:
+
+        db_table = 'account'
+
+
+class AccountContact(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
+    department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
+    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
+    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+    account = models.ForeignKey(Account, related_name='contacts', db_column='ACCOUNT_ID', null=True, on_delete=models.CASCADE)
+    spoc = models.BooleanField(db_column='SPOC', default=False)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+    class Meta:
+
+        db_table = 'account_contact'
+
+
 class CampaignTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     type_name = models.CharField(db_column='TYPE_NAME', max_length=20, blank=True) #change to enum
