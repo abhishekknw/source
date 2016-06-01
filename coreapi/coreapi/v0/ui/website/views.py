@@ -136,14 +136,14 @@ class NewCampaignAPIView(APIView):
                         return Response(contact_serializer.errors, status=400)
 
             return Response(status=200)
-            
+
 
 class CreateCampaignAPIView(APIView):
     def post(self, request, format=None):
             print request.data
             #current_user = request.user
 
-            account_data = request.data['account']
+            account_data = request.data
             with transaction.atomic():
                 if 'id' in account_data:
                     account = Account.objects.get(pk=account_data['id'])
@@ -162,12 +162,16 @@ class CreateCampaignAPIView(APIView):
                 #here we will start storing contacts
                 #if 'contact' in business_data and business_data['contact']:
                 for contact in account_data['contacts']:
+                    print "hi0"
                     if 'id' in contact:
+                        print "hi1"
                         item = AccountContact.objects.get(pk=contact['id'])
                         contact_serializer = AccountContactSerializer(item, data=contact)
                     else:
+                        print "hi2"
                         contact_serializer = AccountContactSerializer(data=contact)
                     if contact_serializer.is_valid():
+                        print "hi3"
                         contact_serializer.save(account=account)
                     else:
                         return Response(contact_serializer.errors, status=400)
