@@ -106,6 +106,7 @@ angular.module('machadaloPages')
               $scope.contacts = angular.copy(contactCopy);
               $scope.form.$setPristine();
               $scope.account = {};
+              $scope.business = {};
               $scope.account.contacts = [$scope.contacts];
       };
 
