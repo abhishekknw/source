@@ -1,11 +1,11 @@
 angular.module('machadaloPages')
-.controller('CreateCampaignCtrl',
+.controller('CreateAccountCtrl',
     ['$scope', '$rootScope', '$window', '$location', 'pagesService',
     function ($scope, $rootScope, $window, $location, pagesService) {
 
       $scope.model = {};
-      $scope.model.business = {};
-    	$scope.businesses = [];
+      $scope.model.account = {};
+    	$scope.accounts = [];
       $scope.supplier_types = ['Society', 'Corporate', 'Club', 'Mall', 'School/College']
     	$scope.campaign_types = ['Poster', 'Standee', 'Stall', 'CarDisplay', 'Fliers']
     	$scope.campaign_sub_types = {
@@ -51,8 +51,8 @@ angular.module('machadaloPages')
         spoc: ''
       };
 
-      var contactCopy = angular.copy($scope.contact);
-      $scope.model.business.contacts = [$scope.contact];
+      var contactCopy = angular.copy($scope.contacts);
+      $scope.model.account.contacts = [$scope.contacts];
 
       pagesService.loadBusinessTypes()
       .success(function (response){
@@ -61,8 +61,6 @@ angular.module('machadaloPages')
 
         $scope.getSubTypes = function() {
           var id = $scope.model.business.type;
-          alert(id);
-          alert($scope.model.business.name);
           pagesService.getSubTypes(id)
           .success(function (response){
               $scope.sub_types = response;
@@ -70,26 +68,27 @@ angular.module('machadaloPages')
         }
 
       $scope.addNew = function() {
-        $scope.model.business.contacts.push($scope.contact)
+        $scope.model.account.contacts.push($scope.contacts)
       };
 
        $scope.remove = function(index) {
-        $scope.model.business.contacts.splice(index, 1);
+        $scope.model.account.contacts.splice(index, 1);
       };
 
-    	$scope.getAllBusinesses = function() {
-	    	pagesService.getAllBusinesses()
+    	$scope.getAllAccounts = function() {
+	    	pagesService.getAllAccounts()
 	    	.success(function (response, status) {
 	    		    console.log(response);
-	            $scope.businesses = response;
+	            $scope.accounts = response;
 	       });
 	    };
 
-    	$scope.getBusiness = function() {
-    		pagesService.getBusiness($scope.bsSelect)
+    	$scope.getAccount = function() {
+    		pagesService.getAccount($scope.selectAcc)
 	    	.success(function (response, status) {
 	    		    console.log(response);
-	            $scope.model.business = response;
+	            $scope.account = response.account;
+              $scope.business = response.business;
 	            $scope.choice = "selected";
 	       });
       };
@@ -102,17 +101,19 @@ angular.module('machadaloPages')
               $scope.choice = "select";
       };
 
-      $scope.newBusiness = function() {
+      $scope.newAccount = function() {
               $scope.choice = "new";
-              $scope.contact = angular.copy(contactCopy);
+              $scope.contacts = angular.copy(contactCopy);
               $scope.form.$setPristine();
-              $scope.model.business = {};
-              $scope.model.business.contacts = [$scope.contact];
+              $scope.account = {};
+              $scope.business = {};
+              $scope.account.contacts = [$scope.contacts];
       };
 
     	$scope.create = function() {
-        	  console.log($scope.model);
-            pagesService.createBusinessCampaign($scope.model)
+        	  console.log($scope.account);
+            alert($scope.account);
+            pagesService.createAccountCampaign($scope.account)
             .success(function (response, status) {
             console.log(response, status);
             console.log(response);
@@ -127,5 +128,4 @@ angular.module('machadaloPages')
              console.log(status);
         })
         };
-      //[TODO] implement this
     }]);

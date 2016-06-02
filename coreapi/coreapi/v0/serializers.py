@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 
 
 
+
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
@@ -300,11 +301,33 @@ class BusinessSerializer(ModelSerializer):
         model = Business
 
 
+class BusinessTypesSerializer(ModelSerializer):
+
+    class Meta:
+        model = BusinessTypes
+
+class BusinessSubTypesSerializer(ModelSerializer):
+
+    class Meta:
+        model = BusinessSubTypes
+
+
 class BusinessContactSerializer(ModelSerializer):
 
     class Meta:
         model = BusinessContact
 
+
+class AccountSerializer(ModelSerializer):
+
+    class Meta:
+        model = Account
+
+
+class AccountContactSerializer(ModelSerializer):
+
+    class Meta:
+        model = AccountContact
 
 class CitySubAreaSerializer(ModelSerializer):
 
