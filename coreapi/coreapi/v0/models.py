@@ -76,7 +76,6 @@ class AdInventoryLocationMapping(models.Model):
 
 
 
-
 '''@receiver(post_save, sender=AdInventoryLocationMapping)
 def update_price_mapping(sender, **kwargs):
     loc_map = kwargs.get('instance')
@@ -1455,9 +1454,13 @@ class JMN_society(models.Model):
 
 
 class  UserProfile(models.Model):
-    user = models.ForeignKey(User, unique=True, related_name='user_profile', db_column='user_id', null=False, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, unique=True, editable=True, null=False, related_name='user_profile', db_column='user_id', on_delete=models.CASCADE)
     is_city_manager = models.BooleanField(db_column='is_city_manager', default=False)
     is_cluster_manager = models.BooleanField(db_column='is_cluster_manager', default=False)
+
+    def get_user(self):
+        return self.user
+
 
     class Meta:
         db_table = 'user_profile'

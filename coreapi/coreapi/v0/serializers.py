@@ -1,8 +1,24 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower, FlatType, BusinessTypes, BusinessSubTypes, Account, AccountContact
-from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower, FlatType
+from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society, UserProfile
+from django.contrib.auth.models import User
 
+
+
+
+class UserSerializer(ModelSerializer):
+    class Meta:
+        model = User
+
+
+class UserProfileSerializer(ModelSerializer):
+    user1 = UserSerializer(source='get_user')
+    class Meta:
+        model = UserProfile
+        read_only_fields = (
+            'user1'
+        )
 
 
 class JMN_societySerializer(ModelSerializer):
