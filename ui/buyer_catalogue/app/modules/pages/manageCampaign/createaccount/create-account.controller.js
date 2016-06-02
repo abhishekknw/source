@@ -111,8 +111,9 @@ angular.module('machadaloPages')
       };
 
     	$scope.create = function() {
-        	  console.log($scope.model);
-            pagesService.createAccountCampaign($scope.model)
+        	  console.log($scope.account);
+            alert($scope.account);
+            pagesService.createAccountCampaign($scope.account)
             .success(function (response, status) {
             console.log(response, status);
             console.log(response);

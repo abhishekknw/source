@@ -192,11 +192,11 @@
           <div class="form-group">
             <div class = "row">
                 <div class = "col-md-3"><label>Name</label></div>
-                <div class = "col-md-3"><input type="text" name="contact_name" id="contact_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/" ng-model="account.contact.name" />
+                <div class = "col-md-3"><input type="text" name="contact_name" id="contact_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/" ng-model="account.contacts.name" />
                 <!--<span class="show-error" ng-show="form.contact_name.$error.pattern">Please Enter Valid Name</span>--></div>
 
                 <div class = "col-md-3"><label >Designation</label></div>
-                <div class = "col-md-3"><input type="text" name="designation" id="designation" class="form-control" ng-pattern= "/^[a-zA-Z\s]+$/" ng-model="account.contact.designation"  />
+                <div class = "col-md-3"><input type="text" name="designation" id="designation" class="form-control" ng-pattern= "/^[a-zA-Z\s]+$/" ng-model="account.contacts.designation"  />
                 <!--<span class="show-error" ng-show="form.designation.$error.pattern">Please Enter Valid Designation</span>--></div>
             </div>
            </div>
@@ -204,11 +204,11 @@
        <div class="form-group">
          <div class = "row">
              <div class = "col-md-3"><label >Department</label></div>
-             <div class = "col-md-3"><input type="text" name="department" id="department" class="form-control" ng-pattern= "/^[a-zA-Z\s]+$/" ng-model="account.contact.department"/>
+             <div class = "col-md-3"><input type="text" name="department" id="department" class="form-control" ng-pattern= "/^[a-zA-Z\s]+$/" ng-model="account.contacts.department"/>
              <!--<span class="show-error" ng-show="form.department.$error.pattern">Please Enter Valid Department</span>--></div>
 
              <div class = "col-md-3"><label>Email</label></div>
-             <div class = "col-md-3"><input type="email" name="contact_email" id="contact_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="account.contact.email"  />
+             <div class = "col-md-3"><input type="email" name="contact_email" id="contact_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="account.contacts.email"  />
              <!--<span class="show-error" ng-show="form.contact_email.$error.pattern">Please Enter Valid Email</span>--></div>
          </div>
        </div>
@@ -216,13 +216,13 @@
       <div class="form-group">
         <div class = "row">
             <div class = "col-md-3"><label>Phone</label></div>
-            <div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-required="true" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="account.contact.phone"/>
+            <div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-required="true" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="account.contacts.phone"/>
              <!--<span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span>-->
             </div>
 
             <div class = "col-md-3"><label>Single Point of Contact?</label></div>
-            <div class = "col-md-3"><input id="spoc" type="radio" name="spoc" ng-model="account.contact.spoc" value=true>Yes &nbsp
-            <input id="spoc" type="radio" name="spoc" ng-model="account.contact.spoc" value=false>No </div>
+            <div class = "col-md-3"><input id="spoc" type="radio" name="spoc" ng-model="account.contacts.spoc" value=true>Yes &nbsp
+            <input id="spoc" type="radio" name="spoc" ng-model="account.contacts.spoc" value=false>No </div>
         </div>
           <div class = "row">
             <div class = "col-md-4"></div>
