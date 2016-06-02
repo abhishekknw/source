@@ -35,4 +35,8 @@ urlpatterns = [
 
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/posters/$', views.PosterAPIView.as_view()),
 
+    url(r'^user_profiles/$', views.getUsersProfiles.as_view()),
+    url(r'^user_profiles/(?P<id>[A-Z_a-z0-9]+)$', views.getUserData.as_view()),
+
+
 ]
