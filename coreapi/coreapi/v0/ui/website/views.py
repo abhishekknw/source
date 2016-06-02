@@ -144,6 +144,9 @@ class CreateCampaignAPIView(APIView):
             #current_user = request.user
 
             account_data = request.data
+            contact_data = account_data['account']
+            contacts = contact_data['contacts']
+
             with transaction.atomic():
                 if 'id' in account_data:
                     account = Account.objects.get(pk=account_data['id'])
@@ -161,7 +164,7 @@ class CreateCampaignAPIView(APIView):
 
                 #here we will start storing contacts
                 #if 'contact' in business_data and business_data['contact']:
-                for contact in account_data['contacts']:
+                for contact in contacts:
                     print "hi0"
                     if 'id' in contact:
                         print "hi1"

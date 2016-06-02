@@ -958,7 +958,7 @@ class SocietyTower(models.Model):
 class Business(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
-    type = models.CharField(db_column='TYPE', max_length=100, blank=True)
+    type_name = models.CharField(db_column='TYPE', max_length=100, blank=True)
     sub_type = models.CharField(db_column='SUB_TYPE', max_length=100, blank=True)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
