@@ -128,7 +128,7 @@ angular
         .state('manageCampaign.release', {
             url : '/release',
             controller: 'ReleaseCampaignCtrl',
-            templateUrl: 'modules/pages/manageCampaign/release/release.tmpl.html'
+            templateUrl: 'modules/pages/manageCampaign/release/release-campaign.tmpl.html'
           })
       .state('manageCampaign.finalize.finalizeInventory', {
           url : '/:campaignId/finalizeInventory/',
