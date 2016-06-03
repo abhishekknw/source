@@ -61,6 +61,8 @@ angular.module('machadaloPages')
 
         $scope.getSubTypes = function() {
           var id = $scope.model.business.type;
+          alert(id);
+          alert($scope.model.business.name);
           pagesService.getSubTypes(id)
           .success(function (response){
               $scope.sub_types = response;

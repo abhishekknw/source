@@ -7,7 +7,7 @@
   padding-left: 10px;
   padding-bottom: 10px;
 	width: 900px;
-	align-self: center;
+	align-self: flex-start;
 }
 .table-heading{
   background-color: #f2f2f2;
@@ -15,4 +15,19 @@
 }
 .table-position{
   padding-left: 0px !important;
+}
+.modal-align{
+  text-align: left;
+  padding-left: 20px;
+}
+.modal-align1{
+  text-align: left;
+  margin-left: 5px;
+}
+.textbox{
+  margin-bottom: 8px !important;
+}
+.textbox1{
+  width: 105%;
+  margin-bottom: 8px !important;
 }

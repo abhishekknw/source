@@ -76,7 +76,6 @@ class AdInventoryLocationMapping(models.Model):
 
 
 
-
 '''@receiver(post_save, sender=AdInventoryLocationMapping)
 def update_price_mapping(sender, **kwargs):
     loc_map = kwargs.get('instance')
@@ -298,7 +297,7 @@ class NoticeBoardDetails(models.Model):
 
 
 class PosterInventory(models.Model):
-    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', primary_key=True, max_length=22)  # Field name made lowercase.
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', primary_key=True, max_length=25)  # Field name made lowercase.
     tower_name = models.CharField(db_column='TOWER_NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
     poster_location = models.CharField(db_column='POSTER_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
     poster_area = models.CharField(db_column='POSTER_AREA', max_length=10, blank=True, null=True)  # Field name made lowercase.
@@ -1014,6 +1013,47 @@ class BusinessSubTypes(models.Model):
         db_table = 'business_subtypes'
 
 
+class Account(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
+    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+    address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
+    reference_name = models.CharField(db_column='REFERENCE_NAME', max_length=50, blank=True)
+    reference_phone = models.CharField(db_column='REFERENCE_PHONE', max_length=10, blank=True)
+    reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+    business = models.ForeignKey(Business, related_name='business', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
+
+
+    def get_contact(self):
+        try:
+            return self.contacts.all()
+        except:
+            return None
+
+    class Meta:
+
+        db_table = 'account'
+
+
+class AccountContact(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
+    department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
+    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
+    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+    account = models.ForeignKey(Account, related_name='contacts', db_column='ACCOUNT_ID', null=True, on_delete=models.CASCADE)
+    spoc = models.BooleanField(db_column='SPOC', default=False)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+    class Meta:
+
+        db_table = 'account_contact'
+
+
 class CampaignTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     type_name = models.CharField(db_column='TYPE_NAME', max_length=20, blank=True) #change to enum
@@ -1414,9 +1454,13 @@ class JMN_society(models.Model):
 
 
 class  UserProfile(models.Model):
-    user = models.ForeignKey(User, unique=True, related_name='user_profile', db_column='user_id', null=False, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, unique=True, editable=True, null=False, related_name='user_profile', db_column='user_id', on_delete=models.CASCADE)
     is_city_manager = models.BooleanField(db_column='is_city_manager', default=False)
     is_cluster_manager = models.BooleanField(db_column='is_cluster_manager', default=False)
+
+    def get_user(self):
+        return self.user
+
 
     class Meta:
         db_table = 'user_profile'
