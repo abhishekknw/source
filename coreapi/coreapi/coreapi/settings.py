@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
+    #'django_admin_bootstrapped',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -87,14 +88,13 @@ DATABASES = {
     },
 
     'default': {
-         'NAME':'machadalo',
-         'ENGINE': 'django.db.backends.mysql',
-         'HOST': '127.0.0.1',
-         'USER': 'root',
-         'PASSWORD': 'vidhi',
-     }
+          'NAME':'machadalo_tech',
+          'ENGINE': 'django.db.backends.mysql',
+          'HOST': '127.0.0.1',
+          'USER': 'root',
+          'PASSWORD': '',
+      }
     }
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -139,6 +139,24 @@ REST_FRAMEWORK = {
 
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOW_HEADERS = (
+    'x-requested-with',
+    'content-type',
+    'accept',
+    'origin',
+    'authorization',
+    'x-csrftoken'
+)
+
+CORS_ALLOW_METHODS = (
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS'
+)
 
 
 # Authentication

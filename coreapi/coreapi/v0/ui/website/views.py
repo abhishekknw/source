@@ -1,11 +1,21 @@
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from serializers import UIBusinessSerializer, CampaignListSerializer, CampaignInventorySerializer
-from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower
+from serializers import UIBusinessSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountSerializer
+from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountSerializer, AccountContactSerializer
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, BusinessSubTypes, Account, AccountContact
 from django.db.models import Q
 from django.db import transaction
+
+
+class getBusinessTypesAPIView(APIView):
+    def get(self, request, format=None):
+        try:
+            busTypes = BusinessTypes.objects.all()
+            serializer = BusinessTypesSerializer(busTypes, many=True)
+            return Response(serializer.data, status=200)
+        except :
+            return Response(status=404)
 
 
 class BusinessAPIListView(APIView):
@@ -13,11 +23,11 @@ class BusinessAPIListView(APIView):
         try:
             items = Business.objects.all()
             serializer = BusinessSerializer(items, many=True)
-            return Response(serializer.data)
+            return Response(serializer.data, status=200)
         except :
             return Response(status=404)
 
-    # the delete api is not being used
+    #the delete api is not being used
     def delete(self, request, id, format=None):
         try:
             item = SupplierTypeSociety.objects.get(pk=id)
@@ -29,6 +39,16 @@ class BusinessAPIListView(APIView):
         item.delete()
         return Response(status=204)
 
+
+class getBusinessSubTypesAPIView(APIView):
+    def get(self, request, id, format=None):
+        try:
+            items = BusinessSubTypes.objects.filter(business_id=id)
+            serializer = BusinessSubTypesSerializer(items, many=True)
+
+            return Response(serializer.data)
+        except :
+            return Response(status=404)
 
 
 class BusinessAPIView(APIView):
@@ -54,13 +74,36 @@ class BusinessAPIView(APIView):
 
 
 
+class AccountAPIListView(APIView):
+    def get(self, request, format=None):
+        try:
+            items = Account.objects.all()
+            serializer = AccountSerializer(items, many=True)
+            return Response(serializer.data, status=200)
+        except :
+            return Response(status=404)
+
+
+class AccountAPIView(APIView):
+    def get(self, request, id, format=None):
+        #try:
+            account = Account.objects.get(pk=id)
+            serializer1 = UIAccountSerializer(account)
+            business = Business.objects.get(pk=account.business_id)
+            serializer2 = BusinessSerializer(business)
+            '''contacts = AccountContact.objects.filter(account=account)
+            serializer3 = AccountContactSerializer(contacts, many=True)'''
+
+            serializer = {'account':serializer1.data, 'business':serializer2.data}
+            return Response(serializer, status=200)
+        #except :
+        #    return Response(status=404)
+
+
 class NewCampaignAPIView(APIView):
+     def post(self, request, format=None):
 
-    def post(self, request, format=None):
-
-            print request.data
-            #current_user = request.user
-
+            current_user = request.user
             business_data = request.data['business']
             with transaction.atomic():
                 if 'id' in business_data:
@@ -85,8 +128,48 @@ class NewCampaignAPIView(APIView):
                         contact_serializer = BusinessContactSerializer(item, data=contact)
                     else:
                         contact_serializer = BusinessContactSerializer(data=contact)
+
+                    contact_serializer.is_valid(raise_exception=True)
+                    contact_serializer.save(business=business)
+
+            return Response(status=200)
+
+
+class CreateCampaignAPIView(APIView):
+    def post(self, request, format=None):
+            print request.data
+            #current_user = request.user
+
+            account_data = request.data
+            with transaction.atomic():
+                if 'id' in account_data:
+                    account = Account.objects.get(pk=account_data['id'])
+                    serializer = AccountSerializer(account,data=account_data)
+                else:
+                    #request.data['created_by'] = current_user.id
+                    serializer = AccountSerializer(data=account_data)
+
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors, status=400)
+
+                account = Account.objects.get(pk=serializer.data['id'])
+
+                #here we will start storing contacts
+                #if 'contact' in business_data and business_data['contact']:
+                for contact in account_data['contacts']:
+                    print "hi0"
+                    if 'id' in contact:
+                        print "hi1"
+                        item = AccountContact.objects.get(pk=contact['id'])
+                        contact_serializer = AccountContactSerializer(item, data=contact)
+                    else:
+                        print "hi2"
+                        contact_serializer = AccountContactSerializer(data=contact)
                     if contact_serializer.is_valid():
-                        contact_serializer.save(business=business)
+                        print "hi3"
+                        contact_serializer.save(account=account)
                     else:
                         return Response(contact_serializer.errors, status=400)
 
@@ -97,13 +180,11 @@ class NewCampaignAPIView(APIView):
                             campaign_data[key] = request.data['tentative'][key]
 
                     campaign_serializer = CampaignSerializer(data=campaign_data)
-                    if campaign_serializer.is_valid():
-                        campaign_serializer.save(business=business)
-                    else:
-                        return Response(campaign_serializer.errors, status=400)
+
+                    campaign_serializer.is_valid(raise_exception=True)
+                    campaign_serializer.save(account=account)
 
                     campaign = Campaign.objects.get(pk=campaign_serializer.data['id'])
-
 
                     if 'campaign_type' in request.data:
                         for key, value in request.data['campaign_type'].iteritems():
@@ -118,7 +199,6 @@ class NewCampaignAPIView(APIView):
                     return  Response(campaign_serializer.data, status=201)
 
             return Response(status=200)
-
 
 class CampaignAPIView(APIView):
 
@@ -290,4 +370,3 @@ class FinalCampaignBookingAPIView(APIView):
             return Response(status=404)
 
         return Response({"message": "Campaign Booked Successfully"}, status=200)
-

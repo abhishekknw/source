@@ -10,11 +10,11 @@
 			    </div>
 			    <div class="col-md-4">
 				  	<span class = "" ng-show ="choice == 'existing'">
-				   	<select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
-				    <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
-			      	</select>
-		      		</span>
-	      		</div>
+				   	    <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
+				            <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
+			          </select>
+		      	</span>
+	      	</div>
             <div class="col-md-4">
 	      			<label for="new">Create New Business</label>
 	      			<input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
@@ -25,13 +25,13 @@
 
 	    <form name = "form1" ng-show="choice == 'selected'" class="">
 	      <div class = "panel panel-default business-panel">
+        <h3 class = "panel-heading">Business Details</h3>
 	      <div class = "table">
 	      	<div class = "row">
-            <div><h3 class = "panel-heading">Business Details</h3></div>
 	      		<div class = "col-md-3"><label>Business Name</label></div>
-	      		<div class = "col-md-3">{{model.business.name}}</td></div>
-	      		<div class = "col-md-3"><label>Business Type</label></td></div>
-	      		<div class = "col-md-3">{{model.business.type}}</td></div>
+	      		<div class = "col-md-3">{{model.business.name}}</div>
+	      		<div class = "col-md-3"><label>Business Type</label></div>
+	      		<div class = "col-md-3">{{model.business.type}}</div>
 	      	</div>
 	      	<div class = "row">
 	      		<div class = "col-md-3"><label>Business Sub-Type</label></div>
@@ -59,7 +59,7 @@
 	      	</div>
           <br>
 	      	<div class = "row">
-	      		<div class = "col-md-4"><a href="#detailModal" class="btn btn-danger  active" data-toggle="modal">View Contact Details</a></div>
+	      		<div class = "col-md-4"><a data-target="#detailModal" class="btn btn-danger  active" data-toggle="modal">View Contact Details</a></div>
 	      		<div class = "col-md-2"></div>
             <div class = "col-md-2"></div>
             <div class = "col-md-4"><button class="btn btn-danger" ng-model="edit" ng-click="editDetails()">Edit Details</button></div>
@@ -137,11 +137,6 @@
       <form name = "form" ng-show = "choice == 'select'|| choice == 'new'" class="" ng-submit="create()" role="form">
       	<div class = "panel panel-default business-panel">
         	<h3 class = "panel-heading">Create Business</h3>
-	         <div class="errorMessages">
-	            <span ng-show="form.username.$dirty && form.username.$error.required" class="help-block">Username is required</span>
-	            <span ng-show="form.password.$dirty && form.password.$error.required" class="help-block">Password is required</span>
-	            <div ng-show="error" class="error">{{error}}</div>
-	         </div>
            <div class = "table">
 	           <div class="form-group">
 	           		<div class = "row">
@@ -150,16 +145,24 @@
 	               		<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>
 
                     <div class = "col-md-3"><label >Business Type</label></div>
-	              		<div class = "col-md-3"><input type="text" name="type" id="type" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.type" ng-required = "true" />
-	              		<span class="show-error" ng-show="form.type.$error.pattern">Please Enter Valid Business Type</span></div>
+                    <div class = "col-md-3">
+                      <select class="form-control input-size" name="bstype" ng-model="model.business.type" ng-change="getSubTypes()">
+                        <option value="">Select Business Type</option   >
+                        <option  ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.type}}</option>
+    			          </select>
+                  </div>
 	            	</div>
 	           </div>
 
 	           <div class="form-group">
                <div class = "row">
 	              		<div class = "col-md-3"><label >Business Sub-Type</label></div>
-	             		  <div class = "col-md-3"><input type="text" name="subtype" id="subtype" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.sub_type" />
-	              		<span class="show-error" ng-show="form.subtype.$error.pattern">Please Enter Valid Business Sub-Type</span></div>
+                    <div class = "col-md-3">
+                      <select class="form-control input-size" name="sub_type" ng-model="model.business.sub_type">
+                        <option value="">Select Business Sub-Type</option>
+                        <option  ng-repeat = "subtype in sub_types">{{subtype.sub_type}}</option>
+    			            </select>
+                    </div>
 
                     <div class = "col-md-3"><label>Business Email</label></div>
 	              		<div class = "col-md-3"><input type="email" name="business_email" id="business_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.business.email" ng-required="true" />
@@ -259,7 +262,9 @@
         <div class = "table">
           <div class = "row">
             <div class = "col-md-4"><button class="btn btn-danger" ng-click="addNew()">Add New Contact</button></div>
-          </div>
+            <div class = "col-md-4"></div>
+            <div class = "col-md-4"><button type="submit" class="btn btn-danger" class="UIbutton">Create & Continue</button></div>
+        </div>
       </div>
 	  </div>
   </form>
@@ -271,7 +276,7 @@
       </span>
     </div>
   </form>
-  <form name="form4" ng-show = "choice == 'selected'|| choice == 'new'" class="" ng-submit="create()" role="form">
+<!--  <form name="form4" ng-show = "choice == 'selected'|| choice == 'new'" class="" ng-submit="create()" role="form">
 	   <div class="panel panel-default business-panel">
        <h3 class = "panel-heading">Create Campaign</h3>
          <div class = "table">
@@ -282,7 +287,7 @@
 	            <div class = "col-md-3"><label>{{type}}</label></div>
 	        	  <div class = "col-md-1"><input type="checkbox"  id="{{type}}" name="{{type}}" ng-model="supplier_type1"/></div>
 							<span class = "" ng-show="supplier_type1">
-						   	<div class = "col-md-3  textbox"><input type="number" name="count" id="count" class="form-control" ng-model="model.supplier_type[type]"/></div>
+						   	<div class = "col-md-3 textbox"><input type="number" name="count" id="count" class="form-control" ng-model="model.supplier_type[type]"/></div>
 		          </span>
 	        </div>
           </div>
@@ -335,6 +340,6 @@
 	      </span>
       </div>
     </div>
-  </form>
+  </form>-->
 <div class="col-md-2"></div>
 </div>
