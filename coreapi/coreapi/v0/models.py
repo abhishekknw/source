@@ -957,7 +957,7 @@ class SocietyTower(models.Model):
 class Business(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
-    type = models.CharField(db_column='TYPE', max_length=100, blank=True)
+    type_name = models.CharField(db_column='TYPE', max_length=100, blank=True)
     sub_type = models.CharField(db_column='SUB_TYPE', max_length=100, blank=True)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
@@ -1112,6 +1112,33 @@ class Campaign(models.Model):
     class Meta:
 
         db_table = 'campaign'
+
+class CampaignOtherCost(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='campaign_cost', db_column='CAMPAIGN_ID', null=True, on_delete=models.CASCADE)
+    content_dev_cost = models.IntegerField(db_column='CONTENT_DEV_COST', null=True)
+    pm_cost = models.IntegerField(db_column='PROJECT_MGMT_COST', null=True)
+    data_analytics = models.IntegerField(db_column='DATA_ANALYTICS', null=True)
+    printing_cost = models.IntegerField(db_column='PRINTING_COST', null=True)
+    digital_camp_cost = models.IntegerField(db_column='DIGITAL_CAMP_COST', null=True)
+
+
+    class Meta:
+
+        db_table = 'campaign_other_cost'
+
+
+class CampaignInventoryPrice(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    campaign = models.ForeignKey(Campaign, related_name='campaign', db_column='CAMPAIGN_ID', null=True, on_delete=models.CASCADE)
+    supplier = models.ForeignKey(SupplierTypeSociety, related_name='inventoryprice', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE, unique=True)
+    master_factor = models.IntegerField(db_column='MASTER_FACTOR', null=True)
+    business_price = models.IntegerField(db_column='BUSINESS_PRICE', null=True)
+
+
+    class Meta:
+
+        db_table = 'campaign_inventory_price'
 
 
 class CampaignSupplierTypes(models.Model):
