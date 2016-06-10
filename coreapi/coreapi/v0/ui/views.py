@@ -513,8 +513,11 @@ class InventorySummaryAPIView(APIView):
                 item = InventorySummary.objects.get(supplier=society)
                 if request.data['stall_allowed']==True:
                     if request.data['total_stall_count']!=None and item.total_stall_count < request.data['total_stall_count']:
-                        self.save_stall_locations(item.total_stall_count, request.data['total_stall_count'], society)
-                    serializer = InventorySummarySerializer(item, data=request.data)
+                        if item.total_stall_count == None:
+                            self.save_stall_locations(0, request.data['total_stall_count'], society)
+                        else:
+                            self.save_stall_locations(item.total_stall_count, request.data['total_stall_count'], society)
+                serializer = InventorySummarySerializer(item, data=request.data)
 
             else:
                 if flag and request.data['total_stall_count']!=None:
