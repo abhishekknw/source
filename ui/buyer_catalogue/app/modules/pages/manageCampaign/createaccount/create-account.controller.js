@@ -51,8 +51,14 @@ angular.module('machadaloPages')
         spoc: ''
       };
 
-      var contactCopy = angular.copy($scope.contacts);
-      $scope.model.account.contacts = [$scope.contacts];
+      var contactCopy = angular.copy($scope.contact);
+      $scope.model.account.contacts = [$scope.contact];
+
+      pagesService.getAllBusinesses()
+        .success(function (response, status) {
+              console.log(response);
+              $scope.businesses = response;
+         });
 
       pagesService.loadBusinessTypes()
       .success(function (response){
@@ -67,12 +73,23 @@ angular.module('machadaloPages')
             });
         }
 
+
       $scope.addNew = function() {
-        $scope.model.account.contacts.push($scope.contacts)
+        // object def is directly added to avoid different array elements pointing to same object
+
+        $scope.model.account.contacts.push({
+        name: '',     designation: '',    department: '',     
+        email: '',    phone: '',      spoc: ''
+      });
+        console.log($scope.model.account.contacts);
+      
+
       };
+
 
        $scope.remove = function(index) {
         $scope.model.account.contacts.splice(index, 1);
+        console.log($scope.model.account.contacts);
       };
 
     	$scope.getAllAccounts = function() {
@@ -87,8 +104,8 @@ angular.module('machadaloPages')
     		pagesService.getAccount($scope.selectAcc)
 	    	.success(function (response, status) {
 	    		    console.log(response);
-	            $scope.account = response.account;
-              $scope.business = response.business;
+	            $scope.model.account = response.account;
+              $scope.model.business = response.business;
 	            $scope.choice = "selected";
 	       });
       };
@@ -103,17 +120,27 @@ angular.module('machadaloPages')
 
       $scope.newAccount = function() {
               $scope.choice = "new";
-              $scope.contacts = angular.copy(contactCopy);
+              
+        // complete object definition given to avoid multiple refrence to same field
+              $scope.contact = {
+                name: '',     
+                designation: '',    
+                department: '',     
+                email: '',    
+                phone: '',      
+                spoc: ''
+              };
+
               $scope.form.$setPristine();
-              $scope.account = {};
-              $scope.business = {};
-              $scope.account.contacts = [$scope.contacts];
+              $scope.model.account = {};
+              $scope.model.business = {};
+              $scope.model.account.contacts = [$scope.contact];
       };
 
     	$scope.create = function() {
-        	  console.log($scope.account);
-            alert($scope.account);
-            pagesService.createAccountCampaign($scope.account)
+        	  console.log($scope.model);
+        //     alert($scope.model);
+            pagesService.createAccountCampaign($scope.model)
             .success(function (response, status) {
             console.log(response, status);
             console.log(response);

@@ -5,7 +5,8 @@
 	    <div class="form-group">
 	    	<div class="row">
 		      	<div class="col-md-4">
-		      		<label for="existing">Select existing Business</label>
+              <div><span >{{errorMsg.message}}</span></div>
+		      		<label for="existing">Select existing Business </label>
 			    	  <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
 			    </div>
 			    <div class="col-md-4">
@@ -31,11 +32,11 @@
 	      		<div class = "col-md-3"><label>Business Name</label></div>
 	      		<div class = "col-md-3">{{model.business.name}}</div>
 	      		<div class = "col-md-3"><label>Business Type</label></div>
-	      		<div class = "col-md-3">{{model.business.type}}</div>
+	      		<div class = "col-md-3">{{model.business.type.type_name}}</div>
 	      	</div>
 	      	<div class = "row">
 	      		<div class = "col-md-3"><label>Business Sub-Type</label></div>
-	      		<div class = "col-md-3">{{model.business.sub_type}}</div>
+	      		<div class = "col-md-3">{{model.business.sub_type.sub_type}}</div>
 	      		<div class = "col-md-3"><label>Business Email</label></div>
 	      		<div class = "col-md-3">{{model.business.email}}</div>
 	      	</div>
@@ -146,9 +147,9 @@
 
                     <div class = "col-md-3"><label >Business Type</label></div>
                     <div class = "col-md-3">
-                      <select class="form-control input-size" name="bstype" ng-model="model.business.type" ng-change="getSubTypes()">
+                      <select class="form-control input-size" name="bstype" ng-model="model.business.type_id" ng-change="getSubTypes()">
                         <option value="">Select Business Type</option   >
-                        <option  ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.type}}</option>
+                        <option ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.type_name}}</option>
     			          </select>
                   </div>
 	            	</div>
@@ -158,9 +159,9 @@
                <div class = "row">
 	              		<div class = "col-md-3"><label >Business Sub-Type</label></div>
                     <div class = "col-md-3">
-                      <select class="form-control input-size" name="sub_type" ng-model="model.business.sub_type">
+                      <select class="form-control input-size" name="sub_type" ng-model="model.business.sub_type_id">
                         <option value="">Select Business Sub-Type</option>
-                        <option  ng-repeat = "subtype in sub_types">{{subtype.sub_type}}</option>
+                        <option  ng-repeat = "subtype in sub_types" value="{{subtype.id}}">{{subtype.sub_type}}</option>
     			            </select>
                     </div>
 
@@ -247,8 +248,8 @@
                   </div>
 
                   <div class = "col-md-3"><label>Single Point of Contact?</label></div>
-	            		<div class = "col-md-3"><input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=true>Yes &nbsp
-	            		<input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=false>No </div>
+	            		<div class = "col-md-3"><input id="spoc" type="radio"  ng-model="contact.spoc" value=true>Yes &nbsp
+	            		<input id="spoc" type="radio"  ng-model="contact.spoc" value=false>No </div>
 	            </div>
                 <div class = "row">
                   <div class = "col-md-4"></div>

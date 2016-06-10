@@ -26,6 +26,11 @@ AD_INVENTORY_CHOICES = (
 )
 
 
+
+
+
+
+
 class ImageMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     location_id = models.CharField(db_column='LOCATION_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
@@ -34,6 +39,7 @@ class ImageMapping(models.Model):
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
     comments = models.CharField(db_column='COMMENTS', max_length=100, blank=True, null=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True, null=True)
+
 
     class Meta:
         db_table = 'image_mapping'
@@ -955,10 +961,11 @@ class SocietyTower(models.Model):
 
 
 class Business(models.Model):
+    ## changed -> on_delete = models.CASCADE
     id = models.AutoField(db_column='ID', primary_key=True)
-    name = models.CharField(db_column='NAME', max_length=50, blank=True)
-    type = models.CharField(db_column='TYPE', max_length=100, blank=True)
-    sub_type = models.CharField(db_column='SUB_TYPE', max_length=100, blank=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True) ## changed -> name
+    type = models.ForeignKey('BusinessTypes',related_name='type_set',db_column='TYPE', blank=False,null=False, on_delete=models.CASCADE) ## changed -> CharField
+    sub_type = models.ForeignKey('BusinessSubTypes',related_name='sub_type_set',db_column='SUB_TYPE', blank=False, null=False, on_delete=models.CASCADE) ## changed -> CharField
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
@@ -967,6 +974,12 @@ class Business(models.Model):
     reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
 
+
+    def __str__(self):
+        return self.name
+
+    def __unicode__(self):
+        return self.name
 
     def get_contact(self):
         try:
@@ -999,6 +1012,12 @@ class BusinessTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     type_name = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
 
+    def __str__(self):
+        return self.type_name
+
+    def __unicode__(self):
+        return self.type_name
+
     class Meta:
 
         db_table = 'business_types'
@@ -1007,7 +1026,14 @@ class BusinessTypes(models.Model):
 class BusinessSubTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     sub_type = models.CharField(db_column='SUBTYPE', max_length=100, blank=True)
-    business = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE', null=True, on_delete=models.CASCADE)
+    business_type = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE', null=True, on_delete=models.CASCADE) ## changed -> business
+        
+    def __str__(self):
+        return self.sub_type
+
+    def __unicode__(self):
+        return self.sub_type
+
     class Meta:
 
         db_table = 'business_subtypes'
@@ -1025,6 +1051,12 @@ class Account(models.Model):
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
     business = models.ForeignKey(Business, related_name='business', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
 
+
+    def __str__(self):
+        return self.name
+
+    def __unicode__(self):
+        return self.name
 
     def get_contact(self):
         try:

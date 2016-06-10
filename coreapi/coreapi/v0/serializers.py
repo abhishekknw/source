@@ -2,6 +2,7 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower, FlatType
 from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society, UserProfile
+from v0.models import Account, AccountContact, BusinessTypes, BusinessSubTypes
 from django.contrib.auth.models import User
 
 
@@ -294,11 +295,11 @@ class CampaignSocietyMappingSerializer(ModelSerializer):
         depth=1
 
 
-
-class BusinessSerializer(ModelSerializer):
+class BusinessSubTypesSerializer(ModelSerializer):
 
     class Meta:
-        model = Business
+        model = BusinessSubTypes
+        depth = 2
 
 
 class BusinessTypesSerializer(ModelSerializer):
@@ -306,10 +307,18 @@ class BusinessTypesSerializer(ModelSerializer):
     class Meta:
         model = BusinessTypes
 
-class BusinessSubTypesSerializer(ModelSerializer):
 
+class BusinessSerializer(ModelSerializer):
+    # sub_type = BusinessSubTypesSerializer()
+    # type = BusinessTypesSerializer()
     class Meta:
-        model = BusinessSubTypes
+
+        model = Business
+        depth = 2
+       
+        # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
+            # 'reference_phone', 'reference_email', 'comments')
+
 
 
 class BusinessContactSerializer(ModelSerializer):

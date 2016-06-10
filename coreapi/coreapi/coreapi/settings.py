@@ -39,6 +39,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_extensions',
+
     'corsheaders',
     'rest_jwt',
     'v0',
@@ -87,12 +89,20 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
 
+    # 'default': {
+    #       'NAME':'machadalo_tech',
+    #       'ENGINE': 'django.db.backends.mysql',
+    #       'HOST': '127.0.0.1',
+    #       'USER': 'root',
+    #       'PASSWORD': '',
+    #   }
+
     'default': {
           'NAME':'machadalo_tech',
           'ENGINE': 'django.db.backends.mysql',
           'HOST': '127.0.0.1',
-          'USER': 'root',
-          'PASSWORD': '',
+          'USER': 'freshuser',
+          'PASSWORD': 'password',
       }
     }
 

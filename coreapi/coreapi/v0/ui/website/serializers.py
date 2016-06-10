@@ -24,6 +24,7 @@ class UIBusinessSerializer(ModelSerializer):
 
     class Meta:
         model = Business
+        depth = 2
         read_only_fields = (
         'contacts'
         )

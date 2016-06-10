@@ -57,24 +57,40 @@ angular.module('machadaloPages')
       pagesService.loadBusinessTypes()
       .success(function (response){
           $scope.busTypes = response;
+          console.log("BusTypes : ");
+          console.log($scope.busTypes);
         });
 
         $scope.getSubTypes = function() {
-          var id = $scope.model.business.type;
-          alert(id);
-          alert($scope.model.business.name);
-          pagesService.getSubTypes(id)
-          .success(function (response){
-              $scope.sub_types = response;
-            });
+          // debugger;
+          if($scope.model.business.type_id == ''){
+            $scope.sub_types = {};
+            $scope.model.business.sub_type_id = "";
+          }else{
+            var id = $scope.model.business.type_id;
+
+            pagesService.getSubTypes(id)
+            .success(function (response){
+                $scope.sub_types = response;
+              });
+          }
         }
 
       $scope.addNew = function() {
-        $scope.model.business.contacts.push($scope.contact)
+        // object def is directly added to avoid different array elements pointing to same object
+
+        $scope.model.business.contacts.push({
+        name: '',     designation: '',    department: '',     
+        email: '',    phone: '',      spoc: ''
+      });
+        console.log($scope.model.business.contacts);
+      
+
       };
 
        $scope.remove = function(index) {
         $scope.model.business.contacts.splice(index, 1);
+        console.log($scope.model.business.contacts);
       };
 
     	$scope.getAllBusinesses = function() {
@@ -88,7 +104,8 @@ angular.module('machadaloPages')
     	$scope.getBusiness = function() {
     		pagesService.getBusiness($scope.bsSelect)
 	    	.success(function (response, status) {
-	    		    console.log(response);
+	    		    console.log("model.business :  ")
+              console.log(response);
 	            $scope.model.business = response;
 	            $scope.choice = "selected";
 	       });
@@ -111,11 +128,32 @@ angular.module('machadaloPages')
       };
 
     	$scope.create = function() {
+            // console.log("type_id : ", $scope.type_id, "\n\nbusTypes : ");
+            // for (var key in $scope.busTypes){
+            //   if ($scope.busTypes.hasOwnProperty(key)){
+            //     if ($scope.busTypes[key].id == $scope.type_id){
+            //       $scope.model.business.type = $scope.busTypes[key];
+            //       break;
+            //     }  
+            //   }
+            // }
+
         	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {
-            console.log(response, status);
-            console.log(response);
+            // console.log(response, status);
+            console.log("\n\nresponse is : ");
+            response = response ? JSON.parse(response) : {}
+            console.log(response)
+
+            var sub_type_id = $scope.model.business.sub_type_id;
+            var type_id = $scope.model.business.type_id;
+            
+            console.log(sub_type_id, type_id);
+            $scope.model.business = response.business;
+            $scope.model.business.sub_type_id = sub_type_id;
+            $scope.model.business.type_id = type_id;
+            $scope.model.business.contacts = response.contacts;
             if (status == '201') {
                  $location.path("/campaign/" + response.id + "/societyList");
             }
@@ -123,8 +161,11 @@ angular.module('machadaloPages')
               $scope.choice = "selected";
             }
         }).error(function(response, status){
-             $rootScope.errorMsg = response.message ;
+             var errorMsg = response ;
+             $scope.errorMsg = errorMsg ? JSON.parse(errorMsg) : {};
+             console.log($scope.errorMsg.message);
              console.log(status);
+             // console.log(response);
         })
         };
       //[TODO] implement this
