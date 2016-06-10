@@ -295,6 +295,7 @@ class CampaignSocietyMappingSerializer(ModelSerializer):
         depth=1
 
 
+
 class BusinessSubTypesSerializer(ModelSerializer):
 
     class Meta:
