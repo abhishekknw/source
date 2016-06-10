@@ -92,6 +92,16 @@ angular.module('machadaloPages')
         console.log($scope.model.account.contacts);
       };
 
+
+      $scope.updatefields = function(){
+        if ($scope.model.account.business_id == ""){
+          $scope.business_type = "";
+          $scope.business_sub_type = "";
+        }else{
+          
+        }
+      }
+
     	$scope.getAllAccounts = function() {
 	    	pagesService.getAllAccounts()
 	    	.success(function (response, status) {

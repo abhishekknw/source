@@ -63,11 +63,12 @@ angular.module('machadaloPages')
 
         $scope.getSubTypes = function() {
           // debugger;
-          if($scope.model.business.type_id == ''){
+          console.log($scope.model.business.type_name_id);
+          if($scope.model.business.type_name_id == ''){
             $scope.sub_types = {};
             $scope.model.business.sub_type_id = "";
           }else{
-            var id = $scope.model.business.type_id;
+            var id = $scope.model.business.type_name_id;
 
             pagesService.getSubTypes(id)
             .success(function (response){
@@ -132,7 +133,7 @@ angular.module('machadaloPages')
             // for (var key in $scope.busTypes){
             //   if ($scope.busTypes.hasOwnProperty(key)){
             //     if ($scope.busTypes[key].id == $scope.type_id){
-            //       $scope.model.business.type = $scope.busTypes[key];
+            //       $scope.model.business.type_name = $scope.busTypes[key];
             //       break;
             //     }  
             //   }
@@ -147,12 +148,12 @@ angular.module('machadaloPages')
             console.log(response)
 
             var sub_type_id = $scope.model.business.sub_type_id;
-            var type_id = $scope.model.business.type_id;
+            var type_id = $scope.model.business.type_name_id;
             
             console.log(sub_type_id, type_id);
             $scope.model.business = response.business;
             $scope.model.business.sub_type_id = sub_type_id;
-            $scope.model.business.type_id = type_id;
+            $scope.model.business.type_name_id = type_id;
             $scope.model.business.contacts = response.contacts;
             if (status == '201') {
                  $location.path("/campaign/" + response.id + "/societyList");

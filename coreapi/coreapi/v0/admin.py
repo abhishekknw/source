@@ -25,8 +25,8 @@ admin.site.register(InventoryLocation, InventoryLocationAdmin)
 
 
 class BusinessAdmin(admin.ModelAdmin):
-	list_display = ['name', 'type', 'sub_type', 'email' ]
-	search_fields = ['name','type','sub_type']	
+	list_display = ['name', 'type_name', 'sub_type', 'email' ]
+	search_fields = ['name','type_name','sub_type']	
 
 	class Meta:
 		model = Business

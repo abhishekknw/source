@@ -146,9 +146,9 @@ class NewCampaignAPIView(APIView):
                     # print serializer.validated_data
                     # print "\n\n\n"
                     try:
-                        type = BusinessTypes.objects.get(id=int(business_data['type_id']))
+                        type_name = BusinessTypes.objects.get(id=int(business_data['type_name_id']))
                         sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
-                        serializer.save(type=type, sub_type=sub_type)
+                        serializer.save(type_name=type_name, sub_type=sub_type)
 
                     except ValueError:
                         return Response(status=400)
@@ -200,7 +200,9 @@ class CreateCampaignAPIView(APIView):
             print "\n\n\n"
             current_user = request.user
 
+
             account_data = request.data['account']
+
             with transaction.atomic():
                 
                 # Done BY ME
