@@ -13,11 +13,10 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 
 
-class getUsersProfiles(APIView):
+class UsersProfilesAPIView(APIView):
 
     def get(self, request, format=None):
         users = User.objects.all()
-        #users = UserProfile.objects.all()
         serializer = UserSerializer(users, many = True)
         return Response(serializer.data, status = 200)
 
@@ -35,6 +34,7 @@ class getUsersProfiles(APIView):
 
 
 class getUserData(APIView):
+
     def get(self, request, id, format=None):
             user = User.objects.get(pk=id)
             user_profile = user.user_profile.all().first()
@@ -44,11 +44,8 @@ class getUserData(APIView):
             area_ids = UserAreas.objects.filter(user__id=id).values_list('area__id', flat=True)
             result = {'user':user_serializer.data, 'user_profile':serializer.data, 'selectedCities':city_ids, 'selectedAreas': area_ids}
             return Response(result, status=200)
-            #return Response(status=404)
 
     def post(self, request, id, format=None):
-
-
         data = request.data
         user = User.objects.get(pk=id)
         serializer = UserSerializer(user, data=data['user'])
@@ -89,18 +86,34 @@ class getUserData(APIView):
 
         return Response(status=200)
 
+    #to update password
+    def put(self, request, id, format=None):
+        user = User.objects.get(pk=id)
+        serializer = UserSerializer(user)
+        serializer.data['password'] = request.data['password']
+        serializer = UserSerializer(user, data=serializer.data)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return Response(serializer.errors, status=400)
+
+        print request.data
+        return Response(status=200)
 
     def delete(self, request, id, format=None):
         try:
             item = User.objects.get(pk=id)
         except User.DoesNotExist:
             return Response(status=404)
-
         item.delete()
         return Response(status=204)
 
 
+class deleteUsersAPIView(APIView):
 
+    def post(self, request, format=None):
+        User.objects.filter(id__in=request.data).delete()
+        return Response(status=204)
 
 
 
