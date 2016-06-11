@@ -89,15 +89,8 @@ class getUserData(APIView):
     #to update password
     def put(self, request, id, format=None):
         user = User.objects.get(pk=id)
-        serializer = UserSerializer(user)
-        serializer.data['password'] = request.data['password']
-        serializer = UserSerializer(user, data=serializer.data)
-        if serializer.is_valid():
-            serializer.save()
-        else:
-            return Response(serializer.errors, status=400)
-
-        print request.data
+        user.set_password(request.data['password'])
+        user.save()
         return Response(status=200)
 
     def delete(self, request, id, format=None):
@@ -196,7 +189,7 @@ class SocietyAPIView(APIView):
     def get(self, request, id, format=None):
         #try:
             item = SupplierTypeSociety.objects.get(pk=id)
-            #self.check_object_permissions(self.request, item)
+            self.check_object_permissions(self.request, item)
             serializer = UISocietySerializer(item)
             return Response(serializer.data)
         #except :
