@@ -329,9 +329,12 @@ class BusinessContactSerializer(ModelSerializer):
 
 
 class AccountSerializer(ModelSerializer):
-
+    # business = BusinessSerializer(read_only=True)
     class Meta:
         model = Account
+        depth = 2
+        # fields = ('id','name')
+
 
 
 class AccountContactSerializer(ModelSerializer):

@@ -56,22 +56,23 @@ angular.module('machadaloPages')
 
       pagesService.getAllBusinesses()
         .success(function (response, status) {
+              console.log("Get All Business response : ");
               console.log(response);
               $scope.businesses = response;
          });
 
-      pagesService.loadBusinessTypes()
-      .success(function (response){
-          $scope.busTypes = response;
-        });
+      // pagesService.loadBusinessTypes()
+      // .success(function (response){
+      //     $scope.busTypes = response;
+      //   });
 
-        $scope.getSubTypes = function() {
-          var id = $scope.model.business.type;
-          pagesService.getSubTypes(id)
-          .success(function (response){
-              $scope.sub_types = response;
-            });
-        }
+        // $scope.getSubTypes = function() {
+        //   var id = $scope.model.business.type;
+        //   pagesService.getSubTypes(id)
+        //   .success(function (response){
+        //       $scope.sub_types = response;
+        //     });
+        // }
 
 
       $scope.addNew = function() {
@@ -116,6 +117,7 @@ angular.module('machadaloPages')
 	    		    console.log(response);
 	            $scope.model.account = response.account;
               $scope.model.business = response.business;
+              $scope.model.account.business_id = response.business.id.toString();
 	            $scope.choice = "selected";
 	       });
       };
@@ -143,26 +145,59 @@ angular.module('machadaloPages')
 
               $scope.form.$setPristine();
               $scope.model.account = {};
-              $scope.model.business = {};
               $scope.model.account.contacts = [$scope.contact];
       };
 
+
+      // $scope.resetValues = function(){
+      //           $scope.model.campaign_type = undefined;
+      //           $scope.model.tentative = undefined;
+      //           $scope.supplier_type = undefined;
+      //           $scope.campaign_type1 = undefined;
+      //           $scope.supplier_type1 = undefined;
+
+      // }
+
     	$scope.create = function() {
+            console.log("$scope.model is :");
         	  console.log($scope.model);
-        //     alert($scope.model);
             pagesService.createAccountCampaign($scope.model)
             .success(function (response, status) {
-            console.log(response, status);
-            console.log(response);
-            if (status == '201') {
-                 $location.path("/campaign/" + response.id + "/societyList");
-            }
-            if (status == '200'){
-              $scope.choice = "selected";
-            }
-        }).error(function(response, status){
-             $rootScope.errorMsg = response.message ;
+            
+
+              console.log("\n\nresponse is : ");
+              console.log(response);
+
+              var business_id = $scope.model.account.business_id
+              
+              if (status == '201') {
+                   $location.path("/campaign/" + response.id + "/societyList");
+              }
+              if (status == '200'){
+                $scope.model.account = response.account;
+                $scope.model.account.contacts = response.contacts;
+                $scope.model.account.business_id = business_id;
+                // if(typeof response.campaign != "undefined"){
+                //   $scope.model.campaign_type = response.campaign;
+                //    console.log("\n\nresponse.campaign is : ");
+                //    console.log(response.campaign);
+                //    $scope.campaign_present = true;
+                // }
+                // $scope.resetValues();
+
+                $scope.successMsg = "Successfully Saved"
+                $scope.errorMsg = undefined;
+                $scope.choice = "selected";
+              }
+          }).error(function(response, status){
+
+            // status = 406 comes from backend if some information is missing with info in response.message
+             response = response ? JSON.parse(response) : {}
+             console.log(response.message);
+             $scope.successMsg = undefined;
+             $scope.errorMsg = response.message ;
              console.log(status);
+
         })
         };
     }]);

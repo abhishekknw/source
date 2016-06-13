@@ -105,39 +105,34 @@ class AccountAPIView(APIView):
 class NewCampaignAPIView(APIView):
      def post(self, request, format=None):
 
-            print "\n\n\n  Request Data : "
-            print request.data
-            print "\n\n\n"
+            # print "\n\n\n  Request Data : "
+            # print request.data
+            # print "\n\n\n"
 
             current_user = request.user
             business_data = request.data['business']
-            # if 'id' in business_data:
-            #     print "Id found in business data" , business_data['id']
-            # else:
-            #     print "no Id Found "
-            #     return Response(status=400)
+            error = {}
 
-            
+            # checking if the business with the same name already exists in the database
             try:
                 if 'id' not in business_data :
                     business = Business.objects.get(name=business_data['name'])
-                    error = {
-                        'message' : 'Business with this name already exists',
-                    }
+                    error['message'] = 'Business with this name already exists',
                     error = json.dumps(error)
                     return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
-                else:
-                    print "\n\nYeyyyy! found id in the business \n\n"
+                # else:
+                #     print "\n\nYeyyyy! found id in the business \n\n"
             except Business.DoesNotExist:
                 pass
 
+
             with transaction.atomic():
                 if 'id' in business_data:
-                    print "\nInside if 1\n"
+                    # print "\nInside if 1\n"
                     business = Business.objects.get(pk=business_data['id'])
                     serializer = BusinessSerializer(business,data=business_data)
                 else:
-                    print "\nInside else 1\n"
+                    # print "\nInside else 1\n"
                     #request.data['created_by'] = current_user.id
                     serializer = BusinessSerializer(data=business_data)
 
@@ -151,117 +146,135 @@ class NewCampaignAPIView(APIView):
                         serializer.save(type_name=type_name, sub_type=sub_type)
 
                     except ValueError:
-                        return Response(status=400)
+                        error['message'] = "Business Type/SubType Invalid"
+                        error = json.dumps(error)
+                        return Response(error, status=status.HTTP_406_NOT_ACCEPTABLE)
 
                 else:
                     return Response(serializer.errors, status=400)
 
                 business = Business.objects.get(pk=serializer.data['id'])
-                print "\n\n\n***************************************"
-                print "Business Contacts : ", business_data['contacts'] 
-                print "***************************************\n\n\n"
+                # print "\n\n\n***************************************"
+                # print "Business Contacts : ", business_data['contacts'] 
+                # print "***************************************\n\n\n"
 
 
                 #here we will start storing contacts
                 #if 'contact' in business_data and business_data['contact']:
                 for contact in business_data['contacts']:
                     if 'id' in contact:
-                        print "\nInside if 2\n"
+                        # print "\nInside if 2\n"
                         item = BusinessContact.objects.get(pk=contact['id'])
                         contact_serializer = BusinessContactSerializer(item, data=contact)
                     else:
-                        print "\nInside else 2\n"
+                        # print "\nInside else 2\n"
                         contact_serializer = BusinessContactSerializer(data=contact)
 
                     contact_serializer.is_valid(raise_exception=True)
 
-                    print "\n\n\n***************************************"
-                    print contact_serializer.validated_data
-                    print "***************************************\n\n\n"
+                    # print "\n\n\n***************************************"
+                    # print contact_serializer.validated_data
+                    # print "***************************************\n\n\n"
                     
                     contact_serializer.save(business=business)
-                    business_serializer = BusinessSerializer(business)
-                    contacts = business.contacts.all()
-                    contacts_serializer = BusinessContactSerializer(contacts, many=True)
+                
+                business_serializer = BusinessSerializer(business)
+                contacts = business.contacts.all()
+                contacts_serializer = BusinessContactSerializer(contacts, many=True)
 
-                    response = json.dumps({
-                            'business' : business_serializer.data,
-                            'contacts' : contacts_serializer.data,
-                        })
+                response = json.dumps({
+                        'business' : business_serializer.data,
+                        'contacts' : contacts_serializer.data,
+                    })
             return Response(response,status=200)
 
 
 class CreateCampaignAPIView(APIView):
     def post(self, request, format=None):
-            print "\n\n\n  Account Data = "
-            print request.data['account']
-            print "\n\n\n Business Data = "
-            print request.data['business']
-            print "\n\n\n"
+            # print "request. Data"
+            # print request.data
+            response = {}
+            # print "\n\n\n"
             current_user = request.user
+            errro = {}
 
-
-            account_data = request.data['account']
+            # checking if the data received contains name of the account
+            try : 
+                account_data = request.data['account']
+                account_name = account_data['name']
+            except KeyError :
+                # print "account object not found"
+                error['message'] = 'Appropriate data not provided',
+                error = json.dumps(error)
+                return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
 
             with transaction.atomic():
                 
-                # Done BY ME
-                business_data = request.data['business']
+                # checking if the account with the same name already exists or not
+                if 'id' not in account_data:
+                    try:
+                        acc = Account.objects.get(name=account_data['name'])
+                        error['message'] =  'Business with this name already exists',
+                        error = json.dumps(error)
+                        return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
+                    except Account.DoesNotExist:
+                        pass
+
+                # checking if business id is integer
                 try:
-                    business_type_id = int(business_data['type'])
+                    business_id = int(account_data['business_id'])
                 except ValueError: 
-                    print "Imporper Business Type Id"
+                    error['message'] = "Imporper Business Type Id"
+                    error = json.dumps(error)
+                    return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
 
-                # print business_type_id
-                business_type = BusinessTypes.objects.get(id=business_type_id)
-                print business_type.type_name
+                
+                # checking a valid business
                 try:
-                    business = Business.objects.get(type=business_type.type_name, sub_type=business_data['sub_type'])
+                    business = Business.objects.get(id=business_id)
                 except Business.DoesNotExist:
-                    print "Object Does Not Exist"
+                    error['message'] =  "Business Does Not Exist"
+                    error = json.dumps(error)
+                    return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
 
-                # account_data['business'] = business.id
-
-                # Done BY ME
                 if 'id' in account_data:
+                    # print "Inside  if 1"
+                    # print "Account data id = ", account_data['id']
                     account = Account.objects.get(pk=account_data['id'])
                     serializer = AccountSerializer(account,data=account_data)
                 else:
                     #request.data['created_by'] = current_user.id
+                    # print "Inside else 1"
                     serializer = AccountSerializer(data=account_data)
 
-                print "\n\n\nAccount Serializer Initial data : "
-                print serializer.initial_data
-                print "\n\n\n"
-
                 if serializer.is_valid():
-                    print "\n\n\nAccount Serializer  Validated data : "
-                    print serializer.validated_data
-                    print "\n\n\n"
-                    serializer.save()
+                    serializer.save(business=business)
                 else:
                     return Response(serializer.errors, status=400)
 
-                account = Account.objects.get(pk=serializer.data['id'])
-
-                #here we will start storing contacts
-                print '\n\Account Contacts =  '
-                print  account_data['contacts']
-                print '\n\n'
-
-
+                account_id = serializer.data['id']
+                account = Account.objects.get(id=account_id)
+            
+                # #here we will start storing contacts
                 for contact in account_data['contacts']:                     
-                    print "hi0"
+                    # print "hi0"
+                
+                    # assinging spoc = False if not present in the data received 
+                    try:
+                        spoc = contact['spoc']
+                    except KeyError:
+                        contact['spoc'] = False
                     if 'id' in contact:
-                        print "hi1"
+                        # print "hi1"
                         item = AccountContact.objects.get(pk=contact['id'])
                         contact_serializer = AccountContactSerializer(item, data=contact)
                     else:
-                        print "hi2"
+                        # print "hi2"
                         contact_serializer = AccountContactSerializer(data=contact)
                     if contact_serializer.is_valid():
-                        print "hi3"
+                        # print "hi3"
                         contact_serializer.save(account=account)
+                        # print "Contact serializer done"
                     else:
                         return Response(contact_serializer.errors, status=400)
 
@@ -273,30 +286,41 @@ class CreateCampaignAPIView(APIView):
                         for key in request.data['tentative']:
                             campaign_data[key] = request.data['tentative'][key]
 
-                        print '\n\nCampaign Data =  '
-                        print campaign_data
-                        print '\n\n'
+                        # print '\n\nCampaign Data =  '
+                        # print campaign_data
+                        # print '\n\n'
 
                     campaign_serializer = CampaignSerializer(data=campaign_data)
 
                     campaign_serializer.is_valid(raise_exception=True)
                     campaign_serializer.save(account=account)
-
+                    
                     campaign = Campaign.objects.get(pk=campaign_serializer.data['id'])
 
                     if 'campaign_type' in request.data:
                         for key, value in request.data['campaign_type'].iteritems():
                             campaign_type_map = CampaignTypeMapping(campaign=campaign, type=key, sub_type=value)
+
                             campaign_type_map.save()
 
                     if 'supplier_type' in request.data:
                         for key, value in request.data['supplier_type'].iteritems():
                             supplier_type_map = CampaignSupplierTypes(campaign=campaign, supplier_type=key, count=value)
                             supplier_type_map.save()
+                            response['campaign'] = campaign_serializer.data
 
+                    # redirecting to societylist page if the campaign info received
                     return  Response(campaign_serializer.data, status=201)
 
-            return Response(status=200)
+                
+                # sending accounts and related contacts fields to allow updating 
+                account = Account.objects.get(id=account_id)
+                account_serializer = AccountSerializer(account)
+                contacts = account.contacts.all()
+                contacts_serializer = AccountContactSerializer(contacts, many=True)
+                response['account'] = account_serializer.data
+                response['contacts'] = contacts_serializer.data
+            return Response(response, status=200)
 
 
 
@@ -405,6 +429,7 @@ class CampaignInventoryAPIView(APIView):
 
 class ShortlistSocietyAPIView(APIView):
 
+    # discuss use of this get function no id in url
     def get(self, request, id, format=None):
         try:
             campaign = Campaign.objects.get(pk=id)

@@ -35,6 +35,7 @@ class UIAccountSerializer(ModelSerializer):
 
     class Meta:
         model = Account
+        depth = 2
         read_only_fields = (
         'contacts'
         )
