@@ -951,7 +951,7 @@ class SocietyTower(models.Model):
     class Meta:
 
         db_table = 'society_tower'
-
+        unique_together = (('tower_tag','supplier'),)
 
 
 

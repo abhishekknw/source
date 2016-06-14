@@ -11,7 +11,7 @@ from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySum
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer
 from django.db.models import Q
 from django.contrib.auth.models import User
-
+from django.db import IntegrityError
 
 class UsersProfilesAPIView(APIView):
 
@@ -750,40 +750,53 @@ class TowerAPIView(APIView):
 
     def post(self, request, id, format=None):
         print request.data
-        flag = True
         society=SupplierTypeSociety.objects.get(pk=id)
 
         for key in request.data['TowerDetails']:
             if 'tower_id' in key:
-                flag = False
-                item = SocietyTower.objects.get(pk=key['tower_id'])
-                if item.lift_count < key['lift_count']:
-                    self.save_lift_locations(item.lift_count, key['lift_count'], item, society)
-                if item.notice_board_count_per_tower < key['notice_board_count_per_tower']:
-                    self.save_nb_locations(item.notice_board_count_per_tower, key['notice_board_count_per_tower'], item, society)
-                if item.standee_count < key['standee_count']:
-                    self.save_standee_locations(item.standee_count, key['standee_count'], item, society)
-                serializer = SocietyTowerSerializer(item, data=key)
-            else:
-                serializer = SocietyTowerSerializer(data=key)
+                try:
+                    item = SocietyTower.objects.get(pk=key['tower_id'])
+                    tower_dict = {
+                        'tower_tag' : key['tower_tag'],
+                        'tower_name' : key['tower_name'],
+                        'tower_id' :  key['tower_id'],
+                        'lift_count' : item.lift_count,
+                        'nb_count' : item.notice_board_count_per_tower,
+                        'standee_count' : item.standee_count,
+                    }
 
-            try:
+                except SocietyTower.DoesNotExist:
+                    print "Tower does not exist"
+
+                serializer = SocietyTowerSerializer(item, data=key)
                 if serializer.is_valid():
                     serializer.save(supplier=society)
-                  #  tower_data=serializer.data
-            except:
-                return Response(serializer.errors, status=400)
+
+                else:
+                    return Response(serializer.errors, status=400)
+
+                if tower_dict['lift_count'] < key['lift_count']:
+                    self.save_lift_locations(tower_dict['lift_count'], key['lift_count'], tower_dict, society)
+                if tower_dict['nb_count'] < key['notice_board_count_per_tower']:
+                    self.save_nb_locations(tower_dict['nb_count'], key['notice_board_count_per_tower'], tower_dict, society)
+                if tower_dict['standee_count'] < key['standee_count']:
+                    self.save_standee_locations(tower_dict['standee_count'], key['standee_count'], tower_dict, society)
+
+            # else:
+            #     serializer = SocietyTowerSerializer(data=key)
+
 
             try:
                 tower_data = SocietyTower.objects.get(pk=serializer.data['tower_id'])
             except SocietyTower.DoesNotExist:
                 return Response(status=404)
 
-            #create automated IDs for lift, notice boards, standees
+            '''#create automated IDs for lift, notice boards, standees
             if flag:
+                print "lift count : ",key['lift_count']
                 self.save_lift_locations(0, key['lift_count'], tower_data, society)
                 self.save_nb_locations(0, key['notice_board_count_per_tower'], tower_data, society)
-                self.save_standee_locations(0, key['standee_count'], tower_data, society)
+                self.save_standee_locations(0, key['standee_count'], tower_data, society)'''
 
             if key['flat_type_details_available']:
                 for index, flat in enumerate(key['flat_type_details'], start=1):
@@ -826,14 +839,12 @@ class TowerAPIView(APIView):
 
 
     def save_lift_locations(self, c1, c2, tower, society):
-        print c1
-        print c2
         i = c1 + 1
-        tow_name = tower.tower_name
+        tow_name = tower['tower_name']
         while i <= c2:
-            lift_tag = tower.tower_tag + "00L" + str(i).zfill(2)
+            lift_tag = tower['tower_tag'] + "00L" + str(i)
             adId = society.supplier_id + lift_tag + "PO01"
-            lift = LiftDetails(adinventory_id=adId, lift_tag=lift_tag, tower=tower)
+            lift = LiftDetails(adinventory_id=adId, lift_tag=lift_tag, tower_id=int(tower['tower_id']))
             lift_inv = PosterInventory(adinventory_id=adId, poster_location=lift_tag, tower_name=tow_name, supplier=society)
             lift.save()
             lift_inv.save()
@@ -842,8 +853,8 @@ class TowerAPIView(APIView):
     def save_nb_locations(self, c1, c2, tower, society):
         i = c1 + 1
         while i <= c2:
-            nb_tag = tower.tower_tag + "00N" + str(i).zfill(2)
-            nb = NoticeBoardDetails(notice_board_tag=nb_tag, tower=tower)
+            nb_tag = tower['tower_tag'] + "00N" + str(i)
+            nb = NoticeBoardDetails(notice_board_tag=nb_tag, tower_id=int(tower['tower_id']))
             nb.save()
 
             i += 1
@@ -851,8 +862,8 @@ class TowerAPIView(APIView):
     def save_standee_locations(self, c1, c2, tower, society):
         i = c1 + 1
         while i <= c2:
-            sd_tag = society.supplier_id + tower.tower_tag + "0000SD" + str(i).zfill(2)
-            sd = StandeeInventory(adinventory_id=sd_tag, tower=tower)
+            sd_tag = society.supplier_id + tower['tower_tag'] + "0000SD" + str(i).zfill(2)
+            sd = StandeeInventory(adinventory_id=sd_tag, tower_id=int(tower['tower_id']))
             sd.save()
             i += 1
 
