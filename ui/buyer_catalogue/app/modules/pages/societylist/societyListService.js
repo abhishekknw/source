@@ -1,4 +1,4 @@
-'use strict';
+  'use strict';
 /**
  * @ngdoc function
  * @name machadaloPages.controller:AboutCtrl
@@ -33,11 +33,22 @@ angular.module('machadaloPages')
      return machadaloHttp.get(url);
    };
 
+
+   societyListService.getSubAreas = function(data){
+      var url = url_base + "society/filterSubArea/";
+      return machadaloHttp.post(url,data);
+   }
+
   //for adding shortlisted societies
   societyListService.addShortlistedSociety = function(campaign_id, society_id){
     var url = url_base + "website/campaign/society/shortlist/";
     var data = {campaign_id, society_id};
     return machadaloHttp.post(url, data);
+  }
+
+  societyListService.getSortedSocieties = function(order){
+    var url = url_base + "societyList/sortedSocieties/?order=" + order;
+    return machadaloHttp.get(url);
   }
 
   societyListService.processParam = function(){

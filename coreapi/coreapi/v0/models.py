@@ -852,6 +852,9 @@ class SupplierTypeSociety(models.Model):
     #standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
 
 
+    # This field is just added for the society list page for disabling the Shortlisted Button
+    disable = models.BooleanField(db_column='DISABLED',default=False)
+
     def get_society_image(self):
         try:
             image_list = list(self.images.all().filter(location_type="Society")[:1])
@@ -1042,6 +1045,7 @@ class BusinessSubTypes(models.Model):
 class Account(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    business = models.ForeignKey(Business, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
@@ -1049,7 +1053,6 @@ class Account(models.Model):
     reference_phone = models.CharField(db_column='REFERENCE_PHONE', max_length=10, blank=True)
     reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
-    business = models.ForeignKey(Business, related_name='business', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
 
 
     def __str__(self):
@@ -1101,13 +1104,20 @@ class CampaignTypes(models.Model):
 class Campaign(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     #campaign_type = models.ForeignKey(CampaignTypes, related_name='campaigns', db_column='CAMPAIGN_TYPE_ID', null=True)
-    business = models.ForeignKey(Business, related_name='campaigns', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, related_name='campaigns', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
     start_date = models.DateTimeField(db_column='START_DATE', null=True)
     end_date = models.DateTimeField(db_column='END_DATE', null=True)
     tentative_cost = models.IntegerField(db_column='TENTATIVE_COST', null=True)
     booking_status = models.CharField(db_column='BOOKING_STATUS', max_length=20, blank=True) #change to enum
 
+    def __str__(self):
+        return self.account.name
+
+    def __unicode__(self):
+        return self.account.name
+
     def get_types(self):
+        # CampaignTypeMapping Model
         try:
             return self.types.all()
         except:

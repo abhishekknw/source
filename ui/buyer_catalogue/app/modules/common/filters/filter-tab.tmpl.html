@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="modules/common/filters/filter-tab.tmpl.css"/>
 <body id="top">
+<!-- <script src="checklist-model.js"></script> -->
 <!-- FILTERS -->
 			<div class="col-md-3 filters offset-0">
 			     <div class="padding20title"><h3 class="opensans dark">Filter by<span class="clearall">
@@ -12,13 +13,41 @@
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-							<div ng-dropdown-multiselect="" options="locationValue"
+						<table>
+							<tr><td ng-dropdown-multiselect="" options="locationValue"
 								selected-model="locationValueModel"
 								extra-settings="locationValueSettings"
 								checkboxes="true"
-								translation-texts="locationcustomTexts">
-							</div>
-					 </div>
+								translation-texts="locationcustomTexts"></td>
+								<td><button ng-click="getSubAreas()">Find SubAreas</td>
+							</tr>
+
+							</table>
+							<!-- <div>
+								<button class="btn" ng-click="getSubAreas()" >Search Sub Areas</button>
+							</div><br> -->
+					 	</div>
+					 	<div class="left wh70percent" ng-show="showSubAreas">
+					 	<div ng-dropdown-multiselect="" options="subLocationValue"
+								selected-model="subLocationValueModel"
+								extra-settings="locationSubAreaSettings"
+								checkboxes="true"
+								translation-texts="locationSubAreaCustomTexts">
+					 	</div>
+					 	</div>
+					 <!-- <div class="col-md-4">
+						  	<span class = "" ng-show ="choice == 'existing'">
+						   	    <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
+						            <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
+					          </select>
+				      	</span>
+			      	</div> -->
+			      	<!-- <div class="col-md-4">
+			      		<select name="bsSelect" id="bsSelect" ng-model="">
+			      			
+			      		</select>
+			      	</div> -->
+
 				</div>
 					<div class="clearfix"></div>
 				</div>
@@ -83,7 +112,7 @@
 				<br/>
 				<br/>
 				<br/>-->
-				<button type="submit" class="btn btn-default" ng-click="filterSocieties(typeValuemodel, locationValueModel, checkboxes, types)">Apply</button>
+				<button type="submit" class="btn btn-default" ng-click="filterSocieties(typeValuemodel, locationValueModel, subLocationValueModel, checkboxes, types)">Apply</button>
 					<!--Apply <span class="collapsearrow"></span>-->
 				</button>
 		</div>

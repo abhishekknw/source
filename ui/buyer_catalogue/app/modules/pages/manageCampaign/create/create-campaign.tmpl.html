@@ -1,5 +1,9 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
   <div class="page-container">
+   <div>
+    <span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span><br>
+    <span style="color:blue;margin-left:28%;font-size:18px;">{{successMsg}}</span>
+  </div>
     <div class="col-md-10">
     	<form class="choices">
 	    <div class="form-group">
@@ -264,7 +268,7 @@
           <div class = "row">
             <div class = "col-md-4"><button class="btn btn-danger" ng-click="addNew()">Add New Contact</button></div>
             <div class = "col-md-4"></div>
-            <div class = "col-md-4"><button type="submit" class="btn btn-danger" class="UIbutton">Create & Continue</button></div>
+            <div class = "col-md-4"><button type="submit" class="btn btn-danger" class="UIbutton" autoscroll="true">Create & Continue</button></div>
         </div>
       </div>
 	  </div>

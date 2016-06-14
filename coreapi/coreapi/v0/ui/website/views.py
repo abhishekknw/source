@@ -117,7 +117,7 @@ class NewCampaignAPIView(APIView):
             try:
                 if 'id' not in business_data :
                     business = Business.objects.get(name=business_data['name'])
-                    error['message'] = 'Business with this name already exists',
+                    error['message'] = 'Business with this name already exists'
                     error = json.dumps(error)
                     return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
                 # else:
@@ -162,6 +162,8 @@ class NewCampaignAPIView(APIView):
                 #here we will start storing contacts
                 #if 'contact' in business_data and business_data['contact']:
                 for contact in business_data['contacts']:
+                    if contact['spoc'] == '':
+                        contact['spoc'] = 'false'
                     if 'id' in contact:
                         # print "\nInside if 2\n"
                         item = BusinessContact.objects.get(pk=contact['id'])
@@ -260,10 +262,8 @@ class CreateCampaignAPIView(APIView):
                     # print "hi0"
                 
                     # assinging spoc = False if not present in the data received 
-                    try:
-                        spoc = contact['spoc']
-                    except KeyError:
-                        contact['spoc'] = False
+                    if contact['spoc'] == '':
+                        contact['spoc'] = 'false'
                     if 'id' in contact:
                         # print "hi1"
                         item = AccountContact.objects.get(pk=contact['id'])
@@ -459,8 +459,17 @@ class ShortlistSocietyAPIView(APIView):
         else:
             return Response(status=400)
 
-        campaign_society = CampaignSocietyMapping(campaign=campaign, society=society, booking_status='Shortlisted')
-        campaign_society.save()
+        try:
+            print "Inside try"
+            campaign_society = CampaignSocietyMapping.objects.get(campaign=campaign, society=society)
+            error = {"message" : "Already Shortlisted"}
+            return Response(error, status=200)
+        except CampaignSocietyMapping.DoesNotExist:
+            campaign_society = CampaignSocietyMapping(campaign=campaign, society=society, booking_status='Shortlisted')
+            campaign_society.save()
+        except CampaignSocietyMapping.MultipleObjectsReturned:
+            error = {"message" : "Already Shortlisted"}
+            return Response(error, status=200)
 
         for key in campaign.get_types():
             inventory = SocietyInventoryBooking(campaign=campaign, society=society, adinventory_type=key)

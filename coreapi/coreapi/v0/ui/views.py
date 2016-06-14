@@ -275,6 +275,30 @@ class SocietyAPIFiltersView(APIView):
             return Response(status=404)
 
 
+
+class SocietyAPIFilterSubAreaView(APIView):
+    def post(self, request, format=None):
+        print request.data
+        print "\n\n\n"
+
+        areas_id = []
+        subareas = []
+        for item in request.data:
+            id = int(item['id'])
+            areas_id.append(id)
+
+        areas = CityArea.objects.filter(id__in=areas_id)
+        for area in areas:
+            subarea = area.areacode.all()
+            subareas.extend(subarea)
+
+        subarea_serializer = CitySubAreaSerializer(subareas, many=True)
+
+        return Response(subarea_serializer.data, status = 200)
+
+
+
+
 def set_default_pricing(society_id):
     society = SupplierTypeSociety.objects.get(pk=society_id)
     ad_types = AdInventoryType.objects.all()
@@ -337,18 +361,26 @@ class SocietyAPIListView(APIView):
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
+
 class SocietyAPIFiltersListView(APIView):
     def post(self, request, format=None):
+        print request.data
         try:
             cityArea = []
             societytype = []
             flatquantity = []
             inventorytype = []
+            citySubArea = []
             filter_present = False
 
             if 'locationValueModel' in request.data:
                 for key in request.data['locationValueModel']:
                     cityArea.append(key['label'])
+                    filter_present = True
+
+            if 'subLocationValueModel' in request.data:
+                for key in request.data['subLocationValueModel']:
+                    citySubArea.append(key['subarea_name'])
                     filter_present = True
 
             if 'typeValuemodel' in request.data:
@@ -370,7 +402,8 @@ class SocietyAPIFiltersListView(APIView):
                 print inventorytype
 
             if filter_present:
-                    items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) | Q(society_type_quality__in = societytype) | Q(society_type_quantity__in = flatquantity))
+                    # add in filter Q(society_subarea__in = citySubArea )
+                    items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) |Q(society_type_quality__in = societytype) | Q(society_type_quantity__in = flatquantity))
                     serializer = UISocietySerializer(items, many= True)
             else:
                     items = SupplierTypeSociety.objects.all()
@@ -381,6 +414,22 @@ class SocietyAPIFiltersListView(APIView):
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
+
+class SocietyAPISortedListView(APIView):
+    def get(self,request,format=None):
+        order = request.query_params.get('order',None)
+        print "Order received is ", order
+
+        if order == 'asc':
+            societies = SupplierTypeSociety.objects.all().order_by('society_name')
+            serializer = UISocietySerializer(societies, many=True)
+            return Response(serializer.data, status=200)
+        elif order == 'desc':
+            societies = SupplierTypeSociety.objects.all().order_by('-society_name')
+            serializer = UISocietySerializer(societies, many=True)
+            return Response(serializer.data, status=200)
+        else:
+            return Response(status=200)
 
 class FlatTypeAPIView(APIView):
     def get(self, request, id, format=None):

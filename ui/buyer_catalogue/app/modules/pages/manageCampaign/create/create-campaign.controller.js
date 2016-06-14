@@ -108,6 +108,9 @@ angular.module('machadaloPages')
 	    		    console.log("model.business :  ")
               console.log(response);
 	            $scope.model.business = response;
+              $scope.model.business.type_name_id = $scope.model.business.type_name.id.toString();
+              $scope.getSubTypes();
+              $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
 	            $scope.choice = "selected";
 	       });
       };
@@ -156,17 +159,24 @@ angular.module('machadaloPages')
             $scope.model.business.type_name_id = type_id;
             $scope.model.business.contacts = response.contacts;
             if (status == '201') {
-                 $location.path("/campaign/" + response.id + "/societyList");
+                 $location.path("/manageCampaign/createAccount");
             }
+            $scope.successMsg = "Successfully Saved"
+            $scope.errorMsg = undefined;
             if (status == '200'){
               $scope.choice = "selected";
             }
         }).error(function(response, status){
              var errorMsg = response ;
-             $scope.errorMsg = errorMsg ? JSON.parse(errorMsg) : {};
-             console.log($scope.errorMsg.message);
+             var json_response = errorMsg ? JSON.parse(errorMsg) : {};
+             // console.log($scope.errorMsg.message);
              console.log(status);
              // console.log(response);
+
+             $scope.successMsg = undefined;
+             $scope.errorMsg = json_response.message;
+             console.log($scope.errorMsg);
+             // $location.path("");
         })
         };
       //[TODO] implement this
