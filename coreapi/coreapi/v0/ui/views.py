@@ -16,7 +16,26 @@ from django.contrib.auth.models import User
 class UsersProfilesAPIView(APIView):
 
     def get(self, request, format=None):
-        users = User.objects.all()
+        user = request.user
+        if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
+            users1 = []
+            for u in UserProfile.objects.filter(Q(is_normal_user=True)).select_related('user'):
+                users1.append(u.user)
+            users = []
+            cities = [item.city for item in user.cities.all()]
+            for u in UserCities.objects.filter(city__in=cities, user__in=users1).select_related('user'):
+                users.append(u.user)
+            areas = CityArea.objects.filter(city_code__in=cities)
+            users1 = []
+            for u in UserProfile.objects.filter(Q(is_cluster_manager=True)).select_related('user'):
+                users1.append(u.user)
+            for u in UserAreas.objects.filter(area__in=areas, user__in=users1).select_related('user'):
+                users.append(u.user)
+            for u in UserProfile.objects.filter(created_by=user).select_related('user'):
+                users.append(u.user)
+
+        else:
+            users = User.objects.all()
         serializer = UserSerializer(users, many = True)
         return Response(serializer.data, status = 200)
 
@@ -24,11 +43,15 @@ class UsersProfilesAPIView(APIView):
         data = request.data
         data['user_permissions'] = []
         data['groups'] = []
+
         serializer = UserSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
         else:
             return Response(serializer.errors, status=400)
+        user = User.objects.get(pk=serializer.data['id'])
+        up = UserProfile(user=user, created_by=request.user)
+        up.save()
         return Response(serializer.data, status=200)
 
 
@@ -113,9 +136,13 @@ class deleteUsersAPIView(APIView):
 class getInitialDataAPIView(APIView):
     def get(self, request, format=None):
         try:
+            user = request.user
             cities = City.objects.all()
             serializer = CitySerializer(cities, many=True)
-            areas = CityArea.objects.all()
+            if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
+                areas = CityArea.objects.filter(city_code__in=[item.city for item in user.cities.all()])
+            else:
+                areas = CityArea.objects.all()
             serializer1 = CityAreaSerializer(areas, many=True)
             items = SupplierTypeCode.objects.all()
             serializer2 = SupplierTypeCodeSerializer(items, many=True)
@@ -321,8 +348,9 @@ class SocietyAPIListView(APIView):
             else:
                 if user.is_superuser:
                     items = SupplierTypeSociety.objects.all().order_by('society_name')
-                else:
-                    items = SupplierTypeSociety.objects.filter(created_by=user.id)
+                elif user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
+                    print user.user_profile.all().first().is_city_manager
+                    items = SupplierTypeSociety.objects.filter(Q(society_city__in=[item.city.city_name for item in user.cities.all()]) | Q(created_by=user.id))
 
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
