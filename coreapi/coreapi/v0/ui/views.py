@@ -798,6 +798,8 @@ class TowerAPIView(APIView):
 
 
     def save_lift_locations(self, c1, c2, tower, society):
+        print c1
+        print c2
         i = c1 + 1
         tow_name = tower.tower_name
         while i <= c2:
