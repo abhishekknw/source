@@ -2,11 +2,11 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from serializers import UIBusinessSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountSerializer
-from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountSerializer, AccountContactSerializer
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, BusinessSubTypes, Account, AccountContact
+from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountSerializer, AccountContactSerializer, CampaignTypeMappingSerializer
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, BusinessSubTypes, Account, AccountContact, InventorySummary
 from django.db.models import Q
 from django.db import transaction
-
+import json
 
 class getBusinessTypesAPIView(APIView):
     def get(self, request, format=None):
@@ -86,7 +86,7 @@ class AccountAPIListView(APIView):
 
 class AccountAPIView(APIView):
     def get(self, request, id, format=None):
-        #try:
+        try:
             account = Account.objects.get(pk=id)
             serializer1 = UIAccountSerializer(account)
             business = Business.objects.get(pk=account.business_id)
@@ -96,8 +96,8 @@ class AccountAPIView(APIView):
 
             serializer = {'account':serializer1.data, 'business':serializer2.data}
             return Response(serializer, status=200)
-        #except :
-        #    return Response(status=404)
+        except :
+            return Response(status=404)
 
 
 class NewCampaignAPIView(APIView):
@@ -346,6 +346,94 @@ class ShortlistSocietyAPIView(APIView):
 
         return Response({"message": "Society Shortlisted", "id": society_id}, status=200)
 
+
+class CreateProposalAPIView(APIView):
+    def get(self, request, id, format=None):
+        try:
+            campaign = Campaign.objects.get(pk=id)
+            items = campaign.societies.filter(booking_status='Shortlisted')
+            inv_types = campaign.types.all()
+
+            response = []
+            allowed = '_allowed'
+            total = 'total_'
+            count = '_count'
+            price_dict = self.getPriceDict()
+            for item in items:
+                society_detail = {}     #List of society-related details required to be displayed
+                society_id = item.society.supplier_id
+                society_name = item.society.society_name
+                society_detail['id'] = society_id
+                society_detail['society_name'] = society_name
+                society_detail['flat_count'] = item.society.flat_count
+                society_detail['tower_count'] = item.society.tower_count
+                society_detail['inventory'] = []
+                inv_details = InventorySummary.objects.get(supplier_id=society_id)
+                for inv in inv_types:
+                    inv_name = inv.type
+                    inv_size = inv.sub_type
+                    #print inv_details.flier_allowed
+                    #print inv_name.lower() + allowed
+                    if (hasattr(inv_details, inv_name.lower() + allowed) and getattr(inv_details, inv_name.lower() + allowed)):
+                        #print "has attribute"
+                        if(inv_name == 'Flier'):
+                            inv_count = 1
+                        else:
+                            inv_count = getattr(inv_details, total+inv_name.lower()+ count)
+                        inv_info = {}       #List of inventory and its count details
+
+                        # adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True, on_delete=models.CASCADE)
+                        # supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True, on_delete=models.CASCADE)
+                        # duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
+                        duration_type = DurationType.objects.get(id=int(price_dict[inv_name]['duration']))
+                        adinventory_type = AdInventoryType.objects.get(id=int(price_dict[inv_name]['types'][inv_size]))
+                        price_obj = PriceMappingDefault.objects.get(supplier=item.society,duration_type=duration_type, adinventory_type=adinventory_type)
+                        #print "price obj price is : " , price_obj.id
+                        inv_price = price_obj.business_price
+                        inv_info['count'] = str(inv_count)
+                        inv_info['price'] = str(inv_price)
+                        inv_info['type'] = inv_name
+                        society_detail['inventory'].append(inv_info)
+
+                response.append(society_detail)
+
+            response = json.dumps(response)
+            return Response(response, status=200)
+
+        except :
+            return Response(status=404)
+
+    def getPriceDict(self):
+        price_dict = {
+            'Standee' : {
+                            'duration': '1',
+                            'types' : {
+                                            'Small' : '3',
+                                            'Medium' : '4',
+                                            # 'Large'  : '5'
+                                       }
+                        },
+
+            'Flier' : {
+                            'duration' : '5',
+                            'types' : {
+                                        'Door-to-Door' : '12',
+                                        'Mailbox' : '13',
+                                      }
+            },
+
+            'Stall' : {
+                            'duration': '5',
+                            'types' : {
+                                            'Canopy' : '6',
+                                            'Small' : '7',
+                                            'Large'  : '8',
+                                            # 'Customize' : '9'
+                                       }
+            },
+        }
+
+        return price_dict
 
 class BookCampaignAPIView(APIView):
 

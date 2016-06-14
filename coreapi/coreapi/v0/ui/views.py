@@ -194,6 +194,7 @@ class generateSupplierIdAPIView(APIView):
             supplier = {'supplier_id':supplier_id,
                         'society_name':request.data['supplier_name'],
                         'society_city':city.city_name,
+                        'society_subarea':sub_area.subarea_name,
                         'society_locality':area.label,
                         'society_state' : city.state_code.state_name,
                         'created_by': current_user.id
@@ -748,7 +749,7 @@ class TowerAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        #print request.data
+        print request.data
         flag = True
         society=SupplierTypeSociety.objects.get(pk=id)
 
