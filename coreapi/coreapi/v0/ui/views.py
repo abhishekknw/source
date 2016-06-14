@@ -7,17 +7,16 @@ from rest_framework import filters
 from serializers import UISocietySerializer, UITowerSerializer
 from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
 from v0.models import ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType
-from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile
+from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, UserCities, UserAreas
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer
 from django.db.models import Q
 from django.contrib.auth.models import User
 
 
-class getUsersProfiles(APIView):
+class UsersProfilesAPIView(APIView):
 
     def get(self, request, format=None):
         users = User.objects.all()
-        #users = UserProfile.objects.all()
         serializer = UserSerializer(users, many = True)
         return Response(serializer.data, status = 200)
 
@@ -35,16 +34,79 @@ class getUsersProfiles(APIView):
 
 
 class getUserData(APIView):
+
     def get(self, request, id, format=None):
             user = User.objects.get(pk=id)
             user_profile = user.user_profile.all().first()
             user_serializer = UserSerializer(user)
             serializer = UserProfileSerializer(user_profile)
-            result = {'user':user_serializer.data, 'user_profile':serializer.data}
+            city_ids = UserCities.objects.filter(user__id=id).values_list('city__id', flat=True)
+            area_ids = UserAreas.objects.filter(user__id=id).values_list('area__id', flat=True)
+            result = {'user':user_serializer.data, 'user_profile':serializer.data, 'selectedCities':city_ids, 'selectedAreas': area_ids}
             return Response(result, status=200)
-            #return Response(status=404)
+
+    def post(self, request, id, format=None):
+        data = request.data
+        user = User.objects.get(pk=id)
+        serializer = UserSerializer(user, data=data['user'])
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return Response(serializer.errors, status=400)
+        if 'id' in data['user_profile']:
+            profile = UserProfile.objects.get(pk=data['user_profile']['id'])
+            serializer = UserProfileSerializer(profile, data=data['user_profile'])
+        else:
+            data['user_profile']['user'] = id
+            serializer = UserProfileSerializer(data=data['user_profile'])
+        if serializer.is_valid():
+            serializer.save(user=user)
+        else:
+            return Response(serializer.errors, status=400)
+
+        prev_ids = UserCities.objects.filter(user__id=id).values_list('city__id', flat=True)
+        new_ids = request.data['selectedCities']
+        del_diff = list(set(prev_ids) - set(new_ids))
+        new_diff = list(set(new_ids) - set(prev_ids))
+        if del_diff:
+            UserCities.objects.filter(user__id=id,city__id__in=del_diff).delete()
+        if len(new_diff) > 0:
+            for key in new_diff:
+                UserCities.objects.create(user=user, city_id=key)
+
+        prev_ids = UserAreas.objects.filter(user__id=id).values_list('area__id', flat=True)
+        new_ids = request.data['selectedAreas']
+        del_diff = list(set(prev_ids) - set(new_ids))
+        new_diff = list(set(new_ids) - set(prev_ids))
+        if del_diff:
+            UserAreas.objects.filter(user__id=id,area__id__in=del_diff).delete()
+        if len(new_diff) > 0:
+            for key in new_diff:
+                UserAreas.objects.create(user=user, area_id=key)
+
+        return Response(status=200)
+
+    #to update password
+    def put(self, request, id, format=None):
+        user = User.objects.get(pk=id)
+        user.set_password(request.data['password'])
+        user.save()
+        return Response(status=200)
+
+    def delete(self, request, id, format=None):
+        try:
+            item = User.objects.get(pk=id)
+        except User.DoesNotExist:
+            return Response(status=404)
+        item.delete()
+        return Response(status=204)
 
 
+class deleteUsersAPIView(APIView):
+
+    def post(self, request, format=None):
+        User.objects.filter(id__in=request.data).delete()
+        return Response(status=204)
 
 
 
@@ -53,9 +115,11 @@ class getInitialDataAPIView(APIView):
         try:
             cities = City.objects.all()
             serializer = CitySerializer(cities, many=True)
+            areas = CityArea.objects.all()
+            serializer1 = CityAreaSerializer(areas, many=True)
             items = SupplierTypeCode.objects.all()
-            serializer1 = SupplierTypeCodeSerializer(items, many=True)
-            result = {'cities':serializer.data, 'supplier_types':serializer1.data}
+            serializer2 = SupplierTypeCodeSerializer(items, many=True)
+            result = {'cities':serializer.data, 'city_areas': serializer1.data, 'supplier_types':serializer2.data}
             return Response(result, status=200)
         except :
             return Response(status=404)
@@ -126,7 +190,7 @@ class SocietyAPIView(APIView):
     def get(self, request, id, format=None):
         #try:
             item = SupplierTypeSociety.objects.get(pk=id)
-            #self.check_object_permissions(self.request, item)
+            self.check_object_permissions(self.request, item)
             serializer = UISocietySerializer(item)
             return Response(serializer.data)
         #except :
@@ -443,8 +507,11 @@ class InventorySummaryAPIView(APIView):
                 item = InventorySummary.objects.get(supplier=society)
                 if request.data['stall_allowed']==True:
                     if request.data['total_stall_count']!=None and item.total_stall_count < request.data['total_stall_count']:
-                        self.save_stall_locations(item.total_stall_count, request.data['total_stall_count'], society)
-                    serializer = InventorySummarySerializer(item, data=request.data)
+                        if item.total_stall_count == None:
+                            self.save_stall_locations(0, request.data['total_stall_count'], society)
+                        else:
+                            self.save_stall_locations(item.total_stall_count, request.data['total_stall_count'], society)
+                serializer = InventorySummarySerializer(item, data=request.data)
 
             else:
                 if flag and request.data['total_stall_count']!=None:

@@ -13,12 +13,12 @@ class UserSerializer(ModelSerializer):
 
 
 class UserProfileSerializer(ModelSerializer):
-    user1 = UserSerializer(source='get_user')
+    #user1 = UserSerializer(source='get_user')
     class Meta:
         model = UserProfile
-        read_only_fields = (
-            'user1'
-        )
+        #read_only_fields = (
+        #    'user1'
+        #)
 
 
 class JMN_societySerializer(ModelSerializer):
@@ -292,7 +292,6 @@ class CampaignSocietyMappingSerializer(ModelSerializer):
     class Meta:
         model = CampaignSocietyMapping
         depth=1
-
 
 
 class BusinessSerializer(ModelSerializer):
