@@ -104,6 +104,9 @@ class AdInventoryType(models.Model):
                                         choices=AD_INVENTORY_CHOICES, default='POSTER')
     adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20)  # Field name made lowercase.
 
+    def __str__(self):
+        return self.adinventory_name
+        
     class Meta:
         db_table = 'ad_inventory_type'
 
