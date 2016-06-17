@@ -1093,28 +1093,37 @@ class FlierAPIView(APIView):
 
 class StandeeBannerAPIView(APIView):
     def get(self, request, id, format=None):
-        response = {}
+        # response = {}
         standees = []
 
         towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
         society = SupplierTypeSociety.objects.get(pk=id)
-        for tower in towers:
-            standees.extend(tower.standees.all())
+        # for tower in towers:
+        #     standees.extend(tower.standees.all())
 
         item = InventorySummary.objects.get(supplier=society)
 
-        serializer1 = InventorySummarySerializer(item, many=True)
+        for tower in towers:
+            tower_standees = tower.standees.all().values()
+            for standee in tower_standees:
+                standee['tower_name'] = tower.tower_name
+            standees.extend(tower_standees)
+
+
+
+        # serializer1 = InventorySummarySerializer(item, many=True)
         response = {"disable_standee": item.standee_allowed}
-        serializer = StandeeInventorySerializer(standees, many=True)
-        response['standee_details'] = serializer.data
+        # serializer = StandeeInventorySerializer(standees, many=True)
+        response['standee_details'] = standees
 
         return Response(response, status=200)
 
 
     def post(self, request, id, format=None):
+        # print request.data
         for standee in request.data['standee_details']:
             if 'id' in standee:
-                standee_item = StandeeInventory.objects.get(pk=lift['id'])
+                standee_item = StandeeInventory.objects.get(pk=standee['id'])
                 standee_serializer = StandeeInventorySerializer(standee_item,data=standee)
 
             else:
@@ -1142,11 +1151,32 @@ class StallAPIView(APIView):
         response = {"disable_stall": item.stall_allowed}
         serializer = StallInventorySerializer(stalls, many=True)
         response['stall_details'] = serializer.data
+        response['stall_details'] = serializer.data
+        response['furniture_available'] = 'Yes' if society.street_furniture_available else 'No'
+        response['stall_timing'] = society.stall_timing
+        response['sound_system_allowed'] = 'Yes' if society.sound_available else 'No'
+        response['electricity_available'] = 'Yes' if society.electricity_available else 'No'
+        response['electricity_charges_daily'] = society.daily_electricity_charges
 
         return Response(response, status=200)
 
 
     def post(self, request, id, format=None):
+        stall = request.data
+        print "request data: ", stall
+        # stall = request.data['stall']
+        society = SupplierTypeSociety.objects.get(supplier_id=id)
+
+        society.street_furniture_available = True if stall['furniture_available'] == 'Yes' else False
+        society.stall_timing = stall['stall_timing']
+        print "society stall timing is ", society.stall_timing
+        society.sound_available = True if stall['sound_system_allowed'] == 'Yes' else False
+        society.electricity_available =  True if stall['electricity_available'] == 'Yes' else False
+        if society.electricity_available:
+           society.daily_electricity_charges = stall['electricity_charges_daily']
+
+
+        society.save()
         for stall in request.data['stall_details']:
             if 'id' in stall:
                 stall_item = StallInventory.objects.get(pk=stall['id'])
