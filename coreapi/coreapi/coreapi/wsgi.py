@@ -27,8 +27,7 @@ site.addsitedir(os.path.join(PROJECT_ENV, 'lib/python2.7/site-packages'))
 activate_this = os.path.expanduser(os.path.join(PROJECT_ENV, "bin/activate_this.py"))
 execfile(activate_this, dict(__file__=activate_this))
 
-os.environ.setdefault["DJANGO_SETTINGS_MODULE"] = "coreapi.settings"
-#os.environ.setdefault("DJANGO_SETTINGS_MODULE", "coreapi.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "coreapi.settings")
 #os.environ["DJANGO_SETTINGS_MODULE"] = "ayflare.settings"
 
 from django.core.wsgi import get_wsgi_application
