@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower, FlatType, Account, AccountContact
-from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society, UserProfile
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SupplierTypeCorporate, SocietyTower, FlatType, Account, AccountContact, ContactDetailsGeneric
+from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society, UserProfile, CorporateParkCompanyList
 from django.contrib.auth.models import User
 
 
@@ -156,6 +156,13 @@ class ContactDetailsSerializer(ModelSerializer):
         model = ContactDetails
 
 
+class ContactDetailsGenericSerializer(ModelSerializer):
+
+    class Meta:
+        model = ContactDetailsGeneric
+        depth = 2
+
+
 class EventsSerializer(ModelSerializer):
 
     class Meta:
@@ -230,6 +237,18 @@ class SupplierTypeSocietySerializer(ModelSerializer):
 
     class Meta:
         model = SupplierTypeSociety
+
+
+class SupplierTypeCorporateSerializer(ModelSerializer):
+
+    class Meta:
+        model = SupplierTypeCorporate
+
+
+class CorporateParkCompanyListSerializer(ModelSerializer):
+
+    class Meta:
+        model = CorporateParkCompanyList
 
 
 class SocietyTowerSerializer(ModelSerializer):

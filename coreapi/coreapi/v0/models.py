@@ -15,6 +15,10 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import date
 
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
+
 
 AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
@@ -473,6 +477,26 @@ class ContactDetails(models.Model):
 
         db_table = 'contact_details'
 
+
+class ContactDetailsGeneric(models.Model):
+    id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
+    contact_type = models.CharField(db_column='CONTACT_TYPE',  max_length=30, blank=True, null=True)  # Field name made lowercase.
+    name = models.CharField(db_column='CONTACT_NAME',  max_length=50, blank=True, null=True)  # Field name made lowercase.
+    salutation = models.CharField(db_column='SALUTATION',  max_length=50, blank=True, null=True)  # Field name made lowercase.
+    landline = models.BigIntegerField(db_column='CONTACT_LANDLINE', blank=True, null=True)  # Field name made lowercase.
+    stdcode = models.CharField(db_column='STD_CODE',max_length=6, blank=True, null=True)  # Field name made lowercase.
+    mobile = models.BigIntegerField(db_column='CONTACT_MOBILE', blank=True, null=True)  # Field name made lowercase.
+    countrycode = models.CharField(db_column='COUNTRY_CODE', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    email = models.CharField(db_column='CONTACT_EMAILID',  max_length=50, blank=True, null=True)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType,related_name='contacts')
+    object_id = models.CharField(max_length=12)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    
+    class Meta:
+
+        db_table = 'contact_details_generic'
+
+
 class SocietyMajorEvents(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='society_events', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
@@ -898,7 +922,39 @@ class SupplierTypeSociety(models.Model):
         db_table = 'supplier_society'
 
 
+class SupplierTypeCorporate(models.Model):
+    supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20) 
+    supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
+    corporate_name = models.CharField(db_column='CORPORATE_NAME', max_length=70, blank=True, null=True) 
+    corporate_address1 = models.CharField(db_column='CORPORATE_ADDRESS1', max_length=250, blank=True, null=True) 
+    corporate_address2 = models.CharField(db_column='CORPORATE_ADDRESS2', max_length=250, blank=True, null=True) 
+    corporate_zip = models.IntegerField(db_column='CORPORATE_ZIP', blank=True, null=True)
+    corporate_city = models.CharField(db_column='CORPORATE_CITY', max_length=250, blank=True, null=True)
+    corporate_state = models.CharField(db_column='CORPORATE_STATE', max_length=250, blank=True, null=True) 
+    corporate_longitude = models.FloatField(db_column='CORPORATE_LONGITUDE', blank=True, null=True, default=0.0)
+    corporate_locality = models.CharField(db_column='CORPORATE_LOCALITY', max_length=30, blank=True, null=True)
+    corporate_latitude = models.FloatField(db_column='CORPORATE_LATITUDE', blank=True, null=True, default=0.0)
+    corporate_location_type = models.CharField(db_column='CORPORATE_LOCATION_TYPE', max_length=50, blank=True, null=True)
+    corporate_type = models.CharField(db_column='CORPORATE_TYPE', max_length=25)
+    corporate_industry_segment = models.CharField(db_column='CORPORATE_INDUSTRY_SEGMENT', max_length=30, blank=True, null=True) 
+    corporate_age = models.PositiveSmallIntegerField(db_column='CORPORATE_AGE', blank=True, null=True)
+    corporate_building_count = models.IntegerField(db_column='CORPORATE_BUILDING_COUNT', blank=True, null=True)
+    corporate_floorperbuilding_count = models.IntegerField(db_column='CORPORATE_FLOORPERBUILDING_COUNT', blank=True, null=True)
+    corporate_totalcompanies_count = models.IntegerField(db_column='CORPORATE_TOTALCOMPANIES_COUNT', blank=True, null=True)
+    corporate_totalemployees_count = models.IntegerField(db_column='CORPORATE_TOTALEMPLOYEES_COUNT', blank=True, null=True)
+    corporate_isrealestateallowed = models.BooleanField(db_column='CORPORATE_ISREALESTATEALLOWED', default=False)
+    generic.GenericRelation(ContactDetailsGeneric)
 
+    class Meta:
+        db_table = 'supplier_corporate'
+
+class CorporateParkCompanyList(models.Model):
+    supplier_id = models.ForeignKey(SupplierTypeCorporate, db_column='SUPPLIER_ID',on_delete=models.CASCADE)
+    name = models.CharField(db_column='NAME',max_length='50')
+    largest_employers = models.BooleanField(db_column='LARGEST_EMPLOYERS',default=False)
+    
+    class Meta:
+        db_table = 'corporateparkcompanylist'
 
 class SocietyTower(models.Model):
     tower_id = models.AutoField(db_column='TOWER_ID', primary_key=True)  # Field name made lowercase.
