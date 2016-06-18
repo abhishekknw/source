@@ -1,9 +1,9 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import Business, BusinessContact, Campaign, CampaignTypeMapping, CampaignSocietyMapping, SocietyInventoryBooking
+from v0.models import Business, BusinessContact, Campaign, CampaignTypeMapping, CampaignSocietyMapping, SocietyInventoryBooking, Account, AccountContact
 from v0.ui.serializers import UISocietySerializer
-from v0.serializers import SocietyInventoryBookingSerializer, BusinessSerializer, BusinessTypesSerializer, BusinessContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer
+from v0.serializers import SocietyInventoryBookingSerializer, BusinessSerializer, BusinessTypesSerializer, BusinessContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, AccountSerializer, AccountContactSerializer
 
 
 class UISocietyInventorySerializer(ModelSerializer):
@@ -24,6 +24,16 @@ class UIBusinessSerializer(ModelSerializer):
 
     class Meta:
         model = Business
+        read_only_fields = (
+        'contacts'
+        )
+
+
+class UIAccountSerializer(ModelSerializer):
+    contacts = AccountContactSerializer(source='get_contact', many=True)
+
+    class Meta:
+        model = Account
         read_only_fields = (
         'contacts'
         )

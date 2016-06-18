@@ -31,13 +31,14 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
-    #'django_admin_bootstrapped',
+    'django_admin_bootstrapped',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'django_extensions',
     'rest_framework',
     'corsheaders',
     'rest_jwt',
@@ -88,11 +89,11 @@ DATABASES = {
     },
 
     'default': {
-         'NAME':'mdprod',
+         'NAME':'mdtest',
          'ENGINE': 'django.db.backends.mysql',
-         'HOST': 'mdprod.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-         'USER': 'prodmachadalo',
-         'PASSWORD': 'vkmachadalo',
+         'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+         'USER': 'mdtest',
+         'PASSWORD': 'mdtestmachadalo',
          }
     }
 

@@ -33,6 +33,16 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
        return machadaloHttp.get(url);
       };
 
+  pagesService.getAllAccounts = function () {
+      var url = url_base + "accounts/";
+      return machadaloHttp.get(url);
+    };
+
+   pagesService.getAccount = function (id) {
+      var url = url_base + "account/" + id;
+      return machadaloHttp.get(url);
+   };
+
   pagesService.loadBusinessTypes = function () {
       var url = url_base + "create_business/load_business_types/";
       return machadaloHttp.get(url);
@@ -47,6 +57,11 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
        var url = url_base + "newCampaign/";
        return machadaloHttp.post(url, data);
       };
+
+    pagesService.createAccountCampaign = function (data) {
+       var url = url_base + "newAccountCampaign/";
+       return machadaloHttp.post(url, data);
+    };
 
     pagesService.getCampaigns = function (status) {
        var url = url_base + "getCampaigns/?status=" + status;

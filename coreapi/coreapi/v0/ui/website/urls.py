@@ -5,8 +5,12 @@ urlpatterns = [
 
     url(r'^businesses/$', views.BusinessAPIListView.as_view()),
     url(r'^business/(?P<id>[A-Z_a-z0-9]+)$', views.BusinessAPIView.as_view()),
+    url(r'^accounts/$', views.AccountAPIListView.as_view()),
+    url(r'^account/(?P<id>[A-Z_a-z0-9]+)$', views.AccountAPIView.as_view()),
     url(r'^newCampaign/$', views.NewCampaignAPIView.as_view()),
+    url(r'^newAccountCampaign/$', views.CreateCampaignAPIView.as_view()),
     url(r'^getCampaigns/$', views.CampaignAPIView.as_view()),
+    url(r'^manageCampaign/(?P<id>[A-Z_a-z0-9]+)/proposal/$', views.CreateProposalAPIView.as_view()),
     url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/inventories/$', views.CampaignInventoryAPIView.as_view()),
     url(r'^campaign/society/shortlist/$', views.ShortlistSocietyAPIView.as_view()),
     url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/book/$', views.BookCampaignAPIView.as_view()),

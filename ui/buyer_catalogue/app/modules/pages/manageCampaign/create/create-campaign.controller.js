@@ -61,6 +61,8 @@ angular.module('machadaloPages')
 
         $scope.getSubTypes = function() {
           var id = $scope.model.business.type;
+          alert(id);
+          alert($scope.model.business.name);
           pagesService.getSubTypes(id)
           .success(function (response){
               $scope.sub_types = response;
@@ -79,7 +81,7 @@ angular.module('machadaloPages')
 	    	pagesService.getAllBusinesses()
 	    	.success(function (response, status) {
 	    		    console.log(response);
-	            $scope.businesses = response.businesses;
+	            $scope.businesses = response;
 	       });
 	    };
 
