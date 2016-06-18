@@ -37,8 +37,9 @@ urlpatterns = [
 
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/posters/$', views.PosterAPIView.as_view()),
 
-    url(r'^user_profiles/$', views.getUsersProfiles.as_view()),
+    url(r'^user_profiles/$', views.UsersProfilesAPIView.as_view()),
     url(r'^user_profiles/(?P<id>[A-Z_a-z0-9]+)$', views.getUserData.as_view()),
+    url(r'^users/delete/$', views.deleteUsersAPIView.as_view()),
 
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_basic_corporate_details$', views.saveBasicCorporateDetailsAPIView.as_view()),
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_contact_details$', views.ContactDetailsGenericAPIView.as_view()),

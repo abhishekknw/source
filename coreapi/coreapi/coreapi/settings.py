@@ -31,15 +31,19 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
-    #'django_admin_bootstrapped',
+    'django_admin_bootstrapped',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD
 
     'django_extensions',
+=======
+    # 'django_extensions',
+>>>>>>> aa0f1032cffac3bd710da2a5ebe282c987ea3d25
     'rest_framework',
     'corsheaders',
     'rest_jwt',

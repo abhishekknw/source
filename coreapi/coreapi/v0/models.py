@@ -108,6 +108,9 @@ class AdInventoryType(models.Model):
                                         choices=AD_INVENTORY_CHOICES, default='POSTER')
     adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20)  # Field name made lowercase.
 
+    def __str__(self):
+        return self.adinventory_name
+        
     class Meta:
         db_table = 'ad_inventory_type'
 
@@ -781,7 +784,8 @@ class SupplierTypeSociety(models.Model):
     society_city = models.CharField(db_column='SOCIETY_CITY', max_length=250, blank=True, null=True)  # Field name made lowercase.
     society_state = models.CharField(db_column='SOCIETY_STATE', max_length=250, blank=True, null=True)  # Field name made lowercase.
     society_longitude = models.FloatField(db_column='SOCIETY_LONGITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
-    society_locality = models.CharField(db_column='SOCIETY_LOCALITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
+    society_locality = models.CharField(db_column='SOCIETY_LOCALITY', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    society_subarea = models.CharField(db_column='SOCIETY_SUBAREA', max_length=50, blank=True, null=True)  # Field name made lowercase.
     society_latitude = models.FloatField(db_column='SOCIETY_LATITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
     society_location_type = models.CharField(db_column='SOCIETY_LOCATION_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
     society_type_quality = models.CharField(db_column='SOCIETY_TYPE_QUALITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
@@ -846,6 +850,11 @@ class SupplierTypeSociety(models.Model):
     ifsc_code = models.CharField(db_column='IFSC_CODE', max_length=100, blank=True, null=True)  # Field name made lowercase.
     bank_name = models.CharField(db_column='BANK_NAME', max_length=100, blank=True, null=True)  # Field name made lowercase.
     account_no = models.IntegerField(db_column='ACCOUNT_NUMBER', blank=True, null=True)  # Field name made lowercase.
+    street_furniture_available = models.BooleanField(db_column='STREET_FURNITURE_AVAILABLE', default=False)  # Field name made lowercase. This field type is a guess.
+    stall_timing = models.CharField(db_column='STALL_TIMING',max_length=10,blank=True, null=True)
+    electricity_available  = models.BooleanField(db_column='ELECTRICITY_AVAILABLE',  default=False)
+    sound_available = models.BooleanField(db_column='SOUND_AVAILABLE',  default=False)
+    daily_electricity_charges = models.IntegerField(db_column='DAILY_ELECTRICITY_CHARGES',blank=True, null=True, default=0)
 
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
@@ -1006,7 +1015,7 @@ class SocietyTower(models.Model):
     class Meta:
 
         db_table = 'society_tower'
-
+        unique_together = (('tower_tag','supplier'),)
 
 
 
@@ -1117,8 +1126,6 @@ class CampaignTypes(models.Model):
     class Meta:
 
         db_table = 'campaign_types'
-
-
 
 
 
@@ -1540,6 +1547,10 @@ class  UserProfile(models.Model):
     user = models.ForeignKey(User, unique=True, editable=True, null=False, related_name='user_profile', db_column='user_id', on_delete=models.CASCADE)
     is_city_manager = models.BooleanField(db_column='is_city_manager', default=False)
     is_cluster_manager = models.BooleanField(db_column='is_cluster_manager', default=False)
+    is_normal_user =  models.BooleanField(db_column='is_normal_user', default=False)
+    society_form_access = models.BooleanField(db_column='society_form_access', default=False)
+    corporate_form_access = models.BooleanField(db_column='corporate_form_access', default=False)
+    created_by = models.ForeignKey(User, db_column='created_by', null=True)
 
     def get_user(self):
         return self.user
