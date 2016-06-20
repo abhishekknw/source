@@ -130,6 +130,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
                 ('name', models.CharField(max_length=50, db_column='NAME', blank=True)),
+                ('type', models.CharField(max_length=100, db_column='TYPE', blank=True)),
+                ('sub_type', models.CharField(max_length=100, db_column='SUB_TYPE', blank=True)),
                 ('phone', models.CharField(max_length=10, db_column='PHONE', blank=True)),
                 ('email', models.CharField(max_length=50, db_column='EMAILID', blank=True)),
                 ('address', models.CharField(max_length=100, db_column='ADDRESS', blank=True)),
@@ -187,7 +189,7 @@ class Migration(migrations.Migration):
                 ('end_date', models.DateTimeField(null=True, db_column='END_DATE')),
                 ('tentative_cost', models.IntegerField(null=True, db_column='TENTATIVE_COST')),
                 ('booking_status', models.CharField(max_length=20, db_column='BOOKING_STATUS', blank=True)),
-                ('account', models.ForeignKey(related_name='campaigns', db_column='BUSINESS_ID', to='v0.Account', null=True)),
+                ('business', models.ForeignKey(related_name='campaigns', db_column='BUSINESS_ID', to='v0.Business', null=True)),
             ],
             options={
                 'db_table': 'campaign',
@@ -206,33 +208,6 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'campaign_booking_info',
-            },
-        ),
-        migrations.CreateModel(
-            name='CampaignInventoryPrice',
-            fields=[
-                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
-                ('master_factor', models.IntegerField(null=True, db_column='MASTER_FACTOR')),
-                ('business_price', models.IntegerField(null=True, db_column='BUSINESS_PRICE')),
-                ('campaign', models.ForeignKey(related_name='campaign', db_column='CAMPAIGN_ID', to='v0.Campaign', null=True)),
-            ],
-            options={
-                'db_table': 'campaign_inventory_price',
-            },
-        ),
-        migrations.CreateModel(
-            name='CampaignOtherCost',
-            fields=[
-                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
-                ('content_dev_cost', models.IntegerField(null=True, db_column='CONTENT_DEV_COST')),
-                ('pm_cost', models.IntegerField(null=True, db_column='PROJECT_MGMT_COST')),
-                ('data_analytics', models.IntegerField(null=True, db_column='DATA_ANALYTICS')),
-                ('printing_cost', models.IntegerField(null=True, db_column='PRINTING_COST')),
-                ('digital_camp_cost', models.IntegerField(null=True, db_column='DIGITAL_CAMP_COST')),
-                ('campaign', models.ForeignKey(related_name='campaign_cost', db_column='CAMPAIGN_ID', to='v0.Campaign', null=True)),
-            ],
-            options={
-                'db_table': 'campaign_other_cost',
             },
         ),
         migrations.CreateModel(
@@ -1046,8 +1021,7 @@ class Migration(migrations.Migration):
                 ('society_city', models.CharField(max_length=250, null=True, db_column='SOCIETY_CITY', blank=True)),
                 ('society_state', models.CharField(max_length=250, null=True, db_column='SOCIETY_STATE', blank=True)),
                 ('society_longitude', models.FloatField(default=0.0, null=True, db_column='SOCIETY_LONGITUDE', blank=True)),
-                ('society_locality', models.CharField(max_length=50, null=True, db_column='SOCIETY_LOCALITY', blank=True)),
-                ('society_subarea', models.CharField(max_length=50, null=True, db_column='SOCIETY_SUBAREA', blank=True)),
+                ('society_locality', models.CharField(max_length=30, null=True, db_column='SOCIETY_LOCALITY', blank=True)),
                 ('society_latitude', models.FloatField(default=0.0, null=True, db_column='SOCIETY_LATITUDE', blank=True)),
                 ('society_location_type', models.CharField(max_length=50, null=True, db_column='SOCIETY_LOCATION_TYPE', blank=True)),
                 ('society_type_quality', models.CharField(max_length=30, null=True, db_column='SOCIETY_TYPE_QUALITY', blank=True)),
@@ -1111,7 +1085,6 @@ class Migration(migrations.Migration):
                 ('ifsc_code', models.CharField(max_length=100, null=True, db_column='IFSC_CODE', blank=True)),
                 ('bank_name', models.CharField(max_length=100, null=True, db_column='BANK_NAME', blank=True)),
                 ('account_no', models.IntegerField(null=True, db_column='ACCOUNT_NUMBER', blank=True)),
-                ('disable', models.BooleanField(default=False, db_column='DISABLED')),
                 ('created_by', models.ForeignKey(related_name='societies', db_column='CREATED_BY', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
             ],
             options={
@@ -1191,10 +1164,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('is_city_manager', models.BooleanField(default=False, db_column='is_city_manager')),
                 ('is_cluster_manager', models.BooleanField(default=False, db_column='is_cluster_manager')),
-                ('is_normal_user', models.BooleanField(default=False, db_column='is_normal_user')),
-                ('society_form_access', models.BooleanField(default=False, db_column='society_form_access')),
-                ('corporate_form_access', models.BooleanField(default=False, db_column='corporate_form_access')),
-                ('created_by', models.ForeignKey(db_column='created_by', to=settings.AUTH_USER_MODEL, null=True)),
                 ('user', models.ForeignKey(related_name='user_profile', db_column='user_id', to=settings.AUTH_USER_MODEL, unique=True)),
             ],
             options={
@@ -1357,24 +1326,9 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='campaigns', db_column='SUPPLIER_ID', to='v0.SupplierTypeSociety', null=True),
         ),
         migrations.AddField(
-            model_name='campaigninventoryprice',
-            name='supplier',
-            field=models.ForeignKey(related_name='inventoryprice', null=True, db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', unique=True),
-        ),
-        migrations.AddField(
             model_name='businesssubtypes',
-            name='business_type',
+            name='business',
             field=models.ForeignKey(related_name='business_subtypes', db_column='BUSINESS_TYPE', to='v0.BusinessTypes', null=True),
-        ),
-        migrations.AddField(
-            model_name='business',
-            name='sub_type',
-            field=models.ForeignKey(related_name='sub_type_set', db_column='SUB_TYPE', to='v0.BusinessSubTypes'),
-        ),
-        migrations.AddField(
-            model_name='business',
-            name='type_name',
-            field=models.ForeignKey(related_name='type_set', db_column='TYPE', to='v0.BusinessTypes'),
         ),
         migrations.AddField(
             model_name='bannerinventory',
@@ -1399,7 +1353,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='account',
             name='business',
-            field=models.ForeignKey(related_name='accounts', db_column='BUSINESS_ID', to='v0.Business', null=True),
+            field=models.ForeignKey(related_name='business', db_column='BUSINESS_ID', to='v0.Business', null=True),
         ),
         migrations.AlterUniqueTogether(
             name='societyflat',

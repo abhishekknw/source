@@ -25,7 +25,6 @@ angular.module('machadaloPages')
         dynamicButtonTextSuffix: 'Value'
       };
 
-      // Done By Me
       $scope.locationSubAreaCustomTexts = {
         buttonDefaultText : 'Select SubArea',
         checkAll : 'Select All',
@@ -42,8 +41,6 @@ angular.module('machadaloPages')
       };
      
 
-
-      // Done By Me
       $scope.typeValue = [
        {id: 1, label: "Ultra High"},
        {id: 2, label: "High"},
@@ -81,7 +78,10 @@ angular.module('machadaloPages')
         console.log("\n\n\n")
       })
 
+      
+
       $scope.getSubAreas = function(){
+        $scope.subLocationValue = [];
         $scope.showSubAreas = true;
         console.log($scope.locationValueModel);
         societyListService.getSubAreas($scope.locationValueModel)
@@ -90,12 +90,13 @@ angular.module('machadaloPages')
             console.log("Sub Location Values");
             console.log($scope.subLocationValue)
         });
+        $scope.showSubAreas = true;
       };
 
 
       $scope.model = {};
         var sObj = '';
-       societyListService.getSocietyList(sObj)
+       societyListService.getSocietyList({},sObj)
           .success(function (response) {
              $scope.model = response;
              console.log("$scope.model Values");
@@ -114,9 +115,11 @@ angular.module('machadaloPages')
         var myDest = {}
         angular.extend(myDest, mySource1, mySource2, mySource3, mySource4, mySource5)
         console.log(myDest);
-        societyListService.getSocietyList(myDest)
+        societyListService.getSocietyList(myDest,"")
          .success(function (response){
            $scope.model = response;
+           console.log("After filtering ");
+           console.log(response);
         });
       }
       //End: For displaying filter values
@@ -139,7 +142,7 @@ angular.module('machadaloPages')
         {"inventoryname": "Flier Campaign", checked: false}
       ];
       $scope.types = inventorytype;
-      societyListService.getSocietyList(sObj)
+      societyListService.getSocietyList({},"")
          .success(function (response) {
             $scope.model = response;
             console.log($scope.model);
@@ -175,7 +178,7 @@ angular.module('machadaloPages')
           $(temp).html('<div ' + style1 + 'class="alert alert-warning alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span>'+response.message +'</span></div>')
           setTimeout(function() {
               $("div.alert").remove();
-          }, 3000000);
+          }, 3000);
           console.log(response.message);
      });
    }}//End: For adding shortlisted society
@@ -183,7 +186,7 @@ angular.module('machadaloPages')
    //Start: To navigate to catalogue page
    if($rootScope.campaignId){
    $scope.catalogue = function(id){
-     alert(id);
+     // alert(id);
      $location.path('campaign/' + $rootScope.campaignId +'/societyDetails/' + id);
    }}//End: To navigate to catalogue page
 
@@ -229,8 +232,8 @@ angular.module('machadaloPages')
     // }
 
   $scope.societyList = function() {
-	  $location.path("manageCampaign/shortlisted/" +$rootScope.campaignId + "/societies");
-	};
+    $location.path("manageCampaign/shortlisted/" +$rootScope.campaignId + "/societies");
+  };
   /*//pagination starts here
   $scope.totalItems = 64;
   $scope.currentPage = 4;

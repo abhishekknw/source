@@ -19,12 +19,14 @@ angular.module('machadaloPages')
   societyListService.listSocieties = function (sObj) {
      var url = url_base + "society/list/";
      if(sObj && sObj != "")
-      url += "?search="+sObj
+      url += "?search="+sObj;
      return machadaloHttp.get(url);
    };
 
-   societyListService.getSocietyList = function(data) {
+   societyListService.getSocietyList = function(data,sObj) {
      var url = url_base + "society/filterList/";
+     if(sObj && sObj != "")
+      url += "?search="+sObj;
      return machadaloHttp.post(url, data);
    };
 
@@ -38,6 +40,7 @@ angular.module('machadaloPages')
       var url = url_base + "society/filterSubArea/";
       return machadaloHttp.post(url,data);
    }
+
 
   //for adding shortlisted societies
   societyListService.addShortlistedSociety = function(campaign_id, society_id){

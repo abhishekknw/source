@@ -28,7 +28,8 @@
 	  </div>
 			<!-- End of padding -->
 			<div class="itemscontainer offset-1">
-				<div class="offset-2"  dir-paginate="row in model | itemsPerPage:4">
+				<div class="offset-2"  dir-paginate="row in model | itemsPerPage:5">
+				<!-- <div class="offset-2"  ng-repeat="row in model"> -->
 					<table cellpadding="30" class="hpadding20 table table-bordered">
 					 <tbody>
 						 <tr valign="center">
@@ -61,9 +62,17 @@
 				<div class="clearfix"></div>
 			</div>
 			<!-- End of offset1-->
+
 			<div class="hpadding20">
 				<dir-pagination-controls max-size="10" direction-links="true" boundary-links="true" ></dir-pagination-controls>
-				<!--<uib-pagination total-items="totalItems" ng-model="currentPage" class="pagination-sm" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></uib-pagination>-->
+
+				<!-- <ul class="pagination ">
+					<li ng-repeat="n in [] | range:pages+1 ">
+            			<a id="hold" value="false" ng-click="getSocietiesPaginator(n+1)">{{n+1}}</a>
+        			</li>
+        		</ul> -->
+				<!-- <uib-pagination total-items="totalItems" ng-model="currentPage" class="pagination-sm" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></uib-pagination> -->
+			
 			</div>
 		</div>
 		<!-- END OF LIST CONTENT-->
