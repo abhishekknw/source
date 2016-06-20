@@ -1,17 +1,23 @@
 
 from rest_framework.pagination import PageNumberPagination
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import permissions
 from v0.permissions import IsOwnerOrManager
 from rest_framework import filters
-from serializers import UISocietySerializer, UITowerSerializer
-from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
-from v0.models import ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType
-from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, UserCities, UserAreas
-from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer
+from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer
+from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SocietyTowerSerializer, FlatTypeSerializer
+from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList
+from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile
+from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
 from django.db.models import Q
 from django.contrib.auth.models import User
+import json
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
+
 from django.db import IntegrityError
 from django.db import transaction
 from itertools import izip
@@ -145,14 +151,16 @@ class getInitialDataAPIView(APIView):
             user = request.user
             cities = City.objects.all()
             serializer = CitySerializer(cities, many=True)
-            if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
-                areas = CityArea.objects.filter(city_code__in=[item.city for item in user.cities.all()])
-            else:
-                areas = CityArea.objects.all()
-            serializer1 = CityAreaSerializer(areas, many=True)
+            print "wef"
+            # if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
+            #     areas = CityArea.objects.filter(city_code__in=[item.city for item in user.cities.all()])
+            # else:
+            #     areas = CityArea.objects.all()
+            # serializer1 = CityAreaSerializer(areas, many=True)
             items = SupplierTypeCode.objects.all()
             serializer2 = SupplierTypeCodeSerializer(items, many=True)
-            result = {'cities':serializer.data, 'city_areas': serializer1.data, 'supplier_types':serializer2.data}
+            # result = {'cities':serializer.data, 'city_areas': serializer1.data, 'supplier_types':serializer2.data}
+            result = {'cities':serializer.data, 'supplier_types':serializer2.data}
             return Response(result, status=200)
         except :
             return Response(status=404)
@@ -429,6 +437,29 @@ class SocietyAPIListView(APIView):
             return paginator.get_paginated_response(serializer.data)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
+
+
+
+class CorporateAPIListView(APIView):
+    def get(self, request, format=None):
+        try:
+            user = request.user
+            search_txt = request.query_params.get('search', None)
+            if search_txt:
+                items = SupplierTypeCorporate.objects.filter(Q(supplier_id__icontains=search_txt) | Q(corporate_name__icontains=search_txt)| Q(corporate_address1__icontains=search_txt)| Q(corporate_city__icontains=search_txt)| Q(corporate_state__icontains=search_txt)).order_by('corporate_name')
+            else:
+                if user.is_superuser:
+                    items = SupplierTypeCorporate.objects.all().order_by('corporate_name')
+                else:
+                    items = SupplierTypeCorporate.objects.filter(created_by=user.id)
+
+            paginator = PageNumberPagination()
+            result_page = paginator.paginate_queryset(items, request)
+            serializer = UICorporateSerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except SupplierTypeCorporate.DoesNotExist:
+            return Response(status=404)
+
 
 
 class SocietyAPIFiltersListView(APIView):
@@ -1779,4 +1810,154 @@ def get_availability(data):
          return False
 
 
+class saveBasicCorporateDetailsAPIView(APIView):
+    def post(self, request,id,format=None):
+        companies = []
+        error = {}
+        print "Inside views.py"
+        if 'supplier_id' in request.data:
+            corporate = SupplierTypeCorporate.objects.filter(pk=request.data['supplier_id']).first()
+            if corporate:
+                corporate_serializer = SupplierTypeCorporateSerializer(corporate,data=request.data)
+            else:
+                corporate_serializer = SupplierTypeCorporateSerializer(data=request.data)
+        if corporate_serializer.is_valid():
+            print "Valid serializer"
+            corporate_serializer.save()
+            print "Values Saved"
+        else:
+            print "Serializer error"
+            print corporate_serializer.errors
+            error['message'] ='Invalid Corporate Info data'
+            error = json.dumps(error)
+            return Response(response, status=406)
+
+        print "Round 2 Saving List of companies"
+        
+        try:
+            corporate_id = request.data['supplier_id']
+        except KeyError :
+            error['message'] ='Invalid Corporate Id'
+            error = json.dumps(error)
+            return Response(response, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        
+
+        # for item in request.data['list1']:
+        #     flag = 0
+        #     for i in range(0,len(instance1)):
+        #         print "Something"
+        #         if item in instance1[i].name:
+        #             flag = 1
+        #             break
+        #         else:
+        #             pass
+        #     if flag == 0:
+        #         new_obj = CorporateParkCompanyList(supplier_id_id=corporate_id,name=item)
+        #         new_list.append(new_obj)
+        #     else:
+        #         pass
+
+        companies_name = request.data['list1']
+        company_ids = list(CorporateParkCompanyList.objects.filter(supplier_id=corporate_id).values_list('id',flat=True))
+
+        for company_name in companies_name:
+            if 'id' in company_name:
+                company = CorporateParkCompanyList.objects.get(id=id)
+                company.name = company_name
+                company_ids.remove(company.id)
+                companies.append(company)
+            else:
+                company = CorporateParkCompanyList(supplier_id_id=corporate_id,name=company_name)
+                companies.append(company)
+
+        CorporateParkCompanyList.objects.bulk_create(companies)
+        CorporateParkCompanyList.objects.filter(id__in=company_ids).delete()
+
+        print "\n\nRound 2 complete"
+
+        
+
+        # print "Round 3 - Saving contacts "
+        
+        try:
+            print id
+            instance = SupplierTypeCorporate.objects.get(supplier_id=id)
+        except SupplierTypeCorporate.DoesNotExist:
+            print "id does not exist in database"
+            return Response({'message': 'This corporate park does not exist'}, status=406)
+
+        content_type = ContentType.objects.get_for_model(SupplierTypeCorporate)
+        print request.data
+        
+        contacts_ids = ContactDetailsGeneric.objects.filter(content_type=content_type, object_id=instance.supplier_id).values_list('id',flat=True)
+        contacts_ids = list(contacts_ids)
+        print contacts_ids
+        print type(contacts_ids)
+
+        for contact in request.data['contacts']:
+            if 'id' in contact:
+                contact_instance = ContactDetailsGeneric.objects.get(id=contact['id'])
+                contacts_ids.remove(contact_instance.id)
+                serializer = ContactDetailsGenericSerializer(contact_instance, data=contact)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    print serializer.errors
+                    return Response(status=404)
+
+            else:
+                contact['object_id'] = instance.supplier_id
+                serializer = ContactDetailsGenericSerializer(data=contact)
+                if serializer.is_valid():
+                    serializer.save(content_type=content_type)
+                else:
+                    print serializer.errors
+                    return Response(status=404)
+
+        ContactDetailsGeneric.objects.filter(id__in=contacts_ids).delete()
+        return Response(status=200)
+
+
+
+    def get(self, request, id, format=None):
+        try:
+            data1 = SupplierTypeCorporate.objects.get(supplier_id=id)
+            serializer = SupplierTypeCorporateSerializer(data1)
+            data2 = CorporateParkCompanyList.objects.filter(supplier_id=id)
+            serializer1 = CorporateParkCompanyListSerializer(data2, many=True)
+            data3 = ContactDetailsGeneric.objects.filter(object_id=id)
+            serializer2 = ContactDetailsGenericSerializer(data3, many=True)
+            print "Hello\n\n"
+            print serializer2.data
+            result = {'basicData' : serializer.data , 'companyList' : serializer1.data , 'contactData' : serializer2.data};
+            return Response(result)
+        except SupplierTypeCorporate.DoesNotExist:
+            return Response(status=404)
+        except SupplierTypeCorporate.MultipleObjectsReturned:
+            return Response(status=406)
+
+
+class ContactDetailsGenericAPIView(APIView):
+
+    def post(self,request,id=None,format=None):
+        print "Hello  ", id
+        # instance = get_object_or_404(SupplierTypeCorporate, supplier_id=id)
+        try:
+            instance = SupplierTypeCorporate.objects.get(supplier_id=id)
+        except SupplierTypeCorporate.DoesNotExist:
+            print "id does not exist in database"
+            return Response({'message': 'This corporate park does not exist'}, status=406)
+
+        print "Hello123"
+        content_type = ContentType.objects.get_for_model(SupplierTypeCorporate)
+        print request.data
+        request.data['contact']['object_id'] = instance.supplier_id
+        serializer = ContactDetailsGenericSerializer(data=request.data['contact'])
+        if serializer.is_valid():
+            print serializer.validated_data
+            serializer.save(content_type=content_type)
+            print "serializer saved"
+            return Response(serializer.data, status=200)
+        return Response(serializers.errors, status=400)
 
