@@ -210,16 +210,15 @@ class generateSupplierIdAPIView(APIView):
                         'society_state' : city.state_code.state_name,
                         'created_by': current_user.id
                         }
-            if request.data['supplier_type'] == 'RS':
-                serializer = SupplierTypeSocietySerializer(data=supplier)
-                if serializer.is_valid():
-                    serializer.save()
-                    #populate default pricing table
-                    print "calling def"
-                    set_default_pricing(serializer.data['supplier_id'])
-                    return Response(serializer.data, status=200)
-                else:
-                    return Response(serializer.errors, status=400)
+            serializer = SupplierTypeSocietySerializer(data=supplier)
+            if serializer.is_valid():
+                serializer.save()
+                #populate default pricing table
+                print "calling def"
+                set_default_pricing(serializer.data['supplier_id'])
+                return Response(serializer.data, status=200)
+            else:
+                return Response(serializer.errors, status=400)
         except :
             return Response(status=404)
 
