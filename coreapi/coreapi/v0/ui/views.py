@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 from rest_framework import permissions
 from v0.permissions import IsOwnerOrManager
 from rest_framework import filters
-<<<<<<< HEAD
 from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer
 from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SocietyTowerSerializer, FlatTypeSerializer
 from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList
@@ -18,23 +17,12 @@ import json
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-# from django.shortcuts import get_object_or_404
 
-class getUsersProfiles(APIView):
-=======
-from serializers import UISocietySerializer, UITowerSerializer
-from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
-from v0.models import ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType
-from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, UserCities, UserAreas
-from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer
-from django.db.models import Q
-from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.db import transaction
 from itertools import izip
 
 class UsersProfilesAPIView(APIView):
->>>>>>> aa0f1032cffac3bd710da2a5ebe282c987ea3d25
 
     def get(self, request, format=None):
         user = request.user
@@ -160,14 +148,16 @@ class getInitialDataAPIView(APIView):
             user = request.user
             cities = City.objects.all()
             serializer = CitySerializer(cities, many=True)
-            if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
-                areas = CityArea.objects.filter(city_code__in=[item.city for item in user.cities.all()])
-            else:
-                areas = CityArea.objects.all()
-            serializer1 = CityAreaSerializer(areas, many=True)
+            print "wef"
+            # if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
+            #     areas = CityArea.objects.filter(city_code__in=[item.city for item in user.cities.all()])
+            # else:
+            #     areas = CityArea.objects.all()
+            # serializer1 = CityAreaSerializer(areas, many=True)
             items = SupplierTypeCode.objects.all()
             serializer2 = SupplierTypeCodeSerializer(items, many=True)
-            result = {'cities':serializer.data, 'city_areas': serializer1.data, 'supplier_types':serializer2.data}
+            # result = {'cities':serializer.data, 'city_areas': serializer1.data, 'supplier_types':serializer2.data}
+            result = {'cities':serializer.data, 'supplier_types':serializer2.data}
             return Response(result, status=200)
         except :
             return Response(status=404)
@@ -220,15 +210,16 @@ class generateSupplierIdAPIView(APIView):
                         'society_state' : city.state_code.state_name,
                         'created_by': current_user.id
                         }
-            serializer = SupplierTypeSocietySerializer(data=supplier)
-            if serializer.is_valid():
-                serializer.save()
-                #populate default pricing table
-                print "calling def"
-                set_default_pricing(serializer.data['supplier_id'])
-                return Response(serializer.data, status=200)
-            else:
-                return Response(serializer.errors, status=400)
+            if request.data['supplier_type'] == 'RS':
+                serializer = SupplierTypeSocietySerializer(data=supplier)
+                if serializer.is_valid():
+                    serializer.save()
+                    #populate default pricing table
+                    print "calling def"
+                    set_default_pricing(serializer.data['supplier_id'])
+                    return Response(serializer.data, status=200)
+                else:
+                    return Response(serializer.errors, status=400)
         except :
             return Response(status=404)
 

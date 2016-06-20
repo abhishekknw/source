@@ -1543,7 +1543,7 @@ class JMN_society(models.Model):
         db_table = 'jmn_society'
 
 
-class  UserProfile(models.Model):
+class UserProfile(models.Model):
     user = models.ForeignKey(User, unique=True, editable=True, null=False, related_name='user_profile', db_column='user_id', on_delete=models.CASCADE)
     is_city_manager = models.BooleanField(db_column='is_city_manager', default=False)
     is_cluster_manager = models.BooleanField(db_column='is_cluster_manager', default=False)
