@@ -110,6 +110,9 @@ class AdInventoryType(models.Model):
                                         choices=AD_INVENTORY_CHOICES, default='POSTER')
     adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20)  # Field name made lowercase.
 
+    def __str__(self):
+        return self.adinventory_name
+        
     class Meta:
         db_table = 'ad_inventory_type'
 
@@ -829,6 +832,11 @@ class SupplierTypeSociety(models.Model):
     ifsc_code = models.CharField(db_column='IFSC_CODE', max_length=100, blank=True, null=True)  # Field name made lowercase.
     bank_name = models.CharField(db_column='BANK_NAME', max_length=100, blank=True, null=True)  # Field name made lowercase.
     account_no = models.IntegerField(db_column='ACCOUNT_NUMBER', blank=True, null=True)  # Field name made lowercase.
+    street_furniture_available = models.BooleanField(db_column='STREET_FURNITURE_AVAILABLE', default=False)  # Field name made lowercase. This field type is a guess.
+    stall_timing = models.CharField(db_column='STALL_TIMING',max_length=10,blank=True, null=True)
+    electricity_available  = models.BooleanField(db_column='ELECTRICITY_AVAILABLE',  default=False)
+    sound_available = models.BooleanField(db_column='SOUND_AVAILABLE',  default=False)
+    daily_electricity_charges = models.IntegerField(db_column='DAILY_ELECTRICITY_CHARGES',blank=True, null=True, default=0)
 
 
     street_furniture_available = models.BooleanField(db_column='STREET_FURNITURE_AVAILABLE', default=False)  # Field name made lowercase. This field type is a guess.
@@ -966,7 +974,7 @@ class SocietyTower(models.Model):
     class Meta:
 
         db_table = 'society_tower'
-
+        unique_together = (('tower_tag','supplier'),)
 
 
 

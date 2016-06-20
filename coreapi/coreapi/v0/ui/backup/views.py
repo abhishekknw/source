@@ -1,4 +1,3 @@
-
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,11 +12,6 @@ from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerial
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.db import IntegrityError
-from django.db import transaction
-from itertools import izip
-
-from v0.ui.serializers import SocietyListSerializer
-
 
 class UsersProfilesAPIView(APIView):
 
@@ -184,7 +178,7 @@ class checkSupplierCodeAPIView(APIView):
 
 class generateSupplierIdAPIView(APIView):
     def post(self, request, format=None):
-        try:
+       # try:
             city = City.objects.get(pk=request.data['city_id'])
             area = CityArea.objects.get(pk=request.data['area_id'])
             sub_area = CitySubArea.objects.get(pk=request.data['subarea_id'])
@@ -214,50 +208,21 @@ class generateSupplierIdAPIView(APIView):
                 return Response(serializer.data, status=200)
             else:
                 return Response(serializer.errors, status=400)
-        except :
-            return Response(status=404)
+        #except :
+         #   return Response(status=404)
 
 
 class SocietyAPIView(APIView):
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrManager,)
 
     def get(self, request, id, format=None):
-        try:
-            response = {}
+        #try:
             item = SupplierTypeSociety.objects.get(pk=id)
             self.check_object_permissions(self.request, item)
             serializer = UISocietySerializer(item)
-            # inventory_summary = InventorySummary.objects.get(supplier=item)
-            # inventory_serializer = InventorySummarySerializer(inventory_summary)
-            
-            ###### Check if to use filter or get
-
-            # poster = PosterInventory.objects.filter(supplier=item)
-            # print "poster.adinventory_id is :",poster.adinventory_id
-            # poster_serializer = PosterInventorySerializer(poster)
-
-            # stall = StallInventory.objects.filter(supplier=item)
-            # stall_serializer = StallInventorySerializer(stall)
-
-            # doorToDoor = DoorToDoorInfo.objects.filter(**** how to filter on tower foreignkey  ***** )
-            # doorToDoor_serializer = DoorToDoorInfoserializer(doorToDoor) 
-
-            # mailbox = MailboxInfo.objects.filter(**** how to filter on tower foreignkey  *****)
-            # mailbox_serializer = MailboxInfoSerializer(mailbox)
-
-            # response['society'] = serializer.data
-            # response['inventory'] = inventory_serializer.data
-            # response['poster'] = poster_serializer.data
-            # response['doorToDoor'] = doorToDoor_serializer.data
-            # response['mailbox'] = mailbox_serializer.data
-
-            # return Response(response, status=200)
-
-
-            return Response(serializer.data, status=200)
-        except SupplierTypeSociety.DoesNotExist:
-           return Response(status=404)
-
+            return Response(serializer.data)
+        #except :
+         #   return Response(status=404)
 
     def delete(self, request, id, format=None):
         try:
@@ -332,81 +297,54 @@ class SocietyAPIFiltersView(APIView):
             return Response(status=404)
 
 
-
-class SocietyAPIFilterSubAreaView(APIView):
-    def post(self, request, format=None):
-        print request.data
-        print "\n\n\n"
-
-        areas_id = []
-        subareas = []
-        for item in request.data:
-            id = int(item['id'])
-            areas_id.append(id)
-
-        areas = CityArea.objects.filter(id__in=areas_id)
-        for area in areas:
-            subarea = area.areacode.all()
-            subareas.extend(subarea)
-
-        subarea_serializer = CitySubAreaSerializer(subareas, many=True)
-
-        return Response(subarea_serializer.data, status = 200)
-
-
-
-
 def set_default_pricing(society_id):
     print "inside def"
     society = SupplierTypeSociety.objects.get(pk=society_id)
     ad_types = AdInventoryType.objects.all()
     duration_types = DurationType.objects.all()
-    price_mapping_list = []
     for type in ad_types:
         for duration in duration_types:
             if (type.adinventory_name=='POSTER'):
                 if((duration.duration_name=='Unit Daily')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
-                    price_mapping_list.append(pmdefault)
+                    pmdefault.save()
                 if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Unit Monthly')|(duration.duration_name=='Unit Weekly')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                    price_mapping_list.append(pmdefault)
-
-            if (type.adinventory_name=='POSTER LIFT'):
+                    pmdefault.save()
+            if (type.adinventory_name=='POSTER (LIFT)'):
                 if((duration.duration_name=='Unit Daily')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
-                    price_mapping_list.append(pmdefault)
+                    pmdefault.save()
                 if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Unit Monthly')|(duration.duration_name=='Unit Weekly')):
-                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                    price_mapping_list.append(pmdefault)
-           
+                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
+                    pmdefault.save()
             if (type.adinventory_name=='STANDEE'):
                 if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Unit Weekly')):
                     if(type.adinventory_type=='Large'):
                         pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
-                        price_mapping_list.append(pmdefault)
+                        pmdefault.save()
                     else:
                         pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                        price_mapping_list.append(pmdefault)
+                        pmdefault.save()
             if (type.adinventory_name=='STALL'):
                 if(duration.duration_name=='Unit Daily'):
                     if ((type.adinventory_type=='Canopy')|(type.adinventory_type=='Small')|(type.adinventory_type=='Large')):
                         pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                        price_mapping_list.append(pmdefault)
+                        pmdefault.save()
                     if(type.adinventory_type=='Customize'):
                         pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
-                        price_mapping_list.append(pmdefault)
+                        pmdefault.save()
             if ((type.adinventory_name=='CAR DISPLAY')&(duration.duration_name=='Unit Daily')):
                 if ((type.adinventory_type=='Standard')|(type.adinventory_type=='Premium')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                    price_mapping_list.append(pmdefault)
+                    pmdefault.save()
             if ((type.adinventory_name=='FLIER')&(duration.duration_name=='Unit Daily')):
                 if ((type.adinventory_type=='Door-to-Door')|(type.adinventory_type=='Mailbox')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                    price_mapping_list.append(pmdefault)
+                    pmdefault.save()
 
-    PriceMappingDefault.objects.bulk_create(price_mapping_list)
-    return Response(status=200)
+
+    return
 
 
 class SocietyAPIListView(APIView):
@@ -425,202 +363,54 @@ class SocietyAPIListView(APIView):
 
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
-            serializer = SocietyListSerializer(result_page, many=True)
+            serializer = UISocietySerializer(result_page, many=True)
             return paginator.get_paginated_response(serializer.data)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
-
 class SocietyAPIFiltersListView(APIView):
-
-    # self.paginator = None
-    # self.serializer = None
-
-    # def get(self,request, format=None):
-    #     return self.paginator.get_paginated_response(self.serializer.data)
-
     def post(self, request, format=None):
-        print request.data
         try:
-            # two list to disable search on society and flats if all the options in both the fields selected
-            allflatquantity = [u'Large', u'Medium', u'Small', u'Very Large']    # in sorted order
-            allsocietytype = ['High', 'Medium High', 'Standard', 'Ultra High'] # in sorted order
             cityArea = []
             societytype = []
             flatquantity = []
             inventorytype = []
-            citySubArea = []
             filter_present = False
-            subareas = False
-            areas = False
 
-            if 'subLocationValueModel' in request.data:
-                for key in request.data['subLocationValueModel']:
-                    citySubArea.append(key['subarea_name'])
-                    # filter_present = True
-                subareas = True if citySubArea else False
-            
-            if (not subareas) and'locationValueModel' in request.data:
+            if 'locationValueModel' in request.data:
                 for key in request.data['locationValueModel']:
                     cityArea.append(key['label'])
-                    # filter_present = True
-                areas = True if cityArea else False
-
+                    filter_present = True
 
             if 'typeValuemodel' in request.data:
                 for key in request.data['typeValuemodel']:
                     societytype.append(key['label'])
-                    # filter_present = True
-
+                    filter_present = True
 
             if 'checkboxes' in request.data:
                 for key in request.data['checkboxes']:
                     if key['checked']:
                      flatquantity.append(key['name'])
-                     # filter_present = True
+                     filter_present = True
 
             if 'types' in request.data:
                 for key in request.data['types']:
                     if key['checked']:
                      inventorytype.append(key['inventoryname'])
-                     # filter_present = True
-                # print inventorytype
-
-            flatquantity.sort()
-            societytype.sort()
-            if flatquantity == allflatquantity: # sorted comparison to avoid mismatch based on index
-                flatquantity = []
-            if  societytype == allsocietytype:   # same as above
-                societytype = []                
-
-            if subareas or areas or societytype or flatquantity or inventorytype:
-                filter_present = True
-
-            print "cityArea : ", cityArea
-            print "citySubArea : ", citySubArea
-            print "societytype : ", societytype
-            print "flatquantity : ", flatquantity
-            print "inventorytype : ", inventorytype
-            print "filter present : ", filter_present
+                     filter_present = True
+                print inventorytype
 
             if filter_present:
-                # if subareas:
-                #     items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
-                # else :
-                #     items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))    
-                # serializer = UISocietySerializer(items, many= True)
-
-                # Sample Code
-
-                if subareas:
-                    if  societytype and flatquantity and inventorytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
-                    elif societytype and flatquantity:
-                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
-                    elif societytype and inventorytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype))
-                    elif flatquantity and inventorytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quantity__in = flatquantity))
-                    elif societytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype))
-                    elif flatquantity:
-                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quantity__in = flatquantity))
-                    # elif inventorytype:
-                    #     do something
-                    else :
-                        items = SupplierTypeSociety.objects.filter(society_subarea__in = citySubArea)
-
-                elif areas :
-                    if societytype and flatquantity and inventorytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
-                    elif societytype and flatquantity:
-                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
-                    elif societytype and inventorytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype))
-                    elif flatquantity and inventorytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quantity__in = flatquantity))
-                    elif societytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype))
-                    elif flatquantity:
-                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quantity__in = flatquantity))
-                    # elif inventorytype:
-                    #     do something
-
-                    else:
-                        items = SupplierTypeSociety.objects.filter(society_locality__in = cityArea)     
-
-                elif societytype or flatquantity or inventorytype :
-                    if societytype and flatquantity and inventorytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
-                    elif societytype and flatquantity:
-                        items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
-                    elif societytype and inventorytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype))
-                    elif flatquantity and inventorytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_type_quantity__in = flatquantity))
-                    elif societytype:
-                        items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype))
-                    elif flatquantity:
-                        items = SupplierTypeSociety.objects.filter(Q(society_type_quantity__in = flatquantity))
-                    # elif inventorytype:
-                    #     do something
-
-                else:
-                    items = SupplierTypeSociety.objects.all()
-
-                ## UISocietySerializer --> SocietyListSerializer
-                # serializer = SocietyListSerializer(items, many= True)
-                # Sample Code
+                    items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) | Q(society_type_quality__in = societytype) | Q(society_type_quantity__in = flatquantity))
+                    serializer = UISocietySerializer(items, many= True)
             else:
                     items = SupplierTypeSociety.objects.all()
-                    ## UISocietySerializer --> SocietyListSerializer
-                    
+                    serializer = UISocietySerializer(items, many= True)
 
+            return Response(serializer.data, status = 200)
 
-            serializer = SocietyListSerializer(items, many= True)
-            # paginator = PageNumberPagination()
-            # result_page = paginator.paginate_queryset(items, request)
-            # serializer = SocietyListSerializer(result_page, many=True)
-
-            # return paginator.get_paginated_response(serializer.data,status=200)
-
-
-            return Response(serializer.data, status=200)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
-
-
-        # def set_paginator(self, paginator, serializer):
-        #     self.filter_socities_paginator = paginator
-        #     self.filter_socities_serializer = serializer
-
-        # def get_paginator(self):
-        #     return self.filter_socities_paginator,  
-
-class SocietyAPISortedListView(APIView):
-    def get(self,request,format=None):
-        order = request.query_params.get('order',None)
-        print "Order received is ", order
-
-        if order == 'asc':
-            societies = SupplierTypeSociety.objects.all().order_by('society_name')
-            serializer = UISocietySerializer(societies, many=True)
-            return Response(serializer.data, status=200)
-        elif order == 'desc':
-            societies = SupplierTypeSociety.objects.all().order_by('-society_name')
-            serializer = UISocietySerializer(societies, many=True)
-            return Response(serializer.data, status=200)
-        else:
-            return Response(status=200)
-
-
-class SocietyAPISocietyIdsView(APIView):
-    def get(self, request, format=None):
-        society_ids = SupplierTypeSociety.objects.all().values_list('supplier_id',flat=True)
-        return Response({'society_ids' : society_ids}, status=200)
-
-
-
 
 
 class FlatTypeAPIView(APIView):
@@ -711,8 +501,7 @@ class InventorySummaryAPIView(APIView):
 
 
     def post(self, request, id, format=None):
-        try:
-            print request.data
+        #try:
             society = SupplierTypeSociety.objects.get(pk=id)
             towercount = society.tower_count
 
@@ -722,251 +511,162 @@ class InventorySummaryAPIView(APIView):
             flier_campaign = 0
             total_campaign = 0
 
-            with transaction.atomic():
-                if request.data['poster_allowed_nb']:
-                    if request.data['nb_count']!=None and request.data['nb_count'] > 0:
-                        poster_campaign = request.data['nb_count']
-                        request.data['poster_campaign'] = poster_campaign
-                if request.data['lift_count']!=None and request.data['poster_allowed_lift']:
-                    if request.data['lift_count'] > 0:
-                        poster_campaign = poster_campaign + request.data['lift_count']
-                        request.data['poster_campaign'] = poster_campaign
-                if request.data['standee_allowed']:
-                    if request.data['total_standee_count']!=None and request.data['total_standee_count'] > 0:
-                        standee_campaign = request.data['total_standee_count']
-                        request.data['standee_campaign'] = standee_campaign
-                if request.data['stall_allowed'] or request.data['car_display_allowed']:
-                    if request.data['total_stall_count']!=None and request.data['total_stall_count'] > 0:
-                        stall_campaign = request.data['total_stall_count']
-                        request.data['stall_or_cd_campaign'] = stall_campaign
-                if request.data['flier_allowed']:
-                    if request.data['flier_frequency']!=None and request.data['flier_frequency'] > 0:
-                        flier_campaign = request.data['flier_frequency']
-                        request.data['flier_campaign'] = flier_campaign
+            if request.data['poster_allowed_nb']:
+                if request.data['nb_count']!=None and request.data['nb_count'] > 0:
+                    poster_campaign = request.data['nb_count']
+                    request.data['poster_campaign'] = poster_campaign
+            if request.data['lift_count']!=None and request.data['poster_allowed_lift']:
+                if request.data['lift_count'] > 0:
+                    poster_campaign = poster_campaign + request.data['lift_count']
+                    request.data['poster_campaign'] = poster_campaign
+            if request.data['standee_allowed']:
+                if request.data['total_standee_count']!=None and request.data['total_standee_count'] > 0:
+                    standee_campaign = request.data['total_standee_count']
+                    request.data['standee_campaign'] = standee_campaign
+            if request.data['stall_allowed'] or request.data['car_display_allowed']:
+                if request.data['total_stall_count']!=None and request.data['total_stall_count'] > 0:
+                    stall_campaign = request.data['total_stall_count']
+                    request.data['stall_or_cd_campaign'] = stall_campaign
+            if request.data['flier_allowed']:
+                if request.data['flier_frequency']!=None and request.data['flier_frequency'] > 0:
+                    flier_campaign = request.data['flier_frequency']
+                    request.data['flier_campaign'] = flier_campaign
 
-                #society = SupplierTypeSociety.objects.get(pk=id)
-                society.total_campaign = poster_campaign+standee_campaign+stall_campaign+flier_campaign
-                society.save()
-
-                # print type(request.data['poster_price_week_lift'])
-                # print request.data['poster_price_week_lift']
-                print "entering after flag"
-                flag = True
-                if 'id' in request.data:
-                    flag = False
-                    item = InventorySummary.objects.get(supplier=society)
-                    if request.data['stall_allowed']==True:
-                        if request.data['total_stall_count']!=None and item.total_stall_count < request.data['total_stall_count']:
-                            if item.total_stall_count == None:
-                                self.save_stall_locations(0, request.data['total_stall_count'], society)
-                            else:
-                                self.save_stall_locations(item.total_stall_count, request.data['total_stall_count'], society)
-                    serializer = InventorySummarySerializer(item, data=request.data)
-
-                else:
-                    if flag and request.data['total_stall_count']!=None:
-                        self.save_stall_locations(0, request.data['total_stall_count'], society)
-                    serializer = InventorySummarySerializer(data=request.data)
+            #society = SupplierTypeSociety.objects.get(pk=id)
+            society.total_campaign = poster_campaign+standee_campaign+stall_campaign+flier_campaign
+            society.save()
 
 
-                if serializer.is_valid():
-                    serializer.save(supplier=society)
-                else :
-                    return Response({'message': 'Invalid InventorySummary Serializer'},status=400)
-
-
-
-                if request.data['poster_price_week_nb']!= None:
-                    posPrice = request.data['poster_price_week_nb']
-                    if request.data['poster_allowed_nb']==True:
-                        if request.data['nb_A3_allowed']== True:
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A3', duration_type__duration_name='Campaign Weekly')
-                            price.business_price = posPrice
-                            price.society_price = price.business_price
-                            price.save()
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A3', duration_type__duration_name='Unit Weekly')
-                            price.business_price = posPrice/towercount
-                            price.society_price = price.business_price
-                            price.save()
-
-                        if request.data['nb_A4_allowed']== True:
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A4', duration_type__duration_name='Campaign Weekly')
-                            price.business_price = posPrice
-                            price.society_price = price.business_price
-                            price.save()
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A4', duration_type__duration_name='Unit Weekly')
-                            price.business_price = posPrice/towercount
-                            price.society_price = price.business_price
-                            price.save()
-
-                if request.data['poster_price_week_lift']:
-                    posPrice = request.data['poster_price_week_lift']
-                    if request.data['poster_allowed_lift']==True:
-                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER LIFT',adinventory_type__adinventory_type='A3',duration_type__duration_name='Campaign Weekly')
-                        price.business_price = posPrice
-                        price.society_price = price.business_price
-                        price.save()
-                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER LIFT',adinventory_type__adinventory_type='A3',duration_type__duration_name='Unit Weekly')
-                        price.business_price = posPrice/towercount
-                        price.society_price = price.business_price
-                        price.save()
-                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER LIFT',adinventory_type__adinventory_type='A4',duration_type__duration_name='Campaign Weekly')
-                        price.business_price = posPrice
-                        price.society_price = price.business_price
-                        price.save()
-                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER LIFT',adinventory_type__adinventory_type='A4',duration_type__duration_name='Unit Weekly')
-                        price.business_price = posPrice/towercount
-                        price.society_price = price.business_price
-                        price.save()
-
-
-                if request.data['standee_price_week']!=None:
-                    stanPrice = request.data['standee_price_week']
-                    if request.data['standee_allowed']==True:
-                        if request.data['standee_small']== True:
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Small', duration_type__duration_name='Campaign Weekly')
-                            price.business_price = stanPrice
-                            price.society_price = price.business_price
-                            price.save()
-                            
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Small', duration_type__duration_name='Unit Weekly')
-                            price.business_price = stanPrice/towercount
-                            price.society_price = price.business_price
-                            price.save()
-
-                        if request.data['standee_medium']== True:
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Medium', duration_type__duration_name='Campaign Weekly')
-                            price.business_price = stanPrice
-                            price.society_price = price.business_price
-                            price.save()
-                        
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Medium', duration_type__duration_name='Unit Weekly')
-                            price.business_price = stanPrice/towercount
-                            price.society_price = price.business_price
-                            price.save()
-
+            flag = True
+            if 'id' in request.data:
+                flag = False
+                item = InventorySummary.objects.get(supplier=society)
                 if request.data['stall_allowed']==True:
-                    if request.data['stall_small']== True:
-                        if request.data['stall_price_day_small']!=None:
-                            stallPrice = request.data['stall_price_day_small']
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STALL',adinventory_type__adinventory_type='Small', duration_type__duration_name='Unit Daily')
-                            price.business_price = stallPrice
-                            price.society_price = price.business_price
-                            price.save()
-                    
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STALL',adinventory_type__adinventory_type='Canopy', duration_type__duration_name='Unit Daily')
-                            price.business_price = stallPrice
-                            price.society_price = price.business_price
-                            price.save()
+                    if request.data['total_stall_count']!=None and item.total_stall_count < request.data['total_stall_count']:
+                        if item.total_stall_count == None:
+                            self.save_stall_locations(0, request.data['total_stall_count'], society)
+                        else:
+                            self.save_stall_locations(item.total_stall_count, request.data['total_stall_count'], society)
+                serializer = InventorySummarySerializer(item, data=request.data)
 
-                    if request.data['stall_large']== True:
-                        if request.data['stall_price_day_large']!=None:
-                            stallPrice = request.data['stall_price_day_large']
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STALL',adinventory_type__adinventory_type='Large', duration_type__duration_name='Unit Daily')
-                            price.business_price = stallPrice
-                            price.society_price = price.business_price
-                            price.save()
+            else:
+                if flag and request.data['total_stall_count']!=None:
+                    self.save_stall_locations(0, request.data['total_stall_count'], society)
+                serializer = InventorySummarySerializer(data=request.data)
 
-                if request.data['car_display_allowed']==True:
-                    if request.data['cd_standard']== True:
-                        if request.data['cd_price_day_standard']!=None:
-                            cdPrice = request.data['cd_price_day_standard']
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='CAR DISPLAY',adinventory_type__adinventory_type='Standard', duration_type__duration_name='Unit Daily')
-                            price.business_price = cdPrice
-                            price.society_price = price.business_price
-                            price.save()
 
-                    if request.data['cd_premium']== True:
-                        if request.data['cd_price_day_premium']!=None:
-                            cdPrice = request.data['cd_price_day_premium']
-                            price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='CAR DISPLAY',adinventory_type__adinventory_type='Premium', duration_type__duration_name='Unit Daily')
-                            price.business_price = cdPrice
-                            price.society_price = price.business_price
-                            price.save()
+            if serializer.is_valid():
+                serializer.save(supplier=society)
 
-                if request.data['flier_price_day']!=None:
-                    flierPrice = request.data['flier_price_day']
-                    if request.data['mailbox_allowed']== True:
-                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='FLIER',adinventory_type__adinventory_type='Mailbox', duration_type__duration_name='Unit Daily')
-                        price.business_price = flierPrice
-                        price.society_price = price.business_price
+
+            if request.data['poster_price_week_nb']!=None:
+                posPrice = request.data['poster_price_week_nb']
+                if request.data['poster_allowed_nb']==True:
+                    if request.data['nb_A3_allowed']== True:
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A3', duration_type__duration_name='Campaign Weekly')
+                        price.business_price = posPrice
+                        price.save()
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A3', duration_type__duration_name='Unit Weekly')
+                        price.business_price = posPrice/towercount
                         price.save()
 
-                    if request.data['d2d_allowed']== True:
-                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='FLIER',adinventory_type__adinventory_type='Door-to-Door', duration_type__duration_name='Unit Daily')
-                        price.business_price = flierPrice
-                        price.society_price = price.business_price
+                    if request.data['nb_A4_allowed']== True:
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A4', duration_type__duration_name='Campaign Weekly')
+                        price.business_price = posPrice
+                        price.save()
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A4', duration_type__duration_name='Unit Weekly')
+                        price.business_price = posPrice/towercount
                         price.save()
 
+            if request.data['poster_price_week_lift']!=None:
+                posPrice = request.data['poster_price_week_lift']
+                if request.data['poster_allowed_lift']==True:
+                    price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A3',duration_type__duration_name='Campaign Weekly')
+                    price.business_price = posPrice
+                    price.save()
+                    price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='POSTER',adinventory_type__adinventory_type='A4',duration_type__duration_name='Unit Weekly')
+                    price.business_price = posPrice/towercount
+                    price.save()
                     
+
+            if request.data['standee_price_week']!=None:
+                stanPrice = request.data['standee_price_week']
+                if request.data['standee_allowed']==True:
+                    if request.data['standee_small']== True:
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Small', duration_type__duration_name='Campaign Weekly')
+                        price.business_price = stanPrice
+                        price.save()
+                        
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Small', duration_type__duration_name='Unit Weekly')
+                        price.business_price = stanPrice/towercount
+                        price.save()
+
+                    if request.data['standee_medium']== True:
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Medium', duration_type__duration_name='Campaign Weekly')
+                        price.business_price = stanPrice
+                        price.save()
+                    
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STANDEE',adinventory_type__adinventory_type='Medium', duration_type__duration_name='Unit Weekly')
+                        price.business_price = stanPrice/towercount
+                        price.save()
+
+            if request.data['stall_allowed']==True:
+                if request.data['stall_small']== True:
+                    if request.data['stall_price_day_small']!=None:
+                        stallPrice = request.data['stall_price_day_small']
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STALL',adinventory_type__adinventory_type='Small', duration_type__duration_name='Unit Daily')
+                        price.business_price = stallPrice
+                        price.save()
                 
-                try:
-                    inventory_obj = InventorySummary.objects.get(supplier=society)
-                    serilaizer_new = InventorySummarySerializer(inventory_obj)
-                    return Response(serilaizer_new.data, status=200)
-                except InventorySummary.DoesNotExist:
-                    return Response({'message' : 'Error fetching inventory summary object'},status=406)
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STALL',adinventory_type__adinventory_type='Canopy', duration_type__duration_name='Unit Daily')
+                        price.business_price = stallPrice
+                        price.save()
 
-                # return Response(serializer.validated_data, status=200)
-            print "404 Ist"
-            return Response(status=404)
-        # except:
-        #     print "404 2nd"
-        #     return Response(status=404)
-        except InventorySummary.DoesNotExist:
-            print "404 2nd"
-            #   return Response(status=404)
+                if request.data['stall_large']== True:
+                    if request.data['stall_price_day_large']!=None:
+                        stallPrice = request.data['stall_price_day_large']
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='STALL',adinventory_type__adinventory_type='Large', duration_type__duration_name='Unit Daily')
+                        price.business_price = stallPrice
+                        price.save()
+
+            if request.data['car_display_allowed']==True:
+                if request.data['cd_standard']== True:
+                    if request.data['cd_price_day_standard']!=None:
+                        cdPrice = request.data['cd_price_day_standard']
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='CAR DISPLAY',adinventory_type__adinventory_type='Standard', duration_type__duration_name='Unit Daily')
+                        price.business_price = cdPrice
+                        price.save()
+
+                if request.data['cd_premium']== True:
+                    if request.data['cd_price_day_premium']!=None:
+                        cdPrice = request.data['cd_price_day_premium']
+                        price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='CAR DISPLAY',adinventory_type__adinventory_type='Premium', duration_type__duration_name='Unit Daily')
+                        price.business_price = cdPrice
+                        price.save()
+
+            if request.data['flier_price_day']!=None:
+                flierPrice = request.data['flier_price_day']
+                if request.data['mailbox_allowed']== True:
+                    price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='FLIER',adinventory_type__adinventory_type='Mailbox', duration_type__duration_name='Unit Daily')
+                    price.business_price = flierPrice
+                    price.save()
+
+                if request.data['d2d_allowed']== True:
+                    price = PriceMappingDefault.objects.get(supplier__supplier_id=id, adinventory_type__adinventory_name='FLIER',adinventory_type__adinventory_type='Door-to-Door', duration_type__duration_name='Unit Daily')
+                    price.business_price = flierPrice
+                    price.save()
+
+                return Response(serializer.data, status=200)
+            
+            else:
+                return Response(serializer.errors, status=400)
+
+            return Response(serializer.data, status=200)
 
 
-    def test_func(self):
-        adinventory_objects = AdInventoryType.objects.all()
-        adinventory_dict = {}     
-        for adinventory in adinventory_objects:
-            if adinventory.adinventory_name == 'POSTER':   
-                if adinventory.adinventory_type == 'A4':
-                    adinventory_dict['poster_a3_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'A3':
-                    adinventory_dict['poster_a4_id'] = adinventory.id
-            elif adinventory.adinventory_name == 'POSTER LIFT': 
-                if adinventory.adinventory_type == 'A4':        
-                    adinventory_dict['poster_lift_a4_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'A3':
-                    adinventory_dict['poster_lift_a3_id'] = adinventory.id
-            elif adinventory.adinventory_name == 'STANDEE':
-                if adinventory.adinventory_type == 'Small':
-                    adinventory_dict['standee_small_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'Medium':
-                    adinventory_dict['standee_medium_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'Large': 
-                    adinventory_dict['standee_large_id'] = adinventory.id
-            elif adinventory.adinventory_name == 'STALL':
-                if adinventory.adinventory_type == 'Canopy':
-                    adinventory_dict['stall_canopy_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'Small':
-                    adinventory_dict['stall_small_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'Large':
-                    adinventory_dict['stall_large_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'Customize':
-                    adinventory_dict['stall_customize_id'] = adinventory.id
-            elif adinventory.adinventory_name == 'CAR DISPLAY':
-                if adinventory.adinventory_type == 'Standard':
-                    adinventory_dict['car_display_standard_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'Premium':
-                    adinventory_dict['car_display_premium_id'] = adinventory.id
-            elif adinventory.adinventory_type == 'FLIER':
-                if adinventory.adinventory_type == 'Door-to-Door':
-                    adinventory_dict['flier_door_to_door_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'Mailbox':
-                    adinventory_dict['flier_mailbox_id'] = adinventory.id
-            elif adinventory.adinventory_name == 'BANNER':
-                if adinventory.adinventory_type == 'Small':
-                    adinventory_dict['banner_small_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'Medium':
-                    adinventory_dict['banner_medium_id'] = adinventory.id
-                elif adinventory.adinventory_type == 'Large':
-                    adinventory_dict['banner_large_id'] = adinventory.id
+        #except:
+        #    return Response(status=404)
 
-        return adinventory_dict 
 
     def save_stall_locations(self, c1, c2, society):
         count = int(c2) + 1
@@ -992,65 +692,28 @@ class InventorySummaryAPIView(APIView):
 
 
 class BasicPricingAPIView(APIView):
-    # def get(self, request, id, format=None):
-    #     response = {}
-    #     try:
-    #         basic_prices = PriceMappingDefault.objects.select_related().filter(supplier__supplier_id=id).values()
-
-    #         for basic_price in basic_prices:
-    #             duration_type = DurationType.objects.filter(id=basic_price['duration_type_id']).values().first()
-    #             basic_price['duration_type'] = duration_type
-    #             adinventory_type = AdInventoryType.objects.filter(id=basic_price['adinventory_type_id']).values().first()
-    #             basic_price['adinventory_type'] = adinventory_type
-           
-
-    #         towercount = SupplierTypeSociety.objects.get(pk=id).tower_count
-    #         response['tower_count'] = towercount
-    #         response['prices'] = basic_prices
-            
-    #         return Response(response,status=200)
-
-    #     except SupplierTypeSociety.DoesNotExist:
-    #         return Response(status=404)
-    #     except PriceMappingDefault.DoesNotExist:
-    #         return Response(status=404)
-            
-    
-
-
-    
-
     def get(self, request, id, format=None):
+        # print "inside API"
         response = {}
         try:
-            # basic_prices = PriceMappingDefault.objects.select_related().filter(supplier__supplier_id=id)
+            basic_prices = PriceMappingDefault.objects.select_related().filter(supplier__supplier_id=id)
             # print "basic prices: ", basic_prices
-            basic_prices_select = PriceMappingDefault.objects.select_related('supplier','adinventory_type','duration_type').filter(supplier_id=id)
-            basic_prices = PriceMappingDefault.objects.filter(supplier_id=id).values()
-            
-            for basic_item, basic_select_item in izip(basic_prices, basic_prices_select):
-                basic_item['supplier'] = basic_select_item.__dict__['_supplier_cache'].__dict__
-                basic_item['supplier'].pop("_state",None)
-                basic_item['adinventory_type'] = basic_select_item.__dict__['_adinventory_type_cache'].__dict__
-                basic_item['adinventory_type'].pop("_state",None)
-                basic_item['duration_type'] =  basic_select_item.__dict__['_duration_type_cache'].__dict__
-                basic_item['duration_type'].pop("_state",None)
-
-
             towercount = SupplierTypeSociety.objects.get(pk=id).tower_count
-
+            # print "tower count: ", towercount
+            serializer = PriceMappingDefaultSerializer(basic_prices, many=True)
             response['tower_count'] = towercount
-
             print "tower count " , towercount
-            response['prices'] = basic_prices
-           
-            return Response(response, status=200)
+            print "basic_prices count  :" , basic_prices.count()
+            print serializer.data
+            response['prices'] = serializer.data
+            print "after serializer"
+            return Response(response)
 
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
         except PriceMappingDefault.DoesNotExist:
             return Response(status=404)
-       
+
 
     def post(self, request, id, format=None):
         print request.data
@@ -1120,7 +783,6 @@ class TowerAPIView(APIView):
 
         for key in request.data['TowerDetails']:
             if 'tower_id' in key:
-
                 try:
                     item = SocietyTower.objects.get(pk=key['tower_id'])
                     tower_dict = {
@@ -1396,32 +1058,28 @@ class FlierAPIView(APIView):
 
 class StandeeBannerAPIView(APIView):
     def get(self, request, id, format=None):
-        # response = {}
+        response = {}
         standees = []
 
         towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
         society = SupplierTypeSociety.objects.get(pk=id)
+        for tower in towers:
+            standees.extend(tower.standees.all())
 
         item = InventorySummary.objects.get(supplier=society)
 
-        for tower in towers:
-            tower_standees = tower.standees.all().values()
-            for standee in tower_standees:
-                standee['tower_name'] = tower.tower_name
-            standees.extend(tower_standees)
-
-
+        serializer1 = InventorySummarySerializer(item, many=True)
         response = {"disable_standee": item.standee_allowed}
-        response['standee_details'] = standees
+        serializer = StandeeInventorySerializer(standees, many=True)
+        response['standee_details'] = serializer.data
 
         return Response(response, status=200)
 
 
     def post(self, request, id, format=None):
-        # print request.data
         for standee in request.data['standee_details']:
             if 'id' in standee:
-                standee_item = StandeeInventory.objects.get(pk=standee['id'])
+                standee_item = StandeeInventory.objects.get(pk=lift['id'])
                 standee_serializer = StandeeInventorySerializer(standee_item,data=standee)
 
             else:
@@ -1450,34 +1108,10 @@ class StallAPIView(APIView):
         serializer = StallInventorySerializer(stalls, many=True)
         response['stall_details'] = serializer.data
 
-        response['furniture_available'] = 'Yes' if society.street_furniture_available else 'No'
-        response['stall_timing'] = society.stall_timing
-        response['sound_system_allowed'] = 'Yes' if society.sound_available else 'No'
-        response['electricity_available'] = 'Yes' if society.electricity_available else 'No'
-        response['electricity_charges_daily'] = society.daily_electricity_charges
-
         return Response(response, status=200)
 
 
     def post(self, request, id, format=None):
-
-        stall = request.data
-        print "request data: ", stall
-        # stall = request.data['stall']
-        society = SupplierTypeSociety.objects.get(supplier_id=id)
-
-        society.street_furniture_available = True if stall['furniture_available'] == 'Yes' else False
-        society.stall_timing = stall['stall_timing']
-        print "society stall timing is ", society.stall_timing
-        society.sound_available = True if stall['sound_system_allowed'] == 'Yes' else False
-        society.electricity_available =  True if stall['electricity_available'] == 'Yes' else False
-        if society.electricity_available:
-
-           society.daily_electricity_charges = stall['electricity_charges_daily']
-
-
-        society.save()
-
         for stall in request.data['stall_details']:
             if 'id' in stall:
                 stall_item = StallInventory.objects.get(pk=stall['id'])
@@ -1777,6 +1411,3 @@ def get_availability(data):
         return True
      else:
          return False
-
-
-
