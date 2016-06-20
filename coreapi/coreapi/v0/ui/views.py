@@ -745,6 +745,57 @@ class InventorySummaryAPIView(APIView):
             print "404 2nd"
             #   return Response(status=404)
 
+
+    def test_func(self):
+        adinventory_objects = AdInventoryType.objects.all()
+        adinventory_dict = {}     
+        for adinventory in adinventory_objects:
+            if adinventory.adinventory_name == 'POSTER':   
+                if adinventory.adinventory_type == 'A4':
+                    adinventory_dict['poster_a3_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'A3':
+                    adinventory_dict['poster_a4_id'] = adinventory.id
+            elif adinventory.adinventory_name == 'POSTER LIFT': 
+                if adinventory.adinventory_type == 'A4':        
+                    adinventory_dict['poster_lift_a4_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'A3':
+                    adinventory_dict['poster_lift_a3_id'] = adinventory.id
+            elif adinventory.adinventory_name == 'STANDEE':
+                if adinventory.adinventory_type == 'Small':
+                    adinventory_dict['standee_small_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'Medium':
+                    adinventory_dict['standee_medium_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'Large': 
+                    adinventory_dict['standee_large_id'] = adinventory.id
+            elif adinventory.adinventory_name == 'STALL':
+                if adinventory.adinventory_type == 'Canopy':
+                    adinventory_dict['stall_canopy_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'Small':
+                    adinventory_dict['stall_small_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'Large':
+                    adinventory_dict['stall_large_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'Customize':
+                    adinventory_dict['stall_customize_id'] = adinventory.id
+            elif adinventory.adinventory_name == 'CAR DISPLAY':
+                if adinventory.adinventory_type == 'Standard':
+                    adinventory_dict['car_display_standard_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'Premium':
+                    adinventory_dict['car_display_premium_id'] = adinventory.id
+            elif adinventory.adinventory_type == 'FLIER':
+                if adinventory.adinventory_type == 'Door-to-Door':
+                    adinventory_dict['flier_door_to_door_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'Mailbox':
+                    adinventory_dict['flier_mailbox_id'] = adinventory.id
+            elif adinventory.adinventory_name == 'BANNER':
+                if adinventory.adinventory_type == 'Small':
+                    adinventory_dict['banner_small_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'Medium':
+                    adinventory_dict['banner_medium_id'] = adinventory.id
+                elif adinventory.adinventory_type == 'Large':
+                    adinventory_dict['banner_large_id'] = adinventory.id
+
+        return adinventory_dict 
+
     def save_stall_locations(self, c1, c2, society):
         count = int(c2) + 1
         for i in range(c1+1, count):
