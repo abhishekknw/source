@@ -1,6 +1,9 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/createaccount/create-account.tmpl.css" />
 
 <div class="page-container">
+  <div>
+    <span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span>
+  </div>
   <div class="form-group">
     <form class="choices">
       <div class="row">
@@ -29,37 +32,37 @@
   <div class = "table">
       <div class = "row">
         <div class = "col-md-3"><label>Account Name</label></div>
-        <div class = "col-md-3">{{account.name}}</div>
+        <div class = "col-md-3">{{model.account.name}}</div>
         <div class = "col-md-3"><label>Business Name</label></div>
-        <div class = "col-md-3">{{business.name}}</div>
+        <div class = "col-md-3">{{model.account.business.name}}</div>
       </div>
-      <div class = "row">
+      <!-- <div class = "row">
         <div class = "col-md-3"><label>Business Type</label></div>
-        <div class = "col-md-3">{{business.type}}</div>
+        <div class = "col-md-3">{{model.business.type}}</div>
         <div class = "col-md-3"><label>Business Sub-Type</label></div>
-        <div class = "col-md-3">{{business.sub_type}}</div>
-      </div>
+        <div class = "col-md-3">{{model.business.sub_type}}</div>
+      </div> -->
       <div class = "row">
         <div class = "col-md-3"><label>Account Email</label></div>
-        <div class = "col-md-3">{{account.email}}</div>
+        <div class = "col-md-3">{{model.account.email}}</div>
         <div class = "col-md-3"><label>Account Phone</label></div>
-        <div class = "col-md-3">{{account.phone}}</div>
+        <div class = "col-md-3">{{model.account.phone}}</div>
       </div>
       <div class = "row">
         <div class = "col-md-3"><label>Account Address</label></div>
-        <div class = "col-md-3">{{account.address}}</div>
+        <div class = "col-md-3">{{model.account.address}}</div>
       </div>
       <div class = "row">
         <div class = "col-md-3"><label>Reference Contact Name</label></div>
-        <div class = "col-md-3">{{account.reference_name}}</div>
+        <div class = "col-md-3">{{model.account.reference_name}}</div>
         <div class = "col-md-3"><label>Reference Contact Phone</label></div>
-        <div class = "col-md-3">{{account.reference_phone}}</div>
+        <div class = "col-md-3">{{model.account.reference_phone}}</div>
       </div>
       <div class = "row">
         <div class = "col-md-3"><label>Reference Contact Email</label></div>
-        <div class = "col-md-3">{{account.reference_email}}</div>
+        <div class = "col-md-3">{{model.account.reference_email}}</div>
         <div class = "col-md-3"><label>Comments</label></div>
-        <div class = "col-md-3">{{account.comments}}</div>
+        <div class = "col-md-3">{{model.account.comments}}</div>
       </div>
       <br>
       <div class = "row">
@@ -83,7 +86,7 @@
         <hr/>
         <!-- For loop to fetch the contact array -->
         <div class = "modal-body" style = "height: 300px;">
-          <div class = "table" ng-repeat="contact in account.contacts track by $index">
+          <div class = "table" ng-repeat="contact in model.account.contacts track by $index">
              <div class = "row">
                <div class = "col-md-3"><label>Name</label></div>
                 <div class = "col-md-3">{{contact.name}}</div>
@@ -117,40 +120,45 @@
        <div class="form-group">
           <div class = "row">
             <div class = "col-md-3"><label>Account Name </label></div>
-            <div class = "col-md-3"><input type="text" name="accountname" id="accountname" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="account.name" ng-required="true" /></div>
+            <div class = "col-md-3"><input type="text" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.account.name" ng-required="true" /></div>
             <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
 
             <div class = "col-md-3"><label>Business Name </label></div>
-            <div class = "col-md-3"><input type="text" name="businessname" id="businessname" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="business.name" ng-required="true" /></div>
+            <div class = "col-md-3"><!-- <input type="text" name="businessname" id="businessname" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.name" ng-required="true" /> -->
+              <select class="form-control input-size" ng-model="model.account.business_id" ng-required="true">
+                    <option value="">Select Business Name</option>
+                    <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
+                </select>
+            </div>
             <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
           </div>
         </div>
-        <div class="form-group">
+        <!-- <div class="form-group">
           <div class = "row">
             <div class = "col-md-3"><label >Business Type</label></div>
             <div class = "col-md-3">
-              <select class="form-control input-size" name="bstype" ng-model="business.type" ng-change="getSubTypes()">
+              <select class="form-control input-size" name="bstype" ng-model="model.business.type" ng-change="getSubTypes()">
                 <option value="">Select Business Type</option   >
                 <option  ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.type_name}}</option>
               </select>
             </div>
             <div class = "col-md-3"><label >Business Sub-Type</label></div>
             <div class = "col-md-3">
-              <select class="form-control input-size" name="sub_type" ng-model="business.sub_type" ng-change="getSubTypes()">
+              <select class="form-control input-size" name="sub_type" ng-model="model.business.sub_type" ng-change="getSubTypes()">
                 <option value="">Select Business Sub-Type</option>
                 <option  ng-repeat = "subtype in sub_types">{{subtype.sub_type}}</option>
               </select>
             </div>
           </div>
-        </div>
+        </div> -->
 
        <div class="form-group">
          <div class = "row">
             <div class = "col-md-3"><label>Account Email</label></div>
-            <div class = "col-md-3"><input type="email" name="business_email" id="business_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="business.email" ng-required="true" /></div>
+            <div class = "col-md-3"><input type="email" name="account_email" id="account_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.account.email" ng-required="true" /></div>
             <!--<span class="show-error" ng-show="form.business_email.$error.pattern">Please Enter Valid Email Id</span></div>-->
             <div class = "col-md-3"><label>Account Phone</label></div>
-            <div class = "col-md-3"><input type="text" name="account_phone" id="account_phone" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="account.phone"/></div>
+            <div class = "col-md-3"><input type="text" name="account_phone" id="account_phone" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="model.account.phone"/></div>
             <!--<span class="show-error" ng-show="form.business_phone.$error.pattern">Please Enter Valid Phone Number</span></div>-->
           </div>
         </div>
@@ -158,9 +166,9 @@
        <div class="form-group">
           <div class = "row">
             <div class = "col-md-3"><label>Account Address</label></div>
-            <div class = "col-md-3"><input type="text" name="address" id="address" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\,\.\s]+$/" ng-model="account.address" /></div>              <!--<span class="show-error" ng-show="form.address.$error.pattern">Please Enter Valid Address</span></div>-->
+            <div class = "col-md-3"><input type="text" name="address" id="address" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\,\.\s]+$/" ng-model="model.account.address" /></div>              <!--<span class="show-error" ng-show="form.address.$error.pattern">Please Enter Valid Address</span></div>-->
             <div class = "col-md-3"><label >Reference Contact Name</label></div>
-            <div class = "col-md-3"><input type="text" name="reference_name" id="reference_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/"  ng-model="account.reference_name"/></div>
+            <div class = "col-md-3"><input type="text" name="reference_name" id="reference_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/"  ng-model="model.account.reference_name"/></div>
             <!--<span class="show-error" ng-show="form.reference_name.$error.pattern">Please Enter Valid Name</span></div>-->
           </div>
        </div>
@@ -168,10 +176,10 @@
        <div class="form-group">
          <div class = "row">
             <div class = "col-md-3"><label >Reference Contact Phone</label></div>
-            <div class = "col-md-3"><input type="text" name="reference_phn" id="reference_phn" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="account.reference_phone"/></div>
+            <div class = "col-md-3"><input type="text" name="reference_phn" id="reference_phn" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="model.account.reference_phone"/></div>
             <!--<span class="show-error" ng-show="form.reference_phn.$error.pattern">Please Enter Valid Phone Number</span></div>-->
             <div class = "col-md-3"><label >Reference Contact Email</label></div>
-            <div class = "col-md-3"><input type="text" name="reference_email" id="reference_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="account.reference_email"/></div>
+            <div class = "col-md-3"><input type="text" name="reference_email" id="reference_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.account.reference_email"/></div>
             <!--<span class="show-error" ng-show="form.reference_email.$error.pattern">Please Enter Valid Email Id</span></div>-->
           </div>
        </div>
@@ -179,7 +187,7 @@
        <div class="form-group">
          <div class = "row">
            <div class = "col-md-3"><label>Comments</label></div>
-           <div class = "col-md-6"><textarea name="comments" id="comments" class="form-control" ng-model="account.comments"></textarea></div>
+           <div class = "col-md-6"><textarea name="comments" id="comments" class="form-control" ng-model="model.account.comments"></textarea></div>
           </div>
        </div>
      </div>
@@ -188,47 +196,49 @@
  <div class="panel panel-default business-panel">
    <h3 class = "panel-heading">Account Contact</h3>
       <!--<div ng-repeat="contact in business.contacts track by $index">-->
-        <div class = "table">
-          <div class="form-group">
-            <div class = "row">
-                <div class = "col-md-3"><label>Name</label></div>
-                <div class = "col-md-3"><input type="text" name="contact_name" id="contact_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/" ng-model="account.contacts.name" />
-                <!--<span class="show-error" ng-show="form.contact_name.$error.pattern">Please Enter Valid Name</span>--></div>
+      <div ng-repeat="contact in model.account.contacts track by $index">
+          <div class = "table">
+            <div class="form-group">
+              <div class = "row">
+                  <div class = "col-md-3"><label>Name</label></div>
+                  <div class = "col-md-3"><input type="text" name="contact_name" id="contact_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/" ng-model="contact.name" />
+                  <!--<span class="show-error" ng-show="form.contact_name.$error.pattern">Please Enter Valid Name</span>--></div>
 
-                <div class = "col-md-3"><label >Designation</label></div>
-                <div class = "col-md-3"><input type="text" name="designation" id="designation" class="form-control" ng-pattern= "/^[a-zA-Z\s]+$/" ng-model="account.contacts.designation"  />
-                <!--<span class="show-error" ng-show="form.designation.$error.pattern">Please Enter Valid Designation</span>--></div>
-            </div>
+                  <div class = "col-md-3"><label >Designation</label></div>
+                  <div class = "col-md-3"><input type="text" name="designation" id="designation" class="form-control" ng-pattern= "/^[a-zA-Z\s]+$/" ng-model="contact.designation"  />
+                  <!--<span class="show-error" ng-show="form.designation.$error.pattern">Please Enter Valid Designation</span>--></div>
+              </div>
+             </div>
+
+         <div class="form-group">
+           <div class = "row">
+               <div class = "col-md-3"><label >Department</label></div>
+               <div class = "col-md-3"><input type="text" name="department" id="department" class="form-control" ng-pattern= "/^[a-zA-Z\s]+$/" ng-model="contact.department"/>
+               <!--<span class="show-error" ng-show="form.department.$error.pattern">Please Enter Valid Department</span>--></div>
+
+               <div class = "col-md-3"><label>Email</label></div>
+               <div class = "col-md-3"><input type="email" name="contact_email" id="contact_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="contact.email"  />
+               <!--<span class="show-error" ng-show="form.contact_email.$error.pattern">Please Enter Valid Email</span>--></div>
            </div>
-
-       <div class="form-group">
-         <div class = "row">
-             <div class = "col-md-3"><label >Department</label></div>
-             <div class = "col-md-3"><input type="text" name="department" id="department" class="form-control" ng-pattern= "/^[a-zA-Z\s]+$/" ng-model="account.contacts.department"/>
-             <!--<span class="show-error" ng-show="form.department.$error.pattern">Please Enter Valid Department</span>--></div>
-
-             <div class = "col-md-3"><label>Email</label></div>
-             <div class = "col-md-3"><input type="email" name="contact_email" id="contact_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="account.contacts.email"  />
-             <!--<span class="show-error" ng-show="form.contact_email.$error.pattern">Please Enter Valid Email</span>--></div>
          </div>
-       </div>
 
-      <div class="form-group">
-        <div class = "row">
-            <div class = "col-md-3"><label>Phone</label></div>
-            <div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-required="true" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="account.contacts.phone"/>
-             <!--<span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span>-->
-            </div>
-
-            <div class = "col-md-3"><label>Single Point of Contact?</label></div>
-            <div class = "col-md-3"><input id="spoc" type="radio" name="spoc" ng-model="account.contacts.spoc" value=true>Yes &nbsp
-            <input id="spoc" type="radio" name="spoc" ng-model="account.contacts.spoc" value=false>No </div>
-        </div>
+        <div class="form-group">
           <div class = "row">
-            <div class = "col-md-4"></div>
-            <div class = "col-md-6"></div>
-            <div class = "col-md-1"><button class="btn btn-danger" ng-click="remove($index)">Remove</button></div>
+              <div class = "col-md-3"><label>Phone</label></div>
+              <div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-required="true" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="contact.phone"/>
+               <!--<span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span>-->
+              </div>
+
+              <div class = "col-md-3"><label>Single Point of Contact?</label></div>
+              <div class = "col-md-3"><input type="radio"  ng-model="contact.spoc" value="true">Yes &nbsp
+              <input type="radio" ng-model="contact.spoc" value="false">No </div>
           </div>
+            <div class = "row">
+              <div class = "col-md-4"></div>
+              <div class = "col-md-6"></div>
+              <div class = "col-md-1"><button class="btn btn-danger" ng-click="remove($index)">Remove</button></div>
+            </div>
+        </div>
       </div>
     </div>
     <hr/>
@@ -248,6 +258,10 @@
 </div>
 </form>
 
+<div ng-show = "campaign_present == 'true'" >
+  
+
+</div>
 <form name="form4" ng-show = "choice == 'selected'|| choice == 'new'" class="" ng-submit="create()" role="form">
    <div class="panel panel-default business-panel">
      <h3 class = "panel-heading">Create Campaign</h3>
@@ -303,7 +317,7 @@
     <div class="row Cost" >
        <span class = "col-md-3"><label>Tentative Campaign Cost: </label></span>
        <span class = "col-md-3"><input type = "number" name = "tentativecost"
-       id = " tentativecost" ng-pattern="/^[0-9.]+$/" ng-model = "model.tentative.campaign_cost" class="form-control"></span>
+       id = " tentativecost" ng-pattern="/^[0-9.]+$/" ng-model = "model.tentative.tentative_cost" class="form-control"></span>
        <!--<span class = "show-error" ng-show="form.tentativecost.$error.pattern">Please Enter Valid Cost</span>-->
     </div>
     </br>

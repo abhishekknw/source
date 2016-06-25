@@ -30,7 +30,9 @@
     		<div class="clearfix"></div>
 	 </div>
 	 <div class="col-md-4 offset-0">
-			<div class="sctext left margtop15" style="color:#0fa491">A3,A4 <br>
+			<div class="sctext left margtop15" style="color:#0fa491">
+			<span ng-if="inventory.nb_A3_allowed">A3</span>
+			<span ng-if="inventory.nb_A4_allowed">,A4</span> <br>
         <center><label style="font-size:15px; color:#c0c0c0">Poster size</label></center>
       </div>
 			<div class="clearfix"></div>

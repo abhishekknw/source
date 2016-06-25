@@ -1,20 +1,29 @@
 
 from rest_framework.pagination import PageNumberPagination
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import permissions
 from v0.permissions import IsOwnerOrManager
 from rest_framework import filters
-from serializers import UISocietySerializer, UITowerSerializer
-from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, FlatTypeSerializer
-from v0.models import ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType
-from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, UserCities, UserAreas
-from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer
+from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer
+from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SocietyTowerSerializer, FlatTypeSerializer
+from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList
+from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile
+from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
 from django.db.models import Q
 from django.contrib.auth.models import User
+import json
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
+
 from django.db import IntegrityError
 from django.db import transaction
 from itertools import izip
+
+from v0.ui.serializers import SocietyListSerializer
+
 
 class UsersProfilesAPIView(APIView):
 
@@ -142,14 +151,16 @@ class getInitialDataAPIView(APIView):
             user = request.user
             cities = City.objects.all()
             serializer = CitySerializer(cities, many=True)
-            if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
-                areas = CityArea.objects.filter(city_code__in=[item.city for item in user.cities.all()])
-            else:
-                areas = CityArea.objects.all()
-            serializer1 = CityAreaSerializer(areas, many=True)
+            print "wef"
+            # if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
+            #     areas = CityArea.objects.filter(city_code__in=[item.city for item in user.cities.all()])
+            # else:
+            #     areas = CityArea.objects.all()
+            # serializer1 = CityAreaSerializer(areas, many=True)
             items = SupplierTypeCode.objects.all()
             serializer2 = SupplierTypeCodeSerializer(items, many=True)
-            result = {'cities':serializer.data, 'city_areas': serializer1.data, 'supplier_types':serializer2.data}
+            # result = {'cities':serializer.data, 'city_areas': serializer1.data, 'supplier_types':serializer2.data}
+            result = {'cities':serializer.data, 'supplier_types':serializer2.data}
             return Response(result, status=200)
         except :
             return Response(status=404)
@@ -220,12 +231,41 @@ class SocietyAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
+            response = {}
             item = SupplierTypeSociety.objects.get(pk=id)
             self.check_object_permissions(self.request, item)
             serializer = UISocietySerializer(item)
-            return Response(serializer.data)
-        except :
-            return Response(status=404)
+            # inventory_summary = InventorySummary.objects.get(supplier=item)
+            # inventory_serializer = InventorySummarySerializer(inventory_summary)
+            
+            ###### Check if to use filter or get
+
+            # poster = PosterInventory.objects.filter(supplier=item)
+            # print "poster.adinventory_id is :",poster.adinventory_id
+            # poster_serializer = PosterInventorySerializer(poster)
+
+            # stall = StallInventory.objects.filter(supplier=item)
+            # stall_serializer = StallInventorySerializer(stall)
+
+            # doorToDoor = DoorToDoorInfo.objects.filter(**** how to filter on tower foreignkey  ***** )
+            # doorToDoor_serializer = DoorToDoorInfoserializer(doorToDoor) 
+
+            # mailbox = MailboxInfo.objects.filter(**** how to filter on tower foreignkey  *****)
+            # mailbox_serializer = MailboxInfoSerializer(mailbox)
+
+            # response['society'] = serializer.data
+            # response['inventory'] = inventory_serializer.data
+            # response['poster'] = poster_serializer.data
+            # response['doorToDoor'] = doorToDoor_serializer.data
+            # response['mailbox'] = mailbox_serializer.data
+
+            # return Response(response, status=200)
+
+
+            return Response(serializer.data, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+           return Response(status=404)
+
 
     def delete(self, request, id, format=None):
         try:
@@ -300,6 +340,30 @@ class SocietyAPIFiltersView(APIView):
             return Response(status=404)
 
 
+
+class SocietyAPIFilterSubAreaView(APIView):
+    def post(self, request, format=None):
+        print request.data
+        print "\n\n\n"
+
+        areas_id = []
+        subareas = []
+        for item in request.data:
+            id = int(item['id'])
+            areas_id.append(id)
+
+        areas = CityArea.objects.filter(id__in=areas_id)
+        for area in areas:
+            subarea = area.areacode.all()
+            subareas.extend(subarea)
+
+        subarea_serializer = CitySubAreaSerializer(subareas, many=True)
+
+        return Response(subarea_serializer.data, status = 200)
+
+
+
+
 def set_default_pricing(society_id):
     print "inside def"
     society = SupplierTypeSociety.objects.get(pk=society_id)
@@ -370,54 +434,225 @@ class SocietyAPIListView(APIView):
 
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
-            serializer = UISocietySerializer(result_page, many=True)
+            serializer = SocietyListSerializer(result_page, many=True)
             return paginator.get_paginated_response(serializer.data)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
-class SocietyAPIFiltersListView(APIView):
-    def post(self, request, format=None):
+
+
+class CorporateAPIListView(APIView):
+    def get(self, request, format=None):
         try:
+            user = request.user
+            search_txt = request.query_params.get('search', None)
+            if search_txt:
+                items = SupplierTypeCorporate.objects.filter(Q(supplier_id__icontains=search_txt) | Q(corporate_name__icontains=search_txt)| Q(corporate_address1__icontains=search_txt)| Q(corporate_city__icontains=search_txt)| Q(corporate_state__icontains=search_txt)).order_by('corporate_name')
+            else:
+                if user.is_superuser:
+                    items = SupplierTypeCorporate.objects.all().order_by('corporate_name')
+                else:
+                    items = SupplierTypeCorporate.objects.filter(created_by=user.id)
+
+            paginator = PageNumberPagination()
+            result_page = paginator.paginate_queryset(items, request)
+            serializer = UICorporateSerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except SupplierTypeCorporate.DoesNotExist:
+            return Response(status=404)
+
+
+
+class SocietyAPIFiltersListView(APIView):
+
+    # self.paginator = None
+    # self.serializer = None
+
+    # def get(self,request, format=None):
+    #     return self.paginator.get_paginated_response(self.serializer.data)
+
+    def post(self, request, format=None):
+        print request.data
+        try:
+            # two list to disable search on society and flats if all the options in both the fields selected
+            allflatquantity = [u'Large', u'Medium', u'Small', u'Very Large']    # in sorted order
+            allsocietytype = ['High', 'Medium High', 'Standard', 'Ultra High'] # in sorted order
             cityArea = []
             societytype = []
             flatquantity = []
             inventorytype = []
+            citySubArea = []
             filter_present = False
+            subareas = False
+            areas = False
 
-            if 'locationValueModel' in request.data:
+            if 'subLocationValueModel' in request.data:
+                for key in request.data['subLocationValueModel']:
+                    citySubArea.append(key['subarea_name'])
+                    # filter_present = True
+                subareas = True if citySubArea else False
+            
+            if (not subareas) and'locationValueModel' in request.data:
                 for key in request.data['locationValueModel']:
                     cityArea.append(key['label'])
-                    filter_present = True
+                    # filter_present = True
+                areas = True if cityArea else False
+
 
             if 'typeValuemodel' in request.data:
                 for key in request.data['typeValuemodel']:
                     societytype.append(key['label'])
-                    filter_present = True
+                    # filter_present = True
+
 
             if 'checkboxes' in request.data:
                 for key in request.data['checkboxes']:
                     if key['checked']:
                      flatquantity.append(key['name'])
-                     filter_present = True
+                     # filter_present = True
 
             if 'types' in request.data:
                 for key in request.data['types']:
                     if key['checked']:
                      inventorytype.append(key['inventoryname'])
-                     filter_present = True
-                print inventorytype
+                     # filter_present = True
+                # print inventorytype
+
+            flatquantity.sort()
+            societytype.sort()
+            if flatquantity == allflatquantity: # sorted comparison to avoid mismatch based on index
+                flatquantity = []
+            if  societytype == allsocietytype:   # same as above
+                societytype = []                
+
+            if subareas or areas or societytype or flatquantity or inventorytype:
+                filter_present = True
+
+            print "cityArea : ", cityArea
+            print "citySubArea : ", citySubArea
+            print "societytype : ", societytype
+            print "flatquantity : ", flatquantity
+            print "inventorytype : ", inventorytype
+            print "filter present : ", filter_present
 
             if filter_present:
-                    items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) | Q(society_type_quality__in = societytype) | Q(society_type_quantity__in = flatquantity))
-                    serializer = UISocietySerializer(items, many= True)
+                # if subareas:
+                #     items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+                # else :
+                #     items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))    
+                # serializer = UISocietySerializer(items, many= True)
+
+                # Sample Code
+
+                if subareas:
+                    if  societytype and flatquantity and inventorytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+                    elif societytype and flatquantity:
+                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+                    elif societytype and inventorytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype))
+                    elif flatquantity and inventorytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quantity__in = flatquantity))
+                    elif societytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype))
+                    elif flatquantity:
+                        items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quantity__in = flatquantity))
+                    # elif inventorytype:
+                    #     do something
+                    else :
+                        items = SupplierTypeSociety.objects.filter(society_subarea__in = citySubArea)
+
+                elif areas :
+                    if societytype and flatquantity and inventorytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+                    elif societytype and flatquantity:
+                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+                    elif societytype and inventorytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype))
+                    elif flatquantity and inventorytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quantity__in = flatquantity))
+                    elif societytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype))
+                    elif flatquantity:
+                        items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quantity__in = flatquantity))
+                    # elif inventorytype:
+                    #     do something
+
+                    else:
+                        items = SupplierTypeSociety.objects.filter(society_locality__in = cityArea)     
+
+                elif societytype or flatquantity or inventorytype :
+                    if societytype and flatquantity and inventorytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+                    elif societytype and flatquantity:
+                        items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+                    elif societytype and inventorytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype))
+                    elif flatquantity and inventorytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_type_quantity__in = flatquantity))
+                    elif societytype:
+                        items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype))
+                    elif flatquantity:
+                        items = SupplierTypeSociety.objects.filter(Q(society_type_quantity__in = flatquantity))
+                    # elif inventorytype:
+                    #     do something
+
+                else:
+                    items = SupplierTypeSociety.objects.all()
+
+                ## UISocietySerializer --> SocietyListSerializer
+                # serializer = SocietyListSerializer(items, many= True)
+                # Sample Code
             else:
                     items = SupplierTypeSociety.objects.all()
-                    serializer = UISocietySerializer(items, many= True)
+                    ## UISocietySerializer --> SocietyListSerializer
+                    
 
-            return Response(serializer.data, status = 200)
 
+            serializer = SocietyListSerializer(items, many= True)
+            # paginator = PageNumberPagination()
+            # result_page = paginator.paginate_queryset(items, request)
+            # serializer = SocietyListSerializer(result_page, many=True)
+
+            # return paginator.get_paginated_response(serializer.data,status=200)
+
+
+            return Response(serializer.data, status=200)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
+
+
+        # def set_paginator(self, paginator, serializer):
+        #     self.filter_socities_paginator = paginator
+        #     self.filter_socities_serializer = serializer
+
+        # def get_paginator(self):
+        #     return self.filter_socities_paginator,  
+
+class SocietyAPISortedListView(APIView):
+    def get(self,request,format=None):
+        order = request.query_params.get('order',None)
+        print "Order received is ", order
+
+        if order == 'asc':
+            societies = SupplierTypeSociety.objects.all().order_by('society_name')
+            serializer = UISocietySerializer(societies, many=True)
+            return Response(serializer.data, status=200)
+        elif order == 'desc':
+            societies = SupplierTypeSociety.objects.all().order_by('-society_name')
+            serializer = UISocietySerializer(societies, many=True)
+            return Response(serializer.data, status=200)
+        else:
+            return Response(status=200)
+
+
+class SocietyAPISocietyIdsView(APIView):
+    def get(self, request, format=None):
+        society_ids = SupplierTypeSociety.objects.all().values_list('supplier_id',flat=True)
+        return Response({'society_ids' : society_ids}, status=200)
+
+
+
 
 
 class FlatTypeAPIView(APIView):
@@ -1328,7 +1563,7 @@ class StallAPIView(APIView):
         response = {"disable_stall": item.stall_allowed}
         serializer = StallInventorySerializer(stalls, many=True)
         response['stall_details'] = serializer.data
-        response['stall_details'] = serializer.data
+
         response['furniture_available'] = 'Yes' if society.street_furniture_available else 'No'
         response['stall_timing'] = society.stall_timing
         response['sound_system_allowed'] = 'Yes' if society.sound_available else 'No'
@@ -1339,6 +1574,7 @@ class StallAPIView(APIView):
 
 
     def post(self, request, id, format=None):
+
         stall = request.data
         print "request data: ", stall
         # stall = request.data['stall']
@@ -1350,10 +1586,12 @@ class StallAPIView(APIView):
         society.sound_available = True if stall['sound_system_allowed'] == 'Yes' else False
         society.electricity_available =  True if stall['electricity_available'] == 'Yes' else False
         if society.electricity_available:
+
            society.daily_electricity_charges = stall['electricity_charges_daily']
 
 
         society.save()
+
         for stall in request.data['stall_details']:
             if 'id' in stall:
                 stall_item = StallInventory.objects.get(pk=stall['id'])
@@ -1653,3 +1891,156 @@ def get_availability(data):
         return True
      else:
          return False
+
+
+class saveBasicCorporateDetailsAPIView(APIView):
+    def post(self, request,id,format=None):
+        companies = []
+        error = {}
+        print "Inside views.py"
+        if 'supplier_id' in request.data:
+            corporate = SupplierTypeCorporate.objects.filter(pk=request.data['supplier_id']).first()
+            if corporate:
+                corporate_serializer = SupplierTypeCorporateSerializer(corporate,data=request.data)
+            else:
+                corporate_serializer = SupplierTypeCorporateSerializer(data=request.data)
+        if corporate_serializer.is_valid():
+            print "Valid serializer"
+            corporate_serializer.save()
+            print "Values Saved"
+        else:
+            print "Serializer error"
+            print corporate_serializer.errors
+            error['message'] ='Invalid Corporate Info data'
+            error = json.dumps(error)
+            return Response(response, status=406)
+
+        print "Round 2 Saving List of companies"
+        
+        try:
+            corporate_id = request.data['supplier_id']
+        except KeyError :
+            error['message'] ='Invalid Corporate Id'
+            error = json.dumps(error)
+            return Response(response, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        
+
+        # for item in request.data['list1']:
+        #     flag = 0
+        #     for i in range(0,len(instance1)):
+        #         print "Something"
+        #         if item in instance1[i].name:
+        #             flag = 1
+        #             break
+        #         else:
+        #             pass
+        #     if flag == 0:
+        #         new_obj = CorporateParkCompanyList(supplier_id_id=corporate_id,name=item)
+        #         new_list.append(new_obj)
+        #     else:
+        #         pass
+
+        companies_name = request.data['list1']
+        company_ids = list(CorporateParkCompanyList.objects.filter(supplier_id=corporate_id).values_list('id',flat=True))
+
+        for company_name in companies_name:
+            if 'id' in company_name:
+                company = CorporateParkCompanyList.objects.get(id=id)
+                company.name = company_name
+                company_ids.remove(company.id)
+                companies.append(company)
+            else:
+                company = CorporateParkCompanyList(supplier_id_id=corporate_id,name=company_name)
+                companies.append(company)
+
+        CorporateParkCompanyList.objects.bulk_create(companies)
+        CorporateParkCompanyList.objects.filter(id__in=company_ids).delete()
+
+        print "\n\nRound 2 complete"
+
+        
+
+        # print "Round 3 - Saving contacts "
+        
+        try:
+            print id
+            instance = SupplierTypeCorporate.objects.get(supplier_id=id)
+        except SupplierTypeCorporate.DoesNotExist:
+            print "id does not exist in database"
+            return Response({'message': 'This corporate park does not exist'}, status=406)
+
+        content_type = ContentType.objects.get_for_model(SupplierTypeCorporate)
+        print request.data
+        
+        contacts_ids = ContactDetailsGeneric.objects.filter(content_type=content_type, object_id=instance.supplier_id).values_list('id',flat=True)
+        contacts_ids = list(contacts_ids)
+        print contacts_ids
+        print type(contacts_ids)
+
+        for contact in request.data['contacts']:
+            if 'id' in contact:
+                contact_instance = ContactDetailsGeneric.objects.get(id=contact['id'])
+                contacts_ids.remove(contact_instance.id)
+                serializer = ContactDetailsGenericSerializer(contact_instance, data=contact)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    print serializer.errors
+                    return Response(status=404)
+
+            else:
+                contact['object_id'] = instance.supplier_id
+                serializer = ContactDetailsGenericSerializer(data=contact)
+                if serializer.is_valid():
+                    serializer.save(content_type=content_type)
+                else:
+                    print serializer.errors
+                    return Response(status=404)
+
+        ContactDetailsGeneric.objects.filter(id__in=contacts_ids).delete()
+        return Response(status=200)
+
+
+
+    def get(self, request, id, format=None):
+        try:
+            data1 = SupplierTypeCorporate.objects.get(supplier_id=id)
+            serializer = SupplierTypeCorporateSerializer(data1)
+            data2 = CorporateParkCompanyList.objects.filter(supplier_id=id)
+            serializer1 = CorporateParkCompanyListSerializer(data2, many=True)
+            data3 = ContactDetailsGeneric.objects.filter(object_id=id)
+            serializer2 = ContactDetailsGenericSerializer(data3, many=True)
+            print "Hello\n\n"
+            print serializer2.data
+            result = {'basicData' : serializer.data , 'companyList' : serializer1.data , 'contactData' : serializer2.data};
+            return Response(result)
+        except SupplierTypeCorporate.DoesNotExist:
+            return Response(status=404)
+        except SupplierTypeCorporate.MultipleObjectsReturned:
+            return Response(status=406)
+
+
+class ContactDetailsGenericAPIView(APIView):
+
+    def post(self,request,id=None,format=None):
+        print "Hello  ", id
+        # instance = get_object_or_404(SupplierTypeCorporate, supplier_id=id)
+        try:
+            instance = SupplierTypeCorporate.objects.get(supplier_id=id)
+        except SupplierTypeCorporate.DoesNotExist:
+            print "id does not exist in database"
+            return Response({'message': 'This corporate park does not exist'}, status=406)
+
+        print "Hello123"
+        content_type = ContentType.objects.get_for_model(SupplierTypeCorporate)
+        print request.data
+        request.data['contact']['object_id'] = instance.supplier_id
+        serializer = ContactDetailsGenericSerializer(data=request.data['contact'])
+        if serializer.is_valid():
+            print serializer.validated_data
+            serializer.save(content_type=content_type)
+            print "serializer saved"
+            return Response(serializer.data, status=200)
+        return Response(serializers.errors, status=400)
+
