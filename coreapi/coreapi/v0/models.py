@@ -653,6 +653,7 @@ class StallInventory(models.Model):
     stall_morning = models.BooleanField(db_column='STALL_MORNING', default=False)
     stall_evening = models.BooleanField(db_column='STALL_EVENING', default=False)
     stall_time_both = models.BooleanField(db_column='STALL_TIME_BOTH', default=False)
+    stall_weekdays = models.BooleanField(db_column='STALL_WEEKDAYS', default=False)
     stall_location = models.CharField(db_column='STALL_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
     electricity_available = models.BooleanField(db_column='ELECTRICITY_AVAILABLE_STALLS', default=False)  # Field name made lowercase.
     electricity_charges_daily = models.FloatField(db_column='ELECTRICITY_CHARGES_DAILY', max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -1308,7 +1309,7 @@ class AuditorSocietyMapping(models.Model):
 
 class State(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    state_name = models.CharField(db_column='STATE_NAME', max_length=20, null=True)
+    state_name = models.CharField(db_column='STATE_NAME', max_length=50, null=True)
     state_code = models.CharField(db_column='STATE_CODE', max_length=5, null=True)
 
     class Meta:
@@ -1318,7 +1319,7 @@ class State(models.Model):
 
 class City(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    city_name = models.CharField(db_column='CITY_NAME', max_length=20, null=True)
+    city_name = models.CharField(db_column='CITY_NAME', max_length=100, null=True)
     city_code = models.CharField(db_column='CITY_CODE', max_length=5, null=True)
     state_code = models.ForeignKey(State, related_name='statecode', db_column='STATE_CODE', null=True, on_delete=models.CASCADE)
 
@@ -1328,7 +1329,7 @@ class City(models.Model):
 
 class CityArea(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    label = models.CharField(db_column='AREA_NAME', max_length=20, null=True)
+    label = models.CharField(db_column='AREA_NAME', max_length=100, null=True)
     area_code = models.CharField(db_column='AREA_CODE', max_length=5, null=True)
     city_code = models.ForeignKey(City, related_name='citycode', db_column='CITY_CODE', null=True, on_delete=models.CASCADE)
 
@@ -1340,7 +1341,7 @@ class CityArea(models.Model):
 
 class CitySubArea(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    subarea_name = models.CharField(db_column='SUBAREA_NAME', max_length=20, null=True)
+    subarea_name = models.CharField(db_column='SUBAREA_NAME', max_length=100, null=True)
     subarea_code = models.CharField(db_column='SUBAREA_CODE', max_length=5, null=True)
     area_code = models.ForeignKey(CityArea, related_name='areacode', db_column='AREA_CODE', null=True,on_delete=models.CASCADE)
 
