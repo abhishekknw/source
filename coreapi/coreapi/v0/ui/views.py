@@ -1,4 +1,3 @@
-
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.response import Response
@@ -75,9 +74,10 @@ class getUserData(APIView):
             user_profile = user.user_profile.all().first()
             user_serializer = UserSerializer(user)
             serializer = UserProfileSerializer(user_profile)
-            city_ids = UserCities.objects.filter(user__id=id).values_list('city__id', flat=True)
-            area_ids = UserAreas.objects.filter(user__id=id).values_list('area__id', flat=True)
-            result = {'user':user_serializer.data, 'user_profile':serializer.data, 'selectedCities':city_ids, 'selectedAreas': area_ids}
+            # city_ids = UserCities.objects.filter(user__id=id).values_list('city__id', flat=True)
+            # area_ids = UserAreas.objects.filter(user__id=id).values_list('area__id', flat=True)
+            # result = {'user':user_serializer.data, 'user_profile':serializer.data, 'selectedCities':city_ids, 'selectedAreas': area_ids}
+            result = {'user':user_serializer.data, 'user_profile':serializer.data}
             return Response(result, status=200)
 
     def post(self, request, id, format=None):
@@ -99,7 +99,7 @@ class getUserData(APIView):
         else:
             return Response(serializer.errors, status=400)
 
-        prev_ids = UserCities.objects.filter(user__id=id).values_list('city__id', flat=True)
+        prev_ids = UserCities.objectsself.filter(user__id=id).values_list('city__id', flat=True)
         new_ids = request.data['selectedCities']
         del_diff = list(set(prev_ids) - set(new_ids))
         new_diff = list(set(new_ids) - set(prev_ids))
@@ -151,7 +151,6 @@ class getInitialDataAPIView(APIView):
             user = request.user
             cities = City.objects.all()
             serializer = CitySerializer(cities, many=True)
-            print "wef"
             # if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
             #     areas = CityArea.objects.filter(city_code__in=[item.city for item in user.cities.all()])
             # else:
@@ -198,6 +197,7 @@ class generateSupplierIdAPIView(APIView):
             sub_area = CitySubArea.objects.get(pk=request.data['subarea_id'])
 
             try:
+                print "locality rating is: ", sub_area.locality_rating
                 society = SupplierTypeSociety.objects.get(supplier_code=request.data['supplier_code'], society_locality=area.label)
                 if society:
                     return Response(status=409)
@@ -211,7 +211,8 @@ class generateSupplierIdAPIView(APIView):
                         'society_subarea':sub_area.subarea_name,
                         'society_locality':area.label,
                         'society_state' : city.state_code.state_name,
-                        'created_by': current_user.id
+                        'created_by': current_user.id,
+                        'society_location_type': sub_area.locality_rating
                         }
             serializer = SupplierTypeSocietySerializer(data=supplier)
             if serializer.is_valid():

@@ -38,9 +38,9 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_extensions',
+    # 'django_extensions',
     'rest_framework',
-    'django_extensions',
+    # 'django_extensions',
 
     'corsheaders',
     'rest_jwt',
@@ -90,23 +90,14 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
 
-    # 'default': {
-    #       'NAME':'machadalo_tech',
-    #       'ENGINE': 'django.db.backends.mysql',
-    #       'HOST': '127.0.0.1',
-    #       'USER': 'root',
-    #       'PASSWORD': '',
-    #   }
-
     'default': {
           'NAME':'machadalo_tech',
           'ENGINE': 'django.db.backends.mysql',
           'HOST': '127.0.0.1',
-
-          'USER': 'freshuser',
-          'PASSWORD': 'password',
-
+          'USER': 'root',
+          'PASSWORD': '',
       }
+
     }
 
 # Internationalization

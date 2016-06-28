@@ -890,10 +890,8 @@ class SupplierTypeSociety(models.Model):
     #swimming_pool_available = models.CharField(db_column='SWIMMING_POOL_AVAILABEL', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #street_furniture_count = models.IntegerField(db_column='STREET_FURNITURE_COUNT', blank=True, null=True)  # Field name made lowercase.
     #standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
-
-
     # This field is just added for the society list page for disabling the Shortlisted Button
-    disable = models.BooleanField(db_column='DISABLED',default=False)
+    # disable = models.BooleanField(db_column='DISABLED',default=False)
 
     def get_society_image(self):
         try:
@@ -1447,6 +1445,7 @@ class CitySubArea(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     subarea_name = models.CharField(db_column='SUBAREA_NAME', max_length=100, null=True)
     subarea_code = models.CharField(db_column='SUBAREA_CODE', max_length=5, null=True)
+    locality_rating = models.CharField(db_column='LOCALITY_RATING', max_length=100, null=True)
     area_code = models.ForeignKey(CityArea, related_name='areacode', db_column='AREA_CODE', null=True,on_delete=models.CASCADE)
 
     class Meta:
