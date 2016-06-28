@@ -23,6 +23,7 @@ PROJECT_ENV = os.path.join(os.path.dirname(PROJECT_DIR), "env")
 
 # Add the site-packages of the chosen virtualenv to work with
 site.addsitedir(os.path.join(PROJECT_ENV, 'lib/python2.7/site-packages'))
+#site.addsitedir(os.path.join(PROJECT_ENV, 'Lib/site-packages'))
 # Activate your virtual env
 activate_this = os.path.expanduser(os.path.join(PROJECT_ENV, "bin/activate_this.py"))
 execfile(activate_this, dict(__file__=activate_this))

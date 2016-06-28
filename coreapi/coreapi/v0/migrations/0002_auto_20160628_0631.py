@@ -7,17 +7,17 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('v0', '0023_merge'),
+        ('v0', '0001_initial'),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='business',
-            name='type',
+            model_name='suppliertypesociety',
+            name='disable',
         ),
         migrations.AddField(
-            model_name='business',
-            name='type_name',
-            field=models.CharField(max_length=100, db_column='TYPE', blank=True),
+            model_name='citysubarea',
+            name='locality_rating',
+            field=models.CharField(max_length=100, null=True, db_column='LOCALITY_RATING'),
         ),
     ]
