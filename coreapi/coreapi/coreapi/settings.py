@@ -87,11 +87,11 @@ DATABASES = {
     },
 
     'default': {
-         'NAME':'mdprod',
-         'ENGINE': 'django.db.backends.mysql',
-         'HOST': 'mdprod.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-         'USER': 'prodmachadalo',
-         'PASSWORD': 'vkmachadalo',
+          'NAME':'mdtest',
+          'ENGINE': 'django.db.backends.mysql',
+          'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+          'USER': 'mdtest',
+          'PASSWORD': 'mdtestmachadalo',
          }
     }
 
