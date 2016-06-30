@@ -869,6 +869,12 @@ class SupplierTypeSociety(models.Model):
     electricity_available  = models.BooleanField(db_column='ELECTRICITY_AVAILABLE',  default=False)
     sound_available = models.BooleanField(db_column='SOUND_AVAILABLE',  default=False)
     daily_electricity_charges = models.IntegerField(db_column='DAILY_ELECTRICITY_CHARGES',blank=True, null=True, default=0)
+    poster_allowed_nb = models.BooleanField(db_column = 'POSTER_ALLOWED_NB', default=False)
+    poster_allowed_lift = models.BooleanField(db_column = 'POSTER_ALLOWED_LIFT', default=False)
+    standee_allowed = models.BooleanField(db_column = 'STANDEE_ALLOWED', default=False)
+    flier_allowed = models.BooleanField(db_column = 'FLIER_ALLOWED', default=False)
+    stall_allowed = models.BooleanField(db_column = 'STALL_ALLOWED', default=False)
+    car_display_allowed = models.BooleanField(db_column='CAR_DISPLAY_ALLOWED', default=False)
 
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.

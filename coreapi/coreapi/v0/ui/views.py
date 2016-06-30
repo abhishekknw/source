@@ -758,24 +758,54 @@ class InventorySummaryAPIView(APIView):
             with transaction.atomic():
                 if request.data['poster_allowed_nb']:
                     if request.data['nb_count']!=None and request.data['nb_count'] > 0:
+                        society.poster_allowed_nb = True
                         poster_campaign = request.data['nb_count']
                         request.data['poster_campaign'] = poster_campaign
+                    else:
+                        society.poster_allowed_nb = False
+                else :
+                    society.poster_allowed_nb = False
+
                 if request.data['lift_count']!=None and request.data['poster_allowed_lift']:
                     if request.data['lift_count'] > 0:
+                        society.poster_allowed_lift = True
                         poster_campaign = poster_campaign + request.data['lift_count']
                         request.data['poster_campaign'] = poster_campaign
+                    else:
+                        society.poster_allowed_lift = False
+                else:
+                    society.poster_allowed_lift = False
+
                 if request.data['standee_allowed']:
                     if request.data['total_standee_count']!=None and request.data['total_standee_count'] > 0:
+                        society.standee_allowed = True
                         standee_campaign = request.data['total_standee_count']
                         request.data['standee_campaign'] = standee_campaign
+                    else:
+                        society.standee_allowed = False
+                else:
+                    society.standee_allowed = False
+
                 if request.data['stall_allowed'] or request.data['car_display_allowed']:
                     if request.data['total_stall_count']!=None and request.data['total_stall_count'] > 0:
                         stall_campaign = request.data['total_stall_count']
                         request.data['stall_or_cd_campaign'] = stall_campaign
+
+
+
                 if request.data['flier_allowed']:
                     if request.data['flier_frequency']!=None and request.data['flier_frequency'] > 0:
+                        society.flier_allowed = True
                         flier_campaign = request.data['flier_frequency']
                         request.data['flier_campaign'] = flier_campaign
+                    else:
+                        society.flier_allowed = False
+                else:
+                    society.flier_allowed = False
+
+
+                society.stall_allowed = True if request.data['stall_allowed'] else False
+                society.car_display_allowed = True if request.data['car_display_allowed'] else False
 
                 #society = SupplierTypeSociety.objects.get(pk=id)
                 society.total_campaign = poster_campaign+standee_campaign+stall_campaign+flier_campaign
