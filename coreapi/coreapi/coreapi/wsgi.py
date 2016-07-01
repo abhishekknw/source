@@ -22,20 +22,14 @@ sys.path.append(os.path.join(PROJECT_DIR, 'coreapi'))
 PROJECT_ENV = os.path.join(os.path.dirname(PROJECT_DIR), "env")
 
 # Add the site-packages of the chosen virtualenv to work with
-<<<<<<< HEAD
 # site.addsitedir(os.path.join(PROJECT_ENV, 'Lib/site-packages'))    For Windows
 site.addsitedir(os.path.join(PROJECT_ENV, 'lib/python2.7/site-packages'))
-=======
-site.addsitedir(os.path.join(PROJECT_ENV, 'lib/python2.7/site-packages'))
-#site.addsitedir(os.path.join(PROJECT_ENV, 'Lib/site-packages'))
->>>>>>> d85bbfd078281332495537af1f04be70016f4f83
 # Activate your virtual env
 # activate_this = os.path.expanduser(os.path.join(PROJECT_ENV, "Scripts/activate_this.py"))  For Windows
 activate_this = os.path.expanduser(os.path.join(PROJECT_ENV, "bin/activate_this.py"))
 execfile(activate_this, dict(__file__=activate_this))
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "coreapi.settings")
-#os.environ["DJANGO_SETTINGS_MODULE"] = "ayflare.settings"
 
 from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()

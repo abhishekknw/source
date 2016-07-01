@@ -31,21 +31,16 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
-<<<<<<< HEAD
     'django_admin_bootstrapped',
-=======
->>>>>>> d85bbfd078281332495537af1f04be70016f4f83
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'rest_framework',
-<<<<<<< HEAD
 
-=======
->>>>>>> d85bbfd078281332495537af1f04be70016f4f83
     'corsheaders',
     'rest_jwt',
     'v0',
@@ -94,13 +89,23 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
 
+    # 'default': {
+    #       'NAME':'machadalo_tech',
+    #       'ENGINE': 'django.db.backends.mysql',
+    #       'HOST': '127.0.0.1',
+    #       'USER': 'root',
+    #       'PASSWORD': '',
+    #   }
+
     'default': {
-          'NAME':'mdtest',
+          'NAME':'machadalo_tech',
           'ENGINE': 'django.db.backends.mysql',
-          'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-          'USER': 'mdtest',
-          'PASSWORD': 'mdtestmachadalo',
-         }
+          'HOST': '127.0.0.1',
+
+          'USER': 'freshuser',
+          'PASSWORD': 'password',
+
+      }
     }
 
 # Internationalization
