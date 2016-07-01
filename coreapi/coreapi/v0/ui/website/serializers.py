@@ -1,9 +1,71 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import Business, BusinessContact, Campaign, CampaignTypeMapping, CampaignSocietyMapping, SocietyInventoryBooking, Account, AccountContact
+from v0.models import BusinessInfo, BusinessAccountContact, Campaign, CampaignTypeMapping, CampaignSocietyMapping, SocietyInventoryBooking, AccountInfo
 from v0.ui.serializers import UISocietySerializer
-from v0.serializers import SocietyInventoryBookingSerializer, BusinessSerializer, BusinessTypesSerializer, BusinessContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, AccountSerializer, AccountContactSerializer
+from v0.serializers import SocietyInventoryBookingSerializer, BusinessInfoSerializer, BusinessTypesSerializer, BusinessAccountContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, AccountInfoSerializer
+
+
+from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety
+
+class ProposalInfoSerializer(ModelSerializer):
+
+    class Meta:
+        model = ProposalInfo
+
+
+class ProposalCenterMappingSerializer(ModelSerializer):
+
+    class Meta:
+        model = ProposalCenterMapping
+
+
+class SpaceMappingSerializer(ModelSerializer):
+
+    class Meta:
+        model = SpaceMapping
+
+
+class InventoryTypeSerializer(ModelSerializer):
+
+    class Meta:
+        model = InventoryType
+
+
+class ShortlistedSpacesSerializer(ModelSerializer):
+
+    class Meta:
+        model = ShortlistedSpaces
+
+
+
+class ProposalSocietySerializer(ModelSerializer):
+    '''This serializer sends the latitude and longitude of societies on map view page.
+    On clicking on map marker info of the society will be displayed'''
+    class Meta:
+        model = SupplierTypeSociety
+        fields = (
+            'supplier_id',
+            'name',
+            'address1',
+            'subarea',
+            'location_type',
+            'longitude',
+            'latitude',
+        )
+
+
+class ProposalCorporateSerializer(ModelSerializer):
+    ''' This Serializer sends the latitude and longitude of corporates on map view page.
+    On clicking on map marker info of the corporate will be retrived'''
+    class Meta:
+        model = SupplierTypeCorporate
+        fields = (
+            'supplier_id',
+            'longitude',
+            'latitude',
+        )
+
 
 
 class UISocietyInventorySerializer(ModelSerializer):
@@ -19,22 +81,22 @@ class UISocietyInventorySerializer(ModelSerializer):
         )
 
 
-class UIBusinessSerializer(ModelSerializer):
-    contacts = BusinessContactSerializer(source='get_contact', many=True)
+class UIBusinessInfoSerializer(ModelSerializer):
+    contacts = BusinessAccountContactSerializer(source='get_contacts', many=True)
 
     class Meta:
-        model = Business
+        model = BusinessInfo
         depth = 2
         read_only_fields = (
         'contacts'
         )
 
 
-class UIAccountSerializer(ModelSerializer):
-    contacts = AccountContactSerializer(source='get_contact', many=True)
+class UIAccountInfoSerializer(ModelSerializer):
+    contacts = BusinessAccountContactSerializer(source='get_contacts', many=True)
 
     class Meta:
-        model = Account
+        model = AccountInfo
         depth = 2
         read_only_fields = (
         'contacts'

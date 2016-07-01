@@ -18,7 +18,7 @@ from datetime import date
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-
+from django.contrib.contenttypes.fields import GenericRelation
 
 AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
@@ -489,6 +489,11 @@ class ContactDetails(models.Model):
 
 class ContactDetailsGeneric(models.Model):
     id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
+
+    content_type = models.ForeignKey(ContentType,related_name='contacts')
+    object_id = models.CharField(max_length=12)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    
     contact_type = models.CharField(db_column='CONTACT_TYPE',  max_length=30, blank=True, null=True)  # Field name made lowercase.
     name = models.CharField(db_column='CONTACT_NAME',  max_length=50, blank=True, null=True)  # Field name made lowercase.
     salutation = models.CharField(db_column='SALUTATION',  max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -497,9 +502,7 @@ class ContactDetailsGeneric(models.Model):
     mobile = models.BigIntegerField(db_column='CONTACT_MOBILE', blank=True, null=True)  # Field name made lowercase.
     countrycode = models.CharField(db_column='COUNTRY_CODE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     email = models.CharField(db_column='CONTACT_EMAILID',  max_length=50, blank=True, null=True)  # Field name made lowercase.
-    content_type = models.ForeignKey(ContentType,related_name='contacts')
-    object_id = models.CharField(max_length=12)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    
     
     class Meta:
 
@@ -783,23 +786,23 @@ class SportsInfra(models.Model):
 class SupplierTypeSociety(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
     supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
-    society_name = models.CharField(db_column='SOCIETY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
-    society_address1 = models.CharField(db_column='SOCIETY_ADDRESS1', max_length=250, blank=True, null=True)  # Field name made lowercase.
-    society_address2 = models.CharField(db_column='SOCIETY_ADDRESS2', max_length=250, blank=True, null=True)  # Field name made lowercase.
-    society_zip = models.IntegerField(db_column='SOCIETY_ZIP', blank=True, null=True)  # Field name made lowercase.
-    society_city = models.CharField(db_column='SOCIETY_CITY', max_length=250, blank=True, null=True)  # Field name made lowercase.
-    society_state = models.CharField(db_column='SOCIETY_STATE', max_length=250, blank=True, null=True)  # Field name made lowercase.
-    society_longitude = models.FloatField(db_column='SOCIETY_LONGITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
-    society_locality = models.CharField(db_column='SOCIETY_LOCALITY', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    society_subarea = models.CharField(db_column='SOCIETY_SUBAREA', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    society_latitude = models.FloatField(db_column='SOCIETY_LATITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
-    society_location_type = models.CharField(db_column='SOCIETY_LOCATION_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    society_type_quality = models.CharField(db_column='SOCIETY_TYPE_QUALITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
-    society_type_quantity = models.CharField(db_column='SOCIETY_TYPE_QUANTITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
-    society_off = models.BooleanField(db_column='SOCIETY_OFF', default=False)
-    society_weekly_off = models.CharField(db_column='SOCIETY_WEEKLY_OFF', max_length=30, blank=True, null=True)
-    society_count = models.BooleanField(db_column='SOCIETY_COUNT', default=True)
-    society_ratings = models.BooleanField(db_column='SOCIETY_RATINGS', default=True)
+    name = models.CharField(db_column='SOCIETY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
+    address1 = models.CharField(db_column='SOCIETY_ADDRESS1', max_length=250, blank=True, null=True)  # Field name made lowercase.
+    address2 = models.CharField(db_column='SOCIETY_ADDRESS2', max_length=250, blank=True, null=True)  # Field name made lowercase.
+    zip = models.IntegerField(db_column='SOCIETY_ZIP', blank=True, null=True)  # Field name made lowercase.
+    city = models.CharField(db_column='SOCIETY_CITY', max_length=250, blank=True, null=True)  # Field name made lowercase.
+    state = models.CharField(db_column='SOCIETY_STATE', max_length=250, blank=True, null=True)  # Field name made lowercase.
+    longitude = models.FloatField(db_index=True, db_column='SOCIETY_LONGITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
+    locality = models.CharField(db_column='SOCIETY_LOCALITY', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    subarea = models.CharField(db_column='SOCIETY_SUBAREA', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    latitude = models.FloatField(db_index=True, db_column='SOCIETY_LATITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
+    location_type = models.CharField(db_column='SOCIETY_LOCATION_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    type_quality = models.CharField(db_column='SOCIETY_TYPE_QUALITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
+    type_quantity = models.CharField(db_column='SOCIETY_TYPE_QUANTITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
+    off = models.BooleanField(db_column='SOCIETY_OFF', default=False)
+    weekly_off = models.CharField(db_column='SOCIETY_WEEKLY_OFF', max_length=30, blank=True, null=True)
+    count = models.BooleanField(db_column='SOCIETY_COUNT', default=True)
+    ratings = models.BooleanField(db_column='SOCIETY_RATINGS', default=True)
     flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)
     resident_count = models.IntegerField(db_column='RESIDENT_COUNT', blank=True, null=True)
     vacant_flat_count = models.IntegerField(db_column='VACANT_FLAT_COUNT', null=True)
@@ -949,24 +952,24 @@ class SupplierTypeSociety(models.Model):
 class SupplierTypeCorporate(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20) 
     supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
-    corporate_name = models.CharField(db_column='CORPORATE_NAME', max_length=70, blank=True, null=True) 
-    corporate_address1 = models.CharField(db_column='CORPORATE_ADDRESS1', max_length=250, blank=True, null=True) 
-    corporate_address2 = models.CharField(db_column='CORPORATE_ADDRESS2', max_length=250, blank=True, null=True) 
-    corporate_zip = models.IntegerField(db_column='CORPORATE_ZIP', blank=True, null=True)
-    corporate_city = models.CharField(db_column='CORPORATE_CITY', max_length=250, blank=True, null=True)
-    corporate_state = models.CharField(db_column='CORPORATE_STATE', max_length=250, blank=True, null=True) 
-    corporate_longitude = models.FloatField(db_column='CORPORATE_LONGITUDE', blank=True, null=True, default=0.0)
-    corporate_locality = models.CharField(db_column='CORPORATE_LOCALITY', max_length=30, blank=True, null=True)
-    corporate_latitude = models.FloatField(db_column='CORPORATE_LATITUDE', blank=True, null=True, default=0.0)
-    corporate_location_type = models.CharField(db_column='CORPORATE_LOCATION_TYPE', max_length=50, blank=True, null=True)
-    corporate_type = models.CharField(db_column='CORPORATE_TYPE', max_length=25)
-    corporate_industry_segment = models.CharField(db_column='CORPORATE_INDUSTRY_SEGMENT', max_length=30, blank=True, null=True) 
-    corporate_age = models.PositiveSmallIntegerField(db_column='CORPORATE_AGE', blank=True, null=True)
-    corporate_building_count = models.IntegerField(db_column='CORPORATE_BUILDING_COUNT', blank=True, null=True)
-    corporate_floorperbuilding_count = models.IntegerField(db_column='CORPORATE_FLOORPERBUILDING_COUNT', blank=True, null=True)
-    corporate_totalcompanies_count = models.IntegerField(db_column='CORPORATE_TOTALCOMPANIES_COUNT', blank=True, null=True)
-    corporate_totalemployees_count = models.IntegerField(db_column='CORPORATE_TOTALEMPLOYEES_COUNT', blank=True, null=True)
-    corporate_isrealestateallowed = models.BooleanField(db_column='CORPORATE_ISREALESTATEALLOWED', default=False)
+    name = models.CharField(db_column='CORPORATE_NAME', max_length=70, blank=True, null=True) 
+    address1 = models.CharField(db_column='CORPORATE_ADDRESS1', max_length=250, blank=True, null=True) 
+    address2 = models.CharField(db_column='CORPORATE_ADDRESS2', max_length=250, blank=True, null=True) 
+    zip = models.IntegerField(db_column='CORPORATE_ZIP', blank=True, null=True)
+    city = models.CharField(db_column='CORPORATE_CITY', max_length=250, blank=True, null=True)
+    state = models.CharField(db_column='CORPORATE_STATE', max_length=250, blank=True, null=True) 
+    longitude = models.FloatField(db_index=True, db_column='CORPORATE_LONGITUDE', blank=True, null=True, default=0.0)
+    locality = models.CharField(db_column='CORPORATE_LOCALITY', max_length=30, blank=True, null=True)
+    latitude = models.FloatField(db_index=True, db_column='CORPORATE_LATITUDE', blank=True, null=True, default=0.0)
+    location_type = models.CharField(db_column='CORPORATE_LOCATION_TYPE', max_length=50, blank=True, null=True)
+    type = models.CharField(db_column='CORPORATE_TYPE', max_length=25)
+    industry_segment = models.CharField(db_column='CORPORATE_INDUSTRY_SEGMENT', max_length=30, blank=True, null=True) 
+    age = models.PositiveSmallIntegerField(db_column='CORPORATE_AGE', blank=True, null=True)
+    building_count = models.IntegerField(db_column='CORPORATE_BUILDING_COUNT', blank=True, null=True)
+    floorperbuilding_count = models.IntegerField(db_column='CORPORATE_FLOORPERBUILDING_COUNT', blank=True, null=True)
+    totalcompanies_count = models.IntegerField(db_column='CORPORATE_TOTALCOMPANIES_COUNT', blank=True, null=True)
+    totalemployees_count = models.IntegerField(db_column='CORPORATE_TOTALEMPLOYEES_COUNT', blank=True, null=True)
+    isrealestateallowed = models.BooleanField(db_column='CORPORATE_ISREALESTATEALLOWED', default=False)
     generic.GenericRelation(ContactDetailsGeneric)
 
     class Meta:
@@ -1034,7 +1037,29 @@ class SocietyTower(models.Model):
 
 
 
-class Business(models.Model):
+class BusinessAccountContact(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.CharField(max_length=20)
+    business_account_id = generic.GenericForeignKey('content_type','object_id')
+
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
+    department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
+    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
+    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+    spoc = models.BooleanField(db_column='SPOC', default=False)
+    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+    class Meta:
+
+        db_table = 'BUSINESS_ACCOUNT_CONTACT'
+
+
+
+class BusinessInfo(models.Model):
     ## changed -> on_delete = models.CASCADE
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True) ## changed -> name
@@ -1048,6 +1073,7 @@ class Business(models.Model):
     reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
 
+    contacts = GenericRelation(BusinessAccountContact)
 
     def __str__(self):
         return self.name
@@ -1055,7 +1081,7 @@ class Business(models.Model):
     def __unicode__(self):
         return self.name
 
-    def get_contact(self):
+    def get_contacts(self):
         try:
             return self.contacts.all()
         except:
@@ -1063,60 +1089,45 @@ class Business(models.Model):
 
     class Meta:
 
-        db_table = 'business'
+        db_table = 'BUSINESS_INFO'
 
 
-class BusinessContact(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
-    name = models.CharField(db_column='NAME', max_length=50, blank=True)
-    designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
-    department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
-    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
-    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
-    business = models.ForeignKey(Business, related_name='contacts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
-    spoc = models.BooleanField(db_column='SPOC', default=False)
-    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
-
-
-    class Meta:
-
-        db_table = 'business_contact'
 
 class BusinessTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    type_name = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
+    business_type = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
 
     def __str__(self):
-        return self.type_name
+        return self.business_type
 
     def __unicode__(self):
-        return self.type_name
+        return self.business_type
 
     class Meta:
 
-        db_table = 'business_types'
+        db_table = 'BUSINESS_TYPES'
 
 
 class BusinessSubTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    sub_type = models.CharField(db_column='SUBTYPE', max_length=100, blank=True)
     business_type = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE', null=True, on_delete=models.CASCADE) ## changed -> business
+    business_sub_type = models.CharField(db_column='SUBTYPE', max_length=100, blank=True)
         
     def __str__(self):
-        return self.sub_type
+        return self.business_sub_type
 
     def __unicode__(self):
-        return self.sub_type
+        return self.business_sub_type
 
     class Meta:
 
-        db_table = 'business_subtypes'
+        db_table = 'BUSINESS_SUBTYPES'
 
 
-class Account(models.Model):
+class AccountInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
+    business = models.ForeignKey(BusinessInfo, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
-    business = models.ForeignKey(Business, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     address = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
@@ -1125,6 +1136,7 @@ class Account(models.Model):
     reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
 
+    contacts = GenericRelation(BusinessAccountContact)
 
     def __str__(self):
         return self.name
@@ -1132,32 +1144,159 @@ class Account(models.Model):
     def __unicode__(self):
         return self.name
 
-    def get_contact(self):
+    def get_contacts(self):
         try:
             return self.contacts.all()
         except:
             return None
 
-    class Meta:
-
-        db_table = 'account'
-
-
-class AccountContact(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
-    name = models.CharField(db_column='NAME', max_length=50, blank=True)
-    designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
-    department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
-    phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
-    email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
-    account = models.ForeignKey(Account, related_name='contacts', db_column='ACCOUNT_ID', null=True, on_delete=models.CASCADE)
-    spoc = models.BooleanField(db_column='SPOC', default=False)
-    comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+    def get_proposals(self):
+        # ProposalInfo --> related_name='proposals'
+        try:
+            return self.proposals.all()
+        except:
+            return None
 
 
     class Meta:
 
-        db_table = 'account_contact'
+        db_table = 'ACCOUNT_INFO'
+
+
+# class AccountContact(models.Model):
+#     id = models.AutoField(db_column='ID', primary_key=True)
+#     name = models.CharField(db_column='NAME', max_length=50, blank=True)
+#     designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
+#     department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
+#     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
+#     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+#     account = models.ForeignKey(AccountInfo, related_name='contacts', db_column='ACCOUNT_ID', null=True, on_delete=models.CASCADE)
+#     spoc = models.BooleanField(db_column='SPOC', default=False)
+#     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+#     class Meta:
+
+#         db_table = 'account_contact'
+
+
+
+
+
+
+
+
+class ProposalInfo(models.Model):
+    proposal_id = models.CharField(db_column = 'PROPOSAL ID',max_length=15,primary_key=True)
+    account = models.ForeignKey(AccountInfo,related_name='proposals', db_column ='ACCOUNT',on_delete=models.CASCADE)
+    name = models.CharField(db_column='NAME', max_length=50,blank=True)
+    payment_status = models.BooleanField(default=False, db_column='PAYMENT STATUS')
+    updated_on = models.DateTimeField(auto_now=True, auto_now_add=False)
+    updated_by = models.CharField(max_length=50,default='Admin')
+    created_on = models.DateTimeField(auto_now_add=True,auto_now=False)
+    created_by = models.CharField(max_length=50, default='Admin')
+    tentative_cost = models.IntegerField(default=5000)
+    tentative_start_date = models.DateTimeField(null=True)
+    tentative_end_date = models.DateTimeField(null=True)
+
+
+    def get_centers(self):
+        # ProposalCenterMapping --> related_name='centers'
+        try:
+            return self.centers.all()
+        except:
+            return None
+
+    class Meta:
+        db_table = 'PROPOSAL_INFO'
+
+
+
+class ProposalCenterMapping(models.Model):
+    proposal = models.ForeignKey(ProposalInfo, db_index=True, related_name='centers', on_delete=models.CASCADE)
+    center_name = models.CharField(max_length=50)
+    Address = models.CharField(max_length=150,null=True, blank=True)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    radius = models.FloatField()
+    subarea = models.CharField(max_length=35)
+    area = models.CharField(max_length=35)
+    city = models.CharField(max_length=35)
+    pincode = models.IntegerField()
+
+    def get_space_mappings(self):
+        # SpaceMapping --> related_name = space_mapping
+        try:
+            return self.space_mappings.all()    
+        except:
+            return None
+
+    class Meta:
+        db_table = 'PROPOSAL CENTER MAPPING'
+        unique_together = (('proposal','center_name'),)
+
+
+class SpaceMapping(models.Model):
+    center = models.ForeignKey(ProposalCenterMapping, db_index=True,related_name='space_mappings', on_delete=models.CASCADE)
+    proposal = models.ForeignKey(ProposalInfo,db_index=True, related_name='space_mapping', on_delete=models.CASCADE)
+    space_name = models.CharField(max_length=20)
+    space_count = models.IntegerField()
+    buffer_space_count = models.IntegerField()
+    inventory_type_count = models.IntegerField()
+
+    def get_spaces(self):
+        # ShortlistedSpaces --> related_name = spaces
+        try:
+            return self.spaces.all()
+        except:
+            return None
+
+    def get_inventory_types():
+        # InventoryType --> related_name = inventory_types
+        try:
+            return self.inventory_types.all()
+        except:
+            return None
+
+
+    class Meta:
+        db_table = 'SPACE MAPPING'
+        unique_together = (('center','space_name'),)
+
+
+class InventoryType(models.Model):
+    space_mapping = models.ForeignKey(SpaceMapping, db_index=True, related_name='inventory_types', on_delete=models.CASCADE)
+    inventory_name = models.CharField(max_length=20)
+    inventory_type = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'INVENTORY TYPE'
+        unique_together = (('space_mapping','inventory_name'))
+
+
+
+class ShortlistedSpaces(models.Model):
+    space_mapping = models.ForeignKey(SpaceMapping,db_index=True, related_name='spaces',on_delete=models.CASCADE)
+
+    content_type = models.ForeignKey(ContentType, related_name='spaces')
+    object_id = models.CharField(max_length=12)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+
+    buffer_status = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'SHORTLISTED SPACES'
+
+
+
+
+
+
+
+
+
+
+
 
 
 class CampaignTypes(models.Model):
@@ -1173,7 +1312,7 @@ class CampaignTypes(models.Model):
 class Campaign(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     #campaign_type = models.ForeignKey(CampaignTypes, related_name='campaigns', db_column='CAMPAIGN_TYPE_ID', null=True)
-    account = models.ForeignKey(Account, related_name='campaigns', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
+    account = models.ForeignKey(AccountInfo, related_name='campaigns', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
     start_date = models.DateTimeField(db_column='START_DATE', null=True)
     end_date = models.DateTimeField(db_column='END_DATE', null=True)
     tentative_cost = models.IntegerField(db_column='TENTATIVE_COST', null=True)
@@ -1444,8 +1583,9 @@ class CityArea(models.Model):
 
 class CitySubArea(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    subarea_name = models.CharField(db_column='SUBAREA_NAME', max_length=20, null=True)
+    subarea_name = models.CharField(db_column='SUBAREA_NAME', max_length=35, null=True)
     subarea_code = models.CharField(db_column='SUBAREA_CODE', max_length=5, null=True)
+    locality_rating = models.CharField(db_column='LOCALITY_RATING',max_length=15,default='Unknown')
     area_code = models.ForeignKey(CityArea, related_name='areacode', db_column='AREA_CODE', null=True,on_delete=models.CASCADE)
 
     class Meta:
@@ -1623,3 +1763,15 @@ class UserAreas(models.Model):
 
     class Meta:
         db_table = 'user_areas'
+
+
+
+class SocietyLeads(models.Model):
+    id = models.CharField(max_length=100,null=False,primary_key=True)
+    society = models.ForeignKey(SupplierTypeSociety, null=True, on_delete=models.SET_NULL)
+    name = models.CharField(max_length=50)
+    phone = models.CharField(max_length=15, null=True, blank=True,default='0')
+    email = models.EmailField()
+
+    class Meta:
+        db_table = 'society_leads'

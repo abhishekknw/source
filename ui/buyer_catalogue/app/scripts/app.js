@@ -31,6 +31,7 @@ angular
     'angularUtils.directives.dirPagination',
     'angularjs-dropdown-multiselect',
     'ngFileUpload',
+    'uiGmapgoogle-maps',
     // ''
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
@@ -50,6 +51,12 @@ angular
           url : '/societyList', //:societyId/
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyListCtrl'
+        })        
+
+        .state('campaign.mapView',{
+           url : '/mapview',
+           templateUrl : 'modues/pages/mapview/mapview.tmpl.html',
+           controller : ''
         })
         .state('campaign.societyDetails', {
           url : '/societyDetails/:societyId', //:societyId/
@@ -150,7 +157,12 @@ angular
             url : '/ongoingcampaign',
             controller: 'OngoingCampaignCtrl',
             templateUrl: 'modules/pages/manageCampaign/ongoingcampaign/ongoing-campaign.tmpl.html'
-          });        /*
+          })
+      .state('mapView',{
+            url : '/mapview',
+            controller : 'MapCtrl',
+            templateUrl : 'modules/pages/mapview/mapview.tmpl.html'
+        });        /*
         .state('catalogue.home', {
           url : '/catalogue',
           templateUrl: 'views/society-home.html',

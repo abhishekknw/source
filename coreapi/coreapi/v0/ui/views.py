@@ -613,7 +613,7 @@ class SocietyAPIFiltersListView(APIView):
             # result_page = paginator.paginate_queryset(items, request)
             # serializer = SocietyListSerializer(result_page, many=True)
 
-            # return paginator.get_paginated_response(serializer.data,status=200)
+            # return paginator.get_paginated_response(serializer.data)
 
 
             return Response(serializer.data, status=200)
@@ -629,17 +629,18 @@ class SocietyAPIFiltersListView(APIView):
         #     return self.filter_socities_paginator,  
 
 class SocietyAPISortedListView(APIView):
-    def get(self,request,format=None):
+    def post(self,request,format=None):
         order = request.query_params.get('order',None)
         print "Order received is ", order
+        society_ids = request.data
 
         if order == 'asc':
-            societies = SupplierTypeSociety.objects.all().order_by('society_name')
-            serializer = UISocietySerializer(societies, many=True)
+            societies = SupplierTypeSociety.objects.filter(supplier_id__in=society_ids).order_by('society_name')
+            serializer = SocietyListSerializer(societies, many=True)
             return Response(serializer.data, status=200)
         elif order == 'desc':
-            societies = SupplierTypeSociety.objects.all().order_by('-society_name')
-            serializer = UISocietySerializer(societies, many=True)
+            societies = SupplierTypeSociety.objects.filter(supplier_id__in=society_ids).order_by('-society_name')
+            serializer = SocietyListSerializer(societies, many=True)
             return Response(serializer.data, status=200)
         else:
             return Response(status=200)
@@ -949,7 +950,7 @@ class InventorySummaryAPIView(APIView):
             #   return Response(status=404)
 
 
-    def test_func(self):
+    def adinventory_func(self):
         adinventory_objects = AdInventoryType.objects.all()
         adinventory_dict = {}     
         for adinventory in adinventory_objects:
@@ -998,6 +999,14 @@ class InventorySummaryAPIView(APIView):
                     adinventory_dict['banner_large_id'] = adinventory.id
 
         return adinventory_dict 
+
+    def duration_type_func(self):
+        duration_type_objects = DurationType.objects.all()
+        duration_type_dict = {}
+        for duration_type in duration_type_objects:
+            if duration_type.duration_name == 'Unit Daily':
+                duration_type_dict['']
+
 
     def save_stall_locations(self, c1, c2, society):
         count = int(c2) + 1
@@ -1138,16 +1147,50 @@ class TowerAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
-            serializer = UITowerSerializer(towers, many=True)
-            return Response(serializer.data)
+            serializer_tower = UITowerSerializer(towers, many=True)
+
+            inventory_summary = InventorySummary.objects.get(supplier_id=id)
+            serializer_inventory = InventorySummarySerializer(inventory_summary)
+
+            response = {
+                'tower' : serializer_tower.data,
+                'inventory' : serializer_inventory.data,
+            }
+
+            # return Response(serializer.data)
+            return Response(response, status=200)
         except SupplierTypeSociety.DoesNotExist:
-            return Response(status=404)
-        except SocietyTower.DoesNotExist:
-            return Response(status=404)
+            return Response({'message' : 'Invalid Society ID'},status=404)
+        except InventorySummary.DoesNotExist:
+            return Response({'message' : 'Please fill Inventory Summary Tab','inventory':'true'},status=404)
 
     def post(self, request, id, format=None):
+        print "\n\n\n Tower API View Post"
         print request.data
+        print "\n\n\n"
         society=SupplierTypeSociety.objects.get(pk=id)
+
+        # checking of notice board in tower == inventory summary nb_count
+        total_nb_count = 0
+        for tower in request.data['TowerDetails']:
+            total_nb_count += tower['notice_board_count_per_tower']
+
+        print "total_nb_count : ",total_nb_count
+
+        try:
+            inventory_obj = InventorySummary.objects.get(supplier=society) 
+        except InventorySummary.DoesNotExist:
+            return Response({'message' : 'Please fill Inventory Summary Tab','inventory':'true'},status=404)
+
+        print "inventory_obj.nb_count : ", inventory_obj.nb_count
+
+
+        if total_nb_count !=0 and total_nb_count != inventory_obj.nb_count:
+            return Response({'message' : 'Total Notice Board Count should equal to Notice Board in Inventory Summary Tab'}, status=404)
+
+
+        # checking ends here
+
 
         for key in request.data['TowerDetails']:
             if 'tower_id' in key:
@@ -1494,7 +1537,6 @@ class StallAPIView(APIView):
 
         stall = request.data
         print "request data: ", stall
-        # stall = request.data['stall']
         society = SupplierTypeSociety.objects.get(supplier_id=id)
 
         society.street_furniture_available = True if stall['furniture_available'] == 'Yes' else False
@@ -1960,4 +2002,180 @@ class ContactDetailsGenericAPIView(APIView):
             print "serializer saved"
             return Response(serializer.data, status=200)
         return Response(serializers.errors, status=400)
+
+
+
+
+
+
+class JustForTestingAPIView(APIView):
+    def get(self, request, format=None):
+
+        # cityArea = request.query_params.get('areas',None)
+        # inventorytype = request.query_params.get('inventory',None)
+        # citySubArea = request.query_params.get('citySubArea',None)
+        subarea_dict = {u'BD': u'Bhayandar', u'BE': u'Borivali (E)', u'SP': u'Sher-E-Punjab', u'DH': u'Dahisar', u'JV': u'JVLR', u'BH': u'Bhandup', u'BW': u'Borivali (W)',
+            u'JH': u'Juhu', u'WR': u'Worli', u'JG': u'Jogeshwari', u'': u'', u'NH': u'Nahar Amrit Shakti', 
+            u'PS': u'Panch Srishti Comple', u'RV': u'Raheja Vihar', u'RW': u'Mira Road (W)', u'KJ': u'Kanjurmarg', 
+            u'RE': u'Mira Road (E)', u'NR': u'Nahur', u'NS': u'Nalasopara', u'PN': u'Panvel', u'GW': u'Goregaon (W)', 
+            u'CH': u'Chembur', u'VE': u'Vasai (E)', u'AI': u'Airoli', u'VK': u'Vikhroli', u'AN': u'Ashok Nagar', u'VP':
+            u'Vile Parle', u'CY': u'Cypress', u'VW': u'Vasai (W)', u'GH': u'Ghatkopar', u'ME': u'Malad (E)', u'KE': u'Kandivali (E)', u'MC': u'Mahakali Caves', 
+            u'SR': u'Santacruz', u'KH': u'Khar', u'GE': u'Goregaon (E)', u'MU': u'Mulund', u'MW': u'Malad (W)', u'KW': u'Kandivali (W)', u'MR': u'Marol', u'SC': 
+            u'Suncity Complex', u'OS': 'Oshiwara'}
+
+        area_dict = {u'CH': u'Chembur', u'LB': u'LBS', u'NM': u'Navi Mumbai', u'SM': u'South Mumbai', 
+            u'GB': u'Goregaon and Beyond', u'AW': u'Andheri (W)', u'TH': u'Thane', u'AE': u'Andheri (E)',
+            u'PO': u'Powai'}
+
+        flat_dict = {
+            'LA' : 'Large',
+            'MD' : 'Medium',
+            'SM' : 'Small',
+            'VL' : 'Very Large'
+        }
+
+        society_dict = {
+            'MH' : 'Medium High',
+            'HG' : 'High',
+            'SD' : 'Standard',
+            'UH' : 'Ultra High'
+         }
+
+        allflatquantity = ['Large', 'Medium', 'Small', 'Very Large']    # in sorted order
+        allsocietytype = ['High', 'Medium High', 'Standard', 'Ultra High'] # in sorted order
+
+        societies = request.query_params.get('society',None)
+        flats = request.query_params.get('flat',None)
+        subareas = request.query_params.get('subarea',None)
+        areas = request.query_params.get('area',None)
+
+        inventorytype = None
+
+
+        societytype = []
+        flatquantity = []
+        citySubArea = []
+        cityArea = []
+        subareas_present = False
+        areas_present = False
+
+
+
+
+        if societies:
+            societies = societies.split()
+            for society in societies:
+                try:
+                    societytype.append(society_dict[society])
+                except KeyError:
+                    pass
+
+        if flats:
+            flats = flats.split()
+            print "Flats : ", flats
+            for flat in flats:
+                try:
+                    flatquantity.append(flat_dict[flat])
+                except KeyError:
+                    pass
+
+        if subareas:
+            subareas = subareas.split()
+            for subarea in subareas:
+                try:
+                    citySubArea.append(subarea_dict[subarea])
+                except KeyError:
+                    pass
+            subareas_present = True
+
+        elif areas:
+            areas = areas.split()
+            for area in areas:
+                try:
+                    cityArea.append(area_dict[area])
+                except KeyError:
+                    pass
+            areas_present = True
+
+
+        if not areas_present and not subareas_present:
+            if flatquantity or societytype :
+                filter_present = True
+            else:
+                filter_present = False
+        else:
+            filter_present = True
+
+
+        print "societytype : ", societytype
+        print "flatquantity : ", flatquantity
+        print "cityAreas  : ", cityArea
+        print "subAreas   : ", citySubArea
+
+
+        if subareas_present:
+            if  societytype and flatquantity and inventorytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+            elif societytype and flatquantity:
+                items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+            elif societytype and inventorytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype))
+            elif flatquantity and inventorytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quantity__in = flatquantity))
+            elif societytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quality__in = societytype))
+            elif flatquantity:
+                items = SupplierTypeSociety.objects.filter(Q(society_subarea__in = citySubArea) & Q(society_type_quantity__in = flatquantity))
+            # elif inventorytype:
+            #     do something
+            else :
+                items = SupplierTypeSociety.objects.filter(society_subarea__in = citySubArea)
+
+        elif areas_present :
+            if societytype and flatquantity and inventorytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+            elif societytype and flatquantity:
+                items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+            elif societytype and inventorytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype))
+            elif flatquantity and inventorytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quantity__in = flatquantity))
+            elif societytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quality__in = societytype))
+            elif flatquantity:
+                items = SupplierTypeSociety.objects.filter(Q(society_locality__in = cityArea) & Q(society_type_quantity__in = flatquantity))
+            # elif inventorytype:
+            #     do something
+
+            else:
+                items = SupplierTypeSociety.objects.filter(society_locality__in = cityArea)     
+
+        elif societytype or flatquantity or inventorytype :
+            if societytype and flatquantity and inventorytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+            elif societytype and flatquantity:
+                items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype) & Q(society_type_quantity__in = flatquantity))
+            elif societytype and inventorytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype))
+            elif flatquantity and inventorytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_type_quantity__in = flatquantity))
+            elif societytype:
+                items = SupplierTypeSociety.objects.filter(Q(society_type_quality__in = societytype))
+            elif flatquantity:
+                items = SupplierTypeSociety.objects.filter(Q(society_type_quantity__in = flatquantity))
+            # elif inventorytype:
+            #     do something
+
+        else:
+            items = SupplierTypeSociety.objects.all()
+
+
+
+        paginator = PageNumberPagination()
+        result_page = paginator.paginate_queryset(items, request)
+        serializer = SocietyListSerializer(result_page, many=True)
+
+
+        return paginator.get_paginated_response(serializer.data)
+
 

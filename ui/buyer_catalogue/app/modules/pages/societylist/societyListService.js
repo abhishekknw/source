@@ -49,9 +49,9 @@ angular.module('machadaloPages')
     return machadaloHttp.post(url, data);
   }
 
-  societyListService.getSortedSocieties = function(order){
+  societyListService.getSortedSocieties = function(order,society_ids){
     var url = url_base + "societyList/sortedSocieties/?order=" + order;
-    return machadaloHttp.get(url);
+    return machadaloHttp.post(url,society_ids);
   }
 
   societyListService.processParam = function(){

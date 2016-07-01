@@ -1,18 +1,27 @@
+import math
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from serializers import UIBusinessSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountSerializer
-from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountSerializer, AccountContactSerializer, CampaignTypeMappingSerializer
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, BusinessSubTypes, Account, AccountContact, InventorySummary
+from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
+from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer,  CampaignTypeMappingSerializer
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, BusinessInfo, BusinessAccountContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, BusinessSubTypes, AccountInfo, InventorySummary
 from django.db.models import Q
 from django.db import transaction
 from rest_framework import status
 import json
+from django.contrib.contenttypes.models import ContentType
+from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping,SpaceMapping , InventoryType, ShortlistedSpaces
+from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer, SpaceMappingSerializer , \
+        InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer
+
+
 
 class getBusinessTypesAPIView(APIView):
     def get(self, request, format=None):
+        print "inside get"
         try:
             busTypes = BusinessTypes.objects.all()
+
             serializer = BusinessTypesSerializer(busTypes, many=True)
             return Response(serializer.data, status=200)
         except :
@@ -22,8 +31,8 @@ class getBusinessTypesAPIView(APIView):
 class BusinessAPIListView(APIView):
     def get(self, request, format=None):
         try:
-            items = Business.objects.all()
-            serializer = BusinessSerializer(items, many=True)
+            items = BusinessInfo.objects.all()
+            serializer = BusinessInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except :
             return Response(status=404)
@@ -55,8 +64,8 @@ class getBusinessSubTypesAPIView(APIView):
 class BusinessAPIView(APIView):
     def get(self, request, id, format=None):
         try:
-            item = Business.objects.get(pk=id)
-            serializer = UIBusinessSerializer(item)
+            item = BusinessInfo.objects.get(pk=id)
+            serializer = UIBusinessInfoSerializer(item)
             return Response(serializer.data)
         except :
             return Response(status=404)
@@ -78,8 +87,8 @@ class BusinessAPIView(APIView):
 class AccountAPIListView(APIView):
     def get(self, request, format=None):
         try:
-            items = Account.objects.all()
-            serializer = AccountSerializer(items, many=True)
+            items = AccountInfo.objects.all()
+            serializer = AccountInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except :
             return Response(status=404)
@@ -88,10 +97,10 @@ class AccountAPIListView(APIView):
 class AccountAPIView(APIView):
     def get(self, request, id, format=None):
         try:
-            account = Account.objects.get(pk=id)
-            serializer1 = UIAccountSerializer(account)
-            business = Business.objects.get(pk=account.business_id)
-            serializer2 = BusinessSerializer(business)
+            account = AccountInfo.objects.get(pk=id)
+            serializer1 = UIAccountInfoSerializer(account)
+            business = BusinessInfo.objects.get(pk=account.business_id)
+            serializer2 = BusinessInfoSerializer(business)
             '''contacts = AccountContact.objects.filter(account=account)
             serializer3 = AccountContactSerializer(contacts, many=True)'''
 
@@ -115,25 +124,25 @@ class NewCampaignAPIView(APIView):
             # checking if the business with the same name already exists in the database
             try:
                 if 'id' not in business_data :
-                    business = Business.objects.get(name=business_data['name'])
+                    business = BusinessInfo.objects.get(name=business_data['name'])
                     error['message'] = 'Business with this name already exists'
                     error = json.dumps(error)
                     return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
                 # else:
                 #     print "\n\nYeyyyy! found id in the business \n\n"
-            except Business.DoesNotExist:
+            except BusinessInfo.DoesNotExist:
                 pass
 
 
             with transaction.atomic():
                 if 'id' in business_data:
                     # print "\nInside if 1\n"
-                    business = Business.objects.get(pk=business_data['id'])
-                    serializer = BusinessSerializer(business,data=business_data)
+                    business = BusinessInfo.objects.get(pk=business_data['id'])
+                    serializer = BusinessInfoSerializer(business,data=business_data)
                 else:
                     # print "\nInside else 1\n"
                     #request.data['created_by'] = current_user.id
-                    serializer = BusinessSerializer(data=business_data)
+                    serializer = BusinessInfoSerializer(data=business_data)
 
                 if serializer.is_valid():
                     # print "\n\n\n Business Serializer Validated Data"
@@ -152,7 +161,8 @@ class NewCampaignAPIView(APIView):
                 else:
                     return Response(serializer.errors, status=400)
 
-                business = Business.objects.get(pk=serializer.data['id'])
+
+                business = BusinessInfo.objects.get(pk=serializer.data['id'])
                 # print "\n\n\n***************************************"
                 # print "Business Contacts : ", business_data['contacts'] 
                 # print "***************************************\n\n\n"
@@ -160,33 +170,36 @@ class NewCampaignAPIView(APIView):
 
                 #here we will start storing contacts
                 #if 'contact' in business_data and business_data['contact']:
-
-                contact_ids = list(BusinessContact.objects.filter(business=business).values_list('id',flat=True))
+                content_type_business = ContentType.objects.get_for_model(BusinessInfo)
+                contact_ids = list(business.contacts.all().values_list('id',flat=True))
                 for contact in business_data['contacts']:
                     
+                    contact['object_id'] = business.id
+                    contact['content_type'] = content_type_business.id
+
                     if 'id' in contact:
                         # print "\nInside if 2\n"
-                        item = BusinessContact.objects.get(pk=contact['id'])
+                        item = BusinessAccountContact.objects.get(pk=contact['id'])
                         if contact['spoc'] == '':
                             contact['spoc'] = item.spoc
                         contact_ids.remove(item.id)
-                        contact_serializer = BusinessContactSerializer(item, data=contact)
+                        contact_serializer = BusinessAccountContactSerializer(item, data=contact)
                     else:
                         if contact['spoc'] == '':
                             contact['spoc'] = 'false'
                         # print "\nInside else 2\n"
-                        contact_serializer = BusinessContactSerializer(data=contact)
+                        contact_serializer = BusinessAccountContactSerializer(data=contact)
 
                     contact_serializer.is_valid(raise_exception=True)
 
-                    contact_serializer.save(business=business)
+                    contact_serializer.save()
                 
                 # deleting all contacts whose id not received from the frontend
-                BusinessContact.objects.filter(id__in=contact_ids).delete()
+                BusinessAccountContact.objects.filter(id__in=contact_ids).delete()
 
-                business_serializer = BusinessSerializer(business)
+                business_serializer = BusinessInfoSerializer(business)
                 contacts = business.contacts.all()
-                contacts_serializer = BusinessContactSerializer(contacts, many=True)
+                contacts_serializer = BusinessAccountContactSerializer(contacts, many=True)
 
                 response = json.dumps({
                         'business' : business_serializer.data,
@@ -216,11 +229,11 @@ class CreateCampaignAPIView(APIView):
                 # checking if the account with the same name already exists or not
                 if 'id' not in account_data:
                     try:
-                        acc = Account.objects.get(name=account_data['name'])
+                        acc = AccountInfo.objects.get(name=account_data['name'])
                         error['message'] =  'Business with this name already exists',
                         error = json.dumps(error)
                         return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
-                    except Account.DoesNotExist:
+                    except AccountInfo.DoesNotExist:
                         pass
 
                 # checking if business id is integer
@@ -234,17 +247,17 @@ class CreateCampaignAPIView(APIView):
                 
                 # checking a valid business
                 try:
-                    business = Business.objects.get(id=business_id)
-                except Business.DoesNotExist:
+                    business = BusinessInfo.objects.get(id=business_id)
+                except BusinessInfo.DoesNotExist:
                     error['message'] =  "Business Does Not Exist"
                     error = json.dumps(error)
                     return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
 
                 if 'id' in account_data:
-                    account = Account.objects.get(pk=account_data['id'])
-                    serializer = AccountSerializer(account,data=account_data)
+                    account = AccountInfo.objects.get(pk=account_data['id'])
+                    serializer = AccountInfoSerializer(account,data=account_data)
                 else:
-                    serializer = AccountSerializer(data=account_data)
+                    serializer = AccountInfoSerializer(data=account_data)
 
                 if serializer.is_valid():
                     serializer.save(business=business)
@@ -252,66 +265,76 @@ class CreateCampaignAPIView(APIView):
                     return Response(serializer.errors, status=400)
 
                 account_id = serializer.data['id']
-                account = Account.objects.get(id=account_id)
+                account = AccountInfo.objects.get(id=account_id)
             
-                # #here we will start storing contacts
-                contact_ids = list(AccountContact.objects.filter(account=account).values_list('id',flat=True))
+                content_type_account = ContentType.objects.get_for_model(AccountInfo)
 
-                for contact in account_data['contacts']:                     
+                # #here we will start storing contacts
+                contact_ids = list(account.contacts.all().values_list('id',flat=True))
+
+                
+                for contact in account_data['contacts']:
+                    contact['object_id'] = account.id
+                    contact['content_type'] = content_type_account.id
+
                     if 'id' in contact:
-                        item = AccountContact.objects.get(pk=contact['id'])
+                        item = BusinessAccountContact.objects.get(pk=contact['id'])
                         contact_ids.remove(item.id)
                         if contact['spoc'] == '':
                             contact['spoc'] = item.spoc
-                        contact_serializer = AccountContactSerializer(item, data=contact)
+                        contact_serializer = BusinessAccountContactSerializer(item, data=contact)
                     else:
                         if contact['spoc'] == '':
                             contact['spoc'] = 'false'
-                        contact_serializer = AccountContactSerializer(data=contact)
+                        contact_serializer = BusinessAccountContactSerializer(data=contact)
+                    
                     if contact_serializer.is_valid():
-                        contact_serializer.save(account=account)
+                        contact_serializer.save()
                     else:
                         return Response(contact_serializer.errors, status=400)
 
-                AccountContact.objects.filter(id__in=contact_ids).delete()
+                BusinessAccountContact.objects.filter(id__in=contact_ids).delete()
 
-                if 'campaign_type' in request.data or 'supplier_type' in request.data:
-                    campaign_data = {'booking_status':'Shortlisted'}
-                    if 'tentative' in request.data:
-                        for key in request.data['tentative']:
-                            campaign_data[key] = request.data['tentative'][key]
+                # if 'campaign_type' in request.data or 'supplier_type' in request.data:
+                #     campaign_data = {'booking_status':'Shortlisted'}
+                #     if 'tentative' in request.data:
+                #         for key in request.data['tentative']:
+                #             campaign_data[key] = request.data['tentative'][key]
 
-                    campaign_serializer = CampaignSerializer(data=campaign_data)
+                #     campaign_serializer = CampaignSerializer(data=campaign_data)
 
-                    campaign_serializer.is_valid(raise_exception=True)
-                    campaign_serializer.save(account=account)
+                #     campaign_serializer.is_valid(raise_exception=True)
+                #     campaign_serializer.save(account=account)
                     
-                    campaign = Campaign.objects.get(pk=campaign_serializer.data['id'])
+                #     campaign = Campaign.objects.get(pk=campaign_serializer.data['id'])
 
-                    if 'campaign_type' in request.data:
-                        for key, value in request.data['campaign_type'].iteritems():
-                            campaign_type_map = CampaignTypeMapping(campaign=campaign, type=key, sub_type=value)
+                #     if 'campaign_type' in request.data:
+                #         for key, value in request.data['campaign_type'].iteritems():
+                #             campaign_type_map = CampaignTypeMapping(campaign=campaign, type=key, sub_type=value)
 
-                            campaign_type_map.save()
+                #             campaign_type_map.save()
 
-                    if 'supplier_type' in request.data:
-                        for key, value in request.data['supplier_type'].iteritems():
-                            supplier_type_map = CampaignSupplierTypes(campaign=campaign, supplier_type=key, count=value)
-                            supplier_type_map.save()
-                            response['campaign'] = campaign_serializer.data
+                #     if 'supplier_type' in request.data:
+                #         for key, value in request.data['supplier_type'].iteritems():
+                #             supplier_type_map = CampaignSupplierTypes(campaign=campaign, supplier_type=key, count=value)
+                #             supplier_type_map.save()
+                #             response['campaign'] = campaign_serializer.data
 
-                    # redirecting to societylist page if the campaign info received
-                    return  Response(campaign_serializer.data, status=201)
+                #     # redirecting to societylist page if the campaign info received
+                #     return  Response(campaign_serializer.data, status=201)
 
                 
                 # sending accounts and related contacts fields to allow updating 
-                account = Account.objects.get(id=account_id)
-                account_serializer = AccountSerializer(account)
+                account = AccountInfo.objects.get(id=account_id)
+                account_serializer = AccountInfoSerializer(account)
                 contacts = account.contacts.all()
-                contacts_serializer = AccountContactSerializer(contacts, many=True)
+                contacts_serializer = BusinessAccountContactSerializer(contacts, many=True)
                 response['account'] = account_serializer.data
                 response['contacts'] = contacts_serializer.data
             return Response(response, status=200)
+
+
+
 
 
 
@@ -599,3 +622,513 @@ class FinalCampaignBookingAPIView(APIView):
             return Response(status=404)
 
         return Response({"message": "Campaign Booked Successfully"}, status=200)
+
+
+
+
+class CreateInitialProposalAPIView(APIView):
+    '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal 
+    fields are stored in the database
+    ProposalInfo and ProposalCenterMapping models are used only'''
+
+    def post(self, request, id, format=None):
+        proposal_data = request.data
+        proposal_data['proposal_id'] = self.create_proposal_id()
+        proposal_serializer = ProposalInfoSerializer(data=proposal_data)
+
+        if proposal_serializer.is_valid():
+            proposal_object = proposal_serializer.save()
+        else:
+            return Response({'message' : 'Invalid Proposal Data', 'errors' : proposal_serializer.errors}, status=406)
+
+
+        for center in proposal_data['centers']:
+            center['proposal'] = proposal_object.proposal_id
+            center_serializer = ProposalCenterMappingSerializer(data=center)
+
+            if serializer.is_valid():
+                center_serializer.save()
+            else:
+                return Response({'message':'Invalid Center Info', 'errors' : center_serializer.errors}, status=406)
+
+
+
+    def create_proposal_id(self):
+        return "Proposal1"
+
+
+class SpacesOnCenterAPIView(APIView):
+    def get(self,request,id=None, format=None):
+        ''' This function filters all the spaces(Societies, Corporates etc.) based on the center and
+        radius provided currently considering radius as the half of side of square
+        This API is called before map view page is loaded'''
+
+        # try:
+        #     proposal = ProposalInfo.objects.get(proposal_id=id)
+        # except ProposalInfo.DoesNotExist:
+        #     return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
+
+        # proposal_centers = ProposalCenterMapping.objects.filter(proposal=proposal)
+        # centers_data_list = []
+
+        # for proposal_center in proposal_centers:
+
+        #     delta_latitude = proposal_center.radius/ 110.574
+        #     min_latitude = proposal_center.latitude - delta_latitude
+        #     max_latitude = proposal_center.latitude + delta_latitude
+
+        #     delta_longitude = proposal_center.radius/(111.320 * cos(math.radians(latitude)))
+        #     min_longitude = proposal_center.longitude - delta_longitude
+        #     max_longitude = proposal_center.longitude + delta_longitude
+
+        #     societies = SupplierTypeSociety.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
+        #     corporates = SupplierTypeCorporate.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
+
+        #     societies_count = societies.count()
+        #     corporates_count = corporates.count()
+
+        #     proposal_center_serializer = ProposalCenterMappingSerializer(proposal_center)
+        #     societies_serializer =  ProposalSocietySerializer(societies, many=True)
+        #     corporates_serializer = ProposalCorporateSerializer(corporates, many=True)  
+        #     centers_data_list.append({
+        #         'center' : proposal_center_serializer.data,
+        #         'societies' : societies_serializer.data,
+        #         'corporates' : corporates_serializer.data,
+        #         'societies_count' : societies_count,
+        #         'corporates_count' : corporates_count,
+        #     })
+
+        # return Response(centers_data_list, status=200)
+
+        min_latitude = 19.12
+        max_latitude = 19.34
+
+        min_longitude = 73.45
+        max_longitude = 73.65
+
+        societies = SupplierTypeSociety.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
+        corporates = SupplierTypeCorporate.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
+
+        societies_count = societies.count()
+        corporates_count = corporates.count()
+
+        societies_serializer =  ProposalSocietySerializer(societies, many=True)
+        corporates_serializer = ProposalCorporateSerializer(corporates, many=True)  
+
+        response = {
+            'societies' : societies_serializer.data,
+            'corporates' : corporates_serializer.data,
+            'societies_count' : societies_count,
+            'corporates_count' : corporates_count,
+        }
+
+        return Response(response, status=200)
+
+
+    def post(self,request,id=None,format=None):
+        societies = SupplierTypeSociety.objects.all()
+        society_serializer = SupplierTypeSocietySerializer(societies,many=True)
+        societies_count = societies.count()
+        response = {
+            'societies' : society_serializer.data,
+            'societies_count' : societies_count
+        }
+
+        return Response(response,status=200)
+
+
+
+class GetSpaceInfoAPIView(APIView):
+    ''' This API is to fetch the space(society,corporate, gym) etc. using its supplier Code
+    e.g. RS for residential Society 
+
+    Currently only working for societies '''
+    def get(self, request, id , format=None):
+        try:
+            '''  On introducing new spaces we have to use if conditions to check the supplier code 
+            like RS for society and the fetch society object
+            e.g. if supplier_code == 'RS':
+                      society = SupplierTypeSociety.objects.get(supplier_id=id)'''
+
+            society = SupplierTypeSociety.objects.get(supplier_id=id)
+            serializer = SupplierTypeSocietySerializer(society)
+            return Response(serializer.data, status=200)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response({'message' : 'No society Exists'}, status=406)
+
+
+class GetFilteredSocietiesAPIView(APIView):
+
+    def get(self, request, id, format=None):
+        ''' This API gives societies based on different filters from mapView and gridView Page
+        Currently implemented filters are locality and location (Standard, Medium High etc.)
+        flat_count (100 - 250 etc.) flat_type(1BHK, 2BHK etc.) '''
+
+        location_params = request.query_params.get('loc',None)
+        locality_params = request.query_params.get('qlt',None)
+        flat_count = request.query_params.get('flc',None)
+        flat_type_params = reqeust.query_params.get('room',None)
+        latitude_params = request.query_params.get('lat', None)
+        longitude_params = request.query_params.get('lng',None)
+        inventory_params = request.query_params.get('inv',None)
+
+        q = Q()
+        quality_dict = get_related_dict()
+        flat_type_dict = {
+            '1R' : '1 RK',      '1B' : '1 BHK',     '1-5B' : '1.5 BHK',     '2B' : '2 BHK',
+            '2-5B' : '2.5 BHK',    '3B' : '3 BHK',  '3-5B' : '3.5 BHK',     '4B' : '4 BHK',
+            '5B' : '5 BHK',         'PH' : 'PENT HOUSE',    'RH' : 'ROW HOUSE',  'DP' : 'DUPLEX' 
+        }
+
+
+        if not latitude_params and not longitude_params:
+            return Response({'message' : 'Please Provide longitude and latitude values as well'}, status=406)
+
+        if latitude_params:
+            latitude_params = latitude_params.split()
+            if len(latitude_params) == 2:
+                min_latitude = latitude_params[0]
+                max_latitude = latitude_params[1]
+
+                q &= Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude)
+            else : 
+                return Response({'message' : 'Please Provide proper latitude values'}, status=406)
+
+        if longitude_params:
+            longitude_params = longitude_params.split()
+            if len(longitude_params) == 2 :
+                min_longitude = longitude_params[0]
+                max_longitude = longitude_params[1]
+
+                q &= Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
+            else :
+                return Response({'message' : 'Please Provide proper longitude values'}, status=406)
+
+        if flat_type_params:
+            flat_types = []
+            flat_type_params = flat_type_params.split()
+            for param in flat_type_params:
+                try:
+                    flat_types.append(quality_dict[param])
+                except KeyError:
+                    pass
+
+            if flat_types:
+                ''' We can improve performance here  by appending .distinct('society_id') when using postgresql ''' 
+                society_ids = set(FlatType.objects.filter(flat_type__in=flat_types).values_list('society_id',flat=True))
+                q &= Q(supplier_id__in=society_ids)
+
+        if location_params:
+            location_ratings = []
+            location_params = location_params.split()
+            for param in location_params:
+                try:
+                    location_ratings.append(quality_dict[param])
+                except KeyError:
+                    pass
+            if locality_params:
+                q &= Q(location_type__in=location_ratings)
+
+        if locality_params:
+            locality_ratings = []
+            locality_params = locality_params.split()
+            for param in locality_params:
+                try:
+                    locality_ratings.append(quality_dict[param])
+                except KeyError:
+                    pass
+
+            if locality_ratings:
+                q &= Q(locality__in=locality_ratings)
+
+        if flat_count:
+            flat_count = flat_count.split()
+            if len(flat_count) == 2:
+                flat_min = flat_count[0]
+                flat_max = flat_count[1]
+
+                q &= Q(flat_count__gte=flat_min) & Q(flat_count__lte=flat_max)
+
+        
+
+        societies = SupplierTypeSociety.objects.filter(q)
+        society_serializer = ProposalSocietySerializer(societies, many=True)
+
+        return Response(society_serializer.data, status=200)
+
+
+    def post(self, request, format=None):
+        ''' This API is for deep filtering 
+        Basic Idea is that if filter is chosen on the left of the map view page get request is fired
+        But if he clicks on deep filters he can choose on almost anything like cars_count, luxury_cars_count,
+        avg_pg_occupancy, women_occupants, etc. whatever required. This is the approach most commonly found on
+        other websites '''
+        pass
+
+
+
+def get_related_dict():
+    # inv_dict = {
+    #     'PO' : 'Poster',    'ST' : 'Standee',   'SL' : 'Stall',
+    #     'FL' : 'Flier'
+    # }
+    quality_dict = {
+        'UH' : 'Ultra High',    'HH' : 'High',
+        'MH' : 'Medium High',   'ST' : 'Standard'    
+    }
+
+    return quality_dict
+
+
+
+
+class CreateProposalAPIView(APIView):
+
+    def get(self,request, format=None):
+        ''' This API creates/update the proposal related to a particular account
+        Currently Versioning of Proposals is not done
+        Tables for versioning are still to be made'''
+        from datetime import datetime
+        proposal = {
+            'proposal_id' : 'BUSACCP01',
+            'account_id' : '2',
+            'name' : 'Sample Proposal',
+            'tentative_cost' : '50000',
+            'tentative_start_date' : datetime.now(),
+            'tentative_end_date' : datetime.now(),
+            'centers' : [{
+                'center_name' : 'Oxford Chambers',
+                'Address' : '',
+                'latitude' : 19.119128, 
+                'longitude' : 72.890795,
+                'radius' : 3.5,
+                'area' : 'Powai',
+                'subarea' : 'Hiranandani Gardens',
+                'city'    : 'Mumbai',
+                'pincode' : '400072',
+
+                'space_mappings' : [
+                    {
+                        'space_name' : 'society',
+                        'space_count' : '10',
+                        'buffer_space_count' : '5',
+                        'spaces' : [
+                            {  'object_id' : 'S1'},
+                            {  'object_id' : 'S2'},
+                            {  'object_id' : 'S3'},
+                            {  'object_id' : 'S4'},
+                        ],
+
+                        'inventories' : [
+                            {
+                                'inventory_name' : 'POSTER',
+                                'inventory_type' : 'A3',
+                            },
+                            {
+                                'inventory_name' : 'POSTER LIFT',
+                                'inventory_type' : 'A3',
+                            },
+                            {
+                                'inventory_name' : 'STANDEE',
+                                'inventory_type' : 'MEDIUM',
+                            },
+                        ],
+                    },
+
+                    {
+                        'space_name' : 'Corporate',
+                        'space_count' : '14',
+                        'buffer_space_count' : '4',
+                        'spaces' : [
+                            {'object_id' : 'CP1'},
+                            {'object_id' : 'CP2'},
+                            {'object_id' : 'CP3'},
+                        ],
+
+                        'inventories' : [
+                            {
+                                'inventory_name' : 'POSTER',
+                                'inventory_type' : 'A3',
+                            },
+                            {
+                                'inventory_name' : 'POSTER LIFT',
+                                'inventory_type' : 'A3',
+                            },
+                            {
+                                'inventory_name' : 'STANDEE',
+                                'inventory_type' : 'MEDIUM',
+                            },
+                        ],
+                    },
+                ],
+
+            }],
+        }
+
+        with transaction.atomic():
+            proposal['account'] = proposal['account_id']
+
+            try:
+                proposal_object = ProposalInfo.objects.get(proposal_id = proposal['proposal_id'])
+                proposal_serializer = ProposalInfoSerializer(proposal_object,data=proposal)
+            except ProposalInfo.DoesNotExist:
+                proposal_serializer = ProposalInfoSerializer(data=proposal)
+
+            if proposal_serializer.is_valid():
+                proposal_object = proposal_serializer.save()
+            else: 
+                return Response({'message' : 'Proposal Serializer Invalid', \
+                    'errors' : proposal_serializer.errors}, status=406)
+            
+
+            centers = proposal['centers']
+
+            space_mappings_superset = set()
+            inventory_type_superset = set()
+            spaces_superset = set()
+            centers_superset  = set(proposal_object.get_centers().values_list('id',flat=True))
+            
+            for center in centers:
+                center['proposal'] = proposal_object.proposal_id
+
+                if 'id' in center:
+                    center_object = ProposalCenterMapping.objects.get(id=center['id'])
+                    centers_superset.remove(center_object.id)
+                    center_serializer = ProposalCenterMappingSerializer(center_object ,data=center)
+                else:
+                    center_serializer = ProposalCenterMappingSerializer(data=center)
+
+                if center_serializer.is_valid():
+                    center_object = center_serializer.save()
+                else:
+                    return Response({'message' : 'Center Serializer Invalid',\
+                        'errors' : center_serializer.errors}, status=406)
+
+                
+
+                space_mappings = center['space_mappings']
+                space_mappings_set = set(SpaceMapping.objects.filter(center=center_object).values_list('id',flat=True))
+
+                for space_mapping in space_mappings:
+
+                    content_model = "SupplierType" + space_mapping['space_name'].title() 
+                    content_type = ContentType.objects.get(model=content_model)
+
+
+                    space_mapping['proposal'] = proposal_object.proposal_id
+                    space_mapping['center'] = center_object.id
+                    space_mapping['inventory_type_count'] = len(space_mapping['inventories'])
+
+                    if 'id' in space_mapping:
+                        space_mapping_object = SpaceMapping.objects.get(id=space_mapping['id'])
+                        space_mappings_set.remove(space_mapping_object.id)
+                        space_mapping_serializer = SpaceMappingSerializer(space_mapping_object,data=space_mapping)
+                    else:    
+                        space_mapping_serializer = SpaceMappingSerializer(data=space_mapping)
+
+                    if space_mapping_serializer.is_valid():
+                        space_mapping_object = space_mapping_serializer.save()
+                    else :
+                        return Response({'message' : 'Invalid Space Mapping Received',\
+                            'errors' : space_mapping_serializer.errors}, status=406)
+
+
+                    
+                    inventories = space_mapping['inventories']
+                    inventory_type_set = set(InventoryType.objects.filter(space_mapping=space_mapping_object).values_list('id',flat=True))
+                    for inventory in inventories:
+                        inventory['space_mapping'] = space_mapping_object.id
+
+                        if 'id' in inventory:
+                            inventory_type_object = InventoryType.objects.get(id=inventory['id'])
+                            inventory_type_set.remove(inventory_type_object.id)
+                            inventory_serializer = InventoryTypeSerializer(inventory_type_object, data=inventory)
+                        else:
+                            inventory_serializer = InventoryTypeSerializer(data=inventory)
+
+                        if inventory_serializer.is_valid():
+                            inventory_serializer.save()
+                        else:
+                            return Response({'message' : 'Invalid Inventory Received',\
+                                'errors' : inventory_serializer.errors} , status=406 )
+
+                    inventory_type_superset = inventory_type_superset.union(inventory_type_set)
+
+                    
+                    spaces = space_mapping['spaces']
+                    spaces_set = set(ShortlistedSpaces.objects.filter(space_mapping=space_mapping_object).values_list('id',flat=True))
+                    
+                    for space in spaces:
+                        if not 'buffer_status' in space:
+                            space['buffer_status'] = 'false' 
+                        print space
+
+                        space['content_type'] = content_type.id
+                        space['space_mapping'] = space_mapping_object.id
+
+                        if 'id' in space:
+                            space_object = ShortlistedSpaces.objects.get(id=space['id'])
+                            spaces_set.remove(space_object.id)
+                            space_serializer = ShortlistedSpacesSerializer(space_object, data=space)
+                        else:
+                            space_serializer = ShortlistedSpacesSerializer(data=space)
+
+                        if space_serializer.is_valid():
+                            space_serializer.save()
+                        else:
+                            return Response({'message' : 'Invalid Space Received',\
+                                'errros' : space_serializer.errors}, status=406)
+            
+                    spaces_superset = spaces_superset.union(spaces_set)
+
+                space_mappings_superset = space_mappings_superset.union(space_mappings_set)
+            
+
+            ProposalCenterMapping.objects.filter(id__in=centers_superset).delete()            
+            SpaceMapping.objects.filter(id__in=space_mappings_superset).delete()
+            InventoryType.objects.filter(id__in=inventory_type_superset).delete()
+            ShortlistedSpaces.objects.filter(id__in=spaces_superset).delete()
+
+        return Response(status=200)
+
+
+
+# 19.119128, 72.890795
+
+# class CorporateCompanyDetails(models.Model):
+#    id = models.AutoField(db_column='ID', primary_key=True)
+#    company_id = models.ForeignKey('CorporateParkCompanyList', db_column='COMPANY_ID', related_name='companydetails', blank=True, null=True, on_delete=models.CASCADE)
+#    building_id = models.ForeignKey('CorporateBuilding', db_column='BUILDING_NAME', related_name='companybuilding', blank=True, null=True, on_delete=models.CASCADE)
+#    wing_id = models.ForeignKey('CorporateBuildingWing', db_column='WING_ID', related_name='companybuildingwing', blank=True, null=True, on_delete=models.CASCADE)    
+
+# class CompanyFloor(models.Model):
+#    company_details_id = models.ForeignKey('CorporateCompanyDetails',db_column='COMPANY_DETAILS_ID',related_name='wingfloor', blank=True, null=True, on_delete=models.CASCADE)
+#    floor_number = models.IntegerField(db_column='FLOOR_NUMBER', blank=True, null=True)
+
+# class CorporateParkCompanyList(models.Model):
+#    id = models.AutoField(db_column='ID', primary_key=True)
+#    name = models.CharField(db_column='COMPANY_NAME',max_length='50', blank=True, null=True)
+#    supplier_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_ID', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
+
+# def post(self, request,format=None):
+#     companies = request.data
+#     for company in companies:
+#         for builiding_key in comapn['details']:
+#             builiding_key['company_id'] = company['company_id']
+#             try:    
+#                 detail_id = building_key['id']
+#                 company_details = CorporateCompanyDetails.objects.get(id=detail_id)
+#                 company_detail_serializer = CorporateCompanyDetailsSerializer(company_details, data=building_key)
+#             except KeyError:    
+#                 company_detail_serializer = CorporateCompanyDetailsSerializer(data=building_key)
+
+#             if company_detail_serializer.is_valid():
+#                 company_detail = company_detail_serializer.save()
+#             else:
+#                 return Response({'message' : 'Invalid Company Details Serializer' \
+#                     'errors' : company_detail_serializer.errors}, status=406)
+
+
+
+#             corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
+#             company_instance = CorporateParkCompanyList.objects.filter(corporate_id=corporate)
