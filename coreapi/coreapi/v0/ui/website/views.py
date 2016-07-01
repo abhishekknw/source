@@ -2,11 +2,12 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from serializers import UIBusinessSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountSerializer
-from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountSerializer, AccountContactSerializer
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, BusinessSubTypes, Account, AccountContact
+from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessSerializer, BusinessContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountSerializer, AccountContactSerializer, CampaignTypeMappingSerializer
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, BusinessSubTypes, Account, AccountContact, InventorySummary
 from django.db.models import Q
 from django.db import transaction
-
+from rest_framework import status
+import json
 
 class getBusinessTypesAPIView(APIView):
     def get(self, request, format=None):
@@ -43,7 +44,7 @@ class BusinessAPIListView(APIView):
 class getBusinessSubTypesAPIView(APIView):
     def get(self, request, id, format=None):
         try:
-            items = BusinessSubTypes.objects.filter(business_id=id)
+            items = BusinessSubTypes.objects.filter(business_type_id=id)
             serializer = BusinessSubTypesSerializer(items, many=True)
 
             return Response(serializer.data)
@@ -86,7 +87,7 @@ class AccountAPIListView(APIView):
 
 class AccountAPIView(APIView):
     def get(self, request, id, format=None):
-        #try:
+        try:
             account = Account.objects.get(pk=id)
             serializer1 = UIAccountSerializer(account)
             business = Business.objects.get(pk=account.business_id)
@@ -96,82 +97,183 @@ class AccountAPIView(APIView):
 
             serializer = {'account':serializer1.data, 'business':serializer2.data}
             return Response(serializer, status=200)
-        #except :
-        #    return Response(status=404)
+        except :
+            return Response(status=404)
 
 
 class NewCampaignAPIView(APIView):
      def post(self, request, format=None):
 
+            # print "\n\n\n  Request Data : "
+            # print request.data
+            # print "\n\n\n"
+
             current_user = request.user
             business_data = request.data['business']
+            error = {}
+
+            # checking if the business with the same name already exists in the database
+            try:
+                if 'id' not in business_data :
+                    business = Business.objects.get(name=business_data['name'])
+                    error['message'] = 'Business with this name already exists'
+                    error = json.dumps(error)
+                    return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
+                # else:
+                #     print "\n\nYeyyyy! found id in the business \n\n"
+            except Business.DoesNotExist:
+                pass
+
+
             with transaction.atomic():
                 if 'id' in business_data:
+                    # print "\nInside if 1\n"
                     business = Business.objects.get(pk=business_data['id'])
                     serializer = BusinessSerializer(business,data=business_data)
                 else:
+                    # print "\nInside else 1\n"
                     #request.data['created_by'] = current_user.id
                     serializer = BusinessSerializer(data=business_data)
 
                 if serializer.is_valid():
-                    serializer.save()
+                    # print "\n\n\n Business Serializer Validated Data"
+                    # print serializer.validated_data
+                    # print "\n\n\n"
+                    try:
+                        type_name = BusinessTypes.objects.get(id=int(business_data['type_name_id']))
+                        sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
+                        serializer.save(type_name=type_name, sub_type=sub_type)
+
+                    except ValueError:
+                        error['message'] = "Business Type/SubType Invalid"
+                        error = json.dumps(error)
+                        return Response(error, status=status.HTTP_406_NOT_ACCEPTABLE)
+
                 else:
                     return Response(serializer.errors, status=400)
 
                 business = Business.objects.get(pk=serializer.data['id'])
+                # print "\n\n\n***************************************"
+                # print "Business Contacts : ", business_data['contacts'] 
+                # print "***************************************\n\n\n"
+
 
                 #here we will start storing contacts
                 #if 'contact' in business_data and business_data['contact']:
+
+                contact_ids = list(BusinessContact.objects.filter(business=business).values_list('id',flat=True))
                 for contact in business_data['contacts']:
+                    
                     if 'id' in contact:
+                        # print "\nInside if 2\n"
                         item = BusinessContact.objects.get(pk=contact['id'])
+                        if contact['spoc'] == '':
+                            contact['spoc'] = item.spoc
+                        contact_ids.remove(item.id)
                         contact_serializer = BusinessContactSerializer(item, data=contact)
                     else:
+                        if contact['spoc'] == '':
+                            contact['spoc'] = 'false'
+                        # print "\nInside else 2\n"
                         contact_serializer = BusinessContactSerializer(data=contact)
 
                     contact_serializer.is_valid(raise_exception=True)
-                    contact_serializer.save(business=business)
 
-            return Response(status=200)
+                    contact_serializer.save(business=business)
+                
+                # deleting all contacts whose id not received from the frontend
+                BusinessContact.objects.filter(id__in=contact_ids).delete()
+
+                business_serializer = BusinessSerializer(business)
+                contacts = business.contacts.all()
+                contacts_serializer = BusinessContactSerializer(contacts, many=True)
+
+                response = json.dumps({
+                        'business' : business_serializer.data,
+                        'contacts' : contacts_serializer.data,
+                    })
+            return Response(response,status=200)
 
 
 class CreateCampaignAPIView(APIView):
     def post(self, request, format=None):
-            print request.data
-            #current_user = request.user
+            response = {}
+            current_user = request.user
+            errro = {}
 
-            account_data = request.data
+            # checking if the data received contains name of the account
+            try : 
+                account_data = request.data['account']
+                account_name = account_data['name']
+            except KeyError :
+                # print "account object not found"
+                error['message'] = 'Appropriate data not provided',
+                error = json.dumps(error)
+                return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
+
             with transaction.atomic():
+                
+                # checking if the account with the same name already exists or not
+                if 'id' not in account_data:
+                    try:
+                        acc = Account.objects.get(name=account_data['name'])
+                        error['message'] =  'Business with this name already exists',
+                        error = json.dumps(error)
+                        return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
+                    except Account.DoesNotExist:
+                        pass
+
+                # checking if business id is integer
+                try:
+                    business_id = int(account_data['business_id'])
+                except ValueError: 
+                    error['message'] = "Imporper Business Type Id"
+                    error = json.dumps(error)
+                    return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
+
+                
+                # checking a valid business
+                try:
+                    business = Business.objects.get(id=business_id)
+                except Business.DoesNotExist:
+                    error['message'] =  "Business Does Not Exist"
+                    error = json.dumps(error)
+                    return Response(error, status = status.HTTP_406_NOT_ACCEPTABLE)
+
                 if 'id' in account_data:
                     account = Account.objects.get(pk=account_data['id'])
                     serializer = AccountSerializer(account,data=account_data)
                 else:
-                    #request.data['created_by'] = current_user.id
                     serializer = AccountSerializer(data=account_data)
 
                 if serializer.is_valid():
-                    serializer.save()
+                    serializer.save(business=business)
                 else:
                     return Response(serializer.errors, status=400)
 
-                account = Account.objects.get(pk=serializer.data['id'])
+                account_id = serializer.data['id']
+                account = Account.objects.get(id=account_id)
+            
+                # #here we will start storing contacts
+                contact_ids = list(AccountContact.objects.filter(account=account).values_list('id',flat=True))
 
-                #here we will start storing contacts
-                #if 'contact' in business_data and business_data['contact']:
-                for contact in account_data['contacts']:
-                    print "hi0"
+                for contact in account_data['contacts']:                     
                     if 'id' in contact:
-                        print "hi1"
                         item = AccountContact.objects.get(pk=contact['id'])
+                        contact_ids.remove(item.id)
+                        if contact['spoc'] == '':
+                            contact['spoc'] = item.spoc
                         contact_serializer = AccountContactSerializer(item, data=contact)
                     else:
-                        print "hi2"
+                        if contact['spoc'] == '':
+                            contact['spoc'] = 'false'
                         contact_serializer = AccountContactSerializer(data=contact)
                     if contact_serializer.is_valid():
-                        print "hi3"
                         contact_serializer.save(account=account)
                     else:
                         return Response(contact_serializer.errors, status=400)
+
+                AccountContact.objects.filter(id__in=contact_ids).delete()
 
                 if 'campaign_type' in request.data or 'supplier_type' in request.data:
                     campaign_data = {'booking_status':'Shortlisted'}
@@ -183,22 +285,35 @@ class CreateCampaignAPIView(APIView):
 
                     campaign_serializer.is_valid(raise_exception=True)
                     campaign_serializer.save(account=account)
-
+                    
                     campaign = Campaign.objects.get(pk=campaign_serializer.data['id'])
 
                     if 'campaign_type' in request.data:
                         for key, value in request.data['campaign_type'].iteritems():
                             campaign_type_map = CampaignTypeMapping(campaign=campaign, type=key, sub_type=value)
+
                             campaign_type_map.save()
 
                     if 'supplier_type' in request.data:
                         for key, value in request.data['supplier_type'].iteritems():
                             supplier_type_map = CampaignSupplierTypes(campaign=campaign, supplier_type=key, count=value)
                             supplier_type_map.save()
+                            response['campaign'] = campaign_serializer.data
 
+                    # redirecting to societylist page if the campaign info received
                     return  Response(campaign_serializer.data, status=201)
 
-            return Response(status=200)
+                
+                # sending accounts and related contacts fields to allow updating 
+                account = Account.objects.get(id=account_id)
+                account_serializer = AccountSerializer(account)
+                contacts = account.contacts.all()
+                contacts_serializer = AccountContactSerializer(contacts, many=True)
+                response['account'] = account_serializer.data
+                response['contacts'] = contacts_serializer.data
+            return Response(response, status=200)
+
+
 
 class CampaignAPIView(APIView):
 
@@ -303,8 +418,22 @@ class CampaignInventoryAPIView(APIView):
         return Response(status=200)
 
 
+class ShortlistSocietyCountAPIView(APIView):
+    # to get the number of shortlisted socities on societyDetailPage
+    def get(self, request, id=None, format=None):
+        try:
+            campaign = Campaign.objects.get(pk=id)
+            societies_count = CampaignSocietyMapping.objects.filter(campaign=campaign).count()
+            return Response({'count': societies_count}, status=200)
+        except Campaign.DoesNotExist:
+            return Response({'error':'No such campaign id exists'},status=406)
+        
+
+
+
 class ShortlistSocietyAPIView(APIView):
 
+    # discuss use of this get function no id in url
     def get(self, request, id, format=None):
         try:
             campaign = Campaign.objects.get(pk=id)
@@ -334,15 +463,115 @@ class ShortlistSocietyAPIView(APIView):
         else:
             return Response(status=400)
 
-        campaign_society = CampaignSocietyMapping(campaign=campaign, society=society, booking_status='Shortlisted')
-        campaign_society.save()
+        try:
+            print "Inside try"
+            campaign_society = CampaignSocietyMapping.objects.get(campaign=campaign, society=society)
+            total_societies = CampaignSocietyMapping.objects.filter(campaign=campaign).count()
+            error = {"message" : "Already Shortlisted", 'count':total_societies}
+            return Response(error, status=200)
+        except CampaignSocietyMapping.DoesNotExist:
+            campaign_society = CampaignSocietyMapping(campaign=campaign, society=society, booking_status='Shortlisted')
+            campaign_society.save()
+        # except CampaignSocietyMapping.MultipleObjectsReturned:
+        #     total_societies = CampaignSocietyMapping.objects.filter(campaign=campaign).count() 
+        #     error = {"message" : "Already Shortlisted", 'count':total_societies}
+        #     return Response(error, status=200)
 
         for key in campaign.get_types():
             inventory = SocietyInventoryBooking(campaign=campaign, society=society, adinventory_type=key)
             inventory.save()
 
-        return Response({"message": "Society Shortlisted", "id": society_id}, status=200)
+        total_societies = CampaignSocietyMapping.objects.filter(campaign=campaign).count() 
+        return Response({"message": "Society Shortlisted", "id": society_id, 'count':total_societies}, status=200)
 
+
+class CreateProposalAPIView(APIView):
+    def get(self, request, id, format=None):
+        try:
+            campaign = Campaign.objects.get(pk=id)
+            items = campaign.societies.filter(booking_status='Shortlisted')
+            inv_types = campaign.types.all()
+
+            response = []
+            allowed = '_allowed'
+            total = 'total_'
+            count = '_count'
+            price_dict = self.getPriceDict()
+            for item in items:
+                society_detail = {}     #List of society-related details required to be displayed
+                society_id = item.society.supplier_id
+                society_name = item.society.society_name
+                society_detail['id'] = society_id
+                society_detail['society_name'] = society_name
+                society_detail['flat_count'] = item.society.flat_count
+                society_detail['tower_count'] = item.society.tower_count
+                society_detail['inventory'] = []
+                inv_details = InventorySummary.objects.get(supplier_id=society_id)
+                for inv in inv_types:
+                    inv_name = inv.type
+                    inv_size = inv.sub_type
+                    #print inv_details.flier_allowed
+                    #print inv_name.lower() + allowed
+                    if (hasattr(inv_details, inv_name.lower() + allowed) and getattr(inv_details, inv_name.lower() + allowed)):
+                        #print "has attribute"
+                        if(inv_name == 'Flier'):
+                            inv_count = 1
+                        else:
+                            inv_count = getattr(inv_details, total+inv_name.lower()+ count)
+                        inv_info = {}       #List of inventory and its count details
+
+                        # adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True, on_delete=models.CASCADE)
+                        # supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True, on_delete=models.CASCADE)
+                        # duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
+                        duration_type = DurationType.objects.get(id=int(price_dict[inv_name]['duration']))
+                        adinventory_type = AdInventoryType.objects.get(id=int(price_dict[inv_name]['types'][inv_size]))
+                        price_obj = PriceMappingDefault.objects.get(supplier=item.society,duration_type=duration_type, adinventory_type=adinventory_type)
+                        #print "price obj price is : " , price_obj.id
+                        inv_price = price_obj.business_price
+                        inv_info['count'] = str(inv_count)
+                        inv_info['price'] = str(inv_price)
+                        inv_info['type'] = inv_name
+                        society_detail['inventory'].append(inv_info)
+
+                response.append(society_detail)
+
+            response = json.dumps(response)
+            return Response(response, status=200)
+
+        except :
+            return Response(status=404)
+
+    def getPriceDict(self):
+        price_dict = {
+            'Standee' : {
+                            'duration': '1',
+                            'types' : {
+                                            'Small' : '3',
+                                            'Medium' : '4',
+                                            # 'Large'  : '5'
+                                       }
+                        },
+
+            'Flier' : {
+                            'duration' : '5',
+                            'types' : {
+                                        'Door-to-Door' : '12',
+                                        'Mailbox' : '13',
+                                      }
+            },
+
+            'Stall' : {
+                            'duration': '5',
+                            'types' : {
+                                            'Canopy' : '6',
+                                            'Small' : '7',
+                                            'Large'  : '8',
+                                            # 'Customize' : '9'
+                                       }
+            },
+        }
+
+        return price_dict
 
 class BookCampaignAPIView(APIView):
 

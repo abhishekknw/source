@@ -7,12 +7,12 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('v0', '0012_auto_20160308_1349'),
+        ('v0', '0004_suppliertypesociety_car_display_allowed'),
     ]
 
     operations = [
-        migrations.AlterModelTable(
-            name='campaignsuppliertypes',
-            table='campaign_supplier_types',
+        migrations.RemoveField(
+            model_name='suppliertypesociety',
+            name='car_display_allowed',
         ),
     ]

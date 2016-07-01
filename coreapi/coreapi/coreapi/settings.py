@@ -31,7 +31,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
-    #'django_admin_bootstrapped',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -88,12 +87,12 @@ DATABASES = {
     },
 
     'default': {
-          'NAME':'machadalo_tech',
+          'NAME':'mdtest',
           'ENGINE': 'django.db.backends.mysql',
-          'HOST': '127.0.0.1',
-          'USER': 'root',
-          'PASSWORD': '',
-      }
+          'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+          'USER': 'mdtest',
+          'PASSWORD': 'mdtestmachadalo',
+         }
     }
 
 # Internationalization
@@ -133,7 +132,7 @@ REST_FRAMEWORK = {
         'rest_jwt.authentication.JSONWebTokenAuthentication',
         ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 10
 }
 
 

@@ -1,10 +1,9 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SocietyTower, FlatType
-from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society, UserProfile
+
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SupplierTypeCorporate, SocietyTower, FlatType, Account, AccountContact, ContactDetailsGeneric
+from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society, UserProfile, CorporateParkCompanyList
 from django.contrib.auth.models import User
-
-
 
 
 class UserSerializer(ModelSerializer):
@@ -13,12 +12,12 @@ class UserSerializer(ModelSerializer):
 
 
 class UserProfileSerializer(ModelSerializer):
-    user1 = UserSerializer(source='get_user')
+    #user1 = UserSerializer(source='get_user')
     class Meta:
         model = UserProfile
-        read_only_fields = (
-            'user1'
-        )
+        #read_only_fields = (
+        #    'user1'
+        #)
 
 
 class JMN_societySerializer(ModelSerializer):
@@ -156,6 +155,13 @@ class ContactDetailsSerializer(ModelSerializer):
         model = ContactDetails
 
 
+class ContactDetailsGenericSerializer(ModelSerializer):
+
+    class Meta:
+        model = ContactDetailsGeneric
+        depth = 2
+
+
 class EventsSerializer(ModelSerializer):
 
     class Meta:
@@ -232,6 +238,18 @@ class SupplierTypeSocietySerializer(ModelSerializer):
         model = SupplierTypeSociety
 
 
+class SupplierTypeCorporateSerializer(ModelSerializer):
+
+    class Meta:
+        model = SupplierTypeCorporate
+
+
+class CorporateParkCompanyListSerializer(ModelSerializer):
+
+    class Meta:
+        model = CorporateParkCompanyList
+
+
 class SocietyTowerSerializer(ModelSerializer):
 
     class Meta:
@@ -295,10 +313,11 @@ class CampaignSocietyMappingSerializer(ModelSerializer):
 
 
 
-class BusinessSerializer(ModelSerializer):
+class BusinessSubTypesSerializer(ModelSerializer):
 
     class Meta:
-        model = Business
+        model = BusinessSubTypes
+        depth = 2
 
 
 class BusinessTypesSerializer(ModelSerializer):
@@ -306,10 +325,18 @@ class BusinessTypesSerializer(ModelSerializer):
     class Meta:
         model = BusinessTypes
 
-class BusinessSubTypesSerializer(ModelSerializer):
 
+class BusinessSerializer(ModelSerializer):
+    # sub_type = BusinessSubTypesSerializer()
+    # type = BusinessTypesSerializer()
     class Meta:
-        model = BusinessSubTypes
+
+        model = Business
+        depth = 2
+       
+        # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
+            # 'reference_phone', 'reference_email', 'comments')
+
 
 
 class BusinessContactSerializer(ModelSerializer):
@@ -319,9 +346,12 @@ class BusinessContactSerializer(ModelSerializer):
 
 
 class AccountSerializer(ModelSerializer):
-
+    # business = BusinessSerializer(read_only=True)
     class Meta:
         model = Account
+        depth = 2
+        # fields = ('id','name')
+
 
 
 class AccountContactSerializer(ModelSerializer):

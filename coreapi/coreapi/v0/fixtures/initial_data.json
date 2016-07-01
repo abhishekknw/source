@@ -17,23 +17,23 @@
 },
 {
     "fields": {
-        "adinventory_type": "Small",
-        "adinventory_name": "STANDEE"
+        "adinventory_type": "A4",
+        "adinventory_name": "POSTER LIFT"
     },
     "model": "v0.adinventorytype",
     "pk": 3
 },
 {
     "fields": {
-        "adinventory_type": "Medium",
-        "adinventory_name": "STANDEE"
+        "adinventory_type": "A3",
+        "adinventory_name": "POSTER LIFT"
     },
     "model": "v0.adinventorytype",
     "pk": 4
 },
 {
     "fields": {
-        "adinventory_type": "Large",
+        "adinventory_type": "Small",
         "adinventory_name": "STANDEE"
     },
     "model": "v0.adinventorytype",
@@ -41,23 +41,23 @@
 },
 {
     "fields": {
-        "adinventory_type": "Canopy",
-        "adinventory_name": "STALL"
+        "adinventory_type": "Medium",
+        "adinventory_name": "STANDEE"
     },
     "model": "v0.adinventorytype",
     "pk": 6
 },
 {
     "fields": {
-        "adinventory_type": "Small",
-        "adinventory_name": "STALL"
+        "adinventory_type": "Large",
+        "adinventory_name": "STANDEE"
     },
     "model": "v0.adinventorytype",
     "pk": 7
 },
 {
     "fields": {
-        "adinventory_type": "Large",
+        "adinventory_type": "Canopy",
         "adinventory_name": "STALL"
     },
     "model": "v0.adinventorytype",
@@ -65,7 +65,7 @@
 },
 {
     "fields": {
-        "adinventory_type": "Customize",
+        "adinventory_type": "Small",
         "adinventory_name": "STALL"
     },
     "model": "v0.adinventorytype",
@@ -73,11 +73,27 @@
 },
 {
     "fields": {
+        "adinventory_type": "Large",
+        "adinventory_name": "STALL"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 10
+},
+{
+    "fields": {
+        "adinventory_type": "Customize",
+        "adinventory_name": "STALL"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 11
+},
+{
+    "fields": {
         "adinventory_type": "Standard",
         "adinventory_name": "CAR DISPLAY"
     },
     "model": "v0.adinventorytype",
-    "pk": 10
+    "pk": 12
 },
 {
     "fields": {
@@ -85,7 +101,7 @@
         "adinventory_name": "CAR DISPLAY"
     },
     "model": "v0.adinventorytype",
-    "pk": 11
+    "pk": 13
 },
 {
     "fields": {
@@ -93,7 +109,7 @@
         "adinventory_name": "FLIER"
     },
     "model": "v0.adinventorytype",
-    "pk": 12
+    "pk": 14
 },
 {
     "fields": {
@@ -101,7 +117,15 @@
         "adinventory_name": "FLIER"
     },
     "model": "v0.adinventorytype",
-    "pk": 13
+    "pk": 15
+},
+{
+    "fields": {
+        "adinventory_type": "Lobby",
+        "adinventory_name": "FLIER"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 16
 },
 {
     "fields": {
@@ -109,7 +133,7 @@
         "adinventory_name": "BANNER"
     },
     "model": "v0.adinventorytype",
-    "pk": 14
+    "pk": 17
 },
 {
     "fields": {
@@ -117,7 +141,7 @@
         "adinventory_name": "BANNER"
     },
     "model": "v0.adinventorytype",
-    "pk": 15
+    "pk": 18
 },
 {
     "fields": {
@@ -125,7 +149,7 @@
         "adinventory_name": "BANNER"
     },
     "model": "v0.adinventorytype",
-    "pk": 16
+    "pk": 19
 },
 
 {
