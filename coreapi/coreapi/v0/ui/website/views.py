@@ -849,6 +849,24 @@ class GetFilteredSocietiesAPIView(APIView):
 
                 q &= Q(flat_count__gte=flat_min) & Q(flat_count__lte=flat_max)
 
+
+        if inventory_params:
+            inventory_parmas = inventory_parmas.split()
+            for param in inventory_parmas:
+                if param == 'PO': # PO --> Poster
+                    q &= Q(poster_allowed=True)
+                elif param == 'ST': # ST --> Standee
+                    q &= Q(standee_allowed=True)
+                elif param == 'SL': # SL --> Stall 
+                    q &= Q(stall_allowed=True)
+                elif param == 'FL': # FL --> Flier
+                    q &= Q(flier_allowed = True) 
+                elif parma == 'CD': # CD --> Car Display
+                    q &= Q(car_display_allowed=True)
+                elif param == 'BA': # BA --> Banner
+                    # Banner is currently not tracked in the website
+                    # when tracked replace pass by --> q &= Q(banner_allowed=True)
+                    pass 
         
 
         societies = SupplierTypeSociety.objects.filter(q)
