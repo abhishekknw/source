@@ -615,7 +615,7 @@ class SocietyAPIFiltersListView(APIView):
             # result_page = paginator.paginate_queryset(items, request)
             # serializer = SocietyListSerializer(result_page, many=True)
 
-            # return paginator.get_paginated_response(serializer.data,status=200)
+            # return paginator.get_paginated_response(serializer.data)
 
 
             return Response(serializer.data, status=200)
@@ -631,17 +631,18 @@ class SocietyAPIFiltersListView(APIView):
         #     return self.filter_socities_paginator,  
 
 class SocietyAPISortedListView(APIView):
-    def get(self,request,format=None):
+    def post(self,request,format=None):
         order = request.query_params.get('order',None)
         print "Order received is ", order
+        society_ids = request.data
 
         if order == 'asc':
-            societies = SupplierTypeSociety.objects.all().order_by('society_name')
-            serializer = UISocietySerializer(societies, many=True)
+            societies = SupplierTypeSociety.objects.filter(supplier_id__in=society_ids).order_by('society_name')
+            serializer = SocietyListSerializer(societies, many=True)
             return Response(serializer.data, status=200)
         elif order == 'desc':
-            societies = SupplierTypeSociety.objects.all().order_by('-society_name')
-            serializer = UISocietySerializer(societies, many=True)
+            societies = SupplierTypeSociety.objects.filter(supplier_id__in=society_ids).order_by('-society_name')
+            serializer = SocietyListSerializer(societies, many=True)
             return Response(serializer.data, status=200)
         else:
             return Response(status=200)
@@ -1069,7 +1070,7 @@ class InventorySummaryAPIView(APIView):
 
         return duration_type_dict
         
-         
+
 
     def save_stall_locations(self, c1, c2, society):
         count = int(c2) + 1
@@ -1220,6 +1221,7 @@ class TowerAPIView(APIView):
                 'inventory' : serializer_inventory.data,
             }
 
+
             return Response(response, status=200)
         except SupplierTypeSociety.DoesNotExist:
             return Response({'message' : 'Invalid Society ID'},status=404)
@@ -1234,6 +1236,7 @@ class TowerAPIView(APIView):
 
         # checking of notice board in tower == inventory summary nb_count
         total_nb_count = 0
+
         total_lift_count = 0
         total_standee_count = 0
         for tower in request.data['TowerDetails']:
@@ -1245,6 +1248,7 @@ class TowerAPIView(APIView):
         print "total_lift_count: ",total_lift_count
         print "total_standee_count: ",total_standee_count
 
+
         try:
             inventory_obj = InventorySummary.objects.get(supplier=society) 
         except InventorySummary.DoesNotExist:
@@ -1254,6 +1258,7 @@ class TowerAPIView(APIView):
 
 
         if total_nb_count !=0 and total_nb_count != inventory_obj.nb_count:
+
             return Response({'message' : 'Total Notice Board Count should equal to Notice Board Count in Inventory Summary Tab'}, status=404)
         if total_lift_count !=0 and total_lift_count != inventory_obj.lift_count:
             return Response({'message' : 'Total Lift Count should equal to Lift Count in Inventory Summary Tab'}, status=404)
@@ -1608,7 +1613,6 @@ class StallAPIView(APIView):
 
         stall = request.data
         print "request data: ", stall
-        # stall = request.data['stall']
         society = SupplierTypeSociety.objects.get(supplier_id=id)
 
         society.street_furniture_available = True if stall['furniture_available'] == 'Yes' else False
@@ -2074,4 +2078,5 @@ class ContactDetailsGenericAPIView(APIView):
             print "serializer saved"
             return Response(serializer.data, status=200)
         return Response(serializers.errors, status=400)
+
 

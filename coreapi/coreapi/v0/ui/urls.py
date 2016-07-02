@@ -1,9 +1,13 @@
 from django.conf.urls import include, url
 from v0.ui import views
+# from v0.ui.website import views as web_views
 
 urlpatterns = [
 
     url(r'^website/', include('v0.ui.website.urls')),
+
+    # url(r'^website/create_business/load_business_types/',web_views.getBusinessTypesAPIView.as_view()),
+    # url(r'^website/subtypes/(?P<id>[A-Z_a-z0-9]+)/$', web_views.getBusinessSubTypesAPIView.as_view()),
 
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/tower/$', views.TowerAPIView.as_view()),
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/flat/$', views.FlatTypeAPIView.as_view()),
@@ -48,5 +52,5 @@ urlpatterns = [
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_basic_corporate_details$', views.saveBasicCorporateDetailsAPIView.as_view()),
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_contact_details$', views.ContactDetailsGenericAPIView.as_view()),
     # url(r'^corporate/save_basic_corporate_details$', views.saveBasicCorporateDetailsAPIView.as_view())
-
+    
 ]

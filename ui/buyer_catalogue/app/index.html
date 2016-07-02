@@ -36,6 +36,8 @@
     <!-- Add your site or application content here -->
     <div ui-view=""></div>
 
+     <script src='http://maps.googleapis.com/maps/api/js?key=AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY'></script>
+
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
     <script src="bower_components/jquery/dist/jquery.js"></script>
@@ -58,6 +60,14 @@
     <script src="bower_components/myforce-angularjs-dropdown-multiselect/dist/angularjs-dropdown-multiselect.min.js"></script>
     <script src="bower_components/ng-file-upload/ng-file-upload.js"></script>
     <script src="bower_components/ng-file-upload-shim/ng-file-upload-shim.js"></script>
+    <script src="bower_components/angular-simple-logger/dist/angular-simple-logger.js"></script>
+    <script src="bower_components/lodash/lodash.js"></script>
+    <script src="bower_components/markerclustererplus/src/markerclusterer.js"></script>
+    <script src="bower_components/google-maps-utility-library-v3-markerwithlabel/dist/markerwithlabel.js"></script>
+    <script src="bower_components/google-maps-utility-library-v3-infobox/dist/infobox.js"></script>
+    <script src="bower_components/google-maps-utility-library-v3-keydragzoom/dist/keydragzoom.js"></script>
+    <script src="bower_components/js-rich-marker/src/richmarker.js"></script>
+    <script src="bower_components/angular-google-maps/dist/angular-google-maps.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
@@ -112,6 +122,13 @@
 
 
         <script src="modules/common/filters/checklist-model.js"></script>
+
+
+
+        <script src="modules/pages/mapview/mapview.controller.js"></script>
+        <script src="modules/pages/mapview/mapViewService.js"></script>
         <!-- endbuild -->
+
+        
 </body>
 </html>

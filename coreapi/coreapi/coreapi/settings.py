@@ -31,13 +31,16 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
+    'django_admin_bootstrapped',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'rest_framework',
+
     'corsheaders',
     'rest_jwt',
     'v0',
@@ -86,13 +89,23 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
 
+    # 'default': {
+    #       'NAME':'machadalo_tech',
+    #       'ENGINE': 'django.db.backends.mysql',
+    #       'HOST': '127.0.0.1',
+    #       'USER': 'root',
+    #       'PASSWORD': '',
+    #   }
+
     'default': {
-          'NAME':'mdtest',
+          'NAME':'machadalo_tech',
           'ENGINE': 'django.db.backends.mysql',
-          'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-          'USER': 'mdtest',
-          'PASSWORD': 'mdtestmachadalo',
-         }
+          'HOST': '127.0.0.1',
+
+          'USER': 'freshuser',
+          'PASSWORD': 'password',
+
+      }
     }
 
 # Internationalization
@@ -132,7 +145,7 @@ REST_FRAMEWORK = {
         'rest_jwt.authentication.JSONWebTokenAuthentication',
         ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 5
 }
 
 

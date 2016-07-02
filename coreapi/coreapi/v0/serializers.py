@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, Business, BusinessContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SupplierTypeCorporate, SocietyTower, FlatType, Account, AccountContact, ContactDetailsGeneric
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, BusinessInfo, BusinessAccountContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SupplierTypeCorporate, SocietyTower, FlatType, AccountInfo, ContactDetailsGeneric
 from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society, UserProfile, CorporateParkCompanyList
 from django.contrib.auth.models import User
 
@@ -228,6 +228,7 @@ class SupplierInfoSerializer(ModelSerializer):
         model = SupplierInfo
 
 class SportsInfraSerializer(ModelSerializer):
+    
     class Meta:
         model = SportsInfra
 
@@ -326,12 +327,12 @@ class BusinessTypesSerializer(ModelSerializer):
         model = BusinessTypes
 
 
-class BusinessSerializer(ModelSerializer):
+class BusinessInfoSerializer(ModelSerializer):
     # sub_type = BusinessSubTypesSerializer()
     # type = BusinessTypesSerializer()
     class Meta:
 
-        model = Business
+        model = BusinessInfo
         depth = 2
        
         # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
@@ -339,25 +340,27 @@ class BusinessSerializer(ModelSerializer):
 
 
 
-class BusinessContactSerializer(ModelSerializer):
+class BusinessAccountContactSerializer(ModelSerializer):
 
     class Meta:
-        model = BusinessContact
+        model = BusinessAccountContact
 
 
-class AccountSerializer(ModelSerializer):
+class AccountInfoSerializer(ModelSerializer):
     # business = BusinessSerializer(read_only=True)
     class Meta:
-        model = Account
+        model = AccountInfo
         depth = 2
         # fields = ('id','name')
 
 
 
-class AccountContactSerializer(ModelSerializer):
+# class AccountContactSerializer(ModelSerializer):
 
-    class Meta:
-        model = AccountContact
+#     class Meta:
+#         model = AccountContact
+
+
 
 class CitySubAreaSerializer(ModelSerializer):
 

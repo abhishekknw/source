@@ -20,4 +20,14 @@ urlpatterns = [
     url(r'^finalbooking/(?P<id>[A-Z_a-z0-9]+)/$', views.FinalCampaignBookingAPIView.as_view()),
     url(r'^create_business/load_business_types/$', views.getBusinessTypesAPIView.as_view()),
     url(r'^subtypes/(?P<id>[A-Z_a-z0-9]+)/$', views.getBusinessSubTypesAPIView.as_view()),
+
+    # Beta Urls and Classes
+    url(r'^createDemoProposal/$',views.CreateProposalAPIView.as_view()),
+    url(r'^getSpaces/$', views.SpacesOnCenterAPIView.as_view()),
+    url(r'^getSpace/(?P<id>[A-Z_a-z0-9]+)/$', views.GetSpaceInfoAPIView.as_view()),
+    url(r'^getFilteredSocieties/$', views.GetFilteredSocietiesAPIView.as_view()),
+
+
+    # for saving societies
+    url(r'^putSocietiesInTable/$', views.SocietySaveCSVAPIView.as_view()),
 ]
