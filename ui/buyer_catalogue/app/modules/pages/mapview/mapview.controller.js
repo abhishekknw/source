@@ -143,71 +143,104 @@ angular.module('catalogueApp')
           }
         };
 
+        $scope.show = false; // for showing info windo
+        $scope.show_societies = false;
+        $scope.center_changed= false;
 
-        $scope.removeMarkers = function(){
-            $scope.markers1 = [];
-            mapViewService.getAllSocieties()
-            .success(function(response, status){
-                $scope.societies1 = response.societies;
-                $scope.societies_count1 = response.societies_count;
-                $scope.markers1 = assignMarkersToMap($scope.societies1);
-            });
+        $scope.old_center = {
+            latitude : $scope.map.center.latitude,
+            longitude : $scope.map.center.longitude,
         };
 
-      // uiGmapGoogleMapApi.then(function(maps) {
-            var dogParks = genarateDogParks(2000);
+        $scope.new_center = {
+            latitude : $scope.map.center.latitude,
+            longitude : $scope.map.center.longitude
+        };
 
-            mapViewService.getSpaces()
-            .success(function(response, status){
-                $scope.societies = response.societies;
-                $scope.societies_count = response.societies_count;
 
-                $scope.corporates_count = response.corporates_count;
-                $scope.corporates = response.corporates;
+        mapViewService.getSpaces()
+        .success(function(response, status){
+            $scope.societies = response.societies;
+            $scope.societies_count = response.societies_count;
 
-                console.log("Success Response : ",response);
-                
-            })
-            .error(function(response, status){
-                $scope.get_spaces_error = response.message;
-                console.log("Error response : ",response);
-            });
+            $scope.corporates_count = response.corporates_count;
+            $scope.corporates = response.corporates;
+
+            console.log("Success Response : ",response);
+            
+        })
+        .error(function(response, status){
+            $scope.get_spaces_error = response.message;
+            console.log("Error response : ",response);
+        });
+
+        
+        $scope.markers = [];
+        $scope.center_marker = [];
+
+
+        uiGmapGoogleMapApi.then(function(maps) {
+            $scope.map = {
+              zoom: 9,
+              bounds: {},
+              center: { 
+                latitude: 19.119,
+                longitude: 73.48,
+              }
+            };
+
+
+
+            $scope.showSocieties = function(){
+                $scope.show_societies = !$scope.show_societies
+            }
 
             function assignMarkersToMap(spaces) {
                 var markers = [];
-                for (var i=0; i <spaces.length; i++) {
+                var length = spaces.length;
+                for (var i=0; i <length; i++) {
                     markers.push({
-                        latitude: spaces[i].latitude,
-                        longitude: spaces[i].longitude,
+                        latitude: spaces[i].society_latitude,
+                        longitude: spaces[i].society_longitude,
                         id: spaces[i].supplier_id,
                         // icon: "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png",
                         options : {draggable : false},
                         title : {
-                            name : spaces[i].name,
-                            address1 : spaces[i].address1,
-                            subarea : spaces[i].subarea,
-                            location_type : spaces[i].location_type,
+                            name : spaces[i].society_name,
+                            address1 : spaces[i].society_address1,
+                            subarea : spaces[i].society_subarea,
+                            location_type : spaces[i].society_location_type,
                         }
                     });
                 };
-                markers.push({
-                    id:0,
-                    latitude: 19.119,
-                    longitude: 73.48,
-                    options : {draggable : true},
-                    
-                });
+                
                 console.log("markers done");
                 return markers;
             };
-
-            $scope.markers = [];
             
             
             uiGmapIsReady.promise()                    
             .then(function(instances) {           
                $scope.markers = assignMarkersToMap($scope.societies);
 
+              
+
+               $scope.center_marker.push({
+                    id:0,
+                    latitude: 19.119,
+                    longitude: 73.48,
+                    options : {draggable : true},
+                    events : {
+                        drag : function(marker, event, model){
+                            $scope.new_center.latitude = marker.getPosition().lat();
+                            $scope.new_center.longitude = marker.getPosition().lng();
+                            console.log("new Latitude : ", $scope.new_center.latitude);
+                            if($scope.old_center.latitude != $scope.new_center.latitude || $scope.old_center.longitude != $scope.new_center.longitude)
+                                $scope.center_changed= true;
+                        }
+                    } 
+
+                });
             });
      
 
@@ -223,65 +256,120 @@ angular.module('catalogueApp')
                     }
                 }
                 else {
-                    // mapViewService.getSpace(model.id)
-                    // .success(function(response, status){
-                    //     $scope.space = response;
-                    //     console.log("space received is : ", $scope.space);
-                    // })
-                    // .error(function(response,status){
-                    //     $scope.get_space_error = response.message;
-                    // });
-
                     $scope.space = model.title
                     
                 }
-
-                // $scope.map.zoom = 11;
                 $scope.windowCoords.latitude = model.latitude;
                 $scope.windowCoords.longitude = model.longitude;
                 $scope.show = true;
             };
 
             $scope.closeClick = function() {
-            	// $scope.map.zoom = 11;
                 $scope.show = false;
             };
+
 
             // $scope.options = {
             //   scrollwheel: false
             // };
 
-            // $scope.show = false;
 
+            $scope.inventory_type = [
+                {name : 'Poster',       code : 'PO',   selected : false},
+                {name : 'Standee',      code : 'ST',   selected : false},
+                {name : 'Stall',        code : 'SL',   selected : false},
+                {name : 'Flier',        code : 'FL',   selected : false},
+                // {name : 'banner_allowed',       code : 'BA',   selected : false},
+            ];
 
-            $scope.show = true;
-            $scope.space = {
-                name : "Center Chosen By You",
-                address1 : "Center Address",
-                location_type : "Posh",
+            // {name : '', code : '', selected : false},
+                
+            $scope.society_location = [
+                {name : 'Ultra High',   code : 'UH',    selected : false},
+                {name : 'High',         code : 'HH',    selected : false},
+                {name : 'Medium High',  code : 'MH',    selected : false},
+                {name : 'Standard',     code : 'ST',    selected : false},
+            ];
+
+            $scope.society_quality_type = [
+                {name : 'Ultra High',   code : 'UH',    selected : false},
+                {name : 'High',         code : 'HH',    selected : false},
+                {name : 'Medium High',  code : 'MH',    selected : false},
+                {name : 'Standard',     code : 'ST',    selected : false},
+            ];
+
+            $scope.society_quantity_type = [
+                {name : 'Large',        code : 'LA',    selected : false},
+                {name : 'Medium',       code : 'MD',    selected : false},
+                {name : 'Very Large',   code : 'VL',    selected : false},
+                {name : 'Small',        code : 'SM',    selected : false},
+                
+            ];
+
+            $scope.society_flat_type = [
+                {name : '1 RK',         code : '1R',      selected : false},
+                {name : '1 BHK',        code : '1B',      selected : false},
+                {name : '1.5 BHK',      code : '1-5B',    selected : false},
+                {name : '2.5 BHK',      code : '2-5B',    selected : false},
+                {name : '3 BHK',        code : '3B',      selected : false},
+                {name : '3.5 BHK',      code : '3-5B',    selected : false},
+                {name : '4 BHK',        code : '4B',      selected : false},
+                {name : '5 BHK',        code : '5B',      selected : false},
+                {name : 'PENT HOUSE',   code : 'PH',      selected : false},
+                {name : 'ROW HOUSE',    code : 'RH',      selected : false},
+                {name : 'DUPLEX',       code : 'DP',      selected : false},                
+            ];
+
+            
+            $scope.societyFilter = function(value){
+                $scope.getFilteredSocieties();
             }
-            $scope.windowCoords.latitude = $scope.map.center.latitude ;
-            $scope.windowCoords.longitude = $scope.map.center.longitude ;
+
+            $scope.clearAllFilters = function(filter_array){
+                var length = filter_array.length;
+                for(var i=0;i<length;i++){
+                    filter_array[i].selected = false;
+                    // console.log(filter_array[i].name , "  ", filter_array[i].selected);
+                }
 
 
-          // });
+                $scope.getFilteredSocieties();
+            }
+
+            $scope.getFilteredSocieties = function(){
+                var get_url_string = "?lat=18 20&lng=70 74";
+                get_url_string += makeString($scope.inventory_type, "&inv=");
+                get_url_string += makeString($scope.society_location, "&loc=");
+                get_url_string += makeString($scope.society_quality_type, "&qlt=");
+                get_url_string += makeString($scope.society_quantity_type, "&qnt=");
+                get_url_string += makeString($scope.society_flat_type, "&flt=");
+
+                console.log("get_url_string is : ", get_url_string);
+
+                mapViewService.getFilterSocieties(get_url_string)
+                .success(function(response, status){
+                    $scope.societies = response;
+                    $scope.societies_count = $scope.societies.length;
+                    console.log("filtered societies : ", $scope.societies);
+                    $scope.markers = assignMarkersToMap($scope.societies);
+                })
+                .error(function(response, status){
+                    console.log("Error Happened while filtering");
+                });
+            }
+
+            var makeString = function(filter_array, filter_keyword){
+                var my_string = filter_keyword;
+                var length = filter_array.length;
+                for(var i=0;i<length;i++)
+                    if(filter_array[i].selected)
+                        my_string += filter_array[i].code + " ";
+
+                return my_string;
+            }
+
+
+        });
     });
 
-    function genarateDogParks(count){
-        var vals = [];
-        for(var i = 0; i < count; i++) {
-            vals.push({
-                latitude: getRandomArbitrary(33.192528,48.209871),
-                longitude: getRandomArbitrary(-118.586462,-81.716346),
-                _id: i,
-                name: 'Dog Park #' + i     
-            });     
-        }
-        return vals;    
-    }    
-
-
-    function getRandomArbitrary(min, max) {
-        return Math.random() * (max - min) + min;
-    }    
-
+    

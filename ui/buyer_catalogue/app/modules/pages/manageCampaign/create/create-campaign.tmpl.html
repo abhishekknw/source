@@ -36,11 +36,11 @@
 	      		<div class = "col-md-3"><label>Business Name</label></div>
 	      		<div class = "col-md-3">{{model.business.name}}</div>
 	      		<div class = "col-md-3"><label>Business Type</label></div>
-	      		<div class = "col-md-3">{{model.business.type_name.type_name}}</div>
+	      		<div class = "col-md-3">{{model.business.type_name.business_type}}</div>
 	      	</div>
 	      	<div class = "row">
 	      		<div class = "col-md-3"><label>Business Sub-Type</label></div>
-	      		<div class = "col-md-3">{{model.business.sub_type.sub_type}}</div>
+	      		<div class = "col-md-3">{{model.business.sub_type.business_sub_type}}</div>
 	      		<div class = "col-md-3"><label>Business Email</label></div>
 	      		<div class = "col-md-3">{{model.business.email}}</div>
 	      	</div>
@@ -151,9 +151,9 @@
 
                     <div class = "col-md-3"><label >Business Type</label></div>
                     <div class = "col-md-3">
-                      <select class="form-control input-size" name="bstype" ng-model="model.business.type_name_id" ng-change="getSubTypes()">
+                      <select class="form-control input-size" name="bstype" ng-model="model.business.business_type_id" ng-change="getSubTypes()">
                         <option value="">Select Business Type</option   >
-                        <option ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.type_name}}</option>
+                        <option ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.business_type}}</option>
     			          </select>
                   </div>
 	            	</div>
@@ -165,7 +165,7 @@
                     <div class = "col-md-3">
                       <select class="form-control input-size" name="sub_type" ng-model="model.business.sub_type_id">
                         <option value="">Select Business Sub-Type</option>
-                        <option  ng-repeat = "subtype in sub_types" value="{{subtype.id}}">{{subtype.sub_type}}</option>
+                        <option  ng-repeat = "subtype in sub_types" value="{{subtype.id}}">{{subtype.business_sub_type}}</option>
     			            </select>
                     </div>
 

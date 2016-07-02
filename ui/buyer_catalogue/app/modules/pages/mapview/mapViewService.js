@@ -21,9 +21,10 @@
   		}
 
 
-      mapViewService.getAllSocieties = function(){
-        var url = url_base + "getSpaces/";
-        return machadaloHttp.post(url);
+      mapViewService.getFilterSocieties = function(get_data){
+        var url = url_base + 'getFilteredSocieties/' + get_data;
+        return machadaloHttp.get(url); 
       }
+
   		return mapViewService;
 }]);

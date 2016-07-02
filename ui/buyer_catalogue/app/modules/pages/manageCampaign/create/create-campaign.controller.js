@@ -63,12 +63,12 @@ angular.module('machadaloPages')
 
         $scope.getSubTypes = function() {
           // debugger;
-          console.log($scope.model.business.type_name_id);
-          if($scope.model.business.type_name_id == ''){
+          console.log($scope.model.business.business_type_id);
+          if($scope.model.business.business_type_id == ''){
             $scope.sub_types = {};
             $scope.model.business.sub_type_id = "";
           }else{
-            var id = $scope.model.business.type_name_id;
+            var id = $scope.model.business.business_type_id;
 
             pagesService.getSubTypes(id)
             .success(function (response){
@@ -95,6 +95,7 @@ angular.module('machadaloPages')
       };
 
     	$scope.getAllBusinesses = function() {
+        $scope.bsSelect = undefined;
 	    	pagesService.getAllBusinesses()
 	    	.success(function (response, status) {
 	    		    console.log(response);
@@ -108,7 +109,7 @@ angular.module('machadaloPages')
 	    		    console.log("model.business :  ")
               console.log(response);
 	            $scope.model.business = response;
-              $scope.model.business.type_name_id = $scope.model.business.type_name.id.toString();
+              $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
               $scope.getSubTypes();
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
 	            $scope.choice = "selected";
@@ -125,6 +126,7 @@ angular.module('machadaloPages')
 
       $scope.newBusiness = function() {
               $scope.choice = "new";
+              $scope.bsSelect = undefined;
               $scope.contact = angular.copy(contactCopy);
               $scope.form.$setPristine();
               $scope.model.business = {};
@@ -146,9 +148,9 @@ angular.module('machadaloPages')
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {
             // console.log(response, status);
-            console.log("\n\nresponse is : ");
-            response = response ? JSON.parse(response) : {}
-            console.log(response)
+            // console.log("\n\nresponse is : ");
+            // response = response ? JSON.parse(response) : {}
+            // console.log(response)
 
             var sub_type_id = $scope.model.business.sub_type_id;
             var type_id = $scope.model.business.type_name_id;
@@ -167,16 +169,15 @@ angular.module('machadaloPages')
               $scope.choice = "selected";
             }
         }).error(function(response, status){
-             var errorMsg = response ;
-             var json_response = errorMsg ? JSON.parse(errorMsg) : {};
-             // console.log($scope.errorMsg.message);
-             console.log(status);
-             // console.log(response);
-
-             $scope.successMsg = undefined;
-             $scope.errorMsg = json_response.message;
-             console.log($scope.errorMsg);
+             console.log("response is : ", response);
+             console.log("status is  : " ,status);
+             if (typeof response != 'number'){
+               $scope.successMsg = undefined;
+               $scope.errorMsg = response.message;
+               console.log($scope.errorMsg);
              // $location.path("");
+            }
+
         })
         };
       //[TODO] implement this
