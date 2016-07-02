@@ -46,12 +46,12 @@ class ProposalSocietySerializer(ModelSerializer):
         model = SupplierTypeSociety
         fields = (
             'supplier_id',
-            'name',
-            'address1',
-            'subarea',
-            'location_type',
-            'longitude',
-            'latitude',
+            'society_name',
+            'society_address1',
+            'society_subarea',
+            'society_location_type',
+            'society_longitude',
+            'society_latitude',
         )
 
 

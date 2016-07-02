@@ -787,23 +787,23 @@ class SportsInfra(models.Model):
 class SupplierTypeSociety(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
     supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
-    name = models.CharField(db_column='SOCIETY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
-    address1 = models.CharField(db_column='SOCIETY_ADDRESS1', max_length=250, blank=True, null=True)  # Field name made lowercase.
-    address2 = models.CharField(db_column='SOCIETY_ADDRESS2', max_length=250, blank=True, null=True)  # Field name made lowercase.
-    zip = models.IntegerField(db_column='SOCIETY_ZIP', blank=True, null=True)  # Field name made lowercase.
-    city = models.CharField(db_column='SOCIETY_CITY', max_length=250, blank=True, null=True)  # Field name made lowercase.
-    state = models.CharField(db_column='SOCIETY_STATE', max_length=250, blank=True, null=True)  # Field name made lowercase.
-    longitude = models.FloatField(db_index=True, db_column='SOCIETY_LONGITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
-    locality = models.CharField(db_column='SOCIETY_LOCALITY', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    subarea = models.CharField(db_column='SOCIETY_SUBAREA', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    latitude = models.FloatField(db_index=True, db_column='SOCIETY_LATITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
-    location_type = models.CharField(db_column='SOCIETY_LOCATION_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
-    type_quality = models.CharField(db_column='SOCIETY_TYPE_QUALITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
-    type_quantity = models.CharField(db_column='SOCIETY_TYPE_QUANTITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
-    off = models.BooleanField(db_column='SOCIETY_OFF', default=False)
-    weekly_off = models.CharField(db_column='SOCIETY_WEEKLY_OFF', max_length=30, blank=True, null=True)
-    count = models.BooleanField(db_column='SOCIETY_COUNT', default=True)
-    ratings = models.BooleanField(db_column='SOCIETY_RATINGS', default=True)
+    society_name = models.CharField(db_column='SOCIETY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
+    society_address1 = models.CharField(db_column='SOCIETY_ADDRESS1', max_length=250, blank=True, null=True)  # Field name made lowercase.
+    society_address2 = models.CharField(db_column='SOCIETY_ADDRESS2', max_length=250, blank=True, null=True)  # Field name made lowercase.
+    society_zip = models.IntegerField(db_column='SOCIETY_ZIP', blank=True, null=True)  # Field name made lowercase.
+    society_city = models.CharField(db_column='SOCIETY_CITY', max_length=250, blank=True, null=True)  # Field name made lowercase.
+    society_state = models.CharField(db_column='SOCIETY_STATE', max_length=250, blank=True, null=True)  # Field name made lowercase.
+    society_longitude = models.FloatField(db_column='SOCIETY_LONGITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
+    society_locality = models.CharField(db_column='SOCIETY_LOCALITY', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    society_subarea = models.CharField(db_column='SOCIETY_SUBAREA', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    society_latitude = models.FloatField(db_column='SOCIETY_LATITUDE', blank=True, null=True, default=0.0)  # Field name made lowercase.
+    society_location_type = models.CharField(db_column='SOCIETY_LOCATION_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    society_type_quality = models.CharField(db_column='SOCIETY_TYPE_QUALITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
+    society_type_quantity = models.CharField(db_column='SOCIETY_TYPE_QUANTITY', max_length=30, blank=True, null=True)  # Field name made lowercase.
+    society_off = models.BooleanField(db_column='SOCIETY_OFF', default=False)
+    society_weekly_off = models.CharField(db_column='SOCIETY_WEEKLY_OFF', max_length=30, blank=True, null=True)
+    society_count = models.BooleanField(db_column='SOCIETY_COUNT', default=True)
+    society_ratings = models.BooleanField(db_column='SOCIETY_RATINGS', default=True)
     flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)
     resident_count = models.IntegerField(db_column='RESIDENT_COUNT', blank=True, null=True)
     vacant_flat_count = models.IntegerField(db_column='VACANT_FLAT_COUNT', null=True)
@@ -866,18 +866,13 @@ class SupplierTypeSociety(models.Model):
     sound_available = models.BooleanField(db_column='SOUND_AVAILABLE',  default=False)
     daily_electricity_charges = models.IntegerField(db_column='DAILY_ELECTRICITY_CHARGES',blank=True, null=True, default=0)
 
-
-    street_furniture_available = models.BooleanField(db_column='STREET_FURNITURE_AVAILABLE', default=False)  # Field name made lowercase. This field type is a guess.
-    stall_timing = models.CharField(db_column='STALL_TIMING',max_length=10,blank=True, null=True)
-    electricity_available  = models.BooleanField(db_column='ELECTRICITY_AVAILABLE',  default=False)
-    sound_available = models.BooleanField(db_column='SOUND_AVAILABLE',  default=False)
-    daily_electricity_charges = models.IntegerField(db_column='DAILY_ELECTRICITY_CHARGES',blank=True, null=True, default=0)
     poster_allowed_nb = models.BooleanField(db_column = 'POSTER_ALLOWED_NB', default=False)
     poster_allowed_lift = models.BooleanField(db_column = 'POSTER_ALLOWED_LIFT', default=False)
     standee_allowed = models.BooleanField(db_column = 'STANDEE_ALLOWED', default=False)
     flier_allowed = models.BooleanField(db_column = 'FLIER_ALLOWED', default=False)
     stall_allowed = models.BooleanField(db_column = 'STALL_ALLOWED', default=False)
     car_display_allowed = models.BooleanField(db_column='CAR_DISPLAY_ALLOWED', default=False)
+
 
     #notice_board_available = models.CharField(db_column='NOTICE_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #stall_available = models.CharField(db_column='STALL_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
@@ -895,12 +890,12 @@ class SupplierTypeSociety(models.Model):
     #bill_sponsorship_maintenanace = models.FloatField(db_column='BILL_SPONSORSHIP_MAINTENANACE', default=0.0, blank=True, null=True)  # Field name made lowercase.
     #children_playing_area_available = models.CharField(db_column='CHILDREN_PLAYING_AREA_AVAILABLE', max_length=45, blank=True, null=True)  # Field name made lowercase.
     #children_playing_area_count = models.IntegerField(db_column='CHILDREN_PLAYING_AREA_count', blank=True, null=True)  # Field nam
+    #street_furniture_available = models.CharField(db_column='STREET_FURNITURE_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #sports_facility_available = models.CharField(db_column='SPORTS_FACILITY_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase.
     #swimming_pool_available = models.CharField(db_column='SWIMMING_POOL_AVAILABEL', max_length=5, blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     #street_furniture_count = models.IntegerField(db_column='STREET_FURNITURE_COUNT', blank=True, null=True)  # Field name made lowercase.
     #standee_count = models.IntegerField(db_column='STANDEE_COUNT', blank=True, null=True)  # Field name made lowercase.
-    # This field is just added for the society list page for disabling the Shortlisted Button
-    # disable = models.BooleanField(db_column='DISABLED',default=False)
+
 
     def get_society_image(self):
         try:
@@ -952,7 +947,6 @@ class SupplierTypeSociety(models.Model):
     class Meta:
 
         db_table = 'supplier_society'
-
 
 class SupplierTypeCorporate(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20) 
@@ -1594,7 +1588,7 @@ class CitySubArea(models.Model):
     area_code = models.ForeignKey(CityArea, related_name='areacode', db_column='AREA_CODE', null=True,on_delete=models.CASCADE)
 
     class Meta:
-
+        
         db_table = 'city_area_subarea'
         unique_together = (('area_code','subarea_code'),)
 

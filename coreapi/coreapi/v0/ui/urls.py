@@ -52,11 +52,5 @@ urlpatterns = [
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_basic_corporate_details$', views.saveBasicCorporateDetailsAPIView.as_view()),
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_contact_details$', views.ContactDetailsGenericAPIView.as_view()),
     # url(r'^corporate/save_basic_corporate_details$', views.saveBasicCorporateDetailsAPIView.as_view())
-
-
-
-
-    url(r'^just_for_testing_fun/$',views.JustForTestingAPIView.as_view()),
-
-
+    
 ]

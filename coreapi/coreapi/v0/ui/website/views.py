@@ -4,7 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer,  CampaignTypeMappingSerializer
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, BusinessInfo, BusinessAccountContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, BusinessSubTypes, AccountInfo, InventorySummary
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, BusinessInfo, \
+                    BusinessAccountContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, \
+                    PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, \
+                    SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, \
+                    PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, \
+                    BusinessSubTypes, AccountInfo, InventorySummary, FlatType
 from django.db.models import Q
 from django.db import transaction
 from rest_framework import status
@@ -626,6 +631,11 @@ class FinalCampaignBookingAPIView(APIView):
 
 
 
+
+
+
+# Beta API below this point
+
 class CreateInitialProposalAPIView(APIView):
     '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal 
     fields are stored in the database
@@ -681,7 +691,7 @@ class SpacesOnCenterAPIView(APIView):
         #     min_longitude = proposal_center.longitude - delta_longitude
         #     max_longitude = proposal_center.longitude + delta_longitude
 
-        #     societies = SupplierTypeSociety.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
+        #     societies = SupplierTypeSociety.objects.filter(Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)society_)
         #     corporates = SupplierTypeCorporate.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
 
         #     societies_count = societies.count()
@@ -696,17 +706,22 @@ class SpacesOnCenterAPIView(APIView):
         #         'corporates' : corporates_serializer.data,
         #         'societies_count' : societies_count,
         #         'corporates_count' : corporates_count,
+        #         'min_latitude' : min_latitude,
+        #         'max_latitude' : max_latitude,
+        #         'min_longitude' : min_longitude,
+        #         'max_longitude' : max_longitude,
+
         #     })
 
         # return Response(centers_data_list, status=200)
 
-        min_latitude = 19.12
-        max_latitude = 19.34
+        min_latitude = 18
+        max_latitude = 20
 
-        min_longitude = 73.45
-        max_longitude = 73.65
+        min_longitude = 70
+        max_longitude = 74
 
-        societies = SupplierTypeSociety.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
+        societies = SupplierTypeSociety.objects.filter(Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude))
         corporates = SupplierTypeCorporate.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
 
         societies_count = societies.count()
@@ -727,7 +742,7 @@ class SpacesOnCenterAPIView(APIView):
 
     def post(self,request,id=None,format=None):
         societies = SupplierTypeSociety.objects.all()
-        society_serializer = SupplierTypeSocietySerializer(societies,many=True)
+        society_serializer = ProposalSocietySerializer(societies,many=True)
         societies_count = societies.count()
         response = {
             'societies' : society_serializer.data,
@@ -748,7 +763,10 @@ class GetSpaceInfoAPIView(APIView):
             '''  On introducing new spaces we have to use if conditions to check the supplier code 
             like RS for society and the fetch society object
             e.g. if supplier_code == 'RS':
-                      society = SupplierTypeSociety.objects.get(supplier_id=id)'''
+                      society = SupplierTypeSociety.objects.get(supplier_id=id)
+                  else supplier_code == 'CP':
+                       corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
+                        Then serialize and send  '''
 
             society = SupplierTypeSociety.objects.get(supplier_id=id)
             serializer = SupplierTypeSocietySerializer(society)
@@ -758,31 +776,57 @@ class GetSpaceInfoAPIView(APIView):
 
 
 class GetFilteredSocietiesAPIView(APIView):
+    
 
-    def get(self, request, id, format=None):
+    def get(self, request, format=None):
         ''' This API gives societies based on different filters from mapView and gridView Page
         Currently implemented filters are locality and location (Standard, Medium High etc.)
         flat_count (100 - 250 etc.) flat_type(1BHK, 2BHK etc.) '''
 
-        location_params = request.query_params.get('loc',None)
-        locality_params = request.query_params.get('qlt',None)
-        flat_count = request.query_params.get('flc',None)
-        flat_type_params = reqeust.query_params.get('room',None)
         latitude_params = request.query_params.get('lat', None)
         longitude_params = request.query_params.get('lng',None)
+        location_params = request.query_params.get('loc',None)
+        society_quality_params = request.query_params.get('qlt',None)
+        society_quantity_params = request.query_params.get('qnt',None)
+        flat_count = request.query_params.get('flc',None)
+        flat_type_params = request.query_params.get('flt',None)
         inventory_params = request.query_params.get('inv',None)
+        radius = request.query_params.get('r',None) # radius change
 
         q = Q()
-        quality_dict = get_related_dict()
+        quality_dict , inventory_dict, society_quantity_dict = get_related_dict()
+
         flat_type_dict = {
             '1R' : '1 RK',      '1B' : '1 BHK',     '1-5B' : '1.5 BHK',     '2B' : '2 BHK',
             '2-5B' : '2.5 BHK',    '3B' : '3 BHK',  '3-5B' : '3.5 BHK',     '4B' : '4 BHK',
             '5B' : '5 BHK',         'PH' : 'PENT HOUSE',    'RH' : 'ROW HOUSE',  'DP' : 'DUPLEX' 
         }
 
+        # if not radius:
 
         if not latitude_params and not longitude_params:
             return Response({'message' : 'Please Provide longitude and latitude values as well'}, status=406)
+
+        print "\n\n\n"
+        print "flat_type_params : ",flat_type_params
+        if flat_type_params:
+            flat_types = []
+            flat_type_params = flat_type_params.split()
+            for param in flat_type_params:
+                try:
+                    flat_types.append(flat_type_dict[param])
+                except KeyError:
+                    pass
+
+            # print "\n\n\n"
+            print "Flat Types : ", flat_types
+            if flat_types:
+                ''' We can improve performance here  by appending .distinct('society_id') when using postgresql ''' 
+                society_ids = set(FlatType.objects.filter(flat_type__in=flat_types).values_list('society_id',flat=True))
+                q &= Q(supplier_id__in=society_ids)
+                # here to include those societies which don't have this info nothing can be done 
+                # It is simply all the societies -> filter becomes useless
+
 
         if latitude_params:
             latitude_params = latitude_params.split()
@@ -790,7 +834,8 @@ class GetFilteredSocietiesAPIView(APIView):
                 min_latitude = latitude_params[0]
                 max_latitude = latitude_params[1]
 
-                q &= Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude)
+                q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude)
+                # can't include default societies with latitude = 0 as they cant be used for mapping 
             else : 
                 return Response({'message' : 'Please Provide proper latitude values'}, status=406)
 
@@ -800,24 +845,12 @@ class GetFilteredSocietiesAPIView(APIView):
                 min_longitude = longitude_params[0]
                 max_longitude = longitude_params[1]
 
-                q &= Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
+                q &= Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
+                # can't include default societies with latitude = 0 as they cant be used for mapping 
             else :
                 return Response({'message' : 'Please Provide proper longitude values'}, status=406)
 
-        if flat_type_params:
-            flat_types = []
-            flat_type_params = flat_type_params.split()
-            for param in flat_type_params:
-                try:
-                    flat_types.append(quality_dict[param])
-                except KeyError:
-                    pass
-
-            if flat_types:
-                ''' We can improve performance here  by appending .distinct('society_id') when using postgresql ''' 
-                society_ids = set(FlatType.objects.filter(flat_type__in=flat_types).values_list('society_id',flat=True))
-                q &= Q(supplier_id__in=society_ids)
-
+        
         if location_params:
             location_ratings = []
             location_params = location_params.split()
@@ -826,20 +859,41 @@ class GetFilteredSocietiesAPIView(APIView):
                     location_ratings.append(quality_dict[param])
                 except KeyError:
                     pass
-            if locality_params:
-                q &= Q(location_type__in=location_ratings)
+            if location_ratings:
+                q &= Q(society_location_type__in=location_ratings)
+                # if required to include societies with null value of this parameter uncomment following line
+                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
+                # q &= Q(society_location_type__isnull=True)  
 
-        if locality_params:
-            locality_ratings = []
-            locality_params = locality_params.split()
-            for param in locality_params:
+        if society_quality_params:
+            society_quality_ratings = []
+            society_quality_params = society_quality_params.split()
+            for param in society_quality_params:
                 try:
-                    locality_ratings.append(quality_dict[param])
+                    society_quality_ratings.append(quality_dict[param])
                 except KeyError:
                     pass
 
-            if locality_ratings:
-                q &= Q(locality__in=locality_ratings)
+            if society_quality_ratings:
+                q &= Q(society_type_quality__in=society_quality_ratings)
+                # if required to include societies with null value of this parameter uncomment following line
+                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
+                # q &= Q(society_type_quality__isnull=True)  
+
+        if society_quantity_params:
+            society_quantity_ratings = []
+            society_quantity_params = society_quantity_params.split()
+            for param in society_quantity_params:
+                try:
+                    society_quantity_ratings.append(society_quantity_dict[param])
+                except KeyError:
+                    pass
+
+            if society_quantity_ratings:
+                q &= Q(society_type_quantity__in=society_quantity_ratings)
+                # if required to include societies with null value of this parameter uncomment following line
+                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
+                # q &= Q(society_type_quantity__isnull=True)  
 
         if flat_count:
             flat_count = flat_count.split()
@@ -848,26 +902,25 @@ class GetFilteredSocietiesAPIView(APIView):
                 flat_max = flat_count[1]
 
                 q &= Q(flat_count__gte=flat_min) & Q(flat_count__lte=flat_max)
+                # if required to include societies with null value of this parameter uncomment following line
+                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
+                # q &= Q(flat_count__isnull=True)  
 
 
         if inventory_params:
-            inventory_parmas = inventory_parmas.split()
-            for param in inventory_parmas:
-                if param == 'PO': # PO --> Poster
-                    q &= Q(poster_allowed=True)
-                elif param == 'ST': # ST --> Standee
-                    q &= Q(standee_allowed=True)
-                elif param == 'SL': # SL --> Stall 
-                    q &= Q(stall_allowed=True)
-                elif param == 'FL': # FL --> Flier
-                    q &= Q(flier_allowed = True) 
-                elif parma == 'CD': # CD --> Car Display
-                    q &= Q(car_display_allowed=True)
-                elif param == 'BA': # BA --> Banner
-                    # Banner is currently not tracked in the website
-                    # when tracked replace pass by --> q &= Q(banner_allowed=True)
-                    pass 
-        
+            inventory_params = inventory_params.split()
+            for param in inventory_params:
+                try:
+                    if param == 'PO':
+                        q &= (Q(poster_allowed_nb=True) | Q(poster_allowed_lift=True))
+                    else:
+                        inventory = inventory_dict[param]
+                        q &= Q(**{inventory : True})
+                except KeyError:
+                    pass
+
+        print "\n\nq is ", q
+        print "\n\n"
 
         societies = SupplierTypeSociety.objects.filter(q)
         society_serializer = ProposalSocietySerializer(societies, many=True)
@@ -886,16 +939,25 @@ class GetFilteredSocietiesAPIView(APIView):
 
 
 def get_related_dict():
-    # inv_dict = {
-    #     'PO' : 'Poster',    'ST' : 'Standee',   'SL' : 'Stall',
-    #     'FL' : 'Flier'
-    # }
+    ''' This dictionary is simply a mapping from get params to their actual values '''
+    # quality_dict if for both society_quality and its location_quality and similarly for other spaces
     quality_dict = {
         'UH' : 'Ultra High',    'HH' : 'High',
         'MH' : 'Medium High',   'ST' : 'Standard'    
     }
 
-    return quality_dict
+    inventory_dict = {
+        'PO' : 'poster_allowed_nb',    'ST' : 'standee_allowed',
+        'SL' : 'stall_allowed',     'FL' : 'flier_allowed',
+        'BA' : 'banner_allowed',    'CD' : 'car_display_allowed',
+    }
+
+    quantity_dict = {
+        'LA' : 'Large',     'MD' : 'Medium',
+        'VL' : 'Very Large',  'SM' : 'Small',
+    }
+
+    return quality_dict, inventory_dict, quantity_dict
 
 
 
@@ -1150,3 +1212,175 @@ class CreateProposalAPIView(APIView):
 
 #             corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
 #             company_instance = CorporateParkCompanyList.objects.filter(corporate_id=corporate)
+
+
+
+
+
+
+
+
+
+class SocietySaveCSVAPIView(APIView):
+    def get(self,request,format=None):
+        import csv, sys
+        from v0.models import City, CityArea, CitySubArea, ContactDetails
+        with transaction.atomic():
+            file = open('/home/prince/Desktop/CSV Testing/society_files/supplier_id.csv','rb')
+            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/supplier_id_error.txt','w')
+            try:
+                reader = csv.reader(file)
+                for num, row in enumerate(reader):
+                    d = {}
+                    if num == 0 :
+                        continue
+                    else:
+                        d['society_city'] , d['society_locality'] , d['society_subarea'] , supplier_type_1, d['society_name'], d['supplier_code'] = row[0].title(), row[1].title(), row[2].title(), row[3], row[4], row[5]
+                        supplier_type_1 = 'RS'
+                        if not (d['society_city'] and d['society_locality'] and d['society_subarea'] and d['supplier_code'] and d['society_name'] and d['supplier_code']):
+                            file_errros.write("Errors in "+ str(num) + " line\t--->Some variables not present\n\n")
+                            continue
+                        try:
+                            city_object = City.objects.get(city_name=d['society_city'])
+                            area_object = CityArea.objects.get(label = d['society_locality'])
+                            subarea_object = CitySubArea.objects.get(subarea_name=d['society_subarea'],area_code=area_object)
+
+                            d['supplier_id'] = city_object.city_code + area_object.area_code + subarea_object.subarea_code + supplier_type_1 + d['supplier_code']
+                            try:
+                                society_object = SupplierTypeSociety.objects.get(supplier_id=d['supplier_id']) 
+                                file_errros.write("Error in " + str(num) + " line\t---> Society with supplier code "\
+                                    + d['supplier_code'] + " already exists in that subarea. Still Updating the details\n\n")
+                                society_object.__dict__.update(d)
+                                society_object.save()
+                                print "\n\n\nsaving socity"
+                                print "society_object dict :" 
+                                for i in ['supplier_id','society_city','society_locality','society_subarea','society_name']:
+                                    try:
+                                        print i + " : " + society_object.__dict__[i]
+                                    except KeyError:
+                                        print "Key Error  : ", i 
+                                print "\n\n\n"
+                                continue
+                            except SupplierTypeSociety.DoesNotExist:
+                                society_object = SupplierTypeSociety()
+                                society_object.__dict__.update(d)
+                                society_object.save()
+                                print "\n\n\nsaving socity"
+                                print "society_object dict :" , society_object.__dict__
+                                print "\n\n\n"
+
+                        except City.DoesNotExist:
+                            file_errros.write("Error in "+ str(num) + " line\t---> City Name is Wrong\n\n")
+                        except CityArea.DoesNotExist:
+                            file_errros.write("Error in "+ str(num) + " line\t---> Area Name is Wrong\n\n")
+                        except CitySubArea.DoesNotExist:
+                            file_errros.write("Error in " + str(num) + " line\t---> Subarea Name is Wrong\n\n")
+                        except CitySubArea.MultipleObjectsReturned:
+                            return Response({'message' : 'Line 1238 error found'}, status=200)
+            finally:
+                file.close()
+                file_errros.close()
+
+
+
+            # service class Population var in society table
+
+            file = open('/home/prince/Desktop/CSV Testing/society_files/new_basic_tab.csv','rb')
+            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/basic_tab_errors.txt','w')
+
+            try:
+                reader = csv.reader(file)
+                for num, row in enumerate(reader):
+                    if num == 0:
+                        continue
+                    else: 
+                        d = {}
+                        try:
+                            length = len(row)
+                            print "row[26]" , row[26]
+                        except IndexError: 
+                            return Response({'message' : 'Index Out of Range', 'maxIndex' : \
+                                length, 'row' : row},status=200)
+
+                        d['supplier_code'], d['society_subarea'], d['society_address1'], d['society_address2'], d['society_zip'], \
+                        d['society_latitude'], d['society_longitude'], possession_year, d['tower_count'], d['flat_count'], d['vacant_flat_count'],\
+                        service_class_population, d['working_women_count'], d['avg_household_occupants'], d['bachelor_tenants_allowed'], \
+                        d['flat_avg_rental_persqft'], d['cars_count'], d['luxury_cars_count'], d['society_location_type'], d['society_type_quality'], \
+                        d['society_type_quantity'], d['count_0_5'], d['count_5_15'], d['count_15_25'], d['count_25_60'], d['count_60above'], \
+                        d['society_weekly_off'] = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],\
+                                            row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18]\
+                                            , row[19], row[20], row[21], row[22], row[23], row[24], row[25], row[26]
+
+                        if not (d['supplier_code'] and d['society_subarea']):
+                            file_errros.write('Error in ' + str(num) + " line\t--> Please provide Supplier Code and Society Subarea\n\n")
+
+                        for key in d.keys():
+                            if d[key] == '':
+                                d[key] = None
+
+                        try:
+                            society_object = SupplierTypeSociety.objects.get(supplier_code=d['supplier_code'], society_subarea=d['society_subarea'])
+                            subarea_object = CitySubArea.objects.get(subarea_name=d['society_subarea'],area_code__label=society_object.society_locality)
+                            d['society_location_type'] = subarea_object.locality_rating
+                            society_object.__dict__.update(d)
+                            society_object.save()
+
+                            print "\n\nSaving Basic Details"
+                            for key in d.keys():
+                                try:
+                                    if society_object.__dict__[key] != None:
+                                        print key + " : " + society_object.__dict__[key]
+                                    else:
+                                        print key , " : " , None
+                                except KeyError:
+                                    print "\nKey Error " + key + "\n"
+
+                        except SupplierTypeSociety.DoesNotExist:
+                            file_errros.write("Error in " + str(num) + " line\t--> Supplier Code + Subarea don't correspond to a society in Database\n\n")
+                        except SupplierTypeSociety.MultipleObjectsReturned:
+                            file_errros.write("Error in " + str(num) + " line\t-->Supplier Code + subarea have more than 1 objects\t MY bad Sorry for this\n\n")
+
+
+            finally:
+                file.close()
+                file_errros.close()
+
+
+
+
+            file = open('/home/prince/Desktop/CSV Testing/society_files/contacts.csv','rb')
+            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/contacts_errors.txt','w')
+
+            try:
+                reader = csv.reader(file)
+                for num, row in enumerate(reader):
+                    if num == 0:
+                        continue
+
+                    else:
+                        d = {}
+                        supplier_code, subarea, d['contact_type'], d['salutation'], d['name'], d['landline'], d['mobile'],\
+                        d['email'] = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]
+                        d['std_code'] = '022'
+                        d['country_code'] = '+91'
+
+                        for key in d.keys():
+                            if d[key] == '':
+                                d[key] = None
+
+                        try:
+                            society_object = SupplierTypeSociety.objects.get(supplier_code=supplier_code, society_subarea=subarea)
+                            d['supplier_id'] = society_object.supplier_id
+                            d['spoc'] = False
+                            contact_object = ContactDetails()
+                            contact_object.__dict__.update(d)
+                            contact_object.save()
+                        except SupplierTypeSociety.DoesNotExist:
+                            file_errros.write('Error in ' + str(num) + ' line\t--> No idea with given Supplier Code and Subarea exists in Database \n\n')
+
+
+            finally:    
+                file.close()
+                file_errros.close()
+
+        return Response(status=200)
