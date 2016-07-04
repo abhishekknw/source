@@ -210,6 +210,7 @@ class NewCampaignAPIView(APIView):
                         'business' : business_serializer.data,
                         'contacts' : contacts_serializer.data,
                     }
+                
             return Response(response,status=200)
 
 
@@ -723,6 +724,7 @@ class SpacesOnCenterAPIView(APIView):
                 'society_inventory' : society_inventory,
             })
 
+
             proposal_serializer = ProposalInfoSerializer(proposal)
             response = {
                 'proposal' : proposal_serializer.data,
@@ -761,9 +763,6 @@ class SpacesOnCenterAPIView(APIView):
         # }
 
         # return Response(response, status=200)
-
-
-
 
 # class GetSpaceInfoAPIView(APIView):
 #     ''' This API is to fetch the space(society,corporate, gym) etc. using its supplier Code

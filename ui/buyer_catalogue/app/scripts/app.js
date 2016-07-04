@@ -53,11 +53,23 @@ angular
           controller: 'SocietyListCtrl'
         })        
 
+
+
         .state('campaign.mapView',{
            url : '/mapview',
            templateUrl : 'modues/pages/mapview/mapview.tmpl.html',
-           controller : ''
+           controller : 'MapCtrl'
         })
+        .state('campaign.createProposalMe',{
+          url : '/createproposaltemp',
+          templateUrl : 'modules/pages/createProposal/createproposal.tmpl.html',
+          controller : 'ProposalCtrl'
+          // controller : ''
+        })
+
+
+
+
         .state('campaign.societyDetails', {
           url : '/societyDetails/:societyId', //:societyId/
           templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
@@ -75,7 +87,7 @@ angular
         })
       .state('manageCampaign', {
           url : '/manageCampaign',
-          //controller: '',
+          // controller: '',
           templateUrl: 'modules/pages/manageCampaign/manage-campaign.tmpl.html'
         })
       .state('manageCampaign.create', {
@@ -136,7 +148,7 @@ angular
         .state('manageCampaign.release', {
             url : '/release',
             controller: 'ReleaseCampaignCtrl',
-            templateUrl: 'modules/pages/manageCampaign/release/release.tmpl.html'
+            templateUrl: 'modules/pages/manageCampaign/release/release-campaign.tmpl.html'
           })
       .state('manageCampaign.finalize.finalizeInventory', {
           url : '/:campaignId/finalizeInventory/',
