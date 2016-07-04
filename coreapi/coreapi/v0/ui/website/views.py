@@ -10,7 +10,7 @@ from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTy
                     SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, \
                     PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, \
                     BusinessSubTypes, AccountInfo, InventorySummary, FlatType
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.db import transaction
 from rest_framework import status
 import json
@@ -154,7 +154,7 @@ class NewCampaignAPIView(APIView):
                     # print serializer.validated_data
                     # print "\n\n\n"
                     try:
-                        type_name = BusinessTypes.objects.get(id=int(business_data['type_name_id']))
+                        type_name = BusinessTypes.objects.get(id=int(business_data['business_type_id']))
                         sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
                         serializer.save(type_name=type_name, sub_type=sub_type)
 
@@ -206,10 +206,10 @@ class NewCampaignAPIView(APIView):
                 contacts = business.contacts.all()
                 contacts_serializer = BusinessAccountContactSerializer(contacts, many=True)
 
-                response = json.dumps({
+                response = {
                         'business' : business_serializer.data,
                         'contacts' : contacts_serializer.data,
-                    })
+                    }
             return Response(response,status=200)
 
 
@@ -664,115 +664,127 @@ class CreateInitialProposalAPIView(APIView):
 
 
     def create_proposal_id(self):
-        return "Proposal1"
+        import random, string
+        return ''.join(random.choice(string.ascii_letters) for _ in range(8))
+
+
 
 
 class SpacesOnCenterAPIView(APIView):
-    def get(self,request,id=None, format=None):
+    def get(self,request,proposal_id=None, format=None):
         ''' This function filters all the spaces(Societies, Corporates etc.) based on the center and
         radius provided currently considering radius as the half of side of square
         This API is called before map view page is loaded'''
 
-        # try:
-        #     proposal = ProposalInfo.objects.get(proposal_id=id)
-        # except ProposalInfo.DoesNotExist:
-        #     return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
-
-        # proposal_centers = ProposalCenterMapping.objects.filter(proposal=proposal)
-        # centers_data_list = []
-
-        # for proposal_center in proposal_centers:
-
-        #     delta_latitude = proposal_center.radius/ 110.574
-        #     min_latitude = proposal_center.latitude - delta_latitude
-        #     max_latitude = proposal_center.latitude + delta_latitude
-
-        #     delta_longitude = proposal_center.radius/(111.320 * cos(math.radians(latitude)))
-        #     min_longitude = proposal_center.longitude - delta_longitude
-        #     max_longitude = proposal_center.longitude + delta_longitude
-
-        #     societies = SupplierTypeSociety.objects.filter(Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)society_)
-        #     corporates = SupplierTypeCorporate.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
-
-        #     societies_count = societies.count()
-        #     corporates_count = corporates.count()
-
-        #     proposal_center_serializer = ProposalCenterMappingSerializer(proposal_center)
-        #     societies_serializer =  ProposalSocietySerializer(societies, many=True)
-        #     corporates_serializer = ProposalCorporateSerializer(corporates, many=True)  
-        #     centers_data_list.append({
-        #         'center' : proposal_center_serializer.data,
-        #         'societies' : societies_serializer.data,
-        #         'corporates' : corporates_serializer.data,
-        #         'societies_count' : societies_count,
-        #         'corporates_count' : corporates_count,
-        #         'min_latitude' : min_latitude,
-        #         'max_latitude' : max_latitude,
-        #         'min_longitude' : min_longitude,
-        #         'max_longitude' : max_longitude,
-
-        #     })
-
-        # return Response(centers_data_list, status=200)
-
-        min_latitude = 18
-        max_latitude = 20
-
-        min_longitude = 70
-        max_longitude = 74
-
-        societies = SupplierTypeSociety.objects.filter(Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude))
-        corporates = SupplierTypeCorporate.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
-
-        societies_count = societies.count()
-        corporates_count = corporates.count()
-
-        societies_serializer =  ProposalSocietySerializer(societies, many=True)
-        corporates_serializer = ProposalCorporateSerializer(corporates, many=True)  
-
-        response = {
-            'societies' : societies_serializer.data,
-            'corporates' : corporates_serializer.data,
-            'societies_count' : societies_count,
-            'corporates_count' : corporates_count,
-        }
-
-        return Response(response, status=200)
-
-
-    def post(self,request,id=None,format=None):
-        societies = SupplierTypeSociety.objects.all()
-        society_serializer = ProposalSocietySerializer(societies,many=True)
-        societies_count = societies.count()
-        response = {
-            'societies' : society_serializer.data,
-            'societies_count' : societies_count
-        }
-
-        return Response(response,status=200)
-
-
-
-class GetSpaceInfoAPIView(APIView):
-    ''' This API is to fetch the space(society,corporate, gym) etc. using its supplier Code
-    e.g. RS for residential Society 
-
-    Currently only working for societies '''
-    def get(self, request, id , format=None):
         try:
-            '''  On introducing new spaces we have to use if conditions to check the supplier code 
-            like RS for society and the fetch society object
-            e.g. if supplier_code == 'RS':
-                      society = SupplierTypeSociety.objects.get(supplier_id=id)
-                  else supplier_code == 'CP':
-                       corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
-                        Then serialize and send  '''
+            if proposal_id is None:
+                proposal_id = 'PROP1';
+            proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
+        except ProposalInfo.DoesNotExist:
+            return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
 
-            society = SupplierTypeSociety.objects.get(supplier_id=id)
-            serializer = SupplierTypeSocietySerializer(society)
-            return Response(serializer.data, status=200)
-        except SupplierTypeSociety.DoesNotExist:
-            return Response({'message' : 'No society Exists'}, status=406)
+        proposal_centers = ProposalCenterMapping.objects.filter(proposal=proposal)
+        centers_data_list = []
+
+        for proposal_center in proposal_centers:
+
+            delta_latitude = proposal_center.radius/ 110.574
+            min_latitude = proposal_center.latitude - delta_latitude
+            max_latitude = proposal_center.latitude + delta_latitude
+
+            delta_longitude = proposal_center.radius/(111.320 * math.cos(math.radians(proposal_center.latitude)))
+            min_longitude = proposal_center.longitude - delta_longitude
+            max_longitude = proposal_center.longitude + delta_longitude
+
+            societies = SupplierTypeSociety.objects.filter(Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude))
+            corporates = SupplierTypeCorporate.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
+
+
+            # This fetches all the society ids in a list
+            society_ids = societies.values_list('supplier_id',flat=True)
+
+            # following query find sum of all the variables specified in a dictionary
+            society_inventory =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
+                standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+
+            societies_count = societies.count()
+            corporates_count = corporates.count()
+
+            proposal_center_serializer = ProposalCenterMappingSerializer(proposal_center)
+            societies_serializer =  ProposalSocietySerializer(societies, many=True)
+            corporates_serializer = ProposalCorporateSerializer(corporates, many=True)  
+            centers_data_list.append({
+                'center' : proposal_center_serializer.data,
+                'societies' : societies_serializer.data,
+                'corporates' : corporates_serializer.data,
+                'societies_count' : societies_count,
+                'corporates_count' : corporates_count,
+                'society_inventory' : society_inventory,
+            })
+
+            proposal_serializer = ProposalInfoSerializer(proposal)
+            response = {
+                'proposal' : proposal_serializer.data,
+                'centers'  : centers_data_list
+            }
+
+        return Response(response.data, status=200)
+
+        # min_latitude = 18
+        # max_latitude = 20
+
+        # min_longitude = 70
+        # max_longitude = 74
+
+        # societies = SupplierTypeSociety.objects.filter(Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude))
+        # corporates = SupplierTypeCorporate.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
+
+        # societies_count = societies.count()
+        # corporates_count = corporates.count()
+
+        # # This is to find inventory count
+        # society_ids = societies.values_list('supplier_id',flat=True)
+
+        # society_inventory =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
+        #         standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+        # societies_serializer =  ProposalSocietySerializer(societies, many=True)
+        # corporates_serializer = ProposalCorporateSerializer(corporates, many=True)  
+
+        # response = {
+        #     'societies' : societies_serializer.data,
+        #     'corporates' : corporates_serializer.data,
+        #     'societies_count' : societies_count,
+        #     'corporates_count' : corporates_count,
+        #     'society_inventory' : society_inventory,
+        # }
+
+        # return Response(response, status=200)
+
+
+
+
+# class GetSpaceInfoAPIView(APIView):
+#     ''' This API is to fetch the space(society,corporate, gym) etc. using its supplier Code
+#     e.g. RS for residential Society 
+
+#     Currently only working for societies '''
+#     def get(self, request, id , format=None):
+#         try:
+#             '''  On introducing new spaces we have to use if conditions to check the supplier code 
+#             like RS for society and the fetch society object
+#             e.g. if supplier_code == 'RS':
+#                       society = SupplierTypeSociety.objects.get(supplier_id=id)
+#                   else supplier_code == 'CP':
+#                        corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
+#                         Then serialize and send  '''
+
+#             society = SupplierTypeSociety.objects.get(supplier_id=id)
+#             serializer = SupplierTypeSocietySerializer(society)
+#             return Response(serializer.data, status=200)
+#         except SupplierTypeSociety.DoesNotExist:
+#             return Response({'message' : 'No society Exists'}, status=406)
 
 
 class GetFilteredSocietiesAPIView(APIView):
@@ -1175,46 +1187,6 @@ class CreateProposalAPIView(APIView):
 
 # 19.119128, 72.890795
 
-# class CorporateCompanyDetails(models.Model):
-#    id = models.AutoField(db_column='ID', primary_key=True)
-#    company_id = models.ForeignKey('CorporateParkCompanyList', db_column='COMPANY_ID', related_name='companydetails', blank=True, null=True, on_delete=models.CASCADE)
-#    building_id = models.ForeignKey('CorporateBuilding', db_column='BUILDING_NAME', related_name='companybuilding', blank=True, null=True, on_delete=models.CASCADE)
-#    wing_id = models.ForeignKey('CorporateBuildingWing', db_column='WING_ID', related_name='companybuildingwing', blank=True, null=True, on_delete=models.CASCADE)    
-
-# class CompanyFloor(models.Model):
-#    company_details_id = models.ForeignKey('CorporateCompanyDetails',db_column='COMPANY_DETAILS_ID',related_name='wingfloor', blank=True, null=True, on_delete=models.CASCADE)
-#    floor_number = models.IntegerField(db_column='FLOOR_NUMBER', blank=True, null=True)
-
-# class CorporateParkCompanyList(models.Model):
-#    id = models.AutoField(db_column='ID', primary_key=True)
-#    name = models.CharField(db_column='COMPANY_NAME',max_length='50', blank=True, null=True)
-#    supplier_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_ID', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
-
-# def post(self, request,format=None):
-#     companies = request.data
-#     for company in companies:
-#         for builiding_key in comapn['details']:
-#             builiding_key['company_id'] = company['company_id']
-#             try:    
-#                 detail_id = building_key['id']
-#                 company_details = CorporateCompanyDetails.objects.get(id=detail_id)
-#                 company_detail_serializer = CorporateCompanyDetailsSerializer(company_details, data=building_key)
-#             except KeyError:    
-#                 company_detail_serializer = CorporateCompanyDetailsSerializer(data=building_key)
-
-#             if company_detail_serializer.is_valid():
-#                 company_detail = company_detail_serializer.save()
-#             else:
-#                 return Response({'message' : 'Invalid Company Details Serializer' \
-#                     'errors' : company_detail_serializer.errors}, status=406)
-
-
-
-#             corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
-#             company_instance = CorporateParkCompanyList.objects.filter(corporate_id=corporate)
-
-
-
 
 
 
@@ -1238,7 +1210,7 @@ class SocietySaveCSVAPIView(APIView):
                         d['society_city'] , d['society_locality'] , d['society_subarea'] , supplier_type_1, d['society_name'], d['supplier_code'] = row[0].title(), row[1].title(), row[2].title(), row[3], row[4], row[5]
                         supplier_type_1 = 'RS'
                         if not (d['society_city'] and d['society_locality'] and d['society_subarea'] and d['supplier_code'] and d['society_name'] and d['supplier_code']):
-                            file_errros.write("Errors in "+ str(num) + " line\t--->Some variables not present\n\n")
+                            file_errros.write("Errors in "+ str(num+1) + " line\t--->Some variables not present\n\n")
                             continue
                         try:
                             city_object = City.objects.get(city_name=d['society_city'])
@@ -1248,7 +1220,7 @@ class SocietySaveCSVAPIView(APIView):
                             d['supplier_id'] = city_object.city_code + area_object.area_code + subarea_object.subarea_code + supplier_type_1 + d['supplier_code']
                             try:
                                 society_object = SupplierTypeSociety.objects.get(supplier_id=d['supplier_id']) 
-                                file_errros.write("Error in " + str(num) + " line\t---> Society with supplier code "\
+                                file_errros.write("Error in " + str(num+1) + " line\t---> Society with supplier code "\
                                     + d['supplier_code'] + " already exists in that subarea. Still Updating the details\n\n")
                                 society_object.__dict__.update(d)
                                 society_object.save()
@@ -1270,11 +1242,11 @@ class SocietySaveCSVAPIView(APIView):
                                 print "\n\n\n"
 
                         except City.DoesNotExist:
-                            file_errros.write("Error in "+ str(num) + " line\t---> City Name is Wrong\n\n")
+                            file_errros.write("Error in "+ str(num+1) + " line\t---> City Name is Wrong\n\n")
                         except CityArea.DoesNotExist:
-                            file_errros.write("Error in "+ str(num) + " line\t---> Area Name is Wrong\n\n")
+                            file_errros.write("Error in "+ str(num+1) + " line\t---> Area Name is Wrong\n\n")
                         except CitySubArea.DoesNotExist:
-                            file_errros.write("Error in " + str(num) + " line\t---> Subarea Name is Wrong\n\n")
+                            file_errros.write("Error in " + str(num+1) + " line\t---> Subarea Name is Wrong\n\n")
                         except CitySubArea.MultipleObjectsReturned:
                             return Response({'message' : 'Line 1238 error found'}, status=200)
             finally:
@@ -1282,8 +1254,6 @@ class SocietySaveCSVAPIView(APIView):
                 file_errros.close()
 
 
-
-            # service class Population var in society table
 
             file = open('/home/prince/Desktop/CSV Testing/society_files/new_basic_tab.csv','rb')
             file_errros = open('/home/prince/Desktop/CSV Testing/society_files/basic_tab_errors.txt','w')
@@ -1304,7 +1274,7 @@ class SocietySaveCSVAPIView(APIView):
 
                         d['supplier_code'], d['society_subarea'], d['society_address1'], d['society_address2'], d['society_zip'], \
                         d['society_latitude'], d['society_longitude'], possession_year, d['tower_count'], d['flat_count'], d['vacant_flat_count'],\
-                        service_class_population, d['working_women_count'], d['avg_household_occupants'], d['bachelor_tenants_allowed'], \
+                        d['service_household_count'], d['working_women_count'], d['avg_household_occupants'], d['bachelor_tenants_allowed'], \
                         d['flat_avg_rental_persqft'], d['cars_count'], d['luxury_cars_count'], d['society_location_type'], d['society_type_quality'], \
                         d['society_type_quantity'], d['count_0_5'], d['count_5_15'], d['count_15_25'], d['count_25_60'], d['count_60above'], \
                         d['society_weekly_off'] = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],\
@@ -1312,16 +1282,22 @@ class SocietySaveCSVAPIView(APIView):
                                             , row[19], row[20], row[21], row[22], row[23], row[24], row[25], row[26]
 
                         if not (d['supplier_code'] and d['society_subarea']):
-                            file_errros.write('Error in ' + str(num) + " line\t--> Please provide Supplier Code and Society Subarea\n\n")
+                            file_errros.write('Error in ' + str(num+1) + " line\t--> Please provide Supplier Code and Society Subarea\n\n")
 
                         for key in d.keys():
                             if d[key] == '':
                                 d[key] = None
+                            if type(d[key]) == type('abc'):  # This to just make sure type is string
+                                d[key] = d[key].replace("\n", " ")
+
+                        if type(d['society_type_quality']) == type('abc'):
+                            d['society_type_quality'] = d['society_type_quality'].title()                         
 
                         try:
                             society_object = SupplierTypeSociety.objects.get(supplier_code=d['supplier_code'], society_subarea=d['society_subarea'])
                             subarea_object = CitySubArea.objects.get(subarea_name=d['society_subarea'],area_code__label=society_object.society_locality)
                             d['society_location_type'] = subarea_object.locality_rating
+                            d['society_state'] = 'Maharashtra'
                             society_object.__dict__.update(d)
                             society_object.save()
 
@@ -1336,9 +1312,9 @@ class SocietySaveCSVAPIView(APIView):
                                     print "\nKey Error " + key + "\n"
 
                         except SupplierTypeSociety.DoesNotExist:
-                            file_errros.write("Error in " + str(num) + " line\t--> Supplier Code + Subarea don't correspond to a society in Database\n\n")
+                            file_errros.write("Error in " + str(num+1) + " line\t--> Supplier Code + Subarea don't correspond to a society in Database\n\n")
                         except SupplierTypeSociety.MultipleObjectsReturned:
-                            file_errros.write("Error in " + str(num) + " line\t-->Supplier Code + subarea have more than 1 objects\t MY bad Sorry for this\n\n")
+                            file_errros.write("Error in " + str(num+1) + " line\t-->Supplier Code + subarea have more than 1 objects\t MY bad Sorry for this\n\n")
 
 
             finally:
@@ -1364,6 +1340,16 @@ class SocietySaveCSVAPIView(APIView):
                         d['std_code'] = '022'
                         d['country_code'] = '+91'
 
+
+                        d['landline'] = d['landline'].split('-',1)
+                        d['landline'].reverse()
+                        d['landline'] = d['landline'][0]
+
+                        d['mobile'] = d['mobile'].split('-',1)
+                        d['mobile'].reverse()
+                        d['mobile'] = d['mobile'][0]
+
+
                         for key in d.keys():
                             if d[key] == '':
                                 d[key] = None
@@ -1372,11 +1358,16 @@ class SocietySaveCSVAPIView(APIView):
                             society_object = SupplierTypeSociety.objects.get(supplier_code=supplier_code, society_subarea=subarea)
                             d['supplier_id'] = society_object.supplier_id
                             d['spoc'] = False
+                            # try:
+                            #     contact_object = ContactDetails(supplier=society_object, name=d['name'], salutation=d['salutation'])
+                            # except ContactDetails.DoesNotExist:
+                            #     pass
+
                             contact_object = ContactDetails()
                             contact_object.__dict__.update(d)
                             contact_object.save()
                         except SupplierTypeSociety.DoesNotExist:
-                            file_errros.write('Error in ' + str(num) + ' line\t--> No idea with given Supplier Code and Subarea exists in Database \n\n')
+                            file_errros.write('Error in ' + str(num+1) + ' line\t--> No idea with given Supplier Code and Subarea exists in Database \n\n')
 
 
             finally:    
