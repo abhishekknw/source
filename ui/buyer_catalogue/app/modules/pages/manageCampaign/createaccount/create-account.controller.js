@@ -104,6 +104,7 @@ angular.module('machadaloPages')
       }
 
     	$scope.getAllAccounts = function() {
+        $scope.selectAcc = undefined;
 	    	pagesService.getAllAccounts()
 	    	.success(function (response, status) {
 	    		    console.log(response);
@@ -132,7 +133,7 @@ angular.module('machadaloPages')
 
       $scope.newAccount = function() {
               $scope.choice = "new";
-              
+              $scope.selectAcc = undefined;
         // complete object definition given to avoid multiple refrence to same field
               $scope.contact = {
                 name: '',     
@@ -192,11 +193,18 @@ angular.module('machadaloPages')
           }).error(function(response, status){
 
             // status = 406 comes from backend if some information is missing with info in response.message
-             response = response ? JSON.parse(response) : {}
-             console.log(response.message);
-             $scope.successMsg = undefined;
-             $scope.errorMsg = response.message ;
-             console.log(status);
+             // response = response ? JSON.parse(response) : {}
+             // console.log(response.message);
+             // $scope.successMsg = undefined;
+             // $scope.errorMsg = response.message ;
+             // console.log(status);
+             console.log("response is : ", response);
+             console.log("Status is : ", status);
+             if (typeof response != 'number'){
+               $scope.successMsg = undefined;
+               $scope.errorMsg = response.message;
+               console.log($scope.errorMsg);
+            }
 
         })
         };
