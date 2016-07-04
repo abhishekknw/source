@@ -153,12 +153,12 @@ angular.module('machadaloPages')
             // console.log(response)
 
             var sub_type_id = $scope.model.business.sub_type_id;
-            var type_id = $scope.model.business.type_name_id;
+            var type_id = $scope.model.business.business_type_id;
             
             console.log(sub_type_id, type_id);
             $scope.model.business = response.business;
             $scope.model.business.sub_type_id = sub_type_id;
-            $scope.model.business.type_name_id = type_id;
+            $scope.model.business.business_type_id = type_id;
             $scope.model.business.contacts = response.contacts;
             if (status == '201') {
                  $location.path("/manageCampaign/createAccount");

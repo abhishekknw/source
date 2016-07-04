@@ -3,7 +3,10 @@
     .angular-google-map-container { height: 400px; }
   </style>
 
-
+<div>
+<select ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
+  <option ng-repeat="center_var in proposal.centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
+</select>
 
   <div >
     <ui-gmap-google-map center="map.center" zoom="map.zoom" draggable="false" 
@@ -15,7 +18,7 @@
                  Locality Rating : {{space.location_type}}<br>
               </div>
         </ui-gmap-window>                
-        <ui-gmap-markers models="markers" coords="'self'" icon="'icon'"
+        <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'"
                          options="'options'" doRebuildAll="true" click="onClick">
         </ui-gmap-markers>
        
@@ -76,8 +79,8 @@ Inventory Types :
 
 
 
-
-<div ng-if="show_societies" ng-repeat="society in societies">
+<br><br>
+<div ng-if="show_societies" ng-repeat="society in current_center.societies">
   Name : {{society.society_name}}<br>
   Address : {{society.society_address1 + " " + society.society_subarea}}<br>
   Locality Rating : {{society.society_location_type}}<br>

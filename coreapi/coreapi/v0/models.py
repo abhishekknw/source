@@ -1214,7 +1214,7 @@ class ProposalInfo(models.Model):
 class ProposalCenterMapping(models.Model):
     proposal = models.ForeignKey(ProposalInfo, db_index=True, related_name='centers', on_delete=models.CASCADE)
     center_name = models.CharField(max_length=50)
-    Address = models.CharField(max_length=150,null=True, blank=True)
+    address = models.CharField(max_length=150,null=True, blank=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
     radius = models.FloatField()

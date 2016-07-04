@@ -1,136 +1,5 @@
 "use strict";
 
-// angular.module('myApplicationModule', ['uiGmapgoogle-maps'])
-// // .config(['uiGmapGoogleMapApiProvider',function(uiGmapGoogleMapApiProvider) {
-// // 		 uiGmapGoogleMapApiProvider.configure({
-// // 		  key: 'AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY',
-// // 		  v: '3.17',
-// // 		  libraries: 'weather,geometry,visualization'
-// // 	 });
-// // }])
-// .controller('mapController',function($scope,$http){
-// 	$scope.map = { center: { latitude: 19.0760, longitude: 72.8777 }, zoom: 12 };
-// 	$scope.markers = [{
-// 		id : 0,
-// 		coords : { latitude : 19.1197, longitude: 72.9051},
-// 		options : {draggable: true},
-// 		title : 'Andheri',
-// 	},
-// 	{
-// 		id: 1,
-// 		coords : {latitude: 19.1136, longitude: 72.8697},
-// 		options : {draggable: true},
-// 		title : 'Powai'
-// 	}
-// 	];
-
-// 	$scope.windowCoords = {}
-
-// 	$scope.onClick = function(marker){
-// 	     $scope.windowCoords.latitude = marker.latitude;
-// 	     $scope.windowCoords.longitude = marker.longitude;
-// 	     $scope.title = "Powai";
-// 	     $scope.show = true;
-// 	     console.log("Onclick Called");
-// 	}
-
-// 	$scope.closeClick = function(){
-// 		console.log("closeClick Called");
-// 		$scope.show = false;
-// 	}
-
-// 	$scope.show = false;
-
-	
-// })
-
-
-
-
-
-
-// angular.module('catalogueApp')
-//     .controller('MapCtrl', function($scope, $rootScope, $window, $location, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady) {
-//          $scope.map = {
-//             zoom: 11,
-//             bounds: {},
-//             center: {  
-//               latitude: 19.119128,
-//               longitude: 72.890795
-//             }
-//         };
-
-//         $scope.markers = [];
-
-//         mapViewService.getSpaces()
-//         .success(function(response, status){
-//             $scope.societies = response.societies;
-//             $scope.societies_count = response.societies_count;
-
-//             $scope.corporates_count = response.corporates_count;
-//             $scope.corporates = response.corporates;
-
-//             console.log("Success Response : ",response);
-            
-//         })
-//         .error(function(response, status){
-//             $scope.get_spaces_error = response.message;
-//             console.log("Error response : ",response);
-//         });
-
-//         $scope.markers = [];
-//         uiGmapGoogleMapApi.then(function(maps){
-            
-
-//             uiGmapIsReady.promise()                    
-//             .then(function(instances) {           
-               
-//                 for(var i=0;i<$scope.societies_count;i++){
-//                     $scope.markers.push({
-//                         latitude : $scope.societies[i].society_latitude,
-//                         longitude : $scope.societies[i].society_longitude,
-//                         id : i+1,
-//                     });
-//                 }
-
-//                 console.log("markers are : ", $scope.markers);
-
-//             });
-
-//             $scope.windowCoords = {};
-
-//             $scope.options = {
-//                 scrollwheel: false
-//             };
-
-//             $scope.onClick = function(marker, eventName, model) {
-//                  console.log("marker is ", marker);
-//                  console.log("eventName is ",eventName);
-//                  console.log("model is ",model);
-//                 $scope.map.center.latitude = model.latitude;
-//                 $scope.map.center.longitude = model.longitude;
-//                 $scope.map.zoom = 11;
-//                 $scope.windowCoords.latitude = model.latitude;
-//                 $scope.windowCoords.longitude = model.longitude;
-//                 $scope.parkName = model.title;
-//                 $scope.show = true;
-//             };
-
-//             $scope.closeClick = function() {
-//                 $scope.map.zoom = 11;
-//                 $scope.show = false;
-//             };
-
-//             $scope.show = false;
-
-
-//             });
-
-// });
-
-
-
-
 angular.module('catalogueApp')
     .controller('MapCtrl', function($scope, $rootScope, $window, $location, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady) {
 
@@ -147,35 +16,8 @@ angular.module('catalogueApp')
         $scope.show_societies = false;
         $scope.center_changed= false;
 
-        $scope.old_center = {
-            latitude : $scope.map.center.latitude,
-            longitude : $scope.map.center.longitude,
-        };
-
-        $scope.new_center = {
-            latitude : $scope.map.center.latitude,
-            longitude : $scope.map.center.longitude
-        };
-
-
-        mapViewService.getSpaces()
-        .success(function(response, status){
-            $scope.societies = response.societies;
-            $scope.societies_count = response.societies_count;
-
-            $scope.corporates_count = response.corporates_count;
-            $scope.corporates = response.corporates;
-
-            console.log("Success Response : ",response);
-            
-        })
-        .error(function(response, status){
-            $scope.get_spaces_error = response.message;
-            console.log("Error response : ",response);
-        });
-
         
-        $scope.markers = [];
+        $scope.society_markers = [];
         $scope.center_marker = [];
 
 
@@ -190,9 +32,42 @@ angular.module('catalogueApp')
             };
 
 
+            $scope.changeCurrentCenter = function(center_id){
+                console.log("Center ID : ",center_id)
+                for(var i=0;i<$scope.proposal.centers.length; i++)
+                    if($scope.proposal.centers[i].center.id == center_id)
+                        $scope.current_center = $scope.proposal.centers[i]
+
+                $scope.society_markers = assignMarkersToMap($scope.current_center.societies); 
+                $scope.center_marker =assignCenterMarkerToMap($scope.current_center.center);           
+            }
 
             $scope.showSocieties = function(){
                 $scope.show_societies = !$scope.show_societies
+            }
+
+
+            function assignCenterMarkerToMap(center){
+                var center_marker = [];
+                center_marker.push({
+                    id:0,
+                    latitude: center.latitude,
+                    longitude: center.longitude, 
+                    options : {draggable : true},
+                    events : {
+                        drag : function(marker, event, model){
+                            $scope.new_center.latitude = marker.getPosition().lat();
+                            $scope.new_center.longitude = marker.getPosition().lng();
+                            console.log("new Latitude : ", $scope.new_center.latitude);
+                            if($scope.old_center.latitude != $scope.new_center.latitude || $scope.old_center.longitude != $scope.new_center.longitude)
+                                $scope.center_changed = true;
+                            else
+                                $scope.center_changed = false;
+                        }
+                    } 
+                });
+
+                return center_marker;
             }
 
             function assignMarkersToMap(spaces) {
@@ -203,7 +78,7 @@ angular.module('catalogueApp')
                         latitude: spaces[i].society_latitude,
                         longitude: spaces[i].society_longitude,
                         id: spaces[i].supplier_id,
-                        // icon: "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png",
+                        icon: "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png",
                         options : {draggable : false},
                         title : {
                             name : spaces[i].society_name,
@@ -214,33 +89,55 @@ angular.module('catalogueApp')
                     });
                 };
                 
-                console.log("markers done");
+                // console.log("markers done");
                 return markers;
             };
             
             
             uiGmapIsReady.promise()                    
-            .then(function(instances) {           
-               $scope.markers = assignMarkersToMap($scope.societies);
+            .then(function(instances) {   
 
-              
+                 mapViewService.getSpaces()
+                .success(function(response, status){
+                    // $scope.societies = response.societies;
+                    // $scope.societies_count = response.societies_count;
 
-               $scope.center_marker.push({
-                    id:0,
-                    latitude: 19.119,
-                    longitude: 73.48,
-                    options : {draggable : true},
-                    events : {
-                        drag : function(marker, event, model){
-                            $scope.new_center.latitude = marker.getPosition().lat();
-                            $scope.new_center.longitude = marker.getPosition().lng();
-                            console.log("new Latitude : ", $scope.new_center.latitude);
-                            if($scope.old_center.latitude != $scope.new_center.latitude || $scope.old_center.longitude != $scope.new_center.longitude)
-                                $scope.center_changed= true;
-                        }
-                    } 
+                    // $scope.corporates_count = response.corporates_count;
+                    // $scope.corporates = response.corporates;
+                    $scope.proposal = response.proposal;
+                    $scope.proposal.centers = response.centers;
+                    $scope.current_center = $scope.proposal.centers[0];
 
-                });
+                    console.log("Success Response : ",response);
+                    console.log("$scope.current_center.societies", $scope.current_center.societies);
+                    $scope.map = {
+                      zoom: 10,
+                      bounds: {},
+                      center: { 
+                        latitude: $scope.current_center.center.latitude,
+                        longitude: $scope.current_center.center.longitude,
+                      }
+                    };
+
+                    $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
+                    $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
+
+                    $scope.old_center = {
+                        latitude : $scope.map.center.latitude,
+                        longitude : $scope.map.center.longitude,
+                    };
+
+                    $scope.new_center = {
+                        latitude : $scope.map.center.latitude,
+                        longitude : $scope.map.center.longitude
+                    };
+                    
+                })
+                .error(function(response, status){
+                    $scope.get_spaces_error = response.message;
+                    console.log("Error response : ",response);
+                });        
+
             });
      
 
@@ -329,9 +226,7 @@ angular.module('catalogueApp')
                 var length = filter_array.length;
                 for(var i=0;i<length;i++){
                     filter_array[i].selected = false;
-                    // console.log(filter_array[i].name , "  ", filter_array[i].selected);
                 }
-
 
                 $scope.getFilteredSocieties();
             }
@@ -348,10 +243,10 @@ angular.module('catalogueApp')
 
                 mapViewService.getFilterSocieties(get_url_string)
                 .success(function(response, status){
-                    $scope.societies = response;
-                    $scope.societies_count = $scope.societies.length;
-                    console.log("filtered societies : ", $scope.societies);
-                    $scope.markers = assignMarkersToMap($scope.societies);
+                    $scope.current_center.societies = response;
+                    $scope.current_center.societies_count = $scope.current_center.societies.length;
+                    console.log("filtered societies : ", $scope.current_center.societies);
+                    $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
                 })
                 .error(function(response, status){
                     console.log("Error Happened while filtering");
@@ -361,9 +256,17 @@ angular.module('catalogueApp')
             var makeString = function(filter_array, filter_keyword){
                 var my_string = filter_keyword;
                 var length = filter_array.length;
+                var count = 0;
                 for(var i=0;i<length;i++)
-                    if(filter_array[i].selected)
+                    if(filter_array[i].selected){
                         my_string += filter_array[i].code + " ";
+                        count += 1;
+                    }
+
+                // Uncomment for better performance but this will also include null values for that filter
+                // What this does is basically dont apply the filter if all values are selected
+                // if(count==length)
+                //     my_string = filter_keyword;
 
                 return my_string;
             }
@@ -371,5 +274,3 @@ angular.module('catalogueApp')
 
         });
     });
-
-    
