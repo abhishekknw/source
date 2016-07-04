@@ -127,7 +127,7 @@
             <div class = "col-md-3"><!-- <input type="text" name="businessname" id="businessname" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.business.name" ng-required="true" /> -->
               <select class="form-control input-size" ng-model="model.account.business_id" ng-required="true">
                     <option value="">Select Business Name</option>
-                    <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
+                    <option  ng-repeat = "business in businesses" value="{{business.business_id}}">{{business.name}}</option>
                 </select>
             </div>
             <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
