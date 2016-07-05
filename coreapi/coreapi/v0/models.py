@@ -1060,7 +1060,8 @@ class BusinessAccountContact(models.Model):
 
 class BusinessInfo(models.Model):
     ## changed -> on_delete = models.CASCADE
-    id = models.AutoField(db_column='ID', primary_key=True)
+    # id = models.AutoField(db_column='ID', primary_key=True)
+    business_id = models.CharField(max_length=15, primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True) ## changed -> name
     type_name = models.ForeignKey('BusinessTypes',related_name='type_set',db_column='TYPE', blank=False,null=False, on_delete=models.CASCADE) ## changed -> CharField
     sub_type = models.ForeignKey('BusinessSubTypes',related_name='sub_type_set',db_column='SUB_TYPE', blank=False, null=False, on_delete=models.CASCADE) ## changed -> CharField
@@ -1095,6 +1096,7 @@ class BusinessInfo(models.Model):
 class BusinessTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     business_type = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
+    business_type_code = models.CharField(db_column='TYPE_CODE',unique=True, max_length=4)
 
     def __str__(self):
         return self.business_type
@@ -1111,7 +1113,8 @@ class BusinessSubTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     business_type = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE', null=True, on_delete=models.CASCADE) ## changed -> business
     business_sub_type = models.CharField(db_column='SUBTYPE', max_length=100, blank=True)
-        
+    business_sub_type_code = models.CharField(db_column='SUBTYPE_CODE', max_length=3, unique=True)
+
     def __str__(self):
         return self.business_sub_type
 
@@ -1124,7 +1127,7 @@ class BusinessSubTypes(models.Model):
 
 
 class AccountInfo(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+    account_id = models.CharField(db_column='ACCOUNT_ID', max_length=15, primary_key=True)
     business = models.ForeignKey(BusinessInfo, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)

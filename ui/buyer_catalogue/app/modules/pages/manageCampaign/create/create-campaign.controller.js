@@ -51,6 +51,8 @@ angular.module('machadaloPages')
         spoc: ''
       };
 
+      $scope.bsSelect = undefined; // initially nothing selected as existing business
+
       var contactCopy = angular.copy($scope.contact);
       $scope.model.business.contacts = [$scope.contact];
 
@@ -148,7 +150,7 @@ angular.module('machadaloPages')
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {
             // console.log(response, status);
-            // console.log("\n\nresponse is : ");
+            console.log("\n\nresponse is : ");
             // response = response ? JSON.parse(response) : {}
             // console.log(response)
 
@@ -156,7 +158,8 @@ angular.module('machadaloPages')
             var type_id = $scope.model.business.business_type_id;
 
             console.log(sub_type_id, type_id);
-            response = JSON.parse(response);
+            console.log('response is : ',response);
+            // response = JSON.parse(response);
             $scope.model.business = response.business;
             $scope.model.business.sub_type_id = sub_type_id;
             $scope.model.business.business_type_id = type_id;
