@@ -1,15 +1,14 @@
-
-  <style type="text/css">
-    .angular-google-map-container { height: 400px; }
+<link rel="stylesheet" href="modules/pages/mapview/mapview.tmpl.css" />
+<style type="text/css">
+    .angular-google-map-container { height: 400px; width: 800px;}
   </style>
-
 <div>
 <select ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
   <option ng-repeat="center_var in proposal.centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
 </select>
-
-  <div >
-    <ui-gmap-google-map center="map.center" zoom="map.zoom" draggable="false" 
+<div class = "mapPosition">
+  <div>
+    <ui-gmap-google-map center="map.center" zoom="map.zoom" draggable="false"
                         options="options" bounds="map.bounds" control="googlemap">
         <ui-gmap-window show="show" coords='windowCoords' closeClick="closeClick()">
               <div>
@@ -17,16 +16,17 @@
                  Address : {{space.address1 + " " + space.subarea}}<br>
                  Locality Rating : {{space.location_type}}<br>
               </div>
-        </ui-gmap-window>                
+        </ui-gmap-window>
         <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'"
                          options="'options'" doRebuildAll="true" click="onClick">
         </ui-gmap-markers>
-       
+
        <ui-gmap-markers models="center_marker" coords="'self'" icon="'icon'" options="'options'" doRebuildAll="true" click="onClick" events = "'events'">
         </ui-gmap-markers>
-        
-       
+
+
     </ui-gmap-google-map>
+</div>
 </div>
 
 <div>
@@ -43,35 +43,35 @@ Longitude <input type="text"  ng-model="new_center.longitude" ng-readonly="true"
 </div>
 
 Society Filters : <br>
-Inventory Types : 
+Inventory Types :
 <div style="display:inline" ng-repeat="inventory in inventory_type">
 <input type="checkbox" ng-model="inventory.selected" ng-click="societyFilter()">{{ inventory.name }}&nbsp;
 </div>
 <button ng-click="clearAllFilters(inventory_type)">Clear All</button>
 
 
-<br>Society Location : 
+<br>Society Location :
 <div style="display:inline" ng-repeat="location in society_location">
 <input type="checkbox" ng-model="location.selected" ng-click="societyFilter()">{{ location.name }}&nbsp;
 </div>
 <button ng-click="clearAllFilters(society_location)">Clear All</button>
 
 
-<br>Society Quality : 
+<br>Society Quality :
 <div style="display:inline" ng-repeat="quality_type in society_quality_type">
 <input type="checkbox" ng-model="quality_type.selected" ng-click="societyFilter()">{{ quality_type.name }}&nbsp;
 </div>
 <button ng-click="clearAllFilters(society_quality_type)">Clear All</button>
 
 
-<br>Society Quantity : 
+<br>Society Quantity :
 <div style="display:inline" ng-repeat="quantity_type in society_quantity_type">
 <input type="checkbox" ng-model="quantity_type.selected" ng-click="societyFilter()">{{ quantity_type.name }}&nbsp;
 </div>
 <button ng-click="clearAllFilters(society_quantity_type)">Clear All</button>
 
 
-<br> Society Flat Type : 
+<br> Society Flat Type :
 <div style="display:inline" ng-repeat="flat_type in society_flat_type">
 <input type="checkbox" ng-model="flat_type.selected" ng-click="societyFilter()">{{ flat_type.name }}&nbsp;
 </div>

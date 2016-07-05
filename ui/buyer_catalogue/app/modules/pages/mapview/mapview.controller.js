@@ -1,58 +1,46 @@
 "use strict";
-
 angular.module('catalogueApp')
     .controller('MapCtrl', function($scope, $rootScope, $window, $location, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady) {
-
         $scope.map = {
           zoom: 10,
           bounds: {},
-          center: { 
+          center: {
             latitude: 19.119,
             longitude: 73.48,
           }
         };
-
         $scope.show = false; // for showing info windo
         $scope.show_societies = false;
         $scope.center_changed= false;
-
-        
         $scope.society_markers = [];
         $scope.center_marker = [];
-
-
         uiGmapGoogleMapApi.then(function(maps) {
             $scope.map = {
               zoom: 9,
               bounds: {},
-              center: { 
+              center: {
                 latitude: 19.119,
                 longitude: 73.48,
               }
             };
-
-
             $scope.changeCurrentCenter = function(center_id){
                 console.log("Center ID : ",center_id)
                 for(var i=0;i<$scope.proposal.centers.length; i++)
                     if($scope.proposal.centers[i].center.id == center_id)
                         $scope.current_center = $scope.proposal.centers[i]
-
-                $scope.society_markers = assignMarkersToMap($scope.current_center.societies); 
-                $scope.center_marker =assignCenterMarkerToMap($scope.current_center.center);           
+                $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
+                $scope.center_marker =assignCenterMarkerToMap($scope.current_center.center);
             }
 
             $scope.showSocieties = function(){
                 $scope.show_societies = !$scope.show_societies
             }
-
-
             function assignCenterMarkerToMap(center){
                 var center_marker = [];
                 center_marker.push({
                     id:0,
                     latitude: center.latitude,
-                    longitude: center.longitude, 
+                    longitude: center.longitude,
                     options : {draggable : true},
                     events : {
                         drag : function(marker, event, model){
@@ -64,7 +52,7 @@ angular.module('catalogueApp')
                             else
                                 $scope.center_changed = false;
                         }
-                    } 
+                    }
                 });
 
                 return center_marker;
@@ -88,20 +76,16 @@ angular.module('catalogueApp')
                         }
                     });
                 };
-                
+
                 // console.log("markers done");
                 return markers;
             };
-            
-            
-            uiGmapIsReady.promise()                    
-            .then(function(instances) {   
-
+            uiGmapIsReady.promise()
+            .then(function(instances) {
                  mapViewService.getSpaces()
                 .success(function(response, status){
                     // $scope.societies = response.societies;
                     // $scope.societies_count = response.societies_count;
-
                     // $scope.corporates_count = response.corporates_count;
                     // $scope.corporates = response.corporates;
                     $scope.proposal = response.proposal;
@@ -113,7 +97,7 @@ angular.module('catalogueApp')
                     $scope.map = {
                       zoom: 10,
                       bounds: {},
-                      center: { 
+                      center: {
                         latitude: $scope.current_center.center.latitude,
                         longitude: $scope.current_center.center.longitude,
                       }
@@ -121,7 +105,6 @@ angular.module('catalogueApp')
 
                     $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
                     $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
-
                     $scope.old_center = {
                         latitude : $scope.map.center.latitude,
                         longitude : $scope.map.center.longitude,
@@ -131,15 +114,15 @@ angular.module('catalogueApp')
                         latitude : $scope.map.center.latitude,
                         longitude : $scope.map.center.longitude
                     };
-                    
+
                 })
                 .error(function(response, status){
                     $scope.get_spaces_error = response.message;
                     console.log("Error response : ",response);
-                });        
+                });
 
             });
-     
+
 
             $scope.windowCoords = {};
             $scope.space = {}
@@ -154,7 +137,7 @@ angular.module('catalogueApp')
                 }
                 else {
                     $scope.space = model.title
-                    
+
                 }
                 $scope.windowCoords.latitude = model.latitude;
                 $scope.windowCoords.longitude = model.longitude;
@@ -164,12 +147,9 @@ angular.module('catalogueApp')
             $scope.closeClick = function() {
                 $scope.show = false;
             };
-
-
             // $scope.options = {
             //   scrollwheel: false
             // };
-
 
             $scope.inventory_type = [
                 {name : 'Poster',       code : 'PO',   selected : false},
@@ -178,9 +158,8 @@ angular.module('catalogueApp')
                 {name : 'Flier',        code : 'FL',   selected : false},
                 // {name : 'banner_allowed',       code : 'BA',   selected : false},
             ];
-
             // {name : '', code : '', selected : false},
-                
+
             $scope.society_location = [
                 {name : 'Ultra High',   code : 'UH',    selected : false},
                 {name : 'High',         code : 'HH',    selected : false},
@@ -200,9 +179,8 @@ angular.module('catalogueApp')
                 {name : 'Medium',       code : 'MD',    selected : false},
                 {name : 'Very Large',   code : 'VL',    selected : false},
                 {name : 'Small',        code : 'SM',    selected : false},
-                
-            ];
 
+            ];
             $scope.society_flat_type = [
                 {name : '1 RK',         code : '1R',      selected : false},
                 {name : '1 BHK',        code : '1B',      selected : false},
@@ -214,10 +192,10 @@ angular.module('catalogueApp')
                 {name : '5 BHK',        code : '5B',      selected : false},
                 {name : 'PENT HOUSE',   code : 'PH',      selected : false},
                 {name : 'ROW HOUSE',    code : 'RH',      selected : false},
-                {name : 'DUPLEX',       code : 'DP',      selected : false},                
+                {name : 'DUPLEX',       code : 'DP',      selected : false},
             ];
 
-            
+
             $scope.societyFilter = function(value){
                 $scope.getFilteredSocieties();
             }
@@ -270,7 +248,5 @@ angular.module('catalogueApp')
 
                 return my_string;
             }
-
-
         });
     });
