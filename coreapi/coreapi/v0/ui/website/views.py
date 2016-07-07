@@ -140,13 +140,15 @@ class NewCampaignAPIView(APIView):
 
 
             with transaction.atomic():
-                if 'id' in business_data:
+                if 'business_id' in business_data:
                     # print "\nInside if 1\n"
-                    business = BusinessInfo.objects.get(pk=business_data['id'])
+                    business = BusinessInfo.objects.get(pk=business_data['business_id'])
                     serializer = BusinessInfoSerializer(business,data=business_data)
                 else:
                     # print "\nInside else 1\n"
                     #request.data['created_by'] = current_user.id
+                    # import random, string
+                    # business_data['business_id']= ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
                     serializer = BusinessInfoSerializer(data=business_data)
 
                 if serializer.is_valid():

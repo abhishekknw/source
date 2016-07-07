@@ -1060,7 +1060,7 @@ class BusinessAccountContact(models.Model):
 
 class BusinessInfo(models.Model):
     ## changed -> on_delete = models.CASCADE
-    id = models.AutoField(db_column='ID', primary_key=True)
+    business_id = models.CharField(db_column='BUSINESS_ID',max_length=15, primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True) ## changed -> name
     type_name = models.ForeignKey('BusinessTypes',related_name='type_set',db_column='TYPE', blank=False,null=False, on_delete=models.CASCADE) ## changed -> CharField
     sub_type = models.ForeignKey('BusinessSubTypes',related_name='sub_type_set',db_column='SUB_TYPE', blank=False, null=False, on_delete=models.CASCADE) ## changed -> CharField
@@ -1124,7 +1124,7 @@ class BusinessSubTypes(models.Model):
 
 
 class AccountInfo(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
+    account_id = models.CharField(db_column='ACCOUNT_ID', max_length=15, primary_key=True)
     business = models.ForeignKey(BusinessInfo, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
