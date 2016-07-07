@@ -171,10 +171,9 @@ angular.module('machadaloPages')
 
               var business_id = $scope.model.account.business_id
               
-              if (status == '201') {
-                   $location.path("/campaign/" + response.id + "/societyList");
-              }
               if (status == '200'){
+                pagesService.setBusinessId(business_id);
+                $location.path("/manageCampaign/create");
                 $scope.model.account = response.account;
                 $scope.model.account.contacts = response.contacts;
                 $scope.model.account.business_id = business_id;

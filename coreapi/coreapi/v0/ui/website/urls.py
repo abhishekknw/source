@@ -9,6 +9,9 @@ urlpatterns = [
     url(r'^account/(?P<id>[A-Z_a-z0-9]+)$', views.AccountAPIView.as_view()),
     url(r'^newCampaign/$', views.NewCampaignAPIView.as_view()),
     url(r'^newAccountCampaign/$', views.CreateCampaignAPIView.as_view()),
+
+    url(r'^(?P<account_id>[A-Z_a-z0-9]+)/getAccountProposals/$')
+
     url(r'^getCampaigns/$', views.CampaignAPIView.as_view()),
     url(r'^manageCampaign/(?P<id>[A-Z_a-z0-9]+)/proposal/$', views.CreateProposalAPIView.as_view()),
     url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/inventories/$', views.CampaignInventoryAPIView.as_view()),

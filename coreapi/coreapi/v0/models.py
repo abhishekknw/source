@@ -1095,6 +1095,7 @@ class BusinessInfo(models.Model):
 class BusinessTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     business_type = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
+    business_type_code = models.CharField(db_column='TYPE_CODE',unique=True, max_length=4)
 
     def __str__(self):
         return self.business_type
@@ -1111,7 +1112,8 @@ class BusinessSubTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     business_type = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE', null=True, on_delete=models.CASCADE) ## changed -> business
     business_sub_type = models.CharField(db_column='SUBTYPE', max_length=100, blank=True)
-        
+    business_sub_type_code = models.CharField(db_column='SUBTYPE_CODE', max_length=3)
+
     def __str__(self):
         return self.business_sub_type
 

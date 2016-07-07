@@ -13,6 +13,15 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
 
    var url_base = "v0/ui/website/";
    var pagesService = {};
+   var business_id = undefined;
+
+   pagesService.setBusinessId = function(id){
+      business_id = id;
+   }
+
+   pagesService.getBusinessId = function(){
+     return business_id;
+   }
 
    // To return the archived estimates
    pagesService.listSocieties = function (sObj) {
@@ -88,6 +97,11 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       var url = url_base + "campaign/" + campaign_id+ "/book/?status=" + new_status;
       return machadaloHttp.get(url);
     };
+
+    pagesService.getAccountProposal = function(account_id){
+       var url = url_base + account_id + '/getAccountProposals/';
+       return machadaloHttp.get(url);
+    }
 
     pagesService.processParam = function(){
      if($stateParams.campaignId){

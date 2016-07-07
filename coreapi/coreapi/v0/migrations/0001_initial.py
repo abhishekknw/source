@@ -150,6 +150,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
                 ('business_sub_type', models.CharField(max_length=100, db_column='SUBTYPE', blank=True)),
+                ('business_sub_type_code', models.CharField(max_length=3, db_column='SUBTYPE_CODE')),
             ],
             options={
                 'db_table': 'BUSINESS_SUBTYPES',
@@ -160,6 +161,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
                 ('business_type', models.CharField(max_length=100, db_column='BUSINESS_TYPE', blank=True)),
+                ('business_type_code', models.CharField(unique=True, max_length=4, db_column='TYPE_CODE')),
             ],
             options={
                 'db_table': 'BUSINESS_TYPES',

@@ -16,7 +16,7 @@
 			    <div class="col-md-4">
 				  	<span class = "" ng-show ="choice == 'existing'">
 				   	    <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
-				            <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
+				            <option  ng-repeat = "business in businesses" value="{{business.business_id}}">{{business.name}}</option>
 			          </select>
 		      	</span>
 	      	</div>
@@ -73,7 +73,73 @@
       </div>
     </form>
 
-	      <!-- Modal Window to view the contact details -->
+    <form name="existingAccount">
+        <div class="panel panel-default business-panel">
+          <h4 class="panel-heading">Existing Accounts</h4>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                <th></th>
+                  <th class="col-md-3 table-heading">Account Name</th>
+                  <th class="col-md-3 table-heading">Account Type</th>
+                  <th class="col-md-3 table-heading">Comments</th>
+                  <th class="col-md-3 table-heading">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="radio" value="false"></td>
+                  <td>ABC</td>
+                  <td>Insurance</td>
+                  <td>Hi!</td>
+                  <td>
+                    <a data-target="#detailModalAccount" class="btn btn-danger  active" data-toggle="modal">Details</a></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn btn-danger" ng-click="addNewAccount()">Add New Account</button>
+          </div>
+        </div>
+      </form>
+
+      <form name="existingProposal">
+        <div class="panel panel-default business-panel">
+          <h4 class="panel-heading">Existing Proposals</h4>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th class="col-md-3 table-heading">Proposal Id</th>
+                  <th class="col-md-3 table-heading">Created By</th>
+                  <th class="col-md-3 table-heading">Created Date</th>
+                  <th class="col-md-3 table-heading">Edited By</th>
+                  <th class="col-md-3 table-heading">Last Edited</th>
+                  <th class="col-md-3 table-heading">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>PROP1</td>
+                  <td>Anmol</td>
+                  <td>01/07/2016</td>
+                  <td>Pankaj</td>
+                  <td>07/07/2016</td>
+                  <td>
+                    <a data-target="#detailModalProposal" class="btn btn-danger  active" data-toggle="modal">Details</a></div>
+                    <br>     
+                    <button class="btn btn-danger detail-button">Map View</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn btn-danger" ng-click="addNewAccount()">Create New Proposal</button>
+          </div>
+        </div>
+      </form>
+
+	      <!-- Modal Window to view the contact details of business -->
 
       <div id="detailModal" class="modal fade">
         <div class="modal-dialog">
@@ -111,6 +177,106 @@
         </div>
       </div>
 
+          <!-- Modal window for displaying selected Account Details -->
+
+      <div id="detailModalAccount" class="modal fade">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Account (Name of Account) Details</h4>
+                <hr/>
+                <div class = "modal-body" style = "height: 300px;">
+                  <div class = "row">
+                    <div class = "col-md-3"><label>Business Name</label></div>
+                    <div class = "col-md-3">XYZ</div>
+                  </div>
+                  <div class="row">
+                    <div class = "col-md-3"><label>Business Type</label></div>
+                    <div class = "col-md-3">Finance</div>
+                    <div class = "col-md-3"><label>Business Sub-Type</label></div>
+                    <div class = "col-md-3">Insurance</div>
+                  </div>
+                  <div class="row">
+                    <div class = "col-md-3"><label>Account Email</label></div>
+                    <div class = "col-md-3">abc@abc.com</div>
+                    <div class = "col-md-3"><label>Account Contact</label></div>
+                    <div class = "col-md-3">9876543210</div>
+                  </div>
+                  <div class="row">
+                    <div class = "col-md-3"><label>Account Address</label></div>
+                    <div class = "col-md-3">Powai</div>
+                    <div class = "col-md-3"><label>Comments</label></div>
+                    <div class = "col-md-3">Hello</div>
+                  </div><br>
+
+                  <!-- For loop to fetch the account contact array -->
+                  <!-- <div class = "table" ng-repeat="contact in model.business.contacts track by $index"> -->
+                  <div class="row">
+                    <div class = "col-md-3"><label>Contact Name</label></div>
+                    <div class = "col-md-3">AAA</div>
+                    <div class = "col-md-3"><label>Contact Phone</label></div>
+                    <div class = "col-md-3">23456780</div>
+                  </div>
+                  <div class="row">
+                    <div class = "col-md-3"><label>Contact Email</label></div>
+                    <div class = "col-md-3">Powai</div>
+                  </div><br>
+                  <div class="row">
+                    <div class="col-md-10"></div>
+                    <div class="col-md-2"><button class="btn btn-danger" ng-click="editAccount()">Edit Details</button></div>
+                  </div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+          <!-- Modal window for displaying existing proposal Details -->
+
+      <div id="detailModalProposal" class="modal fade">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Proposal Details</h4>
+                <hr/>
+                <div class = "modal-body" style = "height: 300px;">
+                   <table class="table table-bordered table-hover">
+                      <thead>
+                        <tr>
+                          <th class="col-md-3 table-heading">No. of Areas</th>
+                          <th class="col-md-3 table-heading">Areas</th>
+                          <th class="col-md-3 table-heading">Space type</th>
+                          <th class="col-md-3 table-heading">Space Count</th>
+                          <th class="col-md-3 table-heading">Invetory Type</th>
+                          <th class="col-md-3 table-heading">Inventory Count</th>
+                          <th class="col-md-3 table-heading">Start Date</th>
+                          <th class="col-md-3 table-heading">End Date</th>
+                          <th class="col-md-3 table-heading">Tentative Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>1</td>
+                          <td>Powai</td>
+                          <td>Societies</td>
+                          <td>10</td>
+                          <td>Standee</td>
+                          <td>30</td>
+                          <td>15/07/2016</td>
+                          <td>22/07/2016</td>
+                          <td>150000</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <button class="btn btn-danger pull-right" ng-click="editProposal()">Edit Proposal</button>
+                </div>
+            </div>
+          </div>
+         </div>
+      </div>
+     
       <form name = "campaignform" ng-show="choice == 'selected'" class="">
         <div class = "panel panel-default business-panel">
           <h3 class "panel-heading">Campaign Details</h3>
@@ -252,8 +418,8 @@
                   </div>
 
                   <div class = "col-md-3"><label>Single Point of Contact?</label></div>
-	            		<div class = "col-md-3"><input id="spoc" type="radio"  ng-model="contact.spoc" value="true">Yes &nbsp
-	            		<input id="spoc" type="radio"  ng-model="contact.spoc" value="false">No </div>
+	            		<div class = "col-md-3"><input type="radio"  ng-model="contact.spoc" value="true">Yes &nbsp;
+	            		<input type="radio"  ng-model="contact.spoc" value="false">No </div>
 	            </div>
                 <div class = "row">
                   <div class = "col-md-4"></div>

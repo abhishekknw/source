@@ -51,6 +51,8 @@ angular.module('machadaloPages')
         spoc: ''
       };
 
+      $scope.bsSelect = undefined; // initially nothing selected as existing business
+
       var contactCopy = angular.copy($scope.contact);
       $scope.model.business.contacts = [$scope.contact];
 
@@ -60,6 +62,28 @@ angular.module('machadaloPages')
           console.log("BusTypes : ");
           console.log($scope.busTypes);
         });
+
+
+      $scope.getBusiness = function() {
+        pagesService.getBusiness($scope.bsSelect)
+        .success(function (response, status) {
+              console.log("model.business :  ")
+              console.log(response);
+              $scope.model.business = response;
+              $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
+              $scope.getSubTypes();
+              $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
+              $scope.choice = "selected";
+         });
+      };
+
+      var business_id_temp = pagesService.getBusinessId();
+      if(business_id_temp){
+        console.log("business_id_temp received", business_id_temp);
+        $scope.bsSelect = business_id_temp;
+        $scope.getBusiness();
+      };
+      
 
         $scope.getSubTypes = function() {
           // debugger;
@@ -103,19 +127,6 @@ angular.module('machadaloPages')
 	       });
 	    };
 
-    	$scope.getBusiness = function() {
-    		pagesService.getBusiness($scope.bsSelect)
-	    	.success(function (response, status) {
-	    		    console.log("model.business :  ")
-              console.log(response);
-	            $scope.model.business = response;
-              $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
-              $scope.getSubTypes();
-              $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
-	            $scope.choice = "selected";
-	       });
-      };
-
       $scope.readMore = function() {
               $scope.seeMore = "true";
       };
@@ -133,6 +144,23 @@ angular.module('machadaloPages')
               $scope.model.business.contacts = [$scope.contact];
       };
 
+      $scope.addNewAccount = function() {
+              $location.path("/manageCampaign/createAccount");
+      };
+
+      $scope.getProposals = function(){
+          // pass account_id of selected account radio button
+          pagesService.getAccountProposal()
+          .success(function(response, status){
+              $scope.account_proposals = response;
+          })
+          .error(function(response, status){
+              if(typeof(response) == typeof([]))
+                  $scope.proposal_error = response.error;
+          });
+      }
+
+
     	$scope.create = function() {
             // console.log("type_id : ", $scope.type_id, "\n\nbusTypes : ");
             // for (var key in $scope.busTypes){
@@ -148,7 +176,7 @@ angular.module('machadaloPages')
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {
             // console.log(response, status);
-            // console.log("\n\nresponse is : ");
+            console.log("\n\nresponse is : ");
             // response = response ? JSON.parse(response) : {}
             // console.log(response)
 
@@ -156,7 +184,8 @@ angular.module('machadaloPages')
             var type_id = $scope.model.business.business_type_id;
 
             console.log(sub_type_id, type_id);
-            response = JSON.parse(response);
+            console.log('response is : ',response);
+            // response = JSON.parse(response);
             $scope.model.business = response.business;
             $scope.model.business.sub_type_id = sub_type_id;
             $scope.model.business.business_type_id = type_id;
