@@ -87,33 +87,32 @@ angular.module('machadaloPages')
 
         $scope.getSubTypes = function() {
           // debugger;
-          console.log($scope.model.business.business_type_id);
-          if($scope.model.business.business_type_id == ''){
-            $scope.sub_types = {};
-            $scope.model.business.sub_type_id = "";
-          }else{
-            var id = $scope.model.business.business_type_id;
+            console.log($scope.model.business.business_type_id);
+            if($scope.model.business.business_type_id == ''){
+                $scope.sub_types = {};
+                $scope.model.business.sub_type_id = "";
+            }else{
+                var id = $scope.model.business.business_type_id;
 
-            pagesService.getSubTypes(id)
-            .success(function (response){
-                $scope.sub_types = response;
-              });
-          }
+                pagesService.getSubTypes(id)
+                .success(function (response){
+                    $scope.sub_types = response;
+            });
+            }
         }
 
-      $scope.addNew = function() {
+        $scope.addNew = function() {
         // object def is directly added to avoid different array elements pointing to same object
 
-        $scope.model.business.contacts.push({
-        name: '',     designation: '',    department: '',
-        email: '',    phone: '',      spoc: ''
-      });
-        console.log($scope.model.business.contacts);
+            $scope.model.business.contacts.push({
+                name: '',     designation: '',    department: '',
+                email: '',    phone: '',      spoc: ''
+            });
+            console.log($scope.model.business.contacts);
+        };
 
-
-      };
-
-       $scope.remove = function(index) {
+      
+      $scope.remove = function(index) {
         $scope.model.business.contacts.splice(index, 1);
         console.log($scope.model.business.contacts);
       };

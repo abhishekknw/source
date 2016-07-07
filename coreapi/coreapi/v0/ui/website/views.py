@@ -17,7 +17,10 @@ import json
 from django.contrib.contenttypes.models import ContentType
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping,SpaceMapping , InventoryType, ShortlistedSpaces
 from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer, SpaceMappingSerializer , \
-        InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer
+        InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer
+
+
+# codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   Saloon -> SA
 
 
 
@@ -733,32 +736,95 @@ class FinalCampaignBookingAPIView(APIView):
 
 # Beta API below this point
 
-class CreateInitialProposalAPIView(APIView):
+class InitialProposalAPIView(APIView):
     '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal 
     fields are stored in the database
     ProposalInfo and ProposalCenterMapping models are used only'''
 
-    def post(self, request, id, format=None):
-        proposal_data = request.data
-        proposal_data['proposal_id'] = self.create_proposal_id()
-        proposal_serializer = ProposalInfoSerializer(data=proposal_data)
+    def post(self, request, account_id=None, format=None):
+        '''In this centers contain format like 
+        centers : [
+            center : [
+                space_mapping : []
+            ]
+            society_inventory : []  // these will be made if in center[space_mapping][society_allowed] is true
+            corporate_inventory : []
+        ] 
+        This is done to be in sync with the format on map view page as serializers.data dont allow to append 
+        any new (key,value) pair to its existing data
+        '''
 
-        if proposal_serializer.is_valid():
-            proposal_object = proposal_serializer.save()
-        else:
-            return Response({'message' : 'Invalid Proposal Data', 'errors' : proposal_serializer.errors}, status=406)
+        supplier_codes = {
+            'society' : 'RS',   'corporate' : 'CP',
+            'gym' : 'GY',       'saloon' : 'SA'
+        }
+        with transaction.atomic():
+            proposal_data = request.data
+            proposal_data['proposal_id'] = self.create_proposal_id()
+            account = AccountInfo.objects.all().order_by('account_id').first()
+            proposal_data['account'] = account.account_id
+            try:
+                proposal_object = ProposalInfo.objects.get(proposal_id=proposal_data['proposal_id'])
+                # id already exists --> Do something
+                return Response(status=404)
+            except ProposalInfo.DoesNotExist:
+                proposal_serializer = ProposalInfoSerializer(data=proposal_data)
+
+                if proposal_serializer.is_valid():
+                    proposal_object = proposal_serializer.save()
+                else:
+                    return Response({'message' : 'Invalid Proposal Info', 'errors' : \
+                        proposal_serializer.errors}, status=406)
+
+                for center_info in proposal_data['centers']:
+                    center = center_info['center']
+                    space_mapping = center['space_mapping']
+                    center['proposal'] = proposal_object.proposal_id
+                    center['radius'] = 1123.45
+                    center_serializer = ProposalCenterMappingSerializer(data=center)
+
+                    if center_serializer.is_valid():
+                        center_object = center_serializer.save()
+                    else:
+                        return Response({'message' : 'Invalid Center Data', 'errors' : center_serializer.errors},\
+                            status=406)
+
+                    space_mapping['center'] = center_object.id
+                    space_mapping['proposal'] = proposal_object.proposal_id
+                    space_mapping_serializer = SpaceMappingSerializer(data=space_mapping)
+                    if space_mapping_serializer.is_valid():
+                        space_mapping_object = space_mapping_serializer.save()
+                    else:
+                        return Response({
+                                'message' : 'Invalid Space Mapping Data',
+                                'errors' : space_mapping_serializer.errors
+                            }, status=406)
 
 
-        for center in proposal_data['centers']:
-            center['proposal'] = proposal_object.proposal_id
-            center_serializer = ProposalCenterMappingSerializer(data=center)
+                    # extend the list in for loop when new spaces added. Keep the variables names accordingly          
+                    for space in ['society','corporate','gym','saloon']:
+                        ''' This loops checks if the space is allowed and if it is allowed save the 
+                        inventory types chosen by the user in the inventory_type table '''
+                        try:
+                            space_allowed = space + '_allowed' 
+                            if space_mapping[space_allowed]:
+                                space_inventory = space + '_inventory'
+                                center_info[space_inventory]['supplier_code'] = supplier_codes[space]
+                                center_info[space_inventory]['space_mapping'] = space_mapping_object.id
+                                inventory_type_serializer = InventoryTypeSerializer(data=center_info[space_inventory])
+                                if inventory_type_serializer.is_valid():
+                                    inventory_type_serializer.save()
+                                else:
+                                    return Response({
+                                            'message' : 'Invalid Inventory Type Info',
+                                            'errors' : inventory_type_serializer.errors
+                                        })
+                        except KeyError:
+                            print 'KeyError occured'
+                            pass
 
-            if serializer.is_valid():
-                center_serializer.save()
-            else:
-                return Response({'message':'Invalid Center Info', 'errors' : center_serializer.errors}, status=406)
 
-
+        return Response(status=200)
 
     def create_proposal_id(self):
         import random, string
@@ -773,9 +839,14 @@ class SpacesOnCenterAPIView(APIView):
         radius provided currently considering radius as the half of side of square
         This API is called before map view page is loaded'''
 
+        ''' !IMPORTANT --> you have to manually add all the type of spaces that are being added apart from
+        Corporate and Society '''
+
+        response = {}
+
         try:
             if proposal_id is None:
-                proposal_id = 'PROP1';
+                proposal_id = 'VGaLoytK';
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
         except ProposalInfo.DoesNotExist:
             return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
@@ -784,50 +855,95 @@ class SpacesOnCenterAPIView(APIView):
         centers_data_list = []
 
         for proposal_center in proposal_centers:
+            try:
+                space_mapping_object = SpaceMapping.objects.get(center=proposal_center)
+            except SpaceMapping.DoesNotExist:
+                return Response({'message' : 'Space Mapping Does Not Exist'}, status=406) 
 
-            delta_latitude = proposal_center.radius/ 110.574
+            space_info_dict = {}
+
+            delta_dict = get_delta_latitude_longitude(float(proposal_center.radius), float(proposal_center.latitude))
+
+            delta_latitude = delta_dict['delta_latitude']
             min_latitude = proposal_center.latitude - delta_latitude
             max_latitude = proposal_center.latitude + delta_latitude
 
-            delta_longitude = proposal_center.radius/(111.320 * math.cos(math.radians(proposal_center.latitude)))
+            delta_longitude = delta_dict['delta_longitude']
             min_longitude = proposal_center.longitude - delta_longitude
             max_longitude = proposal_center.longitude + delta_longitude
 
-            societies = SupplierTypeSociety.objects.filter(Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude))
-            corporates = SupplierTypeCorporate.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
+
+            # for society
+            if space_mapping_object.society_allowed:
+                q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
+                
+                inventory_type_society = space_mapping_object.get_society_inventories()
+                inventory_type_serializer = InventoryTypeSerializer(inventory_type_society)
+                # applying filter on basis of inventory
+                for param in ['poster_allowed', 'standee_allowed', 'flier_allowed', 'stall_allowed', 'banner_allowed']:
+                    try:
+                        if param == 'poster_allowed' and inventory_type_society.__dict__[param]:
+                            q &= (Q(poster_allowed_nb=True) | Q(poster_allowed_lift=True))
+                        elif inventory_type_society.__dict__[param]:
+                            q &= Q(**{param : True})
+                    except KeyError:
+                        pass
 
 
-            # This fetches all the society ids in a list
-            society_ids = societies.values_list('supplier_id',flat=True)
 
-            # following query find sum of all the variables specified in a dictionary
-            society_inventory =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
-                standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+                societies = SupplierTypeSociety.objects.filter(q)
+                societies_count = societies.count()
+                societies_serializer =  ProposalSocietySerializer(societies, many=True)
 
-
-            societies_count = societies.count()
-            corporates_count = corporates.count()
-
-            proposal_center_serializer = ProposalCenterMappingSerializer(proposal_center)
-            societies_serializer =  ProposalSocietySerializer(societies, many=True)
-            corporates_serializer = ProposalCorporateSerializer(corporates, many=True)  
-            centers_data_list.append({
-                'center' : proposal_center_serializer.data,
-                'societies' : societies_serializer.data,
-                'corporates' : corporates_serializer.data,
-                'societies_count' : societies_count,
-                'corporates_count' : corporates_count,
-                'society_inventory' : society_inventory,
-            })
+                # following query find sum of all the variables specified in a dictionary
+                # this finds sum of all inventories, if you don't need some of some inventory make it 0 in front end
+                society_inventory =  InventorySummary.objects.filter(supplier__in=societies).aggregate(posters=Sum('total_poster_count'),\
+                    standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
 
-            proposal_serializer = ProposalInfoSerializer(proposal)
+                space_info_dict['societies'] = societies_serializer.data
+                space_info_dict['society_inventory_count'] = society_inventory
+                space_info_dict['society_inventory'] = inventory_type_serializer.data
+                space_info_dict['societies_count'] = societies_count
+
+
+            if space_mapping_object.corporate_allowed:
+                q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
+                
+                # uncomment this line when corporate inventory implemented 
+                # inventory_type_corporate = space_mapping_object.get_corporate_inventories().
+                # inventory_type_serializer = InventoryTypeSerializer(inventory_type_corporate)
+                # then run for loop almost same as above for applying filter on inventory_allowed
+                # make a query for different inventory count
+
+                corporates = SupplierTypeCorporate.objects.filter(q)
+                corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
+                corporates_count = corporates.count()
+
+                space_info_dict['corporates'] = corporates_serializer.data
+                space_info_dict['corporates_count'] = corporates_count 
+                # space_info_dict['corporate_inventory'] = inventory_type_serializer.data
+
+            if space_mapping_object.gym_allowed:
+                # write gym code for filtering 
+                pass
+
+            if space_mapping_object.saloon_allowed:
+                # write saloon code for filtering 
+                pass    
+            
+
+            proposal_center_serializer = ProposalCenterMappingSpaceSerializer(proposal_center)
+            space_info_dict['center'] = proposal_center_serializer.data
+            
+            centers_data_list.append(space_info_dict)
+
+
             response = {
-                'proposal' : proposal_serializer.data,
-                'centers'  : centers_data_list
+                'centers'  : centers_data_list,
             }
 
-        return Response(response.data, status=200)
+        return Response(response, status=200)
 
         # min_latitude = 18
         # max_latitude = 20
@@ -860,6 +976,22 @@ class SpacesOnCenterAPIView(APIView):
 
         # return Response(response, status=200)
 
+
+    def post(self, reqeust,id=None, format=None):
+        '''Here write the API for changing the center and radius of a center
+        '''
+        pass
+
+
+
+def get_delta_latitude_longitude(radius, latitude):
+    delta_longitude = radius/(111.320 * math.cos(math.radians(latitude)))
+    delta_latitude = radius/ 110.574
+
+    return {'delta_latitude' : delta_latitude, 
+            'delta_longitude' : delta_longitude}
+
+
 # class GetSpaceInfoAPIView(APIView):
 #     ''' This API is to fetch the space(society,corporate, gym) etc. using its supplier Code
 #     e.g. RS for residential Society 
@@ -890,15 +1022,16 @@ class GetFilteredSocietiesAPIView(APIView):
         Currently implemented filters are locality and location (Standard, Medium High etc.)
         flat_count (100 - 250 etc.) flat_type(1BHK, 2BHK etc.) '''
 
-        latitude_params = request.query_params.get('lat', None)
-        longitude_params = request.query_params.get('lng',None)
+        latitude = request.query_params.get('lat', None)
+        longitude = request.query_params.get('lng',None)
+        radius = request.query_params.get('r',None) # radius change
         location_params = request.query_params.get('loc',None)
         society_quality_params = request.query_params.get('qlt',None)
         society_quantity_params = request.query_params.get('qnt',None)
         flat_count = request.query_params.get('flc',None)
         flat_type_params = request.query_params.get('flt',None)
         inventory_params = request.query_params.get('inv',None)
-        radius = request.query_params.get('r',None) # radius change
+        
 
         q = Q()
         quality_dict , inventory_dict, society_quantity_dict = get_related_dict()
@@ -911,11 +1044,10 @@ class GetFilteredSocietiesAPIView(APIView):
 
         # if not radius:
 
-        if not latitude_params and not longitude_params:
-            return Response({'message' : 'Please Provide longitude and latitude values as well'}, status=406)
+        if not latitude or not longitude or not radius:
+            return Response({'message' : 'Please Provide longitude and latitude and radius as well'}, status=406)
 
-        print "\n\n\n"
-        print "flat_type_params : ",flat_type_params
+
         if flat_type_params:
             flat_types = []
             flat_type_params = flat_type_params.split()
@@ -925,8 +1057,6 @@ class GetFilteredSocietiesAPIView(APIView):
                 except KeyError:
                     pass
 
-            # print "\n\n\n"
-            print "Flat Types : ", flat_types
             if flat_types:
                 ''' We can improve performance here  by appending .distinct('society_id') when using postgresql ''' 
                 society_ids = set(FlatType.objects.filter(flat_type__in=flat_types).values_list('society_id',flat=True))
@@ -935,28 +1065,21 @@ class GetFilteredSocietiesAPIView(APIView):
                 # It is simply all the societies -> filter becomes useless
 
 
-        if latitude_params:
-            latitude_params = latitude_params.split()
-            if len(latitude_params) == 2:
-                min_latitude = latitude_params[0]
-                max_latitude = latitude_params[1]
+        # calculating for latitude and longitude
+        # this is done to ensure that the societies are sent according to the current radius and center in frontend
+        # user can change center and radius and it will not be stored in the database until saved
+        latitude = float(latitude)
+        longitude = float(longitude)
+        delta_dict = get_delta_latitude_longitude(float(radius), latitude)
 
-                q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude)
-                # can't include default societies with latitude = 0 as they cant be used for mapping 
-            else : 
-                return Response({'message' : 'Please Provide proper latitude values'}, status=406)
+        max_latitude = latitude + delta_dict['delta_latitude']
+        min_latitude = latitude - delta_dict['delta_latitude']
 
-        if longitude_params:
-            longitude_params = longitude_params.split()
-            if len(longitude_params) == 2 :
-                min_longitude = longitude_params[0]
-                max_longitude = longitude_params[1]
+        delta_longitude = delta_dict['delta_longitude']
+        max_longitude = longitude + delta_dict['delta_longitude']
+        min_longitude = longitude - delta_dict['delta_longitude']
 
-                q &= Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-                # can't include default societies with latitude = 0 as they cant be used for mapping 
-            else :
-                return Response({'message' : 'Please Provide proper longitude values'}, status=406)
-
+        q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
         
         if location_params:
             location_ratings = []
@@ -1030,9 +1153,21 @@ class GetFilteredSocietiesAPIView(APIView):
         print "\n\n"
 
         societies = SupplierTypeSociety.objects.filter(q)
+        society_ids= societies.values_list('supplier_id',flat=True)
+        societies_count = societies.count()
+
+        society_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
+                standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
         society_serializer = ProposalSocietySerializer(societies, many=True)
 
-        return Response(society_serializer.data, status=200)
+        response = {
+            'societies' : society_serializer.data,
+            'society_inventory_count' : society_inventory_count,
+            'societies_count' : societies_count
+        }
+
+        return Response(response, status=200)
 
 
     def post(self, request, format=None):
@@ -1068,215 +1203,222 @@ def get_related_dict():
 
 
 
+class FinalProposalAPIView(APIView):
 
-class CreateProposalAPIView(APIView):
+    def post(self, request, format=None):
+        pass
 
-    def get(self,request, format=None):
-        ''' This API creates/update the proposal related to a particular account
-        Currently Versioning of Proposals is not done
-        Tables for versioning are still to be made'''
-        from datetime import datetime
-        proposal = {
-            'proposal_id' : 'BUSACCP01',
-            'account_id' : '2',
-            'name' : 'Sample Proposal',
-            'tentative_cost' : '50000',
-            'tentative_start_date' : datetime.now(),
-            'tentative_end_date' : datetime.now(),
-            'centers' : [{
-                'center_name' : 'Oxford Chambers',
-                'Address' : '',
-                'latitude' : 19.119128, 
-                'longitude' : 72.890795,
-                'radius' : 3.5,
-                'area' : 'Powai',
-                'subarea' : 'Hiranandani Gardens',
-                'city'    : 'Mumbai',
-                'pincode' : '400072',
 
-                'space_mappings' : [
-                    {
-                        'space_name' : 'society',
-                        'space_count' : '10',
-                        'buffer_space_count' : '5',
-                        'spaces' : [
-                            {  'object_id' : 'S1'},
-                            {  'object_id' : 'S2'},
-                            {  'object_id' : 'S3'},
-                            {  'object_id' : 'S4'},
-                        ],
 
-                        'inventories' : [
-                            {
-                                'inventory_name' : 'POSTER',
-                                'inventory_type' : 'A3',
-                            },
-                            {
-                                'inventory_name' : 'POSTER LIFT',
-                                'inventory_type' : 'A3',
-                            },
-                            {
-                                'inventory_name' : 'STANDEE',
-                                'inventory_type' : 'MEDIUM',
-                            },
-                        ],
-                    },
 
-                    {
-                        'space_name' : 'Corporate',
-                        'space_count' : '14',
-                        'buffer_space_count' : '4',
-                        'spaces' : [
-                            {'object_id' : 'CP1'},
-                            {'object_id' : 'CP2'},
-                            {'object_id' : 'CP3'},
-                        ],
+# class FinalProposalAPIView(APIView):
 
-                        'inventories' : [
-                            {
-                                'inventory_name' : 'POSTER',
-                                'inventory_type' : 'A3',
-                            },
-                            {
-                                'inventory_name' : 'POSTER LIFT',
-                                'inventory_type' : 'A3',
-                            },
-                            {
-                                'inventory_name' : 'STANDEE',
-                                'inventory_type' : 'MEDIUM',
-                            },
-                        ],
-                    },
-                ],
+#     def get(self,request, format=None):
+#         ''' This API creates/update the proposal related to a particular account
+#         Currently Versioning of Proposals is not done
+#         Tables for versioning are still to be made'''
+#         from datetime import datetime
+#         proposal = {
+#             'proposal_id' : 'BUSACCP01',
+#             'account_id' : '2',
+#             'name' : 'Sample Proposal',
+#             'tentative_cost' : '50000',
+#             'tentative_start_date' : datetime.now(),
+#             'tentative_end_date' : datetime.now(),
+#             'centers' : [{
+#                 'center_name' : 'Oxford Chambers',
+#                 'Address' : '',
+#                 'latitude' : 19.119128, 
+#                 'longitude' : 72.890795,
+#                 'radius' : 3.5,
+#                 'area' : 'Powai',
+#                 'subarea' : 'Hiranandani Gardens',
+#                 'city'    : 'Mumbai',
+#                 'pincode' : '400072',
 
-            }],
-        }
+#                 'space_mappings' : [
+#                     {
+#                         'space_name' : 'society',
+#                         'space_count' : '10',
+#                         'buffer_space_count' : '5',
+#                         'spaces' : [
+#                             {  'object_id' : 'S1'},
+#                             {  'object_id' : 'S2'},
+#                             {  'object_id' : 'S3'},
+#                             {  'object_id' : 'S4'},
+#                         ],
 
-        with transaction.atomic():
-            proposal['account'] = proposal['account_id']
+#                         'inventories' : [
+#                             {
+#                                 'inventory_name' : 'POSTER',
+#                                 'inventory_type' : 'A3',
+#                             },
+#                             {
+#                                 'inventory_name' : 'POSTER LIFT',
+#                                 'inventory_type' : 'A3',
+#                             },
+#                             {
+#                                 'inventory_name' : 'STANDEE',
+#                                 'inventory_type' : 'MEDIUM',
+#                             },
+#                         ],
+#                     },
 
-            try:
-                proposal_object = ProposalInfo.objects.get(proposal_id = proposal['proposal_id'])
-                proposal_serializer = ProposalInfoSerializer(proposal_object,data=proposal)
-            except ProposalInfo.DoesNotExist:
-                proposal_serializer = ProposalInfoSerializer(data=proposal)
+#                     {
+#                         'space_name' : 'Corporate',
+#                         'space_count' : '14',
+#                         'buffer_space_count' : '4',
+#                         'spaces' : [
+#                             {'object_id' : 'CP1'},
+#                             {'object_id' : 'CP2'},
+#                             {'object_id' : 'CP3'},
+#                         ],
 
-            if proposal_serializer.is_valid():
-                proposal_object = proposal_serializer.save()
-            else: 
-                return Response({'message' : 'Proposal Serializer Invalid', \
-                    'errors' : proposal_serializer.errors}, status=406)
+#                         'inventories' : [
+#                             {
+#                                 'inventory_name' : 'POSTER',
+#                                 'inventory_type' : 'A3',
+#                             },
+#                             {
+#                                 'inventory_name' : 'POSTER LIFT',
+#                                 'inventory_type' : 'A3',
+#                             },
+#                             {
+#                                 'inventory_name' : 'STANDEE',
+#                                 'inventory_type' : 'MEDIUM',
+#                             },
+#                         ],
+#                     },
+#                 ],
+
+#             }],
+#         }
+
+#         with transaction.atomic():
+#             proposal['account'] = proposal['account_id']
+
+#             try:
+#                 proposal_object = ProposalInfo.objects.get(proposal_id = proposal['proposal_id'])
+#                 proposal_serializer = ProposalInfoSerializer(proposal_object,data=proposal)
+#             except ProposalInfo.DoesNotExist:
+#                 proposal_serializer = ProposalInfoSerializer(data=proposal)
+
+#             if proposal_serializer.is_valid():
+#                 proposal_object = proposal_serializer.save()
+#             else: 
+#                 return Response({'message' : 'Proposal Serializer Invalid', \
+#                     'errors' : proposal_serializer.errors}, status=406)
             
 
-            centers = proposal['centers']
+#             centers = proposal['centers']
 
-            space_mappings_superset = set()
-            inventory_type_superset = set()
-            spaces_superset = set()
-            centers_superset  = set(proposal_object.get_centers().values_list('id',flat=True))
+#             space_mappings_superset = set()
+#             inventory_type_superset = set()
+#             spaces_superset = set()
+#             centers_superset  = set(proposal_object.get_centers().values_list('id',flat=True))
             
-            for center in centers:
-                center['proposal'] = proposal_object.proposal_id
+#             for center in centers:
+#                 center['proposal'] = proposal_object.proposal_id
 
-                if 'id' in center:
-                    center_object = ProposalCenterMapping.objects.get(id=center['id'])
-                    centers_superset.remove(center_object.id)
-                    center_serializer = ProposalCenterMappingSerializer(center_object ,data=center)
-                else:
-                    center_serializer = ProposalCenterMappingSerializer(data=center)
+#                 if 'id' in center:
+#                     center_object = ProposalCenterMapping.objects.get(id=center['id'])
+#                     centers_superset.remove(center_object.id)
+#                     center_serializer = ProposalCenterMappingSerializer(center_object ,data=center)
+#                 else:
+#                     center_serializer = ProposalCenterMappingSerializer(data=center)
 
-                if center_serializer.is_valid():
-                    center_object = center_serializer.save()
-                else:
-                    return Response({'message' : 'Center Serializer Invalid',\
-                        'errors' : center_serializer.errors}, status=406)
+#                 if center_serializer.is_valid():
+#                     center_object = center_serializer.save()
+#                 else:
+#                     return Response({'message' : 'Center Serializer Invalid',\
+#                         'errors' : center_serializer.errors}, status=406)
 
                 
 
-                space_mappings = center['space_mappings']
-                space_mappings_set = set(SpaceMapping.objects.filter(center=center_object).values_list('id',flat=True))
+#                 space_mappings = center['space_mappings']
+#                 space_mappings_set = set(SpaceMapping.objects.filter(center=center_object).values_list('id',flat=True))
 
-                for space_mapping in space_mappings:
+#                 for space_mapping in space_mappings:
 
-                    content_model = "SupplierType" + space_mapping['space_name'].title() 
-                    content_type = ContentType.objects.get(model=content_model)
-
-
-                    space_mapping['proposal'] = proposal_object.proposal_id
-                    space_mapping['center'] = center_object.id
-                    space_mapping['inventory_type_count'] = len(space_mapping['inventories'])
-
-                    if 'id' in space_mapping:
-                        space_mapping_object = SpaceMapping.objects.get(id=space_mapping['id'])
-                        space_mappings_set.remove(space_mapping_object.id)
-                        space_mapping_serializer = SpaceMappingSerializer(space_mapping_object,data=space_mapping)
-                    else:    
-                        space_mapping_serializer = SpaceMappingSerializer(data=space_mapping)
-
-                    if space_mapping_serializer.is_valid():
-                        space_mapping_object = space_mapping_serializer.save()
-                    else :
-                        return Response({'message' : 'Invalid Space Mapping Received',\
-                            'errors' : space_mapping_serializer.errors}, status=406)
+#                     content_model = "SupplierType" + space_mapping['space_name'].title() 
+#                     content_type = ContentType.objects.get(model=content_model)
 
 
-                    
-                    inventories = space_mapping['inventories']
-                    inventory_type_set = set(InventoryType.objects.filter(space_mapping=space_mapping_object).values_list('id',flat=True))
-                    for inventory in inventories:
-                        inventory['space_mapping'] = space_mapping_object.id
+#                     space_mapping['proposal'] = proposal_object.proposal_id
+#                     space_mapping['center'] = center_object.id
+#                     space_mapping['inventory_type_count'] = len(space_mapping['inventories'])
 
-                        if 'id' in inventory:
-                            inventory_type_object = InventoryType.objects.get(id=inventory['id'])
-                            inventory_type_set.remove(inventory_type_object.id)
-                            inventory_serializer = InventoryTypeSerializer(inventory_type_object, data=inventory)
-                        else:
-                            inventory_serializer = InventoryTypeSerializer(data=inventory)
+#                     if 'id' in space_mapping:
+#                         space_mapping_object = SpaceMapping.objects.get(id=space_mapping['id'])
+#                         space_mappings_set.remove(space_mapping_object.id)
+#                         space_mapping_serializer = SpaceMappingSerializer(space_mapping_object,data=space_mapping)
+#                     else:    
+#                         space_mapping_serializer = SpaceMappingSerializer(data=space_mapping)
 
-                        if inventory_serializer.is_valid():
-                            inventory_serializer.save()
-                        else:
-                            return Response({'message' : 'Invalid Inventory Received',\
-                                'errors' : inventory_serializer.errors} , status=406 )
+#                     if space_mapping_serializer.is_valid():
+#                         space_mapping_object = space_mapping_serializer.save()
+#                     else :
+#                         return Response({'message' : 'Invalid Space Mapping Received',\
+#                             'errors' : space_mapping_serializer.errors}, status=406)
 
-                    inventory_type_superset = inventory_type_superset.union(inventory_type_set)
 
                     
-                    spaces = space_mapping['spaces']
-                    spaces_set = set(ShortlistedSpaces.objects.filter(space_mapping=space_mapping_object).values_list('id',flat=True))
+#                     inventories = space_mapping['inventories']
+#                     inventory_type_set = set(InventoryType.objects.filter(space_mapping=space_mapping_object).values_list('id',flat=True))
+#                     for inventory in inventories:
+#                         inventory['space_mapping'] = space_mapping_object.id
+
+#                         if 'id' in inventory:
+#                             inventory_type_object = InventoryType.objects.get(id=inventory['id'])
+#                             inventory_type_set.remove(inventory_type_object.id)
+#                             inventory_serializer = InventoryTypeSerializer(inventory_type_object, data=inventory)
+#                         else:
+#                             inventory_serializer = InventoryTypeSerializer(data=inventory)
+
+#                         if inventory_serializer.is_valid():
+#                             inventory_serializer.save()
+#                         else:
+#                             return Response({'message' : 'Invalid Inventory Received',\
+#                                 'errors' : inventory_serializer.errors} , status=406 )
+
+#                     inventory_type_superset = inventory_type_superset.union(inventory_type_set)
+
                     
-                    for space in spaces:
-                        if not 'buffer_status' in space:
-                            space['buffer_status'] = 'false' 
-                        print space
+#                     spaces = space_mapping['spaces']
+#                     spaces_set = set(ShortlistedSpaces.objects.filter(space_mapping=space_mapping_object).values_list('id',flat=True))
+                    
+#                     for space in spaces:
+#                         if not 'buffer_status' in space:
+#                             space['buffer_status'] = 'false' 
+#                         print space
 
-                        space['content_type'] = content_type.id
-                        space['space_mapping'] = space_mapping_object.id
+#                         space['content_type'] = content_type.id
+#                         space['space_mapping'] = space_mapping_object.id
 
-                        if 'id' in space:
-                            space_object = ShortlistedSpaces.objects.get(id=space['id'])
-                            spaces_set.remove(space_object.id)
-                            space_serializer = ShortlistedSpacesSerializer(space_object, data=space)
-                        else:
-                            space_serializer = ShortlistedSpacesSerializer(data=space)
+#                         if 'id' in space:
+#                             space_object = ShortlistedSpaces.objects.get(id=space['id'])
+#                             spaces_set.remove(space_object.id)
+#                             space_serializer = ShortlistedSpacesSerializer(space_object, data=space)
+#                         else:
+#                             space_serializer = ShortlistedSpacesSerializer(data=space)
 
-                        if space_serializer.is_valid():
-                            space_serializer.save()
-                        else:
-                            return Response({'message' : 'Invalid Space Received',\
-                                'errros' : space_serializer.errors}, status=406)
+#                         if space_serializer.is_valid():
+#                             space_serializer.save()
+#                         else:
+#                             return Response({'message' : 'Invalid Space Received',\
+#                                 'errros' : space_serializer.errors}, status=406)
             
-                    spaces_superset = spaces_superset.union(spaces_set)
+#                     spaces_superset = spaces_superset.union(spaces_set)
 
-                space_mappings_superset = space_mappings_superset.union(space_mappings_set)
+#                 space_mappings_superset = space_mappings_superset.union(space_mappings_set)
             
 
-            ProposalCenterMapping.objects.filter(id__in=centers_superset).delete()            
-            SpaceMapping.objects.filter(id__in=space_mappings_superset).delete()
-            InventoryType.objects.filter(id__in=inventory_type_superset).delete()
-            ShortlistedSpaces.objects.filter(id__in=spaces_superset).delete()
+#             ProposalCenterMapping.objects.filter(id__in=centers_superset).delete()            
+#             SpaceMapping.objects.filter(id__in=space_mappings_superset).delete()
+#             InventoryType.objects.filter(id__in=inventory_type_superset).delete()
+#             ShortlistedSpaces.objects.filter(id__in=spaces_superset).delete()
 
-        return Response(status=200)
+#         return Response(status=200)
 
 
 

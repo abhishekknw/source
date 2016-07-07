@@ -9,7 +9,10 @@
 
   	var createProposalService = {};
 
-
+  	createProposalService.saveInitialProposal = function(data){
+  		var url = url_base + 'createInitialProposal/';
+  		return machadaloHttp.post(url,data);
+  	}
 
   	return createProposalService;
   }]);

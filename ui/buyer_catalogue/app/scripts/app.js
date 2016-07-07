@@ -60,8 +60,8 @@ angular
            templateUrl : 'modues/pages/mapview/mapview.tmpl.html',
            controller : 'MapCtrl'
         })
-        .state('campaign.createProposalMe',{
-          url : '/createproposaltemp',
+        .state('createProposalMe',{
+          url : '/createproposal',
           templateUrl : 'modules/pages/createProposal/createproposal.tmpl.html',
           controller : 'ProposalCtrl'
           // controller : ''

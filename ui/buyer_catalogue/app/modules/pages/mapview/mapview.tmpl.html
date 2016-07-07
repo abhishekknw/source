@@ -4,7 +4,7 @@
   </style>
 <div>
 <select ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
-  <option ng-repeat="center_var in proposal.centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
+  <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
 </select>
 <div class = "mapPosition">
   <div>
@@ -39,15 +39,20 @@ Old Center :&nbsp; &nbsp; Latitude<input type="text" ng-model="old_center.latitu
 Longitude <input type="text"  ng-model="old_center.longitude" ng-readonly="true"> <br>
 New Center : &nbsp; &nbsp; Latitude<input type="text" ng-model="new_center.latitude" ng-readonly="true"> &nbsp;&nbsp;
 Longitude <input type="text"  ng-model="new_center.longitude" ng-readonly="true"><br>
-<button ng-show="center_changed" >Change Center</button>
+<button ng-show="center_changed">Change Center</button>
+<button ng-show="center_changed" ng-click="resetCenter()">Reset Center</button>
 </div>
+
+
+<input type="checkbox" ng-model="society_allowed" ng-click="spaceSociety()"> Society
+<div ng-if="society_allowed">
 
 Society Filters : <br>
 Inventory Types :
-<div style="display:inline" ng-repeat="inventory in inventory_type">
-<input type="checkbox" ng-model="inventory.selected" ng-click="societyFilter()">{{ inventory.name }}&nbsp;
+<div style="display:inline" ng-repeat="inventory in society_inventory_type">
+<input type="checkbox" ng-model="inventory.selected" ng-click="societyFilter(inventory)">{{ inventory.name }}&nbsp;
 </div>
-<button ng-click="clearAllFilters(inventory_type)">Clear All</button>
+<!-- <button ng-click="clearAllFilters(society_inventory_type)">Clear All</button> -->
 
 
 <br>Society Location :
@@ -77,12 +82,23 @@ Inventory Types :
 </div>
 <button ng-click="clearAllFilters(society_flat_type)">Clear All</button>
 
-
+</div>
 
 <br><br>
+<h2>Grid View</h2>
 <div ng-if="show_societies" ng-repeat="society in current_center.societies">
   Name : {{society.society_name}}<br>
   Address : {{society.society_address1 + " " + society.society_subarea}}<br>
   Locality Rating : {{society.society_location_type}}<br>
+  <!-- <input type="checkbox" ng-model="society.shortlisted" > -->
+  <button ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
+  <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
   <br>
 </div>
+<!-- <div>
+  <button ng-click="showDetails()">Submit Proposal</button>
+</div> -->
+
+
+
+
