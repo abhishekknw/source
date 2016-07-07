@@ -14,7 +14,7 @@
       <div class="col-md-3">
         <span class = "" ng-show ="choice == 'existing'">
             <select name="selectAcc" id="selectAcc" ng-model="selectAcc" ng-change="getAccount()">
-                <option  ng-repeat = "account in accounts" value="{{account.id}}">{{account.name}}</option>
+                <option  ng-repeat = "account in accounts" value="{{account.account_id}}">{{account.name}}</option>
             </select>
         </span>
       </div>

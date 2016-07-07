@@ -118,7 +118,7 @@ angular.module('machadaloPages')
 	    		    console.log(response);
 	            $scope.model.account = response.account;
               $scope.model.business = response.business;
-              $scope.model.account.business_id = response.business.id.toString();
+              $scope.model.account.business_id = response.business.business_id.toString();
 	            $scope.choice = "selected";
 	       });
       };
@@ -160,6 +160,7 @@ angular.module('machadaloPages')
       // }
 
     	$scope.create = function() {
+            console.log("create called");
             console.log("$scope.model is :");
         	  console.log($scope.model);
             pagesService.createAccountCampaign($scope.model)

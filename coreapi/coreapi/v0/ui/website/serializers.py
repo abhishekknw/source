@@ -14,10 +14,10 @@ class ProposalInfoSerializer(ModelSerializer):
         model = ProposalInfo
 
 
-class ProposalCenterMappingSerializer(ModelSerializer):
+class InventoryTypeSerializer(ModelSerializer):
 
     class Meta:
-        model = ProposalCenterMapping
+        model = InventoryType
 
 
 class SpaceMappingSerializer(ModelSerializer):
@@ -26,10 +26,17 @@ class SpaceMappingSerializer(ModelSerializer):
         model = SpaceMapping
 
 
-class InventoryTypeSerializer(ModelSerializer):
+class ProposalCenterMappingSpaceSerializer(ModelSerializer):
+    space_mappings = SpaceMappingSerializer(source='get_space_mappings')
 
     class Meta:
-        model = InventoryType
+        model = ProposalCenterMapping
+
+
+class ProposalCenterMappingSerializer(ModelSerializer):
+
+    class Meta:
+        model = ProposalCenterMapping
 
 
 class ShortlistedSpacesSerializer(ModelSerializer):
@@ -42,6 +49,13 @@ class ShortlistedSpacesSerializer(ModelSerializer):
 class ProposalSocietySerializer(ModelSerializer):
     '''This serializer sends the latitude and longitude of societies on map view page.
     On clicking on map marker info of the society will be displayed'''
+
+    # shortlisted is just for grid view to allow remove and shortlist functionality easliy
+    shortlisted = serializers.SerializerMethodField('return_false')
+
+    def return_false(self,foo):
+        return True
+
     class Meta:
         model = SupplierTypeSociety
         fields = (
@@ -52,16 +66,28 @@ class ProposalSocietySerializer(ModelSerializer):
             'society_location_type',
             'society_longitude',
             'society_latitude',
+            'shortlisted',
         )
 
 
 class ProposalCorporateSerializer(ModelSerializer):
     ''' This Serializer sends the latitude and longitude of corporates on map view page.
     On clicking on map marker info of the corporate will be retrived'''
+
+    # shortlisted is just for grid view to allow remove and shortlist functionality easliy
+    shortlisted = serializers.SerializerMethodField('return_false')
+
+    def return_false(self,foo):
+        return False
+
     class Meta:
         model = SupplierTypeCorporate
         fields = (
             'supplier_id',
+            'name',
+            'address1',
+            'subarea',
+            'location_type',
             'longitude',
             'latitude',
         )
