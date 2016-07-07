@@ -154,11 +154,7 @@ angular.module('machadaloPages')
 
             var sub_type_id = $scope.model.business.sub_type_id;
             var type_id = $scope.model.business.business_type_id;
-<<<<<<< HEAD
-            
-=======
 
->>>>>>> 15157e961edab30f2c7563bad992e3773079bc1f
             console.log(sub_type_id, type_id);
             response = JSON.parse(response);
             $scope.model.business = response.business;
