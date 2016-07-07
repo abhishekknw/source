@@ -1,9 +1,13 @@
 from django.conf.urls import include, url
 from v0.ui import views
+# from v0.ui.website import views as web_views
 
 urlpatterns = [
 
     url(r'^website/', include('v0.ui.website.urls')),
+
+    # url(r'^website/create_business/load_business_types/',web_views.getBusinessTypesAPIView.as_view()),
+    # url(r'^website/subtypes/(?P<id>[A-Z_a-z0-9]+)/$', web_views.getBusinessSubTypesAPIView.as_view()),
 
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/tower/$', views.TowerAPIView.as_view()),
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/flat/$', views.FlatTypeAPIView.as_view()),
@@ -14,6 +18,9 @@ urlpatterns = [
     url(r'^corporate/list/$', views.CorporateAPIListView.as_view()),
     url(r'^society/filter/$', views.SocietyAPIFiltersView.as_view()),
     url(r'^society/filterList/$', views.SocietyAPIFiltersListView.as_view()),
+    url(r'^society/filterSubArea/$',views.SocietyAPIFilterSubAreaView.as_view(),),
+    url(r'^societyList/sortedSocieties/$',views.SocietyAPISortedListView.as_view()),
+    url(r'^society/societyIds/$', views.SocietyAPISocietyIdsView.as_view()),
 
     #url(r'^society/(?P<id>[A-Z_a-z0-9]+)/car_display/$', views.CarDisplayAPIView.as_view()),
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/other_inventory/$', views.OtherInventoryAPIView.as_view()),

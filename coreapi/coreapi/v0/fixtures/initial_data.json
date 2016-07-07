@@ -121,15 +121,15 @@
 },
 {
     "fields": {
-        "adinventory_type": "Small",
-        "adinventory_name": "BANNER"
+        "adinventory_type": "Lobby",
+        "adinventory_name": "FLIER"
     },
     "model": "v0.adinventorytype",
     "pk": 16
 },
 {
     "fields": {
-        "adinventory_type": "Medium",
+        "adinventory_type": "Small",
         "adinventory_name": "BANNER"
     },
     "model": "v0.adinventorytype",
@@ -137,11 +137,19 @@
 },
 {
     "fields": {
-        "adinventory_type": "Large",
+        "adinventory_type": "Medium",
         "adinventory_name": "BANNER"
     },
     "model": "v0.adinventorytype",
     "pk": 18
+},
+{
+    "fields": {
+        "adinventory_type": "Large",
+        "adinventory_name": "BANNER"
+    },
+    "model": "v0.adinventorytype",
+    "pk": 19
 },
 
 {

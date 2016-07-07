@@ -30,6 +30,23 @@ class UICorporateSerializer(ModelSerializer):
         model = SupplierTypeCorporate
 
 
+class SocietyListSerializer(ModelSerializer):
+
+    class Meta:
+        model = SupplierTypeSociety
+        fields = (
+            'supplier_id',
+            'society_name',
+            'society_address1',
+            'society_address2',
+            'society_city',
+            'society_state',
+            'machadalo_index',
+            'society_type_quality',
+            'society_location_type',
+        )
+
+
 class UITowerSerializer(ModelSerializer):
     flat_type_details_available = serializers.BooleanField(source='is_flat_available')
     flat_type_details = SocietyFlatSerializer(source='get_flat_list', many=True)

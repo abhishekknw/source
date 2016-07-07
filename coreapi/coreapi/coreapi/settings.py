@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
-    # 'django_admin_bootstrapped',
+    'django_admin_bootstrapped',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django_extensions',
     'rest_framework',
+
     'corsheaders',
     'rest_jwt',
     'v0',
@@ -88,12 +89,22 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
 
+    # 'default': {
+    #       'NAME':'machadalo_tech',
+    #       'ENGINE': 'django.db.backends.mysql',
+    #       'HOST': '127.0.0.1',
+    #       'USER': 'root',
+    #       'PASSWORD': '',
+    #   }
+
     'default': {
           'NAME':'machadalo_tech',
           'ENGINE': 'django.db.backends.mysql',
           'HOST': '127.0.0.1',
-          'USER': 'mayank',
-          'PASSWORD': 'mayank',
+
+          'USER': 'freshuser',
+          'PASSWORD': 'password',
+
       }
     }
 
@@ -134,7 +145,7 @@ REST_FRAMEWORK = {
         'rest_jwt.authentication.JSONWebTokenAuthentication',
         ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 5
 }
 
 

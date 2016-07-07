@@ -1,17 +1,22 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
   <div class="page-container">
+   <div>
+    <span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span><br>
+    <span style="color:blue;margin-left:28%;font-size:18px;">{{successMsg}}</span>
+  </div>
     <div class="col-md-10">
     	<form class="choices">
 	    <div class="form-group">
 	    	<div class="row">
 		      	<div class="col-md-4">
-		      		<label for="existing">Select existing Business</label>
+              <div><span >{{errorMsg.message}}</span></div>
+		      		<label for="existing">Select existing Business </label>
 			    	  <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
 			    </div>
 			    <div class="col-md-4">
 				  	<span class = "" ng-show ="choice == 'existing'">
 				   	    <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
-				            <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
+				            <option  ng-repeat = "business in businesses" value="{{business.business_id}}">{{business.name}}</option>
 			          </select>
 		      	</span>
 	      	</div>
@@ -31,11 +36,11 @@
 	      		<div class = "col-md-3"><label>Business Name</label></div>
 	      		<div class = "col-md-3">{{model.business.name}}</div>
 	      		<div class = "col-md-3"><label>Business Type</label></div>
-	      		<div class = "col-md-3">{{model.business.type}}</div>
+	      		<div class = "col-md-3">{{model.business.type_name.business_type}}</div>
 	      	</div>
 	      	<div class = "row">
 	      		<div class = "col-md-3"><label>Business Sub-Type</label></div>
-	      		<div class = "col-md-3">{{model.business.sub_type}}</div>
+	      		<div class = "col-md-3">{{model.business.sub_type.business_sub_type}}</div>
 	      		<div class = "col-md-3"><label>Business Email</label></div>
 	      		<div class = "col-md-3">{{model.business.email}}</div>
 	      	</div>
@@ -146,9 +151,9 @@
 
                     <div class = "col-md-3"><label >Business Type</label></div>
                     <div class = "col-md-3">
-                      <select class="form-control input-size" name="bstype" ng-model="model.business.type" ng-change="getSubTypes()">
+                      <select class="form-control input-size" name="bstype" ng-model="model.business.business_type_id" ng-change="getSubTypes()">
                         <option value="">Select Business Type</option   >
-                        <option  ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.type}}</option>
+                        <option ng-repeat = "busType in busTypes" value="{{busType.id}}">{{busType.business_type}}</option>
     			          </select>
                   </div>
 	            	</div>
@@ -158,9 +163,9 @@
                <div class = "row">
 	              		<div class = "col-md-3"><label >Business Sub-Type</label></div>
                     <div class = "col-md-3">
-                      <select class="form-control input-size" name="sub_type" ng-model="model.business.sub_type">
+                      <select class="form-control input-size" name="sub_type" ng-model="model.business.sub_type_id">
                         <option value="">Select Business Sub-Type</option>
-                        <option  ng-repeat = "subtype in sub_types">{{subtype.sub_type}}</option>
+                        <option  ng-repeat = "subtype in sub_types" value="{{subtype.id}}">{{subtype.business_sub_type}}</option>
     			            </select>
                     </div>
 
@@ -247,8 +252,8 @@
                   </div>
 
                   <div class = "col-md-3"><label>Single Point of Contact?</label></div>
-	            		<div class = "col-md-3"><input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=true>Yes &nbsp
-	            		<input id="spoc" type="radio" name="spoc" ng-model="contact.spoc" value=false>No </div>
+	            		<div class = "col-md-3"><input type="radio"  ng-model="contact.spoc" value="true">Yes &nbsp;
+	            		<input type="radio"  ng-model="contact.spoc" value="false">No </div>
 	            </div>
                 <div class = "row">
                   <div class = "col-md-4"></div>
@@ -263,7 +268,7 @@
           <div class = "row">
             <div class = "col-md-4"><button class="btn btn-danger" ng-click="addNew()">Add New Contact</button></div>
             <div class = "col-md-4"></div>
-            <div class = "col-md-4"><button type="submit" class="btn btn-danger" class="UIbutton">Create & Continue</button></div>
+            <div class = "col-md-4"><button type="submit" class="btn btn-danger" class="UIbutton" autoscroll="true">Create & Continue</button></div>
         </div>
       </div>
 	  </div>

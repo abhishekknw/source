@@ -30,7 +30,9 @@ angular
     'angular.filter',
     'angularUtils.directives.dirPagination',
     'angularjs-dropdown-multiselect',
-    'ngFileUpload'
+    'ngFileUpload',
+    'uiGmapgoogle-maps',
+    // ''
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
      // $routeProvider.otherwise('/');
@@ -49,7 +51,25 @@ angular
           url : '/societyList', //:societyId/
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyListCtrl'
+        })        
+
+
+
+        .state('campaign.mapView',{
+           url : '/mapview',
+           templateUrl : 'modues/pages/mapview/mapview.tmpl.html',
+           controller : 'MapCtrl'
         })
+        .state('createProposalMe',{
+          url : '/createproposal',
+          templateUrl : 'modules/pages/createProposal/createproposal.tmpl.html',
+          controller : 'ProposalCtrl'
+          // controller : ''
+        })
+
+
+
+
         .state('campaign.societyDetails', {
           url : '/societyDetails/:societyId', //:societyId/
           templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
@@ -67,7 +87,7 @@ angular
         })
       .state('manageCampaign', {
           url : '/manageCampaign',
-          //controller: '',
+          // controller: '',
           templateUrl: 'modules/pages/manageCampaign/manage-campaign.tmpl.html'
         })
       .state('manageCampaign.create', {
@@ -128,7 +148,7 @@ angular
         .state('manageCampaign.release', {
             url : '/release',
             controller: 'ReleaseCampaignCtrl',
-            templateUrl: 'modules/pages/manageCampaign/release/release.tmpl.html'
+            templateUrl: 'modules/pages/manageCampaign/release/release-campaign.tmpl.html'
           })
       .state('manageCampaign.finalize.finalizeInventory', {
           url : '/:campaignId/finalizeInventory/',
@@ -149,7 +169,12 @@ angular
             url : '/ongoingcampaign',
             controller: 'OngoingCampaignCtrl',
             templateUrl: 'modules/pages/manageCampaign/ongoingcampaign/ongoing-campaign.tmpl.html'
-          });        /*
+          })
+      .state('mapView',{
+            url : '/mapview',
+            controller : 'MapCtrl',
+            templateUrl : 'modules/pages/mapview/mapview.tmpl.html'
+        });        /*
         .state('catalogue.home', {
           url : '/catalogue',
           templateUrl: 'views/society-home.html',

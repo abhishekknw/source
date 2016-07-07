@@ -1,0 +1,104 @@
+<link rel="stylesheet" href="modules/pages/mapview/mapview.tmpl.css" />
+<style type="text/css">
+    .angular-google-map-container { height: 400px; width: 800px;}
+  </style>
+<div>
+<select ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
+  <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
+</select>
+<div class = "mapPosition">
+  <div>
+    <ui-gmap-google-map center="map.center" zoom="map.zoom" draggable="false"
+                        options="options" bounds="map.bounds" control="googlemap">
+        <ui-gmap-window show="show" coords='windowCoords' closeClick="closeClick()">
+              <div>
+                 Name : {{space.name}}<br>
+                 Address : {{space.address1 + " " + space.subarea}}<br>
+                 Locality Rating : {{space.location_type}}<br>
+              </div>
+        </ui-gmap-window>
+        <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'"
+                         options="'options'" doRebuildAll="true" click="onClick">
+        </ui-gmap-markers>
+
+       <ui-gmap-markers models="center_marker" coords="'self'" icon="'icon'" options="'options'" doRebuildAll="true" click="onClick" events = "'events'">
+        </ui-gmap-markers>
+
+
+    </ui-gmap-google-map>
+</div>
+</div>
+
+<div>
+<button ng-show="show_societies" ng-click="showSocieties()">Hide All Societies</button>
+<button ng-show="!show_societies" ng-click="showSocieties()">Show All Societies</button>
+</div>
+
+<div>
+Old Center :&nbsp; &nbsp; Latitude<input type="text" ng-model="old_center.latitude" ng-readonly="true"> &nbsp;&nbsp;
+Longitude <input type="text"  ng-model="old_center.longitude" ng-readonly="true"> <br>
+New Center : &nbsp; &nbsp; Latitude<input type="text" ng-model="new_center.latitude" ng-readonly="true"> &nbsp;&nbsp;
+Longitude <input type="text"  ng-model="new_center.longitude" ng-readonly="true"><br>
+<button ng-show="center_changed">Change Center</button>
+<button ng-show="center_changed" ng-click="resetCenter()">Reset Center</button>
+</div>
+
+
+<input type="checkbox" ng-model="society_allowed" ng-click="spaceSociety()"> Society
+<div ng-if="society_allowed">
+
+Society Filters : <br>
+Inventory Types :
+<div style="display:inline" ng-repeat="inventory in society_inventory_type">
+<input type="checkbox" ng-model="inventory.selected" ng-click="societyFilter(inventory)">{{ inventory.name }}&nbsp;
+</div>
+<!-- <button ng-click="clearAllFilters(society_inventory_type)">Clear All</button> -->
+
+
+<br>Society Location :
+<div style="display:inline" ng-repeat="location in society_location">
+<input type="checkbox" ng-model="location.selected" ng-click="societyFilter()">{{ location.name }}&nbsp;
+</div>
+<button ng-click="clearAllFilters(society_location)">Clear All</button>
+
+
+<br>Society Quality :
+<div style="display:inline" ng-repeat="quality_type in society_quality_type">
+<input type="checkbox" ng-model="quality_type.selected" ng-click="societyFilter()">{{ quality_type.name }}&nbsp;
+</div>
+<button ng-click="clearAllFilters(society_quality_type)">Clear All</button>
+
+
+<br>Society Quantity :
+<div style="display:inline" ng-repeat="quantity_type in society_quantity_type">
+<input type="checkbox" ng-model="quantity_type.selected" ng-click="societyFilter()">{{ quantity_type.name }}&nbsp;
+</div>
+<button ng-click="clearAllFilters(society_quantity_type)">Clear All</button>
+
+
+<br> Society Flat Type :
+<div style="display:inline" ng-repeat="flat_type in society_flat_type">
+<input type="checkbox" ng-model="flat_type.selected" ng-click="societyFilter()">{{ flat_type.name }}&nbsp;
+</div>
+<button ng-click="clearAllFilters(society_flat_type)">Clear All</button>
+
+</div>
+
+<br><br>
+<h2>Grid View</h2>
+<div ng-if="show_societies" ng-repeat="society in current_center.societies">
+  Name : {{society.society_name}}<br>
+  Address : {{society.society_address1 + " " + society.society_subarea}}<br>
+  Locality Rating : {{society.society_location_type}}<br>
+  <!-- <input type="checkbox" ng-model="society.shortlisted" > -->
+  <button ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
+  <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
+  <br>
+</div>
+<!-- <div>
+  <button ng-click="showDetails()">Submit Proposal</button>
+</div> -->
+
+
+
+
