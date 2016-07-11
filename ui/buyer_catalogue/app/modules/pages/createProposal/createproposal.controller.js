@@ -66,20 +66,57 @@ angular.module('catalogueApp')
 		}
 	}
 
+	// $scope.submit = function(){
+	// 	console.log("$scope.model", $scope.model);
+	// 	createProposalService.saveInitialProposal($scope.model)
+	// 	.success(function(response, status){
+	// 		console.log("Successfully Saved");
+	// 	})
+	// 	.error(function(response,status){
+	// 		console.log("Error");
+	// 		if(typeof(response) != typeof(12)){
+	// 			console.log("response is ", response);
+	// 		}
+	// 	});
 	$scope.submit = function(){
-		console.log("$scope.model", $scope.model);
-		createProposalService.saveInitialProposal($scope.model)
-		.success(function(response, status){
-			console.log("Successfully Saved");
-		})
-		.error(function(response,status){
-			console.log("Error");
-			if(typeof(response) != typeof(12)){
-				console.log("response is ", response);
-			}
-		});
-	}
+        
+        var flag = 0;
+        console.log("in submit. length =  "+$scope.model.centers.length);
 
+        for(var i=0;i<$scope.model.centers.length; i++){
+            var center = $scope.model.centers[i].center;
+            var address = center.address + "," + center.subarea + "," + center.area + "," + center.city + " " + center.pincode;
+            var geocoder = new google.maps.Geocoder();
+            geocoder.geocode({'address' : address}, function(results, status){
+                if(status == google.maps.GeocoderStatus.OK){
+                    center.latitude = parseFloat(results[0].geometry.location.lat());
+                    center.longitude = parseFloat(results[0].geometry.location.lng());
+                    console.log("address is : ", address);
+                    console.log("latitude is : ", center.latitude);
+                    console.log("longitude is : ", center.longitude);
+                }
+                else{
+                    flag = 1;
+                    alert("Please Enter more general center address/ Check spelling of address");
+                }
+            });
+        }
 
+        console.log("$scope.model", $scope.model);
 
-});
+        // call backend to save only if all the latitudes are found
+        if(flag == 0){
+            createProposalService.saveInitialProposal($scope.model)
+            .success(function(response, status){
+                console.log("Successfully Saved");
+            })
+            .error(function(response,status){
+                console.log("Error");
+                if(typeof(response) != typeof(12)){
+                    console.log("response is ", response);
+                }
+            });
+        }
+    }
+	});
+

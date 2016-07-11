@@ -8,7 +8,7 @@
 # Also note: You'll have to insert the output of 'django-admin sqlcustom [app_label]'
 # into your database.
 
-# codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   Saloon -> SA
+# codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 
 from __future__ import unicode_literals
 from django.db.models.signals import post_save
@@ -1277,9 +1277,9 @@ class SpaceMapping(models.Model):
     gym_allowed         = models.BooleanField(default=False)
     gym_count           = models.IntegerField(default=0)
     gym_buffer_count    = models.IntegerField(default=0)
-    saloon_allowed      = models.BooleanField(default=False)
-    saloon_count        = models.IntegerField(default=0)
-    saloon_buffer_count = models.IntegerField(default=0)
+    salon_allowed      = models.BooleanField(default=False)
+    salon_count        = models.IntegerField(default=0)
+    salon_buffer_count = models.IntegerField(default=0)
 
     def get_all_inventories(self):
         return self.inventory_types.all()
@@ -1293,7 +1293,7 @@ class SpaceMapping(models.Model):
     def get_gym_inventories(self):
         return self.inventory_types.get(supplier_code='GY')
 
-    def get_saloon_inventories(self):
+    def get_salon_inventories(self):
         return self.inventory_types.get(supplier_code='SA')
 
     def get_all_spaces(self):
@@ -1308,7 +1308,7 @@ class SpaceMapping(models.Model):
     def get_gyms(self):
         return self.spaces.get(supplier_code='GY')
 
-    def get_saloons(self):
+    def get_salons(self):
         return self.spaces.get(supplier_code='SA')
 
     class Meta:

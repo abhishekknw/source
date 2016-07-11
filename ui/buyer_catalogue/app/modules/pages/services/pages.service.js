@@ -14,6 +14,16 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
    var url_base = "v0/ui/website/";
    var pagesService = {};
    var business_id = undefined;
+   var account_id = undefined;
+   var business = undefined;
+
+   pagesService.setBusinessObject = function(business_received){
+      business = business_received;
+   }
+
+   pagesService.getBusinessObject = function(){
+      return business;
+   }
 
    pagesService.setBusinessId = function(id){
       business_id = id;
@@ -21,6 +31,14 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
 
    pagesService.getBusinessId = function(){
      return business_id;
+   }
+
+   pagesService.setAccountId = function(id){
+    account_id  =id;
+   }
+
+   pagesService.getAccountId = function(){
+    return account_id;
    }
 
    // To return the archived estimates

@@ -16,7 +16,7 @@
 			    <div class="col-md-4">
 				  	<span class = "" ng-show ="choice == 'existing'">
 				   	    <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
-				            <option  ng-repeat = "business in businesses" value="{{business.business_id}}">{{business.name}}</option>
+				            <option  ng-repeat = "business in businesses" value="{{business.business_id}}">{{business.name}}</option> 
 			          </select>
 		      	</span>
 	      	</div>
@@ -73,14 +73,14 @@
       </div>
     </form>
 
-    <form name="existingAccount">
+    <form name="existingAccount" ng-show="choice == 'selected'">
         <div class="panel panel-default business-panel">
           <h4 class="panel-heading">Existing Accounts</h4>
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
                 <tr>
-                <th></th>
+                  <th></th>
                   <th class="col-md-3 table-heading">Account Name</th>
                   <th class="col-md-3 table-heading">Account Type</th>
                   <th class="col-md-3 table-heading">Comments</th>
@@ -88,13 +88,13 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><input type="radio" value="false"></td>
-                  <td>ABC</td>
-                  <td>Insurance</td>
-                  <td>Hi!</td>
+                <tr ng-repeat="account in model.accounts track by $index">
+                  <td><input type="radio" name="sel_account_id" value="{{account.account_id}}" ng-model="sel_account_id" ng-change="getProposals(sel_account_id)"></td>
+                  <td>{{account.name}}</td>
+                  <td>{{account.business.type_name.business_type}}</td>
+                  <td>{{account.comments}}</td>
                   <td>
-                    <a data-target="#detailModalAccount" class="btn btn-danger  active" data-toggle="modal">Details</a></div>
+                    <a data-target="#detailModalAccount" class="btn btn-danger  active" data-toggle="modal" ng-click="showAccount(account)">Details</a></div>
                   </td>
                 </tr>
               </tbody>
@@ -104,7 +104,7 @@
         </div>
       </form>
 
-      <form name="existingProposal">
+      <form name="existingProposal" ng-show="account_proposals.length != 0">
         <div class="panel panel-default business-panel">
           <h4 class="panel-heading">Existing Proposals</h4>
           <div class="table-responsive">
@@ -120,16 +120,16 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>PROP1</td>
-                  <td>Anmol</td>
-                  <td>01/07/2016</td>
-                  <td>Pankaj</td>
-                  <td>07/07/2016</td>
+                <tr ng-repeat="proposal in account_proposals">
+                  <td>{{proposal.proposal_id}}</td>
+                  <td>{{proposal.created_by}}</td>
+                  <td>{{proposal.created_on | limitTo:10}}</td>
+                  <td>{{proposal.updated_by}}</td>
+                  <td>{{proposal.updated_on | limitTo:10}}</td>
                   <td>
                     <a data-target="#detailModalProposal" class="btn btn-danger  active" data-toggle="modal">Details</a></div>
                     <br>     
-                    <button class="btn btn-danger detail-button">Map View</button>
+                    <!-- <button class="btn btn-danger detail-button">Map View</button> -->
                   </td>
                 </tr>
               </tbody>
@@ -184,48 +184,48 @@
           <div class="modal-content">
             <div class="modal-header">
               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Account (Name of Account) Details</h4>
+                <h4 class="modal-title">{{currentAccount.name}} Details</h4>
                 <hr/>
                 <div class = "modal-body" style = "height: 300px;">
-                  <div class = "row">
-                    <div class = "col-md-3"><label>Business Name</label></div>
-                    <div class = "col-md-3">XYZ</div>
-                  </div>
-                  <div class="row">
-                    <div class = "col-md-3"><label>Business Type</label></div>
-                    <div class = "col-md-3">Finance</div>
-                    <div class = "col-md-3"><label>Business Sub-Type</label></div>
-                    <div class = "col-md-3">Insurance</div>
-                  </div>
                   <div class="row">
                     <div class = "col-md-3"><label>Account Email</label></div>
-                    <div class = "col-md-3">abc@abc.com</div>
+                    <div class = "col-md-3">{{currentAccount.email}}</div>
                     <div class = "col-md-3"><label>Account Contact</label></div>
-                    <div class = "col-md-3">9876543210</div>
+                    <div class = "col-md-3">{{currentAccount.phone}}</div>
                   </div>
                   <div class="row">
                     <div class = "col-md-3"><label>Account Address</label></div>
-                    <div class = "col-md-3">Powai</div>
+                    <div class = "col-md-3">{{currentAccount.address}}</div>
                     <div class = "col-md-3"><label>Comments</label></div>
-                    <div class = "col-md-3">Hello</div>
+                    <div class = "col-md-3">{{currentAccount.comments}}</div>
                   </div><br>
 
                   <!-- For loop to fetch the account contact array -->
-                  <!-- <div class = "table" ng-repeat="contact in model.business.contacts track by $index"> -->
-                  <div class="row">
-                    <div class = "col-md-3"><label>Contact Name</label></div>
-                    <div class = "col-md-3">AAA</div>
-                    <div class = "col-md-3"><label>Contact Phone</label></div>
-                    <div class = "col-md-3">23456780</div>
+                  <div class = "table" ng-repeat="contact in currentAccount.contacts track by $index">
+                    <div class="row">
+                      <div class = "col-md-3"><label>Contact Name</label></div>
+                      <div class = "col-md-3">{{contact.name}}</div>
+                      <div class = "col-md-3"><label>Contact Designation</label></div>
+                      <div class = "col-md-3">{{contact.designation}}</div>
+                    </div>
+                    <div class="row">
+                      <div class = "col-md-3"><label>Contact Department</label></div>
+                      <div class = "col-md-3">{{contact.department}}</div>
+                      <div class = "col-md-3"><label>Contact Email</label></div>
+                      <div class = "col-md-3">{{contact.email}}</div>
+                    </div>
+                    <div class="row">
+                      <div class = "col-md-3"><label>Contact Phone</label></div>
+                      <div class = "col-md-3">{{contact.phone}}</div>
+                      <div class = "col-md-3"><label>Single Point of Contact</label></div>
+                      <div class = "col-md-3">{{contact.spoc}}</div>
+                    </div>
+                    <br>
                   </div>
                   <div class="row">
-                    <div class = "col-md-3"><label>Contact Email</label></div>
-                    <div class = "col-md-3">Powai</div>
-                  </div><br>
-                  <div class="row">
-                    <div class="col-md-10"></div>
-                    <div class="col-md-2"><button class="btn btn-danger" ng-click="editAccount()">Edit Details</button></div>
-                  </div>
+                      <div class="col-md-10"></div>
+                      <div class="col-md-2"><button class="btn btn-danger" ng-click="editAccount(currentAccount)">Edit Details</button></div>
+                    </div>
                 </div>
             </div>
           </div>
@@ -304,7 +304,7 @@
           </div>
         </div>
         </div>
-     </form>
+      </form>
       <form name = "form" ng-show = "choice == 'select'|| choice == 'new'" class="" ng-submit="create()" role="form">
       	<div class = "panel panel-default business-panel">
         	<h3 class = "panel-heading">Create Business</h3>
@@ -434,7 +434,7 @@
           <div class = "row">
             <div class = "col-md-4"><button class="btn btn-danger" ng-click="addNew()">Add New Contact</button></div>
             <div class = "col-md-4"></div>
-            <div class = "col-md-4"><button type="submit" class="btn btn-danger" class="UIbutton" autoscroll="true">Create & Continue</button></div>
+            <!-- <div class = "col-md-4"><button type="submit" class="btn btn-danger" class="UIbutton" autoscroll="true">Create & Continue</button></div> -->
         </div>
       </div>
 	  </div>

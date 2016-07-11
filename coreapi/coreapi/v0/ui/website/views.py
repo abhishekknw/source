@@ -20,8 +20,7 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
         InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer
 
 
-# codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   Saloon -> SA
-
+# codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 
 
 class getBusinessTypesAPIView(APIView):
@@ -73,10 +72,18 @@ class BusinessAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             item = BusinessInfo.objects.get(pk=id)
-            serializer = UIBusinessInfoSerializer(item)
-            return Response(serializer.data)
-        except :
+            business_serializer = UIBusinessInfoSerializer(item)
+            accounts = AccountInfo.objects.filter(business=item)
+            accounts_serializer = UIAccountInfoSerializer(accounts, many=True)
+            response = {
+                'business' : business_serializer.data,
+                'accounts' : accounts_serializer.data
+            }
+            return Response(response, status=200)
+        except BusinessInfo.DoesNotExist:
             return Response(status=404)
+
+
 
     # the delete api is not being used
     def delete(self, request, id, format=None):
@@ -429,7 +436,7 @@ class CreateCampaignAPIView(APIView):
             return account_id.upper()
 
 
-class GetAccountProposals(APIView):
+class GetAccountProposalsAPIView(APIView):
     def get(self, request, account_id, format=None):
         
         try:
@@ -756,7 +763,7 @@ class InitialProposalAPIView(APIView):
 
         supplier_codes = {
             'society' : 'RS',   'corporate' : 'CP',
-            'gym' : 'GY',       'saloon' : 'SA'
+            'gym' : 'GY',       'salon' : 'SA'
         }
         with transaction.atomic():
             proposal_data = request.data
@@ -802,7 +809,7 @@ class InitialProposalAPIView(APIView):
 
 
                     # extend the list in for loop when new spaces added. Keep the variables names accordingly          
-                    for space in ['society','corporate','gym','saloon']:
+                    for space in ['society','corporate','gym','salon']:
                         ''' This loops checks if the space is allowed and if it is allowed save the 
                         inventory types chosen by the user in the inventory_type table '''
                         try:
@@ -928,8 +935,8 @@ class SpacesOnCenterAPIView(APIView):
                 # write gym code for filtering 
                 pass
 
-            if space_mapping_object.saloon_allowed:
-                # write saloon code for filtering 
+            if space_mapping_object.salon_allowed:
+                # write salon code for filtering 
                 pass    
             
 

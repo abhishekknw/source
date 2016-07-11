@@ -2,7 +2,7 @@ angular.module('machadaloPages')
 .controller('CreateCampaignCtrl',
     ['$scope', '$rootScope', '$window', '$location', 'pagesService',
     function ($scope, $rootScope, $window, $location, pagesService) {
-
+      $scope.account_proposals = [];
       $scope.model = {};
       $scope.model.business = {};
     	$scope.businesses = [];
@@ -69,11 +69,13 @@ angular.module('machadaloPages')
         .success(function (response, status) {
               console.log("model.business :  ")
               console.log(response);
-              $scope.model.business = response;
+              $scope.model.business = response.business;
+              $scope.model.accounts = response.accounts;
               $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
               $scope.getSubTypes();
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
               $scope.choice = "selected";
+              pagesService.setBusinessObject($scope.model.business);
          });
       };
 
@@ -134,6 +136,16 @@ angular.module('machadaloPages')
               $scope.choice = "select";
       };
 
+      $scope.showAccount = function(account) {
+             $scope.currentAccount = account;
+      };
+
+      $scope.editAccount = function(account) {
+            $(".modal-backdrop").hide();
+            pagesService.setAccountId(account.account_id);
+            $location.path("/manageCampaign/createAccount");
+      };
+
       $scope.newBusiness = function() {
               $scope.choice = "new";
               $scope.bsSelect = undefined;
@@ -144,14 +156,16 @@ angular.module('machadaloPages')
       };
 
       $scope.addNewAccount = function() {
+              pagesService.setAccountId(undefined);
               $location.path("/manageCampaign/createAccount");
       };
 
-      $scope.getProposals = function(){
+      $scope.getProposals = function(sel_account_id){
           // pass account_id of selected account radio button
-          pagesService.getAccountProposal()
+          pagesService.getAccountProposal(sel_account_id)
           .success(function(response, status){
               $scope.account_proposals = response;
+              alert($scope.account_proposals);
           })
           .error(function(response, status){
               if(typeof(response) == typeof([]))
@@ -161,24 +175,12 @@ angular.module('machadaloPages')
 
 
     	$scope.create = function() {
-            // console.log("type_id : ", $scope.type_id, "\n\nbusTypes : ");
-            // for (var key in $scope.busTypes){
-            //   if ($scope.busTypes.hasOwnProperty(key)){
-            //     if ($scope.busTypes[key].id == $scope.type_id){
-            //       $scope.model.business.type_name = $scope.busTypes[key];
-            //       break;
-            //     }
-            //   }
-            // }
-
         	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {
-            // console.log(response, status);
+    
             console.log("\n\nresponse is : ");
-            // response = response ? JSON.parse(response) : {}
-            // console.log(response)
-
+            console.log(response);
             var sub_type_id = $scope.model.business.sub_type_id;
             var type_id = $scope.model.business.business_type_id;
 
@@ -196,6 +198,7 @@ angular.module('machadaloPages')
             $scope.errorMsg = undefined;
             if (status == '200'){
               $scope.choice = "selected";
+              pagesService.setBusinessObject($scope.model.business);
             }
         }).error(function(response, status){
              console.log("response is : ", response);

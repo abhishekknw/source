@@ -25,7 +25,7 @@ angular.module('catalogueApp')
         // $scope.corporates_allowed = false;
         // $scope.corporate_markers = [];
 
-        // SIMILARLY FOR GYMS AND SALOONS
+        // SIMILARLY FOR GYMS AND salonS
 
         // after angular-google-maps is loaded properly only then proces code inside then
         uiGmapGoogleMapApi.then(function(maps) {
@@ -85,7 +85,7 @@ angular.module('catalogueApp')
                 }
                 
 
-                // do the same for corporate and gym and saloons
+                // do the same for corporate and gym and salons
 
 
                 $scope.center_marker =assignCenterMarkerToMap($scope.current_center.center);
@@ -205,7 +205,7 @@ angular.module('catalogueApp')
                         $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
                     }
 
-                    // Do the same for corporates and gyms and saloons
+                    // Do the same for corporates and gyms and salons
 
                     $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
 
@@ -470,7 +470,7 @@ angular.module('catalogueApp')
     //                     }
     //                 }
 
-    //     //                // here goes the code for saloon and gyms and other spaces
+    //     //                // here goes the code for salon and gyms and other spaces
     //             }
     //         }
     //     }

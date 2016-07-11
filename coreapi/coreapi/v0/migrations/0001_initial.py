@@ -354,6 +354,16 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='CompanyFloor',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('floor_number', models.IntegerField(null=True, db_column='FLOOR_NUMBER', blank=True)),
+            ],
+            options={
+                'db_table': 'corporate_building_floors',
+            },
+        ),
+        migrations.CreateModel(
             name='ContactDetails',
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='CONTACT_ID')),
@@ -393,11 +403,44 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='CorporateBuilding',
+            fields=[
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('building_name', models.CharField(max_length=50, null=True, db_column='BUILDING_NAME', blank=True)),
+                ('number_of_wings', models.IntegerField(null=True, db_column='NUMBER_OF_WINGS', blank=True)),
+            ],
+            options={
+                'db_table': 'corporate_building',
+            },
+        ),
+        migrations.CreateModel(
+            name='CorporateBuildingWing',
+            fields=[
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('wing_name', models.CharField(max_length=50, null=True, db_column='WING_NAME', blank=True)),
+                ('number_of_floors', models.IntegerField(null=True, db_column='NUMBER_OF_FLOORS', blank=True)),
+                ('building_id', models.ForeignKey(related_name='buildingwing', db_column='BUILDING_ID', blank=True, to='v0.CorporateBuilding', null=True)),
+            ],
+            options={
+                'db_table': 'corporate_building_wing',
+            },
+        ),
+        migrations.CreateModel(
+            name='CorporateCompanyDetails',
+            fields=[
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('building_name', models.CharField(max_length=20, null=True, db_column='BUILDING_NAME', blank=True)),
+                ('wing_name', models.CharField(max_length=20, null=True, db_column='WING_NAME', blank=True)),
+            ],
+            options={
+                'db_table': 'corporate_company_details',
+            },
+        ),
+        migrations.CreateModel(
             name='CorporateParkCompanyList',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('name', models.CharField(max_length='50', db_column='NAME')),
-                ('largest_employers', models.BooleanField(default=False, db_column='LARGEST_EMPLOYERS')),
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('name', models.CharField(max_length='50', null=True, db_column='COMPANY_NAME', blank=True)),
             ],
             options={
                 'db_table': 'corporateparkcompanylist',
@@ -609,8 +652,17 @@ class Migration(migrations.Migration):
             name='InventoryType',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('inventory_name', models.CharField(max_length=20)),
-                ('inventory_type', models.CharField(max_length=20)),
+                ('supplier_code', models.CharField(max_length=4, db_index=True)),
+                ('poster_allowed', models.BooleanField(default=False)),
+                ('poster_type', models.CharField(max_length=10, null=True, blank=True)),
+                ('standee_allowed', models.BooleanField(default=False)),
+                ('standee_type', models.CharField(max_length=10, null=True, blank=True)),
+                ('flier_allowed', models.BooleanField(default=False)),
+                ('flier_type', models.CharField(max_length=20, null=True, blank=True)),
+                ('stall_allowed', models.BooleanField(default=False)),
+                ('stall_type', models.CharField(max_length=10, null=True, blank=True)),
+                ('banner_allowed', models.BooleanField(default=False)),
+                ('banner_type', models.CharField(max_length=10, null=True, blank=True)),
             ],
             options={
                 'db_table': 'INVENTORY TYPE',
@@ -881,6 +933,7 @@ class Migration(migrations.Migration):
             name='ShortlistedSpaces',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('supplier_code', models.CharField(max_length=4)),
                 ('object_id', models.CharField(max_length=12)),
                 ('buffer_status', models.BooleanField(default=False)),
                 ('content_type', models.ForeignKey(related_name='spaces', to='contenttypes.ContentType')),
@@ -993,11 +1046,19 @@ class Migration(migrations.Migration):
             name='SpaceMapping',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('space_name', models.CharField(max_length=20)),
-                ('space_count', models.IntegerField()),
-                ('buffer_space_count', models.IntegerField()),
-                ('inventory_type_count', models.IntegerField()),
-                ('center', models.ForeignKey(related_name='space_mappings', to='v0.ProposalCenterMapping')),
+                ('society_allowed', models.BooleanField(default=False)),
+                ('society_count', models.IntegerField(default=0)),
+                ('society_buffer_count', models.IntegerField(default=0)),
+                ('corporate_allowed', models.BooleanField(default=False)),
+                ('corporate_count', models.IntegerField(default=0)),
+                ('corporate_buffer_count', models.IntegerField(default=0)),
+                ('gym_allowed', models.BooleanField(default=False)),
+                ('gym_count', models.IntegerField(default=0)),
+                ('gym_buffer_count', models.IntegerField(default=0)),
+                ('saloon_allowed', models.BooleanField(default=False)),
+                ('saloon_count', models.IntegerField(default=0)),
+                ('saloon_buffer_count', models.IntegerField(default=0)),
+                ('center', models.OneToOneField(related_name='space_mappings', to='v0.ProposalCenterMapping')),
                 ('proposal', models.ForeignKey(related_name='space_mapping', to='v0.ProposalInfo')),
             ],
             options={
@@ -1149,21 +1210,37 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=70, null=True, db_column='CORPORATE_NAME', blank=True)),
                 ('address1', models.CharField(max_length=250, null=True, db_column='CORPORATE_ADDRESS1', blank=True)),
                 ('address2', models.CharField(max_length=250, null=True, db_column='CORPORATE_ADDRESS2', blank=True)),
-                ('zip', models.IntegerField(null=True, db_column='CORPORATE_ZIP', blank=True)),
+                ('zipcode', models.IntegerField(null=True, db_column='CORPORATE_ZIP', blank=True)),
                 ('city', models.CharField(max_length=250, null=True, db_column='CORPORATE_CITY', blank=True)),
                 ('state', models.CharField(max_length=250, null=True, db_column='CORPORATE_STATE', blank=True)),
-                ('longitude', models.FloatField(default=0.0, null=True, db_index=True, db_column='CORPORATE_LONGITUDE', blank=True)),
+                ('longitude', models.FloatField(default=0.0, null=True, db_column='CORPORATE_LONGITUDE', blank=True)),
                 ('locality', models.CharField(max_length=30, null=True, db_column='CORPORATE_LOCALITY', blank=True)),
-                ('latitude', models.FloatField(default=0.0, null=True, db_index=True, db_column='CORPORATE_LATITUDE', blank=True)),
-                ('location_type', models.CharField(max_length=50, null=True, db_column='CORPORATE_LOCATION_TYPE', blank=True)),
-                ('type', models.CharField(max_length=25, db_column='CORPORATE_TYPE')),
+                ('subarea', models.CharField(max_length=30, null=True, db_column='CORPORATE_SUB_AREA', blank=True)),
+                ('latitude', models.FloatField(default=0.0, null=True, db_column='CORPORATE_LATITUDE', blank=True)),
+                ('machadalo_index', models.CharField(max_length=30, null=True, db_column='MACHADALO_INDEX', blank=True)),
+                ('locality_rating', models.CharField(max_length=50, null=True, db_column='CORPORATE_LOCALITY_RATING', blank=True)),
+                ('corporate_type', models.CharField(max_length=25, null=True, db_column='CORPORATE_TYPE', blank=True)),
                 ('industry_segment', models.CharField(max_length=30, null=True, db_column='CORPORATE_INDUSTRY_SEGMENT', blank=True)),
-                ('age', models.PositiveSmallIntegerField(null=True, db_column='CORPORATE_AGE', blank=True)),
+                ('possession_year', models.CharField(max_length=5, null=True, db_column='CORPORATE_AGE', blank=True)),
                 ('building_count', models.IntegerField(null=True, db_column='CORPORATE_BUILDING_COUNT', blank=True)),
                 ('floorperbuilding_count', models.IntegerField(null=True, db_column='CORPORATE_FLOORPERBUILDING_COUNT', blank=True)),
                 ('totalcompanies_count', models.IntegerField(null=True, db_column='CORPORATE_TOTALCOMPANIES_COUNT', blank=True)),
                 ('totalemployees_count', models.IntegerField(null=True, db_column='CORPORATE_TOTALEMPLOYEES_COUNT', blank=True)),
                 ('isrealestateallowed', models.BooleanField(default=False, db_column='CORPORATE_ISREALESTATEALLOWED')),
+                ('quality_rating', models.CharField(max_length=50, null=True, db_column='QUALITY_RATING', blank=True)),
+                ('total_area', models.FloatField(default=0.0, null=True, db_column='TOTAL_AREA', blank=True)),
+                ('quantity_rating', models.CharField(max_length=50, null=True, db_column='QUANTITY_RATING', blank=True)),
+                ('luxurycars_count', models.IntegerField(null=True, db_column='LUXURYCARS_COUNT', blank=True)),
+                ('standardcars_count', models.IntegerField(null=True, db_column='STANDARDCARS_COUNT', blank=True)),
+                ('totallift_count', models.IntegerField(null=True, db_column='TOTALLIFT_COUNT', blank=True)),
+                ('parkingspaces_count', models.IntegerField(null=True, db_column='PARKINGSPACES_COUNT', blank=True)),
+                ('entryexit_count', models.IntegerField(null=True, db_column='ENTRYEXIT_COUNT', blank=True)),
+                ('openspaces_count', models.IntegerField(null=True, db_column='OPENSPACES_COUNT', blank=True)),
+                ('constructionspaces_count', models.IntegerField(null=True, db_column='CONSTRUCTIONSPACES_COUNT', blank=True)),
+                ('constructedspace', models.FloatField(default=0.0, null=True, db_column='CONSTRUCTEDSPACE', blank=True)),
+                ('parkingspace', models.FloatField(default=0.0, null=True, db_column='PARKINGSPACE', blank=True)),
+                ('openspace', models.FloatField(default=0.0, null=True, db_column='OPENSPACE', blank=True)),
+                ('averagerent', models.FloatField(default=0.0, null=True, db_column='AVERAGERENT', blank=True)),
             ],
             options={
                 'db_table': 'supplier_corporate',
@@ -1257,6 +1334,7 @@ class Migration(migrations.Migration):
                 ('flier_allowed', models.BooleanField(default=False, db_column='FLIER_ALLOWED')),
                 ('stall_allowed', models.BooleanField(default=False, db_column='STALL_ALLOWED')),
                 ('car_display_allowed', models.BooleanField(default=False, db_column='CAR_DISPLAY_ALLOWED')),
+                ('banner_allowed', models.BooleanField(default=False, db_column='BANNER_ALLOWED')),
                 ('created_by', models.ForeignKey(related_name='societies', db_column='CREATED_BY', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
             ],
             options={
@@ -1499,12 +1577,27 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='corporateparkcompanylist',
             name='supplier_id',
-            field=models.ForeignKey(to='v0.SupplierTypeCorporate', db_column='SUPPLIER_ID'),
+            field=models.ForeignKey(related_name='corporatecompany', db_column='CORPORATEPARK_ID', blank=True, to='v0.SupplierTypeCorporate', null=True),
+        ),
+        migrations.AddField(
+            model_name='corporatecompanydetails',
+            name='company_id',
+            field=models.ForeignKey(related_name='companydetails', db_column='COMPANY_ID', blank=True, to='v0.CorporateParkCompanyList', null=True),
+        ),
+        migrations.AddField(
+            model_name='corporatebuilding',
+            name='corporatepark_id',
+            field=models.ForeignKey(related_name='corporatebuilding', db_column='CORPORATE_ID', blank=True, to='v0.SupplierTypeCorporate', null=True),
         ),
         migrations.AddField(
             model_name='contactdetails',
             name='supplier',
             field=models.ForeignKey(related_name='contacts', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
+        ),
+        migrations.AddField(
+            model_name='companyfloor',
+            name='company_details_id',
+            field=models.ForeignKey(related_name='wingfloor', db_column='COMPANY_DETAILS_ID', blank=True, to='v0.CorporateCompanyDetails', null=True),
         ),
         migrations.AddField(
             model_name='communityhallinfo',
@@ -1572,10 +1665,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='accounts', db_column='BUSINESS_ID', to='v0.BusinessInfo', null=True),
         ),
         migrations.AlterUniqueTogether(
-            name='spacemapping',
-            unique_together=set([('center', 'space_name')]),
-        ),
-        migrations.AlterUniqueTogether(
             name='societytower',
             unique_together=set([('tower_tag', 'supplier')]),
         ),
@@ -1586,10 +1675,6 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='proposalcentermapping',
             unique_together=set([('proposal', 'center_name')]),
-        ),
-        migrations.AlterUniqueTogether(
-            name='inventorytype',
-            unique_together=set([('space_mapping', 'inventory_name')]),
         ),
         migrations.AlterUniqueTogether(
             name='citysubarea',
