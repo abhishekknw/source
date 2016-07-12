@@ -1,3 +1,29 @@
+<!-- <<<<<<< HEAD -->
+<!-- <div ng-if="errormsg"><h3>{{errormsg}}</h3></div>
+<div>
+	Proposal Info
+	Name : <input type="text" ng-model="model.name">
+	tentative_cost = <input type="number" ng-model="model.tentative_cost">
+	<br><br>
+</div>
+
+<div> 
+	<button ng-click="addCenter()">Add Center</button>&nbsp;
+</div>
+	
+<div ng-repeat="center in model.centers track by $index">
+	Name : <input type="text" ng-model="center.center.center_name">
+	Address :  <input type="text" ng-model="center.center.address">
+	subarea :  <input type="text" ng-model="center.center.subarea">
+	area : <input type="text" ng-model="center.center.area"><br>
+	city : <input type="text" ng-model="center.center.city">
+	pincode : <input type="text" ng-model="center.center.pincode">
+	radius : <input type="number" ng-model="center.center.radius">
+	latitude : <input type="text" ng-model="center.center.latitude">
+	longitude : <input type="text" ng-model="center.center.longitude">
+	<button ng-click="removeCenter($index)">Remove</button>
+	<br><br> -->
+<!-- ======= -->
 <!DOCTYPE html>
 <link rel="stylesheet" href="modules/pages/createProposal/createproposal.tmpl.css" />
   <div class="page-container">
@@ -39,6 +65,7 @@
   			</div>
   		</div>
   	</form>
+<!-- >>>>>>> 489c75761c2132ac3240d7084587d8547002184f -->
 
   	<div class="panel panel-default business-panel">
   		<table class="table table-bordered">
@@ -109,4 +136,22 @@
   		<button class="btn btn-danger spacing" ng-click="submit()">Submit</button>
   	</div> 
 
+<!-- <<<<<<< HEAD
+
+	<input type="checkbox" ng-model="center.center.space_mapping.corporate_allowed" ng-change="checkSpace(center, 'corporate')">corporate 
+	<div ng-if="center.center.space_mapping.corporate_allowed" >
+		corporate Count :	<input type="number" ng-model="center.center.space_mapping.corporate_count" >
+		corporate Buffer Count : <input type="number" ng-model="center.center.space_mapping.corporate_buffer_count" >
+		<input type="checkbox" ng-model="center.corporate_inventory.poster_allowed"> Poster
+		<input type="checkbox" ng-model="center.corporate_inventory.standee_allowed"> Standee
+		<input type="checkbox" ng-model="center.corporate_inventory.stall_allowed"> Stall
+		<input type="checkbox" ng-model="center.corporate_inventory.flier_allowed"> Flier
+		<input type="checkbox" ng-model="center.corporate_inventory.banner_allowed"> Banner
+	</div><br>
+
+	<br><br>
 </div>
+<button ng-click="submit()">Submit</button>
+======= -->
+</div>
+<!-- >>>>>>> 489c75761c2132ac3240d7084587d8547002184f -->

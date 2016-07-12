@@ -1,0 +1,47 @@
+<strong>
+	Proposal Name : {{proposal.proposal.name}}
+	Proposal ID   : {{proposal.proposal.proposal_id}}
+</strong><br>
+<div ng-repeat="center in proposal.centers">
+	<h3>
+		Center : {{center.center.center_name}} &nbsp;
+		Center Address : {{center.center.address}}<br>
+		Center Subarea : {{center.center.subarea}} &nbsp;
+		Center Area    : {{center.center.area}} <br>
+		<br>
+	</h3>
+
+	<div ng-if="center.center.space_mappings.society_allowed">
+		<h4>
+			Societies &nbsp;	Shortlisted : {{center.societies_shortlisted_count}} &nbsp;	Buffered : {{center.societies_buffered_count}}<br>
+			Inventories Chosen : &nbsp;
+			<span ng-if="center.societies_inventory.poster_allowed"> Poster : {{ center.societies_inventory_count.posters}}</span><br>
+			<span ng-if="center.societies_inventory.standee_allowed"> Standee : {{ center.societies_inventory_count.standees}}</span><br>
+			<span ng-if="center.societies_inventory.stall_allowed"> Stall : {{ center.societies_inventory_count.stalls}}</span><br>
+			<span ng-if="center.societies_inventory.flier_allowed"> Flier : {{ center.societies_inventory_count.fliers}}</span><br>
+			<span ng-if="center.societies_inventory.banner_allowed"> Banner : {{ center.societies_inventory_count.banners}}</span><br>
+		</h4>
+		<div ng-repeat="society in center.societies_shortlisted">	
+			Society Name : {{society.society_name}} &nbsp;
+			Society Address : {{ society.society_address1 }} <br>
+			Society Subarea : {{ society.society_subarea }}<br>
+			<button class="btn btn-info" ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
+		    <button class="btn btn-info" ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
+		    <span ng-if="society.shortlisted">
+		    <input type="checkbox" ng-model="society.buffer_status"> Buffer
+		    </span><br>
+		</div><br><br>
+
+		<div ng-repeat="society in center.societies_buffered">
+			Society Name : {{society.society_name}} &nbsp;
+			Society Address : {{ society.society_address1 }} <br>
+			Society Subarea : {{ society.society_subarea }}<br>
+			<button class="btn btn-info" ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
+		    <button class="btn btn-info" ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
+		    <span ng-if="society.shortlisted">
+		    <input type="checkbox" ng-model="society.buffer_status"> Buffer
+		    </span><br>
+		</div>
+	</div>
+</div><br>
+<button class="btn btn-primary" ng-click="submit()">Change Proposal</button>

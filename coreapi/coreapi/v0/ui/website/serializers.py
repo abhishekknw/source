@@ -6,7 +6,47 @@ from v0.ui.serializers import UISocietySerializer
 from v0.serializers import SocietyInventoryBookingSerializer, BusinessInfoSerializer, BusinessTypesSerializer, BusinessAccountContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, AccountInfoSerializer
 
 
-from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety
+from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety,\
+                    ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion
+
+
+class ProposalInfoVersionSerializer(ModelSerializer):
+
+    class Meta:
+        model = ProposalInfoVersion
+
+
+class ProposalCenterMappingVersionSerializer(ModelSerializer):
+
+    class Meta:
+        model = ProposalCenterMappingVersion
+
+
+class SpaceMappingVersionSerializer(ModelSerializer):
+
+    class Meta:
+        model = SpaceMappingVersion
+
+
+class InventoryTypeVersionSerializer(ModelSerializer):
+
+    class Meta:
+        model = InventoryTypeVersion
+
+
+class ShortlistedSpacesVersionSerializer(ModelSerializer):
+
+    class Meta:
+        model = ShortlistedSpacesVersion
+
+class ProposalCenterMappingVersionSpaceSerializer(ModelSerializer):
+    # this serializer is used to send data to front end with space_mappings objects
+    # Not using to save them
+    space_mappings = SpaceMappingVersionSerializer(source='get_space_mappings_versions')
+
+    class Meta:
+        model = ProposalCenterMappingVersion
+
 
 class ProposalInfoSerializer(ModelSerializer):
 
@@ -27,6 +67,8 @@ class SpaceMappingSerializer(ModelSerializer):
 
 
 class ProposalCenterMappingSpaceSerializer(ModelSerializer):
+    # this serializer is used to send data to front end with space_mappings objects
+    # Not using to save them
     space_mappings = SpaceMappingSerializer(source='get_space_mappings')
 
     class Meta:
@@ -34,7 +76,7 @@ class ProposalCenterMappingSpaceSerializer(ModelSerializer):
 
 
 class ProposalCenterMappingSerializer(ModelSerializer):
-
+    # using this serializer to save the center object
     class Meta:
         model = ProposalCenterMapping
 
@@ -51,10 +93,14 @@ class ProposalSocietySerializer(ModelSerializer):
     On clicking on map marker info of the society will be displayed'''
 
     # shortlisted is just for grid view to allow remove and shortlist functionality easliy
-    shortlisted = serializers.SerializerMethodField('return_false')
+    shortlisted = serializers.SerializerMethodField('return_true')
+    buffer_status = serializers.SerializerMethodField('return_false')
 
-    def return_false(self,foo):
+    def return_true(self,foo):
         return True
+
+    def return_false(self, foo):
+        return False
 
     class Meta:
         model = SupplierTypeSociety
@@ -67,6 +113,7 @@ class ProposalSocietySerializer(ModelSerializer):
             'society_longitude',
             'society_latitude',
             'shortlisted',
+            'buffer_status',
         )
 
 
@@ -75,9 +122,13 @@ class ProposalCorporateSerializer(ModelSerializer):
     On clicking on map marker info of the corporate will be retrived'''
 
     # shortlisted is just for grid view to allow remove and shortlist functionality easliy
-    shortlisted = serializers.SerializerMethodField('return_false')
+    shortlisted = serializers.SerializerMethodField('return_true')
+    buffer_status = serializers.SerializerMethodField('return_false')
 
-    def return_false(self,foo):
+    def return_true(self,foo):
+        return True
+
+    def return_false(self, foo):
         return False
 
     class Meta:
@@ -90,6 +141,8 @@ class ProposalCorporateSerializer(ModelSerializer):
             'location_type',
             'longitude',
             'latitude',
+            'shortlisted',
+            'buffer_status',
         )
 
 

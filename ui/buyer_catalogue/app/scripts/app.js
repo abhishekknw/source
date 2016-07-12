@@ -66,7 +66,17 @@ angular
           controller : 'ProposalCtrl'
           // controller : ''
         })
-
+        .state('showProposalHistory',{
+          url : '/showproposalhistory',
+          templateUrl : 'modules/pages/ProposalHistory/proposalHistory.tmpl.html',
+          controller : 'ProposalHistory',
+        })
+        .state('showCurrentProposal',{
+           url : '/showcurrentproposal',
+           templateUrl : 'modules/pages/currentProposal/currentProposal.tmpl.html',
+           controller : 'CurrentProposal',
+        })
+        
 
 
 
