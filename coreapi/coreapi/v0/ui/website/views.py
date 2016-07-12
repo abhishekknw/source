@@ -28,7 +28,6 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 
 
-
 class getBusinessTypesAPIView(APIView):
     def get(self, request, format=None):
         print "inside get"
@@ -78,10 +77,18 @@ class BusinessAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             item = BusinessInfo.objects.get(pk=id)
-            serializer = UIBusinessInfoSerializer(item)
-            return Response(serializer.data)
-        except :
+            business_serializer = UIBusinessInfoSerializer(item)
+            accounts = AccountInfo.objects.filter(business=item)
+            accounts_serializer = UIAccountInfoSerializer(accounts, many=True)
+            response = {
+                'business' : business_serializer.data,
+                'accounts' : accounts_serializer.data
+            }
+            return Response(response, status=200)
+        except BusinessInfo.DoesNotExist:
             return Response(status=404)
+
+
 
     # the delete api is not being used
     def delete(self, request, id, format=None):
@@ -132,6 +139,7 @@ class NewCampaignAPIView(APIView):
 
             with transaction.atomic():
                 if 'business_id' in business_data:
+
                     business = BusinessInfo.objects.get(pk=business_data['business_id'])
                     serializer = BusinessInfoSerializer(business,data=business_data)
                 else:
@@ -412,6 +420,19 @@ class CreateCampaignAPIView(APIView):
         except AccountInfo.DoesNotExist:
             return account_id.upper()
 
+
+class GetAccountProposalsAPIView(APIView):
+    def get(self, request, account_id, format=None):
+        
+        try:
+            account = AccountInfo.objects.get(account_id=account_id)
+        except AccountInfo.DoesNotExist:
+            return Response({'message': 'Invalid Account ID'}, status=406)
+
+        proposals = ProposalInfo.objects.filter(account=account)
+        proposal_serializer = ProposalInfoSerializer(proposals, many=True)
+
+        return Response(proposal_serializer.data, status=200)
 
 
 class CampaignAPIView(APIView):

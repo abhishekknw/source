@@ -253,6 +253,7 @@ angular.module('catalogueApp')
                 
 
                 //ADDNEW -->  do the same for corporate and gym and salonS
+                // do the same for corporate and gym and salons
 
 
                 // reassing the center_marker acc. to the selected center
@@ -412,7 +413,9 @@ angular.module('catalogueApp')
                         $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
                     }
 
+
                     // ADDNEW --> Do the same for corporates and gyms and salons
+                    // Do the same for corporates and gyms and salons
 
                     $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
 

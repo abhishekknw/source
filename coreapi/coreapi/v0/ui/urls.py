@@ -48,9 +48,14 @@ urlpatterns = [
     url(r'^user_profiles/(?P<id>[A-Z_a-z0-9]+)$', views.getUserData.as_view()),
     url(r'^users/delete/$', views.deleteUsersAPIView.as_view()),
 
-
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_basic_corporate_details$', views.saveBasicCorporateDetailsAPIView.as_view()),
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_contact_details$', views.ContactDetailsGenericAPIView.as_view()),
     # url(r'^corporate/save_basic_corporate_details$', views.saveBasicCorporateDetailsAPIView.as_view())
-    
+    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_building_details$', views.saveBuildingDetailsAPIView.as_view()),
+    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/get_company_list$', views.CompanyDetailsAPIView.as_view()),
+    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_company_details$', views.CorporateCompanyDetailsAPIView.as_view()),
+    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/get_company_data$', views.CorporateCompanyDetailsAPIView.as_view()),
+
+    # url(r'^just_for_testing_fun/$',views.JustForTestingAPIView.as_view()),
+
 ]

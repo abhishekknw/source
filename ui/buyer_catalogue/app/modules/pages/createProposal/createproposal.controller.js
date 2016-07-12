@@ -66,7 +66,6 @@ angular.module('catalogueApp')
 		}
 	}
 
-
 	$scope.submit = function(){
 		console.log("$scope.model", $scope.model);
 
@@ -87,7 +86,5 @@ angular.module('catalogueApp')
 			});
 	}
 });
-
-
 
 
