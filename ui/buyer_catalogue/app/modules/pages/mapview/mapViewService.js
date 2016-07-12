@@ -10,8 +10,9 @@
     var mapViewService = {};
 
 
-    mapViewService.getSpaces = function(){
-        var url = url_base + "getSpaces/";
+    mapViewService.getSpaces = function(proposal_id){
+        // done
+        var url = url_base + proposal_id + "/getSpaces/";
         return machadaloHttp.get(url);
     };
 
@@ -20,14 +21,16 @@
         // 	return machadaloHttp.get(url);
     // }
 
-    mapViewService.getChangedCenterSpaces = function(data){
-        var url = url_base + 'getSpaces/';
+    mapViewService.getChangedCenterSpaces = function(proposal_id, data){
+        // done
+        var url = url_base + proposal_id + '/getSpaces/';
         return machadaloHttp.post(url,data);
     };
 
 
-    mapViewService.resetCenter = function(center_id){
-        var url = url_base + "getSpaces/?center=" + center_id ;
+    mapViewService.resetCenter = function(proposal_id, center_id){
+        // done
+        var url = url_base + proposal_id + "/getSpaces/?center=" + center_id ;
         return machadaloHttp.get(url);
     }
 
@@ -36,8 +39,8 @@
         return machadaloHttp.get(url); 
     }
 
-    mapViewService.createFinalProposal = function(centers_data){
-        var url = url_base + 'createFinalProposal/';
+    mapViewService.createFinalProposal = function(proposal_id, centers_data){
+        var url = url_base + proposal_id + '/createFinalProposal/';
         return machadaloHttp.post(url, centers_data);
     }
 

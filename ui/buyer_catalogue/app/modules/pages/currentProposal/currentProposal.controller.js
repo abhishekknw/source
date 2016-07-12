@@ -1,12 +1,13 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('CurrentProposal', function($scope, $rootScope, $window, $location, currentProposalService ,$http) {
+    .controller('CurrentProposal', function($scope, $rootScope, $stateParams, $window, $location, currentProposalService ,$http) {
 
     	console.log('hi');
     	$scope.proposal = {};
 
     	// send proposal_id in service
-    	currentProposalService.getProposal()
+
+    	currentProposalService.getProposal($stateParams.proposal_id)
     	.success(function(response, status){
     		$scope.proposal = response;
     		console.log("$scope.proposal : ", $scope.proposal);
@@ -26,11 +27,11 @@ angular.module('catalogueApp')
     		}
     	});
 
-
+        console.log("proposal_id is : ", $stateParams.proposal_id);
 
     	$scope.submit = function(){
     		console.log("$scope.proposal : ", $scope.proposal);
-    		currentProposalService.saveProposal($scope.proposal.centers)
+    		currentProposalService.saveProposal($stateParams.proposal_id, $scope.proposal.centers)
     		.success(function(response, status){
     			console.log("Successfully Saved");
     		})

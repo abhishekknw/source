@@ -9,15 +9,15 @@
 
     var currentProposalService = {};
 
-    currentProposalService.getProposal = function(){
+    currentProposalService.getProposal = function(proposal_id){
     	// will receive proposal_id
-    	var url = url_base + 'currentProposal/' ;
+    	var url = url_base + proposal_id + '/currentProposal/' ;
     	return machadaloHttp.get(url);
     }
 
-    currentProposalService.saveProposal = function(data){
+    currentProposalService.saveProposal = function(proposal_id, data){
     	// will receive proposal_id
-    	var url = url_base + 'currentProposal/' ;
+    	var url = url_base + proposal_id + '/currentProposal/' ;
     	return machadaloHttp.post(url, data);
     }
 

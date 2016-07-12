@@ -16,6 +16,7 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
    var business_id = undefined;
    var account_id = undefined;
    var business = undefined;
+   var proposal_accountId = undefined;
 
    pagesService.setBusinessObject = function(business_received){
       business = business_received;
@@ -27,6 +28,14 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
 
    pagesService.setBusinessId = function(id){
       business_id = id;
+   }
+
+   pagesService.getProposalAccountId = function(){
+     return proposal_accountId;
+   }
+
+   pagesService.setProposalAccountId = function(id){
+      proposal_accountId = id;
    }
 
    pagesService.getBusinessId = function(){

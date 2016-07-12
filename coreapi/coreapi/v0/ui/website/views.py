@@ -751,7 +751,11 @@ class InitialProposalAPIView(APIView):
         with transaction.atomic():
             proposal_data = request.data
             proposal_data['proposal_id'] = self.create_proposal_id()
-            account = AccountInfo.objects.all().order_by('account_id').first()
+            try:
+                print "\n\naccount id received is : ", account_id
+                account = AccountInfo.objects.get(account_id=account_id)
+            except AccountInfo.DoesNotExist:
+                return Response({'message':'Invalid Account ID'}, status=406)
             proposal_data['account'] = account.account_id
             try:
                 proposal_object = ProposalInfo.objects.get(proposal_id=proposal_data['proposal_id'])
@@ -830,7 +834,7 @@ class InitialProposalAPIView(APIView):
                             pass
 
 
-        return Response(status=200)
+        return Response(proposal_object.proposal_id,status=200)
 
     def create_proposal_id(self):
         import random, string
@@ -849,7 +853,7 @@ def return_price(adinventory_type_dict, duration_type_dict, inv_type, dur_type):
 class SpacesOnCenterAPIView(APIView):
     def get(self,request,proposal_id=None, format=None):
         ''' This function filters all the spaces(Societies, Corporates etc.) based on the center and
-        radius provided currently considering radius as the half of side of square
+        radius provided currently considering radius 
         This API is called before map view page is loaded'''
 
         ''' !IMPORTANT --> you have to manually add all the type of spaces that are being added apart from
@@ -858,8 +862,8 @@ class SpacesOnCenterAPIView(APIView):
         response = {}
         center_id = request.query_params.get('center',None)
         try:
-            if proposal_id is None:
-                proposal_id = 'AlntOlJi';
+            # if proposal_id is None:
+            #     proposal_id = 'AlntOlJi';
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
         except ProposalInfo.DoesNotExist:
             return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
@@ -926,6 +930,7 @@ class SpacesOnCenterAPIView(APIView):
                 for society in societies_temp:
                     if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         society['society_latitude'], society['society_longitude']):
+                        print "\n\nsociety_id : ", society['supplier_id']
                         society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
                         society['buffer_status'] = False
@@ -1017,7 +1022,7 @@ class SpacesOnCenterAPIView(APIView):
 
 
 
-    def post(self, request,id=None, format=None):
+    def post(self, request,proposal_id=None, format=None):
         '''This API returns the spaces info when center or radius is changed
         API ONLY PRODUCE RESULTS FOR SOCIETIES ONLY
         Code to be written for other spaces
@@ -1395,8 +1400,8 @@ class FinalProposalAPIView(APIView):
         e.g. (Society --> poster, standee ) will give societies that have both poster and standee allowed
         '''
         try:
-            if proposal_id is None:
-                proposal_id = 'AlntOlJi';
+            # if proposal_id is None:
+            #     proposal_id = 'AlntOlJi';
             proposal_object = ProposalInfo.objects.get(proposal_id=proposal_id)
         except ProposalInfo.DoesNotExist:
             return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
@@ -1511,7 +1516,7 @@ class FinalProposalAPIView(APIView):
 
 
 
-    def post(self, request, format=None):
+    def post(self, request, proposal_id=None, format=None):
         ''' Saving the proposal from the map view. Every time mapview page is loaded and grid view is submitted from there
         This makes a new version of proposal. And also updates all the required table as well 
         This expects id of both center and space mapping from the frontend as they are saved on basic proposal page (InitialProposalAPIView)
@@ -1679,11 +1684,9 @@ class FinalProposalAPIView(APIView):
 
 class CurrentProposalAPIView(APIView):
 
-    def get(self, request, proposal_id=None, format=None):
+    def get(self, request, proposal_id, format=None):
         ''' This returns the proposal info of the proposal id
         '''
-        if not proposal_id:
-            proposal_id = 'AlntOlJi'
 
         try:
             proposal_object = ProposalInfo.objects.get(proposal_id=proposal_id)
@@ -1783,6 +1786,8 @@ class CurrentProposalAPIView(APIView):
                 societies_inventory = InventoryType.objects.get(supplier_code='RS', space_mapping=space_mapping_object)
                 societies_inventory_serializer = InventoryTypeSerializer(societies_inventory)
                 # inventory count only for shortlisted ones
+                # to add buffered societies as well uncomment following line
+                # societies_shortlisted_ids.extend(societies_buffered_ids)
                 societies_inventory_count = InventorySummary.objects.filter(supplier_id__in=societies_shortlisted_ids).aggregate(posters=Sum('total_poster_count'),\
                 standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
@@ -1813,13 +1818,10 @@ class CurrentProposalAPIView(APIView):
         return Response(response, status=200)
 
 
-    def post(self, request, proposal_id=None, format=None):
+    def post(self, request, proposal_id, format=None):
         ''' Updates the buffer and shortlisted spaces. This API allows user to delete
         move buffer to shortlisted and vice versa. No addition allowed using this API
         '''
-        if not proposal_id:
-            proposal_id = 'AlntOlJi'
-
         try:
             proposal_object = ProposalInfo.objects.get(proposal_id=proposal_id)
         except ProposalInfo.DoesNotExist:
@@ -1872,13 +1874,11 @@ class CurrentProposalAPIView(APIView):
 
 
 class ProposalHistoryAPIView(APIView):
-    def get(self, request, proposal_id=None, format=None):
+    def get(self, request, proposal_id, format=None):
         ''' Sends the proposal versions for the particular proposal id
         Currently if no proposal_id  set to a default one
         sends socities shortlisted and buffered differently
         '''
-        if not proposal_id:
-            proposal_id = 'AlntOlJi'
 
         try:
             proposal_object = ProposalInfo.objects.get(proposal_id=proposal_id)

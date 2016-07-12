@@ -1,6 +1,6 @@
 <!-- <<<<<<< HEAD -->
-<!-- <div ng-if="errormsg"><h3>{{errormsg}}</h3></div>
-<div>
+<div ng-if="errormsg"><h3>{{errormsg}}</h3></div>
+<!-- <div>
 	Proposal Info
 	Name : <input type="text" ng-model="model.name">
 	tentative_cost = <input type="number" ng-model="model.tentative_cost">
@@ -22,8 +22,8 @@
 	latitude : <input type="text" ng-model="center.center.latitude">
 	longitude : <input type="text" ng-model="center.center.longitude">
 	<button ng-click="removeCenter($index)">Remove</button>
-	<br><br> -->
-<!-- ======= -->
+	<br><br>
+ --><!-- ======= -->
 <!DOCTYPE html>
 <link rel="stylesheet" href="modules/pages/createProposal/createproposal.tmpl.css" />
   <div class="page-container">
@@ -65,7 +65,7 @@
   			</div>
   		</div>
   	</form>
-<!-- >>>>>>> 489c75761c2132ac3240d7084587d8547002184f -->
+
 
   	<div class="panel panel-default business-panel">
   		<table class="table table-bordered">
@@ -77,6 +77,7 @@
   					<th>Sub Area</th>
   					<th>Area</th>
   					<th>City</th>
+            <th>Pincode</th>
   					<th>Radius</th>
   					<th>Space Details</th>
   					<th>Action</th>
@@ -90,6 +91,7 @@
   					<td><input type="text" ng-model="center.center.subarea" class="form-control spacing"></td>
   					<td><input type="text" ng-model="center.center.area" class="form-control spacing"></td>
   					<td><input type="text" ng-model="center.center.city" class="form-control spacing"></td>
+            <td><input type="text" ng-model="center.center.pincode" class="form-control spacing"></td>
   					<td><input type="number" ng-model="center.center.radius" class="form-control spacing"></td>
   					<td>
   						<table class="table table-bordered">

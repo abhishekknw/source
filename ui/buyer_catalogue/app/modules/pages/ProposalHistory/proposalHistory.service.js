@@ -9,9 +9,9 @@
 
   	var proposalHistory = {};
 
-  	proposalHistory.getProposalHistory = function(){
+  	proposalHistory.getProposalHistory = function(proposal_id){
   		// send proposal_id here
-  		var url = url_base + 'getProposalVersion/';
+  		var url = url_base + proposal_id + '/getProposalVersion/';
   		return machadaloHttp.get(url);
   	}
 

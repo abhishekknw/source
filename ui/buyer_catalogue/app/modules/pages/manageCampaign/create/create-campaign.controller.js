@@ -30,6 +30,7 @@ angular.module('machadaloPages')
         $scope.dt = new Date(year, month, day);
       };
 
+      $scope.sel_account_id = null;
       $scope.dateOptions = {
         formatYear: 'yy',
         startingDay: 1
@@ -162,6 +163,8 @@ angular.module('machadaloPages')
 
       $scope.getProposals = function(sel_account_id){
           // pass account_id of selected account radio button
+          console.log("Get Proosals\t account_id received  : ", sel_account_id);
+          $scope.sel_account_id = sel_account_id;
           pagesService.getAccountProposal(sel_account_id)
           .success(function(response, status){
               $scope.account_proposals = response;
@@ -173,6 +176,13 @@ angular.module('machadaloPages')
           });
       }
 
+
+      $scope.addNewProposal = function(sel_account_id){
+        console.log("hi");
+        console.log("$scope.sel_account_id : ", $scope.sel_account_id);
+        pagesService.setProposalAccountId(sel_account_id);
+        $location.path('/'+sel_account_id + '/createproposal');
+      }
 
     	$scope.create = function() {
         	  console.log($scope.model);

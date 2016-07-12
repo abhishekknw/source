@@ -55,24 +55,25 @@ angular
 
 
 
-        .state('campaign.mapView',{
-           url : '/mapview',
-           templateUrl : 'modues/pages/mapview/mapview.tmpl.html',
+        // .state('campaign.mapView',{
+          .state('MapView',{
+           url : '/:proposal_id/mapview',
+           templateUrl : 'modules/pages/mapview/mapview.tmpl.html',
            controller : 'MapCtrl'
         })
         .state('createProposalMe',{
-          url : '/createproposal',
+          url : '/:account_id/createproposal',
           templateUrl : 'modules/pages/createProposal/createproposal.tmpl.html',
           controller : 'ProposalCtrl'
           // controller : ''
         })
         .state('showProposalHistory',{
-          url : '/showproposalhistory',
+          url : '/:proposal_id/showproposalhistory',
           templateUrl : 'modules/pages/ProposalHistory/proposalHistory.tmpl.html',
           controller : 'ProposalHistory',
         })
         .state('showCurrentProposal',{
-           url : '/showcurrentproposal',
+           url : '/:proposal_id/showcurrentproposal',
            templateUrl : 'modules/pages/currentProposal/currentProposal.tmpl.html',
            controller : 'CurrentProposal',
         })

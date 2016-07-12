@@ -1,10 +1,11 @@
 "use strict";
 
 angular.module('catalogueApp')
-.controller('ProposalCtrl', function($scope, $rootScope, $q, $window, createProposalService, $location,$http){
+.controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http){
 
 	console.log("Inside Controller");
 
+	console.log("account_id : ", $stateParams.account_id);
 	$scope.model = {}
 	$scope.model.centers = new Array();
 
@@ -66,14 +67,22 @@ angular.module('catalogueApp')
 		}
 	}
 
+	// $scope.
+
 	$scope.submit = function(){
 		console.log("$scope.model", $scope.model);
-
+		
 		// call backend to save only if all the latitudes are found
-			createProposalService.saveInitialProposal($scope.model)
+			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)
 			.success(function(response, status){
 				$scope.errormsg = undefined;
 				console.log("Successfully Saved");
+				console.log("response is : ", response);
+				$scope.proposal_id = response; 
+				createProposalService.setProposalId($scope.proposal_id);
+
+				$location.path('/' + $scope.proposal_id + '/mapview');
+
 			})
 			.error(function(response,status){
 				console.log("Error");

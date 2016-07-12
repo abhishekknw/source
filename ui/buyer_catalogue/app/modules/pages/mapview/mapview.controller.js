@@ -1,6 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('MapCtrl', function($scope, $rootScope, $window, $location, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady) {
+    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady) {
         
         // You have to initailise some value for the map center beforehand 
         // $scope.map is just for that purpose --> Set it according to your needs. 
@@ -19,6 +19,8 @@ angular.module('catalogueApp')
         $scope.inital_center = {}
         $scope.old_center = {}
         $scope.new_center = {}
+
+        console.log("Inside map view with proposal_id : ", $stateParams.proposal_id);
 
         // an array equal to no. of centers to allow reseting each center if changed
         $scope.initial_center_changed = new Array();
@@ -73,6 +75,19 @@ angular.module('catalogueApp')
             }
 
 
+            var deselect_all_society_filters = function(){
+                for(var i=0;i<$scope.society_location.length; i++) 
+                    $scope.society_location[i].selected = false;
+
+                for(var i=0;i<$scope.society_quality_type.length; i++) 
+                    $scope.society_quality_type[i].selected = false;
+
+                for(var i=0;i<$scope.society_quantity_type.length; i++) 
+                    $scope.society_quantity_type[i].selected = false;  
+
+                for(var i=0;i<$scope.society_flat_type.length; i++) 
+                    $scope.society_flat_type[i].selected = false;              
+            }
 
             var set_centers = function(){
                 // center lat lng is equal to map lat lng 
@@ -102,7 +117,7 @@ angular.module('catalogueApp')
 
                 // on changing center lot of things changes
                 // map center || circle center and radius || current_center || society_markers || old_center new_center
-                mapViewService.resetCenter($scope.current_center.center.id)
+                mapViewService.resetCenter($scope.proposal_id_temp, $scope.current_center.center.id)
                 .success(function(response, status){
                     // only one center comes but to reuse Code answer comes in array form
                     console.log("response is : ", response);
@@ -121,6 +136,7 @@ angular.module('catalogueApp')
                     $scope.center_changed = false;
 
                     set_centers();
+                    deselect_all_society_filters();
 
                     if($scope.current_center.center.space_mappings.society_allowed){
                         // $scope.society_allowed = true;
@@ -186,18 +202,18 @@ angular.module('catalogueApp')
 
 
                 // this service will return above deleted variables if checked in the filter
-                mapViewService.getChangedCenterSpaces($scope.current_center)
+                mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center)
                 .success(function(response, status){
                     console.log("Changing Center \nResponse is : ", response);
                     $scope.current_center = response;
                     console.log("\nAfter request $scope.current_center : ", $scope.current_center);
-                    
+                                            
                     // for(var i=0;i<$scope.centers.length;i++)
                     //     if($scope.current_center.id == $scope.centers[i].length)
                     //         $scope.centers[i] = angular.copy($scope.current_center);
 
                     $scope.centers[$scope.current_center_index] = $scope.current_center;
-
+                    deselect_all_society_filters();
                     if($scope.current_center.societies != undefined)
                         $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
                     else
@@ -237,7 +253,7 @@ angular.module('catalogueApp')
                 $scope.circle.radius = $scope.current_center.center.radius * 1000;
 
                 set_centers();
-
+                deselect_all_society_filters();
 
                 // show the societies only if selected in this center
                 if($scope.current_center.center.space_mappings.society_allowed){
@@ -354,7 +370,9 @@ angular.module('catalogueApp')
 
                 // This service gets all the spaces according to center specification like society_allowed, 
                 // t
-                 mapViewService.getSpaces()
+                $scope.proposal_id_temp = $stateParams.proposal_id;
+
+                 mapViewService.getSpaces($scope.proposal_id_temp)
                 .success(function(response, status){
                     
                     console.log("\n\nResponse is : ", response);
@@ -606,7 +624,7 @@ angular.module('catalogueApp')
 
         $scope.submitProposal = function(){
             console.log("Submitting $scope.centers :", $scope.centers);
-            mapViewService.createFinalProposal($scope.centers)
+            mapViewService.createFinalProposal($scope.proposal_id_temp, $scope.centers)
             .success(function(response, status){
                 console.log("Successfully Saved");
             })

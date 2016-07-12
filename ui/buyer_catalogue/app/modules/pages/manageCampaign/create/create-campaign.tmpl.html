@@ -127,14 +127,14 @@
                   <td>{{proposal.updated_by}}</td>
                   <td>{{proposal.updated_on | limitTo:10}}</td>
                   <td>
-                    <a data-target="#detailModalProposal" class="btn btn-danger  active" data-toggle="modal">Details</a><div ng-view></div></div>
+                    <a data-target="#detailModalProposal" class="btn btn-danger  active" data-toggle="modal">Details</a>
                     <br>     
                     <!-- <button class="btn btn-danger detail-button">Map View</button> -->
                   </td>
                 </tr>
               </tbody>
             </table>
-            <button class="btn btn-danger" ng-click="addNewAccount()">Create New Proposal</button>
+            <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)">Create New Proposal</button>
           </div>
         </div>
       </form>
