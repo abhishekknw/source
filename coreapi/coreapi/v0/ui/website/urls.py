@@ -23,10 +23,12 @@ urlpatterns = [
 
     # Beta Urls and Classes
     url(r'^createInitialProposal/$',views.InitialProposalAPIView.as_view()),
-    url(r'^createDemoProposal/$',views.FinalProposalAPIView.as_view()),
+    url(r'^createFinalProposal/$',views.FinalProposalAPIView.as_view()),
     url(r'^getSpaces/$', views.SpacesOnCenterAPIView.as_view()),
     # url(r'^getSpace/(?P<id>[A-Z_a-z0-9]+)/$', views.GetSpaceInfoAPIView.as_view()),
     url(r'^getFilteredSocieties/$', views.GetFilteredSocietiesAPIView.as_view()),
+    url(r'^currentProposal/$',views.CurrentProposalAPIView.as_view()),
+    url(r'^getProposalVersion/$', views.ProposalHistoryAPIView.as_view()),
 
 
     # for saving societies

@@ -1,3 +1,4 @@
+<div ng-if="errormsg"><h3>{{errormsg}}</h3></div>
 <div>
 	Proposal Info
 	Name : <input type="text" ng-model="model.name">
@@ -6,8 +7,7 @@
 </div>
 
 <div> 
-	<button ng-click="addCenter()">Add Society</button>&nbsp;
-	<button ng-click="submit()">Submit</button>
+	<button ng-click="addCenter()">Add Center</button>&nbsp;
 </div>
 	
 <div ng-repeat="center in model.centers track by $index">
@@ -16,8 +16,10 @@
 	subarea :  <input type="text" ng-model="center.center.subarea">
 	area : <input type="text" ng-model="center.center.area"><br>
 	city : <input type="text" ng-model="center.center.city">
-	latitude : <input type="text" ng-model="center.center.latitude">
-	longitude : <input type="text" ng-model="center.center.longitude">
+	pincode : <input type="text" ng-model="center.center.pincode">
+	radius : <input type="number" ng-model="center.center.radius">
+	<!-- latitude : <input type="text" ng-model="center.center.latitude">
+	longitude : <input type="text" ng-model="center.center.longitude"> -->
 	<button ng-click="removeCenter($index)">Remove</button>
 	<br><br>
 
@@ -44,6 +46,6 @@
 		<input type="checkbox" ng-model="center.corporate_inventory.banner_allowed"> Banner
 	</div><br>
 
-
 	<br><br>
 </div>
+<button ng-click="submit()">Submit</button>

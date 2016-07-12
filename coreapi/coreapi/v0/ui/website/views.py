@@ -1,4 +1,5 @@
 import math, random, string
+from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,18 +10,22 @@ from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTy
                     PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, \
                     SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, \
                     PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, \
-                    BusinessSubTypes, AccountInfo, InventorySummary, FlatType
+                    BusinessSubTypes, AccountInfo, InventorySummary, FlatType, ProposalInfoVersion, ProposalCenterMappingVersion, \
+                    SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion
 from django.db.models import Q, Sum
 from django.db import transaction
 from rest_framework import status
+from v0.ui.views import InventorySummaryAPIView
 import json
 from django.contrib.contenttypes.models import ContentType
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping,SpaceMapping , InventoryType, ShortlistedSpaces
 from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer, SpaceMappingSerializer , \
-        InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer
+        InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
+        ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,\
+        ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
 
 
-# codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   Saloon -> SA
+# codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 
 
 
@@ -121,26 +126,9 @@ class AccountAPIView(APIView):
 class NewCampaignAPIView(APIView):
     def post(self, request, format=None):
 
-            # print "\n\n\n  Request Data : "
-            # print request.data
-            # print "\n\n\n"
-
             current_user = request.user
             business_data = request.data['business']
             error = {}
-
-            # checking if the business with the same name already exists in the database
-            # try:
-            #     if 'id' not in business_data :
-            #         business = BusinessInfo.objects.get(name=business_data['name'])
-            #         error['message'] = 'Business with this name already exists'
-            #         error = (error)
-            #         return Response({'message' : 'Business with this name already exists'}, status = status.HTTP_406_NOT_ACCEPTABLE)
-            #     # else:
-            #     #     print "\n\nYeyyyy! found id in the business \n\n"
-            # except BusinessInfo.DoesNotExist:
-            #     pass
-
 
             with transaction.atomic():
                 if 'business_id' in business_data:
@@ -168,8 +156,6 @@ class NewCampaignAPIView(APIView):
                         business = serializer.save(type_name=type_name, sub_type=sub_type)
 
                     except ValueError:
-                        # error['message'] = "Business Type/SubType Invalid"
-                        # error = (error)
                         return Response({'message' : 'Business Type/SubType Invalid'}, \
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -187,7 +173,6 @@ class NewCampaignAPIView(APIView):
                     contact['content_type'] = content_type_business.id
 
                     if 'id' in contact:
-                        # print "\nInside if 2\n"
                         item = BusinessAccountContact.objects.get(pk=contact['id'])
                         if contact['spoc'] == '':
                             contact['spoc'] = item.spoc
@@ -196,18 +181,18 @@ class NewCampaignAPIView(APIView):
                     else:
                         if contact['spoc'] == '':
                             contact['spoc'] = 'false'
-                        # print "\nInside else 2\n"
                         contact_serializer = BusinessAccountContactSerializer(data=contact)
 
                     contact_serializer.is_valid(raise_exception=True)
 
                     contact = contact_serializer.save()
+                    # contact object is returned on saving serializer so appending that inside list to send back to the page
                     contact_list.append(contact)
+
                 # deleting all contacts whose id not received from the frontend
                 BusinessAccountContact.objects.filter(id__in=contact_ids).delete()
 
                 business_serializer = BusinessInfoSerializer(business)
-                # contacts = business.contacts.all()
                 contacts_serializer = BusinessAccountContactSerializer(contact_list, many=True)
 
                 response = {
@@ -718,9 +703,7 @@ class FinalCampaignBookingAPIView(APIView):
 
 
 
-
-
-# Beta API below this point
+# Beta API below this point. Be Careful. Danger Below
 
 class InitialProposalAPIView(APIView):
     '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal 
@@ -742,7 +725,7 @@ class InitialProposalAPIView(APIView):
 
         supplier_codes = {
             'society' : 'RS',   'corporate' : 'CP',
-            'gym' : 'GY',       'saloon' : 'SA'
+            'gym' : 'GY',       'salon' : 'SA'
         }
         with transaction.atomic():
             proposal_data = request.data
@@ -766,12 +749,26 @@ class InitialProposalAPIView(APIView):
                     center = center_info['center']
                     space_mapping = center['space_mapping']
                     center['proposal'] = proposal_object.proposal_id
-                    center['radius'] = 1123.45
+                    address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + center['pincode']
+                    geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
+                    try:
+                        geo_object = geocoder.geocode(address)
+                    except GeocoderError:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                        print "\n\nCenter is : ", center, " \n\n"
+                        return Response({'message' : 'Latitude Longitude Not found for address : ' + address}, status=406)
+                    except ConnectionError:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                        return Response({'message' : 'Unable to connect to google Maps'}, status=406    )
+                    center['latitude'] = geo_object.latitude
+                    center['longitude'] = geo_object.longitude
+                    
                     center_serializer = ProposalCenterMappingSerializer(data=center)
 
                     if center_serializer.is_valid():
                         center_object = center_serializer.save()
                     else:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
                         return Response({'message' : 'Invalid Center Data', 'errors' : center_serializer.errors},\
                             status=406)
 
@@ -781,14 +778,15 @@ class InitialProposalAPIView(APIView):
                     if space_mapping_serializer.is_valid():
                         space_mapping_object = space_mapping_serializer.save()
                     else:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
                         return Response({
                                 'message' : 'Invalid Space Mapping Data',
                                 'errors' : space_mapping_serializer.errors
                             }, status=406)
 
 
-                    # extend the list in for loop when new spaces added. Keep the variables names accordingly          
-                    for space in ['society','corporate','gym','saloon']:
+                    # ADDNEW --> extend the list in for loop when new spaces added. Keep the variables names accordingly          
+                    for space in ['society','corporate','gym','salon']:
                         ''' This loops checks if the space is allowed and if it is allowed save the 
                         inventory types chosen by the user in the inventory_type table '''
                         try:
@@ -801,12 +799,13 @@ class InitialProposalAPIView(APIView):
                                 if inventory_type_serializer.is_valid():
                                     inventory_type_serializer.save()
                                 else:
+                                    ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
                                     return Response({
                                             'message' : 'Invalid Inventory Type Info',
                                             'errors' : inventory_type_serializer.errors
                                         })
                         except KeyError:
-                            print 'KeyError occured'
+                            # print 'KeyError occured'
                             pass
 
 
@@ -816,6 +815,13 @@ class InitialProposalAPIView(APIView):
         import random, string
         return ''.join(random.choice(string.ascii_letters) for _ in range(8))
 
+
+
+def return_price(adinventory_type_dict, duration_type_dict, inv_type, dur_type):
+    price_mapping = PriceMappingDefault.objects.filter(adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type])
+    if price_mapping:
+        return price_mapping[0].business_price
+    return 0
 
 
 
@@ -829,17 +835,32 @@ class SpacesOnCenterAPIView(APIView):
         Corporate and Society '''
 
         response = {}
-
+        center_id = request.query_params.get('center',None)
         try:
             if proposal_id is None:
-                proposal_id = 'VGaLoytK';
+                proposal_id = 'AlntOlJi';
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
         except ProposalInfo.DoesNotExist:
             return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
 
-        proposal_centers = ProposalCenterMapping.objects.filter(proposal=proposal)
-        centers_data_list = []
 
+        # if center comes in get request then just return the result for that center
+        # this is to implement the reset center functionality
+        if center_id :
+            try:
+                print "center_id : ", center_id
+                print type(center_id)
+                center_id = int(center_id)
+            except ValueError:
+                print "\n\nException occured\n\n"
+                return Response({'message' : 'Invalid Center ID provided'}, status=406) 
+            proposal_centers = ProposalCenterMapping.objects.filter(id=center_id)
+            if not proposal_centers:
+                return Response({'message' : 'Invalid Center ID provided'}, status=406) 
+        else : 
+            proposal_centers = ProposalCenterMapping.objects.filter(proposal=proposal)
+        
+        centers_data_list = []
         for proposal_center in proposal_centers:
             try:
                 space_mapping_object = SpaceMapping.objects.get(center=proposal_center)
@@ -863,59 +884,101 @@ class SpacesOnCenterAPIView(APIView):
             if space_mapping_object.society_allowed:
                 q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
                 
-                inventory_type_society = space_mapping_object.get_society_inventories()
-                inventory_type_serializer = InventoryTypeSerializer(inventory_type_society)
+                societies_inventory = space_mapping_object.get_society_inventories()
+                societies_inventory_serializer = InventoryTypeSerializer(societies_inventory)
                 # applying filter on basis of inventory
                 for param in ['poster_allowed', 'standee_allowed', 'flier_allowed', 'stall_allowed', 'banner_allowed']:
                     try:
-                        if param == 'poster_allowed' and inventory_type_society.__dict__[param]:
+                        if param == 'poster_allowed' and societies_inventory.__dict__[param]:
                             q &= (Q(poster_allowed_nb=True) | Q(poster_allowed_lift=True))
-                        elif inventory_type_society.__dict__[param]:
+                        elif societies_inventory.__dict__[param]:
                             q &= Q(**{param : True})
                     except KeyError:
                         pass
 
 
 
-                societies = SupplierTypeSociety.objects.filter(q)
-                societies_count = societies.count()
-                societies_serializer =  ProposalSocietySerializer(societies, many=True)
+                societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+                societies = []
+                society_ids = []
+                societies_count = 0
+                for society in societies_temp:
+                    if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
+                        society['society_latitude'], society['society_longitude']):
+                        society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                        society['shortlisted'] = True
+                        society['buffer_status'] = False
+                        obj = InventorySummaryAPIView()
+                        adinventory_type_dict = obj.adinventory_func()
+                        duration_type_dict = obj.duration_type_func()
+                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                            society['total_poster_count'] = society_inventory_obj.total_poster_count
+                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+
+                        if society_inventory_obj.standee_allowed:
+                            society['total_standee_count'] = society_inventory_obj.total_standee_count
+                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+
+                        if society_inventory_obj.stall_allowed:
+                            society['total_stall_count'] = society_inventory_obj.total_stall_count
+                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+
+                        if society_inventory_obj.flier_allowed:
+                            society['flier_frequency'] = society_inventory_obj.flier_frequency
+                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+
+                        # ADDNEW -->
+                        society_ids.append(society['supplier_id'])
+                        societies.append(society)
+                        societies_count += 1
+
+                # societies_serializer =  ProposalSocietySerializer(societies, many=True)
 
                 # following query find sum of all the variables specified in a dictionary
                 # this finds sum of all inventories, if you don't need some of some inventory make it 0 in front end
-                society_inventory =  InventorySummary.objects.filter(supplier__in=societies).aggregate(posters=Sum('total_poster_count'),\
+                societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
                     standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
 
-                space_info_dict['societies'] = societies_serializer.data
-                space_info_dict['society_inventory_count'] = society_inventory
-                space_info_dict['society_inventory'] = inventory_type_serializer.data
+                space_info_dict['societies'] = societies
+                space_info_dict['societies_inventory_count'] = societies_inventory_count
+                space_info_dict['societies_inventory'] = societies_inventory_serializer.data
                 space_info_dict['societies_count'] = societies_count
 
 
             if space_mapping_object.corporate_allowed:
-                q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
+                pass
+                # q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
                 
-                # uncomment this line when corporate inventory implemented 
-                # inventory_type_corporate = space_mapping_object.get_corporate_inventories().
-                # inventory_type_serializer = InventoryTypeSerializer(inventory_type_corporate)
+                # ADDNEW --> uncomment this line when corporate inventory implemented 
+                # corporates_inventory = space_mapping_object.get_corporate_inventories().
+                # corporates_inventory_serializer = InventoryTypeSerializer(inventory_type_corporate)
                 # then run for loop almost same as above for applying filter on inventory_allowed
-                # make a query for different inventory count
+                # make a query for different inventory count (e.g. poster_count )
 
-                corporates = SupplierTypeCorporate.objects.filter(q)
-                corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
-                corporates_count = corporates.count()
+                # corporates_temp = SupplierTypeCorporate.objects.filter(q)
+                # corporates = []
+                # corporates_count = 0
+                # for corporate in corporates_temp:
+                #     if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
+                #         corporate.latitude, corporate.longitude):
+                #         corporates.append(corporate)
+                #         corporates_count += 1
 
-                space_info_dict['corporates'] = corporates_serializer.data
-                space_info_dict['corporates_count'] = corporates_count 
-                # space_info_dict['corporate_inventory'] = inventory_type_serializer.data
+                # corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
+
+                # space_info_dict['corporates'] = corporates_serializer.data
+                # space_info_dict['corporates_count'] = corporates_count 
+                # space_info_dict['corporates_inventory_count'] = corporates_inventory_count  // implement this first
+                # space_info_dict['corporates_inventory'] = corporates_inventory_serializer.data
 
             if space_mapping_object.gym_allowed:
-                # write gym code for filtering 
+                # ADDNEW --> write gym code for filtering 
                 pass
 
-            if space_mapping_object.saloon_allowed:
-                # write saloon code for filtering 
+            if space_mapping_object.salon_allowed:
+                # ADDNEW --> write salon code for filtering 
                 pass    
             
 
@@ -925,48 +988,148 @@ class SpacesOnCenterAPIView(APIView):
             centers_data_list.append(space_info_dict)
 
 
-            response = {
-                'centers'  : centers_data_list,
-            }
+        response = {
+            'centers'  : centers_data_list,
+        }
 
         return Response(response, status=200)
 
-        # min_latitude = 18
-        # max_latitude = 20
-
-        # min_longitude = 70
-        # max_longitude = 74
-
-        # societies = SupplierTypeSociety.objects.filter(Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude))
-        # corporates = SupplierTypeCorporate.objects.filter(Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude))
-
-        # societies_count = societies.count()
-        # corporates_count = corporates.count()
-
-        # # This is to find inventory count
-        # society_ids = societies.values_list('supplier_id',flat=True)
-
-        # society_inventory =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
-        #         standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
-
-        # societies_serializer =  ProposalSocietySerializer(societies, many=True)
-        # corporates_serializer = ProposalCorporateSerializer(corporates, many=True)  
-
-        # response = {
-        #     'societies' : societies_serializer.data,
-        #     'corporates' : corporates_serializer.data,
-        #     'societies_count' : societies_count,
-        #     'corporates_count' : corporates_count,
-        #     'society_inventory' : society_inventory,
-        # }
-
-        # return Response(response, status=200)
 
 
-    def post(self, reqeust,id=None, format=None):
-        '''Here write the API for changing the center and radius of a center
+    def post(self, request,id=None, format=None):
+        '''This API returns the spaces info when center or radius is changed
+        API ONLY PRODUCE RESULTS FOR SOCIETIES ONLY
+        Code to be written for other spaces
         '''
-        pass
+        response = {}
+        print "\n\n\n"
+        print "request.data : ", request.data
+        print "\n\n\n"
+        center_info = request.data
+        try:
+            center = center_info['center']
+            space_mappings = center['space_mappings']
+        except KeyError:
+            return Response({'message':'Improper center or space_mappings data'}, status=406)
+        
+        response['center'] = center
+        latitude = float(center['latitude'])
+        longitude = float(center['longitude'])
+        radius = float(center['radius'])
+        delta_dict = get_delta_latitude_longitude(radius, latitude)
+
+        delta_latitude = delta_dict['delta_latitude']
+        min_latitude = center['latitude'] - delta_latitude
+        max_latitude = center['latitude'] + delta_latitude
+
+        delta_longitude = delta_dict['delta_longitude']
+        min_longitude = center['longitude'] - delta_longitude
+        max_longitude = center['longitude'] + delta_longitude
+
+        if space_mappings['society_allowed']:
+            q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
+
+            try:
+                societies_inventory = center_info['societies_inventory']            
+            except KeyError:
+                return Response({'message' : 'Provide society_inventory when society selected'}, status=406)
+
+            for param in ['poster_allowed', 'standee_allowed', 'flier_allowed', 'stall_allowed', 'banner_allowed']:
+                try:
+                    if param == 'poster_allowed' and societies_inventory[param]:
+                        q &= (Q(poster_allowed_nb=True) | Q(poster_allowed_lift=True))
+                    elif societies_inventory[param]:
+                        q &= Q(**{param : True})
+                except KeyError:
+                    print "key error occured"
+                    pass
+
+            societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+            societies = []
+            society_ids = []
+            societies_count = 0
+            for society in societies_temp:
+                if space_on_circle(latitude, longitude, radius, society['society_latitude'], society['society_longitude']):
+                    society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                    society['shortlisted'] = True
+                    society['buffer_status'] = False
+                    obj = InventorySummaryAPIView()
+                    adinventory_type_dict = obj.adinventory_func()
+                    duration_type_dict = obj.duration_type_func()
+                    if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                        society['total_poster_count'] = society_inventory_obj.total_poster_count
+                        society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+
+                    if society_inventory_obj.standee_allowed:
+                        society['total_standee_count'] = society_inventory_obj.total_standee_count
+                        society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+
+                    if society_inventory_obj.stall_allowed:
+                        society['total_stall_count'] = society_inventory_obj.total_stall_count
+                        society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                        society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+
+                    if society_inventory_obj.flier_allowed:
+                        society['flier_frequency'] = society_inventory_obj.flier_frequency
+                        society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+
+                    # ADDNEW -->
+                    society_ids.append(society['supplier_id'])
+                    societies.append(society)
+                    societies_count += 1
+
+            # societies_serializer =  ProposalSocietySerializer(societies, many=True)
+
+            # following query find sum of all the variables specified in a dictionary
+            # this finds sum of all inventories, if you don't need some of some inventory make it 0 in front end
+            societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
+                standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+
+            response['societies'] = societies
+            response['societies_inventory_count'] = societies_inventory_count
+            response['societies_inventory'] = societies_inventory
+            response['societies_count'] = societies_count
+
+        if space_mappings['corporate_allowed']:
+            pass
+            # q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
+
+            # ADDNEW --> uncomment when implemented properly 
+            # try:
+            #     corporates_inventory = center_info['corporate_inventory']
+            # except KeyError:
+            #     return Response({'message' : 'Provide corporates_inventory when corporates selected'}, status=406)
+
+            # filter on basis of corporates_inventory (poster_allowed etc.) like in society_filter
+
+
+            # corporates_temp = SupplierTypeCorporate.objects.filter(q)
+            # corporates = []
+            # corporates_count = 0
+            # for corporate in corporates_temp:
+            #     if space_on_circle(center['latitude'], center['longitude'], center['radius'], \
+            #         corporate.latitude, corporate.longitude):
+            #         corporates.append(corporate)
+            #         corporates_count += 1
+                
+            # corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
+
+            # response['corporates'] = corporates_serializer.data
+            # response['corporates_count'] = corporates_count
+            # response['corporates_inventory'] = corporates_inventory
+
+
+        if space_mappings['gym_allowed']:
+            # ADDNEW --> write code for gym
+            pass
+
+        if space_mappings['salon_allowed']:
+            # ADDNEW --> write code for salon
+            pass
+
+
+        return Response(response, status=200)
 
 
 
@@ -978,35 +1141,19 @@ def get_delta_latitude_longitude(radius, latitude):
             'delta_longitude' : delta_longitude}
 
 
-# class GetSpaceInfoAPIView(APIView):
-#     ''' This API is to fetch the space(society,corporate, gym) etc. using its supplier Code
-#     e.g. RS for residential Society 
 
-#     Currently only working for societies '''
-#     def get(self, request, id , format=None):
-#         try:
-#             '''  On introducing new spaces we have to use if conditions to check the supplier code 
-#             like RS for society and the fetch society object
-#             e.g. if supplier_code == 'RS':
-#                       society = SupplierTypeSociety.objects.get(supplier_id=id)
-#                   else supplier_code == 'CP':
-#                        corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
-#                         Then serialize and send  '''
-
-#             society = SupplierTypeSociety.objects.get(supplier_id=id)
-#             serializer = SupplierTypeSocietySerializer(society)
-#             return Response(serializer.data, status=200)
-#         except SupplierTypeSociety.DoesNotExist:
-#             return Response({'message' : 'No society Exists'}, status=406)
+def space_on_circle(latitude, longitude, radius, space_lat, space_lng):
+    return (space_lat - latitude)**2 + (space_lng - longitude)**2 <= (radius/110.574)**2
 
 
-class GetFilteredSocietiesAPIView(APIView):
-    
+
+class GetFilteredSocietiesAPIView(APIView):    
 
     def get(self, request, format=None):
         ''' This API gives societies based on different filters from mapView and gridView Page
         Currently implemented filters are locality and location (Standard, Medium High etc.)
         flat_count (100 - 250 etc.) flat_type(1BHK, 2BHK etc.) '''
+        response = {}
 
         latitude = request.query_params.get('lat', None)
         longitude = request.query_params.get('lng',None)
@@ -1050,13 +1197,17 @@ class GetFilteredSocietiesAPIView(APIView):
                 # here to include those societies which don't have this info nothing can be done 
                 # It is simply all the societies -> filter becomes useless
 
-
         # calculating for latitude and longitude
         # this is done to ensure that the societies are sent according to the current radius and center in frontend
         # user can change center and radius and it will not be stored in the database until saved
-        latitude = float(latitude)
-        longitude = float(longitude)
-        delta_dict = get_delta_latitude_longitude(float(radius), latitude)
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+            radius = float(radius)
+        except ValueError:
+            return Response({'message':'Invalid Format of latitude longitude or radius'}, status=406)
+
+        delta_dict = get_delta_latitude_longitude(radius, latitude)
 
         max_latitude = latitude + delta_dict['delta_latitude']
         min_latitude = latitude - delta_dict['delta_latitude']
@@ -1122,7 +1273,6 @@ class GetFilteredSocietiesAPIView(APIView):
                 # will not work if there is default value is something then replace __isnull=True --> = defaultValue
                 # q &= Q(flat_count__isnull=True)  
 
-
         if inventory_params:
             inventory_params = inventory_params.split()
             for param in inventory_params:
@@ -1135,24 +1285,51 @@ class GetFilteredSocietiesAPIView(APIView):
                 except KeyError:
                     pass
 
-        print "\n\nq is ", q
-        print "\n\n"
+        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+        societies = []
+        society_ids = []
+        societies_count = 0
+        for society in societies_temp:
+            if space_on_circle(latitude, longitude, radius ,society['society_latitude'], society['society_longitude']):
+                society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                society['shortlisted'] = True
+                society['buffer_status'] = False
+                obj = InventorySummaryAPIView()
+                adinventory_type_dict = obj.adinventory_func()
+                duration_type_dict = obj.duration_type_func()
+                if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                    society['total_poster_count'] = society_inventory_obj.total_poster_count
+                    society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
 
-        societies = SupplierTypeSociety.objects.filter(q)
-        society_ids= societies.values_list('supplier_id',flat=True)
-        societies_count = societies.count()
+                if society_inventory_obj.standee_allowed:
+                    society['total_standee_count'] = society_inventory_obj.total_standee_count
+                    society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
 
-        society_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
-                standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+                if society_inventory_obj.stall_allowed:
+                    society['total_stall_count'] = society_inventory_obj.total_stall_count
+                    society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                    society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
-        society_serializer = ProposalSocietySerializer(societies, many=True)
+                if society_inventory_obj.flier_allowed:
+                    society['flier_frequency'] = society_inventory_obj.flier_frequency
+                    society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
-        response = {
-            'societies' : society_serializer.data,
-            'society_inventory_count' : society_inventory_count,
-            'societies_count' : societies_count
-        }
+                # ADDNEW -->
+                society_ids.append(society['supplier_id'])
+                societies.append(society)
+                societies_count += 1
 
+        # societies_serializer =  ProposalSocietySerializer(societies, many=True)
+
+        # following query find sum of all the variables specified in a dictionary
+        # this finds sum of all inventories, if you don't need some of some inventory make it 0 in front end
+        societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
+            standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+
+        response['societies'] = societies
+        response['societies_inventory_count'] = societies_inventory_count
+        response['societies_count'] = societies_count
         return Response(response, status=200)
 
 
@@ -1191,9 +1368,846 @@ def get_related_dict():
 
 class FinalProposalAPIView(APIView):
 
-    def post(self, request, format=None):
-        pass
+    def get(self, request, proposal_id=None, format=None):
+        ''' This API sends the data to frontend based on the centers of that proposal and applying
+        space filter(society_allowed, corporate_allowed) and there inventories as well
+        e.g. (Society --> poster, standee ) will give societies that have both poster and standee allowed
+        '''
+        try:
+            if proposal_id is None:
+                proposal_id = 'AlntOlJi';
+            proposal_object = ProposalInfo.objects.get(proposal_id=proposal_id)
+        except ProposalInfo.DoesNotExist:
+            return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
 
+        space_dict , supplier_code_dict = self.get_space_code_dict()
+        # ADDNEW -->
+        space_model_dict = {
+            'society' : SupplierTypeSociety,    'corporate' : SupplierTypeCorporate,
+            # 'gym' : SupplierTypeGym,          'salon' : SupplierTypesalon
+        }
+
+        space_serializer_dict = {
+            'society' : ProposalSocietySerializer,  'corporate' : ProposalCorporateSerializer,
+            # 'gym' : ProposalGymSerializer,        'salon' : ProposalsalonSerializer
+        }
+
+        centers_objects = proposal_object.get_centers()
+        centers_list = []
+
+        for center_object in centers_objects:
+            space_info_dict = {}
+            center_serializer   = ProposalCenterMappingSpaceSerializer(center_object)
+            space_info_dict['center'] = center_serializer.data
+
+            space_mapping_object = center_object.get_space_mappings()
+            
+            # for space_name in ['society','corporate','gym','salon']:
+            #     if space_mapping_object.__dict__[space_name + '_allowed']:
+            #         space_inventory_object = InventoryTypes.objects.get(space_mapping=space_mapping_object, supplier_code=supplier_code_dict[space_name])
+            #         space_info_dict[space_dict[space_name] + '_inventory'] = InventoryTypeSerializer(space_inventory_object)
+
+            #         space_ids = ShortlistedSpaces.objects.filter(space_mapping=space_mapping_object, supplier_code=supplier_code_dict[space_name]).values_list('object_id',flat=True)
+            #         spaces = space_model_dict[space_name].objects.filter(supplier_id__in=space_ids)
+            #         spaces_serializer = space_serializer_dict[space_name](spaces)
+            #         space_info_dict[space_dict[space_name]] = spaces_serializer.data
+
+            #         # still have to put inventory count and then done
+
+            #         centers_list.append(space_info_dict)
+
+            if space_mapping_object.society_allowed:
+                societies_inventory = space_mapping_object.get_society_inventories()
+                societies_inventory_serializer = InventoryTypeSerializer(societies_inventory)
+
+                society_ids = ShortlistedSpaces.objects.filter(space_mapping=space_mapping_object, supplier_code='RS').values_list('object_id',flat=True)
+                societies_temp = SupplierTypeSociety.objects.filter(supplier_id__in=society_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+                societies = []
+                society_ids = []
+                societies_count = 0
+                for society in societies_temp:
+                    if space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
+                        society['society_latitude'], society['society_longitude']):
+                        society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                        society['shortlisted'] = True
+                        society['buffer_status'] = False
+                        obj = InventorySummaryAPIView()
+                        adinventory_type_dict = obj.adinventory_func()
+                        duration_type_dict = obj.duration_type_func()
+                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                            society['total_poster_count'] = society_inventory_obj.total_poster_count
+                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+
+                        if society_inventory_obj.standee_allowed:
+                            society['total_standee_count'] = society_inventory_obj.total_standee_count
+                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+
+                        if society_inventory_obj.stall_allowed:
+                            society['total_stall_count'] = society_inventory_obj.total_stall_count
+                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+
+                        if society_inventory_obj.flier_allowed:
+                            society['flier_frequency'] = society_inventory_obj.flier_frequency
+                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+
+                        # ADDNEW --> Banner etc.
+                        society_ids.append(society['supplier_id'])
+                        societies.append(society)
+                        societies_count += 1
+
+                # societies_serializer =  ProposalSocietySerializer(societies, many=True)
+
+                # following query find sum of all the variables specified in a dictionary
+                # this finds sum of all inventories, if you don't need some of some inventory make it 0 in front end
+                societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
+                    standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+
+                space_info_dict['societies'] = societies
+                space_info_dict['societies_inventory_count'] = societies_inventory_count
+                space_info_dict['societies_inventory'] = societies_inventory_serializer.data
+                space_info_dict['societies_count'] = societies_count
+
+            if space_mapping_object.corporate_allowed:
+                # ADDNEW -->
+                pass
+
+            if space_mapping_object.gym_allowed:
+                # ADDNEW -->
+                pass
+
+
+            centers_list.append(space_info_dict)
+
+        proposal_serializer = ProposalInfoSerializer(proposal_object)
+        response = {
+            'proposal' : proposal_serializer.data,
+            'centers'  : centers_list,
+        }
+
+        return Response(response, status=200)
+
+
+
+    def post(self, request, format=None):
+        ''' Saving the proposal from the map view. Every time mapview page is loaded and grid view is submitted from there
+        This makes a new version of proposal. And also updates all the required table as well 
+        This expects id of both center and space mapping from the frontend as they are saved on basic proposal page (InitialProposalAPIView)
+        '''
+        centers = request.data
+        print "\n\n\n"
+        print "request.data is : ", request.data
+        print "\n\n\n"
+        # ADDNEW -->
+
+        space_dict , supplier_code_dict = self.get_space_code_dict()
+
+        try:
+            center_id = centers[0]['center']['id']
+            center_object = ProposalCenterMapping.objects.select_related('proposal').get(id=center_id)
+            proposal_object = center_object.proposal
+        except IndexError:
+            return Response({'message' : 'No centers received'}, status=406)
+        except ProposalCenterMapping.DoesNotExist:
+            return Response({'message' : 'Invalid Center Received'}, status=406)
+
+        # version save
+        proposal_version_object = ProposalInfoVersion(proposal=proposal_object, name=proposal_object.name, payment_status=proposal_object.payment_status,\
+            created_on=proposal_object.created_on, created_by=proposal_object.created_by, tentative_cost=proposal_object.tentative_cost,\
+            tentative_start_date=proposal_object.tentative_start_date, tentative_end_date=proposal_object.tentative_end_date)
+        proposal_version_object.save()
+
+        with transaction.atomic():
+            shortlisted_space_list = [] 
+            shortlisted_space_version_list = []
+            for center_info in centers:
+                center = center_info['center']
+                # try :   # transaction.atomic() doesn't work if we handle exceptions on our own
+                center_id = center['id']
+                # except KeyError:
+                #     return Response({'message':'Invalid Center ID'}, status=406)
+
+                center_object = ProposalCenterMapping.objects.select_related('proposal').get(id=center_id)
+                proposal_object = center_object.proposal
+
+                
+                center_serializer = ProposalCenterMappingSerializer(center_object,data=center)
+                if center_serializer.is_valid():
+                    center_object = center_serializer.save()
+                else:
+                    return Response({'message':'Invalid Center Data', 'errors': center_serializer.errors}, status=406)
+
+                # version save
+                center['proposal_version'] = proposal_version_object.id
+                del center['id']
+                center_version_serailizer = ProposalCenterMappingVersionSerializer(data=center)
+                if center_version_serailizer.is_valid():
+                    center_version_object = center_version_serailizer.save()
+                else:
+                    return Response({'message':'Invalid Center Version Data', 'errors' : center_version_serailizer.errors},\
+                            status = 406)
+
+
+                space_mappings = center['space_mappings']
+                space_mapping_id = space_mappings['id']
+                space_mapping_object = SpaceMapping.objects.get(id=space_mapping_id)
+
+                space_mapping_serializer = SpaceMappingSerializer(space_mapping_object, data=space_mappings)
+                if space_mapping_serializer.is_valid():
+                    space_mapping_object = space_mapping_serializer.save()
+                else:
+                    return Response({'message':'Invalid Space Mapping Data', 'errors': space_mapping_serializer.errors},\
+                            status = 406)
+
+                # version save
+                space_mappings['center_version'] = center_version_object.id
+                space_mappings['proposal_version'] = proposal_version_object.id
+                del space_mappings['id']
+                space_mapping_version_serializer = SpaceMappingVersionSerializer(data=space_mappings)
+                if space_mapping_version_serializer.is_valid():
+                    space_mapping_version_object = space_mapping_version_serializer.save()
+                else:
+                    return Response({'message' : 'Invalid Space Mapping Version Data', 'errors' : space_mapping_version_serializer.errors},\
+                            status=406)
+
+                for space_name in ['society','corporate','gym','salon']:
+                    if space_mapping_object.__dict__[space_name+"_allowed"]:
+                        content_type = ContentType.objects.get(model='SupplierType' + space_name.title())
+                        supplier_code = supplier_code_dict[space_name]
+
+                        try:
+                            space_inventory_type = center_info[space_dict[space_name] + '_inventory']
+                        except KeyError: 
+                            # Just ignoring because for corporate inventory is not made
+                            print "\n\n\n"
+                            print "Key Error Key is : " + space_dict[space_name] + '_inventory'
+                            print "\n\n\n"
+                            continue
+                        
+                        try:
+                            inventory_type_object = InventoryType.objects.get(id = space_inventory_type['id'])
+                            inventory_type_serializer = InventoryTypeSerializer(inventory_type_object, data=space_inventory_type)
+                            del space_inventory_type['id']
+                        except KeyError:
+                            space_inventory_type['space_mapping'] = space_mapping_object.id
+                            inventory_type_serializer = InventoryTypeSerializer(data=space_inventory_type)
+
+                        if inventory_type_serializer.is_valid():
+                            inventory_type_serializer.save()
+                        else:
+                            return Response({'message':'Invalid Inventory Details for ' + space_name, 'errors' : \
+                                inventory_type_serializer.errors }, status=406)
+
+
+                        # version save
+                        space_inventory_type['space_mapping_version'] = space_mapping_version_object.id
+                        inventory_type_version_serializer = InventoryTypeVersionSerializer(data=space_inventory_type)
+                        if inventory_type_version_serializer.is_valid():
+                            inventory_type_version_serializer.save()
+                        else:
+                            return Response({'message': 'Invalid Inventory Details Version for ' + space_name , ' errors' : \
+                                inventory_type_version_serializer.errors}, status=406)
+
+                        
+                        space_mapping_object.get_all_spaces().delete()
+
+                        for space in center_info[space_dict[space_name]]:
+                            print "\n\n\n"
+                            print 'space is : ', space
+                            print "\n\n\n"
+                            if space['shortlisted']:
+                                object_id = space['supplier_id']
+                                print "space_mapping_id : ", space_mapping_object.id
+                                shortlisted_space = ShortlistedSpaces(space_mapping = space_mapping_object,content_type=content_type, \
+                                    supplier_code=supplier_code, object_id=object_id, buffer_status = space['buffer_status'])
+                                
+                                shortlisted_space_list.append(shortlisted_space)
+
+                                # version save
+                                shortlisted_version_space = ShortlistedSpacesVersion(space_mapping_version=space_mapping_version_object,\
+                                    content_type=content_type, supplier_code=supplier_code, object_id=object_id, buffer_status=space['buffer_status'])
+                                shortlisted_space_version_list.append(shortlisted_version_space)
+
+            ShortlistedSpaces.objects.bulk_create(shortlisted_space_list)
+            # version save
+            ShortlistedSpacesVersion.objects.bulk_create(shortlisted_space_version_list)
+        
+        return Response({'message':'Successfully Saved'}, status=200)
+
+
+    # def put(self, request, format=None):
+    #     centers = request.data
+    #     for center in centers:
+
+
+    def get_space_code_dict(self):
+        space_dict = { # singular space as key and its plural as value
+            'society' : 'societies',    'corporate' : 'corporates',
+            'gym' : 'gyms',             'salon'    : 'salons',
+        }
+
+        supplier_code_dict = {
+            'society' : 'RS',   'corporate' : 'CP',
+            'gym' : 'GY',       'salon' : 'SA',
+        }
+
+        return space_dict, supplier_code_dict
+
+
+
+class CurrentProposalAPIView(APIView):
+
+    def get(self, request, proposal_id=None, format=None):
+        ''' This returns the proposal info of the proposal id
+        '''
+        if not proposal_id:
+            proposal_id = 'AlntOlJi'
+
+        try:
+            proposal_object = ProposalInfo.objects.get(proposal_id=proposal_id)
+        except ProposalInfo.DoesNotExist:
+            return Response({'message' : 'Invalid Proposal ID'}, status=406)
+
+        proposal_serializer = ProposalInfoSerializer(proposal_object)
+        centers = proposal_object.get_centers()
+        centers_list = []
+
+        for center in centers:
+            space_info_dict = {}
+            space_mapping_object = center.get_space_mappings()
+            center_serializer = ProposalCenterMappingSpaceSerializer(center)
+            space_info_dict['center'] = center_serializer.data
+
+            if space_mapping_object.society_allowed:
+                societies_shortlisted_ids = ShortlistedSpaces.objects.filter(space_mapping=space_mapping_object, supplier_code='RS',\
+                    buffer_status=False).values_list('object_id', flat=True)
+                
+                societies_shortlisted_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_shortlisted_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+                societies_shortlisted = []
+                societies_shortlisted_count = 0
+
+                for society in societies_shortlisted_temp:
+                    society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                    society['shortlisted'] = True
+                    society['buffer_status'] = False
+                    obj = InventorySummaryAPIView()
+                    adinventory_type_dict = obj.adinventory_func()
+                    duration_type_dict = obj.duration_type_func()
+
+                    if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                        society['total_poster_count'] = society_inventory_obj.total_poster_count
+                        society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+
+                    if society_inventory_obj.standee_allowed:
+                        society['total_standee_count'] = society_inventory_obj.total_standee_count
+                        society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+
+                    if society_inventory_obj.stall_allowed:
+                        society['total_stall_count'] = society_inventory_obj.total_stall_count
+                        society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                        society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+
+                    if society_inventory_obj.flier_allowed:
+                        society['flier_frequency'] = society_inventory_obj.flier_frequency
+                        society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+
+                    societies_shortlisted.append(society)
+                    societies_shortlisted_count += 1
+
+
+                # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
+                # societies_shortlisted_count = societies_shortlisted.count()
+                space_info_dict['societies_shortlisted'] = societies_shortlisted
+                space_info_dict['societies_shortlisted_count'] = societies_shortlisted_count
+
+
+                societies_buffered_ids = ShortlistedSpaces.objects.filter(space_mapping=space_mapping_object, supplier_code='RS',\
+                    buffer_status=True).values_list('object_id', flat=True)
+                societies_buffered_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_buffered_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+                societies_buffered = []
+                societies_buffered_count = 0
+                for society in societies_buffered_temp:
+                    society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                    society['shortlisted'] = True
+                    society['buffer_status'] = False
+                    obj = InventorySummaryAPIView()
+                    adinventory_type_dict = obj.adinventory_func()
+                    duration_type_dict = obj.duration_type_func()
+
+                    if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                        society['total_poster_count'] = society_inventory_obj.total_poster_count
+                        society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+
+                    if society_inventory_obj.standee_allowed:
+                        society['total_standee_count'] = society_inventory_obj.total_standee_count
+                        society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+
+                    if society_inventory_obj.stall_allowed:
+                        society['total_stall_count'] = society_inventory_obj.total_stall_count
+                        society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                        society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+
+                    if society_inventory_obj.flier_allowed:
+                        society['flier_frequency'] = society_inventory_obj.flier_frequency
+                        society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+
+                    societies_buffered.append(society)
+                    societies_buffered_count += 1
+
+
+                space_info_dict['societies_buffered'] = societies_buffered
+                space_info_dict['societies_buffered_count'] = societies_buffered_count
+
+                societies_inventory = InventoryType.objects.get(supplier_code='RS', space_mapping=space_mapping_object)
+                societies_inventory_serializer = InventoryTypeSerializer(societies_inventory)
+                # inventory count only for shortlisted ones
+                societies_inventory_count = InventorySummary.objects.filter(supplier_id__in=societies_shortlisted_ids).aggregate(posters=Sum('total_poster_count'),\
+                standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+                # Count only for society_shortlisted
+                space_info_dict['societies_inventory_count'] = societies_inventory_count
+                space_info_dict['societies_inventory'] = societies_inventory_serializer.data
+
+
+            if space_mapping_object.corporate_allowed:
+                # ADDNEW -->
+                pass
+
+            if space_mapping_object.salon_allowed:
+                # ADDNEW --> 
+                pass
+
+            if space_mapping_object.gym_allowed:
+                # ADDNEW -->
+                pass
+
+            centers_list.append(space_info_dict)
+
+        response = {
+            'proposal' : proposal_serializer.data,
+            'centers'  : centers_list,
+        }
+
+        return Response(response, status=200)
+
+
+    def post(self, request, proposal_id=None, format=None):
+        ''' Updates the buffer and shortlisted spaces. This API allows user to delete
+        move buffer to shortlisted and vice versa. No addition allowed using this API
+        '''
+        if not proposal_id:
+            proposal_id = 'AlntOlJi'
+
+        try:
+            proposal_object = ProposalInfo.objects.get(proposal_id=proposal_id)
+        except ProposalInfo.DoesNotExist:
+            return Response({'message' : 'Invalid Proposal ID'}, status=406)
+
+        shortlisted_space_list = []
+        centers = request.data
+        for center_info in centers:
+            space_mappings = center_info['center']['space_mappings']
+            space_mapping_id = space_mappings['id']
+
+            ShortlistedSpaces.objects.filter(space_mapping_id=space_mapping_id).delete()
+
+            if space_mappings['society_allowed']:
+                supplier_code = 'RS'
+                content_type = ContentType.objects.get_for_model(SupplierTypeSociety)
+                for society in center_info['societies_shortlisted']:
+                    if society['shortlisted']:
+                        object_id = society['supplier_id']
+                        shortlisted_society = ShortlistedSpaces(space_mapping_id = space_mapping_id,content_type=content_type, \
+                            supplier_code=supplier_code, object_id=object_id, buffer_status = society['buffer_status'])
+                        
+                        shortlisted_space_list.append(shortlisted_society)
+
+                for society in center_info['societies_buffered']:
+                    if society['shortlisted']:
+                        object_id = society['supplier_id']
+                        shortlisted_society = ShortlistedSpaces(space_mapping_id = space_mapping_id,content_type=content_type, \
+                            supplier_code=supplier_code, object_id=object_id, buffer_status = society['buffer_status'])
+                        
+                        shortlisted_space_list.append(shortlisted_society)
+
+
+
+            if space_mappings['corporate_allowed']:
+                # ADDNEW --> 
+                pass
+
+            if space_mappings['salon_allowed']:
+                # ADDNEW --> 
+                pass
+
+            if space_mappings['gym_allowed']:
+                # ADDNEW --> 
+                pass
+
+        ShortlistedSpaces.objects.bulk_create(shortlisted_space_list)
+        return Response(status=200)
+
+
+
+class ProposalHistoryAPIView(APIView):
+    def get(self, request, proposal_id=None, format=None):
+        ''' Sends the proposal versions for the particular proposal id
+        Currently if no proposal_id  set to a default one
+        sends socities shortlisted and buffered differently
+        '''
+        if not proposal_id:
+            proposal_id = 'AlntOlJi'
+
+        try:
+            proposal_object = ProposalInfo.objects.get(proposal_id=proposal_id)
+        except ProposalInfo.DoesNotExist:
+            return Response({'message' : 'Invalid Proposal ID'}, status=406)
+
+        proposal_versions = proposal_object.get_proposal_versions()
+        proposal_versions_list = []
+
+        for proposal_version_object in proposal_versions:
+            proposal_info_dict = {}
+            proposal_version_serializer = ProposalInfoVersionSerializer(proposal_version_object)
+            proposal_info_dict['proposal'] = proposal_version_serializer.data 
+            proposal_center_versions = ProposalCenterMappingVersion.objects.filter(proposal_version=proposal_version_object)
+            center_versions_list = []
+            for center_version_object in proposal_center_versions:
+                space_info_dict = {}
+                center_version_serailizer = ProposalCenterMappingVersionSpaceSerializer(center_version_object)
+                space_info_dict['center'] = center_version_serailizer.data
+
+                space_mapping_version_object = SpaceMappingVersion.objects.get(center_version=center_version_object)
+                
+                if space_mapping_version_object.society_allowed:
+                    societies_shortlisted_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
+                            supplier_code = 'RS', buffer_status=False).values_list('object_id',flat=True)
+                    societies_shortlisted_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_shortlisted_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+                    societies_shortlisted = []
+                    societies_shortlisted_count = 0
+                    # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
+                    for society in societies_shortlisted_temp:
+                        society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                        society['shortlisted'] = True
+                        society['buffer_status'] = False
+                        obj = InventorySummaryAPIView()
+                        adinventory_type_dict = obj.adinventory_func()
+                        duration_type_dict = obj.duration_type_func()
+
+                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                            society['total_poster_count'] = society_inventory_obj.total_poster_count
+                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+
+                        if society_inventory_obj.standee_allowed:
+                            society['total_standee_count'] = society_inventory_obj.total_standee_count
+                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+
+                        if society_inventory_obj.stall_allowed:
+                            society['total_stall_count'] = society_inventory_obj.total_stall_count
+                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+
+                        if society_inventory_obj.flier_allowed:
+                            society['flier_frequency'] = society_inventory_obj.flier_frequency
+                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+
+                        societies_shortlisted.append(society)
+                        societies_shortlisted_count += 1
+
+                    space_info_dict['societies_shortlisted'] = societies_shortlisted
+                    space_info_dict['societies_shortlisted_count'] = societies_shortlisted_count
+
+
+                    societies_buffered_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
+                            supplier_code = 'RS', buffer_status=True).values_list('object_id',flat=True)
+                    societies_buffered_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_buffered_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+                    # societies_buffered_serializer = ProposalSocietySerializer(societies_buffered, many=True)
+                    societies_buffered = []
+                    societies_buffered_count = 0
+                    for society in societies_buffered_temp:
+                        society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                        society['shortlisted'] = True
+                        society['buffer_status'] = False
+                        obj = InventorySummaryAPIView()
+                        adinventory_type_dict = obj.adinventory_func()
+                        duration_type_dict = obj.duration_type_func()
+
+                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                            society['total_poster_count'] = society_inventory_obj.total_poster_count
+                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+
+                        if society_inventory_obj.standee_allowed:
+                            society['total_standee_count'] = society_inventory_obj.total_standee_count
+                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+
+                        if society_inventory_obj.stall_allowed:
+                            society['total_stall_count'] = society_inventory_obj.total_stall_count
+                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+
+                        if society_inventory_obj.flier_allowed:
+                            society['flier_frequency'] = society_inventory_obj.flier_frequency
+                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+
+                        societies_buffered.append(society)
+                        societies_buffered_count += 1
+
+
+                    space_info_dict['societies_buffered'] = societies_buffered
+                    space_info_dict['societies_buffered_count'] = societies_buffered_count
+
+                    societies_inventory = InventoryTypeVersion.objects.get(supplier_code='RS', \
+                            space_mapping_version=space_mapping_version_object)
+                    societies_inventory_serializer = InventoryTypeVersionSerializer(societies_inventory)
+                    societies_inventory_count = InventorySummary.objects.filter(supplier_id__in=societies_shortlisted_ids).aggregate(posters=Sum('total_poster_count'),\
+                    standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+                    # Count only for society_shortlisted
+                    space_info_dict['societies_inventory_count'] = societies_inventory_count
+                    space_info_dict['societies_inventory'] = societies_inventory_serializer.data
+
+                if space_mapping_version_object.corporate_allowed:
+                    # ADDNEW -->
+                    pass
+
+                if space_mapping_version_object.gym_allowed:
+                    # ADDNEW -->
+                    pass
+
+                if space_mapping_version_object.salon_allowed:
+                    # ADDNEW -->
+                    pass
+
+                center_versions_list.append(space_info_dict)
+
+            proposal_info_dict['centers'] = center_versions_list
+            proposal_versions_list.append(proposal_info_dict)
+
+        return Response(proposal_versions_list, status=200)
+
+
+
+class SocietySaveCSVAPIView(APIView):
+    def get(self,request,format=None):
+        import csv, sys
+        from v0.models import City, CityArea, CitySubArea, ContactDetails
+        with transaction.atomic():
+            file = open('/home/prince/Desktop/CSV Testing/society_files/supplier_id.csv','rb')
+            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/supplier_id_error.txt','w')
+            try:
+                reader = csv.reader(file)
+                for num, row in enumerate(reader):
+                    d = {}
+                    if num == 0 :
+                        continue
+                    else:
+                        d['society_city'] , d['society_locality'] , d['society_subarea'] , supplier_type_1, d['society_name'], d['supplier_code'] = row[0].title(), row[1].title(), row[2].title(), row[3], row[4], row[5]
+                        supplier_type_1 = 'RS'
+                        if not (d['society_city'] and d['society_locality'] and d['society_subarea'] and d['supplier_code'] and d['society_name'] and d['supplier_code']):
+                            file_errros.write("Errors in "+ str(num+1) + " line\t--->Some variables not present\n\n")
+                            continue
+                        try:
+                            city_object = City.objects.get(city_name=d['society_city'])
+                            area_object = CityArea.objects.get(label = d['society_locality'])
+                            subarea_object = CitySubArea.objects.get(subarea_name=d['society_subarea'],area_code=area_object)
+
+                            d['supplier_id'] = city_object.city_code + area_object.area_code + subarea_object.subarea_code + supplier_type_1 + d['supplier_code']
+                            try:
+                                society_object = SupplierTypeSociety.objects.get(supplier_id=d['supplier_id']) 
+                                file_errros.write("Error in " + str(num+1) + " line\t---> Society with supplier code "\
+                                    + d['supplier_code'] + " already exists in that subarea. Still Updating the details\n\n")
+                                society_object.__dict__.update(d)
+                                society_object.save()
+                                print "\n\n\nsaving socity"
+                                print "society_object dict :" 
+                                for i in ['supplier_id','society_city','society_locality','society_subarea','society_name']:
+                                    try:
+                                        print i + " : " + society_object.__dict__[i]
+                                    except KeyError:
+                                        print "Key Error  : ", i 
+                                print "\n\n\n"
+                                continue
+                            except SupplierTypeSociety.DoesNotExist:
+                                society_object = SupplierTypeSociety()
+                                society_object.__dict__.update(d)
+                                society_object.save()
+                                print "\n\n\nsaving socity"
+                                print "society_object dict :" , society_object.__dict__
+                                print "\n\n\n"
+
+                        except City.DoesNotExist:
+                            file_errros.write("Error in "+ str(num+1) + " line\t---> City Name is Wrong\n\n")
+                        except CityArea.DoesNotExist:
+                            file_errros.write("Error in "+ str(num+1) + " line\t---> Area Name is Wrong\n\n")
+                        except CitySubArea.DoesNotExist:
+                            file_errros.write("Error in " + str(num+1) + " line\t---> Subarea Name is Wrong\n\n")
+                        except CitySubArea.MultipleObjectsReturned:
+                            return Response({'message' : 'Line 1238 error found'}, status=200)
+            finally:
+                file.close()
+                file_errros.close()
+
+
+
+            file = open('/home/prince/Desktop/CSV Testing/society_files/new_basic_tab.csv','rb')
+            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/basic_tab_errors.txt','w')
+
+            try:
+                reader = csv.reader(file)
+                for num, row in enumerate(reader):
+                    if num == 0:
+                        continue
+                    else: 
+                        d = {}
+                        try:
+                            length = len(row)
+                            print "row[26]" , row[26]
+                        except IndexError: 
+                            return Response({'message' : 'Index Out of Range', 'maxIndex' : \
+                                length, 'row' : row},status=200)
+
+                        d['supplier_code'], d['society_subarea'], d['society_address1'], d['society_address2'], d['society_zip'], \
+                        d['society_latitude'], d['society_longitude'], possession_year, d['tower_count'], d['flat_count'], d['vacant_flat_count'],\
+                        d['service_household_count'], d['working_women_count'], d['avg_household_occupants'], d['bachelor_tenants_allowed'], \
+                        d['flat_avg_rental_persqft'], d['cars_count'], d['luxury_cars_count'], d['society_location_type'], d['society_type_quality'], \
+                        d['society_type_quantity'], d['count_0_5'], d['count_5_15'], d['count_15_25'], d['count_25_60'], d['count_60above'], \
+                        d['society_weekly_off'] = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],\
+                                            row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18]\
+                                            , row[19], row[20], row[21], row[22], row[23], row[24], row[25], row[26]
+
+                        if not (d['supplier_code'] and d['society_subarea']):
+                            file_errros.write('Error in ' + str(num+1) + " line\t--> Please provide Supplier Code and Society Subarea\n\n")
+
+                        for key in d.keys():
+                            if d[key] == '':
+                                d[key] = None
+                            if type(d[key]) == type('abc'):  # This to just make sure type is string
+                                d[key] = d[key].replace("\n", " ")
+
+                        if type(d['society_type_quality']) == type('abc'):
+                            d['society_type_quality'] = d['society_type_quality'].title()                         
+
+                        try:
+                            society_object = SupplierTypeSociety.objects.get(supplier_code=d['supplier_code'], society_subarea=d['society_subarea'])
+                            subarea_object = CitySubArea.objects.get(subarea_name=d['society_subarea'],area_code__label=society_object.society_locality)
+                            d['society_location_type'] = subarea_object.locality_rating
+                            d['society_state'] = 'Maharashtra'
+                            society_object.__dict__.update(d)
+                            society_object.save()
+
+                            towercount = SocietyTower.objects.filter(supplier = society).count()
+                            abc = 0
+                            try:
+                                # what to do if tower are less
+                                tower_count_given = int(d['tower_count'])
+                                if tower_count_given > towercount:
+                                    abc = tower_count_given - towercount
+                                    for i in range(abc):
+                                        tower = SocietyTower(supplier = society)
+                                        tower.save()
+                            except ValueError:
+                                pass
+
+
+                            print "\n\nSaving Basic Details"
+                            for key in d.keys():
+                                try:
+                                    if society_object.__dict__[key] != None:
+                                        print key + " : " + society_object.__dict__[key]
+                                    else:
+                                        print key , " : " , None
+                                except KeyError:
+                                    print "\nKey Error " + key + "\n"
+
+                        except SupplierTypeSociety.DoesNotExist:
+                            file_errros.write("Error in " + str(num+1) + " line\t--> Supplier Code + Subarea don't correspond to a society in Database\n\n")
+                        except SupplierTypeSociety.MultipleObjectsReturned:
+                            file_errros.write("Error in " + str(num+1) + " line\t-->Supplier Code + subarea have more than 1 objects\t MY bad Sorry for this\n\n")
+
+
+            finally:
+                file.close()
+                file_errros.close()
+
+
+
+
+            file = open('/home/prince/Desktop/CSV Testing/society_files/contacts.csv','rb')
+            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/contacts_errors.txt','w')
+
+            try:
+                reader = csv.reader(file)
+                for num, row in enumerate(reader):
+                    if num == 0:
+                        continue
+
+                    else:
+                        d = {}
+                        supplier_code, subarea, d['contact_type'], d['salutation'], d['name'], d['landline'], d['mobile'],\
+                        d['email'] = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]
+                        d['std_code'] = '022'
+                        d['country_code'] = '+91'
+
+
+                        d['landline'] = d['landline'].split('-',1)
+                        d['landline'].reverse()
+                        d['landline'] = d['landline'][0]
+
+                        d['mobile'] = d['mobile'].split('-',1)
+                        d['mobile'].reverse()
+                        d['mobile'] = d['mobile'][0]
+
+
+                        for key in d.keys():
+                            if d[key] == '':
+                                d[key] = None
+
+                        try:
+                            society_object = SupplierTypeSociety.objects.get(supplier_code=supplier_code, society_subarea=subarea)
+                            d['supplier_id'] = society_object.supplier_id
+                            d['spoc'] = False
+                            # try:
+                            #     contact_object = ContactDetails(supplier=society_object, name=d['name'], salutation=d['salutation'])
+                            # except ContactDetails.DoesNotExist:
+                            #     pass
+
+                            contact_object = ContactDetails()
+                            contact_object.__dict__.update(d)
+                            contact_object.save()
+                        except SupplierTypeSociety.DoesNotExist:
+                            file_errros.write('Error in ' + str(num+1) + ' line\t--> No idea with given Supplier Code and Subarea exists in Database \n\n')
+
+
+            finally:    
+                file.close()
+                file_errros.close()
+
+        return Response(status=200)
+
+
+
+
+# class GetSpaceInfoAPIView(APIView):
+#     ''' This API is to fetch the space(society,corporate, gym) etc. using its supplier Code
+#     e.g. RS for residential Society 
+
+#     Currently only working for societies '''
+#     def get(self, request, id , format=None):
+#         try:
+#             '''  On introducing new spaces we have to use if conditions to check the supplier code 
+#             like RS for society and the fetch society object
+#             e.g. if supplier_code == 'RS':
+#                       society = SupplierTypeSociety.objects.get(supplier_id=id)
+#                   else supplier_code == 'CP':
+#                        corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
+#                         Then serialize and send  '''
+
+#             society = SupplierTypeSociety.objects.get(supplier_id=id)
+#             serializer = SupplierTypeSocietySerializer(society)
+#             return Response(serializer.data, status=200)
+#         except SupplierTypeSociety.DoesNotExist:
+#             return Response({'message' : 'No society Exists'}, status=406)
 
 
 
@@ -1412,189 +2426,3 @@ class FinalProposalAPIView(APIView):
 
 
 
-
-
-
-
-class SocietySaveCSVAPIView(APIView):
-    def get(self,request,format=None):
-        import csv, sys
-        from v0.models import City, CityArea, CitySubArea, ContactDetails
-        with transaction.atomic():
-            file = open('/home/prince/Desktop/CSV Testing/society_files/supplier_id.csv','rb')
-            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/supplier_id_error.txt','w')
-            try:
-                reader = csv.reader(file)
-                for num, row in enumerate(reader):
-                    d = {}
-                    if num == 0 :
-                        continue
-                    else:
-                        d['society_city'] , d['society_locality'] , d['society_subarea'] , supplier_type_1, d['society_name'], d['supplier_code'] = row[0].title(), row[1].title(), row[2].title(), row[3], row[4], row[5]
-                        supplier_type_1 = 'RS'
-                        if not (d['society_city'] and d['society_locality'] and d['society_subarea'] and d['supplier_code'] and d['society_name'] and d['supplier_code']):
-                            file_errros.write("Errors in "+ str(num+1) + " line\t--->Some variables not present\n\n")
-                            continue
-                        try:
-                            city_object = City.objects.get(city_name=d['society_city'])
-                            area_object = CityArea.objects.get(label = d['society_locality'])
-                            subarea_object = CitySubArea.objects.get(subarea_name=d['society_subarea'],area_code=area_object)
-
-                            d['supplier_id'] = city_object.city_code + area_object.area_code + subarea_object.subarea_code + supplier_type_1 + d['supplier_code']
-                            try:
-                                society_object = SupplierTypeSociety.objects.get(supplier_id=d['supplier_id']) 
-                                file_errros.write("Error in " + str(num+1) + " line\t---> Society with supplier code "\
-                                    + d['supplier_code'] + " already exists in that subarea. Still Updating the details\n\n")
-                                society_object.__dict__.update(d)
-                                society_object.save()
-                                print "\n\n\nsaving socity"
-                                print "society_object dict :" 
-                                for i in ['supplier_id','society_city','society_locality','society_subarea','society_name']:
-                                    try:
-                                        print i + " : " + society_object.__dict__[i]
-                                    except KeyError:
-                                        print "Key Error  : ", i 
-                                print "\n\n\n"
-                                continue
-                            except SupplierTypeSociety.DoesNotExist:
-                                society_object = SupplierTypeSociety()
-                                society_object.__dict__.update(d)
-                                society_object.save()
-                                print "\n\n\nsaving socity"
-                                print "society_object dict :" , society_object.__dict__
-                                print "\n\n\n"
-
-                        except City.DoesNotExist:
-                            file_errros.write("Error in "+ str(num+1) + " line\t---> City Name is Wrong\n\n")
-                        except CityArea.DoesNotExist:
-                            file_errros.write("Error in "+ str(num+1) + " line\t---> Area Name is Wrong\n\n")
-                        except CitySubArea.DoesNotExist:
-                            file_errros.write("Error in " + str(num+1) + " line\t---> Subarea Name is Wrong\n\n")
-                        except CitySubArea.MultipleObjectsReturned:
-                            return Response({'message' : 'Line 1238 error found'}, status=200)
-            finally:
-                file.close()
-                file_errros.close()
-
-
-
-            file = open('/home/prince/Desktop/CSV Testing/society_files/new_basic_tab.csv','rb')
-            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/basic_tab_errors.txt','w')
-
-            try:
-                reader = csv.reader(file)
-                for num, row in enumerate(reader):
-                    if num == 0:
-                        continue
-                    else: 
-                        d = {}
-                        try:
-                            length = len(row)
-                            print "row[26]" , row[26]
-                        except IndexError: 
-                            return Response({'message' : 'Index Out of Range', 'maxIndex' : \
-                                length, 'row' : row},status=200)
-
-                        d['supplier_code'], d['society_subarea'], d['society_address1'], d['society_address2'], d['society_zip'], \
-                        d['society_latitude'], d['society_longitude'], possession_year, d['tower_count'], d['flat_count'], d['vacant_flat_count'],\
-                        d['service_household_count'], d['working_women_count'], d['avg_household_occupants'], d['bachelor_tenants_allowed'], \
-                        d['flat_avg_rental_persqft'], d['cars_count'], d['luxury_cars_count'], d['society_location_type'], d['society_type_quality'], \
-                        d['society_type_quantity'], d['count_0_5'], d['count_5_15'], d['count_15_25'], d['count_25_60'], d['count_60above'], \
-                        d['society_weekly_off'] = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],\
-                                            row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18]\
-                                            , row[19], row[20], row[21], row[22], row[23], row[24], row[25], row[26]
-
-                        if not (d['supplier_code'] and d['society_subarea']):
-                            file_errros.write('Error in ' + str(num+1) + " line\t--> Please provide Supplier Code and Society Subarea\n\n")
-
-                        for key in d.keys():
-                            if d[key] == '':
-                                d[key] = None
-                            if type(d[key]) == type('abc'):  # This to just make sure type is string
-                                d[key] = d[key].replace("\n", " ")
-
-                        if type(d['society_type_quality']) == type('abc'):
-                            d['society_type_quality'] = d['society_type_quality'].title()                         
-
-                        try:
-                            society_object = SupplierTypeSociety.objects.get(supplier_code=d['supplier_code'], society_subarea=d['society_subarea'])
-                            subarea_object = CitySubArea.objects.get(subarea_name=d['society_subarea'],area_code__label=society_object.society_locality)
-                            d['society_location_type'] = subarea_object.locality_rating
-                            d['society_state'] = 'Maharashtra'
-                            society_object.__dict__.update(d)
-                            society_object.save()
-
-                            print "\n\nSaving Basic Details"
-                            for key in d.keys():
-                                try:
-                                    if society_object.__dict__[key] != None:
-                                        print key + " : " + society_object.__dict__[key]
-                                    else:
-                                        print key , " : " , None
-                                except KeyError:
-                                    print "\nKey Error " + key + "\n"
-
-                        except SupplierTypeSociety.DoesNotExist:
-                            file_errros.write("Error in " + str(num+1) + " line\t--> Supplier Code + Subarea don't correspond to a society in Database\n\n")
-                        except SupplierTypeSociety.MultipleObjectsReturned:
-                            file_errros.write("Error in " + str(num+1) + " line\t-->Supplier Code + subarea have more than 1 objects\t MY bad Sorry for this\n\n")
-
-
-            finally:
-                file.close()
-                file_errros.close()
-
-
-
-
-            file = open('/home/prince/Desktop/CSV Testing/society_files/contacts.csv','rb')
-            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/contacts_errors.txt','w')
-
-            try:
-                reader = csv.reader(file)
-                for num, row in enumerate(reader):
-                    if num == 0:
-                        continue
-
-                    else:
-                        d = {}
-                        supplier_code, subarea, d['contact_type'], d['salutation'], d['name'], d['landline'], d['mobile'],\
-                        d['email'] = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]
-                        d['std_code'] = '022'
-                        d['country_code'] = '+91'
-
-
-                        d['landline'] = d['landline'].split('-',1)
-                        d['landline'].reverse()
-                        d['landline'] = d['landline'][0]
-
-                        d['mobile'] = d['mobile'].split('-',1)
-                        d['mobile'].reverse()
-                        d['mobile'] = d['mobile'][0]
-
-
-                        for key in d.keys():
-                            if d[key] == '':
-                                d[key] = None
-
-                        try:
-                            society_object = SupplierTypeSociety.objects.get(supplier_code=supplier_code, society_subarea=subarea)
-                            d['supplier_id'] = society_object.supplier_id
-                            d['spoc'] = False
-                            # try:
-                            #     contact_object = ContactDetails(supplier=society_object, name=d['name'], salutation=d['salutation'])
-                            # except ContactDetails.DoesNotExist:
-                            #     pass
-
-                            contact_object = ContactDetails()
-                            contact_object.__dict__.update(d)
-                            contact_object.save()
-                        except SupplierTypeSociety.DoesNotExist:
-                            file_errros.write('Error in ' + str(num+1) + ' line\t--> No idea with given Supplier Code and Subarea exists in Database \n\n')
-
-
-            finally:    
-                file.close()
-                file_errros.close()
-
-        return Response(status=200)
