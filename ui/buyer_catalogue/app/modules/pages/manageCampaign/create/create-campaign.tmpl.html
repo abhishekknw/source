@@ -127,9 +127,9 @@
                   <td>{{proposal.updated_by}}</td>
                   <td>{{proposal.updated_on | limitTo:10}}</td>
                   <td>
-                    <a data-target="#detailModalProposal" class="btn btn-danger  active" data-toggle="modal">Details</a>
+                    <!-- <a data-target="#detailModalProposal" class="btn btn-danger  active" data-toggle="modal">Details</a> -->
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">Details</button>
                     <br>     
-                    <!-- <button class="btn btn-danger detail-button">Map View</button> -->
                   </td>
                 </tr>
               </tbody>
@@ -447,6 +447,7 @@
       </span>
     </div>
   </form>
+
 <!--  <form name="form4" ng-show = "choice == 'selected'|| choice == 'new'" class="" ng-submit="create()" role="form">
      <div class="panel panel-default business-panel">
        <h3 class = "panel-heading">Create Campaign</h3>

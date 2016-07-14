@@ -184,6 +184,10 @@ angular.module('machadaloPages')
         $location.path('/'+sel_account_id + '/createproposal');
       }
 
+      $scope.showProposalDetails = function(proposal_id){
+        $location.path('/' + proposal_id + '/showcurrentproposal');
+      }
+
     	$scope.create = function() {
         	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)

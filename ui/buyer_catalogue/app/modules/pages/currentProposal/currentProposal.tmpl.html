@@ -1,17 +1,100 @@
-<strong>
-	Proposal Name : {{proposal.proposal.name}}
-	Proposal ID   : {{proposal.proposal.proposal_id}}
-</strong><br>
-<div ng-repeat="center in proposal.centers">
-	<h3>
-		Center : {{center.center.center_name}} &nbsp;
-		Center Address : {{center.center.address}}<br>
-		Center Subarea : {{center.center.subarea}} &nbsp;
-		Center Area    : {{center.center.area}} <br>
-		<br>
-	</h3>
+<!DOCTYPE html>
+<html>
+  <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
+  <div class="page-container">
+    <form name="proposalDetails">
+      <div class="panel panel-default business-panel">
+        <div class="table">
+          <div class="row">
+          	<div class="col-md-3"><label>Proposal Id:</label></div>
+            <div class="col-md-3">{{proposal.proposal.proposal_id}}</div>
+            <div class="col-md-3"><label>Name of Proposal:</label></div>
+            <div class="col-md-3">{{proposal.proposal.name}}</div>
+          </div>
+          <div class="row">
+            <div class="col-md-3"><label>Start Date:</label></div>
+            <div class="col-md-3">{{proposal.proposal.tentative_start_date}}</div>
+            <div class="col-md-3"><label>End Date:</label></div>
+            <div class="col-md-3">{{proposal.proposal.tentative_end_date}}</div>
+          </div>
+          <div class="row">
+            <div class="col-md-5"><label>Types of Spaces and their Counts:</label></div>
+          </div>
+          <div class="row">
+            <div class="table table-align">
+              <div class="row">
+                <div class="col-md-2 table-align"><b>Spaces</b></div>
+                <div class="col-md-2"><b>Counts</b></div>
+                <div class="col-md-2"><b>Buffer Count</b></div>
+              </div>
+              <div class="row">
+                <div class="col-md-2 table-align"></div>
+                <div class="col-md-2"></div>
+                <div class="col-md-2"></div>
+              </div>
+            </div>  
+          </div>
+          <div class="row">
+            <div class="col-md-5"><label>Center Details:</label></div>
+          </div>
+          <div class="row">
+            <div class="table table-align">
+              <div class="row">
+              	<div class="col-md-2"><b>Center Name</b></div>
+                <div class="col-md-2 table-align"><b>Area</b></div>
+                <div class="col-md-2"><b>Sub-Area</b></div>
+                <div class="col-md-2"><b>Radius</b></div>
+              </div>
+              <div ng-repeat="center in proposal.centers">
+              <div class="row">
+                <div class="col-md-2 table-align">{{center.center.center_name}}</div>
+                <div class="col-md-2">{{center.center.area}}</div>
+                <div class="col-md-2">{{center.center.subarea}}</div>
+                <div class="col-md-2">{{center.center.radius}}</div>
+              </div>
+            </div>  
+          </div>
+        </div>
+      </div>
+      <div class="panel panel-default business-panel">
+        <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th class="col-md-2 table-heading">Society</th>
+              <th class="col-md-2 table-heading">Center</th>
+              <th class="col-md-2 table-heading">Poster Count</th>
+              <th class="col-md-2 table-heading">Standee Count</th>
+              <th class="col-md-2 table-heading">Stall Count</th>
+              <th class="col-md-2 table-heading">Flyer Count</th>
+              <th class="col-md-2 table-heading">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="society in proposal.centers[0].societies_shortlisted">
+              <td>{{society.society_name}}</td>
+              <td>{{proposal.centers[0].center.center_name}}</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+          </table>
+        </div>
+      </div>
+    </form>
+  </div>
+</html>
 
-	<div ng-if="center.center.space_mappings.society_allowed">
+
+
+
+
+
+
+	<!-- <div ng-if="center.center.space_mappings.society_allowed">
 		<h4>
 			Societies &nbsp;	Shortlisted : {{center.societies_shortlisted_count}} &nbsp;	Buffered : {{center.societies_buffered_count}}<br>
 			Inventories Chosen : &nbsp;
@@ -20,9 +103,9 @@
 			<span ng-if="center.societies_inventory.stall_allowed"> Stall : {{ center.societies_inventory_count.stalls}}</span><br>
 			<span ng-if="center.societies_inventory.flier_allowed"> Flier : {{ center.societies_inventory_count.fliers}}</span><br>
 			<span ng-if="center.societies_inventory.banner_allowed"> Banner : {{ center.societies_inventory_count.banners}}</span><br>
-		</h4>
+		</h4> -->
 		<div ng-repeat="society in center.societies_shortlisted">	
-			Society Name : {{society.society_name}} &nbsp;
+			Society Name :  &nbsp;
 			Society Address : {{ society.society_address1 }} <br>
 			Society Subarea : {{ society.society_subarea }}<br>
 			<button class="btn btn-info" ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
