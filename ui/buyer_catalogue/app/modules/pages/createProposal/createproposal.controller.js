@@ -1,10 +1,11 @@
 "use strict";
 
 angular.module('catalogueApp')
-.controller('ProposalCtrl', function($scope, $rootScope, $window, createProposalService, $location,$http){
+.controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http){
 
 	console.log("Inside Controller");
 
+	console.log("account_id : ", $stateParams.account_id);
 	$scope.model = {}
 	$scope.model.centers = new Array();
 
@@ -17,8 +18,8 @@ angular.module('catalogueApp')
 			radius : '',
 			subarea : '',
 			area  : '',
-			city : 'Mumbai',
-			pincode : '400072',
+			city : '',
+			pincode : '',
 			space_mapping : {
 				society_allowed : false,
 				society_count : undefined,
@@ -29,9 +30,9 @@ angular.module('catalogueApp')
 				gym_allowed : false,
 				gym_count : undefined,
 				gym_buffer_count : undefined,
-				saloon_allowed : false,
-				saloon_count : undefined,
-				saloon_buffer_count : undefined,
+				salon_allowed : false,
+				salon_count : undefined,
+				salon_buffer_count : undefined,
 			},
 		}
 		$scope.model.centers.push({
@@ -66,20 +67,33 @@ angular.module('catalogueApp')
 		}
 	}
 
+	// $scope.
+
 	$scope.submit = function(){
 		console.log("$scope.model", $scope.model);
-		createProposalService.saveInitialProposal($scope.model)
-		.success(function(response, status){
-			console.log("Successfully Saved");
-		})
-		.error(function(response,status){
-			console.log("Error");
-			if(typeof(response) != typeof(12)){
-				console.log("response is ", response);
-			}
-		});
+		
+		// call backend to save only if all the latitudes are found
+			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)
+			.success(function(response, status){
+				$scope.errormsg = undefined;
+				console.log("Successfully Saved");
+				console.log("response is : ", response);
+				$scope.proposal_id = response; 
+				createProposalService.setProposalId($scope.proposal_id);
+
+				$location.path('/' + $scope.proposal_id + '/mapview');
+
+			})
+			.error(function(response,status){
+				console.log("Error");
+				if(typeof(response) != typeof(12)){
+					console.log("response is ", response);
+					$scope.errormsg = response.message;
+					$scope.model.centers = new Array();
+					$scope.addCenter();
+				}
+			});
 	}
-
-
-
 });
+
+

@@ -6,9 +6,20 @@ from rest_framework import permissions
 from v0.permissions import IsOwnerOrManager
 from rest_framework import filters
 from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer
-from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SocietyTowerSerializer, FlatTypeSerializer
+from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer,\
+                    DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer,\
+                    CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer,\
+                    PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer,\
+                    UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, \
+                    MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, \
+                    SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, \
+                    SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SocietyTowerSerializer, FlatTypeSerializer,\
+                    CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateCompanyDetailsSerializer, \
+                    CompanyFloorSerializer, CorporateBuildingGetSerializer, CorporateCompanySerializer, CorporateParkCompanySerializer
+
 from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList
-from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile
+from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuilding, \
+                    CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -191,44 +202,61 @@ class checkSupplierCodeAPIView(APIView):
 
 class generateSupplierIdAPIView(APIView):
     def post(self, request, format=None):
-        try:
+        # try:
             city = City.objects.get(pk=request.data['city_id'])
             area = CityArea.objects.get(pk=request.data['area_id'])
             sub_area = CitySubArea.objects.get(pk=request.data['subarea_id'])
 
             try:
-                print "locality rating is: ", sub_area.locality_rating
                 society = SupplierTypeSociety.objects.get(supplier_code=request.data['supplier_code'], society_locality=area.label)
                 if society:
                     return Response(status=409)
-            except:
+            except SupplierTypeSociety.DoesNotExist:
                 print "No such society"
             current_user = request.user
             supplier_id = city.city_code + area.area_code + sub_area.subarea_code + request.data['supplier_type'] + request.data['supplier_code']
-            supplier = {'supplier_id':supplier_id,
+
+            if request.data['supplier_type'] == 'RS':
+                supplier = {'supplier_id':supplier_id,
                         'society_name':request.data['supplier_name'],
                         'society_city':city.city_name,
                         'society_subarea':sub_area.subarea_name,
                         'society_locality':area.label,
                         'society_state' : city.state_code.state_name,
-                        'created_by': current_user.id,
-                        'society_location_type': sub_area.locality_rating
-                        }
-            serializer = SupplierTypeSocietySerializer(data=supplier)
-            if serializer.is_valid():
-                serializer.save()
-                #populate default pricing table
-                print "calling def"
-                set_default_pricing(serializer.data['supplier_id'])
-                return Response(serializer.data, status=200)
-            else:
-                return Response(serializer.errors, status=400)
-        except :
-            return Response(status=404)
+                        'created_by': current_user.id
+                        } 
+                serializer = SupplierTypeSocietySerializer(data=supplier)
+                if serializer.is_valid():
+                    serializer.save()
+                    #populate default pricing table
+                    print "calling def"
+                    set_default_pricing(serializer.data['supplier_id'])
+                    return Response(serializer.data, status=200)
+                else:
+                    return Response(serializer.errors, status=400)
+
+            #saving corporate in corporate model
+            if request.data['supplier_type'] == 'CP':
+                supplier1 = {'supplier_id': supplier_id,
+                            'name':request.data['supplier_name'],
+                            'city':city.city_name,
+                            'locality':area.label,
+                            'subarea':sub_area.subarea_name,
+                            'state' : city.state_code.state_name
+                            }
+                serializer1 = SupplierTypeCorporateSerializer(data=supplier1) 
+                if serializer1.is_valid():
+                    print serializer1.validated_data
+                    serializer1.save()
+                    return Response(serializer1.data, status=200)
+                else:
+                    return Response(serializer1.errors, status=400)  
+        # except :
+            # return Response(status=404)
 
 
 class SocietyAPIView(APIView):
-    permission_classes = (permissions.IsAuthenticated, IsOwnerOrManager,)
+    # permission_classes = (permissions.IsAuthenticated, IsOwnerOrManager,)
 
     def get(self, request, id, format=None):
         try:
@@ -448,10 +476,10 @@ class CorporateAPIListView(APIView):
             user = request.user
             search_txt = request.query_params.get('search', None)
             if search_txt:
-                items = SupplierTypeCorporate.objects.filter(Q(supplier_id__icontains=search_txt) | Q(corporate_name__icontains=search_txt)| Q(corporate_address1__icontains=search_txt)| Q(corporate_city__icontains=search_txt)| Q(corporate_state__icontains=search_txt)).order_by('corporate_name')
+                items = SupplierTypeCorporate.objects.filter(Q(supplier_id__icontains=search_txt) | Q(name__icontains=search_txt)| Q(address1__icontains=search_txt)| Q(city__icontains=search_txt)| Q(state__icontains=search_txt)).order_by('name')
             else:
                 if user.is_superuser:
-                    items = SupplierTypeCorporate.objects.all().order_by('corporate_name')
+                    items = SupplierTypeCorporate.objects.all().order_by('name')
                 else:
                     items = SupplierTypeCorporate.objects.filter(created_by=user.id)
 
@@ -1959,23 +1987,6 @@ class saveBasicCorporateDetailsAPIView(APIView):
             error = json.dumps(error)
             return Response(response, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        
-
-        # for item in request.data['list1']:
-        #     flag = 0
-        #     for i in range(0,len(instance1)):
-        #         print "Something"
-        #         if item in instance1[i].name:
-        #             flag = 1
-        #             break
-        #         else:
-        #             pass
-        #     if flag == 0:
-        #         new_obj = CorporateParkCompanyList(supplier_id_id=corporate_id,name=item)
-        #         new_list.append(new_obj)
-        #     else:
-        #         pass
-
         companies_name = request.data['list1']
         company_ids = list(CorporateParkCompanyList.objects.filter(supplier_id=corporate_id).values_list('id',flat=True))
 
@@ -1993,8 +2004,6 @@ class saveBasicCorporateDetailsAPIView(APIView):
         CorporateParkCompanyList.objects.filter(id__in=company_ids).delete()
 
         print "\n\nRound 2 complete"
-
-        
 
         # print "Round 3 - Saving contacts "
         
@@ -2034,8 +2043,21 @@ class saveBasicCorporateDetailsAPIView(APIView):
                     return Response(status=404)
 
         ContactDetailsGeneric.objects.filter(id__in=contacts_ids).delete()
-        return Response(status=200)
 
+
+        # Round 4 - Creating number of fields in front end in Building Model.
+        buildingcount = CorporateBuilding.objects.filter(corporatepark_id=request.data['supplier_id']).count()
+        diff_count = 0
+        new_list = []
+        if request.data['building_count'] > buildingcount:
+            diff_count = request.data['building_count'] - buildingcount
+        if 'building_count' in request.data:
+            for i in range(diff_count):
+                instance = CorporateBuilding(corporatepark_id_id=request.data['supplier_id'])
+                new_list.append(instance)
+
+        CorporateBuilding.objects.bulk_create(new_list)
+        return Response(status=200)
 
 
     def get(self, request, id, format=None):
@@ -2079,4 +2101,178 @@ class ContactDetailsGenericAPIView(APIView):
             return Response(serializer.data, status=200)
         return Response(serializers.errors, status=400)
 
+
+class saveBuildingDetailsAPIView(APIView):
+
+    def get(self,request,id, format=None):
+        try:
+            corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
+        except SupplierTypeCorporate.DoesNotExist:
+            return Response({'message' : 'Invalid Corporate ID'}, status=406)
+
+        buildings = corporate.get_buildings()
+        building_serializer = CorporateBuildingGetSerializer(buildings, many=True)
+        return Response(building_serializer.data, status = 200)
+
+
+    def post(self,request,id,format=None):
+        print "id is ", id ,"\n\n\n"
+        print request.data
+        print "\n\n\n\n"
+
+        try:
+            corporate_object = SupplierTypeCorporate.objects.get(supplier_id=id)
+        except SupplierTypeCorporate.DoesNotExist:
+            return Response({'message' : 'Invalid Corporate ID'}, status=404)
+
+        building_count = len(request.data)
+        if corporate_object.building_count != building_count:
+            corporate_object.building_count = building_count
+            corporate_object.save() 
+
+        buildings_ids = set(CorporateBuilding.objects.filter(corporatepark_id=corporate_object).values_list('id',flat=True))
+        wing_ids_superset = set()
+
+        for building in request.data:
+            if 'id' in building:
+                basic_data_instance = CorporateBuilding.objects.get(id=building['id'])
+                buildings_ids.remove(building['id'])
+                building_serializer = CorporateBuildingSerializer(basic_data_instance,data=building)
+            else : 
+                building_serializer = CorporateBuildingSerializer(data=building)
+
+            if building_serializer.is_valid():
+                building_object = building_serializer.save()
+            else:
+                print "Invalid serializer"
+                print building_serializer.errors
+                return Response(status=406)
+
+            wings_ids = set(CorporateBuildingWing.objects.filter(building_id=building_object).values_list('id',flat=True))
+
+            for wing in building['wingInfo']:
+                
+                if 'id' in wing:
+                    wing_object = CorporateBuildingWing.objects.get(id=wing['id'])
+                    wings_ids.remove(wing_object.id)
+                    wing_serializer = CorporateBuildingWingSerializer(wing_object,data=wing)
+                else:
+                    wing_serializer = CorporateBuildingWingSerializer(data=wing)
+
+                if wing_serializer.is_valid():
+                    wing_serializer.save(building_id=building_object)
+                else:
+                    return Response({'message' : 'Invalid Wing Data' , \
+                            'errors' : wing_serializer.errors}, status=406)
+
+            if wings_ids :
+                wing_ids_superset = wing_ids_superset.union(wings_ids)
+                print "1"
+
+        if wing_ids_superset:
+            CorporateBuildingWing.objects.filter(id__in=wing_ids_superset).delete()
+            print "2"
+        if buildings_ids:
+            CorporateBuilding.objects.filter(id__in=buildings_ids).delete()
+            print "3"            
+
+        return Response(status=200)
+    
+class CompanyDetailsAPIView(APIView):
+    def get(self, request, id, format=True):
+        company = SupplierTypeCorporate.objects.get(supplier_id=id)
+        company_list = CorporateParkCompanyList.objects.filter(supplier_id_id=company)
+        serializer = CorporateParkCompanyListSerializer(company_list,many=True)
+        building = SupplierTypeCorporate.objects.get(supplier_id=id)
+        building_list = CorporateBuilding.objects.filter(corporatepark_id_id=building)
+        serializer1 = CorporateBuildingGetSerializer(building_list,many=True)
+        response_dict = {'companies' : serializer.data , 'buildings' : serializer1.data}
+        return Response(response_dict,status=200)
+
+
+
+class CorporateCompanyDetailsAPIView(APIView):
+    def get(self, request, id=None, format=None):
+        try:
+            corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
+        except SupplierTypeCorporate.DoesNotExist:
+            return Response({'message': 'No such Corporate'},status=406)
+
+        companies = corporate.get_corporate_companies()
+        companies_serializer = CorporateParkCompanySerializer(companies,many=True)
+
+        print "\n\n",companies_serializer.data,"\n\n"
+        return Response(companies_serializer.data, status=200)
+
+
+    def post(self, request, id, format=True):
+        print "\n\nData to be saved is \n\n",request.data
+        try:
+            corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
+        except SupplierTypeCorporate.DoesNotExist:
+            return Response({'message' : "Corporate Doesn't Exist" }, status=404)
+
+
+        company_detail_list = []
+        floor_list = []
+        company_detail_ids = set(CorporateCompanyDetails.objects.filter(company_id__supplier_id=corporate).values_list('id',flat=True))
+        floor_superset = set()
+        company_detail_set = set()
+        flag = False
+        
+        for company in request.data:
+            for company_detail in company['companyDetailList']:
+                print "\n\ncompany_detail : ",company_detail
+                print "\n\n\n"
+                try:
+                    if not company_detail['building_name']:
+                        continue
+                    company_detail_instance = CorporateCompanyDetails.objects.get(id=company_detail['id'])
+                    company_detail['company_id'] = company['id']
+                    company_detail_ids.remove(company_detail['id'])
+                    company_detail_instance.__dict__.update(company_detail)
+                    company_detail_instance.save()
+                    flag = True
+                except KeyError:
+                    company_detail_instance = CorporateCompanyDetails(company_id_id=company['id'],building_name=company_detail['building_name'],wing_name=company_detail['wing_name'])
+                    # company_detail_list.append(company_detail_instance)
+                    # uncomment this line if error occurs
+                    company_detail_instance.save()
+                    flag = False
+            
+                if flag:
+                    floor_ids = set(CompanyFloor.objects.filter(company_details_id_id=company_detail_instance.id).values_list('id',flat=True))
+                    for floor in company_detail['listOfFloors']:
+                        try:
+                            floor_instance = CompanyFloor.objects.get(id=floor['id'])
+                            floor_ids.remove(floor_instance.id)
+                            if floor_instance.floor_number == floor['floor_number']:
+                                continue
+                            floor_instance.company_detail_id, floor_instance.floor_number = company_detail_instance, floor['floor_number']
+                            
+                            # floor_instance.__dict__.update(floor)
+                            floor_instance.save()
+                        except KeyError:
+                            floor_list_instance = CompanyFloor(company_details_id=company_detail_instance,floor_number=floor['floor_number'])
+                            floor_list.append(floor_list_instance)
+                    floor_superset = floor_superset.union(floor_ids)
+
+
+                else:
+                    for floor in company_detail['listOfFloors']:
+                        floor_list_instance = CompanyFloor(company_details_id=company_detail_instance,floor_number=floor['floor_number'])
+                        floor_list.append(floor_list_instance)
+
+
+        # floor_list = []
+        #         for floor in company_detail['listOfFloors']:
+        #             floor_list_instance = CompanyFloor(company_details_id=company_detail_instance,floor_number=floor)
+        #             floor_list.append(floor_list_instance)
+        #         CompanyFloor.objects.bulk_create(floor_list)
+
+        # CorporateCompanyDetails.objects.bulk_create(company_detail_list)
+        CompanyFloor.objects.filter(id__in=floor_superset).delete()
+        CorporateCompanyDetails.objects.filter(id__in=company_detail_ids).delete()
+        CompanyFloor.objects.bulk_create(floor_list)
+        return Response(status=200)
 

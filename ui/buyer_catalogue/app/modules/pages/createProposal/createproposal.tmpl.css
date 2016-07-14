@@ -1,0 +1,17 @@
+.page-container{
+	padding: 5px;
+	position: relative;
+}
+
+.business-panel{
+	margin-top: 5px;
+	padding: 10px;
+	width: 1500px;
+	align-self: center;
+}
+.spacing{
+	margin: 3px;
+}
+.col-width{
+	width: 100px;
+}

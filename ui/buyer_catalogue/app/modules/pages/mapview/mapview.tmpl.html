@@ -95,7 +95,14 @@
                  Locality Rating : {{space.location_type}}<br>
               </div>
         </ui-gmap-window>
-        <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'"
+
+         <!-- <ui-gmap-circle ng-repeat="c in circles track by c.id" center="c.center" stroke="c.stroke" fill="c.fill" radius="c.radius" visible="c.visible" geodesic="c.geodesic" editable="c.editable" draggable="c.draggable" clickable="c.clickable" control="c.control"></ui-gmap-circle> -->
+
+         <ui-gmap-circle center="circle.center" stroke="circle.stroke" radius="circle.radius" clickable="circle.clickable", control="circle.control">
+           
+         </ui-gmap-circle>
+
+        <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'" events="'events'"
                          options="'options'" doRebuildAll="true" click="onClick">
         </ui-gmap-markers>
 
@@ -119,13 +126,15 @@ Old Center :&nbsp; &nbsp; Latitude<input type="text" ng-model="old_center.latitu
 Longitude <input type="text"  ng-model="old_center.longitude" ng-readonly="true"> <br>
 New Center : &nbsp; &nbsp; Latitude<input type="text" ng-model="new_center.latitude" ng-readonly="true"> &nbsp;&nbsp;
 Longitude <input type="text"  ng-model="new_center.longitude" ng-readonly="true"><br>
-<button ng-show="center_changed">Change Center</button>
-<button ng-show="center_changed" ng-click="resetCenter()">Reset Center</button>
+<button ng-show="center_changed" ng-click="changeCenter(true)">Change Center</button><br>
+<button ng-show="initial_center_changed[current_center_index]" ng-click="resetCenter()">Reset Center</button>
+Radius <input type="number" step="0.5" ng-model="current_center.center.radius" >
+<button ng-click="changeCenter()">Change Radius</button>
 </div>
 
 
-<input type="checkbox" ng-model="society_allowed" ng-click="spaceSociety()"> Society
-<div ng-if="society_allowed">
+<input type="checkbox" ng-model="current_center.center.space_mappings.society_allowed" ng-click="spaceSociety()"> Society
+<div ng-if="current_center.center.space_mappings.society_allowed">
 
 Society Filters : <br>
 Inventory Types :
@@ -165,16 +174,25 @@ Inventory Types :
 </div>
 
 <br><br>
-<h2>Grid View</h2>
-<div ng-if="show_societies" ng-repeat="society in current_center.societies">
-  Name : {{society.society_name}}<br>
-  Address : {{society.society_address1 + " " + society.society_subarea}}<br>
-  Locality Rating : {{society.society_location_type}}<br>
-  <!-- <input type="checkbox" ng-model="society.shortlisted" > -->
-  <button ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
-  <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
-  <br>
+<div ng-if="show_societies">
+    <h2>Grid View</h2>
+    <div  ng-repeat="society in current_center.societies">
+
+        Name : {{society.society_name}}<br>
+        Address : {{society.society_address1 + " " + society.society_subarea}}<br>
+        Locality Rating : {{society.society_location_type}}<br>
+        <!-- <input type="checkbox" ng-model="society.shortlisted" > -->
+        <button ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
+        <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
+        <span ng-if="society.shortlisted">
+        <input type="checkbox" ng-model="society.buffer_status"> Buffer
+        </span>
+        <br>
+
+    </div>
+    <button ng-click="submitProposal()">Submit Final Proposal</button>
 </div>
+
 <!-- <div>
   <button ng-click="showDetails()">Submit Proposal</button>
 </div> -->
