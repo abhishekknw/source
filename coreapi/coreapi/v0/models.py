@@ -1012,6 +1012,111 @@ class CorporateParkCompanyList(models.Model):
     class Meta:
       db_table = 'corporateparkcompanylist'
 
+
+class SupplierTypeSalon(models.Model):
+    supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20) 
+    supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
+    name = models.CharField(db_column='NAME', max_length=70, blank=True, null=True) 
+    address1 = models.CharField(db_column='ADDRESS1', max_length=250, blank=True, null=True) 
+    address2 = models.CharField(db_column='ADDRESS2', max_length=250, blank=True, null=True) 
+    zipcode = models.IntegerField(db_column='ZIP', blank=True, null=True)
+    city = models.CharField(db_column='CITY', max_length=250, blank=True, null=True)
+    state = models.CharField(db_column='STATE', max_length=250, blank=True, null=True) 
+    latitude = models.FloatField(db_column='LATITUDE', blank=True, null=True, default=0.0)
+    longitude = models.FloatField(db_column='LONGITUDE', blank=True, null=True, default=0.0)
+    locality = models.CharField(db_column='LOCALITY', max_length=30, blank=True, null=True)
+    subarea = models.CharField(db_column='SUB_AREA', max_length=30, blank=True, null=True)
+    salon_type = models.CharField(db_column='SALON_TYPE', max_length=30, blank=True, null=True)
+    category = models.CharField(db_column='CATEGORY', max_length=30, blank=True, null=True)
+    price_confidence = models.CharField(db_column='PRICE_CONFIDENCE', max_length=30, blank=True, null=True)
+    salon_type_chain = models.CharField(db_column='SALON_TYPE_CHAIN', max_length=30, blank=True, null=True)
+    footfall_day = models.IntegerField(db_column='FOOTFALL_DAY', blank=True, null=True)
+    footfall_week = models.IntegerField(db_column='FOOTFALL_WEEK', blank=True, null=True)
+    footfall_weekend = models.IntegerField(db_column='FOOTFALL_WEEKEND', blank=True, null=True)
+    isspaavailable = models.BooleanField(db_column='ISSPAAVAILABLE', default=False)
+    advertising_media = models.CharField(db_column='AD_MEDIA', max_length=30, blank=True, null=True)
+    shop_size = models.CharField(db_column='SHOP_SIZE', max_length=30, blank=True, null=True)
+    floor_size = models.CharField(db_column='FLOOR_SIZE', max_length=30, blank=True, null=True)
+    last_meeting_date = models.CharField(db_column='LAST_MEETING_DATE', max_length=30, blank=True, null=True)
+    last_remarks = models.CharField(db_column='LAST_REMARKS', max_length=30, blank=True, null=True)
+    standee_price_week = models.IntegerField(db_column='ST_PRICE_WEEK', blank=True, null=True)
+    standee_price_weekend = models.IntegerField(db_column='ST_PRICE_WEEKEND', blank=True, null=True)
+    standee_places = models.IntegerField(db_column='ST_PLACES', blank=True, null=True)
+    standee_location = models.IntegerField(db_column='ST_LOCATION', blank=True, null=True)
+    banner_price_week = models.IntegerField(db_column='BA_PRICE_WEEK', blank=True, null=True)
+    banner_price_weekend = models.IntegerField(db_column='BA_PRICE_WEEKEND', blank=True, null=True)
+    banner_places = models.IntegerField(db_column='BA_PLACES', blank=True, null=True)
+    banner_location = models.IntegerField(db_column='BA_LOCATION', blank=True, null=True)
+    flyer_price_week = models.IntegerField(db_column='FL_PRICE_WEEK', blank=True, null=True)
+    flyer_distribution = models.IntegerField(db_column='FL_DISTRIBUTION', blank=True, null=True)
+    poster_price_week = models.IntegerField(db_column='PO_PRICE_WEEK', blank=True, null=True)
+    poster_price_weekend = models.IntegerField(db_column='PO_PRICE_WEEKEND', blank=True, null=True)
+    poster_places = models.IntegerField(db_column='PO_PLACES', blank=True, null=True)
+    mirrorstrip_price_week = models.IntegerField(db_column='MS_PRICE_WEEK', blank=True, null=True)
+    mirrorstrip_price_month = models.IntegerField(db_column='MS_PRICE_MONTH', blank=True, null=True)
+    generic.GenericRelation(ContactDetailsGeneric)
+    
+
+    class Meta:
+        db_table = 'supplier_salon'
+
+
+class SupplierTypeGym(models.Model):
+    supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20) 
+    supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
+    name = models.CharField(db_column='NAME', max_length=70, blank=True, null=True) 
+    address1 = models.CharField(db_column='ADDRESS1', max_length=250, blank=True, null=True) 
+    address2 = models.CharField(db_column='ADDRESS2', max_length=250, blank=True, null=True) 
+    zipcode = models.IntegerField(db_column='ZIP', blank=True, null=True)
+    city = models.CharField(db_column='CITY', max_length=250, blank=True, null=True)
+    state = models.CharField(db_column='STATE', max_length=250, blank=True, null=True) 
+    latitude = models.FloatField(db_column='LATITUDE', blank=True, null=True, default=0.0)
+    longitude = models.FloatField(db_column='LONGITUDE', blank=True, null=True, default=0.0)
+    locality = models.CharField(db_column='LOCALITY', max_length=30, blank=True, null=True)
+    subarea = models.CharField(db_column='SUB_AREA', max_length=30, blank=True, null=True)
+    gym_type = models.CharField(db_column='GYM_TYPE', max_length=30, blank=True, null=True)
+    category = models.CharField(db_column='CATEGORY', max_length=30, blank=True, null=True)
+    price_confidence = models.CharField(db_column='PRICE_CONFIDENCE', max_length=30, blank=True, null=True)
+    gym_type_chain = models.CharField(db_column='GYM_TYPE_CHAIN', max_length=30, blank=True, null=True)
+    chain_origin = models.CharField(db_column='GYM_ORIGIN', max_length=30, blank=True, null=True)
+    totalmembership_perannum = models.IntegerField(db_column='TOTALMEMBERSHIP_PERANNUM', blank=True, null=True)
+    footfall_day = models.IntegerField(db_column='FOOTFALL_DAY', blank=True, null=True)
+    footfall_weekend = models.IntegerField(db_column='FOOTFALL_WEEKEND', blank=True, null=True)
+    advertising_media = models.CharField(db_column='AD_MEDIA', max_length=30, blank=True, null=True)
+    last_meeting_date = models.CharField(db_column='LAST_MEETING_DATE', max_length=30, blank=True, null=True)
+    last_remarks = models.CharField(db_column='LAST_REMARKS', max_length=30, blank=True, null=True)
+    dietchart_price = models.IntegerField(db_column='DIETCHART_PRICE', blank=True, null=True)
+    stall_price_day = models.IntegerField(db_column='STALL_PRICE_DAY', blank=True, null=True)
+    stall_price_two_day = models.IntegerField(db_column='', blank=True, null=True)
+    standee_price_week = models.IntegerField(db_column='STANDEE_PRICE_WEEK', blank=True, null=True)
+    standee_price_two_week = models.IntegerField(db_column='STANDEE_PRICE_TWO_WEEK', blank=True, null=True)
+    standee_price_month = models.IntegerField(db_column='STANDEE_PRICE_MONTH', blank=True, null=True)
+    standee_places = models.IntegerField(db_column='STANDEE_PLACES', blank=True, null=True)
+    standee_location = models.CharField(db_column='STANDEE_LOCATION', max_length=30, blank=True, null=True)
+    banner_price_week = models.IntegerField(db_column='BANNER_PRICE_WEEK', blank=True, null=True)
+    banner_price_month = models.IntegerField(db_column='BANNER_PRICE_MONTH', blank=True, null=True)
+    banner_places = models.IntegerField(db_column='BANNER_PLACES', blank=True, null=True)
+    banner_location = models.CharField(db_column='BANNER_LOCATION', max_length=30, blank=True, null=True)
+    flyer_price_month = models.IntegerField(db_column='FLYER_PRICE_MONTH', blank=True, null=True)
+    flyer_distribution = models.CharField(db_column='FLYER_DISTRIBUTION', max_length=30, blank=True, null=True)
+    poster_price_week = models.IntegerField(db_column='POSTER_PRICE_WEEK', blank=True, null=True)
+    poster_price_month = models.IntegerField(db_column='POSTER_PRICE_MONTH', blank=True, null=True)
+    poster_places = models.IntegerField(db_column='POSTER_PLACES', blank=True, null=True)
+    mirrorstrip_count = models.IntegerField(db_column='MIRRORSTRIP_COUNT', blank=True, null=True)
+    mirrorstrip_price_week = models.IntegerField(db_column='MIRRORSTRIP_PRICE_WEEK', blank=True, null=True)
+    mirrorstrip_price_month = models.IntegerField(db_column='MIRRORSTRIP_PRICE_MONTH', blank=True, null=True)
+    locker_count = models.IntegerField(db_column='LOCKER_COUNT', blank=True, null=True)
+    locker_price_week = models.IntegerField(db_column='LOCKER_PRICE_WEEK', blank=True, null=True)
+    locker_price_month = models.IntegerField(db_column='LOCKER_PRICE_MONTH', blank=True, null=True)
+    wall_price_month = models.IntegerField(db_column='WALL_PRICE_MONTH', blank=True, null=True)
+    wall_price_three_month = models.IntegerField(db_column='WALL_PRICE_THREE_MONTH', blank=True, null=True)
+
+    generic.GenericRelation(ContactDetailsGeneric)
+
+    class Meta:
+        db_table = 'supplier_gym'
+
+
 class SocietyTower(models.Model):
     tower_id = models.AutoField(db_column='TOWER_ID', primary_key=True)  # Field name made lowercase.
     tower_tag = models.CharField(db_column='TOWER_TAG', max_length=20, blank=True, null=True)  # Field name made lowercase.
@@ -1126,7 +1231,7 @@ class BusinessInfo(models.Model):
 class BusinessTypes(models.Model):
     id              = models.AutoField(db_column='ID', primary_key=True)
     business_type   = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
-    business_type_code = models.CharField(db_column='TYPE_CODE',unique=True, max_length=4)
+    business_type_code = models.CharField(db_column='TYPE_CODE',unique=True, max_length=4, blank=True, null=True)
 
     def __str__(self):
         return self.business_type
@@ -1143,7 +1248,7 @@ class BusinessSubTypes(models.Model):
     id                  = models.AutoField(db_column='ID', primary_key=True)
     business_type       = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE', null=True, on_delete=models.CASCADE) ## changed -> business
     business_sub_type   = models.CharField(db_column='SUBTYPE', max_length=100, blank=True)
-    business_sub_type_code = models.CharField(db_column='SUBTYPE_CODE', max_length=3)
+    business_sub_type_code = models.CharField(db_column='SUBTYPE_CODE', max_length=3, blank=True, null=True)
 
     def __str__(self):
         return self.business_sub_type
@@ -1260,7 +1365,7 @@ class ProposalCenterMapping(models.Model):
         return SpaceMapping.objects.get(center=self)
 
     class Meta:
-        db_table = 'PROPOSAL CENTER MAPPING'
+        db_table = 'PROPOSAL_CENTER_MAPPING'
         unique_together = (('proposal','center_name'),)
 
 
@@ -1312,7 +1417,7 @@ class SpaceMapping(models.Model):
         return self.spaces.get(supplier_code='SA')
 
     class Meta:
-        db_table = 'SPACE MAPPING'
+        db_table = 'SPACE_MAPPING'
 
 
 class InventoryType(models.Model):
@@ -1331,7 +1436,7 @@ class InventoryType(models.Model):
 
 
     class Meta:
-        db_table = 'INVENTORY TYPE'
+        db_table = 'INVENTORY_TYPE'
 
 
 class ShortlistedSpaces(models.Model):
@@ -1343,7 +1448,7 @@ class ShortlistedSpaces(models.Model):
     buffer_status   = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'SHORTLISTED SPACES'
+        db_table = 'SHORTLISTED_SPACES'
 
 
 

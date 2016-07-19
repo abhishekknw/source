@@ -16,6 +16,8 @@ urlpatterns = [
     url(r'^society/$', views.SocietyAPIView.as_view()),
     url(r'^society/list/$', views.SocietyAPIListView.as_view()),
     url(r'^corporate/list/$', views.CorporateAPIListView.as_view()),
+    url(r'^salon/list/$', views.SalonAPIListView.as_view()),
+    url(r'^gym/list/$', views.GymAPIListView.as_view()),
     url(r'^society/filter/$', views.SocietyAPIFiltersView.as_view()),
     url(r'^society/filterList/$', views.SocietyAPIFiltersListView.as_view()),
     url(r'^society/filterSubArea/$',views.SocietyAPIFilterSubAreaView.as_view(),),
@@ -56,6 +58,9 @@ urlpatterns = [
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_company_details$', views.CorporateCompanyDetailsAPIView.as_view()),
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/get_company_data$', views.CorporateCompanyDetailsAPIView.as_view()),
 
-    # url(r'^just_for_testing_fun/$',views.JustForTestingAPIView.as_view()),
+    url(r'^salon/(?P<id>[A-Z_a-z0-9]+)/save_basic_salon_details$', views.saveBasicSalonDetailsAPIView.as_view()),
+    url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_salon/$', views.saveBasicSalonDetailsAPIView.as_view()),
 
+    url(r'^gym/(?P<id>[A-Z_a-z0-9]+)/save_basic_gym_details$', views.saveBasicGymDetailsAPIView.as_view()),
+    url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_gym/$', views.saveBasicGymDetailsAPIView.as_view()),
 ]

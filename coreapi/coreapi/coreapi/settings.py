@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
-    'django_admin_bootstrapped',
+    # 'django_admin_bootstrapped',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -102,8 +102,8 @@ DATABASES = {
           'ENGINE': 'django.db.backends.mysql',
           'HOST': '127.0.0.1',
 
-          'USER': 'freshuser',
-          'PASSWORD': 'password',
+          'USER': 'mayank',
+          'PASSWORD': 'mayank',
 
       }
     }
