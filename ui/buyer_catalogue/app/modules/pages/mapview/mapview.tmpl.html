@@ -1,11 +1,89 @@
-<link rel="stylesheet" href="modules/pages/mapview/mapview.tmpl.css" />
+<link rel="stylesheet" href="modules/pages/mapview/mapview.tmpl.css"/>
+<div class = "row navbar-default nav-subtab">
+  <select class = "selectcenter" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
+    <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
+  </select>
+</div>
+<!-- Filter Section Start-->
+<div class = "container containerSpacing">
+<div class = row>
+    <div class="col-sm-3 search-bin" id="searchBinHolder" style="" >
+<div class="panel panel-info list-card" id="search" style="margin-bottom:0px;">
+<div class="panel-body" id="searchBody">
+<div class="filterPanel">
+<span class="filterHeader"> Filter your Search </span>
+<a id="resetFilter" data-ga-log="event" data-ga-category="PropertyFilter" data-ga-action="reset-list-rent" onClick="resetFilters();" name="resetTab" href="#" class="btn btn-xs pull-right" style="border: 1px solid #e1e1e1;color: #707070;"> Reset filters</a>
+</div>
+<hr>
+<form id="filterPanelForm">
+<div class="filterPanel hide">
+<span class="filterPanelHeader">Product Type</span>
+<div class="nbRadioGroup two-col">
+<div class="nbRadio">
+<input type="radio" id="producttype_rent" data-name='productType' data-value='RENT' value="RENT" class="" name="productType" checked>
+<label for="producttype_rent"></label>
+</div>
+<span class="radioLabel filterLabel">Rent</span>
+</div>
+<div class="nbRadioGroup two-col">
+<div class="nbRadio">
+<input type="radio" id="producttype_buy" data-name='productType' data-value='RESALE' value="RESALE" class="" name="productType" >
+<label for="producttype_buy"></label>
+</div>
+<span class="radioLabel filterLabel">Buy</span>
+</div>
+</div>
+<!-- property types-->
+<div class="filterPanel hide" data-ga-log-child="radio" data-ga-category="PropertyFilter" data-ga-action="type-list-rent">
+<span class="filterPanelHeader ">Property Type</span>
+<div class="nbRadioGroup two-col">
+<div class="nbRadio">
+<input type="radio" id="propertytype_full" data-name='sharedAccomodation' data-value='0' value="0" class="" name="isSharedAccomodation" checked>
+<label for="propertytype_full"></label>
+</div>
+<span class="radioLabel filterLabel">Full</span>
+</div>
+<div class="nbRadioGroup two-col">
+<div class="nbRadio">
+<input type="radio" id="propertytype_shared" data-name='sharedAccomodation' data-value='1' value="1" class="" name="isSharedAccomodation" >
+<label for="propertytype_shared"></label>
+</div>
+<span class="radioLabel filterLabel">Shared or PG</span>
+</div>
+</div>
+<!-- apartment types-->
+<div class="filterPanel" data-ga-log-child="checkbox" data-ga-category="PropertyFilter" data-ga-action="bhk-list-rent" id="apartDiv" style="">
+<span class="filterPanelHeader ">Society Quality</span>
+<div class="nbCheckbox two-col">
+<input type="checkbox" id="RK1" class="" data-bhktext="1 RK" data-value="RK1" value="RK1" name="propType" data-name="propType" >
+<label for="RK1"></label>
+<span class="checkBoxLabel filterLabel">Ultra High</span>
+</div>
+<div class="nbCheckbox two-col">
+<input type="checkbox" id="BHK1" class="" data-bhktext="1 BHK" data-value="BHK1" value="BHK1" name="propType" data-name="propType" checked >
+<label for="BHK1"></label>
+<span class="checkBoxLabel filterLabel">High</span>
+</div>
+<div class="nbCheckbox two-col">
+<input type="checkbox" id="BHK2" class="" data-bhktext="2 BHK" data-value="BHK2" value="BHK2" name="propType" data-name="propType" >
+<label for="BHK2"></label>
+<span class="checkBoxLabel filterLabel">Medium High</span>
+</div>
+<div class="nbCheckbox two-col">
+<input type="checkbox" id="BHK3" class="" data-bhktext="3 BHK" data-value="BHK3" value="BHK3" name="propType" data-name="propType" >
+<label for="BHK3"></label>
+<span class="checkBoxLabel filterLabel">Standard</span>
+</div>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- Filter Section End -->
+<!-- Map Starts here -->
 <style type="text/css">
-    .angular-google-map-container { height: 400px; width: 800px;}
-  </style>
-<div>
-<select ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
-  <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
-</select>
+    .angular-google-map-container { height: 400px; width: 700px;}
+</style>
 <div class = "mapPosition">
   <div>
     <ui-gmap-google-map center="map.center" zoom="map.zoom" draggable="false"
@@ -17,7 +95,14 @@
                  Locality Rating : {{space.location_type}}<br>
               </div>
         </ui-gmap-window>
-        <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'"
+
+         <!-- <ui-gmap-circle ng-repeat="c in circles track by c.id" center="c.center" stroke="c.stroke" fill="c.fill" radius="c.radius" visible="c.visible" geodesic="c.geodesic" editable="c.editable" draggable="c.draggable" clickable="c.clickable" control="c.control"></ui-gmap-circle> -->
+
+         <ui-gmap-circle center="circle.center" stroke="circle.stroke" radius="circle.radius" clickable="circle.clickable", control="circle.control">
+           
+         </ui-gmap-circle>
+
+        <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'" events="'events'"
                          options="'options'" doRebuildAll="true" click="onClick">
         </ui-gmap-markers>
 
@@ -26,7 +111,9 @@
 
 
     </ui-gmap-google-map>
-</div>
+        </div>
+      </div>
+    </div>
 </div>
 
 <div>
@@ -39,13 +126,15 @@ Old Center :&nbsp; &nbsp; Latitude<input type="text" ng-model="old_center.latitu
 Longitude <input type="text"  ng-model="old_center.longitude" ng-readonly="true"> <br>
 New Center : &nbsp; &nbsp; Latitude<input type="text" ng-model="new_center.latitude" ng-readonly="true"> &nbsp;&nbsp;
 Longitude <input type="text"  ng-model="new_center.longitude" ng-readonly="true"><br>
-<button ng-show="center_changed">Change Center</button>
-<button ng-show="center_changed" ng-click="resetCenter()">Reset Center</button>
+<button ng-show="center_changed" ng-click="changeCenter(true)">Change Center</button><br>
+<button ng-show="initial_center_changed[current_center_index]" ng-click="resetCenter()">Reset Center</button>
+Radius <input type="number" step="0.5" ng-model="current_center.center.radius" >
+<button ng-click="changeCenter()">Change Radius</button>
 </div>
 
 
-<input type="checkbox" ng-model="society_allowed" ng-click="spaceSociety()"> Society
-<div ng-if="society_allowed">
+<input type="checkbox" ng-model="current_center.center.space_mappings.society_allowed" ng-click="spaceSociety()"> Society
+<div ng-if="current_center.center.space_mappings.society_allowed">
 
 Society Filters : <br>
 Inventory Types :
@@ -85,20 +174,25 @@ Inventory Types :
 </div>
 
 <br><br>
-<h2>Grid View</h2>
-<div ng-if="show_societies" ng-repeat="society in current_center.societies">
-  Name : {{society.society_name}}<br>
-  Address : {{society.society_address1 + " " + society.society_subarea}}<br>
-  Locality Rating : {{society.society_location_type}}<br>
-  <!-- <input type="checkbox" ng-model="society.shortlisted" > -->
-  <button ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
-  <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
-  <br>
+<div ng-if="show_societies">
+    <h2>Grid View</h2>
+    <div  ng-repeat="society in current_center.societies">
+
+        Name : {{society.society_name}}<br>
+        Address : {{society.society_address1 + " " + society.society_subarea}}<br>
+        Locality Rating : {{society.society_location_type}}<br>
+        <!-- <input type="checkbox" ng-model="society.shortlisted" > -->
+        <button ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
+        <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
+        <span ng-if="society.shortlisted">
+        <input type="checkbox" ng-model="society.buffer_status"> Buffer
+        </span>
+        <br>
+
+    </div>
+    <button ng-click="submitProposal()">Submit Final Proposal</button>
 </div>
+
 <!-- <div>
   <button ng-click="showDetails()">Submit Proposal</button>
 </div> -->
-
-
-
-

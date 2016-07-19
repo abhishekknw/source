@@ -1,0 +1,162 @@
+<link rel="stylesheet" href="modules/pages/manageCampaign/createproposal/create-proposal.tmpl.css" />
+<div style="margin-top:30px"></div>
+<!-- Start Summary Section-->
+      <div class = "panel panel-default business-panel">
+          <h3 class = "panel-heading">Summary Details</h3>
+          <div class = "table">
+            <div class = "row">
+              <div class = "col-md-3"><label>Inventory Booking Cost</label></div>
+              <div class = "col-md-3"><a data-target = "#inventoryPricingModal" data-toggle="modal" uib-tooltip="View Inventory Pricing">1000</a></div>
+              <div class = "col-md-3"><label>Execution Cost</label></div>
+              <div class = "col-md-3"><a data-target = "#executionCostModal" data-toggle="modal" uib-tooltip="View Execution Cost">1000</a></div>
+            </div>
+            <div class = "row">
+              <div class = "col-md-3"><label>Other Cost</label></div>
+              <div class = "col-md-3"><a data-target = "#otherCostModal" data-toggle="modal" uib-tooltip="Other Cost">1000</a></div>
+            </div>
+      </div>
+    </div>
+<!-- End Summary Section-->
+<!-- Start: Code for master factor-->
+<div class = "col-md-8">
+    <div class = "col-md-4"><label>Master Factor </label></div>
+    <div class = "col-md-3"><input type = "number" name="masterfactor" id="masterfactor" ng-model = "masterfactor" class="form-control fields"/></div>
+</div>
+<!-- End: Code for master factor-->
+<!-- Start table Section-->
+<div class = "col-md-12">
+    <div class = "table-position">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th class="col-md-1 table-heading">Society Name</th>
+              <th class="col-md-1 table-heading">Flat Count</th>
+              <th class="col-md-1 table-heading">Tower Count</th>
+              <th class="col-md-1 table-heading">Inventory Type</th>
+              <th class="col-md-1 table-heading">Inventory Count</th>
+              <th class="col-md-2 table-heading">Campaign Inventory Price(Society)</th>
+              <th class="col-md-1 table-heading">Factor</th>
+              <th class="col-md-2 table-heading">Campaign Inventory Price(Business)</th>
+              <th class="col-md-1 table-heading">Action</th>
+              <th class="col-md-1 table-heading">View Details</th>
+              <th class="col-md-2 table-heading">Last Booked Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Palaazip CHS</td>
+              <td>40</td>
+              <td>4</td>
+              <td>Poster</td>
+              <td>7</td>
+              <td>1000</td>
+              <td>
+                <p>
+                  <input type="number" class = "form-control" ng-model = "masterfactor"/>
+                </p>
+             </td>
+              <td>70000</td>
+              <td><a href = "">Delete</a></td>
+              <td><a href = "">View Details</a></td>
+              <td>27-05-2015</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+</div>
+
+      <div id="inventoryPricingModal" class="modal fade">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Inventory Pricing Details</h4>
+                <hr/>
+                <!-- For loop to fetch the contact array -->
+                <div class = "modal-body" style = "height: 300px;">
+                   <table class="table table-bordered table-hover">
+                     <thead>
+                     <tr>
+                       <th>Inventory Type</th>
+                       <th>Total Societies</th>
+                       <th>Total Count</th>
+                       <th>Total Cost</th>
+                     </tr>
+                    </thead>
+                   </table>
+	      	            <br>
+	            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="executionCostModal" class="modal fade">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Execution Cost Details</h4>
+                <hr/>
+                <div class = "modal-body" style = "height: 300px;">
+                   <table class="table table-bordered table-hover">
+                     <thead>
+                     <tr>
+                       <th>Execution Cost Inventory Type</th>
+                       <th>Total Societies</th>
+                       <th>Total Count</th>
+                       <th>Total Cost</th>
+                     </tr>
+                    </thead>
+                   </table>
+	      	            <br>
+	            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="otherCostModal" class="modal fade">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Other Cost Details</h4>
+                <hr/>
+                <div class = "modal-body" style = "height: 300px;">
+                  <div class = "row">
+  	              		<div class = "col-md-5"><label class = "modal-align1">Content Development Cost </label></div>
+                      <div class = "col-md-1"></div>
+  	             		  <div class = "col-md-3"><input type = "number" name="contentcost" id="contentcost" class="form-control textbox1" ng-model="model.business.name" ng-required="true" /></div>
+                  </div>
+                  <div class = "row">
+                    <div class = "col-md-5"><label class = "modal-align1">Project Management Cost</label></div>
+                    <div class = "col-md-1"></div>
+                    <div class = "col-md-3"><input type = "number" name = "projectcost" id = "projectcost" class="form-control textbox1"  ng-model="model.business.type" ng-required="true" />
+                  </div>
+                  <div class = "row">
+                    <div class = "col-md-5"><label class = "modal-align">Data Analytics</label></div>
+                    <div class = "col-md-1"></div>
+                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control textbox" ng-model="model.business.type" ng-required = "true" /></div>
+                  </div>
+                  <div class = "row">
+                    <div class = "col-md-5"><label class = "modal-align">Printing Cost</label></div>
+                    <div class = "col-md-1"></div>
+                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control textbox" ng-model="model.business.type" ng-required = "true" /></div>
+                  </div>
+                  <div class = "row">
+                    <div class = "col-md-5"><label class = "modal-align">Digital Campaign Cost</label></div>
+                    <div class = "col-md-1"></div>
+                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control textbox" ng-model="model.business.type" ng-required = "true" /></div>
+                  </div>
+                  <br>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                      <button type="button" class="btn btn-primary">Save changes</button>
+                  </div>
+  	           </div>
+	              </div>
+            </div>
+          </div>
+        </div>
+<!-- End code for Modal Windows-->

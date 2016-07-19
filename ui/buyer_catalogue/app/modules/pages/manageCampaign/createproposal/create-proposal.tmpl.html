@@ -1,162 +1,112 @@
+<!DOCTYPE html>
 <link rel="stylesheet" href="modules/pages/manageCampaign/createproposal/create-proposal.tmpl.css" />
-<div style="margin-top:30px"></div>
-<!-- Start Summary Section-->
-      <div class = "panel panel-default business-panel">
-          <h3 class = "panel-heading">Summary Details</h3>
-          <div class = "table">
-            <div class = "row">
-              <div class = "col-md-3"><label>Inventory Booking Cost</label></div>
-              <div class = "col-md-3"><a data-target = "#inventoryPricingModal" data-toggle="modal" uib-tooltip="View Inventory Pricing">1000</a></div>
-              <div class = "col-md-3"><label>Execution Cost</label></div>
-              <div class = "col-md-3"><a data-target = "#executionCostModal" data-toggle="modal" uib-tooltip="View Execution Cost">1000</a></div>
-            </div>
-            <div class = "row">
-              <div class = "col-md-3"><label>Other Cost</label></div>
-              <div class = "col-md-3"><a data-target = "#otherCostModal" data-toggle="modal" uib-tooltip="Other Cost">1000</a></div>
-            </div>
-      </div>
-    </div>
-<!-- End Summary Section-->
-<!-- Start: Code for master factor-->
-<div class = "col-md-8">
-    <div class = "col-md-4"><label>Master Factor </label></div>
-    <div class = "col-md-3"><input type = "number" name="masterfactor" id="masterfactor" ng-model = "masterfactor" class="form-control fields"/></div>
-</div>
-<!-- End: Code for master factor-->
-<!-- Start table Section-->
-<div class = "col-md-12">
-    <div class = "table-position">
-      <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-          <thead>
-            <tr>
-              <th class="col-md-1 table-heading">Society Name</th>
-              <th class="col-md-1 table-heading">Flat Count</th>
-              <th class="col-md-1 table-heading">Tower Count</th>
-              <th class="col-md-1 table-heading">Inventory Type</th>
-              <th class="col-md-1 table-heading">Inventory Count</th>
-              <th class="col-md-2 table-heading">Campaign Inventory Price(Society)</th>
-              <th class="col-md-1 table-heading">Factor</th>
-              <th class="col-md-2 table-heading">Campaign Inventory Price(Business)</th>
-              <th class="col-md-1 table-heading">Action</th>
-              <th class="col-md-1 table-heading">View Details</th>
-              <th class="col-md-2 table-heading">Last Booked Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Palaazip CHS</td>
-              <td>40</td>
-              <td>4</td>
-              <td>Poster</td>
-              <td>7</td>
-              <td>1000</td>
-              <td>
-                <p>
-                  <input type="number" class = "form-control" ng-model = "masterfactor"/>
-                </p>
-             </td>
-              <td>70000</td>
-              <td><a href = "">Delete</a></td>
-              <td><a href = "">View Details</a></td>
-              <td>27-05-2015</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-</div>
+  <div class="page-container">
+  	<div>
+    	<span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span><br>
+    	<span style="color:blue;margin-left:28%;font-size:18px;">{{successMsg}}</span>
+  	</div>
 
-      <div id="inventoryPricingModal" class="modal fade">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Inventory Pricing Details</h4>
-                <hr/>
-                <!-- For loop to fetch the contact array -->
-                <div class = "modal-body" style = "height: 300px;">
-                   <table class="table table-bordered table-hover">
-                     <thead>
-                     <tr>
-                       <th>Inventory Type</th>
-                       <th>Total Societies</th>
-                       <th>Total Count</th>
-                       <th>Total Cost</th>
-                     </tr>
-                    </thead>
-                   </table>
-	      	            <br>
-	            </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="executionCostModal" class="modal fade">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Execution Cost Details</h4>
-                <hr/>
-                <div class = "modal-body" style = "height: 300px;">
-                   <table class="table table-bordered table-hover">
-                     <thead>
-                     <tr>
-                       <th>Execution Cost Inventory Type</th>
-                       <th>Total Societies</th>
-                       <th>Total Count</th>
-                       <th>Total Cost</th>
-                     </tr>
-                    </thead>
-                   </table>
-	      	            <br>
-	            </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="otherCostModal" class="modal fade">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Other Cost Details</h4>
-                <hr/>
-                <div class = "modal-body" style = "height: 300px;">
-                  <div class = "row">
-  	              		<div class = "col-md-5"><label class = "modal-align1">Content Development Cost </label></div>
-                      <div class = "col-md-1"></div>
-  	             		  <div class = "col-md-3"><input type = "number" name="contentcost" id="contentcost" class="form-control textbox1" ng-model="model.business.name" ng-required="true" /></div>
-                  </div>
-                  <div class = "row">
-                    <div class = "col-md-5"><label class = "modal-align1">Project Management Cost</label></div>
-                    <div class = "col-md-1"></div>
-                    <div class = "col-md-3"><input type = "number" name = "projectcost" id = "projectcost" class="form-control textbox1"  ng-model="model.business.type" ng-required="true" />
-                  </div>
-                  <div class = "row">
-                    <div class = "col-md-5"><label class = "modal-align">Data Analytics</label></div>
-                    <div class = "col-md-1"></div>
-                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control textbox" ng-model="model.business.type" ng-required = "true" /></div>
-                  </div>
-                  <div class = "row">
-                    <div class = "col-md-5"><label class = "modal-align">Printing Cost</label></div>
-                    <div class = "col-md-1"></div>
-                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control textbox" ng-model="model.business.type" ng-required = "true" /></div>
-                  </div>
-                  <div class = "row">
-                    <div class = "col-md-5"><label class = "modal-align">Digital Campaign Cost</label></div>
-                    <div class = "col-md-1"></div>
-                    <div class = "col-md-3"><input type = "number" name = "analytics" id = "analytics" class="form-control textbox" ng-model="model.business.type" ng-required = "true" /></div>
-                  </div>
-                  <br>
-                  <div class="modal-footer">
-                      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                      <button type="button" class="btn btn-primary">Save changes</button>
-                  </div>
-  	           </div>
-	              </div>
-            </div>
-          </div>
-        </div>
-<!-- End code for Modal Windows-->
+  	<form name="proposal">
+  		<div class="panel panel-default business-panel">
+  			<div class="table">
+  				<div class="row">
+  					<div class="col-md-3"><label class="spacing">Name of Proposal</label></div>
+  					<div class="col-md-3"><input type="text" ng-model="model.name" class="form-control spacing textbox-width"></div>
+  				</div>
+  				<div class="row">
+  					<div class="col-md-3"><label class="spacing">Types of Spaces</label></div>
+  					<div class="col-md-3"><select class="form-control spacing textbox-width">
+  						<option>Society</option>
+  						<option>Corporate Park</option>
+  						<option>Bus Shelter</option>
+  						<option>Gym</option>
+  						<option>Salon</option>
+  					</select></div>
+  				</div>
+  				<div class="row">
+  					<div class="col-md-3"><label class="spacing">Types of Inventory</label></div>
+  					<div class="col-md-3"><select class="form-control spacing textbox-width">
+  						<option>Poster</option>
+  						<option>Standee</option>
+  						<option>Stall</option>
+  						<option>Flyer</option>
+  					</select></div>
+  				</div>
+  				<div class="row">
+  					<div class="col-md-3"><label class="spacing">Tentative Cost</label></div>
+  					<div class="col-md-3"><input type="number" ng-model="model.tentative_cost" class="form-control spacing textbox-width"></div>
+  				</div>
+  			</div>
+  		</div>
+  	</form>
+
+  	<div class="panel panel-default business-panel">
+  		<table class="table table-bordered">
+  			<thead>
+  				<tr>
+  					<!-- <th>S.No.</th> -->
+  					<th>Name of Center</th>
+  					<th>Address</th>
+  					<th>Sub Area</th>
+  					<th>Area</th>
+  					<th>City</th>
+  					<th>Radius</th>
+  					<th>Space Details</th>
+  					<th>Action</th>
+  				</tr>
+  			</thead>	
+  			<tbody>
+  			<!-- <tbody ng-repeat="center in model.centers track by $index"> -->
+  				<tr>
+  					<td><input type="text" ng-model="center.center.center_name" class="form-control spacing"></td>
+  					<td><input type="text" ng-model="center.center.address" class="form-control spacing"></td>
+  					<td><input type="text" ng-model="center.center.subarea" class="form-control spacing"></td>
+  					<td><input type="text" ng-model="center.center.area" class="form-control spacing"></td>
+  					<td><input type="text" ng-model="center.center.city" class="form-control spacing"></td>
+  					<td><input type="number" ng-model="center.center.radius" class="form-control spacing"></td>
+  					<td>
+  						<table class="table table-bordered">
+  							<thead>
+  								<th></th>
+  								<th>Space Type</th>
+  								<th>Space Count</th>
+  								<th>Buffer Count</th>
+  								<th>Inventory Types</th>
+  							</thead>
+  							<tbody>
+  								<tr>
+  									<td><input type="checkbox" ng-model="center.center.space_mapping.society_allowed" ng-change="checkSpace(center, 'society')"></td>
+  									<td>Society</td>
+  									<td><input type="number" class="form-control" ng-model="center.center.space_mapping.society_count"></td>
+  									<td><input type="number" class="form-control" ng-model="center.center.space_mapping.society_buffer_count"></td>
+  									<td class="col-width">
+				  						<input type="checkbox" ng-model="center.society_inventory.poster_allowed"> Poster<br>
+										<input type="checkbox" ng-model="center.society_inventory.standee_allowed"> Standee<br>
+										<input type="checkbox" ng-model="center.society_inventory.stall_allowed"> Stall<br>
+										<input type="checkbox" ng-model="center.society_inventory.flier_allowed"> Flyer<br>
+				  					</td>
+  								</tr>
+  								<tr>
+  									<td><input type="checkbox" ng-model="center.center.space_mapping.corporate_allowed" ng-change="checkSpace(center, 'corporate')"></td>
+  									<td>Corporate Park</td>
+  									<td><input type="number" class="form-control" ng-model="center.center.space_mapping.corporate_count"></td>
+  									<td><input type="number" class="form-control" ng-model="center.center.space_mapping.corporate_buffer_count"></td>
+  									<td class="col-width">
+				  						<input type="checkbox" ng-model="center.society_inventory.poster_allowed"> Poster<br>
+										<input type="checkbox" ng-model="center.society_inventory.standee_allowed"> Standee<br>
+										<input type="checkbox" ng-model="center.society_inventory.stall_allowed"> Stall<br>
+										<input type="checkbox" ng-model="center.society_inventory.flier_allowed"> Flyer<br>
+				  					</td>
+  								</tr>
+  							</tbody>
+  						</table>
+  					</td>
+  					<td><button class="btn btn-danger spacing" ng-click="removeCenter($index)">Remove</button></td>
+  				</tr>
+  			</tbody>
+  		</table>
+  		<button class="btn btn-danger spacing pull-right" ng-click="addCenter()">Add Center</button>
+  		<button class="btn btn-danger spacing" ng-click="submit()">Submit</button>
+  	</div> 
+
+</div>

@@ -8,9 +8,19 @@
   	var url_base = 'v0/ui/website/';
 
   	var createProposalService = {};
+  	var proposal_id = undefined;
 
-  	createProposalService.saveInitialProposal = function(data){
-  		var url = url_base + 'createInitialProposal/';
+  	createProposalService.setProposalId = function(id){
+  		proposal_id = id;
+  	}
+
+  	createProposalService.getProposalId = function(id){
+  		return proposal_id;
+  	}
+
+
+  	createProposalService.saveInitialProposal = function(account_id, data){
+  		var url = url_base + account_id + '/createInitialProposal/';
   		return machadaloHttp.post(url,data);
   	}
 
