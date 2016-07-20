@@ -1703,11 +1703,13 @@ class CurrentProposalAPIView(APIView):
             center_serializer = ProposalCenterMappingSpaceSerializer(center)
             space_info_dict['center'] = center_serializer.data
 
+
             if space_mapping_object.society_allowed:
                 societies_shortlisted_ids = ShortlistedSpaces.objects.filter(space_mapping=space_mapping_object, supplier_code='RS',\
                     buffer_status=False).values_list('object_id', flat=True)
-                
+
                 societies_shortlisted_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_shortlisted_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+
                 societies_shortlisted = []
                 societies_shortlisted_count = 0
 
@@ -1719,9 +1721,13 @@ class CurrentProposalAPIView(APIView):
                     adinventory_type_dict = obj.adinventory_func()
                     duration_type_dict = obj.duration_type_func()
 
+                    # print "hello----- "
+
                     if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
-                        society['total_poster_count'] = society_inventory_obj.total_poster_count
+                        # print "Hi! Posters are allowed"
+                        society['total_poster_count'] = society_inventory_obj.poster_count_per_tower
                         society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+                        # print society['total_poster_count']
 
                     if society_inventory_obj.standee_allowed:
                         society['total_standee_count'] = society_inventory_obj.total_standee_count
@@ -1739,12 +1745,13 @@ class CurrentProposalAPIView(APIView):
                     societies_shortlisted.append(society)
                     societies_shortlisted_count += 1
 
-
+                # print "shortlisted society count: ", societies_shortlisted_count
                 # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
                 # societies_shortlisted_count = societies_shortlisted.count()
                 space_info_dict['societies_shortlisted'] = societies_shortlisted
                 space_info_dict['societies_shortlisted_count'] = societies_shortlisted_count
 
+                print "space info dictionary: ", space_info_dict.values()
 
                 societies_buffered_ids = ShortlistedSpaces.objects.filter(space_mapping=space_mapping_object, supplier_code='RS',\
                     buffer_status=True).values_list('object_id', flat=True)
@@ -1760,8 +1767,10 @@ class CurrentProposalAPIView(APIView):
                     duration_type_dict = obj.duration_type_func()
 
                     if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                        print "hi! posters are allowed"
                         society['total_poster_count'] = society_inventory_obj.total_poster_count
                         society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+                        print "poster count= ",society['total_poster_count']
 
                     if society_inventory_obj.standee_allowed:
                         society['total_standee_count'] = society_inventory_obj.total_standee_count
@@ -1796,6 +1805,9 @@ class CurrentProposalAPIView(APIView):
                 space_info_dict['societies_inventory'] = societies_inventory_serializer.data
 
 
+                # print "hello ", space_info_dict['societies_inventory']
+                # print "hi ", space_info_dict['societies_buffered']
+
             if space_mapping_object.corporate_allowed:
                 # ADDNEW -->
                 pass
@@ -1810,10 +1822,17 @@ class CurrentProposalAPIView(APIView):
 
             centers_list.append(space_info_dict)
 
+        # print "space info dictionary: ", space_info_dict['societies_shortlisted']
+
         response = {
             'proposal' : proposal_serializer.data,
             'centers'  : centers_list,
+            # 'inventory': space_info_dict['societies_shortlisted'],
         }
+
+        # print "centers list       ", centers_list
+        # print "inventory--------------------", space_info_dict['societies_shortlisted']
+        # print "response is: ", response
 
         return Response(response, status=200)
 

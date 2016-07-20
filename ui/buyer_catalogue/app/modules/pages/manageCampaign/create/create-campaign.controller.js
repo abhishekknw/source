@@ -163,12 +163,11 @@ angular.module('machadaloPages')
 
       $scope.getProposals = function(sel_account_id){
           // pass account_id of selected account radio button
-          console.log("Get Proosals\t account_id received  : ", sel_account_id);
           $scope.sel_account_id = sel_account_id;
           pagesService.getAccountProposal(sel_account_id)
           .success(function(response, status){
               $scope.account_proposals = response;
-              alert($scope.account_proposals);
+              // alert($scope.account_proposals);
           })
           .error(function(response, status){
               if(typeof(response) == typeof([]))
