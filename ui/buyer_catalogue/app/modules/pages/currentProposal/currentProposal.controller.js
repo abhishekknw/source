@@ -4,7 +4,8 @@ angular.module('catalogueApp')
 
     	console.log('hi');
     	$scope.proposal = {};
-
+        $scope.society = {society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''};
+        $scope.societyDetails = [];
     	// send proposal_id in service
 
     	currentProposalService.getProposal($stateParams.proposal_id)
@@ -19,6 +20,33 @@ angular.module('catalogueApp')
 
     			// ADDNEW --> for corporates gyms and saloons
     		}
+            // alert("hi!! " + $scope.proposal.centers[0].societies_shortlisted);
+            // var k=0;
+            // var center_name;
+            // loop1:
+            // for(var i=0; i<$scope.proposal.centers.length; i++){
+            //     center_name = $scope.proposal.centers[i].center.center_name;
+            //     loop2:   
+            //     for(var j=0; j<$scope.proposal.centers[i].societies_shortlisted.length; j++) {
+            //         $scope.societyDetails[k]={};
+            //         $scope.societyDetails.push($scope.society);
+            //         // $scope.societyDetails.push({society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''});
+            //         $scope.societyDetails[k].center = center_name;
+            //         $scope.societyDetails[k].society_name = $scope.proposal.centers[i].societies_shortlisted[j].society_name; 
+            //         if(k==9)
+            //             {
+            //                 break loop1;
+            //             }
+
+            //             $scope.societyDetails[k].standee_count = $scope.proposal.inventory[k].total_standee_count;
+            //             $scope.societyDetails[k].stall_count = $scope.proposal.inventory[k].total_stall_count;
+            //             if($scope.proposal.inventory[k].shortlisted == true)
+            //                 $scope.societyDetails[k].status = "Shortlisted";
+            //             else
+            //                 $scope.societyDetails[k].status = "Buffered";   
+            //         k++;
+            //     }
+            // }
     	})
     	.error(function(response, status){
     		console.log("Error Occured");
@@ -28,6 +56,12 @@ angular.module('catalogueApp')
     	});
 
         console.log("proposal_id is : ", $stateParams.proposal_id);
+
+
+        $scope.edit = function(){
+            alert("hi! edit proposal");
+            $scope.showEdit = true;
+        },
 
     	$scope.submit = function(){
     		console.log("$scope.proposal : ", $scope.proposal);

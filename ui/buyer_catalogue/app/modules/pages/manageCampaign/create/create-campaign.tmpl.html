@@ -89,7 +89,7 @@
               </thead>
               <tbody>
                 <tr ng-repeat="account in model.accounts track by $index">
-                  <td><input type="radio" name="sel_account_id" value="{{account.account_id}}" ng-model="sel_account_id" ng-change="getProposals(sel_account_id)"></td>
+                  <td><input type="radio" id="sel_account_id" name="sel_account_id" value="{{account.account_id}}" ng-model="sel_account_id" ng-change="getProposals(sel_account_id)"></td>
                   <td>{{account.name}}</td>
                   <td>{{account.business.type_name.business_type}}</td>
                   <td>{{account.comments}}</td>
@@ -111,12 +111,12 @@
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th class="col-md-3 table-heading">Proposal Id</th>
-                  <th class="col-md-3 table-heading">Created By</th>
-                  <th class="col-md-3 table-heading">Created Date</th>
-                  <th class="col-md-3 table-heading">Edited By</th>
-                  <th class="col-md-3 table-heading">Last Edited</th>
-                  <th class="col-md-3 table-heading">Action</th>
+                  <th class="col-md-2 table-heading">Proposal Id</th>
+                  <th class="col-md-2 table-heading">Created By</th>
+                  <th class="col-md-2 table-heading">Created Date</th>
+                  <th class="col-md-2 table-heading">Edited By</th>
+                  <th class="col-md-2 table-heading">Last Edited</th>
+                  <th class="col-md-2 table-heading"></th>
                 </tr>
               </thead>
               <tbody>
