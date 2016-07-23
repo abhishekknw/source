@@ -2031,12 +2031,12 @@ def get_availability(data):
      else:
          return False
 
-
+# This API is for saving basic tab details of corporate space. Divided into four parts mentioned in the comments.
 class saveBasicCorporateDetailsAPIView(APIView):
     def post(self, request,id,format=None):
         companies = []
         error = {}
-        print "Inside views.py"
+        #Round 1 Saving basic data
         if 'supplier_id' in request.data:
             corporate = SupplierTypeCorporate.objects.filter(pk=request.data['supplier_id']).first()
             if corporate:
@@ -2054,7 +2054,7 @@ class saveBasicCorporateDetailsAPIView(APIView):
             error = json.dumps(error)
             return Response(response, status=406)
 
-        print "Round 2 Saving List of companies"
+        # Round 2 Saving List of companies
         
         try:
             corporate_id = request.data['supplier_id']
@@ -2081,8 +2081,8 @@ class saveBasicCorporateDetailsAPIView(APIView):
 
         print "\n\nRound 2 complete"
 
-        # print "Round 3 - Saving contacts "
-        
+        # Round 3 - Saving contacts
+       
         try:
             print id
             instance = SupplierTypeCorporate.objects.get(supplier_id=id)
@@ -2154,30 +2154,31 @@ class saveBasicCorporateDetailsAPIView(APIView):
             return Response(status=406)
 
 
-class ContactDetailsGenericAPIView(APIView):
+# class ContactDetailsGenericAPIView(APIView):
 
-    def post(self,request,id=None,format=None):
-        print "Hello  ", id
-        # instance = get_object_or_404(SupplierTypeCorporate, supplier_id=id)
-        try:
-            instance = SupplierTypeCorporate.objects.get(supplier_id=id)
-        except SupplierTypeCorporate.DoesNotExist:
-            print "id does not exist in database"
-            return Response({'message': 'This corporate park does not exist'}, status=406)
+#     def post(self,request,id=None,format=None):
+#         print "Hello  ", id
+#         # instance = get_object_or_404(SupplierTypeCorporate, supplier_id=id)
+#         try:
+#             instance = SupplierTypeCorporate.objects.get(supplier_id=id)
+#         except SupplierTypeCorporate.DoesNotExist:
+#             print "id does not exist in database"
+#             return Response({'message': 'This corporate park does not exist'}, status=406)
 
-        print "Hello123"
-        content_type = ContentType.objects.get_for_model(SupplierTypeCorporate)
-        print request.data
-        request.data['contact']['object_id'] = instance.supplier_id
-        serializer = ContactDetailsGenericSerializer(data=request.data['contact'])
-        if serializer.is_valid():
-            print serializer.validated_data
-            serializer.save(content_type=content_type)
-            print "serializer saved"
-            return Response(serializer.data, status=200)
-        return Response(serializers.errors, status=400)
+#         print "Hello123"
+#         content_type = ContentType.objects.get_for_model(SupplierTypeCorporate)
+#         print request.data
+#         request.data['contact']['object_id'] = instance.supplier_id
+#         serializer = ContactDetailsGenericSerializer(data=request.data['contact'])
+#         if serializer.is_valid():
+#             print serializer.validated_data
+#             serializer.save(content_type=content_type)
+#             print "serializer saved"
+#             return Response(serializer.data, status=200)
+#         return Response(serializers.errors, status=400)
 
 
+# This API is for saving the buildings and wings details of a corporate space
 class saveBuildingDetailsAPIView(APIView):
 
     def get(self,request,id, format=None):
@@ -2206,6 +2207,9 @@ class saveBuildingDetailsAPIView(APIView):
         buildings_ids = set(CorporateBuilding.objects.filter(corporatepark_id=corporate_object).values_list('id',flat=True))
         wing_ids_superset = set()
 
+        #Logic for delete - Put all currently present fields in the database into a list. 
+        #Check the received data from front-end, if ID of any field matches with any in the list, remove that field from list. 
+        #In the end, delete all the fields left in the list.
         for building in request.data:
             if 'id' in building:
                 basic_data_instance = CorporateBuilding.objects.get(id=building['id'])
@@ -2251,6 +2255,8 @@ class saveBuildingDetailsAPIView(APIView):
 
         return Response(status=200)
     
+
+# This API is for fetching the companies and buildings of a specific corporate space.
 class CompanyDetailsAPIView(APIView):
     def get(self, request, id, format=True):
         company = SupplierTypeCorporate.objects.get(supplier_id=id)
@@ -2263,7 +2269,7 @@ class CompanyDetailsAPIView(APIView):
         return Response(response_dict,status=200)
 
 
-
+# This API is for saving details of all companies belonging to a specific corporate space.
 class CorporateCompanyDetailsAPIView(APIView):
     def get(self, request, id=None, format=None):
         try:
@@ -2350,6 +2356,7 @@ class CorporateCompanyDetailsAPIView(APIView):
         return Response(status=200)
 
 
+# Saving and fetching basic data of a salon.
 class saveBasicSalonDetailsAPIView(APIView):
     def get(self, request, id, format=None):
         try:
@@ -2422,7 +2429,7 @@ class saveBasicSalonDetailsAPIView(APIView):
 
         # End of contact saving
 
-
+# Saving and fetching basic data of a gym.
 class saveBasicGymDetailsAPIView(APIView):
     def get(self, request, id, format=None):
         try:
