@@ -111,11 +111,11 @@ angular
             controller: 'CreateAccountCtrl',
             templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html'
         })
-        .state('manageCampaign.proposal', {
-            url : '/proposal',
-            controller: 'CreateProposalCtrl',
-            templateUrl: 'modules/pages/manageCampaign/createproposal/create-proposal.tmpl.html'
-          })
+        // .state('manageCampaign.proposal', {
+        //     url : '/proposal',
+        //     controller: 'CreateProposalCtrl',
+        //     templateUrl: 'modules/pages/manageCampaign/createproposal/create-proposal.tmpl.html'
+        //   })
       .state('manageCampaign.shortlisted', {
           url : '/shortlisted',
           controller: 'ShortlistedCampaignCtrl',

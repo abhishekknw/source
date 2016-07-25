@@ -70,6 +70,7 @@ angular.module('catalogueApp')
 	// $scope.
 
 	$scope.submit = function(){
+		alert("hi1!!!!!!!!!");
 		console.log("$scope.model", $scope.model);
 		
 		// call backend to save only if all the latitudes are found
@@ -80,7 +81,7 @@ angular.module('catalogueApp')
 				console.log("response is : ", response);
 				$scope.proposal_id = response; 
 				createProposalService.setProposalId($scope.proposal_id);
-
+				alert("$scope.proposal_id--------" + $scope.proposal_id);
 				$location.path('/' + $scope.proposal_id + '/mapview');
 
 			})

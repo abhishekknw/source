@@ -67,9 +67,11 @@ angular.module('catalogueApp')
 	}
 
 	$scope.submit = function(){
+		alert("hi11111111111111111111");
 		console.log("$scope.model", $scope.model);
 		createProposalService.saveInitialProposal($scope.model)
 		.success(function(response, status){
+			alert("hi2222222222222222");
 			console.log("Successfully Saved");
 		})
 		.error(function(response,status){

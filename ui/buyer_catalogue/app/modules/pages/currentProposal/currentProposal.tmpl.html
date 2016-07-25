@@ -17,7 +17,7 @@
             <div class="col-md-3"><label>End Date:</label></div>
             <div class="col-md-3">{{proposal.proposal.tentative_end_date}}</div>
           </div>
-          <div class="row">
+         <!--  <div class="row">
             <div class="col-md-5"><label>Types of Spaces and their Counts:</label></div>
           </div>
           <div class="row">
@@ -33,7 +33,7 @@
                 <div class="col-md-2"></div>
               </div>
             </div>  
-          </div>
+          </div> -->
           <div class="row">
             <div class="col-md-5"><label>Center Details:</label></div>
           </div>
@@ -86,7 +86,8 @@
      </table>
     </div>
   </div>
-  <div ng-show="societies_buffered_count>0" class="panel panel-default business-panel">
+
+  <div ng-repeat="propCenter in proposal.centers track by $index" ng-show="propCenter.societies_buffered_count>0" class="panel panel-default business-panel">
   <h4 class="panel-heading head">Buffered Societies</h4>
   <div class="table-responsive">
     <table class="table table-bordered">
@@ -98,7 +99,6 @@
           <th class="col-md-2 table-heading">Standee Count</th>
           <th class="col-md-2 table-heading">Stall Count</th>
           <th class="col-md-2 table-heading">Flyer Count</th>
-          <!-- <th class="col-md-2 table-heading">Status</th> -->
         </tr>
       </thead>
       <tbody ng-repeat="society in proposal.centers track by $index">           
@@ -109,7 +109,6 @@
               <td>{{center.total_standee_count}}</td>
               <td>{{center.total_stall_count}}</td>
               <td>{{center.flier_frequency}}</td>
-              <!-- <td>{{center.shortlisted}}</td> -->
           	</tr>            
       </tbody>
      </table>
@@ -119,39 +118,99 @@
 </form>
 
 <form name="editProposal" ng-show="showEdit">
-	<div ng-if="proposal.centers[0].center.space_mappings.society_allowed">
-		<h4>
-			Societies &nbsp;	Shortlisted : {{proposal.centers[0].societies_shortlisted_count}} &nbsp;	Buffered : {{center.societies_buffered_count}}<br>
-			Inventories Chosen : &nbsp;
-			<span ng-if="center.societies_inventory.poster_allowed"> Poster : {{ proposal.centers[0].societies_inventory_count.posters}}</span><br>
-			<span ng-if="center.societies_inventory.standee_allowed"> Standee : {{ proposal.centers[0].societies_inventory_count.standees}}</span><br>
-			<span ng-if="center.societies_inventory.stall_allowed"> Stall : {{ proposal.centers[0].societies_inventory_count.stalls}}</span><br>
-			<span ng-if="center.societies_inventory.flier_allowed"> Flier : {{ proposal.centers[0].societies_inventory_count.fliers}}</span><br>
-			<span ng-if="center.societies_inventory.banner_allowed"> Banner : {{ proposal.centers[0].societies_inventory_count.banners}}</span><br>
-		</h4>
-		<div ng-repeat="society in center.societies_shortlisted">	
-			Society Name :  &nbsp;
-			Society Address : {{ society.society_address1 }} <br>
-			Society Subarea : {{ society.society_subarea }}<br>
-			<button class="btn btn-info" ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
-		    <button class="btn btn-info" ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
-		    <span ng-if="society.shortlisted">
-		    <input type="checkbox" ng-model="society.buffer_status"> Buffer
-		    </span><br>
-		</div><br><br>
-
-		<div ng-repeat="society in center.societies_buffered">
-			Society Name : {{society.society_name}} &nbsp;
-			Society Address : {{ society.society_address1 }} <br>
-			Society Subarea : {{ society.society_subarea }}<br>
-			<button class="btn btn-info" ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
-		    <button class="btn btn-info" ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
-		    <span ng-if="society.shortlisted">
-		    <input type="checkbox" ng-model="society.buffer_status"> Buffer
-		    </span><br>
+  <div ng-if="proposal.centers[0].center.space_mappings.society_allowed">
+  <div class="panel panel-default business-panel">
+    <div class="table">
+      <div class="row">
+      	<div class="col-md-3"><label>Proposal Id:</label></div>
+        <div class="col-md-3">{{proposal.proposal.proposal_id}}</div>
+       	</div>
+       	<div class="row">
+	        <div class="col-md-3"><label>Shortlisted Societies:</label></div>
+	        <div class="col-md-3">{{proposal.centers[0].societies_shortlisted_count}}</div>
+	        <div class="col-md-3"><label>Buffered Societies:</label></div>
+	        <div class="col-md-3">{{proposal.centers[0].societies_buffered_count}}</div>
+       	</div>
+       	<div class="row">
+       		<div class="col-md-3"><label>Inventory Details:</label></div>	
+       	</div>
+       	<div class="row">
+        <div class="table table-align">
+        <div class="row">
+        	<div class="col-md-2"><b>Center Name</b></div>
+	      	<div class="col-md-2"><b>Inventory Name</b></div>
+	        <div class="col-md-2 table-align"><b>Count</b></div>
+	    </div>
+      	<div ng-repeat="center2 in proposal.centers">
+      		<div class="row">
+      			<div class="col-md-2">{{center2.center.center_name}}</div>
+      			<div class="col-md-2">Flyers</div>
+		        <div class="col-md-2">{{center2.societies_inventory_count.fliers}}</div>
+		    </div>
+		    <div class="row">
+		    	<div class="col-md-2"></div>
+		    	<!-- <div class="col-md-2">{{center2.center.center_name}}</div> -->
+		    	<div class="col-md-2">Posters</div>
+		        <div class="col-md-2">{{center2.societies_inventory_count.posters}}</div>
+		    </div>
+		    <div class="row">
+		    	<div class="col-md-2"></div>
+		    	<!-- <div class="col-md-2">{{center2.center.center_name}}</div> -->
+		    	<div class="col-md-2">Stalls</div>
+		        <div class="col-md-2">{{center2.societies_inventory_count.stalls}}</div>
+		    </div>
+		    <div class="row">
+		    	<div class="col-md-2"></div>
+		    	<!-- <div class="col-md-2">{{center2.center.center_name}}</div> -->
+		    	<div class="col-md-2">Standees</div>
+		        <div class="col-md-2">{{center2.societies_inventory_count.standees}}</div>
+	        </div>
+    	  	</div>
 		</div>
+	  </div>
 	</div>
-</div><br>
-<button class="btn btn-primary" ng-click="submit()">Save Changes</button>
-</form>
+  </div>
+  </div>
+
+		<div class="panel panel-default business-panel">
+		  <h4 class="panel-heading head">Societies List</h4>
+		    <div class="table-responsive">
+		    <table class="table table-bordered">
+		      <thead>
+		        <tr>
+		          <th class="col-md-2 table-heading">Society Name</th>
+				  <th class="col-md-2 table-heading">Society Address</th>
+				  <th class="col-md-2 table-heading">Sub Area</th>
+				  <th class="col-md-2 table-heading">Action</th>	
+				</tr>
+			   </thead>
+			   <tbody ng-repeat="society in proposal.centers track by $index">           
+        			<tr ng-repeat="center in society.societies_shortlisted track by $index">
+              			<td>{{center.society_name}}</td>
+              			<td>{{center.society_address1}}</td>
+              			<td>{{center.society_subarea}}</td>
+              			<td><button class="btn btn-info" ng-if="center.shortlisted" ng-click="center.shortlisted = !center.shortlisted">Remove</button><br>
+			   	  		<button class="btn btn-info" ng-if="!center.shortlisted" ng-click="center.shortlisted = !center.shortlisted">Shortlist</button><br>
+			   	  		<span ng-if="center.shortlisted">
+		    				<input type="checkbox" ng-model="center.buffer_status"> Buffer
+		    			</span></td>
+		    		</tr>
+		    		<tr ng-repeat="center in society.societies_buffered track by $index">
+		    			<td>{{center.society_name}}</td>
+		    			<td>{{center.society_address1}}</td>
+              			<td>{{center.society_subarea}}</td>
+              			<td>
+              				<button class="btn btn-info" ng-if="center.shortlisted" ng-click="center.shortlisted = !center.shortlisted">Remove</button><br>
+						    <button class="btn btn-info" ng-if="!center.shortlisted" ng-click="center.shortlisted = !center.shortlisted">Shortlist</button><br>
+						    <span ng-if="center.shortlisted">
+						    	<input type="checkbox" ng-model="center.buffer_status"> Buffer
+						    </span><br>
+              			</td>
+		    		</tr>
+			   </tbody>	
+			  </table>		
+			</div>
+		</div>
+		<button class="btn btn-default" ng-click="submit()">Update Proposal</button>
+	</form>
 </html>

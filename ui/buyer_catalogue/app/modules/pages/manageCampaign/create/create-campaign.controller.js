@@ -15,7 +15,7 @@ angular.module('machadaloPages')
     		'CarDisplay':['Normal', 'Premium'],
             'Fliers': ['Normal']
     	}
-
+ 
         $scope.clear = function() {
         $scope.dt = null;
       };

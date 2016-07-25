@@ -59,7 +59,6 @@ angular.module('catalogueApp')
 
 
         $scope.edit = function(){
-            alert("hi! edit proposal");
             $scope.showEdit = true;
         },
 

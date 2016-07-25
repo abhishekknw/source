@@ -190,7 +190,7 @@
                   <div class="row">
                     <div class = "col-md-3"><label>Account Email</label></div>
                     <div class = "col-md-3">{{currentAccount.email}}</div>
-                    <div class = "col-md-3"><label>Account Contact</label></div>
+                    <div class = "col-md-3"><label>Account Phone</label></div>
                     <div class = "col-md-3">{{currentAccount.phone}}</div>
                   </div>
                   <div class="row">
@@ -368,7 +368,7 @@
             <div class="form-group">
               <div class = "row">
                 <div class = "col-md-3"><label >Reference Contact Email</label></div>
-                <div class = "col-md-3"><input type="text" name="reference_email" id="reference_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.business.reference_email"/>
+                <div class = "col-md-3"><input type="email" name="reference_email" id="reference_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.business.reference_email"/>
                 <span class="show-error" ng-show="form.reference_email.$error.pattern">Please Enter Valid Email Id</span></div>
               </div>
             </div>
@@ -440,7 +440,7 @@
     </div>
   </form>
 
-  <form name="form3" ng-show = "choice == 'select'" class="" ng-submit="create()" role="form">
+  <form name="form3" ng-show = "choice == 'select'|| choice == 'new'" class="" ng-submit="create()" role="form">
     <div>
        <span class="create_button">
            <button type="submit" class="btn btn-danger" class="UIbutton">Save Details</button>

@@ -1,44 +1,72 @@
-<div ng-if= "proposals.length != 0">
-	Proposal Name : {{proposals[0].proposal.name}}<br>
-	Proposal ID   : {{proposals[0].proposal.proposal}}<br><br>
-
-<div ng-repeat="proposal in proposals track by $index">
-<h3>Saved at : {{ proposal.proposal.timestamp }}</h3><br>
-	<div ng-repeat="center in proposal.centers">
-		<h4>Center Name : {{center.center.center_name}} &nbsp;
-		Center Address : {{center.center.address}} <br></h4>
-		<div ng-if="center.center.space_mappings.society_allowed">
-				<h4>
-					Societies <br>
-					Inventories Chosen : &nbsp;
-					<span ng-if="center.societies_inventory.poster_allowed"> Poster </span>
-					<span ng-if="center.societies_inventory.standee_allowed"> Standee </span>
-					<span ng-if="center.societies_inventory.stall_allowed"> Stall </span>
-					<span ng-if="center.societies_inventory.flier_allowed"> Flier </span>
-					<span ng-if="center.societies_inventory.banner_allowed"> Banner </span><br>
-				</h4>
-				<h5>
-					<strong> Shortlisted
-						Count : {{center.societies_shortlisted_count}}<br>
-					</strong>
-				</h5>
-				<div ng-repeat="society in center.societies_shortlisted">
-					Society Name : {{society.society_name}} &nbsp;
-					Society Address : {{ society.society_address1 }} <br>
-					Society Subarea : {{ society.society_subarea }}<br><br>
-				</div><br><br>
-
-				<h5><strong>
-					Buffered  
-					Count : {{center.societies_buffered_count}}<br>
-				</strong></h5>
-				<div ng-repeat="society in center.societies_buffered">
-					Society Name : {{society.society_name}} &nbsp;
-					Society Address : {{ society.society_address1 }} <br>
-					Society Subarea : {{ society.society_subarea }}<br><br>
-				</div>
-				
+<!DOCTYPE html>
+<html>
+	<link rel="stylesheet" href="modules/pages/ProposalHistory/proposalHistory.tmpl.css" />
+	<div class="page-container">
+	<form name="historyDetails">
+  		<div ng-repeat="proposal in proposals track by $index">
+  			<div class="panel panel-default business-panel">
+      		<div class="panel-heading"><h3>Saved At:  {{proposal.proposal.timestamp}}</h3>
+      			<div class="table">
+      				<div class="row">
+          			<div class="col-md-3"><label>Proposal Id:</label></div>
+          			<div class="col-md-3"><label>{{proposal.proposal.proposal}}</label></div>
+          			<div class="col-md-3"><label>Proposal Name:</label></div>
+          			<div class="col-md-3"><label>{{proposal.proposal.name}}</label></div>
+          		</div>
+      			<div ng-repeat="center in proposal.centers">
+          			<div class="row">
+	          			<div class="col-md-3">Center Name:</div>
+	          			<div class="col-md-3">{{center.center.center_name}}</div>
+	          			<div class="col-md-3">Center Address:</div>
+	          			<div class="col-md-3">{{center.center.address}}</div>
+          			</div>
+          			<div class="row">
+          				<div class="col-md-3">Shortlisted Societies Count:</div>
+          				<div class="col-md-3">{{center.societies_shortlisted_count}}</div>
+          				<div class="col-md-3">Buffered Societies Count:</div>
+          				<div class="col-md-3">{{center.societies_buffered_count}}</div>
+          			</div>
+          			<div class="row">
+          				<div class="col-md-3" ng-if="center.center.space_mappings.society_allowed">Inventories:</div>
+          				<span ng-if="center.societies_inventory.poster_allowed">Poster</span>
+						<span ng-if="center.societies_inventory.standee_allowed">Standee</span>
+						<span ng-if="center.societies_inventory.stall_allowed">Stall</span>
+						<span ng-if="center.societies_inventory.flier_allowed">Flyers</span>
+						<span ng-if="center.societies_inventory.banner_allowed">Banner</span>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-bordered">
+							<thead>
+								<tr>
+									<th class="col-md-2 table-heading">Society Name</th>
+									<th class="col-md-2 table-heading">Society Address</th>
+									<th class="col-md-2 table-heading">Society Sub-Area</th>
+									<th class="col-md-2 table-heading">Status</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr ng-repeat="society1 in center.societies_shortlisted">
+									<td>{{society1.society_name}}</td>
+									<td>{{society1.society_address1}}</td>
+									<td>{{society1.society_subarea}}</td>
+									<td>Shortlisted</td>
+								</tr>
+								<tr ng-repeat="society1 in center.societies_buffered">
+									<td>{{society1.society_name}}</td>
+									<td>{{society1.society_address1}}</td>
+									<td>{{society1.society_subarea}}</td>
+									<td>Buffered</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+          		</div>
+          		</div>
+	      	</div>
+	  		</div>
 		</div>
-	</div><br><br><br>
-</div>
-</div>
+	</div>
+</form>
+</html>
+
+	
