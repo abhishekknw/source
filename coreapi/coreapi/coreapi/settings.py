@@ -90,11 +90,11 @@ DATABASES = {
     },
 
     'default': {
-          'NAME':'machadalo_tech',
+          'NAME':'machadalo',
           'ENGINE': 'django.db.backends.mysql',
           'HOST': '127.0.0.1',
-          'USER': 'mayank',
-          'PASSWORD': 'mayank',
+          'USER': 'root',
+          'PASSWORD': '',
       }
 
     # 'default': {

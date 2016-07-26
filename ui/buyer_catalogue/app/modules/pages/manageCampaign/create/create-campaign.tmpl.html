@@ -104,11 +104,11 @@
         </div>
       </form>
 
-      <form name="existingProposal" ng-show="account_proposals.length != 0">
+      <form name="existingProposal" ng-show="choice == 'selected'">
         <div class="panel panel-default business-panel">
           <h4 class="panel-heading">Existing Proposals</h4>
           <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" ng-show="account_proposals.length != 0">
               <thead>
                 <tr>
                   <th class="col-md-2 table-heading">Proposal Id</th>
@@ -128,13 +128,16 @@
                   <td>{{proposal.updated_on | limitTo:10}}</td>
                   <td>
                     <!-- <a data-target="#detailModalProposal" class="btn btn-danger  active" data-toggle="modal">Details</a> -->
-                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">Details</button>
-                    <br>     
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">Details</button>     
+                  </td>
+                  <td>
+                    <a href="" ng-click="showHistory(proposal.proposal_id)">Show History</a>
                   </td>
                 </tr>
               </tbody>
             </table>
             <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)">Create New Proposal</button>
+            <span class="show-error" ng-show="error">Please select an account</span>
           </div>
         </div>
       </form>

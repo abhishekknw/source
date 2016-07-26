@@ -24,6 +24,7 @@ angular.module('machadaloPages')
       $scope.today = new Date();
       $scope.popup1 = false;
       $scope.popup2 = false;
+      $scope.error = false;
 
 
       $scope.setDate = function(year, month, day) {
@@ -162,12 +163,12 @@ angular.module('machadaloPages')
       };
 
       $scope.getProposals = function(sel_account_id){
+          $scope.error = false;
           // pass account_id of selected account radio button
           $scope.sel_account_id = sel_account_id;
           pagesService.getAccountProposal(sel_account_id)
           .success(function(response, status){
               $scope.account_proposals = response;
-              // alert($scope.account_proposals);
           })
           .error(function(response, status){
               if(typeof(response) == typeof([]))
@@ -177,14 +178,24 @@ angular.module('machadaloPages')
 
 
       $scope.addNewProposal = function(sel_account_id){
-        console.log("hi");
-        console.log("$scope.sel_account_id : ", $scope.sel_account_id);
-        pagesService.setProposalAccountId(sel_account_id);
-        $location.path('/'+sel_account_id + '/createproposal');
+        if($scope.sel_account_id==null){
+              $scope.error = true;
+              return;
+        }
+        else{
+          console.log("$scope.sel_account_id : ", $scope.sel_account_id);
+          pagesService.setProposalAccountId(sel_account_id);
+          $location.path('/'+sel_account_id + '/createproposal');
+        }
       }
 
       $scope.showProposalDetails = function(proposal_id){
         $location.path('/' + proposal_id + '/showcurrentproposal');
+      }
+
+      $scope.showHistory = function(proposalId){
+        alert(proposalId);
+        $location.path('/' + proposalId + '/showproposalhistory');
       }
 
     	$scope.create = function() {

@@ -67,6 +67,7 @@ angular.module('catalogueApp')
     		currentProposalService.saveProposal($stateParams.proposal_id, $scope.proposal.centers)
     		.success(function(response, status){
     			console.log("Successfully Saved");
+                $window.location.reload();
     		})
     		.error(function(response, status){
     			console.log("Error Occured");
