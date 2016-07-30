@@ -32,12 +32,6 @@ AD_INVENTORY_CHOICES = (
     ('BANNER', 'Banner'),
 )
 
-
-
-
-
-
-
 class ImageMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     location_id = models.CharField(db_column='LOCATION_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
@@ -1196,10 +1190,9 @@ class BusinessAccountContact(models.Model):
     spoc = models.BooleanField(db_column='SPOC', default=False)
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
 
-
     class Meta:
-
-        db_table = 'BUSINESS_ACCOUNT_CONTACT'
+        db_table = 'business_account_conatct'
+        #db_table = 'BUSINESS_ACCOUNT_CONTACT'
 
 
 
@@ -1232,8 +1225,8 @@ class BusinessInfo(models.Model):
             return None
 
     class Meta:
-
-        db_table = 'BUSINESS_INFO'
+        #db_table = 'BUSINESS_INFO'
+        db_table = 'business_info'
 
 
 
@@ -1250,7 +1243,8 @@ class BusinessTypes(models.Model):
 
     class Meta:
 
-        db_table = 'BUSINESS_TYPES'
+        #db_table = 'BUSINESS_TYPES'
+        db_table = 'business_types'
 
 
 class BusinessSubTypes(models.Model):
@@ -1267,8 +1261,8 @@ class BusinessSubTypes(models.Model):
         return self.business_sub_type
 
     class Meta:
-
-        db_table = 'BUSINESS_SUBTYPES'
+        db_table = 'business_subtypes'
+        #db_table = 'BUSINESS_SUBTYPES'
 
 
 class AccountInfo(models.Model):
@@ -1306,8 +1300,8 @@ class AccountInfo(models.Model):
 
 
     class Meta:
-
-        db_table = 'ACCOUNT_INFO'
+        #db_table = 'ACCOUNT_INFO'
+        db_table = 'account_info'
 
 
 # class AccountContact(models.Model):
@@ -1358,7 +1352,8 @@ class ProposalInfo(models.Model):
         return self.proposal_versions.all().order_by('-timestamp')
 
     class Meta:
-        db_table = 'PROPOSAL_INFO'
+        #db_table = 'PROPOSAL_INFO'
+        db_table = 'proposal_info'
 
 
 
@@ -1451,7 +1446,8 @@ class InventoryType(models.Model):
 
 
     class Meta:
-        db_table = 'INVENTORY_TYPE'
+        #db_table = 'INVENTORY_TYPE'
+        db_table = 'inventory_type'
 
 
 class ShortlistedSpaces(models.Model):
