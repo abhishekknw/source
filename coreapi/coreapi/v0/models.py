@@ -1378,7 +1378,8 @@ class ProposalCenterMapping(models.Model):
         return SpaceMapping.objects.get(center=self)
 
     class Meta:
-        db_table = 'PROPOSAL_CENTER_MAPPING'
+        #db_table = 'PROPOSAL_CENTER_MAPPING'
+        db_table = 'proposal_center_mapping'
         unique_together = (('proposal','center_name'),)
 
 
@@ -1430,7 +1431,8 @@ class SpaceMapping(models.Model):
         return self.spaces.filter(supplier_code='SA')
 
     class Meta:
-        db_table = 'SPACE_MAPPING'
+        #db_table = 'SPACE_MAPPING'
+        db_table = 'space_mapping'
 
 
 class InventoryType(models.Model):
@@ -1461,7 +1463,8 @@ class ShortlistedSpaces(models.Model):
     buffer_status   = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'SHORTLISTED_SPACES'
+        #db_table = 'SHORTLISTED_SPACES'
+        db_table = 'shortlisted_spaces'
 
 
 
@@ -1483,7 +1486,8 @@ class ProposalInfoVersion(models.Model):
     timestamp           = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     class Meta:
-        db_table = 'PROPOSAL_INFO_VERSION'
+        #db_table = 'PROPOSAL_INFO_VERSION'
+        db_table = 'proposal_info_version'
 
 
 class ProposalCenterMappingVersion(models.Model):
@@ -1502,7 +1506,8 @@ class ProposalCenterMappingVersion(models.Model):
         return SpaceMappingVersion.objects.get(center_version=self)
 
     class Meta:
-        db_table = 'PROPOSAL_CENTER_MAPPING_VERSION'
+        #db_table = 'PROPOSAL_CENTER_MAPPING_VERSION'
+        db_table = 'proposal_center_mapping_version'
         unique_together = (('proposal_version','center_name'),)
 
 
@@ -1523,8 +1528,8 @@ class SpaceMappingVersion(models.Model):
     salon_buffer_count = models.IntegerField(default=0)
 
     class Meta:
-        db_table = 'SPACE_MAPPING_VERSION'
-
+        #db_table = 'SPACE_MAPPING_VERSION'
+        db_table = 'space_mapping_version'
 
 class InventoryTypeVersion(models.Model):
     supplier_code   = models.CharField(db_index=True, max_length=4)
@@ -1542,7 +1547,8 @@ class InventoryTypeVersion(models.Model):
 
 
     class Meta:
-        db_table = 'INVENTORY_TYPE_VERSION'
+        #db_table = 'INVENTORY_TYPE_VERSION'
+        db_table = 'inventory_type_version'
 
 
 class ShortlistedSpacesVersion(models.Model):
@@ -1554,7 +1560,8 @@ class ShortlistedSpacesVersion(models.Model):
     buffer_status   = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'SHORTLISTED_SPACES_VERSION'
+        #db_table = 'SHORTLISTED_SPACES_VERSION'
+        db_table = 'shortlisted_spaces_version'
 
 
 

@@ -858,7 +858,6 @@ class SpacesOnCenterAPIView(APIView):
 
         ''' !IMPORTANT --> you have to manually add all the type of spaces that are being added apart from
         Corporate and Society '''
-
         response = {}
         center_id = request.query_params.get('center',None)
         try:
@@ -1828,6 +1827,12 @@ class CurrentProposalAPIView(APIView):
             proposal_object = ProposalInfo.objects.get(proposal_id=proposal_id)
         except ProposalInfo.DoesNotExist:
             return Response({'message' : 'Invalid Proposal ID'}, status=406)
+
+        # version save
+        # proposal_version_object = ProposalInfoVersion(proposal=proposal_object, name=proposal_object.name, payment_status=proposal_object.payment_status,\
+        #     created_on=proposal_object.created_on, created_by=proposal_object.created_by, tentative_cost=proposal_object.tentative_cost,\
+        #     tentative_start_date=proposal_object.tentative_start_date, tentative_end_date=proposal_object.tentative_end_date)
+        # proposal_version_object.save()
 
         shortlisted_space_list = []
         centers = request.data

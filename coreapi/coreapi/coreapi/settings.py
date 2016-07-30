@@ -31,7 +31,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
-    # 'django_admin_bootstrapped',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,7 +39,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     # 'django_extensions',
     'rest_framework',
-
     'corsheaders',
     'rest_jwt',
     'v0',
@@ -90,20 +88,12 @@ DATABASES = {
     },
 
     'default': {
-          'NAME':'machadalo',
-          'ENGINE': 'django.db.backends.mysql',
-          'HOST': '127.0.0.1',
-          'USER': 'root',
-          'PASSWORD': '',
+            'NAME':'machadalo',
+         'ENGINE': 'django.db.backends.mysql',
+         'HOST': '127.0.0.1',
+         'USER': 'root',
+         'PASSWORD': 'vidhi',
       }
-
-    # 'default': {
-    #       'NAME':'machadalo_tech',
-    #       'ENGINE': 'django.db.backends.mysql',
-    #       'HOST': '127.0.0.1',
-
-    #       'USER': 'freshuser',
-    #       'PASSWORD': 'password',
 
     }
 
