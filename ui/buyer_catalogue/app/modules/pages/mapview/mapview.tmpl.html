@@ -1,88 +1,83 @@
 <link rel="stylesheet" href="modules/pages/mapview/mapview.tmpl.css"/>
 <div class = "row navbar-default nav-subtab">
-  <select class = "selectcenter" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
+  <form>
+  <div class = "table">
+  <select class = "col-sm-1 selectcenter" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
     <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
   </select>
-</div>
-<!-- Filter Section Start-->
-<div class = "container containerSpacing">
-<div class = row>
-    <div class="col-sm-3 search-bin" id="searchBinHolder" style="" >
-<div class="panel panel-info list-card" id="search" style="margin-bottom:0px;">
-<div class="panel-body" id="searchBody">
-<div class="filterPanel">
-<span class="filterHeader"> Filter your Search </span>
-<a id="resetFilter" data-ga-log="event" data-ga-category="PropertyFilter" data-ga-action="reset-list-rent" onClick="resetFilters();" name="resetTab" href="#" class="btn btn-xs pull-right" style="border: 1px solid #e1e1e1;color: #707070;"> Reset filters</a>
-</div>
-<hr>
-<form id="filterPanelForm">
-<div class="filterPanel hide">
-<span class="filterPanelHeader">Product Type</span>
-<div class="nbRadioGroup two-col">
-<div class="nbRadio">
-<input type="radio" id="producttype_rent" data-name='productType' data-value='RENT' value="RENT" class="" name="productType" checked>
-<label for="producttype_rent"></label>
-</div>
-<span class="radioLabel filterLabel">Rent</span>
-</div>
-<div class="nbRadioGroup two-col">
-<div class="nbRadio">
-<input type="radio" id="producttype_buy" data-name='productType' data-value='RESALE' value="RESALE" class="" name="productType" >
-<label for="producttype_buy"></label>
-</div>
-<span class="radioLabel filterLabel">Buy</span>
-</div>
-</div>
-<!-- property types-->
-<div class="filterPanel hide" data-ga-log-child="radio" data-ga-category="PropertyFilter" data-ga-action="type-list-rent">
-<span class="filterPanelHeader ">Property Type</span>
-<div class="nbRadioGroup two-col">
-<div class="nbRadio">
-<input type="radio" id="propertytype_full" data-name='sharedAccomodation' data-value='0' value="0" class="" name="isSharedAccomodation" checked>
-<label for="propertytype_full"></label>
-</div>
-<span class="radioLabel filterLabel">Full</span>
-</div>
-<div class="nbRadioGroup two-col">
-<div class="nbRadio">
-<input type="radio" id="propertytype_shared" data-name='sharedAccomodation' data-value='1' value="1" class="" name="isSharedAccomodation" >
-<label for="propertytype_shared"></label>
-</div>
-<span class="radioLabel filterLabel">Shared or PG</span>
-</div>
-</div>
-<!-- apartment types-->
-<div class="filterPanel" data-ga-log-child="checkbox" data-ga-category="PropertyFilter" data-ga-action="bhk-list-rent" id="apartDiv" style="">
-<span class="filterPanelHeader ">Society Quality</span>
-<div class="nbCheckbox two-col">
-<input type="checkbox" id="RK1" class="" data-bhktext="1 RK" data-value="RK1" value="RK1" name="propType" data-name="propType" >
-<label for="RK1"></label>
-<span class="checkBoxLabel filterLabel">Ultra High</span>
-</div>
-<div class="nbCheckbox two-col">
-<input type="checkbox" id="BHK1" class="" data-bhktext="1 BHK" data-value="BHK1" value="BHK1" name="propType" data-name="propType" checked >
-<label for="BHK1"></label>
-<span class="checkBoxLabel filterLabel">High</span>
-</div>
-<div class="nbCheckbox two-col">
-<input type="checkbox" id="BHK2" class="" data-bhktext="2 BHK" data-value="BHK2" value="BHK2" name="propType" data-name="propType" >
-<label for="BHK2"></label>
-<span class="checkBoxLabel filterLabel">Medium High</span>
-</div>
-<div class="nbCheckbox two-col">
-<input type="checkbox" id="BHK3" class="" data-bhktext="3 BHK" data-value="BHK3" value="BHK3" name="propType" data-name="propType" >
-<label for="BHK3"></label>
-<span class="checkBoxLabel filterLabel">Standard</span>
-</div>
+  <!-- button starts-->
+  <div class = "col-sm-3 row" style = "margin-top: 23px;">
+  Old Center :&nbsp; &nbsp; Latitude<input type="text" ng-model="old_center.latitude" ng-readonly="true"> &nbsp;&nbsp;
+  </div>
+  <div class = "col-sm-3 row" style = "margin-top: 23px;">
+    Longitude <input type="text"  ng-model="old_center.longitude" ng-readonly="true">
+  </div>
+  <div class = "col-sm-3 row" style = "margin-top: 23px;">
+    New Center : &nbsp; &nbsp; Latitude<input type="text" ng-model="new_center.latitude" ng-readonly="true"> &nbsp;&nbsp;
+  </div>
+  <div class = "col-sm-3 row">
+    Longitude <input type="text"  ng-model="new_center.longitude" ng-readonly="true"><br>
+  </div>
+  <div class = "col-sm-3 row">
+    <button ng-show="center_changed" ng-click="changeCenter(true)">Change Center</button><br>
+  </div>
+  <div class = "col-sm-3 row">
+    <button ng-show="initial_center_changed[current_center_index]" ng-click="resetCenter()">Reset Center</button>
+  </div>
+  <div class = "col-sm-3 row">
+    Radius <input type="number" step="0.5" ng-model="current_center.center.radius" >
+  </div>
+    <button  class = "col-sm-2" ng-click="changeCenter()">Change Radius</button>
 </div>
 </form>
 </div>
-</div>
-</div>
+<div class = "container containerSpacing">
+  <div class = row>
+   <div class="col-sm-3 search-bin" id="searchBinHolder">
+    <div class="panel panel-info">
+     <div class="panel-body" id="searchBody">
+     <!--Start: Filter Section -->
+      <div class="filterPanel">
+       <span class="filterHeader"> Filter your Search </span>
+         <a id="resetFilter" data-ga-log="event" data-ga-category="PropertyFilter" data-ga-action="reset-list-rent" onClick="resetFilters();" name="resetTab" href="#" class="btn btn-xs pull-right" style="border: 1px solid #e1e1e1;color: #707070;"> Reset filters</a>
+      </div>
+      <hr>
+      <form id = "filterPanelForm">
+       <div class = "filterPanel">
+        <input type = "checkbox" ng-model="current_center.center.space_mappings.society_allowed" ng-click="spaceSociety()">
+          <span class = "filterPanelHeader">Society Filters</span><br>
+         <div ng-if = "current_center.center.space_mappings.society_allowed">
+          <span class = "filterPanelHeader ">Inventory Type</span>
+          <div class = "nbCheckbox two-col" ng-repeat="inventory in society_inventory_type">
+            <input type = "checkbox" ng-model="inventory.selected" ng-click="societyFilter(inventory)">{{ inventory.name }}&nbsp;
+          </div><hr>
+          <span class = "filterPanelHeader ">Society Location</span>
+          <div class = "nbCheckbox two-col" ng-repeat="location in society_location">
+            <input type = "checkbox" ng-model="location.selected" ng-click="societyFilter()">{{ location.name }}&nbsp;
+          </div><hr>
+          <span class = "filterPanelHeader ">Society Quality</span>
+            <div class = "nbCheckbox two-col" ng-repeat="quality_type in society_quality_type">
+                <input type = "checkbox" ng-model="quality_type.selected" ng-click="societyFilter()">{{ quality_type.name }}&nbsp;
+            </div><hr>
+          <span class = "filterPanelHeader ">Society Quantity</span>
+            <div class = "nbCheckbox two-col" ng-repeat="quantity_type in society_quantity_type">
+                <input type = "checkbox" ng-model="quantity_type.selected" ng-click="societyFilter()">{{ quantity_type.name }}&nbsp;
+            </div><hr>
+          <span class = "filterPanelHeader ">Society Flat Type</span>
+            <div class = "nbCheckbox two-col" ng-repeat="flat_type in society_flat_type">
+                <input type = "checkbox" ng-model="flat_type.selected" ng-click="societyFilter()">{{ flat_type.name }}&nbsp;
+            </div>
+          </div>
+        </div>
+      </form>
+     </div>
+    </div>
+  </div>
 <!-- Filter Section End -->
 <!-- Map Starts here -->
+<div class="col-sm-1" ng-show = "true">
 <style type="text/css">
-    .angular-google-map-container { height: 400px; width: 700px;}
+    .angular-google-map-container { height: 400px; width: 800px;}
 </style>
 <div class = "mapPosition">
   <div>
@@ -99,23 +94,21 @@
          <!-- <ui-gmap-circle ng-repeat="c in circles track by c.id" center="c.center" stroke="c.stroke" fill="c.fill" radius="c.radius" visible="c.visible" geodesic="c.geodesic" editable="c.editable" draggable="c.draggable" clickable="c.clickable" control="c.control"></ui-gmap-circle> -->
 
          <ui-gmap-circle center="circle.center" stroke="circle.stroke" radius="circle.radius" clickable="circle.clickable", control="circle.control">
-           
-         </ui-gmap-circle>
 
+         </ui-gmap-circle>
         <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'" events="'events'"
                          options="'options'" doRebuildAll="true" click="onClick">
         </ui-gmap-markers>
-
        <ui-gmap-markers models="center_marker" coords="'self'" icon="'icon'" options="'options'" doRebuildAll="true" click="onClick" events = "'events'">
         </ui-gmap-markers>
-
-
     </ui-gmap-google-map>
         </div>
       </div>
     </div>
-</div>
+    </div><!-- row div ends here-->
+</div><!-- containner div ends here-->
 
+<!-- unstructured section starts -->
 <div>
 <button ng-show="show_societies" ng-click="showSocieties()">Hide All Societies</button>
 <button ng-show="!show_societies" ng-click="showSocieties()">Show All Societies</button>
@@ -172,6 +165,25 @@ Inventory Types :
 <button ng-click="clearAllFilters(society_flat_type)">Clear All</button>
 
 </div>
+<!-- start: ritika code-->
+
+<div>
+<h3>Summary</h3>
+ <br>Society Count: {{current_center.centers[0].societies_count}}
+ <br>Inventory Count:
+ <div ng-repeat="inv in current_center.centers[0].societies_inventory_count">
+   Flyers: {{inv.fliers}} <br>
+   Posters: {{inv.posters}}<br>
+   Stalls: {{inv.stalls}}<br>
+   Standees: {{inv.standees}}
+ </div>
+ <br>Total No. Of Impressions:
+ <br> Total Price:
+</div>
+
+
+
+
 
 <br><br>
 <div ng-if="show_societies">

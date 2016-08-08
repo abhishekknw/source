@@ -2,21 +2,39 @@
 	margin-left: 15%;
 }
 .selectcenter{
-	margin-left: 10%;
+	margin-left: 9%;
 	margin-top: 2%;
 }
 .containerSpacing{
 	margin-top: 2%;
 }
-/*.two-col{
+.two-col{
 	min-width: 45%;
 	max-width: 45%;
 }
 .nbCheckbox{
 	position: relative;
-	margin-top: 15px;
-}*/
+    margin-top: 15px;
+    display: inline-block;
+}
 body{
 	background-color: #e6e6e6;
 	font-family: Source Sans Pro;
+	color: #707070;
+}
+.filterPanel{
+    margin-top: 15px;
+    padding-bottom: 20px;
+    border-bottom: solid 1px #e1e1e1;
+    font-size: 14px;
+    float: left;
+    width: 100%;
+}
+.filterPanelHeader{
+    font-weight: 400;
+    display: block;
+}
+.panelSpacing{
+	 margin left: -29%;
+	 margin-right: 29%;
 }
