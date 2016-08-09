@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'django_extensions',
     'rest_framework',
     'corsheaders',
     'rest_jwt',
@@ -85,16 +86,16 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
-    
+
     'default': {
-        'NAME':'vidhitest',
+         'NAME':'machadalo',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': '127.0.0.1',
          'USER': 'root',
-         'PASSWORD': 'vidhi',
-     }
-    }
+         'PASSWORD': 'machadalo',
+      }
 
+    }
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -109,7 +110,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
@@ -118,16 +118,15 @@ STATIC_URL = '/static/'
 
 # settings for Django Rest Framework
 
-REST_FRAMEWORK = {
+'''REST_FRAMEWORK = {
     # other settings...
-
     'DEFAULT_AUTHENTICATION_CLASSES': [],
     'DEFAULT_PERMISSION_CLASSES': [],
-}
-'''
+}'''
+
 REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAdminUser',
+        'rest_framework.permissions.IsAuthenticated',
         ),
      'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
@@ -135,28 +134,30 @@ REST_FRAMEWORK = {
         'rest_jwt.authentication.JSONWebTokenAuthentication',
         ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
-}
-
-
-
-REST_FRAMEWORK = {
-   'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAdminUser'
-   ),
-  'DEFAULT_AUTHENTICATION_CLASSES': (
-      'rest_framework.authentication.TokenAuthentication',
-  ),
-}
-'''
-REST_FRAMEWORK = {
-   'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-   'PAGE_SIZE': 20
+    'PAGE_SIZE': 5
 }
 
 
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOW_HEADERS = (
+    'x-requested-with',
+    'content-type',
+    'accept',
+    'origin',
+    'authorization',
+    'x-csrftoken'
+)
+
+CORS_ALLOW_METHODS = (
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS'
+)
 
 
 # Authentication
