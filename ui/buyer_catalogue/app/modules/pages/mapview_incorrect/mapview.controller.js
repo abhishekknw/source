@@ -32,7 +32,7 @@ angular.module('catalogueApp')
         $scope.show_societies = false;
         $scope.society_markers = []; // markers on the map
 
-        $scope.circle = {};
+        $scope.circle = {}; 
         // ADDNEW -->
         // $scope.show_corporates = false;
         // $scope.corporate_markers = [];
@@ -585,8 +585,10 @@ angular.module('catalogueApp')
                     $scope.current_center.societies = response.societies;
                     $scope.current_center.societies_inventory_count = response.societies_inventory_count;
                     $scope.current_center.societies_count = response.societies_count;
+                    console.log("hiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+                    console.log($scope.current_center.societies_inventory_count);
                     // console.log("\n\n$scope.centers : ", $scope.centers);
-                    $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
+                    $scope.society_markers = assignMarkersToMap($scope.current_center.societies.fliers);
                 })
                 .error(function(response, status){
                     console.log("Error Happened while filtering");
