@@ -24,11 +24,11 @@
        <div class="form-group">
          <div class = "row">
             <div class = "col-md-3"><label>Account Email</label></div>
-            <div class = "col-md-3"><input type="email" name="account_email" id="account_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.account.email" ng-required="true" /></div>
-            <!--<span class="show-error" ng-show="form.business_email.$error.pattern">Please Enter Valid Email Id</span></div>-->
+            <div class = "col-md-3"><input type="email" name="account_email" id="account_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.account.email" ng-required="true" />
+            <span class="show-error" ng-show="form.account_email.$error.email">Please Enter Valid Email Id</span></div>
             <div class = "col-md-3"><label>Account Phone</label></div>
-            <div class = "col-md-3"><input type="text" name="account_phone" id="account_phone" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="model.account.phone"/></div>
-            <!--<span class="show-error" ng-show="form.business_phone.$error.pattern">Please Enter Valid Phone Number</span></div>-->
+            <div class = "col-md-3"><input type="text" name="account_phone" id="account_phone" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="model.account.phone"/>
+            <span class="show-error" ng-show="form.account_phone.$error.pattern">Please Enter Valid Phone Number</span></div>
           </div>
         </div>
 
@@ -45,11 +45,11 @@
        <div class="form-group">
          <div class = "row">
             <div class = "col-md-3"><label >Reference Contact Phone</label></div>
-            <div class = "col-md-3"><input type="text" name="reference_phn" id="reference_phn" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="model.account.reference_phone"/></div>
-            <!--<span class="show-error" ng-show="form.reference_phn.$error.pattern">Please Enter Valid Phone Number</span></div>-->
+            <div class = "col-md-3"><input type="text" name="reference_phn" id="reference_phn" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="model.account.reference_phone"/>
+            <span class="show-error" ng-show="form.reference_phn.$error.pattern">Please Enter Valid Phone Number</span></div>
             <div class = "col-md-3"><label >Reference Contact Email</label></div>
-            <div class = "col-md-3"><input type="text" name="reference_email" id="reference_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.account.reference_email"/></div>
-            <!--<span class="show-error" ng-show="form.reference_email.$error.pattern">Please Enter Valid Email Id</span></div>-->
+            <div class = "col-md-3"><input type="email" name="reference_email" id="reference_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.account.reference_email"/>
+            <span class="show-error" ng-show="form.reference_email.$error.email">Please Enter Valid Email Id</span></div>
           </div>
        </div>
 
@@ -87,7 +87,7 @@
 
                <div class = "col-md-3"><label>Email</label></div>
                <div class = "col-md-3"><input type="email" name="contact_email" id="contact_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="contact.email"  />
-               <!--<span class="show-error" ng-show="form.contact_email.$error.pattern">Please Enter Valid Email</span>--></div>
+               <span class="show-error" ng-show="form.contact_email.$error.email">Please Enter Valid Email</span></div>
            </div>
          </div>
 
@@ -95,7 +95,7 @@
           <div class = "row">
               <div class = "col-md-3"><label>Phone</label></div>
               <div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-required="true" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="contact.phone"/>
-               <!--<span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span>-->
+               <span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span>
               </div>
 
               <div class = "col-md-3"><label>Single Point of Contact?</label></div>
