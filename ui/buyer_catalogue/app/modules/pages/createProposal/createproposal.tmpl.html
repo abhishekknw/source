@@ -7,10 +7,10 @@
 	<br><br>
 </div>
 
-<div> 
+<div>
 	<button ng-click="addCenter()">Add Center</button>&nbsp;
 </div>
-	
+
 <div ng-repeat="center in model.centers track by $index">
 	Name : <input type="text" ng-model="center.center.center_name">
 	Address :  <input type="text" ng-model="center.center.address">
@@ -82,7 +82,7 @@
   					<th>Space Details</th>
   					<th>Action</th>
   				</tr>
-  			</thead>	
+  			</thead>
   			<tbody>
   			<tbody ng-repeat="center in model.centers track by $index">
   				<tr>
@@ -136,11 +136,11 @@
   		</table>
   		<button class="btn btn-danger spacing pull-right" ng-click="addCenter()">Add Center</button>
   		<button class="btn btn-danger spacing" ng-click="submit()">Submit</button>
-  	</div> 
+  	</div>
 
 <!-- <<<<<<< HEAD
 
-	<input type="checkbox" ng-model="center.center.space_mapping.corporate_allowed" ng-change="checkSpace(center, 'corporate')">corporate 
+	<input type="checkbox" ng-model="center.center.space_mapping.corporate_allowed" ng-change="checkSpace(center, 'corporate')">corporate
 	<div ng-if="center.center.space_mapping.corporate_allowed" >
 		corporate Count :	<input type="number" ng-model="center.center.space_mapping.corporate_count" >
 		corporate Buffer Count : <input type="number" ng-model="center.center.space_mapping.corporate_buffer_count" >
