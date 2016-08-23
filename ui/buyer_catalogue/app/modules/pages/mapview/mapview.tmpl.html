@@ -130,11 +130,11 @@
       <table class="table table-bordered table-condensed">
         <thead>
           <tr>
-            <th class = "col-md-4">Supplier Type</th>
+            <th class = "col-md-1">#</th>
             <th class = "col-md-4">Supplier Name</th>
             <th class = "col-md-4">Address</th>
             <th class = "col-md-4">Flat Count</th>
-            <th class = "col-md-4">Average Rent psf</th>
+            <th class = "col-md-4">Average Rent</th>
             <th class = "col-md-4">Society Type</th>
             <th class = "col-md-4">Locality Rating</th>
             <th class = "col-md-4">Machadalo Index</th>
@@ -168,7 +168,7 @@
         </thead>
         <tbody>
           <tr ng-repeat = "society in current_center.societies">
-            <td><p>Societies</p></td>
+            <td>{{$index+1}}</td>
             <td>{{society.society_name}}</td>
             <td>{{society.society_address1 + " " + society.society_address2 + " " + society.society_locality + " " + society.society_subarea}}</td>
             <td>{{society.flat_count}}</td>
@@ -230,101 +230,15 @@
             <hr>
              <span class = "space filterPanelHeader ">Total Number of Impressions</span>
             <hr>
-             <span class = "space filterPanelHeader ">Total Price</span>
+             <!-- <span class = "space filterPanelHeader ">Total Price</span> -->
            </div>
         </div>
       </div>
 
     </div><!-- row div ends here-->
 </div><!-- containner div ends here-->
-
 <!-- unstructured section starts -->
 <div>
 <button ng-show="show_societies" ng-click="showSocieties()">Map View</button>
 <button ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
 </div>
-
-<!-- <div>
-Old Center :&nbsp; &nbsp; Latitude<input type="text" ng-model="old_center.latitude" ng-readonly="true"> &nbsp;&nbsp;
-Longitude <input type="text"  ng-model="old_center.longitude" ng-readonly="true"> <br>
-New Center : &nbsp; &nbsp; Latitude<input type="text" ng-model="new_center.latitude" ng-readonly="true"> &nbsp;&nbsp;
-Longitude <input type="text"  ng-model="new_center.longitude" ng-readonly="true"><br>
-<button ng-show="center_changed" ng-click="changeCenter(true)">Change Center</button><br>
-<button ng-show="initial_center_changed[current_center_index]" ng-click="resetCenter()">Reset Center</button>
-Radius <input type="number" step="0.5" ng-model="current_center.center.radius" >
-<button ng-click="changeCenter()">Change Radius</button>
-</div> -->
-<!-- <input type="checkbox" ng-model="current_center.center.space_mappings.society_allowed" ng-click="spaceSociety()"> Society
-<div ng-if="current_center.center.space_mappings.society_allowed">
-
-Society Filters : <br>
-Inventory Types :
-<div style="display:inline" ng-repeat="inventory in society_inventory_type">
-<input type="checkbox" ng-model="inventory.selected" ng-click="societyFilter(inventory)">{{ inventory.name }}&nbsp;
-</div>
-<button ng-click="clearAllFilters(society_inventory_type)">Clear All</button>
-
-
-<br>Society Location :
-<div style="display:inline" ng-repeat="location in society_location">
-<input type="checkbox" ng-model="location.selected" ng-click="societyFilter()">{{ location.name }}&nbsp;
-</div>
-<button ng-click="clearAllFilters(society_location)">Clear All</button>
-<br>Society Quality :
-<div style="display:inline" ng-repeat="quality_type in society_quality_type">
-<input type="checkbox" ng-model="quality_type.selected" ng-click="societyFilter()">{{ quality_type.name }}&nbsp;
-</div>
-<button ng-click="clearAllFilters(society_quality_type)">Clear All</button>
-
-
-<br>Society Quantity :
-<div style="display:inline" ng-repeat="quantity_type in society_quantity_type">
-<input type="checkbox" ng-model="quantity_type.selected" ng-click="societyFilter()">{{ quantity_type.name }}&nbsp;
-</div>
-<button ng-click="clearAllFilters(society_quantity_type)">Clear All</button>
-
-
-<br> Society Flat Type :
-<div style="display:inline" ng-repeat="flat_type in society_flat_type">
-<input type="checkbox" ng-model="flat_type.selected" ng-click="societyFilter()">{{ flat_type.name }}&nbsp;
-</div>
-<button ng-click="clearAllFilters(society_flat_type)">Clear All</button>
-
-</div> -->
-<!-- summary section starts here-->
-<!--
-<div>
-<h3>Summarynjnjnj</h3> <hr/>
- Society Count: {{current_center.societies_count}}
- <br>Inventory Count:
-   <div ng-if="current_center.societies_inventory_count.fliers != null">Flyers: current_center.societies_inventory_count.fliers <br></div>
-   <div ng-if="current_center.societies_inventory_count.posters != null">Posters: {{current_center.societies_inventory_count.posters}}<br></div>
-   <div ng-if="current_center.societies_inventory_count.stalls != null">Stalls: {{current_center.societies_inventory_count.stalls}}<br></div>
-   <div ng-if="current_center.societies_inventory_count.standees != null">Standees: {{current_center.societies_inventory_count.standees}}</div>
- </div>
- <br>Total No. Of Impressions:
- <br> Total Price:
-</div> -->
-
-<!-- <div ng-if="show_societies">
-    <h2>Grid View</h2>
-    <div  ng-repeat="society in current_center.societies">
-
-        Name : {{society.society_name}}<br>
-        Address : {{society.society_address1 + " " + society.society_subarea}}<br>
-        Locality Rating : {{society.society_location_type}}<br>
-        <input type="checkbox" ng-model="society.shortlisted" > this line was commented previously
-        <button ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
-        <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
-        <span ng-if="society.shortlisted">
-        <input type="checkbox" ng-model="society.buffer_status"> Buffer
-        </span>
-        <br>
-
-    </div>
-    <button ng-click="submitProposal()">Submit Final Proposal</button>
-</div> -->
-
-<!-- <div>
-  <button ng-click="showDetails()">Submit Proposal</button>
-</div> -->
