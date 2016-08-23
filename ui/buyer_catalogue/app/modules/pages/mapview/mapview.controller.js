@@ -554,12 +554,7 @@ angular.module('catalogueApp')
                     if(inventory_name=='poster'){
                         if($scope.inv_poster == true){
                             $scope.inv_poster = false;
-<<<<<<< HEAD
-                        }
-                        else{
-=======
                         }else{
->>>>>>> b2b7ed97c252ddd46cb1ff6f9bb383ce6f73d63e
                             $scope.inv_poster = true;
                         }
                     }
@@ -587,10 +582,6 @@ angular.module('catalogueApp')
                             $scope.inv_flier = true;
                         }
                     }
-
-
-
-
                 }
 
                 $scope.getFilteredSocieties();

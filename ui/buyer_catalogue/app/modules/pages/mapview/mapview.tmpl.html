@@ -138,31 +138,31 @@
             <th class = "col-md-4">Society Type</th>
             <th class = "col-md-4">Locality Rating</th>
             <th class = "col-md-4">Machadalo Index</th>
-            <th colspan="4" class="center-align" ng-if="inv_poster">Poster</th>
-            <th colspan="4" class="center-align" ng-if="inv_standee">Standee</th>
-            <th colspan="4" class="center-align" ng-if="inv_stall">Stall</th>
-            <th colspan="4" class="center-align" ng-if="inv_flier">Flyer</th>
+            <th colspan="1" class="center-align" ng-if="inv_poster">Poster</th>
+            <th colspan="1" class="center-align" ng-if="inv_standee">Standee</th>
+            <th colspan="1" class="center-align" ng-if="inv_stall">Stall</th>
+            <th colspan="1" class="center-align" ng-if="inv_flier">Flyer</th>
             <th class = "col-md-4">Shortlisted/Buffer</th>
             <th class = "col-md-4">Action</th>
           </tr>
           <tr>
             <th colspan="8"></th>
             <th ng-if="inv_poster">Count</th>
-            <th ng-if="inv_poster">Society Price</th>
+            <!-- <th ng-if="inv_poster">Society Price</th>
             <th ng-if="inv_poster">Factor</th>
-            <th ng-if="inv_poster">Effective Price</th>
+            <th ng-if="inv_poster">Effective Price</th> -->
             <th ng-if="inv_standee">Count</th>
-            <th ng-if="inv_standee">Society Price</th>
+            <!-- <th ng-if="inv_standee">Society Price</th>
             <th ng-if="inv_standee">Factor</th>
-            <th ng-if="inv_standee">Effective Price</th>
+            <th ng-if="inv_standee">Effective Price</th> -->
             <th ng-if="inv_stall">Count</th>
-            <th ng-if="inv_stall">Society Price</th>
+            <!-- <th ng-if="inv_stall">Society Price</th>
             <th ng-if="inv_stall">Factor</th>
-            <th ng-if="inv_stall">Effective Price</th>
+            <th ng-if="inv_stall">Effective Price</th> -->
             <th ng-if="inv_flier">Count</th>
-            <th ng-if="inv_flier">Society Price</th>
+            <!-- <th ng-if="inv_flier">Society Price</th>
             <th ng-if="inv_flier">Factor</th>
-            <th ng-if="inv_flier">Effective Price</th>
+            <th ng-if="inv_flier">Effective Price</th> -->
             <th colspan="2"></th>
           </tr>
         </thead>
@@ -177,21 +177,13 @@
             <td>{{society.society_location_type}}</td>
             <td>{{society.machadalo_index}}</td>
             <td ng-if="inv_poster">{{society.total_poster_count}}</td>
-            <td ng-if="inv_poster">{{society.poster_price}}</td>
-            <td ng-if="inv_poster"></td>
-            <td ng-if="inv_poster"></td>
+            <!-- <td ng-if="inv_poster">{{society.poster_price}}</td>-->
             <td ng-if="inv_standee">{{society.total_standee_count}}</td>
-            <td ng-if="inv_standee">{{society.standee_price}}</td>
-            <td ng-if="inv_standee"></td>
-            <td ng-if="inv_standee"></td>
+            <!-- <td ng-if="inv_standee">{{society.standee_price}}</td> -->
             <td ng-if="inv_stall">{{society.total_stall_count}}</td>
-            <td ng-if="inv_stall">{{society.stall_price}}</td>
-            <td ng-if="inv_stall"></td>
-            <td ng-if="inv_stall"></td>
+            <!-- <td ng-if="inv_stall">{{society.stall_price}}</td> -->
             <td ng-if="inv_flier">{{society.total_flier_count}}</td>
-            <td ng-if="inv_flier">{{society.flier_price}}</td>
-            <td ng-if="inv_flier"></td>
-            <td ng-if="inv_flier"></td>
+            <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
             <td>
               <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
               <span ng-if="society.shortlisted">
