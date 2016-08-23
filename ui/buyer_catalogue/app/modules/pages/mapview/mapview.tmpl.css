@@ -64,8 +64,11 @@ body{
 .space{
 	margin-top: 10px !important;
 }
-.summary-panel{
-	margin-left: 155px !important
+.summarypanel{
+	margin-left: 21% !important
+}
+.summaryGrid{
+	margin-left: 45px !important
 }
 .box-spacing1{
 	margin-bottom: 5px;

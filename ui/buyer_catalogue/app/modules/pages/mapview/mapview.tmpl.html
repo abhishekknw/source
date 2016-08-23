@@ -96,7 +96,7 @@
 <!-- Map Starts here -->
 <div class="col-md-3 map-width" ng-if="!show_societies">
 <style type="text/css">
-    .angular-google-map-container { height: 400px; width: 700px;}
+    .angular-google-map-container { height: 800px; width: 840px;}
 </style>
 <div class = "mapPosition">
   <div>
@@ -213,7 +213,7 @@
 
     <!-- Start: Summary Section -->
 
-    <div class="col-md-3 search-bin summary-panel">
+    <div class="col-md-2"  ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
       <div class="panel panel-info">
         <div class="panel-body" id="searchBody">
           <div class="filterPanel">

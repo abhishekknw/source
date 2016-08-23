@@ -380,7 +380,7 @@ angular.module('catalogueApp')
                     $scope.current_center_id = $scope.current_center.center.id
 
                     $scope.map = {
-                      zoom: 11,
+                      zoom: 12,
                       bounds: {},
                       center: {
                         latitude: $scope.current_center.center.latitude,
@@ -568,7 +568,7 @@ angular.module('catalogueApp')
                     if(inventory_name=='flier'){
                         $scope.inv_flier = true;
                     }
-                    
+
                 }
 
                 $scope.getFilteredSocieties();
