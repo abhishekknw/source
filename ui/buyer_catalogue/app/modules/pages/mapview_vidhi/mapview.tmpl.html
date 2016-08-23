@@ -68,23 +68,23 @@
          <div ng-if = "current_center.center.space_mappings.society_allowed">
           <span class = "filterPanelHeader ">Inventory Type</span>
           <div class = "nbCheckbox two-col" ng-repeat="inventory in society_inventory_type">
-            <input type = "checkbox" ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
+            <input type = "checkbox" ng-model="inventory.selected" ng-click="societyFilter(inventory)">{{ inventory.name }}&nbsp;
           </div><hr>
           <span class = "filterPanelHeader ">Society Location</span>
           <div class = "nbCheckbox two-col" ng-repeat="location in society_location">
-            <input type = "checkbox" ng-model="location.selected" ng-change="societyFilter()">{{ location.name }}&nbsp;
+            <input type = "checkbox" ng-model="location.selected" ng-click="societyFilter()">{{ location.name }}&nbsp;
           </div><hr>
           <span class = "filterPanelHeader ">Society Quality</span>
             <div class = "nbCheckbox two-col" ng-repeat="quality_type in society_quality_type">
-                <input type = "checkbox" ng-model="quality_type.selected" ng-change="societyFilter()">{{ quality_type.name }}&nbsp;
+                <input type = "checkbox" ng-model="quality_type.selected" ng-click="societyFilter()">{{ quality_type.name }}&nbsp;
             </div><hr>
           <span class = "filterPanelHeader ">Society Quantity</span>
             <div class = "nbCheckbox two-col" ng-repeat="quantity_type in society_quantity_type">
-                <input type = "checkbox" ng-model="quantity_type.selected" ng-change="societyFilter()">{{ quantity_type.name }}&nbsp;
+                <input type = "checkbox" ng-model="quantity_type.selected" ng-click="societyFilter()">{{ quantity_type.name }}&nbsp;
             </div><hr>
           <span class = "filterPanelHeader ">Society Flat Type</span>
             <div class = "nbCheckbox two-col" ng-repeat="flat_type in society_flat_type">
-                <input type = "checkbox" ng-model="flat_type.selected" ng-change="societyFilter()">{{ flat_type.name }}&nbsp;
+                <input type = "checkbox" ng-model="flat_type.selected" ng-click="societyFilter()">{{ flat_type.name }}&nbsp;
             </div>
           </div>
         </div>
@@ -125,7 +125,7 @@
       </div>
   </div>
   <!-- Start: grid view -->
-  <div class="col-md-4 table-responsive" ng-if="show_societies" style="width: 800px;">
+  <div class="col-md-4 table-responsive" ng-if="show_societies">
       <h2>Grid View</h2>
       <table class="table table-bordered table-condensed">
         <thead>
@@ -133,65 +133,17 @@
             <th class = "col-md-4">Supplier Type</th>
             <th class = "col-md-4">Supplier Name</th>
             <th class = "col-md-4">Address</th>
-            <th class = "col-md-4">Flat Count</th>
-            <th class = "col-md-4">Average Rent psf</th>
-            <th class = "col-md-4">Society Type</th>
             <th class = "col-md-4">Locality Rating</th>
-            <th class = "col-md-4">Machadalo Index</th>
-            <th colspan="4" class="center-align" ng-if="inv_poster">Poster</th>
-            <th colspan="4" class="center-align" ng-if="inv_standee">Standee</th>
-            <th colspan="4" class="center-align" ng-if="inv_stall">Stall</th>
-            <th colspan="4" class="center-align" ng-41="inv_flier">Flyer</th>
             <th class = "col-md-4">Shortlisted/Buffer</th>
             <th class = "col-md-4">Action</th>
-          </tr>
-          <tr>
-            <th colspan="8"></th>
-            <th ng-if="inv_poster">Count</th>
-            <th ng-if="inv_poster">Society Price</th>
-            <th ng-if="inv_poster">Factor</th>
-            <th ng-if="inv_poster">Effective Price</th>
-            <th ng-if="inv_standee">Count</th>
-            <th ng-if="inv_standee">Society Price</th>
-            <th ng-if="inv_standee">Factor</th>
-            <th ng-if="inv_standee">Effective Price</th>
-            <th ng-if="inv_stall">Count</th>
-            <th ng-if="inv_stall">Society Price</th>
-            <th ng-if="inv_stall">Factor</th>
-            <th ng-if="inv_stall">Effective Price</th>
-            <th ng-if="inv_flier">Count</th>
-            <th ng-if="inv_flier">Society Price</th>
-            <th ng-if="inv_flier">Factor</th>
-            <th ng-if="inv_flier">Effective Price</th>
-            <th colspan="2"></th>
           </tr>
         </thead>
         <tbody>
           <tr ng-repeat = "society in current_center.societies">
             <td><p>Societies</p></td>
             <td>{{society.society_name}}</td>
-            <td>{{society.society_address1 + " " + society.society_address2 + " " + society.society_locality + " " + society.society_subarea}}</td>
-            <td>{{society.flat_count}}</td>
-            <td>{{society.average_rent}}</td>
-            <td>{{society.society_type_quality}}</td>
+            <td>{{society.society_address1 + " " + society.society_subarea}}</td>
             <td>{{society.society_location_type}}</td>
-            <td>{{society.machadalo_index}}</td>
-            <td ng-if="inv_poster">{{society.total_poster_count}}</td>
-            <td ng-if="inv_poster">{{society.poster_price}}</td>
-            <td ng-if="inv_poster"></td>
-            <td ng-if="inv_poster"></td>
-            <td ng-if="inv_standee">{{society.total_standee_count}}</td>
-            <td ng-if="inv_standee">{{society.standee_price}}</td>
-            <td ng-if="inv_standee"></td>
-            <td ng-if="inv_standee"></td>
-            <td ng-if="inv_stall">{{society.total_stall_count}}</td>
-            <td ng-if="inv_stall">{{society.stall_price}}</td>
-            <td ng-if="inv_stall"></td>
-            <td ng-if="inv_stall"></td>
-            <td ng-if="inv_flier">{{society.total_flier_count}}</td>
-            <td ng-if="inv_flier">{{society.flier_price}}</td>
-            <td ng-if="inv_flier"></td>
-            <td ng-if="inv_flier"></td>
             <td>
               <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
               <span ng-if="society.shortlisted">

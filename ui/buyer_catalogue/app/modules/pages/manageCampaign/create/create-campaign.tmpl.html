@@ -16,7 +16,7 @@
           <div class="col-md-4">
             <span class = "" ng-show ="choice == 'existing'">
                 <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
-                    <option  ng-repeat = "business in businesses" value="{{business.business_id}}">{{business.name}}</option> 
+                    <option  ng-repeat = "business in businesses" value="{{business.business_id}}">{{business.name}}</option>
                 </select>
             </span>
           </div>
@@ -89,7 +89,7 @@
               </thead>
               <tbody>
                 <tr ng-repeat="account in model.accounts track by $index">
-                  <td><input type="radio" id="sel_account_id" name="sel_account_id" value="{{account.account_id}}" ng-model="sel_account_id" ng-change="getProposals(sel_account_id)"></td>
+                  <td><input type="radio" id="sel_account_id" name="sel_account_id" value="{{account.account_id}}" ng-model="sel_account_id" ng-click = "getProposals(sel_account_id)"></td>
                   <td>{{account.name}}</td>
                   <td>{{account.business.type_name.business_type}}</td>
                   <td>{{account.comments}}</td>
@@ -128,7 +128,7 @@
                   <td>{{proposal.updated_on | limitTo:10}}</td>
                   <td>
                     <!-- <a data-target="#detailModalProposal" class="btn btn-danger  active" data-toggle="modal">Details</a> -->
-                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">Details</button>     
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">Details</button>
                   </td>
                   <td>
                     <a href="" ng-click="showHistory(proposal.proposal_id)">Show History</a>
@@ -279,7 +279,7 @@
           </div>
          </div>
       </div>
-     
+
       <form name = "campaignform" ng-show="choice == 'selected'" class="">
         <div class = "panel panel-default business-panel">
           <h3 class "panel-heading">Campaign Details</h3>
@@ -340,7 +340,7 @@
 
                     <div class = "col-md-3"><label>Business Email</label></div>
                     <div class = "col-md-3"><input type="email" name="business_email" id="business_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.business.email" ng-required="true" />
-                    <span class="show-error" ng-show="form.business_email.$error.pattern">Please Enter Valid Email Id</span></div>
+                    <span class="show-error" ng-show="form.business_email.$error.email">Please Enter Valid Email Id</span></div>
                 </div>
              </div>
 

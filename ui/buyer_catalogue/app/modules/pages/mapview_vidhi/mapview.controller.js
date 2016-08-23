@@ -546,29 +546,9 @@ angular.module('catalogueApp')
                 // this is called when some checkbox in society filters is changed
                 // value is just for inventories , inventories changed will be changed in
                 // $scope.current_center.societies_inventory as well (this is present only if society_allowed is true)
-
                 if(value){
                     var inventory_name = value.name.toLowerCase();
                     $scope.current_center.societies_inventory[inventory_name + '_allowed'] = value.selected;
-
-                    if(inventory_name=='poster'){
-                        if($scope.inv_poster == true){
-                            $scope.inv_poster == false;
-                        }
-                        else{
-                            $scope.inv_poster = true;
-                        }
-                    }
-                    if(inventory_name=='standee'){
-                        $scope.inv_standee = true;
-                    }
-                    if(inventory_name=='stall'){
-                        $scope.inv_stall = true;
-                    }
-                    if(inventory_name=='flier'){
-                        $scope.inv_flier = true;
-                    }
-                    
                 }
 
                 $scope.getFilteredSocieties();

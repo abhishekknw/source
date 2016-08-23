@@ -1,4 +1,6 @@
  'use strict';
+
+
  angular.module('catalogueApp')
  .factory('mapViewService', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location',
   function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
@@ -34,7 +36,7 @@
 
     mapViewService.getFilterSocieties = function(get_data){
         var url = url_base + 'getFilteredSocieties/' + get_data;
-        return machadaloHttp.get(url);
+        return machadaloHttp.get(url); 
     }
 
     mapViewService.createFinalProposal = function(proposal_id, centers_data){
