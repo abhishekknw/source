@@ -553,14 +553,18 @@ angular.module('catalogueApp')
 
                     if(inventory_name=='poster'){
                         if($scope.inv_poster == true){
-                            $scope.inv_poster == false;
+                            $scope.inv_poster = false;
                         }
                         else{
                             $scope.inv_poster = true;
                         }
                     }
                     if(inventory_name=='standee'){
+                      if($scope.inv_standee == true){
+                        $scope.inv_standee = false;
+                      }else{
                         $scope.inv_standee = true;
+                      }
                     }
                     if(inventory_name=='stall'){
                         $scope.inv_stall = true;
