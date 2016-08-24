@@ -10,6 +10,12 @@
     <h3 class = "panel-heading">Create Account</h3>
      <div class = "table">
        <div class="form-group">
+         <div class = "row">
+           <div class = "col-md-3"><label>select </label></div>
+           <div class = "col-md-3"><input type="checkbox" class="form-control"  ng-model="setAccount" ng-click="setCreate_Account()" /></div>
+           <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
+         </div>
+
           <div class = "row">
             <div class = "col-md-3"><label>Account Name </label></div>
             <div class = "col-md-3"><input type="text" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.account.name" ng-required="true" /></div>
@@ -65,9 +71,17 @@
  <div class="panel panel-default business-panel">
    <h3 class = "panel-heading">Account Contact</h3>
       <!--<div ng-repeat="contact in business.contacts track by $index">-->
+
       <div ng-repeat="contact in model.account.contacts track by $index">
           <div class = "table">
             <div class="form-group">
+
+              <div class = "row">
+                <div class = "col-md-3"><label>select </label></div>
+                <div class = "col-md-3"><input type="checkbox" class="form-control"  ng-model="setContact" ng-click="setContact_Account($index)"/></div>
+                <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
+              </div>
+
               <div class = "row">
                   <div class = "col-md-3"><label>Name</label></div>
                   <div class = "col-md-3"><input type="text" name="contact_name" id="contact_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/" ng-model="contact.name" />
