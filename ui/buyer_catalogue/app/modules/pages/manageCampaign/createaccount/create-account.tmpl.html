@@ -11,10 +11,11 @@
      <div class = "table">
        <div class="form-group">
          <div class = "row">
-           <div class = "col-md-3"><label>select </label></div>
-           <div class = "col-md-3"><input type="checkbox" class="form-control"  ng-model="setAccount" ng-click="setCreate_Account()" /></div>
+           <div class ="col-md-3 "><input type="checkbox"  ng-model="setAccount" ng-click="setCreate_Account()" />
+           <label> Automatically select </label></div>
+
            <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
-         </div>
+         </div></br>
 
           <div class = "row">
             <div class = "col-md-3"><label>Account Name </label></div>
@@ -75,12 +76,12 @@
       <div ng-repeat="contact in model.account.contacts track by $index">
           <div class = "table">
             <div class="form-group">
-
               <div class = "row">
-                <div class = "col-md-3"><label>select </label></div>
-                <div class = "col-md-3"><input type="checkbox" class="form-control"  ng-model="setContact" ng-click="setContact_Account($index)"/></div>
+                <div class ="col-md-3 "><input type="checkbox"  ng-model="setContact" ng-click="setContact_Account($index)" />
+                <label> Automatically select </label></div>
+
                 <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
-              </div>
+              </div></br>
 
               <div class = "row">
                   <div class = "col-md-3"><label>Name</label></div>

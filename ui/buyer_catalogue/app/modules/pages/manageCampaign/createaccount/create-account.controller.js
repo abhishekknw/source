@@ -75,7 +75,7 @@ angular.module('machadaloPages')
 
       $scope.addNew = function() {
         // object def is directly added to avoid different array elements pointing to same object
-
+        $scope.setContact=false;
         $scope.model.account.contacts.push({
         name: '',     designation: '',    department: '',
         email: '',    phone: '',      spoc: ''
@@ -174,7 +174,6 @@ angular.module('machadaloPages')
       $scope.setCreate_Account = function(){
         console.log("hello");
         if($scope.setAccount == true){
-          console.log("hello1");
         $scope.model.account.name = $scope.model.business.name;
         $scope.model.account.email = $scope.model.business.email;
         $scope.model.account.phone = $scope.model.business.phone;
@@ -186,7 +185,6 @@ angular.module('machadaloPages')
         $scope.setAccount == true;
 
       }else{
-        console.log("hello2");
         $scope.model.account.name = "";
         $scope.model.account.email = "";
         $scope.model.account.phone = "";
@@ -202,10 +200,19 @@ angular.module('machadaloPages')
       $scope.setContact=false;
       $scope.setContact_Account = function(index){
         if($scope.setContact == false){
-        $scope.model.account.contacts[index] = $scope.model.business.contacts[index];
+        $scope.model.account.contacts[index].name = $scope.model.business.contacts[0].name;
+        $scope.model.account.contacts[index].designation = $scope.model.business.contacts[0].designation;
+        $scope.model.account.contacts[index].department = $scope.model.business.contacts[0].department;
+        $scope.model.account.contacts[index].email = $scope.model.business.contacts[0].email;
+        $scope.model.account.contacts[index].phone = $scope.model.business.contacts[0].phone;
+
         $scope.setContact=true;
       }else{
-        $scope.model.account.contacts[index] = "";
+        $scope.model.account.contacts[index].name = "";
+        $scope.model.account.contacts[index].designation = "";
+        $scope.model.account.contacts[index].department = "";
+        $scope.model.account.contacts[index].email = "";
+        $scope.model.account.contacts[index].phone = "";
         $scope.setContact=false;
       }
     };
@@ -215,7 +222,7 @@ angular.module('machadaloPages')
     	$scope.create = function() {
             console.log("create called");
             console.log("$scope.model is :");
-        	  console.log($scope.model);
+        	  console.log($scope.model.account);
             pagesService.createAccountCampaign($scope.model)
             .success(function (response, status) {
 
