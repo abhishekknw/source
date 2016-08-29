@@ -1,4 +1,4 @@
-  <!--<div class="container">check whether we need this -->
+<!--<div class="container">check whether we need this -->
   <div class="container pagecontainer offset-0">
   <!--Main Header Slider-->
     <div class="col-md-8 cpdd01">
@@ -55,8 +55,14 @@
     				</div>
     				<div class="clearfix"></div><br>
     				  <div class="hpadding20  opensans">
-                <a href="#" class="add2fav margtop5" ng-click = "shortlistThis($parent.$index)">Shortlist</a>
-    					  <a href="#" class="booknow margtop20 btnmarg">Total Shortlisted &nbsp;&nbsp;<span class="badge">5</span></a><br><br>
+                <!-- <button  style="width: 346px;height: 56px;font-size: 25px;color:gray;background-color: white;" class="btn btn-primary" ng-disabled="disable" ng-click = "shortlistThis(society.supplier_id)" ><span style="color:skyblue;" class="glyphicon glyphicon-plus"></span> Shortlist</button> -->
+                    <a class="add2fav margtop5" ng-click = "shortlistThis(society.supplier_id)">Shortlist</a>
+                <div id="alert_placeholder" ></div>
+    					  <a class="booknow margtop20 btnmarg">Total Shortlisted &nbsp;&nbsp;<span class="badge">{{societies_count}}</span></a><br><br>
+                <!-- <div>  
+                <button class="btn" ng-click="previousSociety()" >Previous</button><br>
+                <button class="btn" ng-click="nextSociety()"  >Next</button><br>
+                </div> -->
     				</div>
     			</div>
 <!--</div>-->

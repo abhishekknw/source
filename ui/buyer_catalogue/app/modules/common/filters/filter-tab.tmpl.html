@@ -1,9 +1,10 @@
 <link rel="stylesheet" href="modules/common/filters/filter-tab.tmpl.css"/>
 <body id="top">
+<!-- <script src="checklist-model.js"></script> -->
 <!-- FILTERS -->
 			<div class="col-md-3 filters offset-0">
 			     <div class="padding20title"><h3 class="opensans dark">Filter by<span class="clearall">
-						 <a href = "#" uib-tooltip="Clear All filters">Clear All</span></a></h3></div>
+						 <a uib-tooltip="Clear All filters" ng-click = "clearFilter()" >Clear All</span></a></h3></div>
 				<div class="line2"></div>
 				<!-- Location ratings -->
 				<button type="button" class="collapsebtn" data-toggle="collapse" data-target="#collapse1">
@@ -12,13 +13,43 @@
 				<div id="collapse1" class="collapse in">
 					<div class="hpadding20 topmarginlt">
 						<div class="left wh70percent">
-							<div ng-dropdown-multiselect="" options="locationValue"
+						<table>
+							<tr><td ng-dropdown-multiselect="" options="locationValue"
 								selected-model="locationValueModel"
 								extra-settings="locationValueSettings"
 								checkboxes="true"
-								translation-texts="locationcustomTexts">
-							</div>
-					 </div>
+								translation-texts="locationcustomTexts"></td>
+								<!-- <td><button ng-click="getSubAreas()" ng-show="false">Find SubAreas</td> -->
+								<td><a id="hold" value="false" ng-click="getSubAreas()" style="
+    										margin-left: 29px;">FindSubAreas</a></td>
+							</tr>
+
+							</table><br>
+							<!-- <div>
+								<button class="btn" ng-click="getSubAreas()" >Search Sub Areas</button>
+							</div><br> -->
+					 	</div>
+					 	<div class="left wh70percent" ng-show="showSubAreas">
+					 	<div ng-dropdown-multiselect="" options="subLocationValue"
+								selected-model="subLocationValueModel"
+								extra-settings="locationSubAreaSettings"
+								checkboxes="true"
+								translation-texts="locationSubAreaCustomTexts">
+					 	</div>
+					 	</div>
+					 <!-- <div class="col-md-4">
+						  	<span class = "" ng-show ="choice == 'existing'">
+						   	    <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
+						            <option  ng-repeat = "business in businesses" value="{{business.id}}">{{business.name}}</option>
+					          </select>
+				      	</span>
+			      	</div> -->
+			      	<!-- <div class="col-md-4">
+			      		<select name="bsSelect" id="bsSelect" ng-model="">
+			      			
+			      		</select>
+			      	</div> -->
+
 				</div>
 					<div class="clearfix"></div>
 				</div>
@@ -49,7 +80,7 @@
 			<div class="hpadding20">
 				<div class="checkbox"  ng-repeat = "checkbox in checkboxes">
 					<label>
-						<input type="checkbox" ng-model =  "checkbox.checked">{{checkbox.name}}
+						<input type="checkbox" ng-model = "checkbox.checked">{{checkbox.name}}
 					</label>
 				</div>
 			</div>
@@ -83,7 +114,7 @@
 				<br/>
 				<br/>
 				<br/>-->
-				<button type="submit" class="btn btn-default" ng-click="filterSocieties(typeValuemodel, locationValueModel, checkboxes, types)">Apply</button>
+				<button type="submit" class="btn btn-default" ng-click="filterSocieties(typeValuemodel, locationValueModel, subLocationValueModel, checkboxes, types)">Apply</button>
 					<!--Apply <span class="collapsearrow"></span>-->
 				</button>
 		</div>

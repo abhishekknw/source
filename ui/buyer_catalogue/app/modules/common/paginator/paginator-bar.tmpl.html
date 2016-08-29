@@ -2,7 +2,7 @@
 <div class="line4"></div><br/>
 <div class="pagecontainer2 alsolikebox center container paginator-bar">
     <ul class="pagination ">
-         <li class="disabled"><a href="#">&laquo;</a></li>
+         <!-- <li class="disabled"><a href="#">&laquo;</a></li>
          <li><a href="#">&lsaquo;</a></li>
          <li><a href="#">1</a></li>
          <li><a href="#">2</a></li>
@@ -12,11 +12,19 @@
          <li><a href="#">23</a></li>
          <li><a href="#">&rsaquo;</a></li>
          <li><a href="#">&raquo;</a></li>
-         <li><a href="#" >GO TO PAGE :</a></li>
-         <li><a style="padding-top: 2px;    padding-left: 2px;    padding-right: 2px;    padding-bottom: 2px;"><input type="text" style="height:28px; width:52px;    border-color: whitesmoke;" placeholder=""></a></li>
+         <li><a href="#" >GO TO PAGE :</a></li> -->
+         <li><a id="hold" value="false" ng-click="previousSociety()" ng-show="index > minlength">Pre</a></li>
+         <li ng-repeat="n in [] | range:maxlength+1 ">
+            <a id="hold" value="false" ng-click="societyByIndex(n)">{{n+1}}</a>
+        </li>
+        <li><a id="hold" value="false" ng-click="nextSociety()" ng-show="index < maxlength">Next</a></li>
+         <li><a style="padding-top: 2px;    padding-left: 2px;    padding-right: 2px;    padding-bottom: 2px;"><input type="number" style="height:28px; width:52px;    border-color: whitesmoke;" placeholder="" ng-model="societyIndex" ngMinlength="minlength"  ngMaxlength="maxlength"></a></li>
+         
     </ul>
-    <span class = "paginator-span"><a  href="#">
-      <button type="button" class="btn btn-default button-style">
+    <span class = "paginator-span">
+    <!-- <a  href="#"> -->
+      <button type="button" class="btn btn-default button-style" ng-click="societyByIndex(societyIndex-1)">
         <span class="glyphicon glyphicon-play"></span>
       </button></a></span>
+      <div ng-class="{fade : startFade}" ng-show="numberError">Not a valid entry</div>
 </div>

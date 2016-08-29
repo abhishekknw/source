@@ -3,18 +3,19 @@ angular.module('machadaloPages')
   ['$scope', '$rootScope', '$window', '$location', 'pagesService',
   function ($scope, $rootScope, $window, $location, pagesService) {
 
-
 	pagesService.getCampaigns('Finalized')
 	.success(function (response, status) {
 	  console.log(response);
       $scope.model = response;
-        
-     });
+  });
 
 	$scope.societyList = function(campaign_id) {
-	  $location.path("manageCampaign/finalized/" + campaign_id + "/societies");  
+	  $location.path("manageCampaign/finalized/" + campaign_id + "/societies");
 	};
 
+  $scope.bookCampaign = function(campaign_id) {
+    $location.path("manageCampaign/finalized/" + campaign_id + "/finalbooking");
+  };
 }])
 .controller('FinalizedSocietiesCtrl',
 ['$scope', '$rootScope', '$window', '$location', 'pagesService',
@@ -28,8 +29,6 @@ function ($scope, $rootScope, $window, $location, pagesService) {
     console.log(response);
     $scope.model = response.inventories;
     $scope.campaign = response.campaign;
-
-    
   })
 
    $scope.catalogue = function(campaign_id, society_id){
@@ -40,7 +39,7 @@ function ($scope, $rootScope, $window, $location, pagesService) {
      pagesService.removeThisSociety(society_id, 'Permanent')
      .success(function (response, status) {
         if (status == '200') {
-          $window.location.reload(); 
+          $window.location.reload();
         }
      })
    }
@@ -56,11 +55,5 @@ function ($scope, $rootScope, $window, $location, pagesService) {
           $location.path("/manageCampaign/booked" + campaign_id + "/societies");
         }
      })
-     
-   }//
-
+   }
   }])
-
-
-
-

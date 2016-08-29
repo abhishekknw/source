@@ -17,7 +17,10 @@
     "angular-bootstrap": "~1.1.2",
     "angular-filter": "~0.5.8",
     "angularUtils-pagination": "angular-utils-pagination#~0.11.0",
-    "myforce-angularjs-dropdown-multiselect": "~1.0.0"
+    "myforce-angularjs-dropdown-multiselect": "~1.0.0",
+    "ng-file-upload-shim": "~12.0.4",
+    "ng-file-upload": "~12.0.4",
+    "angular-google-maps" : "~2.3.3"
   },
   "devDependencies": {
     "angular-mocks": "^1.4.0"

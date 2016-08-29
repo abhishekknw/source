@@ -21,6 +21,16 @@ angular.module('machadaloPages')
       return machadaloHttp.get(url);
    };
 
+   societyDetailsService.getSocietyList = function(data) {
+     var url = url_base + "society/filterList/";
+     return machadaloHttp.post(url, data);
+   };
+
+   societyDetailsService.getSocietyIds = function(){
+      var url = url_base + "society/societyIds/";
+      return machadaloHttp.get(url)
+   }
+
    societyDetailsService.processParam = function(){
     if($stateParams.campaignId){
       $rootScope.campaignId = $stateParams.campaignId;
@@ -33,8 +43,20 @@ angular.module('machadaloPages')
     }else {
       $rootScope.societyId = null;
     }
-
    };
 
+
+
+   societyDetailsService.getShortlistedSocietyCount = function(campaign_id){
+      var url = url_base + "website/campaign/" + campaign_id + "/society/count/";
+      return machadaloHttp.get(url)
+   }
+
+   //for adding shortlisted societies
+   societyDetailsService.addShortlistedSociety = function(campaign_id, society_id){
+     var url = url_base + "website/campaign/society/shortlist/";
+     var data = {campaign_id, society_id};
+     return machadaloHttp.post(url, data);
+   }
   return societyDetailsService;
 }]);

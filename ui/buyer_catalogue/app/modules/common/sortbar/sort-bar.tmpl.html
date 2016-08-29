@@ -7,7 +7,7 @@
 				 <div class="col-md-4 offset-0">
 					 <div class="left mt7"><b>Sort by:</b></div>
 					 		<div class="right wh70percent">
-								<button class="popularbtn" ng-click="order('society_name')">Alphabetically</button>
+								<button class="popularbtn" ng-click="order()">Alphabetically</button>
 								<span class="sortorder" ng-show="predicate === 'society_name'" ng-class="{reverse:reverse}"></span>
 							</div>
 					</div>
@@ -20,11 +20,6 @@
 						<div class="w50percentlast">
 							<div class="wh90percent">
 								<button class="popularbtn">Total Campaign Done</button>
-								<!--<select class="form-control mySelectBoxClass ">
-									<option selected>Date Added</option>
-									<option>A to Z</option>
-									<option>Z to A</option>
-								</select>-->
 							</div>
 						</div>
 					</div>
@@ -33,7 +28,8 @@
 	  </div>
 			<!-- End of padding -->
 			<div class="itemscontainer offset-1">
-				<div class="offset-2" ng-repeat="row in model | orderBy:predicate:reverse">
+				<div class="offset-2"  dir-paginate="row in model | itemsPerPage:5">
+				<!-- <div class="offset-2"  ng-repeat="row in model"> -->
 					<table cellpadding="30" class="hpadding20 table table-bordered">
 					 <tbody>
 						 <tr valign="center">
@@ -47,7 +43,8 @@
 											 <p style="color:#949292"><span class="fa fa-map-marker"></span>{{row.society_location}}</p>
 										</div>
 										<div class="col-md-5 hpadding20" style="margin-top:20px">
-											<button type="button" class="shortlist btn btn-danger btn-lg active" ng-click = "shortlistThis(row.supplier_id)">SHORTLIST</button><br><br>
+											<button type="button" class="shortlist btn btn-danger btn-lg active" id = "row.supplier_id" ng-click = "shortlistThis(row.supplier_id, $index)"  ng-disabled = "model[$index].disable">SHORTLIST</button><br>
+											<div id = "{{'alert_placeholder' + $index}}"></div><br>
 											<button type="button" class="viewdetail btn btn-default btn-lg active" ng-click = "catalogue(row.supplier_id)" >VIEW DETAILS</button>
 										</div>
 								 </div>
@@ -55,7 +52,7 @@
 							</tr>
 							<tr align="center">
 								 <td><h4>{{row.society_type_quality}}</h4><p style="color:#949292">Type of society</p></td>
-								 <td><h4>{{row.society_locality}}</h4><p style="color:#949292">Locality rating</p></td>
+								 <td><h4>{{row.society_location_type}}</h4><p style="color:#949292">Locality rating</p></td>
 								 <td><h4>{{row.machadalo_index}}</h4><p style="color:#949292">Machadalo Index</p></td>
 								 <td><h4>{{row.total_adspaces}}</h4><p style="color:#949292">Ad Spaces</p></td>
 							</tr>
@@ -65,9 +62,17 @@
 				<div class="clearfix"></div>
 			</div>
 			<!-- End of offset1-->
+
 			<div class="hpadding20">
 				<dir-pagination-controls max-size="10" direction-links="true" boundary-links="true" ></dir-pagination-controls>
-				<!--<uib-pagination total-items="totalItems" ng-model="currentPage" class="pagination-sm" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></uib-pagination>-->
+
+				<!-- <ul class="pagination ">
+					<li ng-repeat="n in [] | range:pages+1 ">
+            			<a id="hold" value="false" ng-click="getSocietiesPaginator(n+1)">{{n+1}}</a>
+        			</li>
+        		</ul> -->
+				<!-- <uib-pagination total-items="totalItems" ng-model="currentPage" class="pagination-sm" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></uib-pagination> -->
+			
 			</div>
 		</div>
 		<!-- END OF LIST CONTENT-->

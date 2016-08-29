@@ -1,5 +1,4 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/finalize/finalizeInventory.tmpl.css" />
-
 <div style="margin-top:30px"></div>
 <div>
 <div ui-view="">
@@ -23,42 +22,37 @@
                 <div class="table_cell" ng-repeat="key in row.society.basic_contacts">{{key.contact_type}} - {{key.name}} - {{key.mobile}}</div>
             </td>
             <td colspan="4">
-              <table class="table table-bordered">
+              <table class="table">
               <tbody>
                 <tr ng-repeat="key in row.inventories">
-
-                  <td>{{key.type.type}} - {{key.type.sub_type}}</td>
-
+                <!--  <div class="col-xs-3"> -->
+                  <td colspan="2">{{key.type.type}} - {{key.type.sub_type}}</td>
                   <td style = "text-align: -webkit-center">
-                  <p class="input-group">
-                    <input type="text" ng-model="key.start_date" ng-init="key.opened1=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string"  is-open="key.opened1" min-date="today" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
-                    <span class="input-group-btn">
+                  <td><input type="text" class = "col-xs-6" ng-pattern = "/^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/" ng-model="key.start_date" ng-init="key.opened1=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string"  is-open="key.opened1" min-date="today" datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats" />
+                    <span class="show-error">
                       <button type="button" class="btn btn-default" ng-click="key.opened1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
-                    </span>
-                  </p>
+                    </span></td>
                   </td>
-
                   <td style = "text-align: -webkit-center">
-                  <p class="input-group">
-                    <input type="text" ng-model="key.end_date" ng-init="key.opened2=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string" is-open="key.opened2" min-date="key.start_date" datepicker-options="dateOptions"  ng-required="true" close-text="Close" />
-                    <span class="input-group-btn">
+                  <td><input type="text" class = "col-xs-6" ng-pattern = "/^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$/" ng-model="key.end_date" ng-init="key.opened2=false" class="form-control" uib-datepicker-popup="{{format}}" date-type="string" is-open="key.opened2" min-date="key.start_date" datepicker-options="dateOptions"  ng-required="true" close-text="Close" />
+                    <span class="show-error">
                       <button type="button" class="btn btn-default" ng-click="key.opened2 = true"><i class="glyphicon glyphicon-calendar"></i></button>
                     </span>
-                  </p>
+                  </td>
                   </td>
 
-                  <td>{{key.inventory_price}}</td>                  
+                  <td>{{key.inventory_price}}</td>
             </tr>
             <tbody>
           </table>
              <td style = "text-align: -webkit-center"><input type="number" style="text-align: center" ng-model="row.adjusted_price" /></td>
              <td style = "text-align: -webkit-center">
                 <select ng-change="" ng-model="row.booking_status">
-                  <option  ng-repeat="status in statuses" 
-               value="{{status}}">{{status}}</option> 
+                  <option  ng-repeat="status in statuses"
+               value="{{status}}">{{status}}</option>
                </select>
              </td>
-            
+
             <td style = "text-align: -webkit-center"><textarea style="text-align: center" ng-model="row.comments" /></textarea></td>
             <td style = "text-align: -webkit-center"><input type="button" class="btn btn-primary" ng-click="removeSociety(row.id)" value="Remove Society"></td>
         </tr>
@@ -76,5 +70,5 @@
          <input type="button" class="btn btn-primary" ng-click="save('submit')" value="Submit">
       </td>
     </tr>
-</div>  
+</div>
 </div>

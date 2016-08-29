@@ -5,24 +5,11 @@
 				<!-- Top filters -->
 				<div class="topsortby">
 				 <div class="col-md-4 offset-0">
-					 <div class="left mt7"><b>Sort by:</b></div>
+					 <!--<div class="left mt7"><b>Sort by:</b></div>-->
 					 		<div class="right wh70percent">
-								<button class="popularbtn" ng-click="order('society_name')">Alphabetically</button>
+								<!--<button class="popularbtn" ng-click="order('society_name')">Alphabetically</button>-->
 								<span class="sortorder" ng-show="predicate === 'society_name'" ng-class="{reverse:reverse}"></span>
 							</div>
-					</div>
-					<div class="col-md-4">
-						<div class="w50percent">
-							<div class="wh90percent">
-								<button class="popularbtn">Shortlisted</button>
-							</div>
-						</div>
-						<div class="w50percentlast">
-							<div class="wh90percent">
-								<button class="popularbtn">Date Added</button>
-								
-							</div>
-						</div>
 					</div>
 				</div>
 				<!-- End of topfilters-->
@@ -41,32 +28,27 @@
 										<div class="col-md-7 hpadding20">
 											 <h4>{{row.business.name}} Ad Campaign</h4>
 											 <div style="color:#949292">
-											   <p >Business Type: {{row.business.business_type}} , {{row.business.business_sub_type}}</p>
-											   <p>Campaign Types:</p> 
+											   <p >Business Type: {{row.business.type}} , {{row.business.sub_type}}</p>
+											   <p>Campaign Types:</p>
 											   <p ng-repeat="key in row.types">{{key.type}} - {{key.sub_type}}</p>
-
 											   <p>Duration: {{row.start_date}} - {{row.end_date}}</p>
 											  </div>
 										</div>
 										<div class="col-md-5 hpadding20" style="margin-top:20px">
 											<!--<button type="button" class="shortlist btn btn-danger btn-lg active" ng-click = "shortlistThis($parent.$index)">BOOK</button><br><br>-->
-											<button type="button" class="list-button btn btn-danger btn-lg active" ng-click = "societyList(row.id)">VIEW DETAILS</button>
+											<button type="button" class="list-button btn btn-danger btn-lg active" ng-click = "societyList(row.id)">View Societies</button>
+										</div>
+										<div class="col-md-5 hpadding20" style="margin-top:20px">
+											<button type="button" class="list-button btn btn-danger btn-lg active" ng-click = "bookCampaign(row.id)">Book Campaign</button>
 										</div>
 								 </div>
 								</td>
 							</tr>
 							<tr align="center">
-<<<<<<< HEAD
-								 <td ><h4>{{row.society_count}}</h4><p style="color:#949292">No Of Societies</p></td>
-								 <td><h4>{{row.start_date}}</h4><p style="color:#949292">Start date</p></td>
-								 <td><h4>{{row.end_date}}</h4><p style="color:#949292">End Date</p></td>
-								 <td><h4>{{row.tentative_cost}}</h4><p style="color:#949292">Tentative Cost</p></td>
-=======
 								 <td><h4>{{row.society_count}}</h4><p style="color:#949292">No Of Societies</p></td>
 								 <td><h4>{{row.info.flat_count}}</h4><p style="color:#949292">No of Flats</p></td>
 								 <td><h4>{{row.info.resident_count}}</h4><p style="color:#949292">Estimated Residents</p></td>
 								 <td><h4>{{row.info.ad_spaces}}</h4><p style="color:#949292">Total Ad Spaces</p></td>
->>>>>>> e76e4f1e94484fde61ca003cb8281fb2dbd07780
 							</tr>
 						</tbody>
 					</table>
@@ -74,16 +56,6 @@
 				<div class="clearfix"></div>
 			</div>
 			<!-- End of offset1-->
-			<div class="hpadding20">
-				<ul class="pagination right paddingbtm20">
-					<li class="disabled"><a href="#">&laquo;</a></li>
-					<li><a href="#">1</a></li>
-					<li><a href="#">2</a></li>
-					<li><a href="#">3</a></li>
-					<li><a href="#">4</a></li>
-					<li><a href="#">5</a></li>
-					<li><a href="#">&raquo;</a></li>
-				</ul>
-			</div>
+			<!-- removed pagination code-->
 		</div>
 		<!-- END OF LIST CONTENT-->

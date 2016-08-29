@@ -1,0 +1,236 @@
+<link rel="stylesheet" href="modules/pages/mapview/mapview.tmpl.css"/>
+<!-- Start: Center and Radius Detail Section -->
+<div class="navbar-default nav-subtab space">
+  <div class="table">
+    <div class="row">
+      <div class="col-md-1"><b>Select Center</b></div>
+      <div class="col-md-2">
+        <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
+          <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
+         </select>
+      </div>
+      <div class="col-md-1"><b>Old Center:</b></div>
+      <div class="col-md-1">Latitude</div>
+      <div class="col-md-2">{{old_center.latitude}}
+      <!-- <input class="box-spacing" type="text" ng-model="old_center.latitude" ng-readonly="true">--></div>
+      <div class="col-md-1">Longitude</div>
+      <div class="col-md-1">{{old_center.longitude}}
+      <!-- <input class="box-spacing" type="text"  ng-model="old_center.longitude" ng-readonly="true">--></div>
+    </div>
+    <div class="row">
+      <div class="col-md-3"></div>
+      <div class="col-md-1"><b>New Center:</b></div>
+      <div class="col-md-1">Latitude</div>
+      <div class="col-md-2">{{new_center.latitude}}
+      <!-- <input class="box-spacing" type="text" ng-model="new_center.latitude" ng-readonly="true">--></div>
+      <div class="col-md-1">Longitude</div>
+      <div class="col-md-1">{{new_center.longitude}}
+      <!-- <input class="box-spacing" type="text"  ng-model="new_center.longitude" ng-readonly="true">--></div>
+    </div>
+    <div class="row">
+      <div class="col-md-2"></div>
+      <div class="col-md-1"><b>Radius:</b></div>
+      <div class="col-md-1">
+        <input class="box-spacing" type="number" step="0.5" ng-model="current_center.center.radius">
+      </div>
+      <div class="col-md-3">
+        <button class="box-spacing" ng-click="changeCenter()">Change Radius</button>
+      </div>
+      <div class="col-md-3">
+        <button class="box-spacing" ng-show="initial_center_changed[current_center_index]" ng-click="resetCenter()">Reset Center</button>
+      </div>
+      <div class="col-md-3">
+        <button ng-show="center_changed" ng-click="changeCenter(true)">Change Center</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- End: Center and Radius Detail Section -->
+
+<div class = "container page-panel">
+  <div class = "row">
+   <div class="col-md-2 search-bin" id="searchBinHolder">
+    <div class="panel panel-info">
+     <div class="panel-body" id="searchBody">
+
+     <!--Start: Filter Section -->
+
+      <div class="filterPanel">
+       <span class="filterHeader"> Filter your Search </span>
+         <a id="resetFilter" data-ga-log="event" data-ga-category="PropertyFilter" data-ga-action="reset-list-rent" onClick="resetFilters();" name="resetTab" href="#" class="btn btn-xs pull-right" style="border: 1px solid #e1e1e1;color: #707070;"> Reset filters</a>
+      </div>
+      <hr>
+      <form id = "filterPanelForm">
+       <div class = "filterPanel">
+        <input type = "checkbox" ng-model="current_center.center.space_mappings.society_allowed" ng-click="spaceSociety()">
+          <span class = "filterPanelHeader">Society Filters</span><br>
+         <div ng-if = "current_center.center.space_mappings.society_allowed">
+          <span class = "filterPanelHeader ">Inventory Type</span>
+          <div class = "nbCheckbox two-col" ng-repeat="inventory in society_inventory_type">
+            <input type = "checkbox" ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
+          </div><hr>
+          <span class = "filterPanelHeader ">Society Location</span>
+          <div class = "nbCheckbox two-col" ng-repeat="location in society_location">
+            <input type = "checkbox" ng-model="location.selected" ng-change="societyFilter()">{{ location.name }}&nbsp;
+          </div><hr>
+          <span class = "filterPanelHeader ">Society Quality</span>
+            <div class = "nbCheckbox two-col" ng-repeat="quality_type in society_quality_type">
+                <input type = "checkbox" ng-model="quality_type.selected" ng-change="societyFilter()">{{ quality_type.name }}&nbsp;
+            </div><hr>
+          <span class = "filterPanelHeader ">Society Quantity</span>
+            <div class = "nbCheckbox two-col" ng-repeat="quantity_type in society_quantity_type">
+                <input type = "checkbox" ng-model="quantity_type.selected" ng-change="societyFilter()">{{ quantity_type.name }}&nbsp;
+            </div><hr>
+          <span class = "filterPanelHeader ">Society Flat Type</span>
+            <div class = "nbCheckbox two-col" ng-repeat="flat_type in society_flat_type">
+                <input type = "checkbox" ng-model="flat_type.selected" ng-change="societyFilter()">{{ flat_type.name }}&nbsp;
+            </div>
+          </div>
+        </div>
+      </form>
+     </div>
+    </div>
+  </div>
+<!-- Filter Section End -->
+<!-- Map Starts here -->
+<div class="col-md-3 map-width" ng-if="!show_societies">
+<style type="text/css">
+    .angular-google-map-container { height: 970px; width: 840px;}
+</style>
+<div class = "mapPosition">
+  <div>
+    <ui-gmap-google-map center="map.center" zoom="map.zoom" draggable="false"
+                        options="options" bounds="map.bounds" control="googlemap">
+        <ui-gmap-window show="show" coords='windowCoords' closeClick="closeClick()">
+              <div>
+                 Name : {{space.name}}<br>
+                 Address : {{space.address1 + " " + space.subarea}}<br>
+                 Locality Rating : {{space.location_type}}<br>
+              </div>
+        </ui-gmap-window>
+
+         <!-- <ui-gmap-circle ng-repeat="c in circles track by c.id" center="c.center" stroke="c.stroke" fill="c.fill" radius="c.radius" visible="c.visible" geodesic="c.geodesic" editable="c.editable" draggable="c.draggable" clickable="c.clickable" control="c.control"></ui-gmap-circle> -->
+
+         <ui-gmap-circle center="circle.center" stroke="circle.stroke" radius="circle.radius" clickable="circle.clickable", control="circle.control">
+
+         </ui-gmap-circle>
+        <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'" events="'events'"
+                         options="'options'" doRebuildAll="true" click="onClick">
+        </ui-gmap-markers>
+       <ui-gmap-markers models="center_marker" coords="'self'" icon="'icon'" options="'options'" doRebuildAll="true" click="onClick" events = "'events'">
+        </ui-gmap-markers>
+    </ui-gmap-google-map>
+        </div>
+      </div>
+  </div>
+  <!-- Start: grid view -->
+  <div class="col-md-4 table-responsive" ng-if="show_societies" style="width: 800px;">
+      <h2>Grid View</h2>
+      <table class="table table-bordered table-condensed">
+        <thead>
+          <tr>
+            <th class = "col-md-1">#</th>
+            <th class = "col-md-4">Supplier Name</th>
+            <th class = "col-md-4">Address</th>
+            <th class = "col-md-4">Flat Count</th>
+            <th class = "col-md-4">Average Rent</th>
+            <th class = "col-md-4">Society Type</th>
+            <th class = "col-md-4">Locality Rating</th>
+            <th class = "col-md-4">Machadalo Index</th>
+            <th colspan="1" class="center-align" ng-if="inv_poster">Poster</th>
+            <th colspan="1" class="center-align" ng-if="inv_standee">Standee</th>
+            <th colspan="1" class="center-align" ng-if="inv_stall">Stall</th>
+            <th colspan="1" class="center-align" ng-if="inv_flier">Flyer</th>
+            <th class = "col-md-4">Shortlisted/Buffer</th>
+            <th class = "col-md-4">Action</th>
+          </tr>
+          <tr>
+            <th colspan="8"></th>
+            <th ng-if="inv_poster">Count</th>
+            <!-- <th ng-if="inv_poster">Society Price</th>
+            <th ng-if="inv_poster">Factor</th>
+            <th ng-if="inv_poster">Effective Price</th> -->
+            <th ng-if="inv_standee">Count</th>
+            <!-- <th ng-if="inv_standee">Society Price</th>
+            <th ng-if="inv_standee">Factor</th>
+            <th ng-if="inv_standee">Effective Price</th> -->
+            <th ng-if="inv_stall">Count</th>
+            <!-- <th ng-if="inv_stall">Society Price</th>
+            <th ng-if="inv_stall">Factor</th>
+            <th ng-if="inv_stall">Effective Price</th> -->
+            <th ng-if="inv_flier">Count</th>
+            <!-- <th ng-if="inv_flier">Society Price</th>
+            <th ng-if="inv_flier">Factor</th>
+            <th ng-if="inv_flier">Effective Price</th> -->
+            <th colspan="2"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat = "society in current_center.societies">
+            <td>{{$index+1}}</td>
+            <td>{{society.society_name}}</td>
+            <td>{{society.society_address1 + " " + society.society_address2 + " " + society.society_locality + " " + society.society_subarea}}</td>
+            <td>{{society.flat_count}}</td>
+            <td>{{society.average_rent}}</td>
+            <td>{{society.society_type_quality}}</td>
+            <td>{{society.society_location_type}}</td>
+            <td>{{society.machadalo_index}}</td>
+            <td ng-if="inv_poster">{{society.total_poster_count}}</td>
+            <!-- <td ng-if="inv_poster">{{society.poster_price}}</td>-->
+            <td ng-if="inv_standee">{{society.total_standee_count}}</td>
+            <!-- <td ng-if="inv_standee">{{society.standee_price}}</td> -->
+            <td ng-if="inv_stall">{{society.total_stall_count}}</td>
+            <!-- <td ng-if="inv_stall">{{society.stall_price}}</td> -->
+            <td ng-if="inv_flier">{{society.total_flier_count}}</td>
+            <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
+            <td>
+              <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
+              <span ng-if="society.shortlisted">
+              <input type="checkbox" ng-model="society.buffer_status"> Buffer
+              </span>
+            </td>
+            <td>
+              <button ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- <div  ng-repeat="society in current_center.societies">
+      </div> -->
+        <button ng-click="submitProposal()">Submit Final Proposal</button>
+  </div>
+
+  <!-- End: grid view -->
+
+    <!-- Start: Summary Section -->
+
+    <div class="col-md-2"  ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
+      <div class="panel panel-info">
+        <div class="panel-body" id="searchBody">
+          <div class="filterPanel">
+            <span class="filterHeader"> Summary </span></div>
+            <hr>
+             <span class = "space filterPanelHeader ">Space Count</span>
+             <div class = "nbCheckbox two-col">Societies:  {{current_center.societies_count}}</div>
+            <hr>
+              <span class = "space filterPanelHeader ">Inventory Count</span>
+              <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.fliers != null">Flyers: current_center.societies_inventory_count.fliers</div>
+              <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.posters != null">Posters: {{current_center.societies_inventory_count.posters}}</div>
+              <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.stalls != null">Stalls: {{current_center.societies_inventory_count.stalls}}</div>
+              <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.standees != null">Standees: {{current_center.societies_inventory_count.standees}}</div>
+            <hr>
+             <span class = "space filterPanelHeader ">Total Number of Impressions</span>
+            <hr>
+             <!-- <span class = "space filterPanelHeader ">Total Price</span> -->
+           </div>
+        </div>
+      </div>
+
+    </div><!-- row div ends here-->
+</div><!-- containner div ends here-->
+<!-- unstructured section starts -->
+<div>
+<button ng-show="show_societies" ng-click="showSocieties()">Map View</button>
+<button ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
+</div>

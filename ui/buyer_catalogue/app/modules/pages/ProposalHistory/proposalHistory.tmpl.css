@@ -1,0 +1,20 @@
+.page-container{
+	padding: 5px;
+	position: relative;
+}
+.business-panel{
+	margin-top: 50px;
+	margin-left: 80px;
+	padding: 10px;
+	align-self: center;
+	max-width: 80% !important;
+}
+.form{
+	padding: 9px;
+}
+.submit-button{
+	padding-top: 10px;
+}
+.table-align{
+	margin-left: 20px;
+}
