@@ -144,7 +144,7 @@ class NewCampaignAPIView(APIView):
                     serializer = BusinessInfoSerializer(business,data=business_data)
                 else:
                     # creating business ID
-
+                    
                     type_name = BusinessTypes.objects.get(id=int(business_data['business_type_id']))
                     sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
                     business_data['business_id'] = self.generate_business_id(business_name=business_data['name'], \
@@ -176,7 +176,7 @@ class NewCampaignAPIView(APIView):
                 contact_list = []
 
                 for contact in business_data['contacts']:
-
+                    
                     contact['object_id'] = business.business_id
                     contact['content_type'] = content_type_business.id
 
@@ -207,7 +207,7 @@ class NewCampaignAPIView(APIView):
                         'business' : business_serializer.data,
                         'contacts' : contacts_serializer.data,
                     }
-
+                
             return Response(response,status=200)
 
 
@@ -224,7 +224,7 @@ class NewCampaignAPIView(APIView):
             business_code = create_code(name=business_name, conflict=True)
             business_id = type_name.business_type_code + sub_type.business_sub_type_code + business_code
             business = BusinessInfo.objects.get(business_id=business_id)
-
+            
             # still conflict ---> Generate random 4 uppercase character string
             i = 0  # i keeps track of infinite loop tune it according to the needs
             while(True):
@@ -249,7 +249,7 @@ def create_code(name, conflict=False):
     if len(name) == 3:
         if len(name[0]) >= 2:
             code = name[0][:2] + name[1][0] + name[2][0]
-        else :
+        else : 
             code = get_extra_character() + name[0] + name[1][0] + name[2][0]
     elif len(name) == 2:
         if len(name[0]) >= 2 and len(name[1]) >= 2:
@@ -260,12 +260,12 @@ def create_code(name, conflict=False):
             code = name[0] + name[1][:3]
         elif len(name[0]) >= 2 or len(name[0]) >=2:
             code = get_extra_character() + name[0] + name[1]
-        else :
+        else : 
             code = get_extra_character(size=2) + name[0] + name[1]
     else:
         if len(name[0]) >= 4:
             code = name[0][:4]
-        else :
+        else : 
             size = 4 - len(name[0])
             extra_characters = get_extra_character(size)
             code = extra_characters + name[0]
@@ -273,7 +273,7 @@ def create_code(name, conflict=False):
     # conflict means previous code already present in database
     # so append a extra char in front of existing code and remove last char from it
     if conflict:
-        code = get_extra_character() + code[:3]
+        code = get_extra_character() + code[:3] 
 
 
     return code.upper()
@@ -291,7 +291,7 @@ class CreateCampaignAPIView(APIView):
             errro = {}
 
             # checking if the data received contains name of the account
-            try :
+            try : 
                 account_data = request.data['account']
                 account_name = account_data['name']
             except KeyError :
@@ -299,13 +299,13 @@ class CreateCampaignAPIView(APIView):
                         status = status.HTTP_406_NOT_ACCEPTABLE)
 
             with transaction.atomic():
-
+                
                 try:
                     business_id = account_data['business_id']
-                except KeyError:
+                except KeyError: 
                     return Response({'message' : 'Imporper Business Type Id'}, status = status.HTTP_406_NOT_ACCEPTABLE)
 
-
+                
                 # checking a valid business
                 try:
                     business = BusinessInfo.objects.get(business_id=business_id)
@@ -326,13 +326,13 @@ class CreateCampaignAPIView(APIView):
                     account = serializer.save(business=business)
                 else:
                     return Response(serializer.errors, status=400)
-
+            
                 content_type_account = ContentType.objects.get_for_model(AccountInfo)
 
                 # #here we will start storing contacts
                 contact_ids = list(account.contacts.all().values_list('id',flat=True))
                 contact_list = []
-
+                
                 for contact in account_data['contacts']:
                     contact['object_id'] = account.account_id
                     contact['content_type'] = content_type_account.id
@@ -347,7 +347,7 @@ class CreateCampaignAPIView(APIView):
                         if contact['spoc'] == '':
                             contact['spoc'] = 'false'
                         contact_serializer = BusinessAccountContactSerializer(data=contact)
-
+                    
                     if contact_serializer.is_valid():
                         contact = contact_serializer.save()
                         contact_list.append(contact)
@@ -366,7 +366,7 @@ class CreateCampaignAPIView(APIView):
 
                 #     campaign_serializer.is_valid(raise_exception=True)
                 #     campaign_serializer.save(account=account)
-
+                    
                 #     campaign = Campaign.objects.get(pk=campaign_serializer.data['id'])
 
                 #     if 'campaign_type' in request.data:
@@ -384,8 +384,8 @@ class CreateCampaignAPIView(APIView):
                 #     # redirecting to societylist page if the campaign info received
                 #     return  Response(campaign_serializer.data, status=201)
 
-
-                # sending accounts and related contacts fields to allow updating
+                
+                # sending accounts and related contacts fields to allow updating 
                 # account = AccountInfo.objects.get(id=account_id)
                 account_serializer = AccountInfoSerializer(account)
                 # contacts = account.contacts.all()
@@ -423,7 +423,7 @@ class CreateCampaignAPIView(APIView):
 
 class GetAccountProposalsAPIView(APIView):
     def get(self, request, account_id, format=None):
-
+        
         try:
             account = AccountInfo.objects.get(account_id=account_id)
         except AccountInfo.DoesNotExist:
@@ -547,7 +547,7 @@ class ShortlistSocietyCountAPIView(APIView):
             return Response({'count': societies_count}, status=200)
         except Campaign.DoesNotExist:
             return Response({'error':'No such campaign id exists'},status=406)
-
+        
 
 
 
@@ -593,7 +593,7 @@ class ShortlistSocietyAPIView(APIView):
             campaign_society = CampaignSocietyMapping(campaign=campaign, society=society, booking_status='Shortlisted')
             campaign_society.save()
         # except CampaignSocietyMapping.MultipleObjectsReturned:
-        #     total_societies = CampaignSocietyMapping.objects.filter(campaign=campaign).count()
+        #     total_societies = CampaignSocietyMapping.objects.filter(campaign=campaign).count() 
         #     error = {"message" : "Already Shortlisted", 'count':total_societies}
         #     return Response(error, status=200)
 
@@ -601,14 +601,13 @@ class ShortlistSocietyAPIView(APIView):
             inventory = SocietyInventoryBooking(campaign=campaign, society=society, adinventory_type=key)
             inventory.save()
 
-        total_societies = CampaignSocietyMapping.objects.filter(campaign=campaign).count()
+        total_societies = CampaignSocietyMapping.objects.filter(campaign=campaign).count() 
         return Response({"message": "Society Shortlisted", "id": society_id, 'count':total_societies}, status=200)
 
 
 class CreateProposalAPIView(APIView):
     def get(self, request, id, format=None):
         try:
-            print "helllllloooooooooooooo"
             campaign = Campaign.objects.get(pk=id)
             items = campaign.societies.filter(booking_status='Shortlisted')
             inv_types = campaign.types.all()
@@ -653,7 +652,6 @@ class CreateProposalAPIView(APIView):
                         inv_info['price'] = str(inv_price)
                         inv_info['type'] = inv_name
                         society_detail['inventory'].append(inv_info)
-
 
                 response.append(society_detail)
 
@@ -729,20 +727,20 @@ class FinalCampaignBookingAPIView(APIView):
 # Beta API below this point. Be Careful. Danger Below
 
 class InitialProposalAPIView(APIView):
-    '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal
+    '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal 
     fields are stored in the database
     ProposalInfo and ProposalCenterMapping models are used only'''
 
     def post(self, request, account_id=None, format=None):
-        '''In this centers contain format like
+        '''In this centers contain format like 
         centers : [
             center : [
                 space_mapping : []
             ]
             society_inventory : []  // these will be made if in center[space_mapping][society_allowed] is true
             corporate_inventory : []
-        ]
-        This is done to be in sync with the format on map view page as serializers.data dont allow to append
+        ] 
+        This is done to be in sync with the format on map view page as serializers.data dont allow to append 
         any new (key,value) pair to its existing data
         '''
 
@@ -777,9 +775,7 @@ class InitialProposalAPIView(APIView):
                     space_mapping = center['space_mapping']
                     center['proposal'] = proposal_object.proposal_id
                     address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + center['pincode']
-                    print address
                     geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
-                    print "geocoder------------------------", geocoder
                     try:
                         geo_object = geocoder.geocode(address)
                     except GeocoderError:
@@ -791,7 +787,7 @@ class InitialProposalAPIView(APIView):
                         return Response({'message' : 'Unable to connect to google Maps'}, status=406    )
                     center['latitude'] = geo_object.latitude
                     center['longitude'] = geo_object.longitude
-
+                    
                     center_serializer = ProposalCenterMappingSerializer(data=center)
 
                     if center_serializer.is_valid():
@@ -814,12 +810,12 @@ class InitialProposalAPIView(APIView):
                             }, status=406)
 
 
-                    # ADDNEW --> extend the list in for loop when new spaces added. Keep the variables names accordingly
+                    # ADDNEW --> extend the list in for loop when new spaces added. Keep the variables names accordingly          
                     for space in ['society','corporate','gym','salon']:
-                        ''' This loops checks if the space is allowed and if it is allowed save the
+                        ''' This loops checks if the space is allowed and if it is allowed save the 
                         inventory types chosen by the user in the inventory_type table '''
                         try:
-                            space_allowed = space + '_allowed'
+                            space_allowed = space + '_allowed' 
                             if space_mapping[space_allowed]:
                                 space_inventory = space + '_inventory'
                                 center_info[space_inventory]['supplier_code'] = supplier_codes[space]
@@ -857,12 +853,11 @@ def return_price(adinventory_type_dict, duration_type_dict, inv_type, dur_type):
 class SpacesOnCenterAPIView(APIView):
     def get(self,request,proposal_id=None, format=None):
         ''' This function filters all the spaces(Societies, Corporates etc.) based on the center and
-        radius provided currently considering radius
+        radius provided currently considering radius 
         This API is called before map view page is loaded'''
 
         ''' !IMPORTANT --> you have to manually add all the type of spaces that are being added apart from
         Corporate and Society '''
-
         response = {}
         center_id = request.query_params.get('center',None)
         try:
@@ -882,19 +877,19 @@ class SpacesOnCenterAPIView(APIView):
                 center_id = int(center_id)
             except ValueError:
                 print "\n\nException occured\n\n"
-                return Response({'message' : 'Invalid Center ID provided'}, status=406)
+                return Response({'message' : 'Invalid Center ID provided'}, status=406) 
             proposal_centers = ProposalCenterMapping.objects.filter(id=center_id)
             if not proposal_centers:
-                return Response({'message' : 'Invalid Center ID provided'}, status=406)
-        else :
+                return Response({'message' : 'Invalid Center ID provided'}, status=406) 
+        else : 
             proposal_centers = ProposalCenterMapping.objects.filter(proposal=proposal)
-
+        
         centers_data_list = []
         for proposal_center in proposal_centers:
             try:
                 space_mapping_object = SpaceMapping.objects.get(center=proposal_center)
             except SpaceMapping.DoesNotExist:
-                return Response({'message' : 'Space Mapping Does Not Exist'}, status=406)
+                return Response({'message' : 'Space Mapping Does Not Exist'}, status=406) 
 
             space_info_dict = {}
 
@@ -912,7 +907,7 @@ class SpacesOnCenterAPIView(APIView):
             # for society
             if space_mapping_object.society_allowed:
                 q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-
+                
                 societies_inventory = space_mapping_object.get_society_inventories()
                 societies_inventory_serializer = InventoryTypeSerializer(societies_inventory)
                 # applying filter on basis of inventory
@@ -927,7 +922,7 @@ class SpacesOnCenterAPIView(APIView):
 
 
 
-                societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1', 'society_address2', 'society_subarea', 'society_locality', 'society_location_type', 'flat_count', 'average_rent', 'machadalo_index', 'society_type_quality')
+                societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
                 societies = []
                 society_ids = []
                 societies_count = 0
@@ -980,8 +975,8 @@ class SpacesOnCenterAPIView(APIView):
             if space_mapping_object.corporate_allowed:
                 pass
                 # q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
-
-                # ADDNEW --> uncomment this line when corporate inventory implemented
+                
+                # ADDNEW --> uncomment this line when corporate inventory implemented 
                 # corporates_inventory = space_mapping_object.get_corporate_inventories().
                 # corporates_inventory_serializer = InventoryTypeSerializer(inventory_type_corporate)
                 # then run for loop almost same as above for applying filter on inventory_allowed
@@ -999,22 +994,22 @@ class SpacesOnCenterAPIView(APIView):
                 # corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
 
                 # space_info_dict['corporates'] = corporates_serializer.data
-                # space_info_dict['corporates_count'] = corporates_count
+                # space_info_dict['corporates_count'] = corporates_count 
                 # space_info_dict['corporates_inventory_count'] = corporates_inventory_count  // implement this first
                 # space_info_dict['corporates_inventory'] = corporates_inventory_serializer.data
 
             if space_mapping_object.gym_allowed:
-                # ADDNEW --> write gym code for filtering
+                # ADDNEW --> write gym code for filtering 
                 pass
 
             if space_mapping_object.salon_allowed:
-                # ADDNEW --> write salon code for filtering
-                pass
-
+                # ADDNEW --> write salon code for filtering 
+                pass    
+            
 
             proposal_center_serializer = ProposalCenterMappingSpaceSerializer(proposal_center)
             space_info_dict['center'] = proposal_center_serializer.data
-
+            
             centers_data_list.append(space_info_dict)
 
 
@@ -1041,7 +1036,7 @@ class SpacesOnCenterAPIView(APIView):
             space_mappings = center['space_mappings']
         except KeyError:
             return Response({'message':'Improper center or space_mappings data'}, status=406)
-
+        
         response['center'] = center
         latitude = float(center['latitude'])
         longitude = float(center['longitude'])
@@ -1060,7 +1055,7 @@ class SpacesOnCenterAPIView(APIView):
             q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
 
             try:
-                societies_inventory = center_info['societies_inventory']
+                societies_inventory = center_info['societies_inventory']            
             except KeyError:
                 return Response({'message' : 'Provide society_inventory when society selected'}, status=406)
 
@@ -1125,7 +1120,7 @@ class SpacesOnCenterAPIView(APIView):
             pass
             # q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
 
-            # ADDNEW --> uncomment when implemented properly
+            # ADDNEW --> uncomment when implemented properly 
             # try:
             #     corporates_inventory = center_info['corporate_inventory']
             # except KeyError:
@@ -1142,7 +1137,7 @@ class SpacesOnCenterAPIView(APIView):
             #         corporate.latitude, corporate.longitude):
             #         corporates.append(corporate)
             #         corporates_count += 1
-
+                
             # corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
 
             # response['corporates'] = corporates_serializer.data
@@ -1167,7 +1162,7 @@ def get_delta_latitude_longitude(radius, latitude):
     delta_longitude = radius/(111.320 * math.cos(math.radians(latitude)))
     delta_latitude = radius/ 110.574
 
-    return {'delta_latitude' : delta_latitude,
+    return {'delta_latitude' : delta_latitude, 
             'delta_longitude' : delta_longitude}
 
 
@@ -1177,7 +1172,7 @@ def space_on_circle(latitude, longitude, radius, space_lat, space_lng):
 
 
 
-class GetFilteredSocietiesAPIView(APIView):
+class GetFilteredSocietiesAPIView(APIView):    
 
     def get(self, request, format=None):
         ''' This API gives societies based on different filters from mapView and gridView Page
@@ -1194,7 +1189,7 @@ class GetFilteredSocietiesAPIView(APIView):
         flat_count = request.query_params.get('flc',None)
         flat_type_params = request.query_params.get('flt',None)
         inventory_params = request.query_params.get('inv',None)
-
+        
 
         q = Q()
         quality_dict , inventory_dict, society_quantity_dict = get_related_dict()
@@ -1202,7 +1197,7 @@ class GetFilteredSocietiesAPIView(APIView):
         flat_type_dict = {
             '1R' : '1 RK',      '1B' : '1 BHK',     '1-5B' : '1.5 BHK',     '2B' : '2 BHK',
             '2-5B' : '2.5 BHK',    '3B' : '3 BHK',  '3-5B' : '3.5 BHK',     '4B' : '4 BHK',
-            '5B' : '5 BHK',         'PH' : 'PENT HOUSE',    'RH' : 'ROW HOUSE',  'DP' : 'DUPLEX'
+            '5B' : '5 BHK',         'PH' : 'PENT HOUSE',    'RH' : 'ROW HOUSE',  'DP' : 'DUPLEX' 
         }
 
         # if not radius:
@@ -1221,10 +1216,10 @@ class GetFilteredSocietiesAPIView(APIView):
                     pass
 
             if flat_types:
-                ''' We can improve performance here  by appending .distinct('society_id') when using postgresql '''
+                ''' We can improve performance here  by appending .distinct('society_id') when using postgresql ''' 
                 society_ids = set(FlatType.objects.filter(flat_type__in=flat_types).values_list('society_id',flat=True))
                 q &= Q(supplier_id__in=society_ids)
-                # here to include those societies which don't have this info nothing can be done
+                # here to include those societies which don't have this info nothing can be done 
                 # It is simply all the societies -> filter becomes useless
 
         # calculating for latitude and longitude
@@ -1247,7 +1242,7 @@ class GetFilteredSocietiesAPIView(APIView):
         min_longitude = longitude - delta_dict['delta_longitude']
 
         q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-
+        
         if location_params:
             location_ratings = []
             location_params = location_params.split()
@@ -1260,7 +1255,7 @@ class GetFilteredSocietiesAPIView(APIView):
                 q &= Q(society_location_type__in=location_ratings)
                 # if required to include societies with null value of this parameter uncomment following line
                 # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(society_location_type__isnull=True)
+                # q &= Q(society_location_type__isnull=True)  
 
         if society_quality_params:
             society_quality_ratings = []
@@ -1275,7 +1270,7 @@ class GetFilteredSocietiesAPIView(APIView):
                 q &= Q(society_type_quality__in=society_quality_ratings)
                 # if required to include societies with null value of this parameter uncomment following line
                 # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(society_type_quality__isnull=True)
+                # q &= Q(society_type_quality__isnull=True)  
 
         if society_quantity_params:
             society_quantity_ratings = []
@@ -1290,7 +1285,7 @@ class GetFilteredSocietiesAPIView(APIView):
                 q &= Q(society_type_quantity__in=society_quantity_ratings)
                 # if required to include societies with null value of this parameter uncomment following line
                 # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(society_type_quantity__isnull=True)
+                # q &= Q(society_type_quantity__isnull=True)  
 
         if flat_count:
             flat_count = flat_count.split()
@@ -1301,7 +1296,7 @@ class GetFilteredSocietiesAPIView(APIView):
                 q &= Q(flat_count__gte=flat_min) & Q(flat_count__lte=flat_max)
                 # if required to include societies with null value of this parameter uncomment following line
                 # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(flat_count__isnull=True)
+                # q &= Q(flat_count__isnull=True)  
 
         if inventory_params:
             inventory_params = inventory_params.split()
@@ -1364,7 +1359,7 @@ class GetFilteredSocietiesAPIView(APIView):
 
 
     def post(self, request, format=None):
-        ''' This API is for deep filtering
+        ''' This API is for deep filtering 
         Basic Idea is that if filter is chosen on the left of the map view page get request is fired
         But if he clicks on deep filters he can choose on almost anything like cars_count, luxury_cars_count,
         avg_pg_occupancy, women_occupants, etc. whatever required. This is the approach most commonly found on
@@ -1378,7 +1373,7 @@ def get_related_dict():
     # quality_dict if for both society_quality and its location_quality and similarly for other spaces
     quality_dict = {
         'UH' : 'Ultra High',    'HH' : 'High',
-        'MH' : 'Medium High',   'ST' : 'Standard'
+        'MH' : 'Medium High',   'ST' : 'Standard'    
     }
 
     inventory_dict = {
@@ -1431,7 +1426,7 @@ class FinalProposalAPIView(APIView):
             space_info_dict['center'] = center_serializer.data
 
             space_mapping_object = center_object.get_space_mappings()
-
+            
             # for space_name in ['society','corporate','gym','salon']:
             #     if space_mapping_object.__dict__[space_name + '_allowed']:
             #         space_inventory_object = InventoryTypes.objects.get(space_mapping=space_mapping_object, supplier_code=supplier_code_dict[space_name])
@@ -1493,6 +1488,7 @@ class FinalProposalAPIView(APIView):
                 societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
                     standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
+
                 space_info_dict['societies'] = societies
                 space_info_dict['societies_inventory_count'] = societies_inventory_count
                 space_info_dict['societies_inventory'] = societies_inventory_serializer.data
@@ -1521,7 +1517,7 @@ class FinalProposalAPIView(APIView):
 
     def post(self, request, proposal_id=None, format=None):
         ''' Saving the proposal from the map view. Every time mapview page is loaded and grid view is submitted from there
-        This makes a new version of proposal. And also updates all the required table as well
+        This makes a new version of proposal. And also updates all the required table as well 
         This expects id of both center and space mapping from the frontend as they are saved on basic proposal page (InitialProposalAPIView)
         '''
         centers = request.data
@@ -1548,7 +1544,7 @@ class FinalProposalAPIView(APIView):
         proposal_version_object.save()
 
         with transaction.atomic():
-            shortlisted_space_list = []
+            shortlisted_space_list = [] 
             shortlisted_space_version_list = []
             for center_info in centers:
                 center = center_info['center']
@@ -1560,7 +1556,7 @@ class FinalProposalAPIView(APIView):
                 center_object = ProposalCenterMapping.objects.select_related('proposal').get(id=center_id)
                 proposal_object = center_object.proposal
 
-
+                
                 center_serializer = ProposalCenterMappingSerializer(center_object,data=center)
                 if center_serializer.is_valid():
                     center_object = center_serializer.save()
@@ -1607,13 +1603,13 @@ class FinalProposalAPIView(APIView):
 
                         try:
                             space_inventory_type = center_info[space_dict[space_name] + '_inventory']
-                        except KeyError:
+                        except KeyError: 
                             # Just ignoring because for corporate inventory is not made
                             print "\n\n\n"
                             print "Key Error Key is : " + space_dict[space_name] + '_inventory'
                             print "\n\n\n"
                             continue
-
+                        
                         try:
                             inventory_type_object = InventoryType.objects.get(id = space_inventory_type['id'])
                             inventory_type_serializer = InventoryTypeSerializer(inventory_type_object, data=space_inventory_type)
@@ -1638,7 +1634,7 @@ class FinalProposalAPIView(APIView):
                             return Response({'message': 'Invalid Inventory Details Version for ' + space_name , ' errors' : \
                                 inventory_type_version_serializer.errors}, status=406)
 
-
+                        
                         space_mapping_object.get_all_spaces().delete()
 
                         for space in center_info[space_dict[space_name]]:
@@ -1650,7 +1646,7 @@ class FinalProposalAPIView(APIView):
                                 print "space_mapping_id : ", space_mapping_object.id
                                 shortlisted_space = ShortlistedSpaces(space_mapping = space_mapping_object,content_type=content_type, \
                                     supplier_code=supplier_code, object_id=object_id, buffer_status = space['buffer_status'])
-
+                                
                                 shortlisted_space_list.append(shortlisted_space)
 
                                 # version save
@@ -1661,7 +1657,7 @@ class FinalProposalAPIView(APIView):
             ShortlistedSpaces.objects.bulk_create(shortlisted_space_list)
             # version save
             ShortlistedSpacesVersion.objects.bulk_create(shortlisted_space_version_list)
-
+        
         return Response({'message':'Successfully Saved'}, status=200)
 
 
@@ -1745,7 +1741,7 @@ class CurrentProposalAPIView(APIView):
                     societies_shortlisted.append(society)
                     societies_shortlisted_count += 1
 
-
+               
                 space_info_dict['societies_shortlisted'] = societies_shortlisted
                 space_info_dict['societies_shortlisted_count'] = societies_shortlisted_count
 
@@ -1805,7 +1801,7 @@ class CurrentProposalAPIView(APIView):
                 pass
 
             if space_mapping_object.salon_allowed:
-                # ADDNEW -->
+                # ADDNEW --> 
                 pass
 
             if space_mapping_object.gym_allowed:
@@ -1819,7 +1815,7 @@ class CurrentProposalAPIView(APIView):
             'centers'  : centers_list,
         }
 
-
+       
         return Response(response, status=200)
 
 
@@ -1854,7 +1850,7 @@ class CurrentProposalAPIView(APIView):
                         object_id = society['supplier_id']
                         shortlisted_society = ShortlistedSpaces(space_mapping_id = space_mapping_id,content_type=content_type, \
                             supplier_code=supplier_code, object_id=object_id, buffer_status = society['buffer_status'])
-
+                        
                         shortlisted_space_list.append(shortlisted_society)
 
                 for society in center_info['societies_buffered']:
@@ -1862,21 +1858,21 @@ class CurrentProposalAPIView(APIView):
                         object_id = society['supplier_id']
                         shortlisted_society = ShortlistedSpaces(space_mapping_id = space_mapping_id,content_type=content_type, \
                             supplier_code=supplier_code, object_id=object_id, buffer_status = society['buffer_status'])
-
+                        
                         shortlisted_space_list.append(shortlisted_society)
 
 
 
             if space_mappings['corporate_allowed']:
-                # ADDNEW -->
+                # ADDNEW --> 
                 pass
 
             if space_mappings['salon_allowed']:
-                # ADDNEW -->
+                # ADDNEW --> 
                 pass
 
             if space_mappings['gym_allowed']:
-                # ADDNEW -->
+                # ADDNEW --> 
                 pass
 
         ShortlistedSpaces.objects.bulk_create(shortlisted_space_list)
@@ -1902,7 +1898,7 @@ class ProposalHistoryAPIView(APIView):
         for proposal_version_object in proposal_versions:
             proposal_info_dict = {}
             proposal_version_serializer = ProposalInfoVersionSerializer(proposal_version_object)
-            proposal_info_dict['proposal'] = proposal_version_serializer.data
+            proposal_info_dict['proposal'] = proposal_version_serializer.data 
             proposal_center_versions = ProposalCenterMappingVersion.objects.filter(proposal_version=proposal_version_object)
             center_versions_list = []
             for center_version_object in proposal_center_versions:
@@ -1911,7 +1907,7 @@ class ProposalHistoryAPIView(APIView):
                 space_info_dict['center'] = center_version_serailizer.data
 
                 space_mapping_version_object = SpaceMappingVersion.objects.get(center_version=center_version_object)
-
+                
                 if space_mapping_version_object.society_allowed:
                     societies_shortlisted_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
                             supplier_code = 'RS', buffer_status=False).values_list('object_id',flat=True)
@@ -2046,18 +2042,18 @@ class SocietySaveCSVAPIView(APIView):
 
                             d['supplier_id'] = city_object.city_code + area_object.area_code + subarea_object.subarea_code + supplier_type_1 + d['supplier_code']
                             try:
-                                society_object = SupplierTypeSociety.objects.get(supplier_id=d['supplier_id'])
+                                society_object = SupplierTypeSociety.objects.get(supplier_id=d['supplier_id']) 
                                 file_errros.write("Error in " + str(num+1) + " line\t---> Society with supplier code "\
                                     + d['supplier_code'] + " already exists in that subarea. Still Updating the details\n\n")
                                 society_object.__dict__.update(d)
                                 society_object.save()
                                 print "\n\n\nsaving socity"
-                                print "society_object dict :"
+                                print "society_object dict :" 
                                 for i in ['supplier_id','society_city','society_locality','society_subarea','society_name']:
                                     try:
                                         print i + " : " + society_object.__dict__[i]
                                     except KeyError:
-                                        print "Key Error  : ", i
+                                        print "Key Error  : ", i 
                                 print "\n\n\n"
                                 continue
                             except SupplierTypeSociety.DoesNotExist:
@@ -2090,12 +2086,12 @@ class SocietySaveCSVAPIView(APIView):
                 for num, row in enumerate(reader):
                     if num == 0:
                         continue
-                    else:
+                    else: 
                         d = {}
                         try:
                             length = len(row)
                             print "row[26]" , row[26]
-                        except IndexError:
+                        except IndexError: 
                             return Response({'message' : 'Index Out of Range', 'maxIndex' : \
                                 length, 'row' : row},status=200)
 
@@ -2118,7 +2114,7 @@ class SocietySaveCSVAPIView(APIView):
                                 d[key] = d[key].replace("\n", " ")
 
                         if type(d['society_type_quality']) == type('abc'):
-                            d['society_type_quality'] = d['society_type_quality'].title()
+                            d['society_type_quality'] = d['society_type_quality'].title()                         
 
                         try:
                             society_object = SupplierTypeSociety.objects.get(supplier_code=d['supplier_code'], society_subarea=d['society_subarea'])
@@ -2211,7 +2207,7 @@ class SocietySaveCSVAPIView(APIView):
                             file_errros.write('Error in ' + str(num+1) + ' line\t--> No idea with given Supplier Code and Subarea exists in Database \n\n')
 
 
-            finally:
+            finally:    
                 file.close()
                 file_errros.close()
 
@@ -2222,12 +2218,12 @@ class SocietySaveCSVAPIView(APIView):
 
 # class GetSpaceInfoAPIView(APIView):
 #     ''' This API is to fetch the space(society,corporate, gym) etc. using its supplier Code
-#     e.g. RS for residential Society
+#     e.g. RS for residential Society 
 
 #     Currently only working for societies '''
 #     def get(self, request, id , format=None):
 #         try:
-#             '''  On introducing new spaces we have to use if conditions to check the supplier code
+#             '''  On introducing new spaces we have to use if conditions to check the supplier code 
 #             like RS for society and the fetch society object
 #             e.g. if supplier_code == 'RS':
 #                       society = SupplierTypeSociety.objects.get(supplier_id=id)
@@ -2260,7 +2256,7 @@ class SocietySaveCSVAPIView(APIView):
 #             'centers' : [{
 #                 'center_name' : 'Oxford Chambers',
 #                 'Address' : '',
-#                 'latitude' : 19.119128,
+#                 'latitude' : 19.119128, 
 #                 'longitude' : 72.890795,
 #                 'radius' : 3.5,
 #                 'area' : 'Powai',
@@ -2337,10 +2333,10 @@ class SocietySaveCSVAPIView(APIView):
 
 #             if proposal_serializer.is_valid():
 #                 proposal_object = proposal_serializer.save()
-#             else:
+#             else: 
 #                 return Response({'message' : 'Proposal Serializer Invalid', \
 #                     'errors' : proposal_serializer.errors}, status=406)
-
+            
 
 #             centers = proposal['centers']
 
@@ -2348,7 +2344,7 @@ class SocietySaveCSVAPIView(APIView):
 #             inventory_type_superset = set()
 #             spaces_superset = set()
 #             centers_superset  = set(proposal_object.get_centers().values_list('id',flat=True))
-
+            
 #             for center in centers:
 #                 center['proposal'] = proposal_object.proposal_id
 
@@ -2365,14 +2361,14 @@ class SocietySaveCSVAPIView(APIView):
 #                     return Response({'message' : 'Center Serializer Invalid',\
 #                         'errors' : center_serializer.errors}, status=406)
 
-
+                
 
 #                 space_mappings = center['space_mappings']
 #                 space_mappings_set = set(SpaceMapping.objects.filter(center=center_object).values_list('id',flat=True))
 
 #                 for space_mapping in space_mappings:
 
-#                     content_model = "SupplierType" + space_mapping['space_name'].title()
+#                     content_model = "SupplierType" + space_mapping['space_name'].title() 
 #                     content_type = ContentType.objects.get(model=content_model)
 
 
@@ -2384,7 +2380,7 @@ class SocietySaveCSVAPIView(APIView):
 #                         space_mapping_object = SpaceMapping.objects.get(id=space_mapping['id'])
 #                         space_mappings_set.remove(space_mapping_object.id)
 #                         space_mapping_serializer = SpaceMappingSerializer(space_mapping_object,data=space_mapping)
-#                     else:
+#                     else:    
 #                         space_mapping_serializer = SpaceMappingSerializer(data=space_mapping)
 
 #                     if space_mapping_serializer.is_valid():
@@ -2394,7 +2390,7 @@ class SocietySaveCSVAPIView(APIView):
 #                             'errors' : space_mapping_serializer.errors}, status=406)
 
 
-
+                    
 #                     inventories = space_mapping['inventories']
 #                     inventory_type_set = set(InventoryType.objects.filter(space_mapping=space_mapping_object).values_list('id',flat=True))
 #                     for inventory in inventories:
@@ -2415,13 +2411,13 @@ class SocietySaveCSVAPIView(APIView):
 
 #                     inventory_type_superset = inventory_type_superset.union(inventory_type_set)
 
-
+                    
 #                     spaces = space_mapping['spaces']
 #                     spaces_set = set(ShortlistedSpaces.objects.filter(space_mapping=space_mapping_object).values_list('id',flat=True))
-
+                    
 #                     for space in spaces:
 #                         if not 'buffer_status' in space:
-#                             space['buffer_status'] = 'false'
+#                             space['buffer_status'] = 'false' 
 #                         print space
 
 #                         space['content_type'] = content_type.id
@@ -2439,13 +2435,13 @@ class SocietySaveCSVAPIView(APIView):
 #                         else:
 #                             return Response({'message' : 'Invalid Space Received',\
 #                                 'errros' : space_serializer.errors}, status=406)
-
+            
 #                     spaces_superset = spaces_superset.union(spaces_set)
 
 #                 space_mappings_superset = space_mappings_superset.union(space_mappings_set)
+            
 
-
-#             ProposalCenterMapping.objects.filter(id__in=centers_superset).delete()
+#             ProposalCenterMapping.objects.filter(id__in=centers_superset).delete()            
 #             SpaceMapping.objects.filter(id__in=space_mappings_superset).delete()
 #             InventoryType.objects.filter(id__in=inventory_type_superset).delete()
 #             ShortlistedSpaces.objects.filter(id__in=spaces_superset).delete()
@@ -2455,3 +2451,6 @@ class SocietySaveCSVAPIView(APIView):
 
 
 # 19.119128, 72.890795
+
+
+

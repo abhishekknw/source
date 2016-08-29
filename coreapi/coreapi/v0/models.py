@@ -1207,7 +1207,7 @@ class BusinessAccountContact(models.Model):
 
 
     class Meta:
-        db_table = 'business_account_conatct'
+        db_table = 'business_account_contact'
         #db_table = 'BUSINESS_ACCOUNT_CONTACT'
 
 

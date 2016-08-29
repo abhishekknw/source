@@ -16,15 +16,10 @@ from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, 
                     SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SocietyTowerSerializer, FlatTypeSerializer,\
                     CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateCompanyDetailsSerializer, \
                     CompanyFloorSerializer, CorporateBuildingGetSerializer, CorporateCompanySerializer, CorporateParkCompanySerializer, \
-<<<<<<< HEAD
-                    SupplierTypeSalonSerializer, SupplierTypeGymSerializer
-
-from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList
-=======
                     SupplierTypeSalonSerializer, SupplierTypeGymSerializer, FlyerInventorySerializer
+        
 
 from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory
->>>>>>> a431546bcad1f465159950c0464182a393047361
 from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuilding, \
                     CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
@@ -444,7 +439,6 @@ def set_default_pricing(society_id):
         for duration in duration_types:
             if (type.adinventory_name=='POSTER'):
                 if((duration.duration_name=='Unit Daily')):
-<<<<<<< HEAD
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
                     price_mapping_list.append(pmdefault)
                 if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Unit Monthly')|(duration.duration_name=='Unit Weekly')):
@@ -453,24 +447,11 @@ def set_default_pricing(society_id):
 
             if (type.adinventory_name=='POSTER LIFT'):
                 if((duration.duration_name=='Unit Daily')):
-=======
->>>>>>> a431546bcad1f465159950c0464182a393047361
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
                     price_mapping_list.append(pmdefault)
                 if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Unit Monthly')|(duration.duration_name=='Unit Weekly')):
                     pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
                     price_mapping_list.append(pmdefault)
-<<<<<<< HEAD
-=======
-
-            if (type.adinventory_name=='POSTER LIFT'):
-                if((duration.duration_name=='Unit Daily')):
-                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=-1, business_price=-1)
-                    price_mapping_list.append(pmdefault)
-                if((duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Unit Monthly')|(duration.duration_name=='Unit Weekly')):
-                    pmdefault = PriceMappingDefault(supplier= society, adinventory_type=type, duration_type=duration, society_price=0, business_price=0)
-                    price_mapping_list.append(pmdefault)
->>>>>>> a431546bcad1f465159950c0464182a393047361
            
             if (type.adinventory_name=='STANDEE'):
                 if((duration.duration_name=='Campaign Monthly')|(duration.duration_name=='Campaign Weekly')|(duration.duration_name=='Unit Weekly')|(duration.duration_name=='Unit Monthly')):
@@ -622,24 +603,12 @@ class SocietyAPIFiltersListView(APIView):
                     cityArea.append(key['label'])
                     # filter_present = True
                 areas = True if cityArea else False
-<<<<<<< HEAD
 
-
-=======
-
-
->>>>>>> a431546bcad1f465159950c0464182a393047361
             if 'typeValuemodel' in request.data:
                 for key in request.data['typeValuemodel']:
                     societytype.append(key['label'])
                     # filter_present = True
-<<<<<<< HEAD
 
-
-=======
-
-
->>>>>>> a431546bcad1f465159950c0464182a393047361
             if 'checkboxes' in request.data:
                 for key in request.data['checkboxes']:
                     if key['checked']:
@@ -731,7 +700,6 @@ class SocietyAPIFiltersListView(APIView):
                         items = SupplierTypeSociety.objects.filter(Q(society_type_quantity__in = flatquantity))
                     # elif inventorytype:
                     #     do something
-<<<<<<< HEAD
 
                 else:
                     items = SupplierTypeSociety.objects.all()
@@ -751,29 +719,6 @@ class SocietyAPIFiltersListView(APIView):
             # serializer = SocietyListSerializer(result_page, many=True)
 
             # return paginator.get_paginated_response(serializer.data)
-
-=======
-
-                else:
-                    items = SupplierTypeSociety.objects.all()
-
-                ## UISocietySerializer --> SocietyListSerializer
-                # serializer = SocietyListSerializer(items, many= True)
-                # Sample Code
-            else:
-                    items = SupplierTypeSociety.objects.all()
-                    ## UISocietySerializer --> SocietyListSerializer
-                    
-
-
-            serializer = SocietyListSerializer(items, many= True)
-            # paginator = PageNumberPagination()
-            # result_page = paginator.paginate_queryset(items, request)
-            # serializer = SocietyListSerializer(result_page, many=True)
-
-            # return paginator.get_paginated_response(serializer.data)
-
->>>>>>> a431546bcad1f465159950c0464182a393047361
 
             return Response(serializer.data, status=200)
         except SupplierTypeSociety.DoesNotExist:
@@ -1314,9 +1259,7 @@ class InventorySummaryAPIView(APIView):
         except StallInventory.DoesNotExist:
             return Response(status=404)
 
-
-<<<<<<< HEAD
-        return Response(status=201)
+        # return Response(status=201)
 
 
 class InventorySummaryAPIView(APIView):
@@ -1679,9 +1622,6 @@ class InventorySummaryAPIView(APIView):
             return Response(status=404)
 
 
-=======
->>>>>>> a431546bcad1f465159950c0464182a393047361
-
 class BasicPricingAPIView(APIView):
     # def get(self, request, id, format=None):
     #     response = {}
@@ -1823,7 +1763,69 @@ class TowerAPIView(APIView):
 
         # checking of notice board in tower == inventory summary nb_count
         total_nb_count = 0
-<<<<<<< HEAD
+        total_lift_count = 0
+        total_standee_count = 0
+        for tower in request.data['TowerDetails']:
+            total_nb_count += tower['notice_board_count_per_tower']
+            total_lift_count += tower['lift_count']
+            total_standee_count += tower['standee_count']
+
+        print "total_nb_count : ",total_nb_count
+        print "total_lift_count: ",total_lift_count
+        print "total_standee_count: ",total_standee_count
+
+
+        try:
+            inventory_obj = InventorySummary.objects.get(supplier=society) 
+        except InventorySummary.DoesNotExist:
+            return Response({'message' : 'Please fill Inventory Summary Tab','inventory':'true'},status=404)
+
+        print "inventory_obj.nb_count : ", inventory_obj.nb_count
+
+
+        if total_nb_count !=0 and total_nb_count != inventory_obj.nb_count:
+
+            return Response({'message' : 'Total Notice Board Count should equal to Notice Board Count in Inventory Summary Tab'}, status=404)
+        if total_lift_count !=0 and total_lift_count != inventory_obj.lift_count:
+            return Response({'message' : 'Total Lift Count should equal to Lift Count in Inventory Summary Tab'}, status=404)
+        if total_standee_count !=0 and total_standee_count != inventory_obj.total_standee_count:
+            return Response({'message' : 'Total Standee Count should equal to Standee Count in Inventory Summary Tab'}, status=404)
+
+
+        # checking ends here
+
+
+        for key in request.data['TowerDetails']:
+            if 'tower_id' in key:
+
+                try:
+                    item = SocietyTower.objects.get(pk=key['tower_id'])
+                    tower_dict = {
+                        'tower_tag' : key['tower_tag'],
+                        'tower_name' : key['tower_name'],
+                        'tower_id' :  key['tower_id'],
+                        'lift_count' : item.lift_count,
+                        'nb_count' : item.notice_board_count_per_tower,
+                        'standee_count' : item.standee_count,
+                    }
+
+                except SocietyTower.DoesNotExist:
+                    print "Tower does not exist"
+
+                serializer = SocietyTowerSerializer(item, data=key)
+                if serializer.is_valid():
+                    serializer.save(supplier=society)
+
+                else:
+                    return Response(serializer.errors, status=400)
+
+                if tower_dict['lift_count'] < key['lift_count']:
+                    self.save_lift_locations(tower_dict['lift_count'], key['lift_count'], tower_dict, society)
+                if tower_dict['nb_count'] < key['notice_board_count_per_tower']:
+                    self.save_nb_locations(tower_dict['nb_count'], key['notice_board_count_per_tower'], tower_dict, society)
+                if tower_dict['standee_count'] < key['standee_count']:
+                    self.save_standee_locations(tower_dict['standee_count'], key['standee_count'], tower_dict, society)
+
 
         total_lift_count = 0
         total_standee_count = 0
@@ -1888,72 +1890,6 @@ class TowerAPIView(APIView):
                 if tower_dict['standee_count'] < key['standee_count']:
                     self.save_standee_locations(tower_dict['standee_count'], key['standee_count'], tower_dict, society)
 
-=======
-
-        total_lift_count = 0
-        total_standee_count = 0
-        for tower in request.data['TowerDetails']:
-            total_nb_count += tower['notice_board_count_per_tower']
-            total_lift_count += tower['lift_count']
-            total_standee_count += tower['standee_count']
-
-        print "total_nb_count : ",total_nb_count
-        print "total_lift_count: ",total_lift_count
-        print "total_standee_count: ",total_standee_count
-
-
-        try:
-            inventory_obj = InventorySummary.objects.get(supplier=society) 
-        except InventorySummary.DoesNotExist:
-            return Response({'message' : 'Please fill Inventory Summary Tab','inventory':'true'},status=404)
-
-        print "inventory_obj.nb_count : ", inventory_obj.nb_count
-
-
-        if total_nb_count !=0 and total_nb_count != inventory_obj.nb_count:
-
-            return Response({'message' : 'Total Notice Board Count should equal to Notice Board Count in Inventory Summary Tab'}, status=404)
-        if total_lift_count !=0 and total_lift_count != inventory_obj.lift_count:
-            return Response({'message' : 'Total Lift Count should equal to Lift Count in Inventory Summary Tab'}, status=404)
-        if total_standee_count !=0 and total_standee_count != inventory_obj.total_standee_count:
-            return Response({'message' : 'Total Standee Count should equal to Standee Count in Inventory Summary Tab'}, status=404)
-
-
-        # checking ends here
-
-
-        for key in request.data['TowerDetails']:
-            if 'tower_id' in key:
-
-                try:
-                    item = SocietyTower.objects.get(pk=key['tower_id'])
-                    tower_dict = {
-                        'tower_tag' : key['tower_tag'],
-                        'tower_name' : key['tower_name'],
-                        'tower_id' :  key['tower_id'],
-                        'lift_count' : item.lift_count,
-                        'nb_count' : item.notice_board_count_per_tower,
-                        'standee_count' : item.standee_count,
-                    }
-
-                except SocietyTower.DoesNotExist:
-                    print "Tower does not exist"
-
-                serializer = SocietyTowerSerializer(item, data=key)
-                if serializer.is_valid():
-                    serializer.save(supplier=society)
-
-                else:
-                    return Response(serializer.errors, status=400)
-
-                if tower_dict['lift_count'] < key['lift_count']:
-                    self.save_lift_locations(tower_dict['lift_count'], key['lift_count'], tower_dict, society)
-                if tower_dict['nb_count'] < key['notice_board_count_per_tower']:
-                    self.save_nb_locations(tower_dict['nb_count'], key['notice_board_count_per_tower'], tower_dict, society)
-                if tower_dict['standee_count'] < key['standee_count']:
-                    self.save_standee_locations(tower_dict['standee_count'], key['standee_count'], tower_dict, society)
-
->>>>>>> a431546bcad1f465159950c0464182a393047361
             # else:
             #     serializer = SocietyTowerSerializer(data=key)
 
@@ -2020,7 +1956,7 @@ class TowerAPIView(APIView):
             lift.save()
             lift_inv.save()
             i += 1
-<<<<<<< HEAD
+
 
     def save_nb_locations(self, c1, c2, tower, society):
         i = c1 + 1
@@ -2155,9 +2091,6 @@ class PosterAPIView(APIView):
             return Response(status=404)
         except PosterInventory.DoesNotExist:
             return Response(status=404)
-
-=======
->>>>>>> a431546bcad1f465159950c0464182a393047361
 
     def save_nb_locations(self, c1, c2, tower, society):
         i = c1 + 1
@@ -2296,7 +2229,6 @@ class PosterAPIView(APIView):
 
 class FlierAPIView(APIView):
     def get(self, request, id, format=None):
-<<<<<<< HEAD
         # response = {}
         standees = []
 
@@ -2333,7 +2265,7 @@ class FlierAPIView(APIView):
             else:
                 return Response(standee_serializer.errors, status=400)
 
-=======
+
         response = {}
         fliers = []
         try:
@@ -2469,7 +2401,6 @@ class StandeeBannerAPIView(APIView):
             else:
                 return Response(standee_serializer.errors, status=400)
 
->>>>>>> a431546bcad1f465159950c0464182a393047361
         return Response(status=200)
 
 
