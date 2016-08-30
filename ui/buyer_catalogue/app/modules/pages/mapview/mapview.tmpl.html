@@ -225,12 +225,16 @@
              <!-- <span class = "space filterPanelHeader ">Total Price</span> -->
            </div>
         </div>
+        <div>
+        <button ng-show="show_societies" ng-click="showSocieties()">Map View</button>
+        <button ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
+        </div>
       </div>
 
     </div><!-- row div ends here-->
 </div><!-- containner div ends here-->
 <!-- unstructured section starts -->
-<div>
+<!-- <div> code moved under summary code, will be displayed below summary section
 <button ng-show="show_societies" ng-click="showSocieties()">Map View</button>
 <button ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
-</div>
+</div> -->
