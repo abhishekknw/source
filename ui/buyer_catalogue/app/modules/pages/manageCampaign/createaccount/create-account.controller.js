@@ -174,7 +174,7 @@ angular.module('machadaloPages')
       $scope.setCreate_Account = function(){
         console.log("hello");
         if($scope.setAccount == true){
-        $scope.model.account.name = $scope.model.business.name;
+        $scope.model.account.name = $scope.model.business.contacts[0].name;;
         $scope.model.account.email = $scope.model.business.email;
         $scope.model.account.phone = $scope.model.business.phone;
         $scope.model.account.address = $scope.model.business.address;

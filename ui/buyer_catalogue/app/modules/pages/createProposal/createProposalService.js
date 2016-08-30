@@ -6,11 +6,22 @@
   function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
 
   	var url_base = 'v0/ui/website/';
+    var url_base1 = 'v0/ui/'; 
 
   	var createProposalService = {};
   	var proposal_id = undefined;
 
-  	createProposalService.setProposalId = function(id){
+  	createProposalService.loadInitialData = function () {
+       var url = url_base1 + "create_supplier/load_initial_data/";
+       return machadaloHttp.get(url);
+    }
+
+    createProposalService.getLocations = function (type, id) {
+       var url = url_base1 + "locations/" + id + "/?type=" + type;
+       return machadaloHttp.get(url);
+   }
+
+    createProposalService.setProposalId = function(id){
   		proposal_id = id;
   	}
 
