@@ -48,19 +48,17 @@ angular.module('catalogueApp')
       });
 
      $scope.get_areas = function(index) {
-			 console.log(index);
      	//console.log($scope.cities);
      	var id = index;
      	// 	`	1aalert(id);
       createProposalService.getLocations('areas', id)
       .success(function (response){
           $scope.areas = response;
-          alert($scope.areas);
+        //  alert($scope.areas);
         });
     }
     $scope.get_sub_areas = function(index) {
       var id = index;
-			console.log(index);
       createProposalService.getLocations('sub_areas', id)
       .success(function (response){
           $scope.sub_areas = response;

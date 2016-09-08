@@ -117,6 +117,10 @@
          </ui-gmap-circle>
         <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'" events="'events'"
                          options="'options'" doRebuildAll="true" click="onClick">
+
+        <!-- <ui-gmap-markers models="society_markers1" coords="'self'" icon="'icon'" events="'events'"
+                                      options="'options'" doRebuildAll="true" click="onClick"> -->
+
         </ui-gmap-markers>
        <ui-gmap-markers models="center_marker" coords="'self'" icon="'icon'" options="'options'" doRebuildAll="true" click="onClick" events = "'events'">
         </ui-gmap-markers>
@@ -182,7 +186,7 @@
             <!-- <td ng-if="inv_standee">{{society.standee_price}}</td> -->
             <td ng-if="inv_stall">{{society.total_stall_count}}</td>
             <!-- <td ng-if="inv_stall">{{society.stall_price}}</td> -->
-            <td ng-if="inv_flier">{{society.total_flier_count}}</td>
+            <td ng-if="inv_flier">{{society.flier_frequency}}</td>
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
             <td>
               <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
