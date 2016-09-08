@@ -2621,4 +2621,4 @@ class saveBasicGymDetailsAPIView(APIView):
         ContactDetailsGeneric.objects.filter(id__in=contacts_ids).delete()
         return Response(status=200)
 
-        # End of contact saving
+        # End of contact Saving

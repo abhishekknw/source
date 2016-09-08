@@ -1,7 +1,10 @@
-
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
+<<<<<<< HEAD
+from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, BusinessInfo, BusinessAccountContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SupplierTypeCorporate, SocietyTower, FlatType, AccountInfo, ContactDetailsGeneric, SupplierTypeSalon, SupplierTypeGym
+=======
 from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, Campaign, BusinessInfo, BusinessAccountContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, FlyerInventory, StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SupplierTypeCorporate, SocietyTower, FlatType, AccountInfo, ContactDetailsGeneric, SupplierTypeSalon, SupplierTypeGym
+>>>>>>> a431546bcad1f465159950c0464182a393047361
 from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society, UserProfile, CorporateParkCompanyList, CorporateBuilding, CorporateBuildingWing, CorporateCompanyDetails, CompanyFloor
 from django.contrib.auth.models import User
 
@@ -214,12 +217,14 @@ class StallInventorySerializer(ModelSerializer):
 
 	class Meta:
 		model = StallInventory
-
+<<<<<<< HEAD
+=======
 
 class FlyerInventorySerializer(ModelSerializer):
 
 	class Meta:
 		model = FlyerInventory
+>>>>>>> a431546bcad1f465159950c0464182a393047361
 
 
 class StreetFurnitureSerializer(ModelSerializer):
@@ -334,6 +339,11 @@ class CampaignSocietyMappingSerializer(ModelSerializer):
 
 class BusinessSubTypesSerializer(ModelSerializer):
 
+<<<<<<< HEAD
+    class Meta:
+        model = BusinessSubTypes
+        depth = 2
+=======
     class Meta:
         model = BusinessSubTypes
         depth = 2
@@ -349,6 +359,7 @@ class BusinessInfoSerializer(ModelSerializer):
     # sub_type = BusinessSubTypesSerializer()
     # type = BusinessTypesSerializer()
     class Meta:
+>>>>>>> a431546bcad1f465159950c0464182a393047361
 
         model = BusinessInfo
         depth = 2
@@ -361,7 +372,7 @@ class BusinessAccountContactSerializer(ModelSerializer):
     class Meta:
         model = BusinessAccountContact
 
-
+<<<<<<< HEAD
 class BusinessTypesSerializer(ModelSerializer):
 
 	class Meta:
@@ -388,7 +399,12 @@ class BusinessAccountContactSerializer(ModelSerializer):
 class AccountInfoSerializer(ModelSerializer):
     # business = BusinessSerializer(read_only=True)
     class Meta:
+=======
 
+class AccountInfoSerializer(ModelSerializer):
+    # business = BusinessSerializer(read_only=True)
+    class Meta:
+>>>>>>> a431546bcad1f465159950c0464182a393047361
         model = AccountInfo
         depth = 2
         # fields = ('id','name')

@@ -710,6 +710,7 @@ class StallInventory(models.Model):
         db_table = 'stall_inventory'
 
 
+
 class FlyerInventory(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='flyers', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
@@ -1204,8 +1205,9 @@ class BusinessAccountContact(models.Model):
     spoc = models.BooleanField(db_column='SPOC', default=False)
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
 
+
     class Meta:
-        db_table = 'business_account_conatct'
+        db_table = 'business_account_contact'
         #db_table = 'BUSINESS_ACCOUNT_CONTACT'
 
 
@@ -1244,6 +1246,7 @@ class BusinessInfo(models.Model):
 
 
 
+
 class BusinessTypes(models.Model):
     id              = models.AutoField(db_column='ID', primary_key=True)
     business_type   = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
@@ -1256,9 +1259,9 @@ class BusinessTypes(models.Model):
         return self.business_type
 
     class Meta:
-
         #db_table = 'BUSINESS_TYPES'
         db_table = 'business_types'
+
 
 
 class BusinessSubTypes(models.Model):
@@ -1318,6 +1321,7 @@ class AccountInfo(models.Model):
         db_table = 'account_info'
 
 
+
 # class AccountContact(models.Model):
 #     id = models.AutoField(db_column='ID', primary_key=True)
 #     name = models.CharField(db_column='NAME', max_length=50, blank=True)
@@ -1366,6 +1370,7 @@ class ProposalInfo(models.Model):
         return self.proposal_versions.all().order_by('-timestamp')
 
     class Meta:
+
         #db_table = 'PROPOSAL_INFO'
         db_table = 'proposal_info'
 
@@ -1460,8 +1465,10 @@ class InventoryType(models.Model):
 
 
     class Meta:
+
         #db_table = 'INVENTORY_TYPE'
         db_table = 'inventory_type'
+
 
 
 class ShortlistedSpaces(models.Model):
