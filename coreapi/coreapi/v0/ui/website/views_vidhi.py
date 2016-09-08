@@ -1,4 +1,4 @@
-import math, random, string, operator
+import math, random, string
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -1300,65 +1300,15 @@ class GetFilteredSocietiesAPIView(APIView):
 
         if inventory_params:
             inventory_params = inventory_params.split()
-            print inventory_params
-            temp = None    #temporary variable     
             for param in inventory_params:
                 try:
-                    
-                    # | 'STFL' | 'CDFL' | 'PSLF' | 'STSLFL' | 'POCDFL' | 'STCDFL'
-                    if (param == 'POFL') | (param == 'STFL') | (param == 'SLFL') | (param == 'CDFL') | (param == 'POSLFL') | (param == 'STSLFL') | (param == 'POCDFL') | (param == 'STCDFL'):
-                        print "helllllloooooooooooooo"
-
-                        if param == 'POFL':
-                            temp_q = (Q(poster_allowed_nb=True) & Q(flier_allowed=True))
-
-                        if param == 'SLFL':
-                            temp_q = (Q(stall_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'STFL':
-                            temp_q = (Q(standee_allowed=True) & Q(flier_allowed=True))
-                            print q
-
-                        if param == 'CDFL':
-                            temp_q = (Q(car_display_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'POSLFL':
-                            temp_q = (Q(poster_allowed_nb=True) & Q(stall_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'STSLFL':
-                            temp_q = (Q(stall_allowed=True) & Q(standee_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'POCDFL':
-                            temp_q = (Q(poster_allowed_nb=True) & Q(car_display_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'STCDFL':
-                            temp_q = (Q(standee_allowed=True) & Q(car_display_allowed=True) & Q(flier_allowed=True))
-
+                    if param == 'PO':
+                        q &= (Q(poster_allowed_nb=True) | Q(poster_allowed_lift=True))
                     else:
-                        print "hurrrrrrrrrrrrrrrrrr"
-                        temp_q = Q(**{"%s" % inventory_dict[param]:'True'})
-
-                    if temp:
-                        q = (q | temp_q)
-                    else:
-                        q = temp_q
-                        temp=1                                                                                                                                                                                                                                                               
+                        inventory = inventory_dict[param]
+                        q &= Q(**{inventory : True})
                 except KeyError:
                     pass
-
-
-
-        # if inventory_params:
-        #     inventory_params = inventory_params.split()
-        #     for param in inventory_params:
-        #         try:
-        #             if param == 'PO':
-        #                 q &= (Q(poster_allowed_nb=True) | Q(poster_allowed_lift=True))
-        #             else:
-        #                 inventory = inventory_dict[param]
-        #                 q &= Q(**{inventory : True})
-        #         except KeyError:
-        #             pass
 
         societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
         societies = []
