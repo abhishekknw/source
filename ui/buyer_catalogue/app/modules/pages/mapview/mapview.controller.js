@@ -614,29 +614,6 @@ angular.module('catalogueApp')
                             $scope.inv_flier = true;
                         }
                     }
-
-                    // if(inventory_name=='poster+flyer'){
-                    //     if($scope.inv_poster == true && $scope.inv_flier == true ){
-                    //         $scope.inv_poster = false;
-                    //         $scope.inv_flier = false;
-                    //     }else{
-                    //         $scope.inv_poster = true;
-                    //         $scope.inv_flier = true;
-                    //     }
-                    // }
-
-                    if(inventory_name=='poster+stall+flyer'){
-                        if($scope.inv_poster1 == true && $scope.inv_stall1 == true && $scope.inv_flier1 == true ){
-                            $scope.inv_poster1 = false;
-                            $scope.inv_flier1 = false;
-                            $scope.inv_stall1 = false;
-                        }else{
-                            $scope.inv_poster1 = true;
-                            $scope.inv_flier1 = true;
-                            $scope.inv_stall1 = true;
-                        }
-                    }
-
                 }
 
                 $scope.getFilteredSocieties();
