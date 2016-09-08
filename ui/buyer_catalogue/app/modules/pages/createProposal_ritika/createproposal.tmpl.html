@@ -62,25 +62,25 @@
     					<th class="alignment">Space Type</th>
     					<th class="alignment">Action</th>
     				</tr>
-    			</thead>
+    			</thead>	
     			<tbody ng-repeat="center in model.centers track by $index">
     				<tr>
     					<td><input type="text" ng-model="center.center.center_name" class="form-control spacing"></td>
     					<td><input type="text" ng-model="center.center.address" class="form-control spacing"></td>
               <td>
-                <select name="city" class="form-control input-size" ng-change="get_areas(center.center.city)" ng-model="center.center.city">
+                <select name="city" class="form-control input-size" ng-change="get_areas()" ng-model="model.city_id" ng-required="true">
                   <option value="">Select City</option>
                   <option  ng-repeat="city in cities" value="{{city.id}}" required>{{city.city_name}}</option>
                 </select>
-              </td>
+              </td>              
               <td>
-                <select name="areas" class="form-control input-size" ng-change="get_sub_areas(center.center.area)" ng-model="center.center.area">
+                <select name="areas" class="form-control input-size" ng-change="get_sub_areas()" ng-model="model.area_id">
                   <option value="">Select Area</option>
                   <option  ng-repeat="area in areas" value="{{area.id}}" required>{{area.label}}</option>
                 </select>
-              </td>
+              </td>    					
               <td>
-                <select name="subareas" class="form-control input-size" ng-change="" ng-model="center.center.subarea">
+                <select name="subareas" class="form-control input-size" ng-change="" ng-model="model.subarea_id">
                   <option value="">Select SubArea</option>
                   <option  ng-repeat="area in sub_areas" value="{{area.id}}" required>{{area.subarea_name}}</option>
                 </select>
@@ -100,7 +100,7 @@
     								<th>Inventory Types</th>
     							</thead>
     							<tbody>
-    								<tr>
+    								<tr> 
     									<td><input type="checkbox" ng-model="center.center.space_mapping.society_allowed" ng-change="checkSpace(center, 'society')"></td>
     									<td>Society</td>
     									<td><input type="number" class="form-control" ng-model="center.center.space_mapping.society_count"></td>
@@ -133,4 +133,4 @@
     		</table>
     		<button class="btn btn-danger spacing" ng-click="submit()">Submit</button>
     	</div>
-    </form>
+    </form> 

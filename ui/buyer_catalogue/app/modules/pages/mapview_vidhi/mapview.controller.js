@@ -199,8 +199,6 @@ angular.module('catalogueApp')
                 .success(function(response, status){
                     console.log("Changing Center \nResponse is : ", response);
                     $scope.current_center = response;
-                    // $scope.area_societies = response.area_societies;
-                    // console.log($scope.area_societies);
                     console.log("\nAfter request $scope.current_center : ", $scope.current_center);
 
                     // for(var i=0;i<$scope.centers.length;i++)
@@ -209,10 +207,8 @@ angular.module('catalogueApp')
 
                     $scope.centers[$scope.current_center_index] = $scope.current_center;
                     deselect_all_society_filters();
-                    if($scope.current_center.societies != undefined){
+                    if($scope.current_center.societies != undefined)
                         $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
-                        // $scope.society_markers1 = assignMarkersToMap($scope.area_societies);
-                      }
                     else
                         $scope.society_markers = [];
 
@@ -357,24 +353,10 @@ angular.module('catalogueApp')
                 // initiated here as this is used in the service below
                 // similarly initiate for other spacecs as well
                 $scope.society_inventory_type = [
-                    {name : 'Poster',             code : 'PO',   selected : false },
-                    {name : 'Standee',            code : 'ST',   selected : false },
-                    {name : 'Stall',              code : 'SL',   selected : false },
-                    {name : 'Flyer',              code : 'FL',   selected : false },
-                    {name : 'Car',                code : 'CD',   selected : false },
-                    {name : 'Poster+Flyer',       code : 'POFL',   selected : false },
-                    {name : 'Standee+Flyer',       code : 'STFL',   selected : false },
-                    {name : 'Stall+Flyer',       code : 'SLFL',   selected : false },
-                    {name : 'CarDisp+Flyer',       code : 'CDFL',   selected : false },
-                    {name : 'Poster+Stall+Flyer',       code : 'POSLFL',   selected : false },
-                    {name : 'Standee+Stall+Flyer',       code : 'STSLFL',   selected : false },
-                    {name : 'Poster+Cardisplay+Flyer',       code : 'POCDFL',   selected : false },
-                    {name : 'Standee+Cardisplay+Flyer',       code : 'STCDFL',   selected : false },
-
-
-
-
-
+                    {name : 'Poster',       code : 'PO',   selected : false },
+                    {name : 'Standee',      code : 'ST',   selected : false },
+                    {name : 'Stall',        code : 'SL',   selected : false },
+                    {name : 'Flier',        code : 'FL',   selected : false },
                     // {name : 'banner_allowed',       code : 'BA',   selected : false},
                 ];
 
@@ -398,7 +380,7 @@ angular.module('catalogueApp')
                     $scope.current_center_id = $scope.current_center.center.id
 
                     $scope.map = {
-                      zoom: 12,
+                      zoom: 11,
                       bounds: {},
                       center: {
                         latitude: $scope.current_center.center.latitude,
@@ -525,7 +507,6 @@ angular.module('catalogueApp')
             $scope.spaceSociety = function(){
                 // this function handles selecting/deselecting society space i.e. society_allowed = true/false
                 if($scope.current_center.center.space_mappings.society_allowed){
-
                    $scope.getFilteredSocieties();
                    // types to be included later on
                    if(!$scope.current_center.societies_inventory){
@@ -560,60 +541,14 @@ angular.module('catalogueApp')
                 // This function is for showing societies on the map view
                 $scope.show_societies = !$scope.show_societies
             }
-            var pcount=0,stcount=0,slcount=0,flcount=0;
-            // This count variables are to display count tab in gridView
+
             $scope.societyFilter = function(value){
                 // this is called when some checkbox in society filters is changed
                 // value is just for inventories , inventories changed will be changed in
                 // $scope.current_center.societies_inventory as well (this is present only if society_allowed is true)
-
                 if(value){
                     var inventory_name = value.name.toLowerCase();
                     $scope.current_center.societies_inventory[inventory_name + '_allowed'] = value.selected;
-                    console.log(inventory_name + '_allowed');
-                    if(inventory_name=='poster' || inventory_name=='poster+flyer' || inventory_name=='poster+stall+flyer' || inventory_name=='poster+cardisplay+flyer'){
-                        if($scope.inv_poster == true && value.selected == false ){
-                          --pcount;
-                          if(pcount==0){
-                            $scope.inv_poster = false;}
-                        }else{
-                            pcount++;
-                            $scope.inv_poster = true;
-                        }
-                    }
-
-                    if(inventory_name=='standee' || inventory_name=='standee+flyer' || inventory_name=='standee+stall+flyer' || inventory_name=='standee+cardisplay+flyer' ){
-                        if($scope.inv_standee == true && value.selected == false ){
-                          --stcount;
-                          if(stcount==0){
-                            $scope.inv_standee = false;}
-                        }else{
-                            stcount++;
-                            $scope.inv_standee = true;
-                        }
-                    }
-
-                    if(inventory_name=='stall'|| inventory_name=='stall+flyer' || inventory_name=='standee+stall+flyer' || inventory_name=='poster+stall+flyer'){
-                        if($scope.inv_stall == true && value.selected == false ){
-                          --slcount;
-                          if(slcount==0){
-                            $scope.inv_stall = false;}
-                        }else{
-                          slcount++;
-                            $scope.inv_stall = true;
-                        }
-                    }
-
-                    if(inventory_name=='flyer' || inventory_name=='poster+flyer'|| inventory_name=='standee+flyer' || inventory_name=='stall+flyer' || inventory_name=='poster+stall+flyer' || inventory_name=='standee+stall+flyer' || inventory_name=='poster+cardisplay+flyer' || inventory_name=='standee+cardisplay+flyer'){
-                        if($scope.inv_flier == true && value.selected == false ){
-                          --flcount;
-                          if(flcount==0){
-                            $scope.inv_flier = false;}
-                        }else{
-                          flcount++;
-                            $scope.inv_flier = true;
-                        }
-                    }
                 }
 
                 $scope.getFilteredSocieties();
@@ -647,7 +582,6 @@ angular.module('catalogueApp')
 
                 mapViewService.getFilterSocieties(get_url_string)
                 .success(function(response, status){
-                  console.log(response);
                     $scope.current_center.societies = response.societies;
                     $scope.current_center.societies_inventory_count = response.societies_inventory_count;
                     $scope.current_center.societies_count = response.societies_count;

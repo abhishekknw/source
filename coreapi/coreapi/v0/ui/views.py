@@ -16,9 +16,9 @@ from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, 
                     SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SocietyTowerSerializer, FlatTypeSerializer,\
                     CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateCompanyDetailsSerializer, \
                     CompanyFloorSerializer, CorporateBuildingGetSerializer, CorporateCompanySerializer, CorporateParkCompanySerializer, \
-                    SupplierTypeSalonSerializer, SupplierTypeGymSerializer
+                    SupplierTypeSalonSerializer, SupplierTypeGymSerializer, FlyerInventorySerializer
 
-from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList
+from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory
 from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuilding, \
                     CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
@@ -764,9 +764,12 @@ class SocietyAPISocietyIdsView(APIView):
 class FlatTypeAPIView(APIView):
     def get(self, request, id, format=None):
         try:
+            society=SupplierTypeSociety.objects.get(pk=id)
             flatType = SupplierTypeSociety.objects.get(pk=id).flatTypes.all()
             serializer = FlatTypeSerializer(flatType, many=True)
             count = len(serializer.data)
+            print society.flat_count
+
 
             if count > 0:
                 flat_details_available=True
@@ -777,6 +780,7 @@ class FlatTypeAPIView(APIView):
             response['flat_type_count'] = count
             response['flat_details_available'] = flat_details_available
             response['flat_details'] = serializer.data
+            response['total_flat'] = society.flat_count
 
             return Response(response, status=200)
         except SupplierTypeSociety.DoesNotExist:
@@ -832,10 +836,26 @@ class FlatTypeAPIView(APIView):
                 serializer = FlatTypeSerializer(data=key)
             if serializer.is_valid():
                 serializer.save(society=society)
-            else:
-                return Response(serializer.errors, status=400)
+            #else:
+                #return Response(serializer.errors, status=400)
 
         return Response(status=201)
+
+    def delete(self, request, id, format=None):
+        try:
+            invid = request.query_params.get('flatid', None)
+            print invid
+           
+            society = SupplierTypeSociety.objects.get(pk=id)
+
+            flat = FlatType.objects.filter(pk =invid)
+            print "in flat delete"
+            flat.delete()
+            return Response(status=204)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except FlatType.DoesNotExist:
+            return Response(status=404)
 
 
 class InventorySummaryAPIView(APIView):
@@ -907,6 +927,41 @@ class InventorySummaryAPIView(APIView):
                         society.flier_allowed = False
                 else:
                     society.flier_allowed = False
+
+
+#flier creation
+
+
+                print "entering after flier flag"
+                flag1 = True
+                if 'id' in request.data:
+                    flag1 = False
+                    item = InventorySummary.objects.get(supplier=society)
+                    if request.data['flier_allowed']==True:
+                        if request.data['flier_frequency']!=None and item.flier_frequency < request.data['flier_frequency']:
+                            if item.flier_frequency == None:
+                                self.save_flyer_locations(0, request.data['flier_frequency'], society)
+                            else:
+                                self.save_flyer_locations(item.flier_frequency, request.data['flier_frequency'], society)
+                        serializer = InventorySummarySerializer(item, data=request.data)
+                else:
+                    if flag1 and request.data['flier_frequency']!=None:
+                        self.save_flyer_locations(0, request.data['flier_frequency'], society)
+                    serializer = InventorySummarySerializer(data=request.data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
                 society.stall_allowed = True if request.data['stall_allowed'] else False
@@ -1183,6 +1238,15 @@ class InventorySummaryAPIView(APIView):
             print stall_id
             stall = StallInventory(adinventory_id=stall_id, supplier_id=society.supplier_id)
             stall.save()
+
+    def save_flyer_locations(self, c1, c2, society):
+        count = int(c2) + 1
+        for i in range(c1+1, count):
+            flyer_id = society.supplier_id + "0000FL" + str(i).zfill(2)
+            print flyer_id
+            print society.flat_count
+            flyer = FlyerInventory(adinventory_id=flyer_id,flat_count=society.flat_count, supplier_id=society.supplier_id)
+            flyer.save()
 
     def delete(self, request, id, format=None):
         try:
@@ -1609,49 +1673,106 @@ class PosterAPIView(APIView):
 class FlierAPIView(APIView):
     def get(self, request, id, format=None):
         response = {}
+        fliers = []
         try:
-            mail_boxes = SupplierTypeSociety.objects.get(pk=id).mail_boxes.all()
-            serializer = MailboxInfoSerializer(mail_boxes, many=True)
-            mail_box_available = get_availability(serializer.data)
-            response['mail_box_available'] = mail_box_available
-            response['mail_box_details'] = serializer.data
+            society = SupplierTypeSociety.objects.get(pk=id)
+            flyers = FlyerInventory.objects.filter(supplier=id)
+            response['flat_count'] = society.flat_count
+
+            serializer = FlyerInventorySerializer(flyers, many=True)
+            response['flyers_data'] = serializer.data
+            towers = SupplierTypeSociety.objects.get(pk=id).towers.all().values()
+            
+            item = InventorySummary.objects.get(supplier=society)
+
+            #mail_boxes = SupplierTypeSociety.objects.get(pk=id).mail_boxes.all().values()
+            
+            
+            response['flyer_available'] = society.flier_allowed
+            #fliers.extend(towers)
+            #fliers.extend(mail_boxes)
+            #serializer = MailboxInfoSerializer(mail_boxes, many=True)
+            #mail_box_available = get_availability(serializer.data)
+            #mail_box_available = item.mailbox_allowed
+            #response['mail_box_available'] = item.mailbox_allowed
+            #response['mail_box_details'] = fliers
+            #response['tower_data'] = towers
+
+            
 
 
-            door_to_doors = SupplierTypeSociety.objects.get(pk=id).door_to_doors.all()
-            serializer = DoorToDoorInfoSerializer(door_to_doors, many=True)
-            door_to_door_allowed = get_availability(serializer.data)
-            response['door_to_door_allowed'] = door_to_door_allowed
-            response['door_to_door_details'] = serializer.data
+            #door_to_doors = SupplierTypeSociety.objects.get(pk=id).door_to_doors.all()
+            #serializer = DoorToDoorInfoSerializer(door_to_doors, many=True)
+            #door_to_door_allowed = get_availability(serializer.data)
+            #response['d2d_available'] = item.d2d_allowed
+            #response['door_to_door_details'] = serializer.data
 
             return Response(response, status=200)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
-        except MailboxInfo.DoesNotExist:
+        except FlyerInventory.DoesNotExist:
             return Response(status=404)
-        except DoorToDoorInfo.DoesNotExist:
-            return Response(status=404)
+        # except MailboxInfo.DoesNotExist:
+            # return Response(status=404)
+        # except DoorToDoorInfo.DoesNotExist:
+            # MultipleObjectsReturnedrn Response(status=404)
 
     def post(self, request, id, format=None):
-            #print request.data
+            society = SupplierTypeSociety.objects.get(supplier_id=id)
+            #mail = request.data['flyers_data']
+            #society.tower_id = mail['tower_id']
+            #if request.data['mail_box_available']:
+                #response = post_data(MailboxInfo, MailboxInfoSerializer, request.data['mail_box_details'], society)
+                #response = post_data(MailboxInfo, MailboxInfoSerializer, request.data['tower_data'], society)
+                #print request.data['tower_data']
+                #if response == False:
+              #      return Response(status=400)
+
+            #if request.data['door_to_door_allowed']:
+                #response = post_data(DoorToDoorInfo, DoorToDoorInfoSerializer, request.data['door_to_door_details'], society)
+                #if response == False:
+                 #   return Response(status=400)
+
+            #return Response(status=201)
+            for flyer in request.data['flyers_data']:
+                    #print request.data['tower_data']
+                if 'id' in flyer:
+                        
+                    flyer_item = FlyerInventory.objects.get(pk=flyer['id'])
+                    flyer_serializer = FlyerInventorySerializer(flyer_item,data=flyer)
+
+                else:
+                    flyer_serializer = FlyerInventorySerializer(data=flier)
+
+                if flyer_serializer.is_valid():
+                    flyer_serializer.save()
+                else:
+                    return Response(flyer_serializer.errors, status=400)
+
+            return Response(status=200)
+
+    def delete(self, request, id, format=None):
+        try:
+            #invId = request.query_params.get('invId', None)
+            adinventory_id = request.query_params.get('adinventory_id', None)
+            #invType = request.query_params.get('type', None)
+            #adinventory_type = request.query_params.get('type', None)
             society = SupplierTypeSociety.objects.get(pk=id)
-            if request.data['mail_box_available']:
-                response = post_data(MailboxInfo, MailboxInfoSerializer, request.data['mail_box_details'], society)
-                if response == False:
-                    return Response(status=400)
 
-            if request.data['door_to_door_allowed']:
-                response = post_data(DoorToDoorInfo, DoorToDoorInfoSerializer, request.data['door_to_door_details'], society)
-                if response == False:
-                    return Response(status=400)
-
-            return Response(status=201)
-
-
+            flyer = FlyerInventory.objects.filter(supplier=society, pk =adinventory_id)
+            print "in flyer delete"
+            flyer.delete()
+            return Response(status=204)
+        except SupplierTypeSociety.DoesNotExist:
+            return Response(status=404)
+        except FlyerInventory.DoesNotExist:
+            return Response(status=404)
 
 class StandeeBannerAPIView(APIView):
     def get(self, request, id, format=None):
         # response = {}
         standees = []
+
 
         towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
         society = SupplierTypeSociety.objects.get(pk=id)
@@ -2500,4 +2621,4 @@ class saveBasicGymDetailsAPIView(APIView):
         ContactDetailsGeneric.objects.filter(id__in=contacts_ids).delete()
         return Response(status=200)
 
-        # End of contact saving
+        # End of contact Saving

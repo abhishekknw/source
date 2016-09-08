@@ -51,10 +51,7 @@ angular
           url : '/societyList', //:societyId/
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyListCtrl'
-        })        
-
-
-
+        })
         // .state('campaign.mapView',{
           .state('MapView',{
            url : '/:proposal_id/mapview',
@@ -77,10 +74,6 @@ angular
            templateUrl : 'modules/pages/currentProposal/currentProposal.tmpl.html',
            controller : 'CurrentProposal',
         })
-        
-
-
-
         .state('campaign.societyDetails', {
           url : '/societyDetails/:societyId', //:societyId/
           templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
