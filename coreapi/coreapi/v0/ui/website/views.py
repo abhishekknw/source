@@ -1,4 +1,4 @@
-import math, random, string
+import math, random, string, operator
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -911,8 +911,9 @@ class SpacesOnCenterAPIView(APIView):
 
             # for society
             if space_mapping_object.society_allowed:
+                print Q()
                 q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-
+                
                 societies_inventory = space_mapping_object.get_society_inventories()
                 societies_inventory_serializer = InventoryTypeSerializer(societies_inventory)
                 # applying filter on basis of inventory
@@ -921,7 +922,8 @@ class SpacesOnCenterAPIView(APIView):
                         if param == 'poster_allowed' and societies_inventory.__dict__[param]:
                             q &= (Q(poster_allowed_nb=True) | Q(poster_allowed_lift=True))
                         elif societies_inventory.__dict__[param]:
-                            q &= Q(**{param : True})
+                            q |= Q(**{param : True})
+                            
                     except KeyError:
                         pass
 
@@ -932,6 +934,7 @@ class SpacesOnCenterAPIView(APIView):
                 society_ids = []
                 societies_count = 0
                 for society in societies_temp:
+                    print society
                     if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         society['society_latitude'], society['society_longitude']):
                         print "\n\nsociety_id : ", society['supplier_id']
@@ -1046,6 +1049,7 @@ class SpacesOnCenterAPIView(APIView):
         latitude = float(center['latitude'])
         longitude = float(center['longitude'])
         radius = float(center['radius'])
+        # area= "Andheri(E)"
         delta_dict = get_delta_latitude_longitude(radius, latitude)
 
         delta_latitude = delta_dict['delta_latitude']
@@ -1058,7 +1062,7 @@ class SpacesOnCenterAPIView(APIView):
 
         if space_mappings['society_allowed']:
             q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-
+            # p = Q(society_locality=area)
             try:
                 societies_inventory = center_info['societies_inventory']
             except KeyError:
@@ -1073,6 +1077,8 @@ class SpacesOnCenterAPIView(APIView):
                 except KeyError:
                     print "key error occured"
                     pass
+            # societies_temp1 = SupplierTypeSociety.objects.filter(p).values('supplier_id','society_latitude','society_longitude','society_zip')    
+            # print societies_temp1,"yogesh"     
 
             societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
             societies = []
@@ -1120,6 +1126,7 @@ class SpacesOnCenterAPIView(APIView):
             response['societies_inventory_count'] = societies_inventory_count
             response['societies_inventory'] = societies_inventory
             response['societies_count'] = societies_count
+            # response['area_societies'] = societies_temp1 
 
         if space_mappings['corporate_allowed']:
             pass
@@ -1190,10 +1197,12 @@ class GetFilteredSocietiesAPIView(APIView):
         radius = request.query_params.get('r',None) # radius change
         location_params = request.query_params.get('loc',None)
         society_quality_params = request.query_params.get('qlt',None)
+        print society_quality_params
         society_quantity_params = request.query_params.get('qnt',None)
         flat_count = request.query_params.get('flc',None)
         flat_type_params = request.query_params.get('flt',None)
         inventory_params = request.query_params.get('inv',None)
+        print inventory_params
 
 
         q = Q()
@@ -1215,8 +1224,10 @@ class GetFilteredSocietiesAPIView(APIView):
             flat_types = []
             flat_type_params = flat_type_params.split()
             for param in flat_type_params:
+                print param
                 try:
                     flat_types.append(flat_type_dict[param])
+                    print flat_type_dict[param]
                 except KeyError:
                     pass
 
@@ -1247,7 +1258,7 @@ class GetFilteredSocietiesAPIView(APIView):
         min_longitude = longitude - delta_dict['delta_longitude']
 
         q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-
+        print q,"vidhi"
         if location_params:
             location_ratings = []
             location_params = location_params.split()
@@ -1305,17 +1316,62 @@ class GetFilteredSocietiesAPIView(APIView):
 
         if inventory_params:
             inventory_params = inventory_params.split()
+            print inventory_params
+            temp = None    #temporary variable     
             for param in inventory_params:
                 try:
-                    if param == 'PO':
-                        q &= (Q(poster_allowed_nb=True) | Q(poster_allowed_lift=True))
+                    
+                    # | 'STFL' | 'CDFL' | 'PSLF' | 'STSLFL' | 'POCDFL' | 'STCDFL'
+                    if (param == 'POFL') | (param == 'STFL') | (param == 'SLFL') | (param == 'CDFL') | (param == 'POSLFL') | (param == 'STSLFL') | (param == 'POCDFL') | (param == 'STCDFL'):
+                        print "helllllloooooooooooooo"
+
+                        if param == 'POFL':
+                            temp_q = (Q(poster_allowed_nb=True) & Q(flier_allowed=True))
+
+                        if param == 'SLFL':
+                            temp_q = (Q(stall_allowed=True) & Q(flier_allowed=True))
+
+                        if param == 'STFL':
+                            temp_q = (Q(standee_allowed=True) & Q(flier_allowed=True))
+                            print q
+
+                        if param == 'CDFL':
+                            temp_q = (Q(car_display_allowed=True) & Q(flier_allowed=True))
+
+                        if param == 'POSLFL':
+                            temp_q = (Q(poster_allowed_nb=True) & Q(stall_allowed=True) & Q(flier_allowed=True))
+
+                        if param == 'STSLFL':
+                            temp_q = (Q(stall_allowed=True) & Q(standee_allowed=True) & Q(flier_allowed=True))
+
+                        if param == 'POCDFL':
+                            temp_q = (Q(poster_allowed_nb=True) & Q(car_display_allowed=True) & Q(flier_allowed=True))
+
+                        if param == 'STCDFL':
+                            temp_q = (Q(standee_allowed=True) & Q(car_display_allowed=True) & Q(flier_allowed=True))
+
                     else:
-                        inventory = inventory_dict[param]
-                        q &= Q(**{inventory : True})
+                        temp_q = Q(**{"%s" % inventory_dict[param]:'True'})
+
+                    if temp:
+                        q = (q | temp_q)
+                    else:
+                        q = temp_q
+                        temp=1                                                                                                                                                                                                                                                               
                 except KeyError:
                     pass
 
+                    # else:
+                    #     inventory = inventory_dict[param]
+                    #     q |= Q(**{inventory : True})
+
+                    #     print inventory
+                    #     print q,"helllllloooooooooooooo"
+                    #     #print Q(**{inventory : True})),"hi"
+
+
         societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+        print societies_temp
         societies = []
         society_ids = []
         societies_count = 0
@@ -1341,6 +1397,8 @@ class GetFilteredSocietiesAPIView(APIView):
                     society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
                 if society_inventory_obj.flier_allowed:
+                    print society_inventory_obj.flier_allowed
+                    print society_inventory_obj
                     society['flier_frequency'] = society_inventory_obj.flier_frequency
                     society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
