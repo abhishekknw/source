@@ -651,6 +651,7 @@ angular.module('catalogueApp')
             mapViewService.createFinalProposal($scope.proposal_id_temp, $scope.centers)
             .success(function(response, status){
                 console.log("Successfully Saved");
+                $location.path('/' + $scope.proposal_id_temp + '/showcurrentproposal');
             })
             .error(function(response, status){
                 console.log("Error response is : ", response);
