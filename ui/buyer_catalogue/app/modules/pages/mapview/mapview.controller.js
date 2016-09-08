@@ -604,7 +604,7 @@ angular.module('catalogueApp')
                         }
                     }
 
-                    if(inventory_name=='flyer' || inventory_name=='poster+flyer'|| inventory_name=='standee+flyer' || inventory_name=='stall+flyer' || inventory_name=='poster+stall+flyer' || inventory_name=='standee+stall+flyer' || inventory_name=='poster+cardisplay+flyer' || inventory_name=='standee+cardisplay+flyer'){
+                    if(inventory_name=='flyer' || inventory_name=='poster+flyer'|| inventory_name=='standee+flyer' || inventory_name=='stall+flyer' || inventory_name=='poster+stall+flyer' || inventory_name=='standee+stall+flyer' || inventory_name=='poster+cardisplay+flyer' || inventory_name == 'standee+cardisplay+flyer' || inventory_name == 'cardisp+flyer'){
                         if($scope.inv_flier == true && value.selected == false ){
                           --flcount;
                           if(flcount==0){
