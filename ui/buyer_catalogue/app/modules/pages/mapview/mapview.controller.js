@@ -13,6 +13,25 @@ angular.module('catalogueApp')
             longitude: 73.48,
           }
         };
+        $scope.options = {scrollwheel: false,
+          mapTypeControl: true,
+    mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+        position: google.maps.ControlPosition.TOP_LEFT
+    },
+          zoomControl: true,
+    zoomControlOptions: {
+      style: google.maps.ZoomControlStyle.HORIZONTAL_BAR,
+        position: google.maps.ControlPosition.TOP_RIGHT
+    },
+    streetViewControl: true,
+          streetViewControlOptions: {
+              position: google.maps.ControlPosition.TOP_RIGHT
+          },
+
+
+
+        };
 
         // initial_center currently no use AND old and new center to track whether center marker has been changed or not
         $scope.inital_center = {}
@@ -357,19 +376,19 @@ angular.module('catalogueApp')
                 // initiated here as this is used in the service below
                 // similarly initiate for other spacecs as well
                 $scope.society_inventory_type = [
-                    {name : 'Poster',             code : 'PO',   selected : false },
-                    {name : 'Standee',            code : 'ST',   selected : false },
-                    {name : 'Stall',              code : 'SL',   selected : false },
-                    {name : 'Flyer',              code : 'FL',   selected : false },
-                    {name : 'Car',                code : 'CD',   selected : false },
-                    {name : 'Poster+Flyer',       code : 'POFL',   selected : false },
-                    {name : 'Standee+Flyer',       code : 'STFL',   selected : false },
-                    {name : 'Stall+Flyer',       code : 'SLFL',   selected : false },
-                    {name : 'CarDisp+Flyer',       code : 'CDFL',   selected : false },
-                    {name : 'Poster+Stall+Flyer',       code : 'POSLFL',   selected : false },
-                    {name : 'Standee+Stall+Flyer',       code : 'STSLFL',   selected : false },
-                    {name : 'Poster+Cardisplay+Flyer',       code : 'POCDFL',   selected : false },
-                    {name : 'Standee+Cardisplay+Flyer',       code : 'STCDFL',   selected : false },
+                    {name : 'Poster(PO)',  code : 'PO',   selected : false },
+                    {name : 'Standee(ST)', code : 'ST',   selected : false },
+                    {name : 'Stall(SL)',   code : 'SL',   selected : false },
+                    {name : 'Flyer(FL)',   code : 'FL',   selected : false },
+                    {name : 'Car(CD)',     code : 'CD',   selected : false },
+                    {name : 'PO & FL',     code : 'POFL',   selected : false },
+                    {name : 'ST & FL',       code : 'STFL',   selected : false },
+                    {name : 'SL & FL',       code : 'SLFL',   selected : false },
+                    {name : 'CD & FL',       code : 'CDFL',   selected : false },
+                    {name : 'PO & SL & FL',    code : 'POSLFL',   selected : false },
+                    {name : 'ST & SL& FL',    code : 'STSLFL',   selected : false },
+                    {name : 'PO & CD & FL',    code : 'POCDFL',   selected : false },
+                    {name : 'ST & CD & FL',    code : 'STCDFL',   selected : false },
 
 
 

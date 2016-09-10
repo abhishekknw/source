@@ -3,29 +3,24 @@
 <div class="navbar-default nav-subtab space">
   <div class="table">
     <div class="row">
-      <div class="col-md-1"><b>Select Center</b></div>
+      <div class="col-md-2"><b>Select Advertising Location</b></div>
       <div class="col-md-2">
         <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
           <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
          </select>
       </div>
-      <div class="col-md-1"><b>Old Center:</b></div>
+      <!-- <div class="col-md-1"><b>Old Center:</b></div>
       <div class="col-md-1">Latitude</div>
-      <div class="col-md-2">{{old_center.latitude}}
-      <!-- <input class="box-spacing" type="text" ng-model="old_center.latitude" ng-readonly="true">--></div>
-      <div class="col-md-1">Longitude</div>
-      <div class="col-md-1">{{old_center.longitude}}
-      <!-- <input class="box-spacing" type="text"  ng-model="old_center.longitude" ng-readonly="true">--></div>
-    </div>
-    <div class="row">
-      <div class="col-md-3"></div>
+      <div class="col-md-2">{{old_center.latitude}}</div> -->
+      <!-- <input class="box-spacing" type="text" ng-model="old_center.latitude" ng-readonly="true">-->
+      <!-- <div class="col-md-1">Longitude</div>
+      <div class="col-md-1">{{old_center.longitude}}</div> -->
+      <!-- <input class="box-spacing" type="text"  ng-model="old_center.longitude" ng-readonly="true">-->
       <div class="col-md-1"><b>New Center:</b></div>
       <div class="col-md-1">Latitude</div>
-      <div class="col-md-2">{{new_center.latitude}}
-      <!-- <input class="box-spacing" type="text" ng-model="new_center.latitude" ng-readonly="true">--></div>
+      <div class="col-md-2">{{new_center.latitude}}</div>
       <div class="col-md-1">Longitude</div>
-      <div class="col-md-1">{{new_center.longitude}}
-      <!-- <input class="box-spacing" type="text"  ng-model="new_center.longitude" ng-readonly="true">--></div>
+      <div class="col-md-1">{{new_center.longitude}}</div>
     </div>
     <div class="row">
       <div class="col-md-2"></div>
@@ -45,9 +40,7 @@
     </div>
   </div>
 </div>
-
 <!-- End: Center and Radius Detail Section -->
-
 <div class = "container page-panel">
   <div class = "row">
    <div class="col-md-2 search-bin" id="searchBinHolder">
@@ -96,7 +89,7 @@
 <!-- Map Starts here -->
 <div class="col-md-3 map-width" ng-if="!show_societies">
 <style type="text/css">
-    .angular-google-map-container { height: 970px; width: 840px;}
+    .angular-google-map-container { height: 700px; width: 840px;}
 </style>
 <div class = "mapPosition">
   <div>
@@ -109,18 +102,10 @@
                  Locality Rating : {{space.location_type}}<br>
               </div>
         </ui-gmap-window>
-
          <!-- <ui-gmap-circle ng-repeat="c in circles track by c.id" center="c.center" stroke="c.stroke" fill="c.fill" radius="c.radius" visible="c.visible" geodesic="c.geodesic" editable="c.editable" draggable="c.draggable" clickable="c.clickable" control="c.control"></ui-gmap-circle> -->
-
-         <ui-gmap-circle center="circle.center" stroke="circle.stroke" radius="circle.radius" clickable="circle.clickable", control="circle.control">
-
-         </ui-gmap-circle>
-        <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'" events="'events'"
-                         options="'options'" doRebuildAll="true" click="onClick">
-
-        <!-- <ui-gmap-markers models="society_markers1" coords="'self'" icon="'icon'" events="'events'"
-                                      options="'options'" doRebuildAll="true" click="onClick"> -->
-
+        <ui-gmap-circle center="circle.center" stroke="circle.stroke" radius="circle.radius" clickable="circle.clickable", control="circle.control"></ui-gmap-circle>
+        <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'" events="'events'" options="'options'" doRebuildAll="true" click="onClick">
+        <!-- <ui-gmap-markers models="society_markers1" coords="'self'" icon="'icon'" events="'events'" options="'options'" doRebuildAll="true" click="onClick"> -->
         </ui-gmap-markers>
        <ui-gmap-markers models="center_marker" coords="'self'" icon="'icon'" options="'options'" doRebuildAll="true" click="onClick" events = "'events'">
         </ui-gmap-markers>
