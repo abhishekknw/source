@@ -126,24 +126,6 @@
             <th class = "col-md-4">Action</th>
           </tr>
           <tr>
-            <!-- <th colspan="8"></th> -->
-            <!--<th ng-if="inv_poster">Count</th>
-            <th ng-if="inv_poster">Society Price</th>
-            <th ng-if="inv_poster">Factor</th>
-            <th ng-if="inv_poster">Effective Price</th> -->
-            <!--<th ng-if="inv_standee">Count</th>
-            <th ng-if="inv_standee">Society Price</th>
-            <th ng-if="inv_standee">Factor</th>
-            <th ng-if="inv_standee">Effective Price</th> -->
-            <!--<th ng-if="inv_stall">Count</th>
-            <th ng-if="inv_stall">Society Price</th>
-            <th ng-if="inv_stall">Factor</th>
-            <th ng-if="inv_stall">Effective Price</th> -->
-            <!-- <th ng-if="inv_flier">Count</th>
-            <th ng-if="inv_flier">Society Price</th>
-            <th ng-if="inv_flier">Factor</th>
-            <th ng-if="inv_flier">Effective Price</th> -->
-            <!-- <th colspan="2"></th> -->
           </tr>
         </thead>
         <tbody>
@@ -176,8 +158,7 @@
           </tr>
         </tbody>
       </table>
-      <!-- <div  ng-repeat="society in current_center.societies">
-      </div> -->
+      <!-- <div  ng-repeat="society in current_center.societies"></div> -->
         <button class="btn btn-danger active" ng-click="submitProposal()">Submit Final Proposal</button>
         <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" >Add Socities</button>
   </div>
@@ -196,13 +177,17 @@
              <div class = "nbCheckbox two-col">Societies:  {{current_center.societies_count}}</div>
             <!--added if condition below to display those inventories selected by user in sumarry section-->
             <hr>
-              <span class = "space filterPanelHeader ">Inventory Count</span>
+              <span class = "space filterPanelHeader">Inventory Count</span>
               <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{current_center.societies_inventory_count.fliers}}</div>
               <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{current_center.societies_inventory_count.posters}}</div>
               <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{current_center.societies_inventory_count.stalls}}</div>
               <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{current_center.societies_inventory_count.standees}}</div>
             <hr>
-             <span class = "space filterPanelHeader ">Total Number of Impressions</span>
+             <span class = "space filterPanelHeader">Total Number of Impressions</span>
+             <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{impressions.fliers}}</div>
+             <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{impressions.posterImpression}}</div>
+             <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{impressions.stalls}}</div>
+             <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{impressions.standeeImpression}}</div>
             <hr>
              <!-- <span class = "space filterPanelHeader ">Total Price</span> -->
            </div>

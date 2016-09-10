@@ -10,7 +10,7 @@
 }
 .two-col{
 	min-width: 50%;
-	max-width: 45%;
+	/*max-width: 51%;*/
 }
 .nbCheckbox{
 	position: relative;
