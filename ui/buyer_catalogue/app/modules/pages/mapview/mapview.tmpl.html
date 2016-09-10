@@ -3,7 +3,7 @@
 <div class="navbar-default nav-subtab space">
   <div class="table">
     <div class="row">
-      <div class="col-md-2"><b>Select Advertising Location</b></div>
+      <div class="col-md-2 aligndropdown">Select Advertising Location</div>
       <div class="col-md-2">
         <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
           <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
