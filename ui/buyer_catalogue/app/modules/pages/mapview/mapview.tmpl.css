@@ -35,6 +35,13 @@ body{
     font-weight: 400;
     display: block;
 }
+.filterscroll{
+	overflow: scroll;
+	overflow-x:hidden;
+	overflow-y: scroll;
+	position: relative;
+  height: 700px;
+}
 .panelSpacing{
 	 margin left: -29%;
 	 margin-right: 29%;
