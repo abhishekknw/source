@@ -203,12 +203,20 @@
             <hr>
              <span class = "space filterPanelHeader ">Space Count</span>
              <div class = "nbCheckbox two-col">Societies:  {{current_center.societies_count}}</div>
-            <hr>
+            <!-- <hr>
               <span class = "space filterPanelHeader ">Inventory Count</span>
               <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.fliers != null">Flyers: {{current_center.societies_inventory_count.fliers}}</div>
               <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.posters != null">Posters: {{current_center.societies_inventory_count.posters}}</div>
               <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.stalls != null">Stalls: {{current_center.societies_inventory_count.stalls}}</div>
               <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.standees != null">Standees: {{current_center.societies_inventory_count.standees}}</div>
+            <hr> -->
+            <!--added if condition below to display those inventories selected by user in sumarry section-->
+            <hr>
+              <span class = "space filterPanelHeader ">Inventory Count</span>
+              <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{current_center.societies_inventory_count.fliers}}</div>
+              <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{current_center.societies_inventory_count.posters}}</div>
+              <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{current_center.societies_inventory_count.stalls}}</div>
+              <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{current_center.societies_inventory_count.standees}}</div>
             <hr>
              <span class = "space filterPanelHeader ">Total Number of Impressions</span>
             <hr>

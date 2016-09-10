@@ -13,12 +13,13 @@ angular.module('catalogueApp')
             longitude: 73.48,
           }
         };
-        $scope.options = {scrollwheel: false,
+        $scope.options = {
+          scrollwheel: false,
           mapTypeControl: true,
-    mapTypeControlOptions: {
-        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-        position: google.maps.ControlPosition.TOP_LEFT
-    },
+          mapTypeControlOptions: {
+           style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+           position: google.maps.ControlPosition.TOP_LEFT
+          },
           zoomControl: true,
     zoomControlOptions: {
       style: google.maps.ZoomControlStyle.HORIZONTAL_BAR,
@@ -28,9 +29,6 @@ angular.module('catalogueApp')
           streetViewControlOptions: {
               position: google.maps.ControlPosition.TOP_RIGHT
           },
-
-
-
         };
 
         // initial_center currently no use AND old and new center to track whether center marker has been changed or not
@@ -590,7 +588,7 @@ angular.module('catalogueApp')
                     var inventory_name = value.name.toLowerCase();
                     $scope.current_center.societies_inventory[inventory_name + '_allowed'] = value.selected;
                     console.log(inventory_name + '_allowed');
-                    if(inventory_name=='poster' || inventory_name=='poster+flyer' || inventory_name=='poster+stall+flyer' || inventory_name=='poster+cardisplay+flyer'){
+                    if(inventory_name =='poster' || inventory_name=='poster+flyer' || inventory_name=='poster+stall+flyer' || inventory_name=='poster+cardisplay+flyer'){
                         if($scope.inv_poster == true && value.selected == false ){
                           --pcount;
                           if(pcount==0){
@@ -634,7 +632,6 @@ angular.module('catalogueApp')
                         }
                     }
                 }
-
                 $scope.getFilteredSocieties();
             }
 
