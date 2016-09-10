@@ -1,7 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
     .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady) {
-
         // You have to initailise some value for the map center beforehand
         // $scope.map is just for that purpose --> Set it according to your needs.
         // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
@@ -21,11 +20,11 @@ angular.module('catalogueApp')
            position: google.maps.ControlPosition.TOP_LEFT
           },
           zoomControl: true,
-    zoomControlOptions: {
-      style: google.maps.ZoomControlStyle.HORIZONTAL_BAR,
-        position: google.maps.ControlPosition.TOP_RIGHT
-    },
-    streetViewControl: true,
+          zoomControlOptions: {
+            style: google.maps.ZoomControlStyle.HORIZONTAL_BAR,
+            position: google.maps.ControlPosition.TOP_RIGHT
+          },
+          streetViewControl: true,
           streetViewControlOptions: {
               position: google.maps.ControlPosition.TOP_RIGHT
           },
@@ -92,6 +91,7 @@ angular.module('catalogueApp')
 
 
             var deselect_all_society_filters = function(){
+              alert('vidhi');
                 for(var i=0;i<$scope.society_location.length; i++)
                     $scope.society_location[i].selected = false;
 
@@ -112,25 +112,19 @@ angular.module('catalogueApp')
                     latitude : $scope.map.center.latitude,
                     longitude : $scope.map.center.longitude,
                 }
-
                 $scope.old_center = {
                     latitude : $scope.map.center.latitude,
                     longitude : $scope.map.center.longitude,
                 };
-
                 $scope.new_center = {
                     latitude : $scope.map.center.latitude,
                     longitude : $scope.map.center.longitude
                 };
             }
-
-
             $scope.resetCenter = function(){
                 // reset center to what is saved in database
                 // only the center u are working on is reset not all centers
                 $scope.initial_center_changed[$scope.current_center_index] = false;
-
-
                 // on changing center lot of things changes
                 // map center || circle center and radius || current_center || society_markers || old_center new_center
                 mapViewService.resetCenter($scope.proposal_id_temp, $scope.current_center.center.id)
@@ -152,14 +146,11 @@ angular.module('catalogueApp')
                         // $scope.society_allowed = true;
                         set_space_inventory($scope.current_center.societies_inventory, $scope.society_inventory_type);
                         $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
-                    }
-                    else{
+                    }else{
                         $scope.society_markers = [];
                         deselect_space_inventory($scope.society_inventory_type);
                     }
-
-                        // ADDNEW --> Do the same for corporates and gyms and salons
-
+                    // ADDNEW --> Do the same for corporates and gyms and salons
                     // change the position of center_marker as well
                     $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                     // console.log("$scope.center_marker is ", $scope.center_marker);
@@ -169,48 +160,36 @@ angular.module('catalogueApp')
                 })
             }
 
-
-
             $scope.changeCenter = function(change_center){
                 // if change_center present then change center to new_center latitude longitude
                 // calls backend and modifies the current_center and ultimately the actual center (doesn't save at this point)
                 // on changing center lot of things changes
                 // map center || circle center and radius || current_center || society_markers || old_center new_center
                 $scope.initial_center_changed[$scope.current_center_index] = true;
-
-                console.log("\nInitial $scope.current_center  : ", $scope.current_center);
                 if(change_center){
                     // only if change_center present center is changed
                     $scope.old_center = {
                         latitude : $scope.new_center.latitude,
                         longitude : $scope.new_center.longitude,
                     }
-
                     $scope.current_center.center.latitude = $scope.new_center.latitude;
                     $scope.current_center.center.longitude = $scope.new_center.longitude;
-
                     // change map center to new lat lng
                     $scope.map.center.latitude = $scope.new_center.latitude;
                     $scope.map.center.longitude = $scope.new_center.longitude;
-
                     $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                     $scope.center_changed = false;
                 }
-
-
                 $scope.circle.center.latitude = $scope.current_center.center.latitude;
                 $scope.circle.center.longitude = $scope.current_center.center.longitude;
                 $scope.circle.radius = $scope.current_center.center.radius * 1000;
                 console.log("$scope.circle  : ", $scope.circle);
-
                 // saves bandwidth
                 // ADDNEW --> add new spaces variables as well
                 delete $scope.current_center.society_inventory;
                 delete $scope.current_center.societies;
                 delete $scope.current_center.corporate_inventory;
                 delete $scope.current_center.corporates;
-
-
                 // this service will return above deleted variables if checked in the filter
                 mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center)
                 .success(function(response, status){
@@ -223,30 +202,19 @@ angular.module('catalogueApp')
                     // for(var i=0;i<$scope.centers.length;i++)
                     //     if($scope.current_center.id == $scope.centers[i].length)
                     //         $scope.centers[i] = angular.copy($scope.current_center);
-
                     $scope.centers[$scope.current_center_index] = $scope.current_center;
                     deselect_all_society_filters();
                     if($scope.current_center.societies != undefined){
                         $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
                         // $scope.society_markers1 = assignMarkersToMap($scope.area_societies);
-                      }
-                    else
+                      }else
                         $scope.society_markers = [];
-
                 })
                 .error(function(response, status){
                     if (typeof(response) == typeof([]))
                         console.log("Error fetching : ", response.message);
                 });
-
-
             }
-
-
-            // $scope.printCurrentCenters = function(){
-            //     console.log("\n\nAfter request $scope.centers : ", $scope.centers);
-            // }
-
 
             $scope.changeCurrentCenter = function(center_id){
                 // changes the center currently shown on the map
@@ -257,41 +225,30 @@ angular.module('catalogueApp')
                         $scope.current_center = $scope.centers[i]
                         $scope.current_center_index = i;
                     }
-
                 // make the current center of map equal to center of the map
                 $scope.map.center.latitude = $scope.current_center.center.latitude;
                 $scope.map.center.longitude = $scope.current_center.center.longitude;
-
                 $scope.circle.center.latitude = $scope.current_center.center.latitude;
                 $scope.circle.center.longitude = $scope.current_center.center.longitude;
                 $scope.circle.radius = $scope.current_center.center.radius * 1000;
 
                 set_centers();
                 deselect_all_society_filters();
-
                 // show the societies only if selected in this center
                 if($scope.current_center.center.space_mappings.society_allowed){
                     // $scope.society_allowed = true;
                     $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
                     set_space_inventory($scope.current_center.societies_inventory, $scope.society_inventory_type);
-                }
-                else{
+                }else{
                     // $scope.society_allowed = false;
                     $scope.society_markers = [];
                     deselect_space_inventory($scope.society_inventory_type);
                 }
-
-
                 //ADDNEW -->  do the same for corporate and gym and salonS
                 // do the same for corporate and gym and salons
-
-
                 // reassing the center_marker acc. to the selected center
                 $scope.center_marker =assignCenterMarkerToMap($scope.current_center.center);
             }
-
-
-
 
             function assignCenterMarkerToMap(center){
                 // This is to assign marker for the current center on the map
@@ -309,17 +266,13 @@ angular.module('catalogueApp')
                             console.log("new Latitude : ", $scope.new_center.latitude);
                             if($scope.old_center.latitude != $scope.new_center.latitude || $scope.old_center.longitude != $scope.new_center.longitude){
                                 $scope.center_changed = true;
-                            }
-                            else
+                            }else
                                 $scope.center_changed = false;
                         }
                     }
                 });
-
                 return center_marker;
             }
-
-
 
             function assignMarkersToMap(spaces) {
                 // assigns spaces(society, corporate) markers on the map
@@ -357,20 +310,15 @@ angular.module('catalogueApp')
                         //         $scope.windowCoords.longitude = model.longitude;
                         //         $scope.show = false;
                         //     }
-
                         // }
                     });
                 };
-
                 // console.log("markers done");
                 return markers;
             };
-
-
             // Execute code inside them only when uiGMapIsReady is done --> map is loaded properly
             uiGmapIsReady.promise()
             .then(function(instances) {
-
                 // initiated here as this is used in the service below
                 // similarly initiate for other spacecs as well
                 $scope.society_inventory_type = [
@@ -387,43 +335,28 @@ angular.module('catalogueApp')
                     {name : 'ST & SL& FL',    code : 'STSLFL',   selected : false },
                     {name : 'PO & CD & FL',    code : 'POCDFL',   selected : false },
                     {name : 'ST & CD & FL',    code : 'STCDFL',   selected : false },
-
-
-
-
-
                     // {name : 'banner_allowed',       code : 'BA',   selected : false},
                 ];
-
-
                 // This service gets all the spaces according to center specification like society_allowed,
                 // t
                 $scope.proposal_id_temp = $stateParams.proposal_id;
-
                  mapViewService.getSpaces($scope.proposal_id_temp)
                 .success(function(response, status){
-
                     console.log("\n\nResponse is : ", response);
-
                     $scope.centers = response.centers;
                     $scope.current_center = $scope.centers[0]
                     $scope.current_center_index = 0
                     for(var i=0;i<$scope.centers.length; i++)
                         $scope.initial_center_changed.push(false);
-
-
-                    $scope.current_center_id = $scope.current_center.center.id
-
-                    $scope.map = {
-                      zoom: 12,
-                      bounds: {},
-                      center: {
-                        latitude: $scope.current_center.center.latitude,
-                        longitude: $scope.current_center.center.longitude,
+                        $scope.current_center_id = $scope.current_center.center.id
+                        $scope.map = {
+                          zoom: 12,
+                          bounds: {},
+                          center: {
+                          latitude: $scope.current_center.center.latitude,
+                          longitude: $scope.current_center.center.longitude,
                       }
                     };
-
-
                     $scope.circle = {
                         id : 1,
                         center : {
@@ -445,14 +378,11 @@ angular.module('catalogueApp')
                     };
                     // initial center is to allow user to reset the latitude and longitude to the saved address
                     // of the center in the database
-
                     // done by me
                     console.log("calling set_centers ");
                     set_centers();
                     console.log("$scope.old_center : ", $scope.old_center);
                     console.log("$scope.new_center : ", $scope.new_center);
-
-
                     if($scope.current_center.center.space_mappings.society_allowed){
                         // $scope.society_allowed = true;
                         set_space_inventory($scope.current_center.societies_inventory, $scope.society_inventory_type);
@@ -462,19 +392,14 @@ angular.module('catalogueApp')
                     // Do the same for corporates and gyms and salons
 
                     $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
-
                 })
                 .error(function(response, status){
                     $scope.get_spaces_error = response.message;
                     console.log("Error response : ",response);
                 });
-
             });
-
-
             $scope.windowCoords = {}; // at windowCoords the window will show up
             $scope.space = {}
-
             $scope.onClick = function(marker, eventName, model) {
                 // this function executes when a marker is
                 $scope.space = {};
@@ -484,10 +409,8 @@ angular.module('catalogueApp')
                         address1 : "Center Address",
                         location_type : "Posh",
                     }
-                }
-                else {
+                }else {
                     $scope.space = model.title
-
                 }
                 $scope.windowCoords.latitude = model.latitude;
                 $scope.windowCoords.longitude = model.longitude;
@@ -497,11 +420,6 @@ angular.module('catalogueApp')
             $scope.closeClick = function() {
                 $scope.show = false;
             };
-
-
-            // {name : '', code : '', selected : false},
-
-
             // different society filters
             $scope.society_location = [
                 {name : 'Ultra High',   code : 'UH',    selected : false},
@@ -522,7 +440,6 @@ angular.module('catalogueApp')
                 {name : 'Medium',       code : 'MD',    selected : false},
                 {name : 'Very Large',   code : 'VL',    selected : false},
                 {name : 'Small',        code : 'SM',    selected : false},
-
             ];
             $scope.society_flat_type = [
                 {name : '1 RK',         code : '1R',      selected : false},
@@ -537,12 +454,9 @@ angular.module('catalogueApp')
                 {name : 'ROW HOUSE',    code : 'RH',      selected : false},
                 {name : 'DUPLEX',       code : 'DP',      selected : false},
             ];
-
-
             $scope.spaceSociety = function(){
                 // this function handles selecting/deselecting society space i.e. society_allowed = true/false
                 if($scope.current_center.center.space_mappings.society_allowed){
-
                    $scope.getFilteredSocieties();
                    // types to be included later on
                    if(!$scope.current_center.societies_inventory){
@@ -554,13 +468,10 @@ angular.module('catalogueApp')
                             standee_allowed : false,
                             supplier_code : 'RS',
                        };
-                    }
-                   else{
+                    }else{
                         set_space_inventory($scope.current_center.societies_inventory, $scope.society_inventory_type);
                    }
-
-                }
-                else{
+                }else{
                     $scope.society_markers = [];
                     delete $scope.current_center.societies;
                     // delete $scope.current_center.society_inventory;
@@ -568,11 +479,8 @@ angular.module('catalogueApp')
                     delete $scope.current_center.societies_inventory_count;
                     deselect_space_inventory($scope.society_inventory_type)
                 }
-
                 console.log("$scope.current_center is : ", $scope.current_center);
             }
-
-
             $scope.showSocieties = function(){
                 // This function is for showing societies on the map view
                 $scope.show_societies = !$scope.show_societies
@@ -584,7 +492,6 @@ angular.module('catalogueApp')
                 // value is just for inventories , inventories changed will be changed in
                 // $scope.current_center.societies_inventory as well (this is present only if society_allowed is true)
                 // change from inventory_name to inventory_code
-                
                 if(value){
                     var inventory_name = value.name.toLowerCase();
                     var inventory_code = value.code;
@@ -637,17 +544,14 @@ angular.module('catalogueApp')
                 $scope.getFilteredSocieties();
             }
 
-
             $scope.clearAllFilters = function(filter_array){
                 // just deselects all the checkboxes of filter_array passed
                 var length = filter_array.length;
                 for(var i=0;i<length;i++){
                     filter_array[i].selected = false;
                 }
-
                 $scope.getFilteredSocieties();
             }
-
 
             $scope.getFilteredSocieties = function(){
                 // creates the string for the get request for getting the required societies based on the filters

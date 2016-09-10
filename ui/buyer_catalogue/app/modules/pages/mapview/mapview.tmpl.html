@@ -9,13 +9,6 @@
           <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
          </select>
       </div>
-      <!-- <div class="col-md-1"><b>Old Center:</b></div>
-      <div class="col-md-1">Latitude</div>
-      <div class="col-md-2">{{old_center.latitude}}</div> -->
-      <!-- <input class="box-spacing" type="text" ng-model="old_center.latitude" ng-readonly="true">-->
-      <!-- <div class="col-md-1">Longitude</div>
-      <div class="col-md-1">{{old_center.longitude}}</div> -->
-      <!-- <input class="box-spacing" type="text"  ng-model="old_center.longitude" ng-readonly="true">-->
       <div class="col-md-1"><b>New Center:</b></div>
       <div class="col-md-1">Latitude</div>
       <div class="col-md-2">{{new_center.latitude}}</div>
@@ -46,12 +39,10 @@
    <div class="col-md-2 search-bin" id="searchBinHolder">
     <div class="panel panel-info filterscroll ">
      <div class="panel-body" id="searchBody">
-
      <!--Start: Filter Section -->
-
       <div class="filterPanel ">
        <span class="filterHeader"> Filter your Search </span>
-         <a id="resetFilter" data-ga-log="event" data-ga-category="PropertyFilter" data-ga-action="reset-list-rent" onClick="resetFilters();" name="resetTab" href="#" class="btn btn-xs pull-right" style="border: 1px solid #e1e1e1;color: #707070;"> Reset filters</a>
+         <a class="btn btn-xs pull-right" style="border: 1px solid #e1e1e1;color: #707070;" ng-click="clearAllFilters()"> Reset filters</a>
       </div>
       <hr>
       <form id = "filterPanelForm">
@@ -203,13 +194,6 @@
             <hr>
              <span class = "space filterPanelHeader ">Space Count</span>
              <div class = "nbCheckbox two-col">Societies:  {{current_center.societies_count}}</div>
-            <!-- <hr>
-              <span class = "space filterPanelHeader ">Inventory Count</span>
-              <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.fliers != null">Flyers: {{current_center.societies_inventory_count.fliers}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.posters != null">Posters: {{current_center.societies_inventory_count.posters}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.stalls != null">Stalls: {{current_center.societies_inventory_count.stalls}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.societies_inventory_count.standees != null">Standees: {{current_center.societies_inventory_count.standees}}</div>
-            <hr> -->
             <!--added if condition below to display those inventories selected by user in sumarry section-->
             <hr>
               <span class = "space filterPanelHeader ">Inventory Count</span>
@@ -230,11 +214,6 @@
       </div>
     </div><!-- row div ends here-->
 </div><!-- containner div ends here-->
-<!-- unstructured section starts -->
-<!-- <div> code moved under summary code, will be displayed below summary section
-<button ng-show="show_societies" ng-click="showSocieties()">Map View</button>
-<button ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
-</div> -->
 
 <div id = "addNewSocities" class = "modal fade">
   <div class="modal-dialog">
