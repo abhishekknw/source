@@ -1,33 +1,20 @@
-.fields{
-  margin-bottom: 10px;
+.page-container{
+	padding: 5px;
+	position: relative;
 }
+
 .business-panel{
-	margin-top: 0px;
-	padding-right: 10px;
-  padding-left: 10px;
-  padding-bottom: 10px;
-	width: 900px;
-	align-self: flex-start;
+	margin-top: 5px;
+	padding: 10px;
+	width: 1500px;
+	align-self: center;
 }
-.table-heading{
-  background-color: #f2f2f2;
-  text-align: left;
+.spacing{
+	margin: 3px;
 }
-.table-position{
-  padding-left: 0px !important;
+.col-width{
+	width: 100px;
 }
-.modal-align{
-  text-align: left;
-  padding-left: 20px;
-}
-.modal-align1{
-  text-align: left;
-  margin-left: 5px;
-}
-.textbox{
-  margin-bottom: 8px !important;
-}
-.textbox1{
-  width: 105%;
-  margin-bottom: 8px !important;
+.textbox-width{
+	width: 150px !important;
 }

@@ -22,27 +22,36 @@
   font-size: 15px;
   padding: 2px;
 }
-
-
-.noborderright
-{
-     border-right-style:hidden;    
+.noborderright{
+     border-right-style:hidden;
 }
-
-
-.noborderleft
-{
+.noborderlef{
    border-left-style:hidden;
 }
-
 .aligntop{
     margin-top: -15px;
 }
-
-   
-
-
+.bold{
+  font-weight: bold;
+}
+.fontcolor{
+  color: #949292;
+}
 .align{
     margin-left: -15px;
 }
-
+.weight{
+  font-weight: 100;
+}
+.statusbadge{
+  background-color: #c9302c;
+  color: #fff;
+}
+ .keypoints{
+   border-bottom-style: hidden;
+ }
+ .removebutton{
+   margin-top: 20px;
+   margin-bottom: 20px;
+   width: 100px;
+ }

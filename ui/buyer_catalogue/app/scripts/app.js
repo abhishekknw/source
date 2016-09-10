@@ -31,6 +31,7 @@ angular
     'angularUtils.directives.dirPagination',
     'angularjs-dropdown-multiselect',
     'ngFileUpload',
+    'uiGmapgoogle-maps',
     // ''
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
@@ -51,6 +52,28 @@ angular
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyListCtrl'
         })
+        // .state('campaign.mapView',{
+          .state('MapView',{
+           url : '/:proposal_id/mapview',
+           templateUrl : 'modules/pages/mapview/mapview.tmpl.html',
+           controller : 'MapCtrl'
+        })
+        .state('createProposalMe',{
+          url : '/:account_id/createproposal',
+          templateUrl : 'modules/pages/createProposal/createproposal.tmpl.html',
+          controller : 'ProposalCtrl'
+          // controller : ''
+        })
+        .state('showProposalHistory',{
+          url : '/:proposal_id/showproposalhistory',
+          templateUrl : 'modules/pages/ProposalHistory/proposalHistory.tmpl.html',
+          controller : 'ProposalHistory',
+        })
+        .state('showCurrentProposal',{
+           url : '/:proposal_id/showcurrentproposal',
+           templateUrl : 'modules/pages/currentProposal/currentProposal.tmpl.html',
+           controller : 'CurrentProposal',
+        })
         .state('campaign.societyDetails', {
           url : '/societyDetails/:societyId', //:societyId/
           templateUrl: 'modules/pages/societydetails/societydetails.tmpl.html',
@@ -68,7 +91,7 @@ angular
         })
       .state('manageCampaign', {
           url : '/manageCampaign',
-          //controller: '',
+          // controller: '',
           templateUrl: 'modules/pages/manageCampaign/manage-campaign.tmpl.html'
         })
       .state('manageCampaign.create', {
@@ -81,11 +104,11 @@ angular
             controller: 'CreateAccountCtrl',
             templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html'
         })
-        .state('manageCampaign.proposal', {
-            url : '/proposal',
-            controller: 'CreateProposalCtrl',
-            templateUrl: 'modules/pages/manageCampaign/createproposal/create-proposal.tmpl.html'
-          })
+        // .state('manageCampaign.proposal', {
+        //     url : '/proposal',
+        //     controller: 'CreateProposalCtrl',
+        //     templateUrl: 'modules/pages/manageCampaign/createproposal/create-proposal.tmpl.html'
+        //   })
       .state('manageCampaign.shortlisted', {
           url : '/shortlisted',
           controller: 'ShortlistedCampaignCtrl',
@@ -129,7 +152,7 @@ angular
         .state('manageCampaign.release', {
             url : '/release',
             controller: 'ReleaseCampaignCtrl',
-            templateUrl: 'modules/pages/manageCampaign/release/release.tmpl.html'
+            templateUrl: 'modules/pages/manageCampaign/release/release-campaign.tmpl.html'
           })
       .state('manageCampaign.finalize.finalizeInventory', {
           url : '/:campaignId/finalizeInventory/',
@@ -150,7 +173,12 @@ angular
             url : '/ongoingcampaign',
             controller: 'OngoingCampaignCtrl',
             templateUrl: 'modules/pages/manageCampaign/ongoingcampaign/ongoing-campaign.tmpl.html'
-          });        /*
+          })
+      .state('mapView',{
+            url : '/mapview',
+            controller : 'MapCtrl',
+            templateUrl : 'modules/pages/mapview/mapview.tmpl.html'
+        });        /*
         .state('catalogue.home', {
           url : '/catalogue',
           templateUrl: 'views/society-home.html',

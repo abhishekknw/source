@@ -35,3 +35,13 @@
 	width: 100% !important;
 	align-self: right !important;
 }
+.detail-button{
+	font-size: 12px;
+	margin-top: 5px;
+}
+.head{
+	text-align: center;
+}
+.table-align{
+	margin-left: 20px;
+}

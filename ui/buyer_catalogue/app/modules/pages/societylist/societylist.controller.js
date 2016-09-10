@@ -157,22 +157,7 @@ angular.module('machadaloPages')
      $scope.model[index].disable = true;
      societyListService.addShortlistedSociety($rootScope.campaignId, id)
       .success(function (response){
-        //for disabling shortlisted society button
-          // $scope.disablebutton = function(id,index){
-          //   if(response.id == id){
-          //       return true;
-          //   }
            
-          //   return true;
-          // }
-
-          // $scope.message = response.message;
-
-//           <div style="position: fixed; top: 0; right: 0">
-//   <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">
-//       {{alert.msg}}
-//   </alert>
-// </div>
           var temp = "#alert_placeholder" + index;
           var style1 = 'style="position:absolute;z-index:1000;margin-left:-321px;margin-top:-100px;background-color:gold;font-size:18px;"'
           $(temp).html('<div ' + style1 + 'class="alert alert-warning alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button><span>'+response.message +'</span></div>')
@@ -190,17 +175,25 @@ angular.module('machadaloPages')
      $location.path('campaign/' + $rootScope.campaignId +'/societyDetails/' + id);
    }}//End: To navigate to catalogue page
 
+  
+
   //Start: Sort Functionality
       $scope.predicate = 'society_name';
       $scope.reverse = 'asc';
+
       $scope.order = function(predicate) {
+
+        var society_ids = []
+        for(var i=0;i<$scope.model.length;i++)
+            society_ids.push($scope.model[i].supplier_id);
+
           if($scope.reverse === 'asc'){
               $scope.reverse = 'desc';
           }
           else{
               $scope.reverse = 'asc';
           }
-        societyListService.getSortedSocieties($scope.reverse)
+        societyListService.getSortedSocieties($scope.reverse,society_ids)
         .success(function(response,status){
               $scope.model = response;
               console.log('got sorted societies')

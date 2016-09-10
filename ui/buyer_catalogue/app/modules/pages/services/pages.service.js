@@ -13,6 +13,42 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
 
    var url_base = "v0/ui/website/";
    var pagesService = {};
+   var business_id = undefined;
+   var account_id = undefined;
+   var business = undefined;
+   var proposal_accountId = undefined;
+
+   pagesService.setBusinessObject = function(business_received){
+      business = business_received;
+   }
+
+   pagesService.getBusinessObject = function(){
+      return business;
+   }
+
+   pagesService.setBusinessId = function(id){
+      business_id = id;
+   }
+
+   pagesService.getProposalAccountId = function(){
+     return proposal_accountId;
+   }
+
+   pagesService.setProposalAccountId = function(id){
+      proposal_accountId = id;
+   }
+
+   pagesService.getBusinessId = function(){
+     return business_id;
+   }
+
+   pagesService.setAccountId = function(id){
+    account_id  =id;
+   }
+
+   pagesService.getAccountId = function(){
+    return account_id;
+   }
 
    // To return the archived estimates
    pagesService.listSocieties = function (sObj) {
@@ -88,6 +124,11 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       var url = url_base + "campaign/" + campaign_id+ "/book/?status=" + new_status;
       return machadaloHttp.get(url);
     };
+
+    pagesService.getAccountProposal = function(account_id){
+       var url = url_base + account_id + '/getAccountProposals/';
+       return machadaloHttp.get(url);
+    }
 
     pagesService.processParam = function(){
      if($stateParams.campaignId){

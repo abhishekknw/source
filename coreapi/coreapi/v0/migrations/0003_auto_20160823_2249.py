@@ -7,13 +7,13 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('v0', '0003_auto_20160630_1010'),
+        ('v0', '0002_auto_20160729_1628'),
     ]
 
     operations = [
-        migrations.AddField(
+        migrations.AlterField(
             model_name='suppliertypesociety',
-            name='car_display_allowed',
-            field=models.BooleanField(default=False),
+            name='created_on',
+            field=models.DateField(auto_now_add=True, db_column='CREATED_ON'),
         ),
     ]

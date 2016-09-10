@@ -7,13 +7,12 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('v0', '0006_auto_20160630_1201'),
+        ('v0', '0005_auto_20160812_0619'),
     ]
 
     operations = [
-        migrations.RenameField(
-            model_name='suppliertypesociety',
-            old_name='cd_allowed',
-            new_name='car_display_allowed',
+        migrations.RemoveField(
+            model_name='mailboxinfo',
+            name='tower_name',
         ),
     ]
