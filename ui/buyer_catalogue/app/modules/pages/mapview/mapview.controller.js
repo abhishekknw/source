@@ -583,12 +583,14 @@ angular.module('catalogueApp')
                 // this is called when some checkbox in society filters is changed
                 // value is just for inventories , inventories changed will be changed in
                 // $scope.current_center.societies_inventory as well (this is present only if society_allowed is true)
-
+                // change from inventory_name to inventory_code
+                
                 if(value){
                     var inventory_name = value.name.toLowerCase();
+                    var inventory_code = value.code;
                     $scope.current_center.societies_inventory[inventory_name + '_allowed'] = value.selected;
                     console.log(inventory_name + '_allowed');
-                    if(inventory_name =='poster' || inventory_name=='poster+flyer' || inventory_name=='poster+stall+flyer' || inventory_name=='poster+cardisplay+flyer'){
+                    if(inventory_code =='PO' || inventory_code =='POFL' || inventory_code =='POSLFL' || inventory_code =='POCDFL'){
                         if($scope.inv_poster == true && value.selected == false ){
                           --pcount;
                           if(pcount==0){
@@ -599,7 +601,7 @@ angular.module('catalogueApp')
                         }
                     }
 
-                    if(inventory_name=='standee' || inventory_name=='standee+flyer' || inventory_name=='standee+stall+flyer' || inventory_name=='standee+cardisplay+flyer' ){
+                    if(inventory_code == 'ST' || inventory_code == 'STFL' || inventory_code == 'STSLFL' || inventory_code == 'STCDFL' ){
                         if($scope.inv_standee == true && value.selected == false ){
                           --stcount;
                           if(stcount==0){
@@ -610,7 +612,7 @@ angular.module('catalogueApp')
                         }
                     }
 
-                    if(inventory_name=='stall'|| inventory_name=='stall+flyer' || inventory_name=='standee+stall+flyer' || inventory_name=='poster+stall+flyer'){
+                    if(inventory_code == 'SL'|| inventory_code == 'SLFL' || inventory_code == 'STSLFL' || inventory_code == 'POSLFL'){
                         if($scope.inv_stall == true && value.selected == false ){
                           --slcount;
                           if(slcount==0){
@@ -621,7 +623,7 @@ angular.module('catalogueApp')
                         }
                     }
 
-                    if(inventory_name=='flyer' || inventory_name=='poster+flyer'|| inventory_name=='standee+flyer' || inventory_name=='stall+flyer' || inventory_name=='poster+stall+flyer' || inventory_name=='standee+stall+flyer' || inventory_name=='poster+cardisplay+flyer' || inventory_name == 'standee+cardisplay+flyer' || inventory_name == 'cardisp+flyer'){
+                    if(inventory_code == 'FL' || inventory_code == 'POFL'|| inventory_code == 'STFL' || inventory_code == 'SLFL' || inventory_code == 'POSLFL' || inventory_code == 'STSLFL' || inventory_code == 'POCDFL' || inventory_code == 'STCDFL' || inventory_code == 'CDFL'){
                         if($scope.inv_flier == true && value.selected == false ){
                           --flcount;
                           if(flcount==0){
