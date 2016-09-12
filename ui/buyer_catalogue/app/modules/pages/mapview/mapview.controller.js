@@ -39,16 +39,14 @@ angular.module('catalogueApp')
 
         // an array equal to no. of centers to allow reseting each center if changed
         $scope.initial_center_changed = new Array();
-
         $scope.show = false; // for showing info windo
         $scope.center_marker = [];
         $scope.center_changed= false;
-
         // can be used in grid view currently using for showing societies
         $scope.show_societies = false;
         $scope.society_markers = []; // markers on the map
-
         $scope.circle = {};
+        $scope.impressions = {};
         // ADDNEW -->
         // $scope.show_corporates = false;
         // $scope.corporate_markers = [];
@@ -581,8 +579,8 @@ angular.module('catalogueApp')
                     $scope.current_center.societies = response.societies;
                     $scope.current_center.societies_inventory_count = response.societies_inventory_count;
                     $scope.current_center.societies_count = response.societies_count;
-                    // console.log("\n\n$scope.centers : ", $scope.centers);
                     $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
+                    $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
                 })
                 .error(function(response, status){
                     console.log("Error Happened while filtering");
@@ -608,7 +606,30 @@ angular.module('catalogueApp')
             }
         });
 
-
+        //Start: Function for calculating total impressions inventory wise
+        function calculateImpressions (inventoryCount){
+          console.log(inventoryCount);
+          //var impressions = [];
+          var posterCount = inventoryCount.posters;
+          var standeeCount = inventoryCount.standees;
+          var flierCount = inventoryCount.fliers;
+          var stallCount = inventoryCount.stalls;
+          var posterImpression = posterCount*4*7;
+          var standeeImpression = standeeCount*4*7;
+          var stallImpression = stallCount*4*2;
+          //var flierImpression = total flat count * 4*1 ; In future this 1 will be replaced with the number of flier frequency
+          // impressions.push({
+          //   posterImpression : posterImpression,
+          //   standeeImpression : standeeImpression,
+          //   stallImpression : stallImpression,
+          // });
+          $scope.impressions = {
+              posterImpression : posterImpression,
+              standeeImpression : standeeImpression,
+          };
+          return $scope.impressions;
+        }
+        //End: Function for calculating total impressions inventory wise
         $scope.submitProposal = function(){
             console.log("Submitting $scope.centers :", $scope.centers);
             mapViewService.createFinalProposal($scope.proposal_id_temp, $scope.centers)
