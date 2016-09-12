@@ -543,14 +543,22 @@ angular.module('catalogueApp')
                 }
                 $scope.getFilteredSocieties();
             }
-
-            $scope.clearAllFilters = function(filter_array){
+            $scope.clearAllFilters = function(){
                 // just deselects all the checkboxes of filter_array passed
-                var length = filter_array.length;
-                for(var i=0;i<length;i++){
-                    filter_array[i].selected = false;
-                }
+                // Added reset function to deselct all inventories
+                reset($scope.society_inventory_type);
+                reset($scope.society_location);
+                reset($scope.society_quality_type);
+                reset($scope.society_quantity_type);
+                reset($scope.society_flat_type);
+
                 $scope.getFilteredSocieties();
+            }
+            var reset = function(filter_array){
+            var length = filter_array.length;
+            for(var i=0;i<length;i++){
+                filter_array[i].selected = false;
+              }
             }
 
             $scope.getFilteredSocieties = function(){
