@@ -34,7 +34,6 @@ angular.module('catalogueApp')
         $scope.inital_center = {}
         $scope.old_center = {}
         $scope.new_center = {}
-
         console.log("Inside map view with proposal_id : ", $stateParams.proposal_id);
 
         // an array equal to no. of centers to allow reseting each center if changed
@@ -342,6 +341,8 @@ angular.module('catalogueApp')
                 .success(function(response, status){
                     console.log("\n\nResponse is : ", response);
                     $scope.centers = response.centers;
+                    $scope.centers1 = response.centers;
+                    console.log($scope.centers1,"hello");
                     $scope.current_center = $scope.centers[0]
                     $scope.current_center_index = 0
                     for(var i=0;i<$scope.centers.length; i++)
@@ -617,6 +618,11 @@ angular.module('catalogueApp')
           var posterImpression = posterCount*4*7;
           var standeeImpression = standeeCount*4*7;
           var stallImpression = stallCount*4*2;
+          var total_flat_count=0;
+          for(var i=0;i<$scope.current_center.societies_count;i++){
+            total_flat_count += $scope.current_center.societies[i].flat_count;
+          }
+           var flierImpression = total_flat_count * 4*1;
           //var flierImpression = total flat count * 4*1 ; In future this 1 will be replaced with the number of flier frequency
           // impressions.push({
           //   posterImpression : posterImpression,
@@ -626,6 +632,8 @@ angular.module('catalogueApp')
           $scope.impressions = {
               posterImpression : posterImpression,
               standeeImpression : standeeImpression,
+              stallImpression : stallImpression,
+              flierImpression : flierImpression,
           };
           return $scope.impressions;
         }

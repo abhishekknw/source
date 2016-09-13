@@ -111,6 +111,7 @@
         <thead>
           <tr>
             <th class = "col-md-1">#</th>
+            <th class = "col-md-4">Center Name</th>
             <th class = "col-md-4">Supplier Name</th>
             <th class = "col-md-4">SubArea-Area</th>
             <th class = "col-md-4">Flat Count</th>
@@ -128,9 +129,11 @@
           <tr>
           </tr>
         </thead>
-        <tbody>
-          <tr ng-repeat = "society in current_center.societies">
+        <!--Changes for displaying all center's societies in gridView  -->
+        <tbody ng-repeat = "society1 in centers1">
+          <tr ng-repeat = "society in society1.societies">
             <td>{{$index+1}}</td>
+            <td>{{society1.center.center_name}}</td>
             <td>{{society.society_name}}</td>
             <td>{{society.society_subarea + "," + society.society_locality}}</td>
             <td>{{society.flat_count}}</td>
@@ -184,9 +187,9 @@
               <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{current_center.societies_inventory_count.standees}}</div>
             <hr>
              <span class = "space filterPanelHeader">Total Number of Impressions</span>
-             <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{impressions.fliers}}</div>
+             <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{impressions.flierImpression}}</div>
              <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{impressions.posterImpression}}</div>
-             <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{impressions.stalls}}</div>
+             <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{impressions.stallImpression}}</div>
              <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{impressions.standeeImpression}}</div>
             <hr>
              <!-- <span class = "space filterPanelHeader ">Total Price</span> -->
