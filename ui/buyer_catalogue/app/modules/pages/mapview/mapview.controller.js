@@ -89,7 +89,6 @@ angular.module('catalogueApp')
 
 
             var deselect_all_society_filters = function(){
-              alert('vidhi');
                 for(var i=0;i<$scope.society_location.length; i++)
                     $scope.society_location[i].selected = false;
 
@@ -618,6 +617,7 @@ angular.module('catalogueApp')
           $scope.impressions = {
               posterImpression : posterImpression,
               standeeImpression : standeeImpression,
+              stallImpression : stallImpression,
           };
           return $scope.impressions;
         }
