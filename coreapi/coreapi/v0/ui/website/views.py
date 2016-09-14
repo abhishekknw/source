@@ -1362,7 +1362,7 @@ class GetFilteredSocietiesAPIView(APIView):
                 except KeyError:
                     pass
 
-        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type','flat_count')
         print societies_temp
         societies = []
         society_ids = []
