@@ -15,7 +15,7 @@ angular.module('machadaloPages')
     		'CarDisplay':['Normal', 'Premium'],
             'Fliers': ['Normal']
     	}
- 
+
         $scope.clear = function() {
         $scope.dt = null;
       };
@@ -87,7 +87,7 @@ angular.module('machadaloPages')
         $scope.bsSelect = business_id_temp;
         $scope.getBusiness();
       };
-      
+
 
         $scope.getSubTypes = function() {
           // debugger;
@@ -97,7 +97,6 @@ angular.module('machadaloPages')
                 $scope.model.business.sub_type_id = "";
             }else{
                 var id = $scope.model.business.business_type_id;
-
                 pagesService.getSubTypes(id)
                 .success(function (response){
                     $scope.sub_types = response;
@@ -107,7 +106,6 @@ angular.module('machadaloPages')
 
         $scope.addNew = function() {
         // object def is directly added to avoid different array elements pointing to same object
-
             $scope.model.business.contacts.push({
                 name: '',     designation: '',    department: '',
                 email: '',    phone: '',      spoc: ''
@@ -115,7 +113,7 @@ angular.module('machadaloPages')
             console.log($scope.model.business.contacts);
         };
 
-      
+
       $scope.remove = function(index) {
         $scope.model.business.contacts.splice(index, 1);
         console.log($scope.model.business.contacts);
@@ -194,7 +192,6 @@ angular.module('machadaloPages')
       }
 
       $scope.showHistory = function(proposalId){
-        alert(proposalId);
         $location.path('/' + proposalId + '/showproposalhistory');
       }
 
@@ -202,7 +199,7 @@ angular.module('machadaloPages')
         	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {
-    
+
             console.log("\n\nresponse is : ");
             console.log(response);
             var sub_type_id = $scope.model.business.sub_type_id;

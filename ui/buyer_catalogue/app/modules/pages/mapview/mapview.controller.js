@@ -608,20 +608,19 @@ angular.module('catalogueApp')
 
         //Start: Function for calculating total impressions inventory wise
         function calculateImpressions (inventoryCount){
-          console.log(inventoryCount);
           //var impressions = [];
-          var posterCount = inventoryCount.posters;
-          var standeeCount = inventoryCount.standees;
-          var flierCount = inventoryCount.fliers;
-          var stallCount = inventoryCount.stalls;
-          var posterImpression = posterCount*4*7;
-          var standeeImpression = standeeCount*4*7;
-          var stallImpression = stallCount*4*2;
           var total_flat_count=0;
           for(var i=0;i<$scope.current_center.societies_count;i++){
             total_flat_count += $scope.current_center.societies[i].flat_count;
           }
-           var flierImpression = total_flat_count * 4*1;
+          //var posterCount = inventoryCount.posters;
+          //var standeeCount = inventoryCount.standees;
+          //var flierCount = inventoryCount.fliers;
+          //var stallCount = inventoryCount.stalls;
+          var posterImpression = total_flat_count*4*7*2;
+          var standeeImpression = total_flat_count*4*7*2;
+          var stallImpression = total_flat_count*4*2;
+          var flierImpression = total_flat_count * 4*1;
           $scope.impressions = {
               posterImpression : posterImpression,
               standeeImpression : standeeImpression,
