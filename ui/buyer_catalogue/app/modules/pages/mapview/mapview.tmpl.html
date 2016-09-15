@@ -9,26 +9,26 @@
           <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
          </select>
       </div>
-      <div class="col-md-1"><b>New Center:</b></div>
-      <div class="col-md-1">Latitude</div>
-      <div class="col-md-2">{{new_center.latitude}}</div>
-      <div class="col-md-1">Longitude</div>
-      <div class="col-md-1">{{new_center.longitude}}</div>
+      <!-- <div class="col-md-1">New Center:</div> -->
+      <div class="col-md-2">New Center Latitude & Longitude: </div>
+      <div class="col-md-2">{{new_center.latitude}}/{{new_center.longitude}}</div>
+      <!-- <div class="col-md-1">Longitude</div> -->
+      <!-- <div class="col-md-1">{{new_center.longitude}}</div> -->
     </div>
     <div class="row">
-      <div class="col-md-2"></div>
-      <div class="col-md-1"><b>Radius:</b></div>
-      <div class="col-md-1">
+      <!-- <div class="col-md-2"></div> -->
+      <div class="col-md-1 aligndropdown">Radius:</div>
+      <div class="col-md-1" style = "margin-left: 116px;">
         <input class="box-spacing" type="number" step="0.5" ng-model="current_center.center.radius">
       </div>
       <div class="col-md-3">
-        <button class="box-spacing" ng-click="changeCenter()">Change Radius</button>
+        <button class="btn btn-default active" ng-click="changeCenter()">Change Radius</button>
+      <!-- </div>
+      <div class="col-md-3"> -->
+        <button class="btn btn-default active box-spacing" style = "margin-left: 10px;" ng-show="initial_center_changed[current_center_index]" ng-click="resetCenter()">Reset Center</button>
       </div>
       <div class="col-md-3">
-        <button class="box-spacing" ng-show="initial_center_changed[current_center_index]" ng-click="resetCenter()">Reset Center</button>
-      </div>
-      <div class="col-md-3">
-        <button ng-show="center_changed" ng-click="changeCenter(true)">Change Center</button>
+        <button class = "btn btn-default active box-spacing" ng-show="center_changed" ng-click="changeCenter(true)">Change Center</button>
       </div>
     </div>
   </div>
@@ -150,13 +150,13 @@
             <td ng-if="inv_flier">{{society.flier_frequency}}</td>
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
             <td>
-              <button ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
+              <button class="btn btn-success active" ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
               <span ng-if="society.shortlisted">
               <input type="checkbox" ng-model="society.buffer_status"> Buffer
               </span>
             </td>
             <td>
-              <button ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
+              <button class="btn btn-danger active" ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
             </td>
           </tr>
         </tbody>
