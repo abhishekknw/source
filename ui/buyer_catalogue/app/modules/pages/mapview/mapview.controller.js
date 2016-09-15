@@ -580,7 +580,9 @@ angular.module('catalogueApp')
                     $scope.current_center.societies_inventory_count = response.societies_inventory_count;
                     $scope.current_center.societies_count = response.societies_count;
                     $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
+                    $scope.towers = calculatetowers();
                     $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
+
                 })
                 .error(function(response, status){
                     console.log("Error Happened while filtering");
@@ -606,6 +608,13 @@ angular.module('catalogueApp')
             }
         });
 
+        function calculatetowers (){
+          var total_tower_count=0;
+          for(var i=0;i<$scope.current_center.societies.length;i++){
+            total_tower_count += $scope.current_center.societies[i].tower_count;
+          }
+          return total_tower_count;
+        }
         //Start: Function for calculating total impressions inventory wise
         function calculateImpressions (inventoryCount){
           //var impressions = [];
