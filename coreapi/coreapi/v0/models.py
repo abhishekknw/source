@@ -486,11 +486,9 @@ class ContactDetails(models.Model):
 
 class ContactDetailsGeneric(models.Model):
     id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
-
     content_type = models.ForeignKey(ContentType,related_name='contacts')
     object_id = models.CharField(max_length=12)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    
     contact_type = models.CharField(db_column='CONTACT_TYPE',  max_length=30, blank=True, null=True)  # Field name made lowercase.
     name = models.CharField(db_column='CONTACT_NAME',  max_length=50, blank=True, null=True)  # Field name made lowercase.
     salutation = models.CharField(db_column='SALUTATION',  max_length=50, blank=True, null=True)  # Field name made lowercase.

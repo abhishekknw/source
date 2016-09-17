@@ -1344,11 +1344,6 @@ class BasicPricingAPIView(APIView):
     #     except PriceMappingDefault.DoesNotExist:
     #         return Response(status=404)
             
-    
-
-
-    
-
     def get(self, request, id, format=None):
         response = {}
         try:
