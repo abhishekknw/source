@@ -29,7 +29,7 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
         InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
         ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,\
         ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
-from constants import supplier_keys
+from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
@@ -2156,201 +2156,70 @@ class SaveSocietyData(APIView):
         return Response(data="success", status=status.HTTP_200_OK)
 
 
-class SocietySaveCSVAPIView(APIView):
-    def get(self,request,format=None):
-        """
-        DO not use this api. will be modified. 
-        """
-        import csv, sys
-        from constants import supplier_keys
-        from v0.models import City, CityArea, CitySubArea, ContactDetails
-        #SupplierTypeSociety.objects.all().delete()
+class SaveContactDetails(APIView):
+    """
+    Saves contact details in db for each supplier.
+    The API expects source file to be named as contacts.csv and should be placed parrallel to manage.py
+    """
+
+    def get(self, request):
 
         with transaction.atomic():
-            '''
 
-            file = open('/home/nikhil/Documents/machadalo/source/coreapi/coreapi/supplier_id.csv','rb')
-            file_errros = open('/home/nikhil/Documents/machadalo/source/coreapi/coreapi/supplier_id_error.txt','w')
+            file = open(BASE_DIR + '/contacts.csv', 'rb')
+            file_errros = open(BASE_DIR + '/contacts_errors.txt', 'w')
+
             try:
                 reader = csv.reader(file)
+                total_count = sum(1 for row in reader) - 1
+                failure_count = 0
+                file.seek(0)
                 for num, row in enumerate(reader):
-                    d = {}
                     if num == 0:
                         continue
                     else:
-                        keys = ['society_city', 'society_locality', 'society_subarea', 'supplier_type', 'society_name', 'supplier_code']
-                        for index, key in enumerate(keys):
-                            d[key] = row[index]
+                        data = {}
+                        for index, key in enumerate(contact_keys):
+                            if row[index] == '':
+                                data[key] = None
+                            else:
+                                data[key] = row[index]
 
-                        if '' in d.values() or None in d.values():
-                            continue
-
+                        landline_number = data['landline'].split('-')
+                        data['landline'] = landline_number[1]
+                        data['std_code'] = landline_number[0]
+                        data['country_code'] = COUNTRY_CODE
                         try:
-                            city_object = City.objects.get(city_name=d['society_city'])
-                            area_object = CityArea.objects.get(label = d['society_locality'])
-                            subarea_object = CitySubArea.objects.get(subarea_name=d['society_subarea'],area_code=area_object)
-
-                            d['supplier_id'] = city_object.city_code + area_object.area_code + subarea_object.subarea_code + d['supplier_type'] + d['supplier_code']
-
-                            try:
-                                (society_object, value) = SupplierTypeSociety.objects.get_or_create(supplier_id=d['supplier_id'])
-                                society_object.__dict__.update(d)
-                                society_object.save()
+                            response = get_supplier_id(request, data)
+                            # this method of handing error code will  change in future
+                            if response.status_code == status.HTTP_200_OK:
+                                data['supplier_id'] = response.data['supplier_id']
+                            else:
+                                file_errros.write("Error in generating supplier id {0} ".format(response.data['error']))
+                                failure_count += 1
                                 continue
-                            except Exception as e:
-                                file_errros.write("Error: " + e.message)
-
-                        except City.DoesNotExist:
-                            file_errros.write("Error in "+ str(num+1) + " line\t---> City Name is Wrong\n\n")
-                        except CityArea.DoesNotExist:
-                            file_errros.write("Error in "+ str(num+1) + " line\t---> Area Name is Wrong\n\n")
-                        except CitySubArea.DoesNotExist:
-                            file_errros.write("Error in " + str(num+1) + " line\t---> Subarea Name is Wrong\n\n")
-                        except CitySubArea.MultipleObjectsReturned:
-                            return Response({'message' : 'Line 1238 error found'}, status=200)
-            finally:
-                file.close()
-                file_errr
-
-
-
-                os.close()
-
-            '''
-
-
-            file = open('/home/nikhil/Documents/machadalo/source/coreapi/coreapi/new_basic_tab.csv','rb')
-            file_errros = open('/home/nikhil/Documents/machadalo/source/coreapi/coreapi/basic_tab_errors.txt','w')
-
-            try:
-                reader = csv.reader(file)
-                for num, row in enumerate(reader):
-                    if num == 0:
-                        continue
-                    else:
-                        d = {}
-                        try:
-                            length = len(row)
-                            print "row[26]" , row[26]
-                        except IndexError:
-                            return Response({'message' : 'Index Out of Range', 'maxIndex' : \
-                                length, 'row' : row},status=200)
-
-                        for index, key in enumerate(supplier_keys):
-                            d[key] = row[index]
-
-                        if not (d['supplier_code'] and d['society_subarea']):
-                            file_errros.write('Error in ' + str(num+1) + " line\t--> Please provide Supplier Code and Society Subarea\n\n")
-
-                        for key in d.keys():
-                            if d[key] == '':
-                                d[key] = None
-                            if type(d[key]) == type('abc'):  # This to just make sure type is string
-                                d[key] = d[key].replace("\n", " ")
-
-                        if type(d['society_type_quality']) == type('abc'):
-                            d['society_type_quality'] = d['society_type_quality'].title()
-
-                        try:
-                            society_object = SupplierTypeSociety.objects.get(supplier_code=d['supplier_code'], society_subarea=d['society_subarea'])
-                            subarea_object = CitySubArea.objects.get(subarea_name=d['society_subarea'],area_code__label=society_object.society_locality)
-                            d['society_location_type'] = subarea_object.locality_rating
-                            d['society_state'] = 'Maharashtra'
-                            society_object.__dict__.update(d)
-                            society_object.save()
-
-                            towercount = SocietyTower.objects.filter(supplier = society_object).count()
-                            abc = 0
-                            try:
-                                # what to do if tower are less
-                                tower_count_given = int(d['tower_count'])
-                                if tower_count_given > towercount:
-                                    abc = tower_count_given - towercount
-                                    for i in range(abc):
-                                        tower = SocietyTower(supplier = society_object)
-                                        tower.save()
-                            except ValueError:
-                                pass
-
-
-                            print "\n\nSaving Basic Details"
-                            for key in d.keys():
-                                try:
-                                    if society_object.__dict__[key] != None:
-                                        print key + " : " + society_object.__dict__[key]
-                                    else:
-                                        print key , " : " , None
-                                except KeyError:
-                                    print "\nKey Error " + key + "\n"
-
-                        except SupplierTypeSociety.DoesNotExist:
-                            file_errros.write("No supplier exist for  this supplier code {0} and supplier subarea {1}".format( d['supplier_code'], d['society_subarea']))
-                            file_errros.write("Error in " + str(num+1) + " line\t--> Supplier Code + Subarea don't correspond to a society in Database\n\n")
-
-                        except SupplierTypeSociety.MultipleObjectsReturned:
-                            file_errros.write("Error in " + str(num+1) + " line\t-->Supplier Code + subarea have more than 1 objects\t MY bad Sorry for this\n\n")
-
-
-            finally:
-                file.close()
-                file_errros.close()
-
-            '''
-
-            file = open('/home/prince/Desktop/CSV Testing/society_files/contacts.csv','rb')
-            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/contacts_errors.txt','w')
-
-            try:
-                reader = csv.reader(file)
-                for num, row in enumerate(reader):
-                    if num == 0:
-                        continue
-
-                    else:
-                        d = {}
-                        supplier_code, subarea, d['contact_type'], d['salutation'], d['name'], d['landline'], d['mobile'],\
-                        d['email'] = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]
-                        d['std_code'] = '022'
-                        d['country_code'] = '+91'
-
-
-                        d['landline'] = d['landline'].split('-',1)
-                        d['landline'].reverse()
-                        d['landline'] = d['landline'][0]
-
-                        d['mobile'] = d['mobile'].split('-',1)
-                        d['mobile'].reverse()
-                        d['mobile'] = d['mobile'][0]
-
-
-                        for key in d.keys():
-                            if d[key] == '':
-                                d[key] = None
-
-                        try:
-                            society_object = SupplierTypeSociety.objects.get(supplier_code=supplier_code, society_subarea=subarea)
-                            d['supplier_id'] = society_object.supplier_id
-                            d['spoc'] = False
-                            # try:
-                            #     contact_object = ContactDetails(supplier=society_object, name=d['name'], salutation=d['salutation'])
-                            # except ContactDetails.DoesNotExist:
-                            #     pass
-
+                            society_object = SupplierTypeSociety.objects.get(supplier_id=data['supplier_id'])
+                            data['spoc'] = False
+                            data['supplier'] = society_object
                             contact_object = ContactDetails()
-                            contact_object.__dict__.update(d)
+                            contact_object.__dict__.update(data)
                             contact_object.save()
-                        except SupplierTypeSociety.DoesNotExist:
-                            file_errros.write('Error in ' + str(num+1) + ' line\t--> No idea with given Supplier Code and Subarea exists in Database \n\n')
 
+                        except ObjectDoesNotExist as e:
+                            file_errros.write("Supplier object not found for {0}".format(data['supplier_id']))
+                            failure_count += 1
+                            continue
+                        except Exception as e:
+                            return Response(data={str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
             finally:
                 file.close()
                 file_errros.close()
-            '''
-
-        return Response(status=200)
-
-
+        return Response(
+            data="Information: out of {0} rows, {1} successfully inserted and {2} failed ".format(total_count,
+                                                                                                  total_count - failure_count,
+                                                                                                  failure_count),
+            status=status.HTTP_200_OK)
 
 
 # class GetSpaceInfoAPIView(APIView):

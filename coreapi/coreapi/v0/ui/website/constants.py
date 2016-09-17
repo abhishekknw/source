@@ -1,5 +1,5 @@
 supplier_keys = [
-'city', 'area', 'sub_area', 'supplier_type', 'supplier_code','society_name'
+    'city', 'area', 'sub_area', 'supplier_type', 'supplier_code', 'society_name'
 
     , 'society_address1', 'society_address2', 'society_zip', \
  \
@@ -11,3 +11,11 @@ supplier_keys = [
     'count_15_25', 'count_25_60', 'count_60above', 'society_weekly_off',
 
 ]
+
+contact_keys = [
+    'city', 'area', 'sub_area', 'supplier_type', 'society_name', 'supplier_code', 'contact_type', 'salutation', \
+    'name', 'landline', 'mobile', 'email'
+]
+
+STD_CODE = '022'
+COUNTRY_CODE = '+91'
