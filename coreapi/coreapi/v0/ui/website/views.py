@@ -1,4 +1,7 @@
 import math, random, string, operator
+#import tablib
+#from import_export import resources
+from openpyxl import Workbook
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -608,7 +611,6 @@ class ShortlistSocietyAPIView(APIView):
 class CreateProposalAPIView(APIView):
     def get(self, request, id, format=None):
         try:
-            print "helllllloooooooooooooo"
             campaign = Campaign.objects.get(pk=id)
             items = campaign.societies.filter(booking_status='Shortlisted')
             inv_types = campaign.types.all()
@@ -1258,7 +1260,6 @@ class GetFilteredSocietiesAPIView(APIView):
         min_longitude = longitude - delta_dict['delta_longitude']
 
         q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-        print q,"vidhi"
         if location_params:
             location_ratings = []
             location_params = location_params.split()
@@ -1323,7 +1324,6 @@ class GetFilteredSocietiesAPIView(APIView):
                     
                     # | 'STFL' | 'CDFL' | 'PSLF' | 'STSLFL' | 'POCDFL' | 'STCDFL'
                     if (param == 'POFL') | (param == 'STFL') | (param == 'SLFL') | (param == 'CDFL') | (param == 'POSLFL') | (param == 'STSLFL') | (param == 'POCDFL') | (param == 'STCDFL'):
-                        print "helllllloooooooooooooo"
 
                         if param == 'POFL':
                             temp_q = (Q(poster_allowed_nb=True) & Q(flier_allowed=True))
@@ -1355,14 +1355,14 @@ class GetFilteredSocietiesAPIView(APIView):
                         temp_q = Q(**{"%s" % inventory_dict[param]:'True'})
 
                     if temp:
-                        q = (q | temp_q)
+                        q &= (q | temp_q)
                     else:
-                        q = temp_q
+                        q &= temp_q
                         temp=1                                                                                                                                                                                                                                                               
                 except KeyError:
                     pass
 
-        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type','flat_count', 'tower_count')
         print societies_temp
         societies = []
         society_ids = []
@@ -1389,12 +1389,11 @@ class GetFilteredSocietiesAPIView(APIView):
                     society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
                 if society_inventory_obj.flier_allowed:
-                    print society_inventory_obj.flier_allowed
-                    print society_inventory_obj
                     society['flier_frequency'] = society_inventory_obj.flier_frequency
                     society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
                 # ADDNEW -->
+
                 society_ids.append(society['supplier_id'])
                 societies.append(society)
                 societies_count += 1
@@ -2501,7 +2500,6 @@ class SocietySaveCSVAPIView(APIView):
 #             ShortlistedSpaces.objects.filter(id__in=spaces_superset).delete()
 
 #         return Response(status=200)
-
 
 
 # 19.119128, 72.890795

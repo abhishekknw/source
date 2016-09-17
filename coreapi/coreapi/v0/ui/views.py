@@ -949,21 +949,6 @@ class InventorySummaryAPIView(APIView):
                         self.save_flyer_locations(0, request.data['flier_frequency'], society)
                     serializer = InventorySummarySerializer(data=request.data)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 society.stall_allowed = True if request.data['stall_allowed'] else False
                 society.car_display_allowed = True if request.data['car_display_allowed'] else False
 
@@ -1287,11 +1272,6 @@ class BasicPricingAPIView(APIView):
     #     except PriceMappingDefault.DoesNotExist:
     #         return Response(status=404)
             
-    
-
-
-    
-
     def get(self, request, id, format=None):
         response = {}
         try:
