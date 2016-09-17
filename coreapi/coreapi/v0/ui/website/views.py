@@ -1,8 +1,19 @@
 import math, random, string, operator
+import csv
+import json
+
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.db.models import Q, Sum
+from django.db import transaction
+from django.contrib.contenttypes.models import ContentType
+
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework import status
+
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer,  CampaignTypeMappingSerializer
 from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, BusinessInfo, \
@@ -12,17 +23,16 @@ from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTy
                     PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, \
                     BusinessSubTypes, AccountInfo, InventorySummary, FlatType, ProposalInfoVersion, ProposalCenterMappingVersion, \
                     SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion
-from django.db.models import Q, Sum
-from django.db import transaction
-from rest_framework import status
 from v0.ui.views import InventorySummaryAPIView
-import json
-from django.contrib.contenttypes.models import ContentType
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping,SpaceMapping , InventoryType, ShortlistedSpaces
 from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer, SpaceMappingSerializer , \
         InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
         ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,\
         ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
+from constants import supplier_keys
+from v0.models import City, CityArea, CitySubArea
+from coreapi.settings import BASE_URL, BASE_DIR
+from v0.ui.utils import get_supplier_id
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -2069,54 +2079,126 @@ class ProposalHistoryAPIView(APIView):
         return Response(proposal_versions_list, status=200)
 
 
+class SaveSocietyData(APIView):
+    """
+    This API reads a csv file and  makes supplier id's for each row. then it adds the data along with
+    supplier id in the  supplier_society table. it also populates society_tower table.
+    """
+
+    def get(self, request):
+        """
+        :param request: request object
+        :return: success response in case it succeeds else failure message.
+        """
+
+        with transaction.atomic():
+
+            source_file = open(BASE_DIR + '/modified_new_tab.csv', 'rb')
+            file_errros = open(BASE_DIR + '/errors.txt', 'w')
+            try:
+                reader = csv.reader(source_file)
+
+                for num, row in enumerate(reader):
+                    d = {}
+                    if num == 0:
+                        continue
+                    else:
+                        for index, key in enumerate(supplier_keys):
+                            if row[index] == '':
+                                d[key] = None
+                            else:
+                                d[key] = row[index]
+
+                        try:
+                            area_object = CityArea.objects.get(label=d['area'])
+                            subarea_object = CitySubArea.objects.get(subarea_name=d['sub_area'],
+                                                                     area_code=area_object)
+                            response = get_supplier_id(request, d)
+                            # this method of handing error code will  change in future
+                            if response.status_code == status.HTTP_200_OK:
+                                d['supplier_id'] = response.data['supplier_id']
+                            else:
+                                file_errros.write("Error in generating supplier id {0} ". format(response.data['error']))
+                                continue
+
+                            (society_object, value) = SupplierTypeSociety.objects.get_or_create(
+                                supplier_id=d['supplier_id'])
+                            d['society_location_type'] = subarea_object.locality_rating
+                            d['society_state'] = 'Maharashtra'
+                            society_object.__dict__.update(d)
+                            society_object.save()
+
+                            towercount = SocietyTower.objects.filter(supplier=society_object).count()
+
+                            # what to do if tower are less
+                            tower_count_given = int(d['tower_count'])
+                            if tower_count_given > towercount:
+                                abc = tower_count_given - towercount
+                                for i in range(abc):
+                                    tower = SocietyTower(supplier=society_object)
+                                    tower.save()
+
+                        except ObjectDoesNotExist as e:
+                            file_errros.write(str(e.message) + "," + str(e.args) + ' for ' + str(d['sub_area']) + ' and ' + str(area_object.area_code)
+                                              )
+                            continue
+                        except KeyError as e:
+                            return Response(data=str(e.message), status=status.HTTP_400_BAD_REQUEST)
+                        except Exception as e:
+                            # severe error if reached here, must be returned
+                            return Response(data=str(e.message), status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response(data=str(e.message), status=status.HTTP_400_BAD_REQUEST)
+
+            finally:
+                source_file.close()
+                file_errros.close()
+        return Response(data="success", status=status.HTTP_200_OK)
+
 
 class SocietySaveCSVAPIView(APIView):
     def get(self,request,format=None):
+        """
+        DO not use this api. will be modified. 
+        """
         import csv, sys
+        from constants import supplier_keys
         from v0.models import City, CityArea, CitySubArea, ContactDetails
+        #SupplierTypeSociety.objects.all().delete()
+
         with transaction.atomic():
-            file = open('/home/prince/Desktop/CSV Testing/society_files/supplier_id.csv','rb')
-            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/supplier_id_error.txt','w')
+            '''
+
+            file = open('/home/nikhil/Documents/machadalo/source/coreapi/coreapi/supplier_id.csv','rb')
+            file_errros = open('/home/nikhil/Documents/machadalo/source/coreapi/coreapi/supplier_id_error.txt','w')
             try:
                 reader = csv.reader(file)
                 for num, row in enumerate(reader):
                     d = {}
-                    if num == 0 :
+                    if num == 0:
                         continue
                     else:
-                        d['society_city'] , d['society_locality'] , d['society_subarea'] , supplier_type_1, d['society_name'], d['supplier_code'] = row[0].title(), row[1].title(), row[2].title(), row[3], row[4], row[5]
-                        supplier_type_1 = 'RS'
-                        if not (d['society_city'] and d['society_locality'] and d['society_subarea'] and d['supplier_code'] and d['society_name'] and d['supplier_code']):
-                            file_errros.write("Errors in "+ str(num+1) + " line\t--->Some variables not present\n\n")
+                        keys = ['society_city', 'society_locality', 'society_subarea', 'supplier_type', 'society_name', 'supplier_code']
+                        for index, key in enumerate(keys):
+                            d[key] = row[index]
+
+                        if '' in d.values() or None in d.values():
                             continue
+
                         try:
                             city_object = City.objects.get(city_name=d['society_city'])
                             area_object = CityArea.objects.get(label = d['society_locality'])
                             subarea_object = CitySubArea.objects.get(subarea_name=d['society_subarea'],area_code=area_object)
 
-                            d['supplier_id'] = city_object.city_code + area_object.area_code + subarea_object.subarea_code + supplier_type_1 + d['supplier_code']
+                            d['supplier_id'] = city_object.city_code + area_object.area_code + subarea_object.subarea_code + d['supplier_type'] + d['supplier_code']
+
                             try:
-                                society_object = SupplierTypeSociety.objects.get(supplier_id=d['supplier_id'])
-                                file_errros.write("Error in " + str(num+1) + " line\t---> Society with supplier code "\
-                                    + d['supplier_code'] + " already exists in that subarea. Still Updating the details\n\n")
+                                (society_object, value) = SupplierTypeSociety.objects.get_or_create(supplier_id=d['supplier_id'])
                                 society_object.__dict__.update(d)
                                 society_object.save()
-                                print "\n\n\nsaving socity"
-                                print "society_object dict :"
-                                for i in ['supplier_id','society_city','society_locality','society_subarea','society_name']:
-                                    try:
-                                        print i + " : " + society_object.__dict__[i]
-                                    except KeyError:
-                                        print "Key Error  : ", i
-                                print "\n\n\n"
                                 continue
-                            except SupplierTypeSociety.DoesNotExist:
-                                society_object = SupplierTypeSociety()
-                                society_object.__dict__.update(d)
-                                society_object.save()
-                                print "\n\n\nsaving socity"
-                                print "society_object dict :" , society_object.__dict__
-                                print "\n\n\n"
+                            except Exception as e:
+                                file_errros.write("Error: " + e.message)
 
                         except City.DoesNotExist:
                             file_errros.write("Error in "+ str(num+1) + " line\t---> City Name is Wrong\n\n")
@@ -2128,12 +2210,17 @@ class SocietySaveCSVAPIView(APIView):
                             return Response({'message' : 'Line 1238 error found'}, status=200)
             finally:
                 file.close()
-                file_errros.close()
+                file_errr
 
 
 
-            file = open('/home/prince/Desktop/CSV Testing/society_files/new_basic_tab.csv','rb')
-            file_errros = open('/home/prince/Desktop/CSV Testing/society_files/basic_tab_errors.txt','w')
+                os.close()
+
+            '''
+
+
+            file = open('/home/nikhil/Documents/machadalo/source/coreapi/coreapi/new_basic_tab.csv','rb')
+            file_errros = open('/home/nikhil/Documents/machadalo/source/coreapi/coreapi/basic_tab_errors.txt','w')
 
             try:
                 reader = csv.reader(file)
@@ -2149,14 +2236,8 @@ class SocietySaveCSVAPIView(APIView):
                             return Response({'message' : 'Index Out of Range', 'maxIndex' : \
                                 length, 'row' : row},status=200)
 
-                        d['supplier_code'], d['society_subarea'], d['society_address1'], d['society_address2'], d['society_zip'], \
-                        d['society_latitude'], d['society_longitude'], possession_year, d['tower_count'], d['flat_count'], d['vacant_flat_count'],\
-                        d['service_household_count'], d['working_women_count'], d['avg_household_occupants'], d['bachelor_tenants_allowed'], \
-                        d['flat_avg_rental_persqft'], d['cars_count'], d['luxury_cars_count'], d['society_location_type'], d['society_type_quality'], \
-                        d['society_type_quantity'], d['count_0_5'], d['count_5_15'], d['count_15_25'], d['count_25_60'], d['count_60above'], \
-                        d['society_weekly_off'] = row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9],\
-                                            row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18]\
-                                            , row[19], row[20], row[21], row[22], row[23], row[24], row[25], row[26]
+                        for index, key in enumerate(supplier_keys):
+                            d[key] = row[index]
 
                         if not (d['supplier_code'] and d['society_subarea']):
                             file_errros.write('Error in ' + str(num+1) + " line\t--> Please provide Supplier Code and Society Subarea\n\n")
@@ -2178,7 +2259,7 @@ class SocietySaveCSVAPIView(APIView):
                             society_object.__dict__.update(d)
                             society_object.save()
 
-                            towercount = SocietyTower.objects.filter(supplier = society).count()
+                            towercount = SocietyTower.objects.filter(supplier = society_object).count()
                             abc = 0
                             try:
                                 # what to do if tower are less
@@ -2186,7 +2267,7 @@ class SocietySaveCSVAPIView(APIView):
                                 if tower_count_given > towercount:
                                     abc = tower_count_given - towercount
                                     for i in range(abc):
-                                        tower = SocietyTower(supplier = society)
+                                        tower = SocietyTower(supplier = society_object)
                                         tower.save()
                             except ValueError:
                                 pass
@@ -2203,7 +2284,9 @@ class SocietySaveCSVAPIView(APIView):
                                     print "\nKey Error " + key + "\n"
 
                         except SupplierTypeSociety.DoesNotExist:
+                            file_errros.write("No supplier exist for  this supplier code {0} and supplier subarea {1}".format( d['supplier_code'], d['society_subarea']))
                             file_errros.write("Error in " + str(num+1) + " line\t--> Supplier Code + Subarea don't correspond to a society in Database\n\n")
+
                         except SupplierTypeSociety.MultipleObjectsReturned:
                             file_errros.write("Error in " + str(num+1) + " line\t-->Supplier Code + subarea have more than 1 objects\t MY bad Sorry for this\n\n")
 
@@ -2212,8 +2295,7 @@ class SocietySaveCSVAPIView(APIView):
                 file.close()
                 file_errros.close()
 
-
-
+            '''
 
             file = open('/home/prince/Desktop/CSV Testing/society_files/contacts.csv','rb')
             file_errros = open('/home/prince/Desktop/CSV Testing/society_files/contacts_errors.txt','w')
@@ -2264,6 +2346,7 @@ class SocietySaveCSVAPIView(APIView):
             finally:
                 file.close()
                 file_errros.close()
+            '''
 
         return Response(status=200)
 
