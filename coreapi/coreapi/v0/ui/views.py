@@ -1,3 +1,19 @@
+# python core imports
+from itertools import izip
+import json
+import csv
+
+# django imports
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
+from django.db import IntegrityError
+from django.db import transaction
+from django.db.models import Q
+from django.contrib.auth.models import User
+
+# third party imports
+import requests
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.response import Response
@@ -22,18 +38,13 @@ from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation,
 from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuilding, \
                     CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
-from django.db.models import Q
-from django.contrib.auth.models import User
-import json
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
-
-from django.db import IntegrityError
-from django.db import transaction
-from itertools import izip
-
 from v0.ui.serializers import SocietyListSerializer
+
+# project imports
+import utils as ui_utils
+from coreapi.settings import BASE_URL, BASE_DIR
+from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas
+from constants import keys, decision
 
 
 class UsersProfilesAPIView(APIView):
@@ -758,9 +769,6 @@ class SocietyAPISocietyIdsView(APIView):
         return Response({'society_ids' : society_ids}, status=200)
 
 
-
-
-
 class FlatTypeAPIView(APIView):
     def get(self, request, id, format=None):
         try:
@@ -858,7 +866,78 @@ class FlatTypeAPIView(APIView):
             return Response(status=404)
 
 
+class SaveSummaryData(APIView):
+    """
+    Saves inventory summary data from csv sheet.
+    """
+
+    def get(self, request):
+        """
+        :return: success or failure depending on weather the data was successfully saved or not
+        """
+
+        with transaction.atomic():
+
+            source_file = open(BASE_DIR + '/inventory_summary.csv', 'rb')
+            error_file = open(BASE_DIR + '/inventory_summary_errors.csv', 'w')
+
+            try:
+                reader = csv.reader(source_file)
+                failure_count = 0  # to report failure rows
+                total_count = sum(1 for row in reader) - 1
+                source_file.seek(0)
+
+                sess = requests.Session()
+
+                for num, row in enumerate(reader):
+                    data = {}
+                    if num == 0:
+                        continue
+                    else:
+                        for index, key in enumerate(keys):
+                            if row[index] == '':
+                                data[key] = None
+                            elif row[index].lower() == decision["YES"]:
+                                data[key] = True
+                            elif row[index].lower() == decision["NO"]:
+                                data[key] = False
+                            else:
+                                data[key] = row[index]
+
+                        response = ui_utils.get_supplier_id(request, data)
+                        # this method of handing error code will  change in future
+                        if response.status_code == status.HTTP_200_OK:
+                            data['supplier_id'] = response.data['supplier_id']
+                            url = BASE_URL + 'v0/ui/society/' + data['supplier_id'] + '/inventory_summary/'  # verify
+                            r = sess.post(url, data=data, timeout=5)
+
+                            if r.status_code != status.HTTP_200_OK:
+                                error_file.write(
+                                    "POST API failed for entry of row index {0} and error is {1} \n ------------\n".format(num,
+                                                                                                                  r.text))
+                                failure_count += 1
+                                continue
+                        else:
+                            error_file.write("Error in making supplier id {0} for row number {1} \n".format(response.data['error'], num))
+                            failure_count += 1
+                            continue
+
+            except Exception as e:
+                return Response(data=str(e.message), status=status.HTTP_400_BAD_REQUEST)
+            finally:
+                source_file.close()
+                error_file.close()
+
+        return Response(data="Information:  out of {0} rows, {1} successfully saved and {2} failed ".format(total_count,
+                                                                                                       total_count - failure_count,
+                                                                                                       failure_count),
+                        status=status.HTTP_200_OK)
+
+
 class InventorySummaryAPIView(APIView):
+    """
+    This api provides summary of all the inventories
+    """
     def get(self, request, id, format=None):
         try:
             inv_summary = InventorySummary.objects.select_related().filter(supplier__supplier_id=id).first()
@@ -866,7 +945,6 @@ class InventorySummaryAPIView(APIView):
             return Response(serializer.data)
         except InventorySummary.DoesNotExist:
             return Response(status=404)
-
 
     def post(self, request, id, format=None):
         try:
@@ -882,6 +960,7 @@ class InventorySummaryAPIView(APIView):
 
             with transaction.atomic():
                 if request.data['poster_allowed_nb']:
+
                     if request.data['nb_count']!=None and request.data['nb_count'] > 0:
                         society.poster_allowed_nb = True
                         poster_campaign = request.data['nb_count']
@@ -915,8 +994,6 @@ class InventorySummaryAPIView(APIView):
                     if request.data['total_stall_count']!=None and request.data['total_stall_count'] > 0:
                         stall_campaign = request.data['total_stall_count']
                         request.data['stall_or_cd_campaign'] = stall_campaign
-
-
 
                 if request.data['flier_allowed']:
                     if request.data['flier_frequency']!=None and request.data['flier_frequency'] > 0:
@@ -979,7 +1056,7 @@ class InventorySummaryAPIView(APIView):
                 if serializer.is_valid():
                     serializer.save(supplier=society)
                 else :
-                    return Response({'message': 'Invalid InventorySummary Serializer'},status=400)
+                    return Response({'error': 'Invalid InventorySummary Serializer'},status=400)
 
 
                 adinventory_dict =  self.adinventory_func()
@@ -1120,6 +1197,7 @@ class InventorySummaryAPIView(APIView):
                             price.save()
                         except KeyError as e:
                             print "\n\nKey Error happened here\n\n"
+
                     
                 
                 try:
@@ -1127,18 +1205,12 @@ class InventorySummaryAPIView(APIView):
                     serilaizer_new = InventorySummarySerializer(inventory_obj)
                     return Response(serilaizer_new.data, status=200)
                 except InventorySummary.DoesNotExist:
-                    return Response({'message' : 'Error fetching inventory summary object'},status=406)
+                    return Response({'error': 'Error fetching inventory summary object'},status=406)
 
                 # return Response(serializer.validated_data, status=200)
-            print "404 Ist"
-            return Response(status=404)
-        # except:
-        #     print "404 2nd"
-        #     return Response(status=404)
-        except InventorySummary.DoesNotExist:
-            print "404 2nd"
-            #   return Response(status=404)
 
+        except Exception as e:
+            return Response(data={"error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
     def adinventory_func(self):
         adinventory_objects = AdInventoryType.objects.all()
