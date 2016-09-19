@@ -35,7 +35,6 @@ urlpatterns = [
 
 
     # for saving societies
-    url(r'^putSocietiesInTable/$', views.SocietySaveCSVAPIView.as_view()),
     url(r'^save-society-data/$', views.SaveSocietyData.as_view()),
     url(r'^save-contact-details/$', views.SaveContactDetails.as_view()),
 ]
