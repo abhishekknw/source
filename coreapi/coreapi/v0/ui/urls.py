@@ -42,7 +42,7 @@ urlpatterns = [
     url(r'^create_supplier/load_initial_data/$', views.getInitialDataAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_corporate/$', views.saveBasicCorporateDetailsAPIView.as_view()),
     url(r'^locations/(?P<id>[A-Z_a-z0-9]+)/$', views.getLocationsAPIView.as_view()),
-    url(r'^supplier/generate_id/$', views.generateSupplierIdAPIView.as_view()),
+    url(r'^supplier/generate_id/$', views.GenerateSupplierIdAPIView.as_view()),
     url(r'^check_supplier_code/(?P<code>[A-Z0-9]+)$', views.checkSupplierCodeAPIView.as_view()),
 
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/posters/$', views.PosterAPIView.as_view()),
@@ -54,7 +54,7 @@ urlpatterns = [
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_basic_corporate_details$', views.saveBasicCorporateDetailsAPIView.as_view()),
     # url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_contact_details$', views.ContactDetailsGenericAPIView.as_view()),
     # url(r'^corporate/save_basic_corporate_details$', views.saveBasicCorporateDetailsAPIView.as_view())
-    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_building_details$', views.saveBuildingDetailsAPIView.as_view()),
+    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_building_details$', views.SaveBuildingDetailsAPIView.as_view()),
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/get_company_list$', views.CompanyDetailsAPIView.as_view()),
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_company_details$', views.CorporateCompanyDetailsAPIView.as_view()),
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/get_company_data$', views.CorporateCompanyDetailsAPIView.as_view()),

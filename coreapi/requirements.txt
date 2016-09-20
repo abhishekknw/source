@@ -7,6 +7,9 @@ djangorestframework==3.1.1
 djangorestframework-jwt==1.5.0
 drf-generators==0.2.8
 drfdocs==0.0.11
+et-xmlfile==1.0.1
+jdcal==1.2
+openpyxl==2.4.0
 pygeocoder==1.2.5
 requests==2.11.1
 wsgiref==0.1.2
