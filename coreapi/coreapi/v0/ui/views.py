@@ -709,6 +709,7 @@ class FlatTypeAPIView(APIView):
             if flag:
                 avgRentpsf = num/den
                 society.average_rent = avgRentpsf
+                society.flat_type_count = request.data['flat_type_count']
                 society.save()
 
             if request.data['flat_type_count'] != len(request.data['flat_details']):
@@ -725,8 +726,8 @@ class FlatTypeAPIView(APIView):
                 serializer = FlatTypeSerializer(data=key)
             if serializer.is_valid():
                 serializer.save(society=society)
-            #else:
-                #return Response(serializer.errors, status=400)
+            else:
+                return Response(serializer.errors, status=400)
 
         return Response(status=201)
 
@@ -840,6 +841,7 @@ class InventorySummaryAPIView(APIView):
             primary_citations = FullCitation.objects.filter(content_object=my_supported, content_type=ct_supported, is_primary=True)
 
             '''
+          
             response = ui_utils.get_supplier_inventory(request.data['supplier_type_code'], id)
             if not response['status']:
                 return response
