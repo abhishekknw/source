@@ -46,25 +46,42 @@ angular.module('catalogueApp')
 
 	createProposalService.loadInitialData()
     .success(function (response){
+			console.log(response);
         $scope.cities = response.cities;
+				console.log($scope.cities);
       });
-
+			//changes for searching societies on basis of area,subarea
      $scope.get_areas = function(id,index) {
      	var id = id;
-			console.log(index);
+			console.log($scope.cities);
+			for(var i=0;i<$scope.cities.length;i++){
+				if($scope.cities[i].id == id){
+					$scope.model.centers[index].center.city = $scope.cities[i].city_name;
+				}
+			}
      	// 	`	1aalert(id);
       createProposalService.getLocations('areas', id,index)
       .success(function (response){
           $scope.areas[index] = response;
+
         });
     }
     $scope.get_sub_areas = function(id,index) {
       var id = id;
+			console.log($scope.sub_areas);
+			for(var i=0;i<$scope.areas[index].length;i++){
+				if($scope.areas[index][i].id == id){
+					$scope.model.centers[index].center.area = $scope.areas[index][i].label;
+				}
+			}
+
+	console.log($scope.model.centers);
       createProposalService.getLocations('sub_areas', id)
       .success(function (response){
           $scope.sub_areas[index] = response;
         });
     }
+
 
 	$scope.removeCenter = function(index){
 		$scope.model.centers.splice(index,1);
@@ -94,7 +111,6 @@ angular.module('catalogueApp')
 	// $scope.
 
 	$scope.submit = function(){
-		alert("hi1!!!!!!!!!");
 		console.log("$scope.model", $scope.model);
 
 		// call backend to save only if all the latitudes are found
@@ -105,7 +121,6 @@ angular.module('catalogueApp')
 				console.log("response is : ", response);
 				$scope.proposal_id = response;
 				createProposalService.setProposalId($scope.proposal_id);
-				alert("$scope.proposal_id--------" + $scope.proposal_id);
 				$location.path('/' + $scope.proposal_id + '/mapview');
 
 			})

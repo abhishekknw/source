@@ -68,13 +68,13 @@
     					<td><input type="text" ng-model="center.center.center_name" class="form-control spacing"></td>
     					<td><input type="text" ng-model="center.center.address" class="form-control spacing"></td>
               <td>
-                <select name="city" class="form-control input-size" ng-change="get_areas(center.center.city,$index)" ng-model="center.center.city">
+                <select name="city" class="form-control input-size" ng-change="get_areas(center.city,$index)" ng-model="center.city">
                   <option value="">Select City</option>
                   <option  ng-repeat="city in cities" value="{{city.id}}" required>{{city.city_name}}</option>
                 </select>
               </td>
               <td>
-                <select name="areas" class="form-control input-size" ng-change="get_sub_areas(center.center.area,$index)" ng-model="center.center.area">
+                <select name="areas" class="form-control input-size" ng-change="get_sub_areas(center.area,$index)" ng-model="center.area">
                   <option value="">Select Area</option>
                   <option  ng-repeat="area in areas[$index]" value="{{area.id}}" required>{{area.label}}</option>
                 </select>
@@ -82,7 +82,7 @@
               <td>
                 <select name="subareas" class="form-control input-size" ng-change="" ng-model="center.center.subarea">
                   <option value="">Select SubArea</option>
-                  <option  ng-repeat="area in sub_areas[$index]" value="{{area.id}}" required>{{area.subarea_name}}</option>
+                  <option  ng-repeat="subarea in sub_areas[$index]" value="{{subarea.subarea_name}}" required>{{subarea.subarea_name}}</option>
                 </select>
               </td>
               <td><input type="text" ng-model="center.center.pincode" class="form-control spacing col-width"></td>

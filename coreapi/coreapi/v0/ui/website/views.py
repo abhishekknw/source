@@ -911,7 +911,6 @@ class SpacesOnCenterAPIView(APIView):
 
             # for society
             if space_mapping_object.society_allowed:
-                print Q()
                 q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
                 
                 societies_inventory = space_mapping_object.get_society_inventories()
@@ -1197,12 +1196,10 @@ class GetFilteredSocietiesAPIView(APIView):
         radius = request.query_params.get('r',None) # radius change
         location_params = request.query_params.get('loc',None)
         society_quality_params = request.query_params.get('qlt',None)
-        print society_quality_params
         society_quantity_params = request.query_params.get('qnt',None)
         flat_count = request.query_params.get('flc',None)
         flat_type_params = request.query_params.get('flt',None)
         inventory_params = request.query_params.get('inv',None)
-        print inventory_params
 
 
         q = Q()
@@ -1224,7 +1221,6 @@ class GetFilteredSocietiesAPIView(APIView):
             flat_types = []
             flat_type_params = flat_type_params.split()
             for param in flat_type_params:
-                print param
                 try:
                     flat_types.append(flat_type_dict[param])
                     print flat_type_dict[param]
@@ -1258,7 +1254,6 @@ class GetFilteredSocietiesAPIView(APIView):
         min_longitude = longitude - delta_dict['delta_longitude']
 
         q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-        print q,"vidhi"
         if location_params:
             location_ratings = []
             location_params = location_params.split()
@@ -1313,17 +1308,15 @@ class GetFilteredSocietiesAPIView(APIView):
                 # if required to include societies with null value of this parameter uncomment following line
                 # will not work if there is default value is something then replace __isnull=True --> = defaultValue
                 # q &= Q(flat_count__isnull=True)
-
+        p = None
         if inventory_params:
             inventory_params = inventory_params.split()
-            print inventory_params
             temp = None    #temporary variable     
             for param in inventory_params:
                 try:
                     
                     # | 'STFL' | 'CDFL' | 'PSLF' | 'STSLFL' | 'POCDFL' | 'STCDFL'
                     if (param == 'POFL') | (param == 'STFL') | (param == 'SLFL') | (param == 'CDFL') | (param == 'POSLFL') | (param == 'STSLFL') | (param == 'POCDFL') | (param == 'STCDFL'):
-                        print "helllllloooooooooooooo"
 
                         if param == 'POFL':
                             temp_q = (Q(poster_allowed_nb=True) & Q(flier_allowed=True))
@@ -1333,7 +1326,6 @@ class GetFilteredSocietiesAPIView(APIView):
 
                         if param == 'STFL':
                             temp_q = (Q(standee_allowed=True) & Q(flier_allowed=True))
-                            print q
 
                         if param == 'CDFL':
                             temp_q = (Q(car_display_allowed=True) & Q(flier_allowed=True))
@@ -1351,19 +1343,23 @@ class GetFilteredSocietiesAPIView(APIView):
                             temp_q = (Q(standee_allowed=True) & Q(car_display_allowed=True) & Q(flier_allowed=True))
 
                     else:
-
                         temp_q = Q(**{"%s" % inventory_dict[param]:'True'})
-
+                        
                     if temp:
-                        q = (q | temp_q)
+                        p = (p | temp_q)
                     else:
-                        q = temp_q
-                        temp=1                                                                                                                                                                                                                                                               
+                        p = temp_q
+                        temp=1                                                                                                                                                                                                                                                             
                 except KeyError:
                     pass
+        
+        #code changes & added for 'OR' filters of inventory and 'AND' filters with inventory and others
+        #code start
+        if p:
+            q&=p
+        #code end
 
-        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type','flat_count')
-        print societies_temp
+        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type','flat_count','tower_count','society_type_quality')
         societies = []
         society_ids = []
         societies_count = 0
