@@ -624,6 +624,7 @@ angular.module('catalogueApp')
             var promises = [];
             $scope.getFilteredSocieties = function(){
                 // creates the string for the get request for getting the required societies based on the filters
+// <<<<<<< HEAD
                 // if($scope.show_societies == false){
                 //   console.log("hello");
                 //   // var lat = "?lat=" + $scope.current_center.center.latitude ;
@@ -706,6 +707,36 @@ angular.module('catalogueApp')
           }) // end of q
         // } //end of else
       }
+// =======
+//                 var lat = "?lat=" + $scope.current_center.center.latitude ;
+//                 var lng = "&lng=" + $scope.current_center.center.longitude;
+//                 var radius = "&r=" + $scope.current_center.center.radius;
+//                 var get_url_string = lat + lng + radius;
+//                 get_url_string += makeString($scope.society_inventory_type, "&inv=");
+//                 get_url_string += makeString($scope.society_location, "&loc=");
+//                 get_url_string += makeString($scope.society_quality_type, "&qlt=");
+//                 get_url_string += makeString($scope.society_quantity_type, "&qnt=");
+//                 get_url_string += makeString($scope.society_flat_type, "&flt=");
+//
+//                 console.log("get_url_string is : ", get_url_string);
+//
+//                 mapViewService.getFilterSocieties(get_url_string)
+//                 .success(function(response, status){
+//                   console.log(response);
+//                     $scope.current_center.societies = response.societies;
+//                     $scope.current_center.societies_inventory_count = response.societies_inventory_count;
+//                     $scope.current_center.societies_count = response.societies_count;
+//                     $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
+//                     $scope.towers = calculatetowers();
+//                     $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
+//
+//                 })
+//                 .error(function(response, status){
+//                     console.log("Error Happened while filtering");
+//                 });
+//             }
+//
+// >>>>>>> 983a12db0188f041e8154ed752d3a790e7875583
             var makeString = function(filter_array, filter_keyword){
                 var my_string = filter_keyword;
                 var length = filter_array.length;
@@ -723,6 +754,17 @@ angular.module('catalogueApp')
                 return my_string;
             }
         });
+// <<<<<<< HEAD
+// =======
+//
+//         function calculatetowers (){
+//           var total_tower_count=0;
+//           for(var i=0;i<$scope.current_center.societies.length;i++){
+//             total_tower_count += $scope.current_center.societies[i].tower_count;
+//           }
+//           return total_tower_count;
+//         }
+// >>>>>>> 983a12db0188f041e8154ed752d3a790e7875583
         //Start: Function for calculating total impressions inventory wise
         function calculatetowers (){
           var total_tower_count=0;
@@ -733,26 +775,19 @@ angular.module('catalogueApp')
           return total_tower_count;
         }
         function calculateImpressions (inventoryCount){
-          console.log(inventoryCount);
           //var impressions = [];
-          var posterCount = inventoryCount.posters;
-          var standeeCount = inventoryCount.standees;
-          var flierCount = inventoryCount.fliers;
-          var stallCount = inventoryCount.stalls;
-          var posterImpression = posterCount*4*7;
-          var standeeImpression = standeeCount*4*7;
-          var stallImpression = stallCount*4*2;
           var total_flat_count=0;
           for(var i=0;i<$scope.current_center.societies_count;i++){
             total_flat_count += $scope.current_center.societies[i].flat_count;
           }
-           var flierImpression = total_flat_count * 4*1;
-          //var flierImpression = total flat count * 4*1 ; In future this 1 will be replaced with the number of flier frequency
-          // impressions.push({
-          //   posterImpression : posterImpression,
-          //   standeeImpression : standeeImpression,
-          //   stallImpression : stallImpression,
-          // });
+          //var posterCount = inventoryCount.posters;
+          //var standeeCount = inventoryCount.standees;
+          //var flierCount = inventoryCount.fliers;
+          //var stallCount = inventoryCount.stalls;
+          var posterImpression = total_flat_count*4*7*2;
+          var standeeImpression = total_flat_count*4*7*2;
+          var stallImpression = total_flat_count*4*2;
+          var flierImpression = total_flat_count * 4*1;
           $scope.impressions = {
               posterImpression : posterImpression,
               standeeImpression : standeeImpression,
