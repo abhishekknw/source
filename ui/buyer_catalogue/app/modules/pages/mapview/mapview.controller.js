@@ -279,7 +279,8 @@ angular.module('catalogueApp')
                         latitude: spaces[i].society_latitude,
                         longitude: spaces[i].society_longitude,
                         id: spaces[i].supplier_id,
-                        icon: "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png",
+                        icon: "img/homeicon1.ico",
+                        // icon: "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png",
                         options : {draggable : false},
                         title : {
                             name : spaces[i].society_name,
@@ -622,10 +623,6 @@ angular.module('catalogueApp')
           for(var i=0;i<$scope.current_center.societies_count;i++){
             total_flat_count += $scope.current_center.societies[i].flat_count;
           }
-          //var posterCount = inventoryCount.posters;
-          //var standeeCount = inventoryCount.standees;
-          //var flierCount = inventoryCount.fliers;
-          //var stallCount = inventoryCount.stalls;
           var posterImpression = total_flat_count*4*7*2;
           var standeeImpression = total_flat_count*4*7*2;
           var stallImpression = total_flat_count*4*2;
@@ -651,62 +648,15 @@ angular.module('catalogueApp')
             });
         }
 
-
-
-    // grid view starts
-
-    // $scope.showDetails = function(){
-    //     $scope.new_centers = new Array();
-    //     console.log("\n$scope.centers : ", $scope.centers, "\n\n");
-
-    //     // converting the data in the required and a suitable form for the backend
-    //     // fomat is center = [
-    //     //     space_mappings : [
-    //     //         inventory_type : [],
-    //     //         spaces : []
-    //     //     ]
-    //     // ]
-
-    //     for(var i=0;i<$scope.centers.length;i++){
-    //         $scope.new_centers.push({
-    //             center : $scope.centers[i].center
-    //         });
-
-    //         console.log("$scope.centers[i].center  : ", $scope.centers[i].center);
-
-    //         var center_var = $scope.centers[i]
-
-    //         console.log("center_var.center.space_mappings : ", center_var.center.space_mappings);
-    //         // only iterate over space_mappings if it is an object/array
-    //         if(typeof(center_var.center.space_mappings) == typeof([])){
-    //             for(var j=0;j<center_var.center.space_mappings.length;j++){
-    //                 center_var.center.space_mappings[j].spaces = new Array();
-    //                 console.log("Inside if")
-    //                 if(center_var.center.space_mappings[j].space_name == 'Society'){
-    //                     for(var k=0;k<center_var.societies.length; k++){
-    //                         if(center_var.societies[k].shortlisted){
-    //                             center_var.center.space_mappings[j].spaces.push({
-    //                                 object_id : center_var.societies[i].supplier_id,
-    //                             })
-    //                         }
-    //                     }
-    //                 }
-
-    //                 else if (center_var.center.space_mappings[j].space_name == 'Corporate'){
-    //                     for(var k=0;k<center_var.corporates.length; k++){
-    //                         if(center_var.corporates[k].shortlisted){
-    //                             center_var.center.space_mappings[j].spaces.push({
-    //                                 object_id : center_var.corporates[i].supplier_id
-    //                             });
-    //                         }
-    //                     }
-    //                 }
-
-    //     //                // here goes the code for salon and gyms and other spaces
-    //             }
-    //         }
-    //     }
-    //     console.log("\n\n$scope.new_centers", $scope.new_centers, "\n\n");
-    // }
-
+        $scope.exportData = function(){
+          console.log($scope.centers);
+          mapViewService.exportProposalData($scope.proposal_id_temp, $scope.centers)
+          .success(function(response){
+            console.log ($scope.centers);
+              console.log("Successfully Exported");
+          })
+          .error(function(response){
+              console.log("Error response is : ", response);
+          });
+        }
 });

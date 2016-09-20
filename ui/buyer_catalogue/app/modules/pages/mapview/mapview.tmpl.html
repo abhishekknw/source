@@ -163,7 +163,7 @@
       </table>
       <!-- <div  ng-repeat="society in current_center.societies"></div> -->
         <button class="btn btn-danger active" ng-click="submitProposal()">Submit Final Proposal</button>
-        <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" >Add Socities</button>
+        <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" >Add Societies</button>
   </div>
 
   <!-- End: grid view -->
@@ -196,8 +196,9 @@
            </div>
         </div>
         <div>
-        <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
-        <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
+         <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
+         <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
+         <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
         </div>
       </div>
     </div><!-- row div ends here-->
