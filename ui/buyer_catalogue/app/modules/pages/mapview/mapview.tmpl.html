@@ -120,10 +120,10 @@
             <th class = "col-md-4">Supplier Name</th>
             <th class = "col-md-4">SubArea-Area</th>
             <th class = "col-md-4">Flat Count</th>
-            <th class = "col-md-4">Average Rent</th>
+            <!-- <th class = "col-md-4">Average Rent</th> -->
             <th class = "col-md-4">Society Type</th>
             <th class = "col-md-4">Locality Rating</th>
-            <th class = "col-md-4">Machadalo Index</th>
+            <!-- <th class = "col-md-4">Machadalo Index</th> -->
             <th class="center-align" ng-if="inv_poster">Poster</th>
             <th class="center-align" ng-if="inv_standee">Standee Count</th>
             <th class="center-align" ng-if="inv_stall">Stall</th>
@@ -142,10 +142,10 @@
             <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{society.supplier_id}}" target="_blank">{{society.society_name}}</a></td>
             <td>{{society.society_subarea + "," + society.society_locality}}</td>
             <td>{{society.flat_count}}</td>
-            <td>{{society.average_rent}}</td>
+            <!-- <td>{{society.average_rent}}</td> -->
             <td>{{society.society_type_quality}}</td>
             <td>{{society.society_location_type}}</td>
-            <td>{{society.machadalo_index}}</td>
+            <!-- <td>{{society.machadalo_index}}</td> -->
             <td ng-if="inv_poster">{{}}</td>
             <!-- <td ng-if="inv_poster">{{society.poster_price}}</td>-->
             <td ng-if="inv_standee">{{society.total_standee_count}}</td>
@@ -179,7 +179,7 @@
       <div class="panel panel-info">
         <div class="panel-body" id="searchBody">
           <div class="filterPanel">
-            <span class="filterHeader"> Summary </span></div>
+            <span class="filterHeader"> Summary for {{centers1[current_center_index].center.center_name}}</span></div>
             <hr>
              <span class = "space filterPanelHeader ">Space Count</span>
              <div class = "nbCheckbox two-col">Societies:  {{current_center.societies_count}}</div>
@@ -214,7 +214,7 @@
         <div class="panel panel-info">
           <div class="panel-body" id="searchBody">
             <div class="filterPanel">
-              <span class="filterHeader"> Summary </span></div>
+              <span class="filterHeader">Comprehensive Summary </span></div>
               <hr>
                <span class = "space filterPanelHeader ">Space Count</span>
                <div class = "nbCheckbox two-col">Societies:  {{total_societies}}</div>

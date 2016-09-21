@@ -331,13 +331,13 @@ angular.module('catalogueApp')
                     {name : 'Flyer(FL)',   code : 'FL',   selected : false },
                     {name : 'Car(CD)',     code : 'CD',   selected : false },
                     {name : 'PO & FL',     code : 'POFL',   selected : false },
-                    {name : 'ST & FL',       code : 'STFL',   selected : false },
-                    {name : 'SL & FL',       code : 'SLFL',   selected : false },
-                    {name : 'CD & FL',       code : 'CDFL',   selected : false },
-                    {name : 'PO & SL & FL',    code : 'POSLFL',   selected : false },
-                    {name : 'ST & SL& FL',    code : 'STSLFL',   selected : false },
-                    {name : 'PO & CD & FL',    code : 'POCDFL',   selected : false },
-                    {name : 'ST & CD & FL',    code : 'STCDFL',   selected : false },
+                    {name : 'ST & FL',     code : 'STFL',   selected : false },
+                    {name : 'SL & FL',     code : 'SLFL',   selected : false },
+                    {name : 'CD & FL',     code : 'CDFL',   selected : false },
+                    {name : 'PO & SL & FL',code : 'POSLFL',   selected : false },
+                    {name : 'ST & SL& FL', code : 'STSLFL',   selected : false },
+                    {name : 'PO & CD & FL',code : 'POCDFL',   selected : false },
+                    {name : 'ST & CD & FL',code : 'STCDFL',   selected : false },
                     // {name : 'banner_allowed',       code : 'BA',   selected : false},
                 ];
                 // This service gets all the spaces according to center specification like society_allowed,
@@ -442,10 +442,11 @@ angular.module('catalogueApp')
             ];
 
             $scope.society_quantity_type = [
-                {name : 'Large',        code : 'LA',    selected : false},
-                {name : 'Medium',       code : 'MD',    selected : false},
-                {name : 'Very Large',   code : 'VL',    selected : false},
                 {name : 'Small',        code : 'SM',    selected : false},
+                {name : 'Medium',       code : 'MD',    selected : false},
+                {name : 'Large',        code : 'LA',    selected : false},
+                {name : 'Very Large',   code : 'VL',    selected : false},
+
             ];
             $scope.society_flat_type = [
                 {name : '1 RK',         code : '1R',      selected : false},
@@ -488,7 +489,6 @@ angular.module('catalogueApp')
                      }
                    }
                   }else{
-                    console.log("hello");
                     for(var i=0; i< $scope.centers1.length; i++){
                       $scope.society_markers = [];
                       delete $scope.centers1[i].societies;

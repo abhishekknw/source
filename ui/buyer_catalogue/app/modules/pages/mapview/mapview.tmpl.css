@@ -34,6 +34,7 @@ body{
 .filterPanelHeader{
     font-weight: 400;
     display: block;
+		color: red;
 }
 .filterscroll{
 	overflow: hidden;
