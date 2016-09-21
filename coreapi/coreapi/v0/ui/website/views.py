@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import status
 from openpyxl import Workbook
+from openpyxl.compat import range
 #from import_export import resources
 
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
@@ -32,10 +33,12 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
         InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
         ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,\
         ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
-from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE
+
+from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
+import utils as website_utils
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -100,21 +103,6 @@ class BusinessAPIView(APIView):
             return Response(response, status=200)
         except BusinessInfo.DoesNotExist:
             return Response(status=404)
-
-
-
-    # the delete api is not being used
-    def delete(self, request, id, format=None):
-        try:
-            item = SupplierTypeSociety.objects.get(pk=id)
-        except SupplierTypeSociety.DoesNotExist:
-            return Response(status=404)
-        contacts = item.get_contact_list()
-        for contact in contacts:
-            contact.delete()
-        item.delete()
-        return Response(status=204)
-
 
 
 class AccountAPIListView(APIView):
@@ -1209,12 +1197,11 @@ class GetFilteredSocietiesAPIView(APIView):
         radius = request.query_params.get('r',None) # radius change
         location_params = request.query_params.get('loc',None)
         society_quality_params = request.query_params.get('qlt',None)
-        print society_quality_params
         society_quantity_params = request.query_params.get('qnt',None)
         flat_count = request.query_params.get('flc',None)
         flat_type_params = request.query_params.get('flt',None)
         inventory_params = request.query_params.get('inv',None)
-        print inventory_params
+    
 
 
         q = Q()
@@ -1583,11 +1570,6 @@ class FinalProposalAPIView(APIView):
         This expects id of both center and space mapping from the frontend as they are saved on basic proposal page (InitialProposalAPIView)
         '''
         centers = request.data
-        print "\n\n\n"
-        print "request.data is : ", request.data
-        print "\n\n\n"
-        # ADDNEW -->
-
         space_dict , supplier_code_dict = self.get_space_code_dict()
 
         try:
@@ -1700,9 +1682,6 @@ class FinalProposalAPIView(APIView):
                         space_mapping_object.get_all_spaces().delete()
 
                         for space in center_info[space_dict[space_name]]:
-                            print "\n\n\n"
-                            print 'space is : ', space
-                            print "\n\n\n"
                             if space['shortlisted']:
                                 object_id = space['supplier_id']
                                 print "space_mapping_id : ", space_mapping_object.id
@@ -2154,6 +2133,21 @@ class SaveSocietyData(APIView):
         return Response(data="success", status=status.HTTP_200_OK)
 
 
+class ExportData(APIView):
+    def post(self, request, proposal_id = None,  format=None):
+        wb = Workbook()
+        #ws = wb.active
+        centers = request.data[0]['societies']
+        print centers
+        ws = wb.create_sheet(index=0, title='Spaces Data')
+        for col in range(1):
+            ws.append(proposal_header_keys)
+        for center in centers:
+            ws.append(website_utils.getList(center))
+        wb.save("getmachadalo2.xlsx")
+        return Response(data={"successs"})
+
+
 class SaveContactDetails(APIView):
     """
     Saves contact details in db for each supplier.
@@ -2218,6 +2212,7 @@ class SaveContactDetails(APIView):
                                                                                                   total_count - failure_count,
                                                                                                   failure_count),
             status=status.HTTP_200_OK)
+
 
 
 # class GetSpaceInfoAPIView(APIView):
@@ -2454,3 +2449,4 @@ class SaveContactDetails(APIView):
 
 
 # 19.119128, 72.890795
+
