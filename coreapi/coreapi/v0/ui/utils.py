@@ -41,3 +41,4 @@ def get_supplier_id(request, data):
         return Response({'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response(data={'supplier_id': supplier_id}, status=status.HTTP_200_OK)
+    
