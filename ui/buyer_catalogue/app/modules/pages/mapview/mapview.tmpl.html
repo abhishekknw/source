@@ -47,29 +47,34 @@
       <hr>
       <form id = "filterPanelForm">
        <div class = "filterPanel">
-        <input type = "checkbox" ng-model="current_center.center.space_mappings.society_allowed" ng-click="spaceSociety()">
+        <input type = "checkbox"  ng-model="current_center.center.space_mappings.society_allowed"  ng-click="spaceSociety()">
           <span class = "filterPanelHeader">Society Filters</span><br>
          <div ng-if = "current_center.center.space_mappings.society_allowed">
           <span class = "filterPanelHeader ">Inventory Type</span>
           <div class = "nbCheckbox two-col" ng-repeat="inventory in society_inventory_type">
-            <input type = "checkbox" ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
-          </div><hr>
+            <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
+          </div>
+          <hr>
           <span class = "filterPanelHeader ">Society Type</span>
-            <div class = "nbCheckbox two-col" ng-repeat="quality_type in society_quality_type">
-                <input type = "checkbox" ng-model="quality_type.selected" ng-change="societyFilter()">{{ quality_type.name }}&nbsp;
-            </div><hr>
+            <div class = "nbCheckbox two-col"  ng-repeat="quality_type in society_quality_type">
+                <input type = "checkbox"  ng-model="quality_type.selected" ng-change="societyFilter()">{{ quality_type.name }}&nbsp;
+            </div>
+            <hr>
           <span class = "filterPanelHeader ">Society Size</span>
             <div class = "nbCheckbox two-col" ng-repeat="quantity_type in society_quantity_type">
                 <input type = "checkbox" ng-model="quantity_type.selected" ng-change="societyFilter()">{{ quantity_type.name }}&nbsp;
-            </div><hr>
+            </div>
+            <hr>
           <span class = "filterPanelHeader ">Society Location Rating</span>
           <div class = "nbCheckbox two-col" ng-repeat="location in society_location">
             <input type = "checkbox" ng-model="location.selected" ng-change="societyFilter()">{{ location.name }}&nbsp;
-          </div><hr>
+          </div>
+          <hr>
           <span class = "filterPanelHeader ">Society Flat Type</span>
             <div class = "nbCheckbox two-col" ng-repeat="flat_type in society_flat_type">
                 <input type = "checkbox" ng-model="flat_type.selected" ng-change="societyFilter()">{{ flat_type.name }}&nbsp;
             </div>
+
           </div>
         </div>
       </form>
@@ -134,7 +139,7 @@
           <tr ng-repeat = "society in society1.societies">
             <td>{{$index+1}}</td>
             <td>{{society1.center.center_name}}</td>
-            <td>{{society.society_name}}</td>
+            <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{society.supplier_id}}" target="_blank">{{society.society_name}}</a></td>
             <td>{{society.society_subarea + "," + society.society_locality}}</td>
             <td>{{society.flat_count}}</td>
             <!-- <td>{{society.average_rent}}</td>
@@ -147,7 +152,7 @@
             <!-- <td ng-if="inv_standee">{{society.standee_price}}</td> -->
             <td ng-if="inv_stall">{{society.total_stall_count}}</td>
             <!-- <td ng-if="inv_stall">{{society.stall_price}}</td> -->
-            <td ng-if="inv_flier">{{society.flier_frequency}}</td>
+            <td ng-if="inv_flier">{{society.flat_count}}</td>
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
             <td>
               <button class="btn btn-success active" ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
@@ -170,18 +175,20 @@
 
     <!-- Start: Summary Section -->
 
-    <div class="col-md-2"  ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
+    <div class="col-md-2"  ng-if = "!show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
       <div class="panel panel-info">
         <div class="panel-body" id="searchBody">
           <div class="filterPanel">
-            <span class="filterHeader"> Summary </span></div>
+            <span class="filterHeader"> Summary for {{centers1[current_center_index].center.center_name}}</span></div>
             <hr>
              <span class = "space filterPanelHeader ">Space Count</span>
              <div class = "nbCheckbox two-col">Societies:  {{current_center.societies_count}}</div>
+             <div class = "nbCheckbox two-col">Flat Count:  {{total_flat_count}}</div>
+             <div class = "nbCheckbox two-col">Tower Count:  {{total_towers}}</div>
             <!--added if condition below to display those inventories selected by user in sumarry section-->
             <hr>
               <span class = "space filterPanelHeader">Inventory Count</span>
-              <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{current_center.societies_inventory_count.fliers}}</div>
+              <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{total_flat_count}}</div>
               <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{towers}}</div>
               <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{current_center.societies_inventory_count.stalls}}</div>
               <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{current_center.societies_inventory_count.standees}}</div>
@@ -199,8 +206,47 @@
          <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
          <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
          <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
+
         </div>
       </div>
+
+      <!-- Start: Summary Section of Gridview-->
+
+      <div class="col-md-2"  ng-if = "show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
+        <div class="panel panel-info">
+          <div class="panel-body" id="searchBody">
+            <div class="filterPanel">
+              <span class="filterHeader">Comprehensive Summary </span></div>
+              <hr>
+               <span class = "space filterPanelHeader ">Space Count</span>
+               <div class = "nbCheckbox two-col">Societies:  {{total_societies}}</div>
+               <div class = "nbCheckbox two-col">Flat Count:  {{total_flats}}</div>
+               <div class = "nbCheckbox two-col">Tower Count:  {{total_posters}}</div>
+              <!--added if condition below to display those inventories selected by user in sumarry section-->
+              <hr>
+                <span class = "space filterPanelHeader">Inventory Count</span>
+                <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{total_flats}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{total_posters}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{total_stalls}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{total_standees}}</div>
+              <hr>
+               <span class = "space filterPanelHeader">Total Number of Impressions</span>
+               <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{total_flierImpressions}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{total_posterImpressions}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{total_stallImpressions}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{total_standeeImpressions}}</div>
+              <hr>
+               <!-- <span class = "space filterPanelHeader ">Total Price</span> -->
+             </div>
+          </div>
+          <div>
+          <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
+          <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
+          </div>
+        </div>
+
+
+
     </div><!-- row div ends here-->
 </div><!-- containner div ends here-->
 
