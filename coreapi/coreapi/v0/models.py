@@ -2016,7 +2016,9 @@ class InventorySummary(models.Model):
     poster_count_per_tower = models.IntegerField(db_column='POSTER_COUNT_PER_TOWER', null=True)
     poster_count_per_nb = models.IntegerField(db_column='POSTER_COUNT_PER_NB', null=True)
     standee_count_per_tower = models.IntegerField(db_column='STANDEE_COUNT_PER_TOWER', null=True)
-
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
 
     class Meta:
 

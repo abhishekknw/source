@@ -33,7 +33,8 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
         InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
         ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,\
         ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
-from constants import supplier_keys, proposal_header_keys, sample_data
+
+from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
@@ -2131,6 +2132,7 @@ class SaveSocietyData(APIView):
                 file_errros.close()
         return Response(data="success", status=status.HTTP_200_OK)
 
+
 class ExportData(APIView):
     def post(self, request, proposal_id = None,  format=None):
         wb = Workbook()
@@ -2144,6 +2146,73 @@ class ExportData(APIView):
             ws.append(website_utils.getList(center))
         wb.save("getmachadalo2.xlsx")
         return Response(data={"successs"})
+
+
+class SaveContactDetails(APIView):
+    """
+    Saves contact details in db for each supplier.
+    The API expects source file to be named as contacts.csv and should be placed parrallel to manage.py
+    """
+
+    def get(self, request):
+
+        with transaction.atomic():
+
+            file = open(BASE_DIR + '/contacts.csv', 'rb')
+            file_errros = open(BASE_DIR + '/contacts_errors.txt', 'w')
+
+            try:
+                reader = csv.reader(file)
+                total_count = sum(1 for row in reader) - 1
+                failure_count = 0
+                file.seek(0)
+                for num, row in enumerate(reader):
+                    if num == 0:
+                        continue
+                    else:
+                        data = {}
+                        for index, key in enumerate(contact_keys):
+                            if row[index] == '':
+                                data[key] = None
+                            else:
+                                data[key] = row[index]
+
+                        landline_number = data['landline'].split('-')
+                        data['landline'] = landline_number[1]
+                        data['std_code'] = landline_number[0]
+                        data['country_code'] = COUNTRY_CODE
+                        try:
+                            response = get_supplier_id(request, data)
+                            # this method of handing error code will  change in future
+                            if response.status_code == status.HTTP_200_OK:
+                                data['supplier_id'] = response.data['supplier_id']
+                            else:
+                                file_errros.write("Error in generating supplier id {0} ".format(response.data['error']))
+                                failure_count += 1
+                                continue
+                            society_object = SupplierTypeSociety.objects.get(supplier_id=data['supplier_id'])
+                            data['spoc'] = False
+                            data['supplier'] = society_object
+                            contact_object = ContactDetails()
+                            contact_object.__dict__.update(data)
+                            contact_object.save()
+
+                        except ObjectDoesNotExist as e:
+                            file_errros.write("Supplier object not found for {0}".format(data['supplier_id']))
+                            failure_count += 1
+                            continue
+                        except Exception as e:
+                            return Response(data={str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+
+            finally:
+                file.close()
+                file_errros.close()
+        return Response(
+            data="Information: out of {0} rows, {1} successfully inserted and {2} failed ".format(total_count,
+                                                                                                  total_count - failure_count,
+                                                                                                  failure_count),
+            status=status.HTTP_200_OK)
+
 
 
 # class GetSpaceInfoAPIView(APIView):
