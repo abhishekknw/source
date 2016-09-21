@@ -557,7 +557,6 @@ angular.module('catalogueApp')
             var pcount=0,stcount=0,slcount=0,flcount=0;
             // This count variables are to display count tab in gridView
             $scope.societyFilter = function(value){
-              console.log("hello");
                 // this is called when some checkbox in society filters is changed
                 // value is just for inventories , inventories changed will be changed in
                 // $scope.current_center.societies_inventory as well (this is present only if society_allowed is true)
@@ -614,7 +613,7 @@ angular.module('catalogueApp')
             }
             $scope.clearAllFilters = function(){
                 // just deselects all the checkboxes of filter_array passed
-                // Added reset function to deselct all inventories
+                // Added reset function to deselct all inventoriesclearAllFilters
                 reset($scope.society_inventory_type);
                 reset($scope.society_location);
                 reset($scope.society_quality_type);
@@ -622,10 +621,15 @@ angular.module('catalogueApp')
                 reset($scope.society_flat_type);
 
                 $scope.getFilteredSocieties();
+
             }
             var reset = function(filter_array){
             var length = filter_array.length;
             for(var i=0;i<length;i++){
+              if(filter_array[i].selected == true){
+                filter_array[i].selected = false;
+                $scope.societyFilter(filter_array[i]);
+              }
                 filter_array[i].selected = false;
               }
             }
@@ -699,6 +703,7 @@ angular.module('catalogueApp')
           $q.all(promises).then(function(response){
             var length = $scope.centers1.length;
             for(var i=0; i<length; i++){
+              console.log(promises[i].$$state.value);
               $scope.centers1[i].societies = promises[i].$$state.value.data.societies;
               $scope.centers1[i].societies_inventory_count = promises[i].$$state.value.data.societies_inventory_count;
               $scope.centers1[i].societies_count = promises[i].$$state.value.data.societies_count;
@@ -713,8 +718,8 @@ angular.module('catalogueApp')
             $scope.towers = calculatetowers();
             $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
             $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
-
             gridView_Summary();
+
           }) // end of q
       }
 // =======

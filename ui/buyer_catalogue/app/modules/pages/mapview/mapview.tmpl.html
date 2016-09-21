@@ -139,7 +139,7 @@
           <tr ng-repeat = "society in society1.societies">
             <td>{{$index+1}}</td>
             <td>{{society1.center.center_name}}</td>
-            <td>{{society.society_name}}</td>
+            <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{society.supplier_id}}" target="_blank">{{society.society_name}}</a></td>
             <td>{{society.society_subarea + "," + society.society_locality}}</td>
             <td>{{society.flat_count}}</td>
             <td>{{society.average_rent}}</td>
