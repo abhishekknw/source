@@ -128,6 +128,9 @@ angular.module('catalogueApp')
                     // only one center comes but to reuse Code answer comes in array form
                     console.log("response is : ", response);
                     $scope.current_center = response.centers[0];
+                    $scope.centers1[$scope.current_center_index] = $scope.current_center;
+                    $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
+                    gridView_Summary();
                      console.log("$scope.current_center = ", $scope.current_center);
                      // change the map and center latitude and longitude to initial_center values
                     $scope.map.center.latitude =  $scope.current_center.center.latitude;
@@ -162,6 +165,7 @@ angular.module('catalogueApp')
                 // on changing center lot of things changes
                 // map center || circle center and radius || current_center || society_markers || old_center new_center
                 $scope.initial_center_changed[$scope.current_center_index] = true;
+                console.log($scope.current_center_index);
                 if(change_center){
                     // only if change_center present center is changed
                     $scope.old_center = {
@@ -191,15 +195,16 @@ angular.module('catalogueApp')
                 .success(function(response, status){
                     console.log("Changing Center \nResponse is : ", response);
                     $scope.current_center = response;
-                    // $scope.area_societies = response.area_societies;
-                    // console.log($scope.area_societies);
+                    $scope.centers1[$scope.current_center_index] = response;
+                    gridView_Summary();
                     console.log("\nAfter request $scope.current_center : ", $scope.current_center);
 
                     // for(var i=0;i<$scope.centers.length;i++)
                     //     if($scope.current_center.id == $scope.centers[i].length)
                     //         $scope.centers[i] = angular.copy($scope.current_center);
                     $scope.centers[$scope.current_center_index] = $scope.current_center;
-                    deselect_all_society_filters();
+                    $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
+                    // deselect_all_society_filters();
                     if($scope.current_center.societies != undefined){
                         $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
                         // $scope.society_markers1 = assignMarkersToMap($scope.area_societies);
@@ -227,14 +232,16 @@ angular.module('catalogueApp')
                 $scope.circle.center.latitude = $scope.current_center.center.latitude;
                 $scope.circle.center.longitude = $scope.current_center.center.longitude;
                 $scope.circle.radius = $scope.current_center.center.radius * 1000;
+                $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
+                $scope.towers = calculatetowers();
 
                 set_centers();
-                //deselect_all_society_filters();
+                // deselect_all_society_filters();
                 // show the societies only if selected in this center
                 if($scope.current_center.center.space_mappings.society_allowed){
                     // $scope.society_allowed = true;
                     $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
-                    set_space_inventory($scope.current_center.societies_inventory, $scope.society_inventory_type);
+                    // set_space_inventory($scope.current_center.societies_inventory, $scope.society_inventory_type);
                 }else{
                     // $scope.society_allowed = false;
                     $scope.society_markers = [];
@@ -341,8 +348,9 @@ angular.module('catalogueApp')
                     console.log("\n\nResponse is : ", response);
                     $scope.centers = response.centers;
                     $scope.centers1 = response.centers;
-                    $scope.current_center = $scope.centers[0]
-                    $scope.current_center_index = 0
+                    $scope.current_center = $scope.centers[0];
+                    $scope.current_center_index = 0;
+                    $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
                     gridView_Summary();
                     for(var i=0;i<$scope.centers.length; i++)
                         $scope.initial_center_changed.push(false);
@@ -443,6 +451,7 @@ angular.module('catalogueApp')
                 {name : '1 RK',         code : '1R',      selected : false},
                 {name : '1 BHK',        code : '1B',      selected : false},
                 {name : '1.5 BHK',      code : '1-5B',    selected : false},
+                {name : '2 BHK',        code : '2B',    selected : false},
                 {name : '2.5 BHK',      code : '2-5B',    selected : false},
                 {name : '3 BHK',        code : '3B',      selected : false},
                 {name : '3.5 BHK',      code : '3-5B',    selected : false},
@@ -455,6 +464,8 @@ angular.module('catalogueApp')
             $scope.centers1 = [];
             $scope.spaceSociety = function(){
                 // this function handles selecting/deselecting society space i.e. society_allowed = true/false
+                // code changed after changes done for adding two centers on gridView
+                // commented original code below
                   if($scope.current_center.center.space_mappings.society_allowed){
                     console.log("hello");
                     for(var i=0;i<$scope.centers1.length;i++){
@@ -489,10 +500,6 @@ angular.module('catalogueApp')
                     }
                   }
 
-
-
-                  //yogi end ...................................................
-
                 // if($scope.current_center.center.space_mappings.society_allowed){
                 //   console.log($scope.current_center.center.space_mappings.society_allowed);
                 //    $scope.getFilteredSocieties();
@@ -521,10 +528,10 @@ angular.module('catalogueApp')
                 // console.log("$scope.current_center is : ", $scope.current_center);
             }
 
-            // function to show gridView_Summary
-            $scope.total_societies, $scope.total_standees, $scope.total_stalls, $scope.total_posters, $scope.total_fliers;
+            // function to show gridView_Summary on gridView page
+            $scope.total_societies, $scope.total_standees, $scope.total_stalls, $scope.total_posters, $scope.total_flats;
             function gridView_Summary(){
-              $scope.total_societies = 0,$scope.total_standees = 0,$scope.total_stalls = 0,$scope.total_posters = 0,$scope.total_fliers = 0;
+              $scope.total_societies = 0,$scope.total_standees = 0,$scope.total_stalls = 0,$scope.total_posters = 0,$scope.total_flats = 0;
               var merge_societies = [];
               for(var i=0;i<$scope.centers1.length;i++){
                 $scope.total_societies+= $scope.centers1[i].societies_count;
@@ -534,13 +541,13 @@ angular.module('catalogueApp')
               }
               for(var i=0; i<merge_societies.length; i++){
                 $scope.total_posters +=merge_societies[i].tower_count;
-                $scope.total_fliers +=merge_societies[i].flat_count;
+                $scope.total_flats +=merge_societies[i].flat_count;
               }
               // impressions for gridView
-              $scope.total_posterImpressions = $scope.total_posters*4*7;
-              $scope.total_flierImpressions = $scope.total_fliers*4*1;
-              $scope.total_standeeImpressions = $scope.total_standees*4*7;
-              $scope.total_stallImpressions = $scope.total_stalls*4*2;
+              $scope.total_posterImpressions = $scope.total_flats*4*7*2;
+              $scope.total_flierImpressions = $scope.total_flats*4*1;
+              $scope.total_standeeImpressions = $scope.total_flats*4*7*2;
+              $scope.total_stallImpressions = $scope.total_flats*4*2;
             }
 
             $scope.showSocieties = function(){
@@ -550,6 +557,7 @@ angular.module('catalogueApp')
             var pcount=0,stcount=0,slcount=0,flcount=0;
             // This count variables are to display count tab in gridView
             $scope.societyFilter = function(value){
+              console.log("hello");
                 // this is called when some checkbox in society filters is changed
                 // value is just for inventories , inventories changed will be changed in
                 // $scope.current_center.societies_inventory as well (this is present only if society_allowed is true)
@@ -624,8 +632,9 @@ angular.module('catalogueApp')
             var promises = [];
             $scope.getFilteredSocieties = function(){
                 // creates the string for the get request for getting the required societies based on the filters
-// <<<<<<< HEAD
-                // if($scope.show_societies == false){
+                // code changes for adding two centers i.e centers passed in for loop
+                // commented original code for current_center
+
                 //   console.log("hello");
                 //   // var lat = "?lat=" + $scope.current_center.center.latitude ;
                   // var lng = "&lng=" + $scope.current_center.center.longitude;
@@ -653,7 +662,8 @@ angular.module('catalogueApp')
                   //     console.log("Error Happened while filtering");
                   // });
           // }
-          // else{
+
+          // code added for getting filtered societies for multiple centers
             promises = [];
             var defer = $q.defer();
             for(var i=0; i<$scope.centers1.length; i++){
@@ -685,6 +695,7 @@ angular.module('catalogueApp')
               // });
           } //end of for loop
 
+          // promises handled
           $q.all(promises).then(function(response){
             var length = $scope.centers1.length;
             for(var i=0; i<length; i++){
@@ -705,7 +716,6 @@ angular.module('catalogueApp')
 
             gridView_Summary();
           }) // end of q
-        // } //end of else
       }
 // =======
 //                 var lat = "?lat=" + $scope.current_center.center.latitude ;
@@ -735,8 +745,7 @@ angular.module('catalogueApp')
 //                     console.log("Error Happened while filtering");
 //                 });
 //             }
-//
-// >>>>>>> 983a12db0188f041e8154ed752d3a790e7875583
+
             var makeString = function(filter_array, filter_keyword){
                 var my_string = filter_keyword;
                 var length = filter_array.length;
@@ -754,18 +763,6 @@ angular.module('catalogueApp')
                 return my_string;
             }
         });
-// <<<<<<< HEAD
-// =======
-//
-//         function calculatetowers (){
-//           var total_tower_count=0;
-//           for(var i=0;i<$scope.current_center.societies.length;i++){
-//             total_tower_count += $scope.current_center.societies[i].tower_count;
-//           }
-//           return total_tower_count;
-//         }
-// >>>>>>> 983a12db0188f041e8154ed752d3a790e7875583
-        //Start: Function for calculating total impressions inventory wise
         function calculatetowers (){
           var total_tower_count=0;
           for(var i=0;i<$scope.current_center.societies_count;i++){
@@ -774,20 +771,24 @@ angular.module('catalogueApp')
           console.log(total_tower_count);
           return total_tower_count;
         }
+
+        //Function for calculating total impressions inventory wise
         function calculateImpressions (inventoryCount){
           //var impressions = [];
-          var total_flat_count=0;
+          $scope.total_flat_count=0, $scope.total_towers = 0;
           for(var i=0;i<$scope.current_center.societies_count;i++){
-            total_flat_count += $scope.current_center.societies[i].flat_count;
+            $scope.total_flat_count += $scope.current_center.societies[i].flat_count;
+            $scope.total_towers += $scope.current_center.societies[i].tower_count;
           }
+          console.log($scope.total_flat_count);
           //var posterCount = inventoryCount.posters;
-          //var standeeCount = inventoryCount.standees;
+          var standeeCount = inventoryCount.standees;
           //var flierCount = inventoryCount.fliers;
-          //var stallCount = inventoryCount.stalls;
-          var posterImpression = total_flat_count*4*7*2;
-          var standeeImpression = total_flat_count*4*7*2;
-          var stallImpression = total_flat_count*4*2;
-          var flierImpression = total_flat_count * 4*1;
+          var stallCount = inventoryCount.stalls;
+          var posterImpression = $scope.total_flat_count*4*7*2;
+          var standeeImpression = $scope.total_flat_count*4*7*2;
+          var stallImpression = $scope.total_flat_count*4*2;
+          var flierImpression = $scope.total_flat_count * 4*1;
           $scope.impressions = {
               posterImpression : posterImpression,
               standeeImpression : standeeImpression,
