@@ -76,8 +76,8 @@ def make_supplier_data(data):
 
             "RS": {
 
-                'data': {'supplier_type': data['supplier_type'],
-                         'supplier_name': data['supplier_name'],
+                'data': {'supplier_code': data['supplier_code'],
+                         'society_name': data['supplier_name'],
                          'supplier_id': data['supplier_id'],
                          'created_by': current_user.id,
                          'society_city': city.city_name,
@@ -282,7 +282,7 @@ def adinventory_func():
     return adinventory_dict
 
 
-def get_supplier_inventory(supplier_code, id):
+def get_supplier_inventory(data, id):
     """
     :param supplier_code: RA, CP, GYM, SA, id = pk of supplier table
     :return:  a dict containing correct inventory and supplier object depending upon the supplier id
@@ -294,21 +294,55 @@ def get_supplier_inventory(supplier_code, id):
 
     '''
     try:
+        #supplier_code = data['supplier_type_code']
+        supplier_code = 'RS' #todo: change this when get clearity
         if not supplier_code or not id:
             return Response(data={"status": False, "error": "provide supplier code and  supplier id"},
                             status=status.HTTP_400_BAD_REQUEST)
         supplier_class = ui_constants.suppliers[supplier_code]
         supplier_object = supplier_class.objects.get(pk=id)
         content_type = ContentType.objects.get_for_model(supplier_class)
-        inventory_object = InventorySummary.objects.get(content_object=supplier_object, content_type=content_type)
+#       inventory_object = InventorySummary.objects.get(content_object=supplier_object, object_id=id, content_type=content_type)
+
+        inventory_object = InventorySummary.objects.get(object_id=id, content_type=content_type) if 'id' in data else None
+        data['object_id'] = id
+        data['content_type'] = content_type.id
         return Response(
-            data={"status": True, "data": {"inventory_object": inventory_object, "supplier_object": supplier_object}},
+            data={"status": True, "data": {"inventory_object": inventory_object, "supplier_object": supplier_object, "request_data": data}},
             status=status.HTTP_200_OK)
     except ObjectDoesNotExist as e:
         return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
+#
+# def get_inventory_object(request_data, id):
+#     """
+#     :param request_data: request param containing supplier_type_code
+#     :param id: id of supplier
+#     :return: correct inventory object for that supplier id
+#     """
+#     try:
+#         data = request_data.data.copy()
+#         # supplier_code = data['supplier_type_code']
+#         supplier_code = 'RS'  # todo: change this when get clearity
+#         if not supplier_code or not id:
+#             return Response(data={"status": False, "error": "provide supplier code and  supplier id"},
+#                             status=status.HTTP_400_BAD_REQUEST)
+#         supplier_class = ui_constants.suppliers[supplier_code]
+#         content_type = ContentType.objects.get_for_model(supplier_class)
+#
+#         inventory_object = InventorySummary.objects.get(object_id=id,
+#                                                         content_type=content_type)
+#
+#         return Response(
+#             data={"status": True, "data": {"inventory_object": inventory_object}},
+#             status=status.HTTP_200_OK)
+#     except ObjectDoesNotExist as e:
+#         return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+#     except Exception as e:
+#         return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+#
 
 def duration_type_func():
     duration_type_objects = DurationType.objects.all()
@@ -337,16 +371,22 @@ def save_stall_locations(c1, c2, society):
     count = int(c2) + 1
     for i in range(c1 + 1, count):
         stall_id = society.supplier_id + "CA0000ST" + str(i).zfill(2)
-        stall = StallInventory(adinventory_id=stall_id, supplier_id=society.supplier_id)
+        (stall, is_created) = StallInventory.objects.get_or_create(adinventory_id=stall_id, supplier_id=society.supplier_id)
         stall.save()
 
 
 def save_flyer_locations(c1, c2, society):
     count = int(c2) + 1
-    for i in range(c1 + 1, count):
-        flyer_id = society.supplier_id + "0000FL" + str(i).zfill(2)
-        flyer = FlyerInventory(adinventory_id=flyer_id, flat_count=society.flat_count, supplier_id=society.supplier_id)
-        flyer.save()
+
+    try:
+        for i in range(c1 + 1, count):
+            flyer_id = society.supplier_id + "0000FL" + str(i).zfill(2)
+            (flyer, is_created) = FlyerInventory.objects.get_or_create(adinventory_id=flyer_id,  supplier_id=society.supplier_id)
+            flyer.flat_count = society.flat_count
+            flyer.save()
+
+    except Exception as e:
+       return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def delete(request, id, format=None):

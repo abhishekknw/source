@@ -1,3 +1,6 @@
+
+from v0.models import SupplierTypeSociety, SupplierTypeCorporate, SupplierTypeGym, SupplierTypeSalon
+
 keys = [
 
     'city', 'area', 'sub_area', 'supplier_type', 'supplier_name', 'supplier_code', \
@@ -22,5 +25,5 @@ decision = {
 
 # add new supplier type and corresponding class here
 
-suppliers = {'RS': 'SupplierTypeSociety', 'CP': 'CorporateTypeCorporate', 'GY': 'SupplierTypeGym',
-             'SA': 'SupplierTypeSalon'}
+suppliers = {'RS': SupplierTypeSociety, 'CP': SupplierTypeCorporate, 'GY': SupplierTypeGym,
+             'SA': SupplierTypeSalon}
