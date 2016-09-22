@@ -9,7 +9,6 @@ keys = [
     'largeStall_price_confidence', 'car_display_allowed', 'cd_standard', 'cd_price_day_standard', 'cd_price_day_standard', \
     'cd_premium', 'cd_price_day_premium', 'premium_price_confidence', 'total_stall_count', 'flier_allowed', 'mailbox_allowed', \
     'd2d_allowed', 'flier_lobby_allowed', 'flier_frequency', 'flier_price_day', 'flier_price_confidence'
-
 ]
 
 decision = {

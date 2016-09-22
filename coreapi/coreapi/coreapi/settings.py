@@ -118,6 +118,7 @@ STATIC_URL = '/static/'
 
 # settings for Django Rest Framework
 
+
 REST_FRAMEWORK = {
     # other settings...
     'DEFAULT_AUTHENTICATION_CLASSES': [],
