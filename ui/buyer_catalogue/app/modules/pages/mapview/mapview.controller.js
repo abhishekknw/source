@@ -346,6 +346,7 @@ angular.module('catalogueApp')
                  mapViewService.getSpaces($scope.proposal_id_temp)
                 .success(function(response, status){
                     console.log("\n\nResponse is : ", response);
+                    $scope.business_name = response.business_name;
                     $scope.centers = response.centers;
                     $scope.centers1 = response.centers;
                     $scope.current_center = $scope.centers[0];
@@ -491,6 +492,7 @@ angular.module('catalogueApp')
                   }else{
                     for(var i=0; i< $scope.centers1.length; i++){
                       $scope.society_markers = [];
+                      $scope.societyFilter($scope.centers1[i].societies_inventory);
                       delete $scope.centers1[i].societies;
                       delete $scope.centers1[i].societies_inventory;
                       delete $scope.centers1[i].societies_count;

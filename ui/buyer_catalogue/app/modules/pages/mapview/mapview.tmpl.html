@@ -12,6 +12,7 @@
       <!-- <div class="col-md-1">New Center:</div> -->
       <div class="col-md-2">New Center Latitude & Longitude: </div>
       <div class="col-md-2">{{new_center.latitude}}/{{new_center.longitude}}</div>
+      <div class="col-md-2">Business Name : {{business_name}}</div>
       <!-- <div class="col-md-1">Longitude</div> -->
       <!-- <div class="col-md-1">{{new_center.longitude}}</div> -->
     </div>
@@ -121,7 +122,7 @@
             <th class = "col-md-4">SubArea-Area</th>
             <th class = "col-md-4">Flat Count</th>
             <!-- <th class = "col-md-4">Average Rent</th> -->
-            <th class = "col-md-4">Society Type</th>
+            <!-- <th class = "col-md-4">Society Type</th> -->
             <th class = "col-md-4">Locality Rating</th>
             <!-- <th class = "col-md-4">Machadalo Index</th> -->
             <th class="center-align" ng-if="inv_poster">Poster</th>
@@ -143,7 +144,7 @@
             <td>{{society.society_subarea + "," + society.society_locality}}</td>
             <td>{{society.flat_count}}</td>
             <!-- <td>{{society.average_rent}}</td> -->
-            <td>{{society.society_type_quality}}</td>
+            <!-- <td>{{society.society_type_quality}}</td> -->
             <td>{{society.society_location_type}}</td>
             <!-- <td>{{society.machadalo_index}}</td> -->
             <td ng-if="inv_poster">{{}}</td>
