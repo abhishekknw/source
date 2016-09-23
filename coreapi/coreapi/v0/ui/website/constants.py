@@ -45,3 +45,7 @@ contact_keys = [
 STD_CODE = '022'
 COUNTRY_CODE = '+91'
 
+price_per_flat = {
+    'PO': ['poster_price_per_flat', 'poster_price'],
+    'ST': ['standee_price_per_flat', 'standee_price']
+}
