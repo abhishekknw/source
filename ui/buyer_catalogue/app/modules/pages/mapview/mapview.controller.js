@@ -823,8 +823,8 @@ angular.module('catalogueApp')
           }
         }
         //End: Function for calculating total impressions inventory wise
-        // code added to send selected society inventory types while submitting the proposal & sending only shortlisted societies
-        $scope.submitProposal = function(){
+        //Start: For sending only shortlisted societies & selected inventory types
+        function getShortlistedFilteredSocieties(){
           for(var i=0;i<$scope.centers.length;i++){
             for(var j=0;j<$scope.centers[i].societies.length;j++){
               if($scope.centers[i].societies[j].shortlisted == false){
@@ -842,6 +842,10 @@ angular.module('catalogueApp')
             for(var i=0;i<$scope.centers.length;i++){
               $scope.centers[i].center['society_inventory_type_selected']=society_inventory_type_selected;
             }
+        };
+        //End: For sending only shortlisted societies & selected inventory types
+        $scope.submitProposal = function(){
+            getShortlistedFilteredSocieties();
             console.log("Submitting $scope.centers :", $scope.centers);
             mapViewService.createFinalProposal($scope.proposal_id_temp, $scope.centers)
             .success(function(response, status){
