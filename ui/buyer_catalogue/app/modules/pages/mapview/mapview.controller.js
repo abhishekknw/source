@@ -854,10 +854,9 @@ angular.module('catalogueApp')
         }
 
         $scope.exportData = function(){
-          console.log($scope.centers);
+          console.log("vidhi", $scope.centers);
           mapViewService.exportProposalData($scope.proposal_id_temp, $scope.centers)
           .success(function(response){
-            console.log ($scope.centers);
               console.log("Successfully Exported");
           })
           .error(function(response){
