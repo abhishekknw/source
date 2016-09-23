@@ -34,7 +34,7 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
         ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,\
         ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
 
-from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data
+from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
@@ -2136,17 +2136,48 @@ class SaveSocietyData(APIView):
 
 
 class ExportData(APIView):
+    """
+     Exports supplier data on grid view page.
+    """
     def post(self, request, proposal_id = None,  format=None):
         wb = Workbook()
         #ws = wb.active
-        centers = request.data[0]['societies']
-        print centers
-        ws = wb.create_sheet(index=0, title='Spaces Data')
+        ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
         for col in range(1):
             ws.append(proposal_header_keys)
-        for center in centers:
-            ws.append(website_utils.getList(center))
-        wb.save("getmachadalo2.xlsx")
+
+        master_list = [] 
+        for obj in request.data:
+         
+            for item in obj['societies']:
+                center_list = []
+                for key in center_keys:
+                    center_list.append(obj['center'][key])
+            
+                local_list = [] 
+                temp = website_utils.getList(item)
+                #print temp
+                local_list.extend(temp)
+            
+                center_list.extend(local_list)
+                print center_list
+                ws.append(center_list)
+
+            # apending from center
+
+
+
+        wb.save("getmachadalo4.xlsx")
+
+        # centers = request.data[0]
+        # print centers
+        # ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
+        # for col in range(1):
+        #     ws.append(proposal_header_keys
+        # for key in export_keys:
+        #     for key1 in centers[key]
+        #     ws.append(website_utils.getList(key1))
+
         return Response(data={"successs"})
 
 

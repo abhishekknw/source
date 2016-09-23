@@ -12,15 +12,27 @@ supplier_keys = [
 ]
 
 proposal_header_keys = [
- 'Supplier Id', 'Supplier Name', 'Area', 'Sub Area', 'Average Rent',\
- 'Inventory Type', 'Inventory Price'
+ 'Center Name', 'Supplier Id', 'Supplier Name', 'Area', 'Sub Area', 'Society Type', 'Tower Count',
  ]
+
+ # proposal_header_keys = [
+ # 'Center Name', 'Supplier Id', 'Supplier Name', 'Area', 'Sub Area', 'Society Type', 'Tower Count',\
+ # 'Poster Count', 'Poster Price', 'Poster Price Factor', 'Poster Duration', \
+ # 'Flyer Count', 'Flyer Price', 'Flyer Frequency', 'Standee Count', 'Standee Price', \
+ # 'Standee Duration', 'Stall Price', 'Stall Duration',  
+ # ]
 
 sample_data = [
 'vvhbhb', 'bhbhbh'
 ]
 
-data_keys = [ 'supplier_id', 'society_name', 'society_locality', 'society_subarea', 'average_rent']
+society_keys = [ 'supplier_id', 'society_name', 'society_locality', 'society_subarea', 'society_type_quality',\
+'tower_count', 
+]
+
+center_keys = ['center_name']
+
+export_keys = ['center', 'societies', 'societies_inventory', 'societies_inventory_count']
 
 contact_keys = [
     'city', 'area', 'sub_area', 'supplier_type', 'society_name', 'supplier_code', 'contact_type', 'salutation', \

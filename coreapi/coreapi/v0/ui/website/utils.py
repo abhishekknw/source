@@ -1,5 +1,4 @@
-from constants import data_keys
+from constants import society_keys
 
 def getList (data):
-	return [ data[key] for key in data_keys ]
-
+	return [ data[key] for key in society_keys ]
