@@ -4,9 +4,7 @@
   function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
 
     var url_base = 'v0/ui/website/';
-
     var mapViewService = {};
-
 
     mapViewService.getSpaces = function(proposal_id){
         // done
@@ -14,17 +12,11 @@
         return machadaloHttp.get(url);
     };
 
-    // mapViewService.getSpace = function(id){
-        // 	var url = url_base + "getSpace/" + id +"/";
-        // 	return machadaloHttp.get(url);
-    // }
-
     mapViewService.getChangedCenterSpaces = function(proposal_id, data){
         // done
         var url = url_base + proposal_id + '/getSpaces/';
         return machadaloHttp.post(url,data);
     };
-
 
     mapViewService.resetCenter = function(proposal_id, center_id){
         // done
@@ -39,6 +31,11 @@
 
     mapViewService.createFinalProposal = function(proposal_id, centers_data){
         var url = url_base + proposal_id + '/createFinalProposal/';
+        return machadaloHttp.post(url, centers_data);
+    }
+
+    mapViewService.exportProposalData = function(proposal_id, centers_data){
+        var url = url_base + proposal_id + '/export-spaces-data/';
         return machadaloHttp.post(url, centers_data);
     }
 

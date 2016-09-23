@@ -5,20 +5,41 @@ angular.module('machadaloPages')
      societyDetailsService.processParam();
      $scope.society = {};
      $scope.disable = false;
+     $scope.residentCount = {};
+     $scope.inventoryDetails = {};
+     $scope.totalInventoryCount = {};
      societyDetailsService.getSociety($rootScope.societyId)
       .success(function (response) {
         $scope.society = response;
-        /*
-        $scope.society = response.society;
-        $scope.poster = response.poster;
-        $scope.doorToDoor = response.doorToDoor;
-        $scope.mailbox = response.mailbox;
-        */
         $rootScope.societyname = response.society_name;
-        console.log(response);
+        $scope.residentCount = estimatedResidents(response.flat_count);
+        $scope.flatcountflier = response.flat_count;
+        console.log(response, "vidhi");
      });
 
+     societyDetailsService.get_inventory_summary($rootScope.societyId)
+     .success(function (response){
+          $scope.inventoryDetails = response;
+          $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);
+          console.log($scope.inventoryDetails);
+     });
 
+     function estimatedResidents (flatcount){
+       var residents = flatcount * 4;
+       $scope.residentCount = {
+          residents  : residents,
+       };
+       return $scope.residentCount;
+     }
+     function inventoryCount (inventoryDetails){
+            var totalPoster = inventoryDetails.lift_count + inventoryDetails.nb_count ;
+            var totalAddSpaces = inventoryDetails.lift_count + inventoryDetails.nb_count + inventoryDetails.standee_campaign + inventoryDetails.stall_or_cd_campaign + inventoryDetails.flier_frequency;
+            $scope.totalInventoryCount = {
+               totalPoster  : totalPoster,
+               totalAddSpaces: totalAddSpaces,
+            };
+            return $scope.totalInventoryCount;
+     }
 
     if($rootScope.campaignId){
         console.log("INside if");
@@ -40,17 +61,8 @@ angular.module('machadaloPages')
     societyDetailsService.getSocietyIds()
     .success(function(response,status){
         $scope.society_ids = response.society_ids;
-
         $scope.minlength = 0;
         $scope.maxlength = $scope.society_ids.length-1;
-        // var i=0;
-        // $scope.arr = [];
-        // for(i=0;i<=$scope.maxlength;i++)
-        //     $scope.arr.push(i);
-
-        console.log("Min length = ",$scope.minlength);
-        console.log("Max length = ",$scope.maxlength  );
-        // $scope.index = -1;
         for(var i=0;i<= $scope.maxlength; i++){
             if($rootScope.societyId == $scope.society_ids[i]){
                 $scope.index = i;
@@ -113,20 +125,10 @@ angular.module('machadaloPages')
              //    $scope.numberError = true;
              //  }, 2000);
         }
-
         $scope.societyIndex = undefined;
         console.log("$index is : ",$scope.index)
     }
 
-    // $scope.get_Array = function(number){
-    //     var arr = []
-    //     for(var i=0;i<=number;i++){
-    //         arr.push(i);
-    //     }  
-    //     return arr;
-    // }
-
-    // Done By Me
      $scope.societyList = function() {
        $location.path("manageCampaign/shortlisted/" + $rootScope.campaignId + "/societies");
      };
