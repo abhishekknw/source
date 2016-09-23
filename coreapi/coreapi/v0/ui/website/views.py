@@ -13,7 +13,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework import status
 from openpyxl import Workbook
 from openpyxl.compat import range
 #from import_export import resources
@@ -33,6 +32,7 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
         InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
         ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,\
         ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
+
 
 from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys
 from v0.models import City, CityArea, CitySubArea
@@ -585,7 +585,6 @@ class ShortlistSocietyAPIView(APIView):
             return Response(status=400)
 
         try:
-            print "Inside try"
             campaign_society = CampaignSocietyMapping.objects.get(campaign=campaign, society=society)
             total_societies = CampaignSocietyMapping.objects.filter(campaign=campaign).count()
             error = {"message" : "Already Shortlisted", 'count':total_societies}
@@ -754,7 +753,6 @@ class InitialProposalAPIView(APIView):
             proposal_data = request.data
             proposal_data['proposal_id'] = self.create_proposal_id()
             try:
-                print "\n\naccount id received is : ", account_id
                 account = AccountInfo.objects.get(account_id=account_id)
             except AccountInfo.DoesNotExist:
                 return Response({'message':'Invalid Account ID'}, status=406)
@@ -777,14 +775,12 @@ class InitialProposalAPIView(APIView):
                     space_mapping = center['space_mapping']
                     center['proposal'] = proposal_object.proposal_id
                     address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + center['pincode']
-                    print address
                     geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
                     print "geocoder------------------------", geocoder
                     try:
                         geo_object = geocoder.geocode(address)
                     except GeocoderError:
                         ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        print "\n\nCenter is : ", center, " \n\n"
                         return Response({'message' : 'Latitude Longitude Not found for address : ' + address}, status=406)
                     except ConnectionError:
                         ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
@@ -862,13 +858,13 @@ class SpacesOnCenterAPIView(APIView):
 
         ''' !IMPORTANT --> you have to manually add all the type of spaces that are being added apart from
         Corporate and Society '''
-
         response = {}
         center_id = request.query_params.get('center',None)
         try:
             # if proposal_id is None:
             #     proposal_id = 'AlntOlJi';
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
+            response['business_name'] = proposal.account.business.name
         except ProposalInfo.DoesNotExist:
             return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
 
@@ -933,7 +929,6 @@ class SpacesOnCenterAPIView(APIView):
                 society_ids = []
                 societies_count = 0
                 for society in societies_temp:
-                    print society
                     if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         society['society_latitude'], society['society_longitude']):
                         print "\n\nsociety_id : ", society['supplier_id']
@@ -1020,10 +1015,8 @@ class SpacesOnCenterAPIView(APIView):
             centers_data_list.append(space_info_dict)
 
 
-        response = {
-            'centers'  : centers_data_list,
-        }
-
+        response['centers'] = centers_data_list 
+    
         return Response(response, status=200)
 
 
@@ -2057,7 +2050,6 @@ class ProposalHistoryAPIView(APIView):
 
         return Response(proposal_versions_list, status=200)
 
-
 class SaveSocietyData(APIView):
     """
     This API reads a csv file and  makes supplier id's for each row. then it adds the data along with
@@ -2245,8 +2237,6 @@ class SaveContactDetails(APIView):
                                                                                                   total_count - failure_count,
                                                                                                   failure_count),
             status=status.HTTP_200_OK)
-
-
 
 # class GetSpaceInfoAPIView(APIView):
 #     ''' This API is to fetch the space(society,corporate, gym) etc. using its supplier Code
