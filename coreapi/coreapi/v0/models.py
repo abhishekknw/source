@@ -1619,6 +1619,7 @@ class ShortlistedSpacesVersion(models.Model):
 #         unique_together = (('space_mapping','inventory_name'))
 
 
+
 # class ShortlistedSpaces(models.Model):
 #     space_mapping = models.ForeignKey(SpaceMapping,db_index=True, related_name='spaces',on_delete=models.CASCADE)
 
@@ -1630,6 +1631,18 @@ class ShortlistedSpacesVersion(models.Model):
 
 #     class Meta:
 #         db_table = 'SHORTLISTED SPACES'
+
+
+
+
+
+
+
+
+
+
+
+
 
 class CampaignTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
