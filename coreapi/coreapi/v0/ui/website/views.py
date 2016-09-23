@@ -13,7 +13,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework import status
 from openpyxl import Workbook
 from openpyxl.compat import range
 #from import_export import resources
@@ -34,8 +33,10 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
         ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,\
         ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
 
+
 from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys,\
                       inventorylist, society_keys
+
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
@@ -848,13 +849,13 @@ class SpacesOnCenterAPIView(APIView):
 
         ''' !IMPORTANT --> you have to manually add all the type of spaces that are being added apart from
         Corporate and Society '''
-
         response = {}
         center_id = request.query_params.get('center',None)
         try:
             # if proposal_id is None:
             #     proposal_id = 'AlntOlJi';
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
+            response['business_name'] = proposal.account.business.name
         except ProposalInfo.DoesNotExist:
             return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
 
@@ -1001,10 +1002,8 @@ class SpacesOnCenterAPIView(APIView):
             centers_data_list.append(space_info_dict)
 
 
-        response = {
-            'centers'  : centers_data_list,
-        }
-
+        response['centers'] = centers_data_list 
+    
         return Response(response, status=200)
 
 
@@ -2027,7 +2026,6 @@ class ProposalHistoryAPIView(APIView):
 
         return Response(proposal_versions_list, status=200)
 
-
 class SaveSocietyData(APIView):
     """
     This API reads a csv file and  makes supplier id's for each row. then it adds the data along with
@@ -2210,8 +2208,6 @@ class SaveContactDetails(APIView):
                                                                                                   total_count - failure_count,
                                                                                                   failure_count),
             status=status.HTTP_200_OK)
-
-
 
 # class GetSpaceInfoAPIView(APIView):
 #     ''' This API is to fetch the space(society,corporate, gym) etc. using its supplier Code

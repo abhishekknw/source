@@ -33,8 +33,10 @@ angular.module('machadaloPages')
      }
      function inventoryCount (inventoryDetails){
             var totalPoster = inventoryDetails.lift_count + inventoryDetails.nb_count ;
+            var totalAddSpaces = inventoryDetails.lift_count + inventoryDetails.nb_count + inventoryDetails.standee_campaign + inventoryDetails.stall_or_cd_campaign + inventoryDetails.flier_frequency;
             $scope.totalInventoryCount = {
                totalPoster  : totalPoster,
+               totalAddSpaces: totalAddSpaces,
             };
             return $scope.totalInventoryCount;
      }

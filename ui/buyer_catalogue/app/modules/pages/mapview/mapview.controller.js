@@ -347,6 +347,7 @@ angular.module('catalogueApp')
                  mapViewService.getSpaces($scope.proposal_id_temp)
                 .success(function(response, status){
                     console.log("\n\nResponse is : ", response);
+                    $scope.business_name = response.business_name;
                     $scope.centers = response.centers;
                     $scope.centers1 = response.centers;
                     $scope.current_center = $scope.centers[0];
@@ -492,6 +493,7 @@ angular.module('catalogueApp')
                   }else{
                     for(var i=0; i< $scope.centers1.length; i++){
                       $scope.society_markers = [];
+                      $scope.societyFilter($scope.centers1[i].societies_inventory);
                       delete $scope.centers1[i].societies;
                       delete $scope.centers1[i].societies_inventory;
                       delete $scope.centers1[i].societies_count;
@@ -821,7 +823,25 @@ angular.module('catalogueApp')
           }
         }
         //End: Function for calculating total impressions inventory wise
+        // code added to send selected society inventory types while submitting the proposal & sending only shortlisted societies
         $scope.submitProposal = function(){
+          for(var i=0;i<$scope.centers.length;i++){
+            for(var j=0;j<$scope.centers[i].societies.length;j++){
+              if($scope.centers[i].societies[j].shortlisted == false){
+                 $scope.centers[i].societies.splice(j--,1);
+                 $scope.centers[i].societies_count--;
+              }
+            }
+          }
+            var society_inventory_type_selected = [];
+            for(var i=0;i<$scope.society_inventory_type.length;i++){
+              if($scope.society_inventory_type[i].selected == true){
+                society_inventory_type_selected.push($scope.society_inventory_type[i].code);
+              }
+            }
+            for(var i=0;i<$scope.centers.length;i++){
+              $scope.centers[i].center['society_inventory_type_selected']=society_inventory_type_selected;
+            }
             console.log("Submitting $scope.centers :", $scope.centers);
             mapViewService.createFinalProposal($scope.proposal_id_temp, $scope.centers)
             .success(function(response, status){
@@ -834,10 +854,9 @@ angular.module('catalogueApp')
         }
 
         $scope.exportData = function(){
-          console.log($scope.centers);
+          console.log("vidhi", $scope.centers);
           mapViewService.exportProposalData($scope.proposal_id_temp, $scope.centers)
           .success(function(response){
-            console.log ($scope.centers);
               console.log("Successfully Exported");
           })
           .error(function(response){
