@@ -1,0 +1,22 @@
+City,Area,SubArea,SupplierType,Supplier Code,Supplier Name,Address1,Address2,Zip Code,Society Latitude,Society Longitude,Possesion Year,Total No of Towers,Total no of Flats,Vacant Flat Count,Service Class Population,Working Women Count,Average Household Occupants,Bachelor Tenants Allowed,Average Rent/sqft,Total No of Cars,Total No of Luxury Cars,Society Locality Rating,Society Quality Rating,Society Quantity Rating,Age grp 0 to 5,Age grp 5 to 15,Age grp 15 to 25,Age grp 25 to 60,Above 60,Society Weekly Off,City,Area,SubArea,SupplierType,Supplier Name
+Mumbai,Andheri(W),DN Nagar,RS,UPC,Uphar CHS,"This 
+IS A TEST 
+ADDRESS",,400061,19.131431,72.817398,,2,56,1,,,,No,,45,0,,,,,,,,,,Mumbai,Andheri(W),DN Nagar,RS,Uphar CHS
+Mumbai,Andheri(W),Adarsh Nagar,RS,SEC,Sanjeev Enclave,"Sanjeev Enclave
+Jai Prakash Rd
+Pushpanjali, Versova","Andheri West
+Mumbai, Maharashtra 400053",400061,19.131431,72.817398,,3,78,,,,,,,,,,,,,,,,,,Mumbai,Andheri(W),Adarsh Nagar,RS,Sanjeev Enclave
+Mumbai,Andheri(W),Adarsh Nagar,RS,ABC,Abhar CHS,"Abhar 
+Fisheries University Rd 
+Goraipada, Versova","Andheri West 
+Mumbai, Maharashtra 400061",400061,19.131876,72.817715,,2,64,0,,,,No,,40,,,,,,,,,,Thursday,Mumbai,Andheri(W),Adarsh Nagar,RS,Abhar CHS
+Mumbai,Andheri(W),Veera Desai Industrial Estate,RS,GSC,Gundecha Symphony,"Veera Desai Rd, Andheri West","Mumbai, Maharashtra 400047",400047,19.137568,72.837142,,2,194,2,,,,No,,200,12,,,,,,,,,Monday,Mumbai,Andheri(W),Veera Desai Industrial Estate,RS,Gundecha Symphony
+Mumbai,Andheri(W),Versova,RS,ASN,Aakaar Saakaar Niraakaar CHS,,,400061,19.137768,72.811864,,9,168,0,,,,No,,142,3,,,,50,,,,30,Monday,Mumbai,Andheri(W),Versova,RS,Aakaar Saakaar Niraakaar CHS
+Mumbai,Andheri(W),Lokhandwala,RS,SHC,Shankardham CHS,,,400053,19.137264,72.827697,,5,112,,,,,,,,,,,,,,,,,,Mumbai,Andheri(W),Lokhandwala,RS,Shankardham CHS
+Mumbai,Andheri(W),Shashtri Nagar,RS,SAC,Sarla chs,"Sarla CHS Ltd, Manek Moti, Yari Road, Versova","Andheri West, Mumbai, Maharashtra 400061",,,,,12,129,7,,,,Yes,,50,,,,,,,,,80,,Mumbai,Andheri(W),Shashtri Nagar,RS,Sarla chs
+Mumbai,Andheri(W),Yagna Nagar,RS,INC,Inlaks Nagar CHS,"Yagna Nagar, Versova","Andheri (W), Mumbai, Maharashtra 400061",400061,19.140972,72.811201,,28,292,,,,,Yes,,100,0,,,,,,,,,Thursday,Mumbai,Andheri(W),Yagna Nagar,RS,Inlaks Nagar CHS
+Mumbai,Andheri(W),Shashtri Nagar,RS,BIC,Bianca CHS,,,,,,,2,110,,,,,No,,150,25,,,,,,,,,,Mumbai,Andheri(W),Shashtri Nagar,RS,Bianca CHS
+Mumbai,Andheri(W),Seven Bunglows,RS,PHC,Pearl Heights,"Pearl Heights 
+Yari Rd 
+Yagna Nagar, Versova","Andheri West 
+Mumbai, Maharashtra 400061",400061,19.141453,72.809245,,2,178,0,,,,No,,145,50,,,,,,,,,,Mumbai,Andheri(W),Seven Bunglows,RS,Pearl Heights

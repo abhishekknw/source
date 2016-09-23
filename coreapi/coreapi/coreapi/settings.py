@@ -118,24 +118,25 @@ STATIC_URL = '/static/'
 
 # settings for Django Rest Framework
 
-'''REST_FRAMEWORK = {
+
+REST_FRAMEWORK = {
     # other settings...
     'DEFAULT_AUTHENTICATION_CLASSES': [],
     'DEFAULT_PERMISSION_CLASSES': [],
-}'''
-
-REST_FRAMEWORK = {
-     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-        ),
-     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_jwt.authentication.JSONWebTokenAuthentication',
-        ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5
 }
+
+# REST_FRAMEWORK = {
+#      'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.IsAuthenticated',
+#         ),
+#      'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework.authentication.SessionAuthentication',
+#         'rest_framework.authentication.BasicAuthentication',
+#         'rest_jwt.authentication.JSONWebTokenAuthentication',
+#         ),
+#     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+#     'PAGE_SIZE': 5
+# }
 
 
 # CORS headers
@@ -184,3 +185,5 @@ JWT_AUTH = {
 
       'JWT_VERIFY_EXPIRATION': False,
       }
+
+BASE_URL = 'http://127.0.0.1:8108/'
