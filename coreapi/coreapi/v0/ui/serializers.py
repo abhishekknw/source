@@ -40,7 +40,7 @@ class UIGymSerializer(ModelSerializer):
         model = SupplierTypeGym
 
 class SocietyListSerializer(ModelSerializer):
-
+    society_image = ImageMappingSerializer(source='get_society_image')
     class Meta:
         model = SupplierTypeSociety
         fields = (
@@ -53,6 +53,7 @@ class SocietyListSerializer(ModelSerializer):
             'machadalo_index',
             'society_type_quality',
             'society_location_type',
+            'society_image',
         )
 
 
