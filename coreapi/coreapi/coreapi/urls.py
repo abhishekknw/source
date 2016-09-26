@@ -8,7 +8,7 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^v0/', include('v0.urls')),
     url(r'^', include('v0.urls')),
-    url(r'^docs/', include('rest_framework_docs.urls'))
+    url(r'^docs/', include('rest_framework_swagger.urls'))
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

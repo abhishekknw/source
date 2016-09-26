@@ -295,7 +295,7 @@ def get_supplier_inventory(data, id):
     '''
     try:
         #supplier_code = data['supplier_type_code']
-        supplier_code = 'RS' #todo: change this when get clearity
+        supplier_code = 'CP' #todo: change this when get clearity
         if not supplier_code or not id:
             return Response(data={"status": False, "error": "provide supplier code and  supplier id"},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -304,7 +304,7 @@ def get_supplier_inventory(data, id):
         content_type = ContentType.objects.get_for_model(supplier_class)
 #       inventory_object = InventorySummary.objects.get(content_object=supplier_object, object_id=id, content_type=content_type)
 
-        inventory_object = InventorySummary.objects.get(object_id=id, content_type=content_type) if 'id' in data else None
+        (inventory_object, is_created) = InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
         data['object_id'] = id
         data['content_type'] = content_type.id
         return Response(
