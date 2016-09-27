@@ -13,7 +13,7 @@ class GetInventoryObjectManager(models.Manager):
         try:
             # supplier_code = data['supplier_type_code']
 
-            supplier_code = 'CP'  # todo: change this when get clearity
+            supplier_code = 'RS'  # todo: change this when get clearity
             suppliers = {'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate',
                          'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon'}
 
@@ -34,3 +34,29 @@ class GetInventoryObjectManager(models.Manager):
             return None
         except Exception as e:
             return None
+
+    def filter_inventory_objects(self, data, supplier_ids):
+        try:
+            # supplier_code = data['supplier_type_code']
+
+            supplier_code = 'RS'  # todo: change this when get clearity
+            suppliers = {'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate',
+                         'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon'}
+
+            ContentType = apps.get_model('contenttypes', 'ContentType')
+
+            load_model = apps.get_model('v0', suppliers[supplier_code])
+
+            if not supplier_code:
+                return None
+
+            content_type = ContentType.objects.get_for_model(load_model)
+
+            inventory_objects = self.filter(object_id__in=supplier_ids, content_type=content_type)
+            return inventory_objects
+
+        except ObjectDoesNotExist as e:
+            return None
+        except Exception as e:
+            return None
+

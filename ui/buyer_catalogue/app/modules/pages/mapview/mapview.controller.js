@@ -337,6 +337,7 @@ angular.module('catalogueApp')
                 $scope.proposal_id_temp = $stateParams.proposal_id;
                  mapViewService.getSpaces($scope.proposal_id_temp)
                 .success(function(response, status){
+                  console.log(response);
                     $scope.business_name = response.business_name;
                     $scope.centers = response.centers;
                     $scope.centers1 = response.centers;
@@ -689,13 +690,16 @@ angular.module('catalogueApp')
           $q.all(promises).then(function(response){
             var length = $scope.centers1.length;
             for(var i=0; i<length; i++){
-              $scope.centers1[i].societies = promises[i].$$state.value.data.societies;
-              $scope.centers1[i].societies_inventory_count = promises[i].$$state.value.data.societies_inventory_count;
-              $scope.centers1[i].societies_count = promises[i].$$state.value.data.societies_count;
+              console.log(promises);
+              $scope.centers1[i].societies = promises[i].$$state.value.data.suppliers;
+              $scope.centers1[i].societies_inventory_count = promises[i].$$state.value.data.supplier_inventory_count;
+              $scope.centers1[i].societies_count = promises[i].$$state.value.data.supplier_count;
               calculateQualityType($scope.centers1[i].societies);
               //$scope.society_markers = assignMarkersToMap($scope.current_center.societies);
               //$scope.impressions = calculateImpressions($scope.centers1[i].societies_inventory_count);
             } //end of for loop
+            $scope.current_center = $scope.centers1[0];
+            console.log($scope.current_center);
             $scope.current_center.societies = $scope.centers1[$scope.current_center_index].societies;
             $scope.current_center.societies_inventory_count = $scope.centers1[$scope.current_center_index].societies_inventory_count;
             $scope.current_center.societies_count = $scope.centers1[$scope.current_center_index].societies_count;
