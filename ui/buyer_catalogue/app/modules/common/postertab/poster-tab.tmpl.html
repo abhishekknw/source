@@ -6,9 +6,7 @@
 <!--<div id="pager">-->
     <div class="col-md-10" style="text-align: center;">
         <div class="row">
-          <div class="col-md-4"><img src="images/details-slider/slide4.jpg" width="180px" height="180px" alt=""/><br>Description</div>
-          <div class="col-md-4"><img src="images/details-slider/slide4.jpg" width="180px" height="180px" alt=""/><br>Description</div>
-          <div class="col-md-4"><img src="images/details-slider/slide4.jpg" width="180px" height="180px" alt=""/><br>Description</div>
+          <div style="margin-left:10px" ng-repeat="image in society_images" ng-if="image.name=='Notice Board' || image.name=='Lift' || image.name=='Poster'" class="col-md-4"><img src="http://mdimages.s3.amazonaws.com/{{image.image_url}}" width="180px" height="180px" alt=""/></div>
         </div>
     </div>
 

@@ -1,5 +1,4 @@
 # python core imports
-from itertools import izip
 import json
 import csv
 
@@ -310,6 +309,12 @@ class SocietyAPIView(APIView):
             item = SupplierTypeSociety.objects.get(pk=id)
             self.check_object_permissions(self.request, item)
             serializer = UISocietySerializer(item)
+
+            #Start : Code changes to display images
+            images = ImageMapping.objects.filter(supplier=item)
+            image_serializer = ImageMappingSerializer(images, many=True)
+            response['society_images'] = image_serializer.data
+            #End : Code changes to display images
             # inventory_summary = InventorySummary.objects.get(supplier=item)
             # inventory_serializer = InventorySummarySerializer(inventory_summary)
             
@@ -336,8 +341,8 @@ class SocietyAPIView(APIView):
 
             # return Response(response, status=200)
 
-
-            return Response(serializer.data, status=200)
+            response['society_data'] = serializer.data    
+            return Response(response, status=200)
         except SupplierTypeSociety.DoesNotExist:
            return Response(status=404)
 
@@ -2160,7 +2165,6 @@ class ImageMappingAPIView(APIView):
     def post(self, request, id, format=None):
         #print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
-
         for key in request.data['image_details']:
             if 'id' in key:
                 item = ImageMapping.objects.get(pk=key['id'])

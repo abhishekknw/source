@@ -909,7 +909,9 @@ class SupplierTypeSociety(models.Model):
 
     def get_society_image(self):
         try:
+            #Start : Code changed to save tag of image by name field
             image_list = list(self.images.all().filter(name="Society")[:1])
+            #End : Code changed to save tag of image by name field
         except:
             return None
         if image_list:

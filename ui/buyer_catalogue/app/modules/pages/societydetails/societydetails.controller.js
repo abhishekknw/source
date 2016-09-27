@@ -10,10 +10,11 @@ angular.module('machadaloPages')
      $scope.totalInventoryCount = {};
      societyDetailsService.getSociety($rootScope.societyId)
       .success(function (response) {
-        $scope.society = response;
-        $rootScope.societyname = response.society_name;
-        $scope.residentCount = estimatedResidents(response.flat_count);
-        $scope.flatcountflier = response.flat_count;
+        $scope.society_images = response.society_images;
+        $scope.society = response.society_data;
+        $rootScope.societyname = response.society_data.society_name;
+        $scope.residentCount = estimatedResidents(response.society_data.flat_count);
+        $scope.flatcountflier = response.society_data.flat_count;
         console.log(response, "vidhi");
      });
 
@@ -67,8 +68,6 @@ angular.module('machadaloPages')
                 break;
             }
         }
-
-        console.log($scope.society_ids)
     });
 
 

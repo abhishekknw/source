@@ -22,7 +22,7 @@ class UISocietySerializer(ModelSerializer):
         'basic_reference_contacts',
         'past_details',
         'business_preferences',
-        'society_image'
+        'society_image',
         )
 
 class UICorporateSerializer(ModelSerializer):
@@ -40,7 +40,9 @@ class UIGymSerializer(ModelSerializer):
         model = SupplierTypeGym
 
 class SocietyListSerializer(ModelSerializer):
+    # Start : code changes to display image of society
     society_image = ImageMappingSerializer(source='get_society_image')
+    # End : code changes to display image of society
     class Meta:
         model = SupplierTypeSociety
         fields = (
