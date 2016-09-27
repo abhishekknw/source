@@ -87,31 +87,6 @@ class AdInventoryLocationMapping(models.Model):
         db_table = 'ad_inventory_location_mapping'
 
 
-
-
-
-'''@receiver(post_save, sender=AdInventoryLocationMapping)
-def update_price_mapping(sender, **kwargs):
-    loc_map = kwargs.get('instance')
-    type1 = kwargs.get('type')
-    print type1
-    print str(loc_map)
-    if loc_map.adinventory_name == 'PO':
-        ad_type = AdInventoryType.objects.filter(adinventory_name=loc_map.adinventory_name)
-    else:
-        ad_type = AdInventoryType.objects.filter(adinventory_name=loc_map.adinventory_name) #add type = stall/standee.type
-    print 'adele'
-    default_prices = PriceMappingDefault.objects.filter(adinventory_type__in=ad_type)
-    for key in default_prices:
-        pm = PriceMapping(adinventory_id = loc_map, adinventory_type=key.adinventory_type,
-                          society_price = key.society_price, business_price=key.business_price,
-                          duration_type = key.duration_type, supplier=key.supplier)
-        pm.save()
-
-
-'''
-
-
 class AdInventoryType(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=20,
@@ -142,7 +117,10 @@ class PriceMappingDefault(models.Model):
     society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
     business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
-
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = GetInventoryObjectManager()
     class Meta:
         db_table = 'price_mapping_default'
 
@@ -374,10 +352,6 @@ class StandeeInventory(models.Model):
     type = models.CharField(db_column='STANDEE_TYPE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     standee_size = models.CharField(db_column='STANDEE_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     standee_sides = models.CharField(db_column='STANDEE_SIDES', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    #standee_weekly_price_society = models.CharField(db_column='STANDEE_WEEKLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    #standee_monthly_price_society = models.CharField(db_column='STANDEE_MONTHLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    #standee_weekly_price_business = models.CharField(db_column='STANDEE_WEEKLY_PRICE_BUSINESS', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    #standee_monthly_price_business = models.CharField(db_column='STANDEE_MONTHLY_PRICE_BUSINESS', max_length=5, blank=True, null=True)  # Field name made lowercase.
     tower = models.ForeignKey('SocietyTower', db_column='TOWER_ID', related_name='standees', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)

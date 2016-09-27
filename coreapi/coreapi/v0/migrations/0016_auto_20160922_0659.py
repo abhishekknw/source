@@ -26,7 +26,7 @@ def do_each_model(myModel, content_type):
 
 def populate_content_types(apps, schema):
     model_names = ['ContactDetails', 'Events', 'FlyerInventory', 'ImageMapping', 'PosterInventory', 'SocietyTower', \
-                   'StallInventory', 'StandeeInventory', 'WallInventory'
+                   'StallInventory', 'WallInventory'
                    ]
     load_names = [apps.get_model('v0', model) for model in model_names]
     ContentType = apps.get_model('contenttypes', 'ContentType')

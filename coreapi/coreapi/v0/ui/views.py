@@ -823,7 +823,10 @@ class InventorySummaryAPIView(APIView):
     """
     def get(self, request, id):
         try:
-            inventory_object = InventorySummary.objects.get_inventory_object(request.data.copy(), id)
+            supplier_type_code = request.query_params.get('supplierTypeCode',None)
+            data = request.data.copy()
+            data['supplier_type_code'] = supplier_type_code
+            inventory_object = InventorySummary.objects.get_inventory_object(data, id)
             if not inventory_object:
                 return Response(data={'Inventory object does not exist for this supplier id {0}'.format(id)}, status=status.HTTP_400_BAD_REQUEST)
             return Response(model_to_dict(inventory_object), status=status.HTTP_200_OK)
@@ -896,13 +899,9 @@ class InventorySummaryAPIView(APIView):
 
         """
         try:
-            '''
-            my_supported = SupportedProgram.objects.get(id=instance_id_goes_here)
-            ct_supported = ContentType.objects.get_for_model(SupportedProgram))
-            primary_citations = FullCitation.objects.filter(content_object=my_supported, content_type=ct_supported, is_primary=True)
+            
 
-            '''
-            response = ui_utils.get_supplier_inventory(request.data, id)
+            response = ui_utils.get_supplier_inventory(request.data.copy(), id)
 
             if not response.data['status']:
                 return response
