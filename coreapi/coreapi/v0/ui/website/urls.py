@@ -29,7 +29,7 @@ urlpatterns = [
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/createFinalProposal/$',views.FinalProposalAPIView.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/getSpaces/$', views.SpacesOnCenterAPIView.as_view()),
     # url(r'^getSpace/(?P<id>[A-Z_a-z0-9]+)/$', views.GetSpaceInfoAPIView.as_view()),
-    url(r'^getFilteredSocieties/$', views.GetFilteredSocietiesAPIView.as_view()),
+    url(r'^getFilteredSocieties/$', views.GetFilteredSuppliersAPIView.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/currentProposal/$',views.CurrentProposalAPIView.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/getProposalVersion/$', views.ProposalHistoryAPIView.as_view()),
 

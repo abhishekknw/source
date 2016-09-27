@@ -35,7 +35,7 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
 
 
 from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys,\
-                      inventorylist, society_keys
+                      inventorylist, society_keys, flat_type_dict, supplier_code_filter_params
 
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
@@ -877,12 +877,14 @@ def return_price(adinventory_type_dict, duration_type_dict, inv_type, dur_type):
     return 0
 
 
-
 class SpacesOnCenterAPIView(APIView):
     def get(self,request,proposal_id=None, format=None):
         ''' This function filters all the spaces(Societies, Corporates etc.) based on the center and
         radius provided currently considering radius
-        This API is called before map view page is loaded'''
+        This API is called before map view page is loaded
+        center -- center id for which to filter societies and corporates.
+
+        '''
 
         ''' !IMPORTANT --> you have to manually add all the type of spaces that are being added apart from
         Corporate and Society '''
@@ -899,7 +901,7 @@ class SpacesOnCenterAPIView(APIView):
 
         # if center comes in get request then just return the result for that center
         # this is to implement the reset center functionality
-        if center_id :
+        if center_id:
             try:
                 center_id = int(center_id)
             except ValueError:
@@ -919,7 +921,7 @@ class SpacesOnCenterAPIView(APIView):
 
             space_info_dict = {}
 
-            delta_dict = get_delta_latitude_longitude(float(proposal_center.radius), float(proposal_center.latitude))
+            delta_dict = website_utils.get_delta_latitude_longitude(float(proposal_center.radius), float(proposal_center.latitude))
 
             delta_latitude = delta_dict['delta_latitude']
             min_latitude = proposal_center.latitude - delta_latitude
@@ -954,7 +956,7 @@ class SpacesOnCenterAPIView(APIView):
                 society_ids = []
                 societies_count = 0
                 for society in societies_temp:
-                    if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
+                    if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         society['society_latitude'], society['society_longitude']):
                         society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(), society['supplier_id'])
                         # society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
@@ -1050,6 +1052,9 @@ class SpacesOnCenterAPIView(APIView):
         '''This API returns the spaces info when center or radius is changed
         API ONLY PRODUCE RESULTS FOR SOCIETIES ONLY
         Code to be written for other spaces
+        ---
+
+
         '''
         response = {}
         center_info = request.data
@@ -1064,7 +1069,7 @@ class SpacesOnCenterAPIView(APIView):
         longitude = float(center['longitude'])
         radius = float(center['radius'])
         # area= "Andheri(E)"
-        delta_dict = get_delta_latitude_longitude(radius, latitude)
+        delta_dict = website_utils.get_delta_latitude_longitude(radius, latitude)
 
         delta_latitude = delta_dict['delta_latitude']
         min_latitude = center['latitude'] - delta_latitude
@@ -1096,7 +1101,7 @@ class SpacesOnCenterAPIView(APIView):
             society_ids = []
             societies_count = 0
             for society in societies_temp:
-                if space_on_circle(latitude, longitude, radius, society['society_latitude'], society['society_longitude']):
+                if website_utils.space_on_circle(latitude, longitude, radius, society['society_latitude'], society['society_longitude']):
                     society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(),
                                                                                           society['supplier_id'])
 
@@ -1135,11 +1140,10 @@ class SpacesOnCenterAPIView(APIView):
             societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
                 standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
-
-            response['societies'] = societies
-            response['societies_inventory_count'] = societies_inventory_count
-            response['societies_inventory'] = societies_inventory
-            response['societies_count'] = societies_count
+            response['suppliers'] = societies
+            response['supplier_inventory_count'] = societies_inventory_count
+            response['supplier_inventory'] = societies_inventory
+            response['supplier_count'] = societies_count
             # response['area_societies'] = societies_temp1 
 
         if space_mappings['corporate_allowed']:
@@ -1183,282 +1187,159 @@ class SpacesOnCenterAPIView(APIView):
         return Response(response, status=200)
 
 
-
-def get_delta_latitude_longitude(radius, latitude):
-    delta_longitude = radius/(111.320 * math.cos(math.radians(latitude)))
-    delta_latitude = radius/ 110.574
-
-    return {'delta_latitude' : delta_latitude,
-            'delta_longitude' : delta_longitude}
-
-
-
-def space_on_circle(latitude, longitude, radius, space_lat, space_lng):
-    return (space_lat - latitude)**2 + (space_lng - longitude)**2 <= (radius/110.574)**2
-
-
-
-class GetFilteredSocietiesAPIView(APIView):
+class GetFilteredSuppliersAPIView(APIView):
+    """
+    This API gives suppliers based on different filters from mapView and gridView Page
+    Currently implemented filters are locality and location (Standard, Medium High etc.)
+    flat_count (100 - 250 etc.) flat_type(1BHK, 2BHK etc.)
+    """
 
     def get(self, request, format=None):
-        ''' This API gives societies based on different filters from mapView and gridView Page
-        Currently implemented filters are locality and location (Standard, Medium High etc.)
-        flat_count (100 - 250 etc.) flat_type(1BHK, 2BHK etc.) '''
-        response = {}
+        '''
+        lat -- latitude
+        lng -- longitude
+        r -- radius
+        loc -- location params
+        qlt -- supplier quality params example UH, HH, MH
+        qnt -- supplier quantity params example LA, MD
+        flc -- flat count
+        inv -- inventory params example PO, ST, SL
+        supplier_type_code -- RS, CP etc
 
-        latitude = request.query_params.get('lat', None)
-        longitude = request.query_params.get('lng',None)
-        radius = request.query_params.get('r',None) # radius change
-        location_params = request.query_params.get('loc',None)
-        society_quality_params = request.query_params.get('qlt',None)
-        society_quantity_params = request.query_params.get('qnt',None)
-        flat_count = request.query_params.get('flc',None)
-        flat_type_params = request.query_params.get('flt',None)
-        inventory_params = request.query_params.get('inv',None)
-
-
-
-        q = Q()
-        quality_dict , inventory_dict, society_quantity_dict = get_related_dict()
-
-        flat_type_dict = {
-            '1R' : '1 RK',      '1B' : '1 BHK',     '1-5B' : '1.5 BHK',     '2B' : '2 BHK',
-            '2-5B' : '2.5 BHK',    '3B' : '3 BHK',  '3-5B' : '3.5 BHK',     '4B' : '4 BHK',
-            '5B' : '5 BHK',         'PH' : 'PENT HOUSE',    'RH' : 'ROW HOUSE',  'DP' : 'DUPLEX'
-        }
-
-        # if not radius:
-
-        if not latitude or not longitude or not radius:
-            return Response({'message' : 'Please Provide longitude and latitude and radius as well'}, status=406)
-
-
-        if flat_type_params:
-            flat_types = []
-            flat_type_params = flat_type_params.split()
-            for param in flat_type_params:
-                try:
-                    flat_types.append(flat_type_dict[param])
-                except KeyError:
-                    pass
-
-            if flat_types:
-                ''' We can improve performance here  by appending .distinct('society_id') when using postgresql '''
-                society_ids = set(FlatType.objects.filter(flat_type__in=flat_types).values_list('society_id',flat=True))
-                q &= Q(supplier_id__in=society_ids)
-                # here to include those societies which don't have this info nothing can be done
-                # It is simply all the societies -> filter becomes useless
-
-        # calculating for latitude and longitude
-        # this is done to ensure that the societies are sent according to the current radius and center in frontend
-        # user can change center and radius and it will not be stored in the database until saved
+        '''
         try:
+
+            response = {}
+
+            latitude = request.query_params.get('lat', None)
+            longitude = request.query_params.get('lng', None)
+            radius = request.query_params.get('r', None)  # radius change
+            location_params = request.query_params.get('loc', None)
+            supplier_quality_params = request.query_params.get('qlt', None)
+            supplier_quantity_params = request.query_params.get('qnt', None)
+            flat_count = request.query_params.get('flc', None)
+            flat_type_params = request.query_params.get('flt', None)
+            inventory_params = request.query_params.get('inv', None)
+            supplier_code = request.query_params.get('supplier_type_code')
+            filter_query = Q()
+
+            if not supplier_code:
+                return Response({'status': False, 'error': 'Provide supplier type code'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            if not latitude or not longitude or not radius:
+                return Response({'message': 'Please Provide longitude and latitude and radius as well'}, status=406)
+
             latitude = float(latitude)
             longitude = float(longitude)
             radius = float(radius)
-        except ValueError:
-            return Response({'message':'Invalid Format of latitude longitude or radius'}, status=406)
-
-        delta_dict = get_delta_latitude_longitude(radius, latitude)
-
-        max_latitude = latitude + delta_dict['delta_latitude']
-        min_latitude = latitude - delta_dict['delta_latitude']
-
-        delta_longitude = delta_dict['delta_longitude']
-        max_longitude = longitude + delta_dict['delta_longitude']
-        min_longitude = longitude - delta_dict['delta_longitude']
-
-        q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-        if location_params:
-            location_ratings = []
-            location_params = location_params.split()
-            for param in location_params:
-                try:
-                    location_ratings.append(quality_dict[param])
-                except KeyError:
-                    pass
-            if location_ratings:
-                q &= Q(society_location_type__in=location_ratings)
-                # if required to include societies with null value of this parameter uncomment following line
-                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(society_location_type__isnull=True)
-
-        if society_quality_params:
-            society_quality_ratings = []
-            society_quality_params = society_quality_params.split()
-            for param in society_quality_params:
-                try:
-                    society_quality_ratings.append(quality_dict[param])
-                except KeyError:
-                    pass
-
-            if society_quality_ratings:
-                q &= Q(society_type_quality__in=society_quality_ratings)
-                # if required to include societies with null value of this parameter uncomment following line
-                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(society_type_quality__isnull=True)
-
-        if society_quantity_params:
-            society_quantity_ratings = []
-            society_quantity_params = society_quantity_params.split()
-            for param in society_quantity_params:
-                try:
-                    society_quantity_ratings.append(society_quantity_dict[param])
-                except KeyError:
-                    pass
-
-            if society_quantity_ratings:
-                q &= Q(society_type_quantity__in=society_quantity_ratings)
-                # if required to include societies with null value of this parameter uncomment following line
-                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(society_type_quantity__isnull=True)
-
-        if flat_count:
-            flat_count = flat_count.split()
-            if len(flat_count) == 2:
-                flat_min = flat_count[0]
-                flat_max = flat_count[1]
-
-                q &= Q(flat_count__gte=flat_min) & Q(flat_count__lte=flat_max)
-                # if required to include societies with null value of this parameter uncomment following line
-                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(flat_count__isnull=True)
-        p = None
-        if inventory_params:
-            inventory_params = inventory_params.split()
-            temp = None    #temporary variable
-            temp = None    #temporary variable
-            for param in inventory_params:
-                try:
-                    
-                    # | 'STFL' | 'CDFL' | 'PSLF' | 'STSLFL' | 'POCDFL' | 'STCDFL'
-                    if (param == 'POFL') | (param == 'STFL') | (param == 'SLFL') | (param == 'CDFL') | (param == 'POSLFL') | (param == 'STSLFL') | (param == 'POCDFL') | (param == 'STCDFL'):
-
-                        if param == 'POFL':
-                            temp_q = (Q(poster_allowed_nb=True) & Q(flier_allowed=True))
-
-                        if param == 'SLFL':
-                            temp_q = (Q(stall_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'STFL':
-                            temp_q = (Q(standee_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'CDFL':
-                            temp_q = (Q(car_display_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'POSLFL':
-                            temp_q = (Q(poster_allowed_nb=True) & Q(stall_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'STSLFL':
-                            temp_q = (Q(stall_allowed=True) & Q(standee_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'POCDFL':
-                            temp_q = (Q(poster_allowed_nb=True) & Q(car_display_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'STCDFL':
-                            temp_q = (Q(standee_allowed=True) & Q(car_display_allowed=True) & Q(flier_allowed=True))
-
-                    else:
-                        temp_q = Q(**{"%s" % inventory_dict[param]:'True'})
-
-                    if temp:
-
-                        p = (p | temp_q)
-                    else:
-                        p = temp_q
-                        temp=1
-                except KeyError:
-                    pass
-
-        #code changes & added for 'OR' filters of inventory and 'AND' filters with inventory and others
-        #code start
-        if p:
-            q&=p
-        #code end
-
-        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type','flat_count','tower_count','society_type_quality')
-        societies = []
-        society_ids = []
-        societies_count = 0
-        for society in societies_temp:
-            if space_on_circle(latitude, longitude, radius ,society['society_latitude'], society['society_longitude']):
-                society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(),
-                                                                                      society['supplier_id'])
-
-                #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
-                society['shortlisted'] = True
-                society['buffer_status'] = False
-                obj = InventorySummaryAPIView()
-                adinventory_type_dict = obj.adinventory_func()
-                duration_type_dict = obj.duration_type_func()
-                if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
-                    society['total_poster_count'] = society_inventory_obj.total_poster_count
-                    society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
-
-                if society_inventory_obj.standee_allowed:
-                    society['total_standee_count'] = society_inventory_obj.total_standee_count
-                    society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
-
-                if society_inventory_obj.stall_allowed:
-                    society['total_stall_count'] = society_inventory_obj.total_stall_count
-                    society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
-                    society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
-
-                if society_inventory_obj.flier_allowed:
-                    society['flier_frequency'] = society_inventory_obj.flier_frequency
-                    society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
-
-                # ADDNEW -->
-
-                society_ids.append(society['supplier_id'])
-                societies.append(society)
-                societies_count += 1
-
-        # societies_serializer =  ProposalSocietySerializer(societies, many=True)
-
-        # following query find sum of all the variables specified in a dictionary
-        # this finds sum of all inventories, if you don't need some of some inventory make it 0 in front end
-        societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
-            standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
 
-        response['societies'] = societies
-        response['societies_inventory_count'] = societies_inventory_count
-        response['societies_count'] = societies_count
-        return Response(response, status=200)
+            if flat_type_params:
+                flat_types = []
+                flat_type_params = flat_type_params.split()
+                for param in flat_type_params:
+                    try:
+                        flat_types.append(flat_type_dict[param])
+                    except KeyError:
+                        pass
 
+                if flat_types:
+                    ''' We can improve performance here  by appending .distinct('supplier_id') when using postgresql '''
+                    supplier_ids = set(
+                        FlatType.objects.filter(flat_type__in=flat_types).values_list('object_id', flat=True))
+                    filter_query &= Q(supplier_id__in=supplier_ids)
+                    # here to include those suppliers which don't have this info nothing can be done
+                    # It is simply all the suppliers -> filter becomes useless
+            delta_dict = website_utils.get_delta_latitude_longitude(radius, latitude)
 
-    def post(self, request, format=None):
-        ''' This API is for deep filtering
-        Basic Idea is that if filter is chosen on the left of the map view page get request is fired
-        But if he clicks on deep filters he can choose on almost anything like cars_count, luxury_cars_count,
-        avg_pg_occupancy, women_occupants, etc. whatever required. This is the approach most commonly found on
-        other websites '''
-        pass
+            # add data to get min,max lat-long
+            delta_dict['latitude'] = float(latitude)
+            delta_dict['longitude'] = float(longitude)
+            delta_dict['supplier_type_code'] = supplier_code
 
+            # call the function to get min,max, lat,long data
+            min_max_lat_long_response = website_utils.get_min_max_lat_long(delta_dict)
+            if not min_max_lat_long_response.data['status']:
+                return min_max_lat_long_response
 
+            # make right params to call make_filter_query function
+            filter_query_params = min_max_lat_long_response.data['data']
+            filter_query_params['location_params'] = location_params
+            filter_query_params['supplier_quality_params'] = supplier_quality_params
+            filter_query_params['supplier_quantity_params'] = supplier_quantity_params
+            filter_query_params['flat_count'] = flat_count
+            filter_query_params['inventory_params'] = inventory_params
+            filter_query_params['supplier_type_code'] = supplier_code
 
-def get_related_dict():
-    ''' This dictionary is simply a mapping from get params to their actual values '''
-    # quality_dict if for both society_quality and its location_quality and similarly for other spaces
-    quality_dict = {
-        'UH' : 'Ultra High',    'HH' : 'High',
-        'MH' : 'Medium High',   'ST' : 'Standard'
-    }
+            # call function to make filter
+            #todo: make filter function specific to supplier
+            filter_query_response = website_utils.make_filter_query(filter_query_params)
+            if not filter_query_response.data['status']:
+                return filter_query_response
+            filter_query = filter_query_response.data['data']
 
-    inventory_dict = {
-        'PO' : 'poster_allowed_nb',    'ST' : 'standee_allowed',
-        'SL' : 'stall_allowed',     'FL' : 'flier_allowed',
-        'BA' : 'banner_allowed',    'CD' : 'car_display_allowed',
-    }
+            # get all suppliers  with all columns for the filter we constructed.
+            suppliers = supplier_code_filter_params[supplier_code]['MODEL'].objects.filter(filter_query)
+            supplier_ids = []
+            suppliers_count = 0
+            suppliers_data = []
 
-    quantity_dict = {
-        'LA' : 'Large',     'MD' : 'Medium',
-        'VL' : 'Very Large',  'SM' : 'Small',
-    }
+            # iterate over all suppliers to  generate the final response
+            for supplier in suppliers:
+                if website_utils.space_on_circle(latitude, longitude, radius, supplier['supplier_latitude'],
+                                   supplier['supplier_longitude']):
+                    supplier_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(),
+                                                                                           supplier['supplier_id'])
 
-    return quality_dict, inventory_dict, quantity_dict
+                    # supplier_inventory_obj = InventorySummary.objects.get(supplier_id=supplier['supplier_id'])
+                    supplier['shortlisted'] = True
+                    supplier['buffer_status'] = False
+                    obj = InventorySummaryAPIView()
+                    adinventory_type_dict = obj.adinventory_func()
+                    duration_type_dict = obj.duration_type_func()
+                    if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
+                        supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
+                        supplier['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4',
+                                                                'campaign_weekly')
 
+                    if supplier_inventory_obj.standee_allowed:
+                        supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
+                        supplier['standee_price'] = return_price(adinventory_type_dict, duration_type_dict,
+                                                                 'standee_small', 'campaign_weekly')
+
+                    if supplier_inventory_obj.stall_allowed:
+                        supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
+                        supplier['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small',
+                                                               'unit_daily')
+                        supplier['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict,
+                                                                     'car_display_standard', 'unit_daily')
+
+                    if supplier_inventory_obj.flier_allowed:
+                        supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
+                        supplier['filer_price'] = return_price(adinventory_type_dict, duration_type_dict,
+                                                               'flier_door_to_door', 'unit_daily')
+
+                    # ADDNEW -->
+
+                    supplier_ids.append(supplier['supplier_id'])
+                    suppliers_data.append(supplier)
+                    suppliers_count += 1
+
+            suppliers_inventory_count = InventorySummary.objects.filter_inventory_objects(
+                {'supplier_type_code': supplier_code}, supplier_ids).aggregate(posters=Sum('total_poster_count'), \
+                                                                               standees=Sum('total_standee_count'),
+                                                                               stalls=Sum('total_stall_count'),
+                                                                               fliers=Sum('flier_frequency'))
+
+            response['suppliers'] = suppliers_data
+            response['supplier_inventory_count'] = suppliers_inventory_count
+            response['supplier_count'] = suppliers_count
+            response['supplier_type_code'] = supplier_code
+            return Response(response, status=200)
+
+        except Exception as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class FinalProposalAPIView(APIView):
@@ -2041,7 +1922,7 @@ class ProposalHistoryAPIView(APIView):
                             society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
                         if society_inventory_obj.flier_allowed:
-                            society['flier_frequency'] = society_inventory_obj.flier_frequency
+                            society['flier_freqency'] = society_inventory_obj.flier_frequency
                             society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
                         societies_buffered.append(society)

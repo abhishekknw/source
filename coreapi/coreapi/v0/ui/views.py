@@ -409,7 +409,6 @@ class SocietyAPIListView(APIView):
             return Response(status=404)
 
 
-
 class CorporateAPIListView(APIView):
     def get(self, request, format=None):
         try:
@@ -422,13 +421,14 @@ class CorporateAPIListView(APIView):
                     items = SupplierTypeCorporate.objects.all().order_by('name')
                 else:
                     items = SupplierTypeCorporate.objects.filter(created_by=user.id)
-
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             serializer = UICorporateSerializer(result_page, many=True)
             return paginator.get_paginated_response(serializer.data)
         except SupplierTypeCorporate.DoesNotExist:
             return Response(status=404)
+        except Exception as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SalonAPIListView(APIView):

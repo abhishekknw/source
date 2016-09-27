@@ -1,3 +1,5 @@
+from v0.models import SupplierTypeSociety, SupplierTypeSalon, SupplierTypeGym, SupplierTypeCorporate
+
 supplier_keys = [
     'city', 'area', 'sub_area', 'supplier_type', 'supplier_code', 'society_name'
 
@@ -49,3 +51,26 @@ price_per_flat = {
     'PO': ['poster_price_per_flat', 'poster_price'],
     'ST': ['standee_price_per_flat', 'standee_price']
 }
+
+flat_type_dict = {
+    '1R': '1 RK', '1B': '1 BHK', '1-5B': '1.5 BHK', '2B': '2 BHK',
+        '2-5B': '2.5 BHK', '3B': '3 BHK', '3-5B': '3.5 BHK', '4B': '4 BHK',
+    '5B': '5 BHK', 'PH': 'PENT HOUSE', 'RH': 'ROW HOUSE', 'DP': 'DUPLEX'
+}
+
+supplier_code_filter_params = {
+    'RS': {
+        'MODEL': SupplierTypeSociety
+    },
+    'CP': {
+        'MODEL': SupplierTypeCorporate
+    },
+    'GY': {
+        'MODEL': SupplierTypeGym
+    },
+    'SL': {
+        'MODEL': SupplierTypeSalon
+    }
+
+}
+
