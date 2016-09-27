@@ -32,9 +32,9 @@ body{
     width: 100%;
 }
 .filterPanelHeader{
-    font-weight: 400;
+    font-weight: 500;
     display: block;
-		color: red;
+		color: crimson;
 }
 .filterscroll{
 	overflow: hidden;

@@ -12,22 +12,25 @@ supplier_keys = [
 ]
 
 proposal_header_keys = [
- 'Center Name', 'Supplier Id', 'Supplier Name', 'Area', 'Sub Area', 'Society Type', 'Tower Count',
+ 'Center Name', 'Supplier Id', 'Supplier Name', 'Sub Area', 'Society Type', 'Tower Count',\
+ 'Flat Count'
  ]
 
- # proposal_header_keys = [
- # 'Center Name', 'Supplier Id', 'Supplier Name', 'Area', 'Sub Area', 'Society Type', 'Tower Count',\
- # 'Poster Count', 'Poster Price', 'Poster Price Factor', 'Poster Duration', \
- # 'Flyer Count', 'Flyer Price', 'Flyer Frequency', 'Standee Count', 'Standee Price', \
- # 'Standee Duration', 'Stall Price', 'Stall Duration',  
- # ]
+inventorylist = {
+	'PO' :  { 'HEADER' : [ 'Poster Count', 'Poster Price', 'Poster Duration','Poster Price Factor','Poster price per flat'],
+	          'DATA': ['total_poster_count', 'poster_price' , 'poster_duration' , 'poster_price_factor', 'poster_price_per_flat'] 
+	}, 
+	'ST' :  { 'HEADER': ['Standee Count', 'Standee Price', 'Standee Duration', 'Standee Price factor', 'Standee price per flat'],  
+	          'DATA': ['total_standee_count', 'standee_price', 'standee_duration', 'standee_price_factor', 'standee_price_per_flat'] 
+	}
+}
 
 sample_data = [
 'vvhbhb', 'bhbhbh'
 ]
 
-society_keys = [ 'supplier_id', 'society_name', 'society_locality', 'society_subarea', 'society_type_quality',\
-'tower_count', 
+society_keys = [ 'supplier_id', 'society_name',  'society_subarea', 'society_type_quality',\
+'tower_count', 'flat_count' 
 ]
 
 center_keys = ['center_name']
@@ -42,3 +45,7 @@ contact_keys = [
 STD_CODE = '022'
 COUNTRY_CODE = '+91'
 
+price_per_flat = {
+    'PO': ['poster_price_per_flat', 'poster_price'],
+    'ST': ['standee_price_per_flat', 'standee_price']
+}

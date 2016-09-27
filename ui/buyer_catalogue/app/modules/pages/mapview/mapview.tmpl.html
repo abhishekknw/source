@@ -124,11 +124,11 @@
             <th class = "col-md-4">Average Rent</th>
             <th class = "col-md-4">Society Type</th>
             <th class = "col-md-4">Locality Rating</th>
-            <!-- <th class = "col-md-4">Machadalo Index</th> -->
-            <th class="center-align" ng-if="inv_poster">Poster</th>
+            <th class = "col-md-4">Machadalo Index</th>
+            <th class="center-align" ng-if="inv_poster">Poster Count</th>
             <th class="center-align" ng-if="inv_standee">Standee Count</th>
-            <th class="center-align" ng-if="inv_stall">Stall</th>
-            <th class="center-align" ng-if="inv_flier">Flyer</th>
+            <th class="center-align" ng-if="inv_stall">Stall Count</th>
+            <th class="center-align" ng-if="inv_flier">Flyer Count</th>
             <th class = "col-md-4">Shortlisted/Buffer</th>
             <th class = "col-md-4">Action</th>
           </tr>
@@ -140,14 +140,14 @@
           <tr ng-repeat = "society in society1.societies">
             <td>{{$index+1}}</td>
             <td>{{society1.center.center_name}}</td>
-            <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{society.supplier_id}}" target="_blank">{{society.society_name}}</a></td>
+            <td><a ng-href="http://mdbuyercatalog.s3-website-ap-southeast-1.amazonaws.com/#/campaign/5/societyDetails/{{society.supplier_id}}" target="_blank">{{society.society_name}}</a></td>
             <td>{{society.society_subarea + "," + society.society_locality}}</td>
             <td>{{society.flat_count}}</td>
             <td>{{society.average_rent}}</td>
             <td>{{society.society_type_quality}}</td>
             <td>{{society.society_location_type}}</td>
-            <!-- <td>{{society.machadalo_index}}</td> -->
-            <td ng-if="inv_poster">{{society.total_poster_count}}</td>
+            <td>{{society.machadalo_index}}</td>
+            <td ng-if="inv_poster">{{society.flat_count}}</td>
             <!-- <td ng-if="inv_poster">{{society.poster_price}}</td>-->
             <td ng-if="inv_standee">{{society.total_standee_count}}</td>
             <!-- <td ng-if="inv_standee">{{society.standee_price}}</td> -->
@@ -206,9 +206,7 @@
         <div>
          <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
          <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
-         <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
-
-        </div>
+       </div>
       </div>
 
       <!-- Start: Summary Section of Gridview-->
@@ -243,6 +241,7 @@
           <div>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
           <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
+          <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
           </div>
         </div>
 

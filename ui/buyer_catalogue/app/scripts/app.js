@@ -9,7 +9,6 @@
  * Main module of the application.
  */
   var APIBaseUrl = 'http://localhost:8108/';
-  //var APIBaseUrl = 'http://coreapi-dev-test.ap-southeast-1.elasticbeanstalk.com/';
   //var APIBaseUrl = 'http://coreapi-prod.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/';
 
 
