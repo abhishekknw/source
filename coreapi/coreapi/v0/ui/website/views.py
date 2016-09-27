@@ -1376,7 +1376,7 @@ class GetFilteredSocietiesAPIView(APIView):
             q&=p
         #code end
 
-        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type','flat_count','tower_count','society_type_quality')
+        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type','flat_count','tower_count','society_type_quality','society_locality')
         societies = []
         society_ids = []
         societies_count = 0
