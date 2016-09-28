@@ -18,6 +18,7 @@ from rest_framework import status
 from v0.models import City, CityArea, CitySubArea, AdInventoryType, FlyerInventory, DurationType, StallInventory, \
     InventorySummary, SupplierTypeSociety, PriceMappingDefault
 import constants as ui_constants
+from website.constants import supplier_code_filter_params
 from v0.serializers import SupplierTypeSocietySerializer, SupplierTypeGymSerializer, SupplierTypeCorporateSerializer, \
     SupplierTypeSalonSerializer
 
@@ -150,8 +151,9 @@ def save_supplier_data(master_data):
         serializer = serializer_class(data=supplier_data)
         if serializer.is_valid():
             serializer.save()
-            if supplier_code == 'RS':
-                set_default_pricing(serializer.data['supplier_id'])
+            response = set_default_pricing(serializer.data['supplier_id'], supplier_code)
+            if not response.data['status']:
+                return response
             return Response(data={"status": True, "data": serializer.data}, status=status.HTTP_200_OK)
         else:
             return Response(data={"status": False, "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -160,75 +162,100 @@ def save_supplier_data(master_data):
         return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def set_default_pricing(society_id):
-    society = SupplierTypeSociety.objects.get(pk=society_id)
-    ad_types = AdInventoryType.objects.all()
-    duration_types = DurationType.objects.all()
-    price_mapping_list = []
-    for type in ad_types:
-        for duration in duration_types:
-            if (type.adinventory_name == 'POSTER'):
-                if ((duration.duration_name == 'Unit Daily')):
-                    pmdefault = PriceMappingDefault(supplier=society, adinventory_type=type, duration_type=duration,
-                                                    society_price=-1, business_price=-1)
-                    price_mapping_list.append(pmdefault)
-                if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (
-                            duration.duration_name == 'Unit Monthly') | (duration.duration_name == 'Unit Weekly')):
-                    pmdefault = PriceMappingDefault(supplier=society, adinventory_type=type, duration_type=duration,
-                                                    society_price=0, business_price=0)
-                    price_mapping_list.append(pmdefault)
+def set_default_pricing(supplier_id, supplier_type_code):
+    """
+    :param supplier_id: supplier uinique id
+    :param supplier_type_code: which type of supplier
+    :return:  makes an entry into PriceMappingDefault table for the given supplier
 
-            if (type.adinventory_name == 'POSTER LIFT'):
-                if ((duration.duration_name == 'Unit Daily')):
-                    pmdefault = PriceMappingDefault(supplier=society, adinventory_type=type, duration_type=duration,
-                                                    society_price=-1, business_price=-1)
-                    price_mapping_list.append(pmdefault)
-                if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (
-                            duration.duration_name == 'Unit Monthly') | (duration.duration_name == 'Unit Weekly')):
-                    pmdefault = PriceMappingDefault(supplier=society, adinventory_type=type, duration_type=duration,
-                                                    society_price=0, business_price=0)
-                    price_mapping_list.append(pmdefault)
+    """
+    try:
+        supplier = supplier_code_filter_params[supplier_type_code]['MODEL'].objects.get(pk=supplier_id)
+        content_type = ContentType.objects.get_for_model(supplier)
+        # SupplierTypeSociety.objects.get(pk=society_id)
+        ad_types = AdInventoryType.objects.all()
+        duration_types = DurationType.objects.all()
+        price_mapping_list = []
+        for type in ad_types:
+            for duration in duration_types:
+                if (type.adinventory_name == 'POSTER'):
+                    if ((duration.duration_name == 'Unit Daily')):
+                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                        adinventory_type=type, duration_type=duration,
+                                                        supplier_price=-1, business_price=-1)
+                        price_mapping_list.append(pmdefault)
+                    if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (
+                                duration.duration_name == 'Unit Monthly') | (duration.duration_name == 'Unit Weekly')):
+                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                        adinventory_type=type, duration_type=duration,
+                                                        supplier_price=0, business_price=0)
+                        price_mapping_list.append(pmdefault)
 
-            if (type.adinventory_name == 'STANDEE'):
-                if ((duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Weekly') | (
-                            duration.duration_name == 'Unit Weekly') | (duration.duration_name == 'Unit Monthly')):
-                    if (type.adinventory_type == 'Large'):
-                        pmdefault = PriceMappingDefault(supplier=society, adinventory_type=type, duration_type=duration,
-                                                        society_price=-1, business_price=-1)
+                if (type.adinventory_name == 'POSTER LIFT'):
+                    if ((duration.duration_name == 'Unit Daily')):
+                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                        adinventory_type=type, duration_type=duration,
+                                                        supplier_price=-1, business_price=-1)
                         price_mapping_list.append(pmdefault)
-                    else:
-                        pmdefault = PriceMappingDefault(supplier=society, adinventory_type=type, duration_type=duration,
-                                                        society_price=0, business_price=0)
+                    if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (
+                                duration.duration_name == 'Unit Monthly') | (duration.duration_name == 'Unit Weekly')):
+                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                        adinventory_type=type, duration_type=duration,
+                                                        supplier_price=0, business_price=0)
                         price_mapping_list.append(pmdefault)
-            if (type.adinventory_name == 'STALL'):
-                if ((duration.duration_name == 'Unit Daily') | (duration.duration_name == '2 Days')):
-                    if ((type.adinventory_type == 'Canopy') | (type.adinventory_type == 'Small') | (
-                                type.adinventory_type == 'Large')):
-                        pmdefault = PriceMappingDefault(supplier=society, adinventory_type=type, duration_type=duration,
-                                                        society_price=0, business_price=0)
-                        price_mapping_list.append(pmdefault)
-                    if (type.adinventory_type == 'Customize'):
-                        pmdefault = PriceMappingDefault(supplier=society, adinventory_type=type, duration_type=duration,
-                                                        society_price=-1, business_price=-1)
-                        price_mapping_list.append(pmdefault)
-            if (type.adinventory_name == 'CAR DISPLAY'):
-                if ((duration.duration_name == 'Unit Daily') | (duration.duration_name == '2 Days')):
-                    if ((type.adinventory_type == 'Standard') | (type.adinventory_type == 'Premium')):
-                        pmdefault = PriceMappingDefault(supplier=society, adinventory_type=type, duration_type=duration,
-                                                        society_price=0, business_price=0)
-                        price_mapping_list.append(pmdefault)
-            if ((type.adinventory_name == 'FLIER') & (duration.duration_name == 'Unit Daily')):
-                if ((type.adinventory_type == 'Door-to-Door') | (type.adinventory_type == 'Mailbox') | (
-                            type.adinventory_type == 'Lobby')):
-                    pmdefault = PriceMappingDefault(supplier=society, adinventory_type=type, duration_type=duration,
-                                                    society_price=0, business_price=0)
-                    price_mapping_list.append(pmdefault)
 
-    PriceMappingDefault.objects.bulk_create(price_mapping_list)
-    return Response(status=200)
+                if (type.adinventory_name == 'STANDEE'):
+                    if ((duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Weekly') | (
+                                duration.duration_name == 'Unit Weekly') | (duration.duration_name == 'Unit Monthly')):
+                        if (type.adinventory_type == 'Large'):
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                            adinventory_type=type, duration_type=duration,
+                                                            supplier_price=-1, business_price=-1)
+                            price_mapping_list.append(pmdefault)
+                        else:
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                            adinventory_type=type, duration_type=duration,
+                                                            supplier_price=0, business_price=0)
+                            price_mapping_list.append(pmdefault)
+                if (type.adinventory_name == 'STALL'):
+                    if ((duration.duration_name == 'Unit Daily') | (duration.duration_name == '2 Days')):
+                        if ((type.adinventory_type == 'Canopy') | (type.adinventory_type == 'Small') | (
+                                    type.adinventory_type == 'Large')):
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                            adinventory_type=type, duration_type=duration,
+                                                            supplier_price=0, business_price=0)
+                            price_mapping_list.append(pmdefault)
+                        if (type.adinventory_type == 'Customize'):
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                            adinventory_type=type, duration_type=duration,
+                                                            supplier_price=-1, business_price=-1)
+                            price_mapping_list.append(pmdefault)
+                if (type.adinventory_name == 'CAR DISPLAY'):
+                    if ((duration.duration_name == 'Unit Daily') | (duration.duration_name == '2 Days')):
+                        if ((type.adinventory_type == 'Standard') | (type.adinventory_type == 'Premium')):
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                            adinventory_type=type, duration_type=duration,
+                                                            supplier_price=0, business_price=0)
+                            price_mapping_list.append(pmdefault)
+                if ((type.adinventory_name == 'FLIER') & (duration.duration_name == 'Unit Daily')):
+                    if ((type.adinventory_type == 'Door-to-Door') | (type.adinventory_type == 'Mailbox') | (
+                                type.adinventory_type == 'Lobby')):
+                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                        adinventory_type=type, duration_type=duration,
+                                                        supplier_price=0, business_price=0)
+                        price_mapping_list.append(pmdefault)
+
+        PriceMappingDefault.objects.bulk_create(price_mapping_list)
+        return Response({'status': True, 'data': 'success'}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def adinventory_func():
+    """
+    :return: functions makes a dict containing adinventory_dict
+    """
     adinventory_objects = AdInventoryType.objects.all()
     adinventory_dict = {}
     for adinventory in adinventory_objects:
@@ -364,15 +391,19 @@ def duration_type_func():
 
 
 def save_stall_locations(c1, c2, supplier, supplier_type_code):
+    try:
 
-    count = int(c2) + 1
-    for i in range(c1 + 1, count):
-        stall_id = supplier.supplier_id + "CA0000ST" + str(i).zfill(2)
-        data = {
-            'adinventory_id': stall_id,
-        }
-        stall = StallInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
-        stall.save()
+        count = int(c2) + 1
+        for i in range(c1 + 1, count):
+            stall_id = supplier.supplier_id + "CA0000ST" + str(i).zfill(2)
+            data = {
+                'adinventory_id': stall_id,
+            }
+            stall = StallInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
+            stall.save()
+
+    except Exception as e:
+        return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def save_flyer_locations(c1, c2, supplier, supplier_type_code):
@@ -418,8 +449,19 @@ def save_price_data(price_object, posprice, buisiness_price):
     """
     try:
         price_object.business_price = posprice
-        price_object.society_price = buisiness_price
+        price_object.supplier_price = buisiness_price
         price_object.save()
     except Exception as e:
         pass
 
+
+def get_tower_count(supplier_object, supplier_type_code):
+    try:
+        count = 1
+        attr = ui_constants.tower_count_attribute_mapping[supplier_type_code]
+        if attr != 'none':
+            count = supplier_object.__dict__[attr]
+        return Response(data={'status': True, 'data': count}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response(data={'status': False, 'error': 'Error in fetching tower count'}, status=status.HTTP_400_BAD_REQUEST)

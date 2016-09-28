@@ -59,12 +59,13 @@ class GetInventoryObjectManager(models.Manager):
         except Exception as e:
             return None
 
-    def get_price_mapping_object(self, data, id):
+    def get_price_mapping_object(self, data, id, supplier_type_code):
         try:
-            # supplier_code = data['supplier_type_code']
+            supplier_code = supplier_type_code
+
             adinventory_type = data['adinventory_type']
             duration_type = data['duration_type']
-            supplier_code = 'RS'  # todo: change this when get clearity
+            #supplier_code = 'RS'  # todo: change this when get clearity
             suppliers = {'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate',
                          'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon'}
 
@@ -113,7 +114,7 @@ class GetInventoryObjectManager(models.Manager):
         except ObjectDoesNotExist as e:
             return None
         except Exception as e:
-            print e.message
+            return None
 
 
 
