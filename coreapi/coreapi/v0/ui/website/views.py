@@ -1101,29 +1101,29 @@ class SpacesOnCenterAPIView(APIView):
                 if website_utils.space_on_circle(latitude, longitude, radius, society['society_latitude'], society['society_longitude']):
                     society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(),
                                                                                           society['supplier_id'])
-
+                    if society_inventory_obj:
                     #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
-                    society['shortlisted'] = True
-                    society['buffer_status'] = False
-                    # obj = InventorySummaryAPIView()
-                    adinventory_type_dict = ui_utils.adinventory_func()
-                    duration_type_dict = ui_utils.duration_type_func()
-                    if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
-                        society['total_poster_count'] = society_inventory_obj.total_poster_count
-                        society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+                        society['shortlisted'] = True
+                        society['buffer_status'] = False
+                        # obj = InventorySummaryAPIView()
+                        adinventory_type_dict = ui_utils.adinventory_func()
+                        duration_type_dict = ui_utils.duration_type_func()
+                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                            society['total_poster_count'] = society_inventory_obj.total_poster_count
+                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
 
-                    if society_inventory_obj.standee_allowed:
-                        society['total_standee_count'] = society_inventory_obj.total_standee_count
-                        society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+                        if society_inventory_obj.standee_allowed:
+                            society['total_standee_count'] = society_inventory_obj.total_standee_count
+                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
 
-                    if society_inventory_obj.stall_allowed:
-                        society['total_stall_count'] = society_inventory_obj.total_stall_count
-                        society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
-                        society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+                        if society_inventory_obj.stall_allowed:
+                            society['total_stall_count'] = society_inventory_obj.total_stall_count
+                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
-                    if society_inventory_obj.flier_allowed:
-                        society['flier_frequency'] = society_inventory_obj.flier_frequency
-                        society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+                        if society_inventory_obj.flier_allowed:
+                            society['flier_frequency'] = society_inventory_obj.flier_frequency
+                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
                     # ADDNEW -->
                     society_ids.append(society['supplier_id'])
