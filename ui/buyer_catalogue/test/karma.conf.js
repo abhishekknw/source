@@ -37,7 +37,7 @@ module.exports = function(config) {
       'bower_components/angular-rangeslider/angular.rangeSlider.js',
       'bower_components/angularjs-slider/dist/rzslider.js',
       'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
-      'bower_components/angular-filter/dist/angular-filter.min.js',
+      'bower_components/angular-filter/dist/angular-filter.js',
       'bower_components/angularUtils-pagination/dirPagination.js',
       'bower_components/myforce-angularjs-dropdown-multiselect/dist/angularjs-dropdown-multiselect.min.js',
       'bower_components/ng-file-upload/ng-file-upload.js',

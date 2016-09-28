@@ -337,7 +337,10 @@ class FlatType(models.Model):
     size_builtup_area = models.FloatField(db_column='SIZE_BUILTUP_AREA', blank=True, null=True)  # Field name made lowercase.
     flat_rent = models.IntegerField(db_column='FLAT_RENT', blank=True, null=True)  # Field name made lowercase.
     average_rent_per_sqft = models.FloatField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
-
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = GetInventoryObjectManager()
 
     class Meta:
         db_table = 'flat_type'
@@ -1393,6 +1396,9 @@ class ProposalInfo(models.Model):
 
 
 class ProposalCenterMapping(models.Model):
+    """
+    for a given proposal, stores lat, long, radius, city, pincode etc.
+    """
     proposal    = models.ForeignKey(ProposalInfo, db_index=True, related_name='centers', on_delete=models.CASCADE)
     center_name = models.CharField(max_length=50)
     address     = models.CharField(max_length=150,null=True, blank=True)
