@@ -13,7 +13,9 @@ class GetInventoryObjectManager(models.Manager):
         try:
             # supplier_code = data['supplier_type_code']
 
-            supplier_code = 'RS'  # todo: change this when get clearity
+            # supplier_code = 'RS'  # todo: change this when get clearity
+            supplier_code = data['supplier_type_code']
+            #supplier_code = 'CP'  # todo: change this when get clearity
             suppliers = {'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate',
                          'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon'}
 

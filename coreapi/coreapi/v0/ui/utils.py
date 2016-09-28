@@ -161,7 +161,6 @@ def save_supplier_data(master_data):
 
 
 def set_default_pricing(society_id):
-    print "inside def"
     society = SupplierTypeSociety.objects.get(pk=society_id)
     ad_types = AdInventoryType.objects.all()
     duration_types = DurationType.objects.all()
@@ -294,8 +293,8 @@ def get_supplier_inventory(data, id):
 
     '''
     try:
-        #supplier_code = data['supplier_type_code']
-        supplier_code = 'CP' #todo: change this when get clearity
+        supplier_code = data['supplier_type_code']
+        #supplier_code = 'CP' #todo: change this when get clearity
         if not supplier_code or not id:
             return Response(data={"status": False, "error": "provide supplier code and  supplier id"},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -307,6 +306,10 @@ def get_supplier_inventory(data, id):
         (inventory_object, is_created) = InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
         data['object_id'] = id
         data['content_type'] = content_type.id
+        print inventory_object
+        print "\n"
+        print data
+        
         return Response(
             data={"status": True, "data": {"inventory_object": inventory_object, "supplier_object": supplier_object, "request_data": data}},
             status=status.HTTP_200_OK)
