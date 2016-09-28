@@ -27,3 +27,10 @@ decision = {
 
 suppliers = {'RS': SupplierTypeSociety, 'CP': SupplierTypeCorporate, 'GY': SupplierTypeGym,
              'SA': SupplierTypeSalon}
+
+tower_count_attribute_mapping = {
+    'RS': 'tower_count',
+    'CP': 'building_count',
+    'GY': 'none',
+    'SA': 'none'
+}

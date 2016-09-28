@@ -114,7 +114,7 @@ class PriceMappingDefault(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True, on_delete=models.CASCADE)
     #adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True, on_delete=models.CASCADE)
-    society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
+    supplier_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
     business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, null=True)
@@ -134,9 +134,10 @@ class PriceMapping(models.Model):
     society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
     business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
+
+
     class Meta:
         db_table = 'price_mapping'
-
 
 
 class BannerInventory(models.Model):
@@ -337,10 +338,6 @@ class FlatType(models.Model):
     size_builtup_area = models.FloatField(db_column='SIZE_BUILTUP_AREA', blank=True, null=True)  # Field name made lowercase.
     flat_rent = models.IntegerField(db_column='FLAT_RENT', blank=True, null=True)  # Field name made lowercase.
     average_rent_per_sqft = models.FloatField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
-    content_type = models.ForeignKey(ContentType, null=True)
-    object_id = models.CharField(max_length=12, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = GetInventoryObjectManager()
 
     class Meta:
         db_table = 'flat_type'
@@ -1808,6 +1805,10 @@ class SocietyInventoryBooking(models.Model):
     start_date = models.DateField(db_column='START_DATE', null=True)
     end_date = models.DateField(db_column='END_DATE', null=True)
     audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = GetInventoryObjectManager()
 
     def get_type(self):
         try:
@@ -1835,7 +1836,7 @@ class SocietyInventoryBooking(models.Model):
 
     def get_price(self):
         try:
-            price = PriceMappingDefault.objects.filter(supplier=self.society, adinventory_type__adinventory_name=self.adinventory_type.type.upper()).first().society_price
+            price = PriceMappingDefault.objects.filter(object_id=self.object_id, adinventory_type__adinventory_name=self.adinventory_type.type.upper()).first().supplier_price
             return price
         except:
             return None

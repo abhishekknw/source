@@ -966,7 +966,7 @@ class SpacesOnCenterAPIView(APIView):
                             society['shortlisted'] = True
                             society['buffer_status'] = False
                             # obj = InventorySummaryAPIView()
-                               
+
                             if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
                                 society['total_poster_count'] = society_inventory_obj.total_poster_count
                                 society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
@@ -988,7 +988,7 @@ class SpacesOnCenterAPIView(APIView):
                         societies.append(society)
                         societies_count += 1
 
-              
+
                 societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
                     standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
@@ -1221,9 +1221,8 @@ class GetFilteredSuppliersAPIView(APIView):
             filter_query = Q()
 
             if not supplier_code:
-                supplier_code = 'RS'
-                # return Response({'status': False, 'error': 'Provide supplier type code'},
-                #                 status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status': False, 'error': 'Provide supplier type code'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
             if not latitude or not longitude or not radius:
                 return Response({'message': 'Please Provide longitude and latitude and radius as well'}, status=406)
@@ -1231,6 +1230,7 @@ class GetFilteredSuppliersAPIView(APIView):
             latitude = float(latitude)
             longitude = float(longitude)
             radius = float(radius)
+
 
             if flat_type_params:
                 flat_types = []
@@ -1281,7 +1281,7 @@ class GetFilteredSuppliersAPIView(APIView):
             supplier_ids = []
             suppliers_count = 0
             suppliers_data = []
-            print filter_query
+
             # iterate over all suppliers to  generate the final response
             for supplier in suppliers:
                 supplier['supplier_latitude'] = supplier['society_latitude'] if supplier['society_latitude'] else supplier['latitude']

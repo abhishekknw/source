@@ -6,7 +6,7 @@ from v0.models import SupplierTypeSociety
 
 def populate(apps, schema_editor):
     """
-    populates content_type, object_id, content_object of inventory_summary table
+    populates content_type, object_id, content_object of  table
     assuming the existing rows  are only mapped to supplier_society table
     :param apps: apps
     :param schema_editor: editor
