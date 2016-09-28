@@ -1075,9 +1075,9 @@ class SpacesOnCenterAPIView(APIView):
         delta_longitude = delta_dict['delta_longitude']
         min_longitude = center['longitude'] - delta_longitude
         max_longitude = center['longitude'] + delta_longitude
-
+        q = Q()
         if space_mappings['society_allowed']:
-            q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
+            q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
             # p = Q(society_locality=area)
             try:
                 societies_inventory = center_info['societies_inventory']

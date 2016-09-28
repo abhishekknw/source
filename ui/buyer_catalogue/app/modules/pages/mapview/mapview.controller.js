@@ -162,7 +162,6 @@ angular.module('catalogueApp')
                 // on changing center lot of things changes
                 // map center || circle center and radius || current_center || society_markers || old_center new_center
                 $scope.initial_center_changed[$scope.current_center_index] = true;
-                console.log($scope.current_center_index);
                 if(change_center){
                     // only if change_center present center is changed
                     $scope.old_center = {
@@ -189,8 +188,16 @@ angular.module('catalogueApp')
                 // this service will return above deleted variables if checked in the filter
                 mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center)
                 .success(function(response, status){
-                    $scope.current_center = response;
-                    $scope.centers1[$scope.current_center_index] = response;
+                  // Start : Code changes to add response of suppliers
+                  $scope.current_center.societies = response.suppliers;
+                  $scope.current_center.societies_count = response.supplier_count;
+                  $scope.current_center.societies_inventory_count = response.supplier_inventory_count;
+                    // $scope.current_center = response;
+                  $scope.centers1[$scope.current_center_index].societies = response.suppliers;
+                  $scope.centers1[$scope.current_center_index].societies_count = response.supplier_count;
+                  $scope.centers1[$scope.current_center_index].societies_inventory_count = response.supplier_inventory_count;
+                  $scope.centers = $scope.centers1;
+                  // End : Code changes to add response of suppliers
                     gridView_Summary();
                     // for(var i=0;i<$scope.centers.length;i++)
                     //     if($scope.current_center.id == $scope.centers[i].length)
@@ -337,7 +344,6 @@ angular.module('catalogueApp')
                 $scope.proposal_id_temp = $stateParams.proposal_id;
                  mapViewService.getSpaces($scope.proposal_id_temp)
                 .success(function(response, status){
-                  console.log(response);
                     $scope.business_name = response.business_name;
                     $scope.centers = response.centers;
                     $scope.centers1 = response.centers;
@@ -690,16 +696,14 @@ angular.module('catalogueApp')
           $q.all(promises).then(function(response){
             var length = $scope.centers1.length;
             for(var i=0; i<length; i++){
-              console.log(promises);
               $scope.centers1[i].societies = promises[i].$$state.value.data.suppliers;
               $scope.centers1[i].societies_inventory_count = promises[i].$$state.value.data.supplier_inventory_count;
               $scope.centers1[i].societies_count = promises[i].$$state.value.data.supplier_count;
+              $scope.centers[i] = $scope.centers1[i];
               calculateQualityType($scope.centers1[i].societies);
               //$scope.society_markers = assignMarkersToMap($scope.current_center.societies);
               //$scope.impressions = calculateImpressions($scope.centers1[i].societies_inventory_count);
             } //end of for loop
-            $scope.current_center = $scope.centers1[0];
-            console.log($scope.current_center);
             $scope.current_center.societies = $scope.centers1[$scope.current_center_index].societies;
             $scope.current_center.societies_inventory_count = $scope.centers1[$scope.current_center_index].societies_inventory_count;
             $scope.current_center.societies_count = $scope.centers1[$scope.current_center_index].societies_count;
