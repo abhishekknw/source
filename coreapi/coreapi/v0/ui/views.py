@@ -1,5 +1,4 @@
 # python core imports
-from itertools import izip
 import json
 import csv
 
@@ -262,6 +261,12 @@ class SocietyAPIView(APIView):
             item = SupplierTypeSociety.objects.get(pk=id)
             self.check_object_permissions(self.request, item)
             serializer = UISocietySerializer(item)
+
+            #Start : Code changes to display images
+            images = ImageMapping.objects.filter(supplier=item)
+            image_serializer = ImageMappingSerializer(images, many=True)
+            response['society_images'] = image_serializer.data
+            #End : Code changes to display images
             # inventory_summary = InventorySummary.objects.get(supplier=item)
             # inventory_serializer = InventorySummarySerializer(inventory_summary)
             
@@ -288,8 +293,8 @@ class SocietyAPIView(APIView):
 
             # return Response(response, status=200)
 
-
-            return Response(serializer.data, status=200)
+            response['society_data'] = serializer.data
+            return Response(response, status=200)
         except SupplierTypeSociety.DoesNotExist:
            return Response(status=404)
 
@@ -414,13 +419,14 @@ class CorporateAPIListView(APIView):
         try:
             user = request.user
             search_txt = request.query_params.get('search', None)
+
             if search_txt:
                 items = SupplierTypeCorporate.objects.filter(Q(supplier_id__icontains=search_txt) | Q(name__icontains=search_txt)| Q(address1__icontains=search_txt)| Q(city__icontains=search_txt)| Q(state__icontains=search_txt)).order_by('name')
             else:
                 if user.is_superuser:
                     items = SupplierTypeCorporate.objects.all().order_by('name')
                 else:
-                    items = SupplierTypeCorporate.objects.filter(created_by=user.id)
+                    items = SupplierTypeCorporate.objects.filter(created_by=user.id)#todo : No field created by !
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             serializer = UICorporateSerializer(result_page, many=True)
@@ -820,12 +826,19 @@ class SaveSummaryData(APIView):
 class InventorySummaryAPIView(APIView):
     """
     This api provides summary of all the inventories associated with a supplier
+    supplierTypeCode -- supplier type code RS, CP etc
+
     """
+
     def get(self, request, id):
         try:
-            inventory_object = InventorySummary.objects.get_inventory_object(request.data.copy(), id)
+            supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            data = request.data.copy()
+            data['supplier_type_code'] = supplier_type_code
+            inventory_object = InventorySummary.objects.get_inventory_object(data, id)
             if not inventory_object:
-                return Response(data={'Inventory object does not exist for this supplier id {0}'.format(id)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(data={'Inventory object does not exist for this supplier id {0}'.format(id)},
+                                status=status.HTTP_400_BAD_REQUEST)
             return Response(model_to_dict(inventory_object), status=status.HTTP_200_OK)
         except Exception as e:
             return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
@@ -835,6 +848,9 @@ class InventorySummaryAPIView(APIView):
         creates summary for given supplier id
         ---
         parameters:
+        - name: supplier_type_code
+          description: RS, CP, etc
+          required: true
         - name: poster_allowed_nb
           description: poster allowed or not
         - name: nb_count
@@ -896,22 +912,19 @@ class InventorySummaryAPIView(APIView):
 
         """
         try:
-            '''
-            my_supported = SupportedProgram.objects.get(id=instance_id_goes_here)
-            ct_supported = ContentType.objects.get_for_model(SupportedProgram))
-            primary_citations = FullCitation.objects.filter(content_object=my_supported, content_type=ct_supported, is_primary=True)
 
-            '''
-            response = ui_utils.get_supplier_inventory(request.data, id)
+
+            response = ui_utils.get_supplier_inventory(request.data.copy(), id)
 
             if not response.data['status']:
                 return response
             data = response.data['data']['request_data']
             supplier_object = response.data['data']['supplier_object']
             inventory_object = response.data['data']['inventory_object']
+            supplier_type_code = request.data['supplier_type_code']
 
-            #society = SupplierTypeSociety.objects.get(pk=id)
-            #item = InventorySummary.objects.get(supplier=society)
+            # society = SupplierTypeSociety.objects.get(pk=id)
+            # item = InventorySummary.objects.get(supplier=society)
 
             towercount = supplier_object.tower_count if hasattr(supplier_object, 'tower_count') else 0
 
@@ -926,17 +939,17 @@ class InventorySummaryAPIView(APIView):
                 if request.data.get('poster_allowed_nb'):
                     if request.data.get('nb_count'):
                         supplier_object.poster_allowed_nb = True
-                        poster_campaign = request.data.get('nb_count')
+                        poster_campaign = int(request.data.get('nb_count'))
                         request.data['poster_campaign'] = poster_campaign
                     else:
                         supplier_object.poster_allowed_nb = False
-                else :
+                else:
                     supplier_object.poster_allowed_nb = False
 
                 if request.data.get('lift_count') and request.data.get('poster_allowed_lift'):
                     if request.data.get('lift_count') > 0:
                         supplier_object.poster_allowed_lift = True
-                        poster_campaign = poster_campaign + request.data.get('lift_count')
+                        poster_campaign = poster_campaign + int(request.data.get('lift_count'))
                         request.data['poster_campaign'] = poster_campaign
                     else:
                         supplier_object.poster_allowed_lift = False
@@ -946,7 +959,7 @@ class InventorySummaryAPIView(APIView):
                 if request.data.get('standee_allowed'):
                     if request.data.get('total_standee_count'):
                         supplier_object.standee_allowed = True
-                        standee_campaign = request.data.get('total_standee_count')
+                        standee_campaign = int(request.data.get('total_standee_count'))
                         request.data['standee_campaign'] = standee_campaign
                     else:
                         supplier_object.standee_allowed = False
@@ -955,65 +968,70 @@ class InventorySummaryAPIView(APIView):
 
                 if request.data.get('stall_allowed') or request.data.get('car_display_allowed'):
                     if request.data.get('total_stall_count'):
-                        stall_campaign = request.data.get('total_stall_count')
+                        stall_campaign = int(request.data.get('total_stall_count'))
                         request.data['stall_or_cd_campaign'] = stall_campaign
 
                 if request.data.get('flier_allowed'):
                     if request.data.get('flier_frequency'):
                         supplier_object.flier_allowed = True
-                        flier_campaign = request.data.get('flier_frequency')
+                        flier_campaign = int(request.data.get('flier_frequency'))
                         request.data['flier_campaign'] = flier_campaign
                     else:
                         supplier_object.flier_allowed = False
                 else:
                     supplier_object.flier_allowed = False
 
-# flier creation
+                # flier creation
 
                 flag1 = True
                 if 'id' in request.data:
 
                     flag1 = False
                     if request.data.get('flier_allowed'):
-                        if request.data.get('flier_frequency') and inventory_object.flier_frequency < request.data.get('flier_frequency'):
+                        if request.data.get('flier_frequency') and inventory_object.flier_frequency < request.data.get(
+                                'flier_frequency'):
                             if not inventory_object.flier_frequency:
-                                ui_utils.save_flyer_locations(0, request.data.get('flier_frequency'), supplier_object)
+                                ui_utils.save_flyer_locations(0, request.data.get('flier_frequency'), supplier_object, supplier_type_code)
                             else:
-                                ui_utils.save_flyer_locations(inventory_object.flier_frequency, request.data.get('flier_frequency'), supplier_object)
+                                ui_utils.save_flyer_locations(inventory_object.flier_frequency,
+                                                              request.data.get('flier_frequency'), supplier_object, supplier_type_code)
                         serializer = InventorySummarySerializer(inventory_object, data=data)
                 else:
                     if flag1 and request.data.get('flier_frequency'):
-                        ui_utils.save_flyer_locations(0, request.data['flier_frequency'], supplier_object)
+                        ui_utils.save_flyer_locations(0, request.data['flier_frequency'], supplier_object, supplier_type_code)
                     serializer = InventorySummarySerializer(data=data)
 
                 supplier_object.stall_allowed = True if request.data.get('stall_allowed') else False
                 supplier_object.car_display_allowed = True if request.data.get('car_display_allowed') else False
 
-                #society = SupplierTypeSociety.objects.get(pk=id)
-                supplier_object.total_campaign = poster_campaign+standee_campaign+stall_campaign+flier_campaign
+                # society = SupplierTypeSociety.objects.get(pk=id)
+                supplier_object.total_campaign = poster_campaign + standee_campaign + stall_campaign + flier_campaign
                 supplier_object.save()
 
-# stall creation
+                # stall creation
                 flag = True
                 if 'id' in request.data:
                     flag = False
                     if request.data.get('stall_allowed'):
-                        if request.data.get('total_stall_count') and inventory_object.total_stall_count < request.data.get('total_stall_count'):
-                            if not inventory_object.total_stall_count :
-                                ui_utils.save_stall_locations(0, request.data.get('total_stall_count'), supplier_object)
+                        if request.data.get(
+                                'total_stall_count') and inventory_object.total_stall_count < request.data.get(
+                                'total_stall_count'):
+                            if not inventory_object.total_stall_count:
+                                ui_utils.save_stall_locations(0, request.data.get('total_stall_count'), supplier_object, supplier_type_code)
                             else:
-                                ui_utils.save_stall_locations(inventory_object.total_stall_count, request.data.get('total_stall_count'), supplier_object)
+                                ui_utils.save_stall_locations(inventory_object.total_stall_count,
+                                                              request.data.get('total_stall_count'), supplier_object, supplier_type_code)
                     serializer = InventorySummarySerializer(inventory_object, data=data)
 
                 else:
                     if flag and request.data.get('total_stall_count'):
-                        ui_utils.save_stall_locations(0, request.data.get('total_stall_count'), supplier_object)
-                    #
-                    # serializer = InventorySummarySerializer(data=data)
-                    # if serializer.is_valid():
-                    #     serializer.save(supplier=supplier_object)
-                    # else :
-                    #     return Response({'error': serializer.errors},status=400)
+                        ui_utils.save_stall_locations(0, request.data.get('total_stall_count'), supplier_object, supplier_type_code)
+                        #
+                        # serializer = InventorySummarySerializer(data=data)
+                        # if serializer.is_valid():
+                        #     serializer.save(supplier=supplier_object)
+                        # else :
+                        #     return Response({'error': serializer.errors},status=400)
 
                 adinventory_dict = ui_utils.adinventory_func()
                 duration_type_dict = ui_utils.duration_type_func()
@@ -1023,133 +1041,156 @@ class InventorySummaryAPIView(APIView):
                     posPrice = request.data.get('poster_price_week_nb')
                     if request.data.get('poster_allowed_nb'):
                         if request.data.get('nb_A3_allowed'):
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['poster_a3'], duration_type=duration_type_dict['campaign_weekly'])
-                            price.business_price = posPrice
-                            price.society_price = price.business_price
-                            price.save()
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['poster_a3'], duration_type=duration_type_dict['unit_weekly'])
-                            price.business_price = posPrice/towercount
-                            price.society_price = price.business_price
-                            price.save()
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['poster_a3'],
+                                                           duration_type_dict['campaign_weekly']), id)
+                            ui_utils.save_price_data(price, posPrice, price.business_price)
+
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['poster_a3'],
+                                                           duration_type_dict['unit_weekly']), id)
+                            ui_utils.save_price_data(price, posPrice / towercount, price.business_price)
 
                         if request.data.get('nb_A4_allowed'):
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['poster_a4'], duration_type=duration_type_dict['campaign_weekly'])
-                            price.business_price = posPrice
-                            price.society_price = price.business_price
-                            price.save()
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['poster_a4'], duration_type=duration_type_dict['unit_weekly'])
-                            price.business_price = posPrice/towercount
-                            price.society_price = price.business_price
-                            price.save()
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['poster_a3'],
+                                                           duration_type_dict['campaign_weekly']), id)
+                            ui_utils.save_price_data(price, posPrice, price.business_price)
+
+                            price = PriceMappingDefault.objects.get(supplier_id=id,
+                                                                    adinventory_type=adinventory_dict['poster_a4'],
+                                                                    duration_type=duration_type_dict['unit_weekly'])
+                            ui_utils.save_price_data(price, posPrice / towercount, price.business_price)
 
                 if request.data.get('poster_price_week_lift'):
                     posPrice = request.data.get('poster_price_week_lift')
                     if request.data.get('poster_allowed_lift'):
-                        price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['poster_lift_a3'],duration_type=duration_type_dict['campaign_weekly'])
-                        price.business_price = posPrice
-                        price.society_price = price.business_price
-                        price.save()
-                        price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['poster_lift_a3'],duration_type=duration_type_dict['unit_weekly'])
-                        price.business_price = posPrice/towercount
-                        price.society_price = price.business_price
-                        price.save()
-                        price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['poster_lift_a4'],duration_type=duration_type_dict['campaign_weekly'])
-                        price.business_price = posPrice
-                        price.society_price = price.business_price
-                        price.save()
-                        price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['poster_lift_a4'],duration_type=duration_type_dict['unit_weekly'])
-                        price.business_price = posPrice/towercount
-                        price.society_price = price.business_price
-                        price.save()
+                        price = PriceMappingDefault.objects.get_price_mapping_object(
+                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],
+                                                       duration_type_dict['campaign_weekly']), id)
+                        ui_utils.save_price_data(price, posPrice, price.business_price)
 
+                        price = PriceMappingDefault.objects.get_price_mapping_object(
+                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],
+                                                       duration_type_dict['unit_weekly']), id)
+
+                        ui_utils.save_price_data(price, posPrice / towercount, price.business_price)
+
+                        price = PriceMappingDefault.objects.get_price_mapping_object(
+                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a4'],
+                                                       duration_type_dict['campaign_weekly']), id)
+
+                        ui_utils.save_price_data(price, posPrice, price.business_price)
+
+                        price = PriceMappingDefault.objects.get_price_mapping_object(
+                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a4'],
+                                                       duration_type_dict['unit_weekly']), id)
+
+                        ui_utils.save_price_data(price, posPrice / towercount, price.business_price)
 
                 if request.data.get('standee_price_week'):
                     stanPrice = request.data.get('standee_price_week')
                     if request.data.get('standee_allowed'):
                         if request.data.get('standee_small'):
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['standee_small'], duration_type=duration_type_dict['campaign_weekly'])
-                            price.business_price = stanPrice
-                            price.society_price = price.business_price
-                            price.save()
-                            
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['standee_small'], duration_type=duration_type_dict['unit_weekly'])
-                            price.business_price = stanPrice/towercount
-                            price.society_price = price.business_price
-                            price.save()
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['standee_small'],
+                                                           duration_type_dict['campaign_weekly']), id)
+
+                            ui_utils.save_price_data(price, stanPrice, price.business_price)
+
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['standee_small'],
+                                                           duration_type_dict['unit_weekly']), id)
+
+                            ui_utils.save_price_data(price, stanPrice / towercount, price.business_price)
 
                         if request.data.get('standee_medium'):
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['standee_medium'], duration_type=duration_type_dict['campaign_weekly'])
-                            price.business_price = stanPrice
-                            price.society_price = price.business_price
-                            price.save()
-                        
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['standee_medium'], duration_type=duration_type_dict['unit_weekly'])
-                            price.business_price = stanPrice/towercount
-                            price.society_price = price.business_price
-                            price.save()
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['standee_medium'],
+                                                           duration_type_dict['campaign_weekly']), id)
+
+                            ui_utils.save_price_data(price, stanPrice, price.business_price)
+
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['standee_medium'],
+                                                           duration_type_dict['unit_weekly']), id)
+
+                            ui_utils.save_price_data(price, stanPrice / towercount, price.business_price)
 
                 if request.data.get('stall_allowed'):
                     if request.data.get('stall_small'):
                         if request.data.get('stall_price_day_small'):
                             stallPrice = request.data.get('stall_price_day_small')
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['stall_small'], duration_type=duration_type_dict['unit_daily'])
-                            price.business_price = stallPrice
-                            price.society_price = price.business_price
-                            price.save()
-                    
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['stall_canopy'], duration_type=duration_type_dict['unit_daily'])
-                            price.business_price = stallPrice
-                            price.society_price = price.business_price
-                            price.save()
+
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['stall_small'],
+                                                           duration_type_dict['unit_daily']), id)
+
+                            ui_utils.save_price_data(price, stallPrice, price.business_price)
+
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['stall_canopy'],
+                                                           duration_type_dict['unit_daily']), id)
+
+                            ui_utils.save_price_data(price, stallPrice, price.business_price)
 
                     if request.data.get('stall_large'):
                         if request.data.get('stall_price_day_large'):
                             stallPrice = request.data.get('stall_price_day_large')
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['stall_large'], duration_type=duration_type_dict['unit_daily'])
-                            price.business_price = stallPrice
-                            price.society_price = price.business_price
-                            price.save()
+
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['stall_large'],
+                                                           duration_type_dict['unit_daily']), id)
+
+                            ui_utils.save_price_data(price, stallPrice, price.business_price)
 
                 if request.data.get('car_display_allowed'):
                     if request.data.get('cd_standard'):
                         if request.data.get('cd_price_day_standard'):
                             cdPrice = request.data['cd_price_day_standard']
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['car_display_standard'], duration_type=duration_type_dict['unit_daily'])
-                            price.business_price = cdPrice
-                            price.society_price = price.business_price
-                            price.save()
+
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['car_display_standard'],
+                                                           duration_type_dict['unit_daily']), id)
+
+                            ui_utils.save_price_data(price, cdPrice, price.business_price)
 
                     if request.data.get('cd_premium'):
                         if request.data.get('cd_price_day_premium'):
                             cdPrice = request.data.get('cd_price_day_premium')
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['car_display_premium'], duration_type=duration_type_dict['unit_daily'])
-                            price.business_price = cdPrice
-                            price.society_price = price.business_price
-                            price.save()
+
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['car_display_premium'],
+                                                           duration_type_dict['unit_daily']), id)
+
+                            ui_utils.save_price_data(price, cdPrice, price.business_price)
 
                 if request.data.get('flier_price_day'):
                     flierPrice = request.data.get('flier_price_day')
                     if request.data.get('mailbox_allowed'):
-                        price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['flier_mailbox'], duration_type=duration_type_dict['unit_daily'])
-                        price.business_price = flierPrice
-                        price.society_price = price.business_price
-                        price.save()
+                        price = PriceMappingDefault.objects.get_price_mapping_object(
+                            ui_utils.make_dict_manager(adinventory_dict['flier_mailbox'],
+                                                       duration_type_dict['unit_daily']), id)
+
+                        ui_utils.save_price_data(price, flierPrice, price.business_price)
 
                     if request.data.get('d2d_allowed'):
-                        price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['flier_door_to_door'], duration_type=duration_type_dict['unit_daily'])
-                        price.business_price = flierPrice
-                        price.society_price = price.business_price
-                        price.save()
+                        price = PriceMappingDefault.objects.get_price_mapping_object(
+                            ui_utils.make_dict_manager(adinventory_dict['flier_door_to_door'],
+                                                       duration_type_dict['unit_daily']), id)
+
+                        ui_utils.save_price_data(price, flierPrice, price.business_price)
 
                     if request.data.get('flier_lobby_allowed'):
                         try:
-                            price = PriceMappingDefault.objects.get(supplier_id=id, adinventory_type=adinventory_dict['flier_lobby'], duration_type=duration_type_dict['unit_daily'])
-                            price.business_price = flierPrice
-                            price.society_price = price.business_price
-                            price.save()
-                        except KeyError as e:
-                             pass
+                            price = PriceMappingDefault.objects.get_price_mapping_object(
+                                ui_utils.make_dict_manager(adinventory_dict['flier_lobby'],
+                                                           duration_type_dict['unit_daily']), id)
 
+                            ui_utils.save_price_data(price, flierPrice, price.business_price)
+
+                        except KeyError as e:
+                            pass
 
                 serializer = InventorySummarySerializer(inventory_object, data=data)
 
@@ -1160,7 +1201,7 @@ class InventorySummaryAPIView(APIView):
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            return Response(data={ "status" : False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class BasicPricingAPIView(APIView):
@@ -1173,7 +1214,7 @@ class BasicPricingAPIView(APIView):
             basic_prices_select = PriceMappingDefault.objects.select_related('supplier','adinventory_type','duration_type').filter(supplier_id=id)
             basic_prices = PriceMappingDefault.objects.filter(supplier_id=id).values()
             
-            for basic_item, basic_select_item in izip(basic_prices, basic_prices_select):
+            for basic_item, basic_select_item in zip(basic_prices, basic_prices_select):
                 basic_item['supplier'] = basic_select_item.__dict__['_supplier_cache'].__dict__
                 basic_item['supplier'].pop("_state",None)
                 basic_item['adinventory_type'] = basic_select_item.__dict__['_adinventory_type_cache'].__dict__
@@ -1294,7 +1335,7 @@ class TowerAPIView(APIView):
         except InventorySummary.DoesNotExist:
             return Response({'message' : 'Please fill Inventory Summary Tab','inventory':'true'},status=404)
 
-        if total_nb_count !=0 and total_nb_count != inventory_obj.nb_count:
+        if total_nb_count !=0 and total_nb_count != inventory_nb_count:
 
             return Response({'message' : 'Total Notice Board Count should equal to Notice Board Count in Inventory Summary Tab'}, status=404)
         if total_lift_count !=0 and total_lift_count != inventory_obj.lift_count:
@@ -1990,7 +2031,6 @@ class ImageMappingAPIView(APIView):
     def post(self, request, id, format=None):
         #print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
-
         for key in request.data['image_details']:
             if 'id' in key:
                 item = ImageMapping.objects.get(pk=key['id'])
