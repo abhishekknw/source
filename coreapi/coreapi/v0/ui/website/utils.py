@@ -1,12 +1,33 @@
 import math
+from types import *
 
 from django.db.models import Q
 
 from rest_framework.response import Response
 from rest_framework import  status
 
-from constants import price_per_flat
+from constants import price_per_flat, inventorylist
 from v0.models import PriceMappingDefault
+
+
+def get_union_keys_inventory_code(key_type, unique_inventory_codes):
+    """
+    :param key_type: can take value 'HEADER' or 'DATA'
+    :param unique inventory_code: can take value, 'SL', 'CD', 'ST', 'PO'
+    :return: a list containing HEADERS/DATA union of all inventory types hidden in inventory_code.
+    """
+
+    assert key_type is not None, 'key type should not be None'
+    assert unique_inventory_codes is not None, 'inventory code  should not be None'
+    assert type(inventorylist) is DictType, 'Inventory list is not dict type'
+
+    try:
+        response = Response(data={'status': True, 'data': ''}, status=status.HTTP_200_OK)
+        # for each code in individual_codes union the data and return
+        response.data['data'] = [item for code in unique_inventory_codes for item in inventorylist.get(code)[key_type]]
+        return response
+    except Exception as e:
+        return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -14,10 +35,60 @@ def getList(data, society_keys):
     return [data.get(key, '') for key in society_keys]
 
 
-def inventoryPricePerFlat(data, inventory_array):
-    for arr in inventory_array:
-        data[price_per_flat[arr][0]] = (data[price_per_flat[arr][1]]) / (data['flat_count'])
-    return data
+def remove_duplicates_preserver_order(sequence):
+    """
+    Args:
+        sequence: a list  containing duplicatees
+    Returns: a list which does not contains duplicates whilst preserving order of elements in orginal lis
+    """
+    assert type(sequence) is ListType, 'Sequence must be list type'
+    seen = set()
+    seen_add = seen.add
+    return [x for x in sequence if not (x in seen or seen_add(x))]
+
+
+def get_unique_inventory_codes(inventory_array):
+    """
+    Args:
+        inventory_array: array of inventory codes like PL, SL, PLSL.
+    Returns: an array containing unique codes. Pl, PLSL would just give [ PL, SL]
+    """
+    try:
+        # our codes are two letters long (individual)
+        step = 2
+        # generate individual codes from inventory_array
+        individual_codes = [inventory_code[i:i + step] for inventory_code in inventory_array for i in range(0, len(inventory_code), step)]
+        return Response({'status': True, 'data': list(set(individual_codes))}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_union_inventory_price_per_flat(data, unique_inventory_codes, index):
+    """
+    This function adds an extra key to the dict data based on price and flat count keys
+    :param data: it's a dict containing 1 society data
+    :param unique_inventory_code: array of inventory codes like 'FL', 'CD', 'ST' etc
+    :return: calculates inventory price per flat by dividing two keys of the the dict and stores the result  in the dict itself
+    """
+
+    # assert type(data) is DictType, 'Data variable should be a dict'
+    # assert type(inventory_code) is StringType, 'inventory_code should be a String {0}.'.format(inventory_code)
+
+    try:
+        response = Response(data={'status': True, 'data': ''}, status=status.HTTP_200_OK)
+        # check if directly you can get the data kept against the inventory_code
+
+        # iterate over individual codes and calculate for each code and  return
+        for code in unique_inventory_codes:
+            if data.get('flat_count'):
+                price = data[price_per_flat[code][1]] if data.get(price_per_flat[code][1]) else 0
+                data[price_per_flat[code][0]] = (price) / (data['flat_count'])
+        response.data['data'] = data
+        return response
+
+    except Exception as e:
+        return Response({'status': False, 'error': '{0} at society index {1}'.format(e.message, index)},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 def get_related_dict():

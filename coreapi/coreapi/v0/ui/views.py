@@ -227,7 +227,6 @@ class GenerateSupplierIdAPIView(APIView):
                 'supplier_code': request.data['supplier_code'],
                 'supplier_name': request.data['supplier_name'],
             }
-
             response = ui_utils.get_supplier_id(request, data)
             if not response.data['status']:
                 return response
@@ -371,7 +370,6 @@ class SocietyAPIFiltersView(APIView):
             return Response(status=404)
 
 
-
 class SocietyAPIFilterSubAreaView(APIView):
     def post(self, request, format=None):
 
@@ -389,8 +387,6 @@ class SocietyAPIFilterSubAreaView(APIView):
         subarea_serializer = CitySubAreaSerializer(subareas, many=True)
 
         return Response(subarea_serializer.data, status = 200)
-
-
 
 
 class SocietyAPIListView(APIView):
@@ -835,7 +831,7 @@ class InventorySummaryAPIView(APIView):
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
-            inventory_object = InventorySummary.objects.get_inventory_object(data, id)
+            inventory_object = InventorySummary.objects.get_object(data, id)
             if not inventory_object:
                 return Response(data={'Inventory object does not exist for this supplier id {0}'.format(id)},
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -926,7 +922,7 @@ class InventorySummaryAPIView(APIView):
             # society = SupplierTypeSociety.objects.get(pk=id)
             # item = InventorySummary.objects.get(supplier=society)
             tower_response = ui_utils.get_tower_count(supplier_object, supplier_type_code)
-            if not tower_response.data['data']:
+            if not tower_response.data['status']:
                 return tower_response
             towercount = tower_response.data['data']
 
@@ -1210,37 +1206,49 @@ class InventorySummaryAPIView(APIView):
 
 class BasicPricingAPIView(APIView):
 
-            
     def get(self, request, id, format=None):
         response = {}
         try:
-            # basic_prices = PriceMappingDefault.objects.select_related().filter(supplier__supplier_id=id)
+            # get the supplier_type_code
+            supplier_type_code = request.data.get('supplier_type_code')
+            supplier_type_code = 'CP' #todo: change this when get supplier_type_code
+            if not supplier_type_code:
+                return Response({'status': False, 'error': 'Provide supplier_type_code'}, status=status.HTTP_400_BAD_REQUEST)
 
-            basic_prices_select = PriceMappingDefault.objects.select_related('supplier','adinventory_type','duration_type').filter(supplier_id=id)
-            basic_prices = PriceMappingDefault.objects.filter(supplier_id=id).values()
-            
-            for basic_item, basic_select_item in zip(basic_prices, basic_prices_select):
-                basic_item['supplier'] = basic_select_item.__dict__['_supplier_cache'].__dict__
-                basic_item['supplier'].pop("_state",None)
+            # get the content_type_response and content_type
+            content_type_response = ui_utils.get_content_type(supplier_type_code)
+            if not content_type_response.data['status']:
+                return None
+            content_type = content_type_response.data['data']
+
+            basic_prices = PriceMappingDefault.objects.filter(object_id=id, content_type=content_type).values()
+            selected_prices = PriceMappingDefault.objects.select_related('supplier', 'adinventory_type',
+                                                                      'duration_type').filter(object_id=id, content_type=content_type)
+
+            supplier_object = ui_utils.get_model(supplier_type_code).objects.get(pk=id)
+            towercount_response = ui_utils.get_tower_count(supplier_object, supplier_type_code)
+            if not towercount_response.data['status']:
+                return towercount_response
+            tower_count = towercount_response.data['data']
+
+            for basic_item, basic_select_item in zip(basic_prices, selected_prices):
+                basic_item['supplier'] = basic_select_item.__dict__['_supplier_cache'].__dict__ if basic_select_item.__dict__['_supplier_cache'] else None
                 basic_item['adinventory_type'] = basic_select_item.__dict__['_adinventory_type_cache'].__dict__
-                basic_item['adinventory_type'].pop("_state",None)
-                basic_item['duration_type'] =  basic_select_item.__dict__['_duration_type_cache'].__dict__
-                basic_item['duration_type'].pop("_state",None)
+                basic_item['adinventory_type'].pop("_state", None)
+                basic_item['duration_type'] = basic_select_item.__dict__['_duration_type_cache'].__dict__
+                basic_item['duration_type'].pop("_state", None)
 
-
-            towercount = SupplierTypeSociety.objects.get(pk=id).tower_count
-
-            response['tower_count'] = towercount
-
+            response['tower_count'] = tower_count
             response['prices'] = basic_prices
-           
+
             return Response(response, status=200)
 
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
         except PriceMappingDefault.DoesNotExist:
             return Response(status=404)
-       
+        except Exception as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, id, format=None):
 
@@ -1255,8 +1263,7 @@ class BasicPricingAPIView(APIView):
                     serializer.save()
             except:
                 return Response(serializer.errors, status=400)
-
-        return Response(serializer.data, status=201)
+        return Response({'status': True, 'data': 'success'}, status=201)
 
 
 class InventoryPricingAPIView(APIView):
@@ -1301,7 +1308,7 @@ class TowerAPIView(APIView):
             serializer_tower = UITowerSerializer(towers, many=True)
             #inventory_summary = InventorySummary.objects.get(supplier_id=id)
 
-            inventory_summary = InventorySummary.objects.get_inventory_object(request.data.copy(), id)
+            inventory_summary = InventorySummary.objects.get_object(request.data.copy(), id)
             if not inventory_summary:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             serializer_inventory = InventorySummarySerializer(inventory_summary)
@@ -1333,7 +1340,7 @@ class TowerAPIView(APIView):
 
         try:
 
-            inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(), id)
+            inventory_obj = InventorySummary.objects.get_object(request.data.copy(), id)
             if not inventory_obj:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             #inventory_obj = InventorySummary.objects.get(supplier=society)
@@ -1478,7 +1485,7 @@ class PosterAPIView(APIView):
             society = SupplierTypeSociety.objects.get(pk=id)
             posters = PosterInventory.objects.filter(supplier=society)
 
-            item = InventorySummary.objects.get_inventory_object(request.data.copy(), id)
+            item = InventorySummary.objects.get_object(request.data.copy(), id)
             if not item:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1603,7 +1610,7 @@ class FlierAPIView(APIView):
             response['flyers_data'] = serializer.data
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all().values()
 
-            item = InventorySummary.objects.get_inventory_object(request.data.copy(), id)
+            item = InventorySummary.objects.get_object(request.data.copy(), id)
             if not item:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -1700,7 +1707,7 @@ class StandeeBannerAPIView(APIView):
         towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
         society = SupplierTypeSociety.objects.get(pk=id)
 
-        item = InventorySummary.objects.get_inventory_object(request.data.copy(), id)
+        item = InventorySummary.objects.get_object(request.data.copy(), id)
         if not item:
             return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1746,7 +1753,7 @@ class StallAPIView(APIView):
 
         #item = InventorySummary.objects.get(supplier=society)
 
-        item = InventorySummary.objects.get_inventory_object(request.data.copy(), id)
+        item = InventorySummary.objects.get_object(request.data.copy(), id)
         if not item:
             return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 

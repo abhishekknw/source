@@ -14,16 +14,18 @@ class Migration(migrations.Migration):
         :param schema_editor: editor
         :return: Nothing
         """
-        myModel = apps.get_model('v0', 'SocietyInventoryBooking')
-        ContentType = apps.get_model('contenttypes', 'ContentType')
-        content_type = ContentType.objects.get(model='suppliertypesociety')
-
-        for row in myModel.objects.all():
-            supplier_type = SupplierTypeSociety.objects.get(supplier_id=row.supplier.supplier_id)
-            row.content_type = content_type
-            row.object_id = row.supplier.supplier_id
-            row.content_object = supplier_type
-            row.save()
+        try:
+            myModel = apps.get_model('v0', 'SocietyInventoryBooking')
+            ContentType = apps.get_model('contenttypes', 'ContentType')
+            content_type = ContentType.objects.get(model='suppliertypesociety')
+            for row in myModel.objects.all():
+                supplier_type = SupplierTypeSociety.objects.get(supplier_id=row.supplier.supplier_id)
+                row.content_type = content_type
+                row.object_id = row.supplier.supplier_id
+                row.content_object = supplier_type
+                row.save()
+        except Exception:
+            pass
 
     dependencies = [
         ('v0', '0020_auto_20160928_0800'),
