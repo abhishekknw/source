@@ -138,7 +138,6 @@ class ProposalCorporateSerializer(ModelSerializer):
             'name',
             'address1',
             'subarea',
-            'location_type',
             'longitude',
             'latitude',
             'shortlisted',
