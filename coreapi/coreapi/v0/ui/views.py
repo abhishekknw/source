@@ -10,7 +10,7 @@ from django.db import IntegrityError
 from django.db import transaction
 from django.db.models import Q
 from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.forms.models import model_to_dict
 
 # third party imports
@@ -218,7 +218,6 @@ class GenerateSupplierIdAPIView(APIView):
     """
     def post(self, request, format=None):
         try:
-
             data = {
                 'city': request.data['city_id'],
                 'area': request.data['area_id'],
@@ -2088,7 +2087,8 @@ def get_availability(data):
 
 # This API is for saving basic tab details of corporate space. Divided into four parts mentioned in the comments.
 
-class saveBasicCorporateDetailsAPIView(APIView):
+
+class SaveBasicCorporateDetailsAPIView(APIView):
 
     def post(self, request,id,format=None):
         try:
@@ -2096,7 +2096,7 @@ class saveBasicCorporateDetailsAPIView(APIView):
             companies = []
             error = {}
 
-            #Round 1 Saving basic data
+            # Round 1 Saving basic data
             if 'supplier_id' in request.data:
                 corporate = SupplierTypeCorporate.objects.filter(pk=request.data['supplier_id']).first()
                 if corporate:
@@ -2114,10 +2114,9 @@ class saveBasicCorporateDetailsAPIView(APIView):
 
             # Round 2 Saving List of companies
 
-
             corporate_id = request.data['supplier_id']
 
-            companies_name = request.data['list1']
+            companies_name = request.data.get('list1')
             company_ids = list(CorporateParkCompanyList.objects.filter(supplier_id=corporate_id).values_list('id',flat=True))
 
             for company_name in companies_name:
@@ -2127,7 +2126,7 @@ class saveBasicCorporateDetailsAPIView(APIView):
                     company_ids.remove(company.id)
                     companies.append(company)
                 else:
-                    company = CorporateParkCompanyList(supplier_id_id=corporate_id,name=company_name)
+                    company = CorporateParkCompanyList(supplier_id_id=corporate_id, name=company_name)
                     companies.append(company)
 
             CorporateParkCompanyList.objects.bulk_create(companies)
@@ -2171,13 +2170,13 @@ class saveBasicCorporateDetailsAPIView(APIView):
             ContactDetailsGeneric.objects.filter(id__in=contacts_ids).delete()
 
             '''
-
             # Round 4 - Creating number of fields in front end in Building Model.
             buildingcount = CorporateBuilding.objects.filter(corporatepark_id=request.data['supplier_id']).count()
             diff_count = 0
             new_list = []
-            if request.data['building_count'] > buildingcount:
-                diff_count = request.data['building_count'] - buildingcount
+            building_count_recieved = int(request.data['building_count'])
+            if building_count_recieved > buildingcount:
+                diff_count = building_count_recieved - buildingcount
             if 'building_count' in request.data:
                 for i in range(diff_count):
                     instance = CorporateBuilding(corporatepark_id_id=request.data['supplier_id'])
@@ -2194,21 +2193,25 @@ class saveBasicCorporateDetailsAPIView(APIView):
 
         return Response(status=200)
 
-
     def get(self, request, id, format=None):
         try:
-            data1 = SupplierTypeCorporate.objects.get(supplier_id=id)
-            serializer = SupplierTypeCorporateSerializer(data1)
-            data2 = CorporateParkCompanyList.objects.filter(supplier_id=id)
-            serializer1 = CorporateParkCompanyListSerializer(data2, many=True)
-            data3 = ContactDetailsGeneric.objects.filter(object_id=id)
-            serializer2 = ContactDetailsGenericSerializer(data3, many=True)
-            result = {'basicData' : serializer.data , 'companyList' : serializer1.data , 'contactData' : serializer2.data}
+            supplier = SupplierTypeCorporate.objects.get(supplier_id=id)
+            serializer = SupplierTypeCorporateSerializer(supplier)
+            companies = CorporateParkCompanyList.objects.filter(supplier_id=id)
+            corporate_serializer = CorporateParkCompanyListSerializer(companies, many=True)
+            contacts = ContactDetailsGeneric.objects.filter(object_id=id)
+            contact_detail_serializer = ContactDetailsGenericSerializer(contacts, many=True)
+            result = {'basicData': serializer.data, 'companyList': corporate_serializer.data,
+                      'contactData': contact_detail_serializer.data}
             return Response(result)
-        except SupplierTypeCorporate.DoesNotExist:
-            return Response(status=404)
-        except SupplierTypeCorporate.MultipleObjectsReturned:
-            return Response(status=406)
+
+        except ObjectDoesNotExist as e:
+            return Response({"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        except MultipleObjectsReturned as e:
+            return Response({"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 # class ContactDetailsGenericAPIView(APIView):
@@ -2236,24 +2239,25 @@ class saveBasicCorporateDetailsAPIView(APIView):
 
 
 # This API is for saving the buildings and wings details of a corporate space
+
 class SaveBuildingDetailsAPIView(APIView):
 
     def get(self,request,id, format=None):
         try:
             corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
         except SupplierTypeCorporate.DoesNotExist:
-            return Response({'message': 'Invalid Corporate ID'}, status=406)
+            return Response({'message': 'Invalid Corporate ID'}, status=status.HTTP_400_BAD_REQUEST)
 
         buildings = corporate.get_buildings()
         building_serializer = CorporateBuildingGetSerializer(buildings, many=True)
-        return Response(building_serializer.data, status = 200)
+        return Response(building_serializer.data, status = status.HTTP_200_OK)
 
     def post(self,request,id,format=None):
 
         try:
             corporate_object = SupplierTypeCorporate.objects.get(supplier_id=id)
         except SupplierTypeCorporate.DoesNotExist:
-            return Response({'message': 'Invalid Corporate ID'}, status=404)
+            return Response({'message': 'Invalid Corporate ID'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
 
@@ -2307,14 +2311,14 @@ class SaveBuildingDetailsAPIView(APIView):
             if buildings_ids:
                 CorporateBuilding.objects.filter(id__in=buildings_ids).delete()
 
+            return Response({"status": True, "data": ""}, status=status.HTTP_200_OK)
+
         except KeyError as e:
             return Response({"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
         except ObjectDoesNotExist as e:
             return Response({"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"status": True, "data": ""}, status=status.HTTP_200_OK)
 
 
 # This API is for fetching the companies and buildings of a specific corporate space.
