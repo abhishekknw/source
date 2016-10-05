@@ -28,11 +28,14 @@ def populate_content_types(apps, schema):
     model_names = ['ContactDetails', 'Events', 'FlyerInventory', 'ImageMapping', 'PosterInventory', 'SocietyTower', \
                    'StallInventory', 'WallInventory'
                    ]
-    load_names = [apps.get_model('v0', model) for model in model_names]
-    ContentType = apps.get_model('contenttypes', 'ContentType')
-    content_type = ContentType.objects.get(model='suppliertypesociety')
-    for name in load_names:
-        do_each_model(name, content_type)
+    try:
+        load_names = [apps.get_model('v0', model) for model in model_names]
+        ContentType = apps.get_model('contenttypes', 'ContentType')
+        content_type = ContentType.objects.get(model='suppliertypesociety')
+        for name in load_names:
+            do_each_model(name, content_type)
+    except Exception:
+        pass
 
 
 class Migration(migrations.Migration):

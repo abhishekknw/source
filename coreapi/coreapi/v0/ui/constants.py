@@ -1,6 +1,4 @@
 
-from v0.models import SupplierTypeSociety, SupplierTypeCorporate, SupplierTypeGym, SupplierTypeSalon
-
 keys = [
 
     'city', 'area', 'sub_area', 'supplier_type', 'supplier_name', 'supplier_code', \
@@ -25,5 +23,15 @@ decision = {
 
 # add new supplier type and corresponding class here
 
-suppliers = {'RS': SupplierTypeSociety, 'CP': SupplierTypeCorporate, 'GY': SupplierTypeGym,
-             'SA': SupplierTypeSalon}
+# suppliers = {'RS': v0.models.SupplierTypeSociety, 'CP': v0.models.SupplierTypeCorporate,
+#              'GY': v0.models.SupplierTypeGym,
+#              'SA': v0.models.SupplierTypeSalon}
+
+tower_count_attribute_mapping = {
+    'RS': 'tower_count',
+    'CP': 'building_count',
+    'GY': 'none',
+    'SA': 'none'
+}
+string_suppliers = {'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate',
+                    'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon'}

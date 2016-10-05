@@ -2,6 +2,7 @@ import math, random, string, operator
 #import tablib
 import csv
 import json
+import datetime
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models import Q, Sum
@@ -35,7 +36,7 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
 
 
 from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys,\
-                      inventorylist, society_keys, flat_type_dict, supplier_code_filter_params
+                      inventorylist, society_keys, flat_type_dict
 
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
@@ -655,7 +656,7 @@ class CreateProposalAPIView(APIView):
                 society_detail['flat_count'] = item.society.flat_count
                 society_detail['tower_count'] = item.society.tower_count
                 society_detail['inventory'] = []
-                inv_details = InventorySummary.objects.get_inventory_object(request.data.copy(), id)
+                inv_details = InventorySummary.objects.get_object(request.data.copy(), id)
                 if not inv_details:
                     return Response({'status': False, 'error': 'Inventory object not found for {0} id'.format(id)},
                                     status=status.HTTP_400_BAD_REQUEST)
@@ -956,7 +957,8 @@ class SpacesOnCenterAPIView(APIView):
                 for society in societies_temp:
                     if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         society['society_latitude'], society['society_longitude']):
-                        society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(), society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                    society['supplier_id'])
                         adinventory_type_dict = ui_utils.adinventory_func()
                         duration_type_dict = ui_utils.duration_type_func()
 
@@ -966,7 +968,7 @@ class SpacesOnCenterAPIView(APIView):
                             society['shortlisted'] = True
                             society['buffer_status'] = False
                             # obj = InventorySummaryAPIView()
-                               
+
                             if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
                                 society['total_poster_count'] = society_inventory_obj.total_poster_count
                                 society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
@@ -988,7 +990,7 @@ class SpacesOnCenterAPIView(APIView):
                         societies.append(society)
                         societies_count += 1
 
-              
+
                 societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
                     standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
@@ -1136,8 +1138,8 @@ class SpacesOnCenterAPIView(APIView):
             societies_count = 0
             for society in societies_temp:
                 if website_utils.space_on_circle(latitude, longitude, radius, society['society_latitude'], society['society_longitude']):
-                    society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(),
-                                                                                          society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                society['supplier_id'])
                     if society_inventory_obj:
                     #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
@@ -1257,10 +1259,11 @@ class GetFilteredSuppliersAPIView(APIView):
             supplier_code = request.query_params.get('supplier_type_code')
             filter_query = Q()
 
+            supplier_code = 'RS'
+
             if not supplier_code:
-                supplier_code = 'CP'
-                # return Response({'status': False, 'error': 'Provide supplier type code'},
-                #                 status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status': False, 'error': 'Provide supplier type code'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
             if not latitude or not longitude or not radius:
                 return Response({'message': 'Please Provide longitude and latitude and radius as well'}, status=406)
@@ -1268,6 +1271,7 @@ class GetFilteredSuppliersAPIView(APIView):
             latitude = float(latitude)
             longitude = float(longitude)
             radius = float(radius)
+
 
             if flat_type_params:
                 flat_types = []
@@ -1312,19 +1316,23 @@ class GetFilteredSuppliersAPIView(APIView):
             filter_query &= filter_query_response.data['data']
 
             # get all suppliers  with all columns for the filter we constructed.
-            suppliers = supplier_code_filter_params[supplier_code]['MODEL'].objects.filter(filter_query)
-            serializer = supplier_code_filter_params[supplier_code]['SERIALIZER'](suppliers, many=True)
+            suppliers = ui_utils.get_model(supplier_code).objects.filter(filter_query)
+            # suppliers = supplier_code_filter_params[supplier_code]['MODEL'].objects.filter(filter_query)
+
+            serializer = ui_utils.get_serializer(supplier_code)(suppliers, many=True)
+            #serializer = supplier_code_filter_params[supplier_code]['SERIALIZER'](suppliers, many=True)
             suppliers = serializer.data
             supplier_ids = []
             suppliers_count = 0
             suppliers_data = []
-            print filter_query
+
             # iterate over all suppliers to  generate the final response
             for supplier in suppliers:
                 supplier['supplier_latitude'] = supplier['society_latitude'] if supplier['society_latitude'] else supplier['latitude']
                 supplier['supplier_longitude'] = supplier['society_longitude'] if supplier['society_longitude'] else supplier['longitude']
                 if website_utils.space_on_circle(latitude, longitude, radius, supplier['supplier_latitude'],supplier['supplier_longitude']):
-                    supplier_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(),supplier['supplier_id'])
+                    supplier_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                 supplier['supplier_id'])
                     if supplier_inventory_obj:
 
                     # supplier_inventory_obj = InventorySummary.objects.get(supplier_id=supplier['supplier_id'])
@@ -1361,11 +1369,11 @@ class GetFilteredSuppliersAPIView(APIView):
                     suppliers_data.append(supplier)
                     suppliers_count += 1
 
-            suppliers_inventory_count = InventorySummary.objects.filter_inventory_objects(
-                {'supplier_type_code': supplier_code}, supplier_ids).aggregate(posters=Sum('total_poster_count'), \
-                                                                               standees=Sum('total_standee_count'),
-                                                                               stalls=Sum('total_stall_count'),
-                                                                               fliers=Sum('flier_frequency'))
+            suppliers_inventory_count = InventorySummary.objects.filter_objects({'supplier_type_code': supplier_code},
+                                                                                supplier_ids).aggregate(posters=Sum('total_poster_count'), \
+                                                                                                        standees=Sum('total_standee_count'),
+                                                                                                        stalls=Sum('total_stall_count'),
+                                                                                                        fliers=Sum('flier_frequency'))
 
             response['suppliers'] = suppliers_data
             response['supplier_inventory_count'] = suppliers_inventory_count
@@ -1439,7 +1447,8 @@ class FinalProposalAPIView(APIView):
                 for society in societies_temp:
                     if space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
                         society['society_latitude'], society['society_longitude']):
-                        society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(), society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                    society['supplier_id'])
                         #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
                         society['buffer_status'] = False
@@ -1687,8 +1696,8 @@ class CurrentProposalAPIView(APIView):
                 societies_shortlisted_count = 0
 
                 for society in societies_shortlisted_temp:
-                    society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(),
-                                                                                          society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                society['supplier_id'])
                     #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                     society['shortlisted'] = True
                     society['buffer_status'] = False
@@ -1728,8 +1737,8 @@ class CurrentProposalAPIView(APIView):
                 societies_buffered = []
                 societies_buffered_count = 0
                 for society in societies_buffered_temp:
-                    society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(),
-                                                                                          society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                society['supplier_id'])
 
                     #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                     society['shortlisted'] = True
@@ -1894,7 +1903,8 @@ class ProposalHistoryAPIView(APIView):
                     societies_shortlisted_count = 0
                     # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
                     for society in societies_shortlisted_temp:
-                        society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(), society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                    society['supplier_id'])
 
                         #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
@@ -1934,7 +1944,8 @@ class ProposalHistoryAPIView(APIView):
                     societies_buffered = []
                     societies_buffered_count = 0
                     for society in societies_buffered_temp:
-                        society_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(), society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                    society['supplier_id'])
 
                         #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
@@ -2076,42 +2087,122 @@ class SaveSocietyData(APIView):
 class ExportData(APIView):
     """
      Exports supplier data on grid view page.
+     The API is divided into two phases :
+     1. extension of Headers and DATA keys. This is because one or more inventory type selected map to more HEADER
+     and hence more DATA keys
+     2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
     """
-    def post(self, request, proposal_id = None,  format=None):
-        wb = Workbook()
-        #ws = wb.active
-        global inventory_array
-        ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
-        for abc in request.data:
-            inventory_array = abc['center']['society_inventory_type_selected']
-            for arr in inventory_array:
-                 header = []
-                 header = inventorylist[arr]['HEADER']
-                 society_keys.extend(inventorylist[arr]['DATA'])
-                 proposal_header_keys.extend(header)
-        for col in range(1):
-            ws.append(proposal_header_keys)
 
-        master_list = []
-        for obj in request.data:
+    def post(self, request, proposal_id=None, format=None):
+        try:
+            wb = Workbook()
+            from constants import society_keys, proposal_header_keys
 
-            for item in obj['societies']:
-                center_list = []
-                for key in center_keys:
-                    center_list.append(obj['center'][key])
+            # ws = wb.active
+            ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
 
-                local_list = []
-                item = website_utils.inventoryPricePerFlat(item, inventory_array)
-                temp = website_utils.getList(item, society_keys)
-                local_list.extend(temp)
+            # iterating through centers in request.data array
+            for center in request.data:
+                inventory_array = center['center']['society_inventory_type_selected']
 
-                center_list.extend(local_list)
-                ws.append(center_list)
+                # get the unique codes by combining all the codes
+                response = website_utils.get_unique_inventory_codes(inventory_array)
 
-            # apending from center
-        wb.save("getmachadalo10.xlsx")
+                if not response.data['status']:
+                    return response
+                unique_inventory_codes = response.data['data']
 
-        return Response(data={"successs"})
+                # get the union of HEADERS
+                response = website_utils.get_union_keys_inventory_code('HEADER', unique_inventory_codes)
+                if not response.data['status']:
+                    return response
+                extra_header_keys = response.data['data']
+
+                # get the union of DATA
+                response = website_utils.get_union_keys_inventory_code('DATA', unique_inventory_codes)
+                if not response.data['status']:
+                    return response
+                extra_supplier_keys = response.data['data']
+
+                # extend the society_keys
+                society_keys.extend(extra_supplier_keys)
+
+                # extend the proposal_header_keys
+                proposal_header_keys.extend(extra_header_keys)
+
+            # remove duplicates if any
+            proposal_header_keys = website_utils.remove_duplicates_preserver_order(proposal_header_keys)
+            society_keys = website_utils.remove_duplicates_preserver_order(society_keys)
+
+            # set the final headers in the sheet
+            for col in range(1):
+                ws.append(proposal_header_keys)
+
+            # populate sheet row by row. Number of rows will be equal to number of societies. 1 society = 1 row
+            master_list = []
+            # for all centers in request.data
+
+            for center in request.data:
+                # get the inventory_array containg all the codes selected for this center
+                inventory_array = center['center']['society_inventory_type_selected']
+
+                # get the unique codes by combining all the codes
+                response = website_utils.get_unique_inventory_codes(inventory_array)
+                if not response.data['status']:
+                    return response
+                unique_inventory_codes = response.data['data']
+
+                # for all societies in societies array
+                for index, item in enumerate(center['societies']):
+
+                    # iterate over center_keys and make a partial row with data from center object
+                    center_list = []
+                    for key in center_keys:
+                        center_list.append(center['center'][key])
+
+                    # calculates inventory price per flat and  store the result in dict itself
+                    local_list = []
+
+                    # modify the dict with extra keys for pricing
+                    response = website_utils.get_union_inventory_price_per_flat(item, unique_inventory_codes, index)
+                    if not response.data['status']:
+                        return response
+                    item = response.data['data']
+
+                    # use the modified dict in the getList function that makes a list out of keys present in society_keys
+                    temp = website_utils.getList(item, society_keys)
+                    local_list.extend(temp)
+
+                    # append this list to center_list to make final row.
+                    center_list.extend(local_list)
+
+                    # add row to the sheet
+                    ws.append(center_list)
+
+            file_name = 'machadalo_{0}.xlsx'.format(str(datetime.datetime.now()))
+            wb.save(file_name)
+
+            return Response(data={"successs"})
+        except Exception as e:
+            return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ImportData(APIView):
+    """
+    This API basically takes an excel sheet , process the data and saves it in the database.
+    """
+    def get(self, request, proposal_id=None):
+        """
+        Args:
+            request: request param
+            proposal_id: proposal_id
+
+        Returns: Saves the  data in db
+
+        """
+        pass
+
+
 
 
 class SaveContactDetails(APIView):
