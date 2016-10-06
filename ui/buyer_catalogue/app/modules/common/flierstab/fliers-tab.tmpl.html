@@ -5,9 +5,7 @@
   </div>
   <div class="col-md-10" style="text-align: center;">
    <div class="row">
-     <div class="col-md-4"><img src="img/flyer1.jpg" width="180px" height="180px" alt=""/><br></div>
-     <div class="col-md-4"><img src="img/flyer2.jpg" width="180px" height="180px" alt=""/><br></div>
-     <div class="col-md-4"><img src="img/flyer3.jpg" width="180px" height="180px" alt=""/><br></div>
+     <div style="margin-left:10px" ng-repeat="image in society_images" ng-if="image.name=='Fliers'" class="col-md-4"><img src="http://mdimages.s3.amazonaws.com/{{image.image_url}}" width="180px" height="180px" alt=""/></div>
    </div>
   </div>
   <div class="col-md-1" style="margin-top:150px">

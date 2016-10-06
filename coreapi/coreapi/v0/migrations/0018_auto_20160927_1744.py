@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import migrations
+from django.db import models, migrations
 from v0.models import SupplierTypeSociety
-
 
 def populate(apps, schema_editor):
     """
-    populates content_type, object_id, content_object of inventory_summary table
+    populates content_type, object_id, content_object of  table
     assuming the existing rows  are only mapped to supplier_society table
     :param apps: apps
     :param schema_editor: editor
     :return: Nothing
     """
     try:
-        myModel = apps.get_model('v0', 'InventorySummary')
+        myModel = apps.get_model('v0', 'PriceMappingDefault')
         ContentType = apps.get_model('contenttypes', 'ContentType')
         content_type = ContentType.objects.get(model='suppliertypesociety')
 
@@ -28,11 +27,13 @@ def populate(apps, schema_editor):
         pass
 
 
+
 class Migration(migrations.Migration):
+
     dependencies = [
-        ('v0', '0012_auto_20160919_1254'),
+        ('v0', '0017_auto_20160927_1742'),
     ]
 
     operations = [
-        migrations.RunPython(populate),
+    	migrations.RunPython(populate),
     ]

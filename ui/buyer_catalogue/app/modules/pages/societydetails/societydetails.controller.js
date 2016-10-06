@@ -10,18 +10,17 @@ angular.module('machadaloPages')
      $scope.totalInventoryCount = {};
      societyDetailsService.getSociety($rootScope.societyId)
       .success(function (response) {
-        $scope.society = response;
-        $rootScope.societyname = response.society_name;
-        $scope.residentCount = estimatedResidents(response.flat_count);
-        $scope.flatcountflier = response.flat_count;
-        console.log(response, "vidhi");
+        $scope.society_images = response.society_images;
+        $scope.society = response.society_data;
+        $rootScope.societyname = response.society_data.society_name;
+        $scope.residentCount = estimatedResidents(response.society_data.flat_count);
+        $scope.flatcountflier = response.society_data.flat_count;
      });
 
      societyDetailsService.get_inventory_summary($rootScope.societyId)
      .success(function (response){
           $scope.inventoryDetails = response;
           $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);
-          console.log($scope.inventoryDetails);
      });
 
      function estimatedResidents (flatcount){
@@ -33,20 +32,16 @@ angular.module('machadaloPages')
      }
      function inventoryCount (inventoryDetails){
             var totalPoster = inventoryDetails.lift_count + inventoryDetails.nb_count ;
-            var totalAddSpaces = inventoryDetails.lift_count + inventoryDetails.nb_count + inventoryDetails.standee_campaign + inventoryDetails.stall_or_cd_campaign + inventoryDetails.flier_frequency;
             $scope.totalInventoryCount = {
                totalPoster  : totalPoster,
-               totalAddSpaces: totalAddSpaces,
             };
             return $scope.totalInventoryCount;
      }
 
     if($rootScope.campaignId){
-        console.log("INside if");
         societyDetailsService.getShortlistedSocietyCount($rootScope.campaignId)
         .success(function(response,status){
             $scope.societies_count = response.count;
-            console.log(response);
 
         }).error(function(response,status){
             console.log("error ",response.error);
@@ -69,8 +64,6 @@ angular.module('machadaloPages')
                 break;
             }
         }
-
-        console.log($scope.society_ids)
     });
 
 
@@ -81,14 +74,12 @@ angular.module('machadaloPages')
             var current_path = $location.path()
             var pos = current_path.lastIndexOf("/");
             var required_path = current_path.slice(0,pos+1) + $scope.society_ids[$scope.index] ;
-            console.log("required_path  ",required_path);
             $location.path(required_path);
             // history.pushState({bar : "foo"}, "page 3", required_path);
             // setCurrentPage(required_path);
         }else{
             $scope.index = $scope.index - 1;
         }
-        console.log("$index is : ",$scope.index)
     }
 
     $scope.previousSociety = function(){
@@ -97,7 +88,6 @@ angular.module('machadaloPages')
             var current_path = $location.path()
             var pos = current_path.lastIndexOf("/");
             var required_path = current_path.slice(0,pos+1) + $scope.society_ids[$scope.index] ;
-            console.log("required_path  ",required_path);
             $location.path(required_path);
             // history.pushState({bar : "foo"}, "page 3", required_path);
             // setCurrentPage(required_path);
@@ -105,11 +95,9 @@ angular.module('machadaloPages')
         else{
            $scope.index = $scope.index + 1;
         }
-        console.log("$index is : ",$scope.index)
     }
 
     $scope.societyByIndex = function(index){
-        console.log("index received is : ", index);
         $scope.numberError = false;
         if(index <= $scope.maxlength && index >= $scope.minlength){
             $scope.index = index;
@@ -126,7 +114,6 @@ angular.module('machadaloPages')
              //  }, 2000);
         }
         $scope.societyIndex = undefined;
-        console.log("$index is : ",$scope.index)
     }
 
      $scope.societyList = function() {
@@ -139,8 +126,6 @@ angular.module('machadaloPages')
        societyDetailsService.addShortlistedSociety($rootScope.campaignId, id)
         .success(function (response){
             // $scope.model = response;
-              console.log("You received response as");
-              console.log(response);
               // $location.path("manageCampaign/shortlisted/" + $rootScope.campaignId + "/societies");
               $scope.disable = true;
               $scope.societies_count = response.count;

@@ -11,17 +11,19 @@
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 
 from __future__ import unicode_literals
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import date
-
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.fields import GenericRelation
+
+import managers
+
 
 AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
@@ -32,6 +34,8 @@ AD_INVENTORY_CHOICES = (
     ('BANNER', 'Banner'),
 )
 
+
+
 class ImageMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     location_id = models.CharField(db_column='LOCATION_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
@@ -40,7 +44,10 @@ class ImageMapping(models.Model):
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
     comments = models.CharField(db_column='COMMENTS', max_length=100, blank=True, null=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True, null=True)
-
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
 
     class Meta:
         db_table = 'image_mapping'
@@ -80,31 +87,6 @@ class AdInventoryLocationMapping(models.Model):
         db_table = 'ad_inventory_location_mapping'
 
 
-
-
-
-'''@receiver(post_save, sender=AdInventoryLocationMapping)
-def update_price_mapping(sender, **kwargs):
-    loc_map = kwargs.get('instance')
-    type1 = kwargs.get('type')
-    print type1
-    print str(loc_map)
-    if loc_map.adinventory_name == 'PO':
-        ad_type = AdInventoryType.objects.filter(adinventory_name=loc_map.adinventory_name)
-    else:
-        ad_type = AdInventoryType.objects.filter(adinventory_name=loc_map.adinventory_name) #add type = stall/standee.type
-    print 'adele'
-    default_prices = PriceMappingDefault.objects.filter(adinventory_type__in=ad_type)
-    for key in default_prices:
-        pm = PriceMapping(adinventory_id = loc_map, adinventory_type=key.adinventory_type,
-                          society_price = key.society_price, business_price=key.business_price,
-                          duration_type = key.duration_type, supplier=key.supplier)
-        pm.save()
-
-
-'''
-
-
 class AdInventoryType(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=20,
@@ -132,10 +114,13 @@ class PriceMappingDefault(models.Model):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True, on_delete=models.CASCADE)
     #adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True, on_delete=models.CASCADE)
-    society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
+    supplier_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
     business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
-
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
     class Meta:
         db_table = 'price_mapping_default'
 
@@ -149,9 +134,10 @@ class PriceMapping(models.Model):
     society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
     business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
+
+
     class Meta:
         db_table = 'price_mapping'
-
 
 
 class BannerInventory(models.Model):
@@ -304,8 +290,6 @@ class NoticeBoardDetails(models.Model):
         db_table = 'notice_board_details'
 
 
-
-
 class PosterInventory(models.Model):
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', primary_key=True, max_length=25)  # Field name made lowercase.
     tower_name = models.CharField(db_column='TOWER_NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
@@ -319,6 +303,10 @@ class PosterInventory(models.Model):
     poster_count_per_notice_board = models.IntegerField(db_column='POSTER_COUNT_PER_NOTICE_BOARD', blank=True, null=True)  # Field name made lowercase.
     inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=255, blank=True, null=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
 
     class Meta:
 
@@ -349,7 +337,6 @@ class FlatType(models.Model):
     flat_rent = models.IntegerField(db_column='FLAT_RENT', blank=True, null=True)  # Field name made lowercase.
     average_rent_per_sqft = models.FloatField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
 
-
     class Meta:
         db_table = 'flat_type'
 
@@ -363,11 +350,11 @@ class StandeeInventory(models.Model):
     type = models.CharField(db_column='STANDEE_TYPE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     standee_size = models.CharField(db_column='STANDEE_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     standee_sides = models.CharField(db_column='STANDEE_SIDES', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    #standee_weekly_price_society = models.CharField(db_column='STANDEE_WEEKLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    #standee_monthly_price_society = models.CharField(db_column='STANDEE_MONTHLY_PRICE_SOCIETY', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    #standee_weekly_price_business = models.CharField(db_column='STANDEE_WEEKLY_PRICE_BUSINESS', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    #standee_monthly_price_business = models.CharField(db_column='STANDEE_MONTHLY_PRICE_BUSINESS', max_length=5, blank=True, null=True)  # Field name made lowercase.
     tower = models.ForeignKey('SocietyTower', db_column='TOWER_ID', related_name='standees', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
 
     def get_tower_name1(self):
         try:
@@ -429,6 +416,10 @@ class WallInventory(models.Model):
     wall_frame_status = models.CharField(db_column='WALL_FRAME_STATUS', max_length=5, blank=True, null=True)  # Field name made lowercase.
     wall_inventory_status = models.CharField(db_column='WALL_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='walls', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
 
     class Meta:
 
@@ -478,6 +469,10 @@ class ContactDetails(models.Model):
     email = models.CharField(db_column='CONTACT_EMAILID',  max_length=50, blank=True, null=True)  # Field name made lowercase.
     spoc = models.CharField(db_column='SPOC', max_length=5, blank=True, null=True)  # Field name made lowercase.
     contact_authority = models.CharField(db_column='CONTACT_AUTHORITY', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
 
     class Meta:
 
@@ -543,6 +538,11 @@ class Events(models.Model):
     #photograph_3 = models.CharField(db_column='PHOTOGRAPH_3', max_length=45, blank=True, null=True)  # Field name made lowercase.
     #event_plan_map = models.CharField(db_column='EVENT_PLAN_MAP', max_length=45, blank=True, null=True)  # Field name made lowercase.
     event_status = models.CharField(db_column='EVENT_STATUS', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
+
 
     class Meta:
 
@@ -617,6 +617,7 @@ class PoleInventory(models.Model):
     pole_location = models.CharField(db_column='POLE_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
     pole_inventory_status = models.CharField(db_column='POLE_INVENTORY_STATUS', max_length=20, blank=True, null=True)  # Field name made lowercase.
 
+
     class Meta:
 
         db_table = 'pole_inventory'
@@ -690,6 +691,11 @@ class StallInventory(models.Model):
     furniture_details = models.CharField(db_column='STALL_FURNITURE_DETAILS', max_length=50, blank=True, null=True)  # Field name made lowercase.
     stall_size = models.CharField(db_column='STALL_SIZE', max_length=20, blank=True, null=True)  # Field name made lowercase.
     stall_timing = models.CharField(db_column='STALL_TIMINGS', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
+
 
     #type = models.CharField(db_column='STALL_TYPES', max_length=20, blank=True, null=True)  # Field name made lowercase.
     #stall_timings_morning = models.CharField(db_column='STALL_TIMINGS_morning', max_length=10, blank=True, null=True)  # Field name made lowercase.
@@ -717,6 +723,10 @@ class FlyerInventory(models.Model):
     mailbox_allowed = models.BooleanField(db_column='MAILBOX_ALLOWED', default=False)
     d2d_allowed = models.BooleanField(db_column='D2D_ALLOWED', default=False)
     lobbytolobby_allowed = models.BooleanField(db_column='LOBBYTOLOBBY_ALLOWED', default=False)
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
 
     class Meta:
 
@@ -794,7 +804,7 @@ class SportsInfra(models.Model):
 
 
 
-class SupplierTypeSociety(models.Model):
+class  SupplierTypeSociety(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
     supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
     society_name = models.CharField(db_column='SOCIETY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
@@ -909,7 +919,9 @@ class SupplierTypeSociety(models.Model):
 
     def get_society_image(self):
         try:
-            image_list = list(self.images.all().filter(location_type="Society")[:1])
+            #Start : Code changed to save tag of image by name field
+            image_list = list(self.images.all().filter(name="Society")[:1])
+            #End : Code changed to save tag of image by name field
         except:
             return None
         if image_list:
@@ -1151,6 +1163,10 @@ class SocietyTower(models.Model):
     flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', default=0)  # Field name made lowercase.
     standee_count = models.IntegerField(db_column='STANDEE_COUNT', default=0)  # Field name made lowercase.
     average_rent_per_sqft = models.IntegerField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
 
 
     def get_notice_board_list(self):
@@ -1209,7 +1225,6 @@ class BusinessAccountContact(models.Model):
         #db_table = 'BUSINESS_ACCOUNT_CONTACT'
 
 
-
 class BusinessInfo(models.Model):
     ## changed -> on_delete = models.CASCADE
     business_id = models.CharField(db_column='BUSINESS_ID',max_length=15, primary_key=True)
@@ -1261,12 +1276,11 @@ class BusinessTypes(models.Model):
         db_table = 'business_types'
 
 
-
 class BusinessSubTypes(models.Model):
-
-    id                  = models.AutoField(db_column='ID', primary_key=True)
-    business_type       = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE', null=True, on_delete=models.CASCADE) ## changed -> business
-    business_sub_type   = models.CharField(db_column='SUBTYPE', max_length=100, blank=True)
+    id = models.AutoField(db_column='ID', primary_key=True)
+    business_type = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE',
+                                      null=True, on_delete=models.CASCADE)  ## changed -> business
+    business_sub_type = models.CharField(db_column='SUBTYPE', max_length=100, blank=True)
     business_sub_type_code = models.CharField(db_column='SUBTYPE_CODE', max_length=3, blank=True, null=True)
 
     def __str__(self):
@@ -1277,7 +1291,7 @@ class BusinessSubTypes(models.Model):
 
     class Meta:
         db_table = 'business_subtypes'
-        #db_table = 'BUSINESS_SUBTYPES'
+        # db_table = 'BUSINESS_SUBTYPES'
 
 
 class AccountInfo(models.Model):
@@ -1375,6 +1389,9 @@ class ProposalInfo(models.Model):
 
 
 class ProposalCenterMapping(models.Model):
+    """
+    for a given proposal, stores lat, long, radius, city, pincode etc.
+    """
     proposal    = models.ForeignKey(ProposalInfo, db_index=True, related_name='centers', on_delete=models.CASCADE)
     center_name = models.CharField(max_length=50)
     address     = models.CharField(max_length=150,null=True, blank=True)
@@ -1784,6 +1801,10 @@ class SocietyInventoryBooking(models.Model):
     start_date = models.DateField(db_column='START_DATE', null=True)
     end_date = models.DateField(db_column='END_DATE', null=True)
     audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
 
     def get_type(self):
         try:
@@ -1811,7 +1832,7 @@ class SocietyInventoryBooking(models.Model):
 
     def get_price(self):
         try:
-            price = PriceMappingDefault.objects.filter(supplier=self.society, adinventory_type__adinventory_name=self.adinventory_type.type.upper()).first().society_price
+            price = PriceMappingDefault.objects.filter(object_id=self.object_id, adinventory_type__adinventory_name=self.adinventory_type.type.upper()).first().supplier_price
             return price
         except:
             return None
@@ -2016,9 +2037,11 @@ class InventorySummary(models.Model):
     poster_count_per_tower = models.IntegerField(db_column='POSTER_COUNT_PER_TOWER', null=True)
     poster_count_per_nb = models.IntegerField(db_column='POSTER_COUNT_PER_NB', null=True)
     standee_count_per_tower = models.IntegerField(db_column='STANDEE_COUNT_PER_TOWER', null=True)
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType,default=None, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
+
 
     class Meta:
 

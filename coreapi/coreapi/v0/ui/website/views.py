@@ -2,6 +2,7 @@ import math, random, string, operator
 #import tablib
 import csv
 import json
+import datetime
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models import Q, Sum
@@ -34,11 +35,14 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
         ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
 
 
-from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys
+from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys,\
+                      inventorylist, society_keys, flat_type_dict
+
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
 import utils as website_utils
+import v0.ui.utils as ui_utils
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -46,7 +50,6 @@ import utils as website_utils
 
 class getBusinessTypesAPIView(APIView):
     def get(self, request, format=None):
-        print "inside get"
         try:
             busTypes = BusinessTypes.objects.all()
 
@@ -90,6 +93,10 @@ class getBusinessSubTypesAPIView(APIView):
 
 
 class BusinessAPIView(APIView):
+    """
+    Fetches buisiness data
+    """
+
     def get(self, request, id, format=None):
         try:
             item = BusinessInfo.objects.get(pk=id)
@@ -97,13 +104,13 @@ class BusinessAPIView(APIView):
             accounts = AccountInfo.objects.filter(business=item)
             accounts_serializer = UIAccountInfoSerializer(accounts, many=True)
             response = {
-                'business' : business_serializer.data,
-                'accounts' : accounts_serializer.data
+                'business': business_serializer.data,
+                'accounts': accounts_serializer.data
             }
             return Response(response, status=200)
         except BusinessInfo.DoesNotExist:
-            return Response(status=404)
-
+            return Response(data={'status': False, 'error': "No Buisness data found"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 class AccountAPIListView(APIView):
     def get(self, request, format=None):
@@ -133,27 +140,42 @@ class AccountAPIView(APIView):
 
 class NewCampaignAPIView(APIView):
     def post(self, request, format=None):
+        """
+        creates new campaign
+        ---
+        parameters:
+        - name: business
+          description: a dict having keys buisiness_id, business_type_id, sub_type_id, name, contacts.
+          paramType: body
 
-            current_user = request.user
-            business_data = request.data['business']
-            error = {}
+        """
 
-            with transaction.atomic():
+        current_user = request.user
+
+        business_data = request.data.get('business')
+        if not business_data:
+            return Response(data={'status': False, 'error': 'No business data supplied'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+
+            try:
                 if 'business_id' in business_data:
 
                     business = BusinessInfo.objects.get(pk=business_data['business_id'])
-                    serializer = BusinessInfoSerializer(business,data=business_data)
+                    serializer = BusinessInfoSerializer(business, data=business_data)
                 else:
                     # creating business ID
 
                     type_name = BusinessTypes.objects.get(id=int(business_data['business_type_id']))
                     sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
                     business_data['business_id'] = self.generate_business_id(business_name=business_data['name'], \
-                        sub_type=sub_type, type_name=type_name)
+                                                                             sub_type=sub_type, type_name=type_name)
                     if business_data['business_id'] is None:
                         # if business_id is None --> after 12 attempts couldn't get unique id so return first id in lowercase
-                        business_data['business_id'] = self.generate_business_id(business_data['name'],\
-                            sub_type=sub_type, type_name=type_name, lower=True)
+                        business_data['business_id'] = self.generate_business_id(business_data['name'], \
+                                                                                 sub_type=sub_type, type_name=type_name,
+                                                                                 lower=True)
 
                     serializer = BusinessInfoSerializer(data=business_data)
 
@@ -165,15 +187,14 @@ class NewCampaignAPIView(APIView):
                         business = serializer.save(type_name=type_name, sub_type=sub_type)
 
                     except ValueError:
-                        return Response({'message' : 'Business Type/SubType Invalid'}, \
-                                status=status.HTTP_406_NOT_ACCEPTABLE)
+                        return Response({'message': 'Business Type/SubType Invalid'}, \
+                                        status=status.HTTP_406_NOT_ACCEPTABLE)
 
                 else:
                     return Response(serializer.errors, status=400)
 
-
                 content_type_business = ContentType.objects.get_for_model(BusinessInfo)
-                contact_ids = list(business.contacts.all().values_list('id',flat=True))
+                contact_ids = list(business.contacts.all().values_list('id', flat=True))
                 contact_list = []
 
                 for contact in business_data['contacts']:
@@ -205,15 +226,16 @@ class NewCampaignAPIView(APIView):
                 contacts_serializer = BusinessAccountContactSerializer(contact_list, many=True)
 
                 response = {
-                        'business' : business_serializer.data,
-                        'contacts' : contacts_serializer.data,
-                    }
+                    'business': business_serializer.data,
+                    'contacts': contacts_serializer.data,
+                }
+            except Exception as e:
+                return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response(response,status=200)
+        return Response(response, status=200)
 
-
-    def generate_business_id(self,business_name,sub_type,type_name,lower=False):
-        business_code = create_code(name = business_name)
+    def generate_business_id(self, business_name, sub_type, type_name, lower=False):
+        business_code = create_code(name=business_name)
         business_front = type_name.business_type_code + sub_type.business_sub_type_code
         business_id = business_front + business_code
         if lower:
@@ -228,10 +250,10 @@ class NewCampaignAPIView(APIView):
 
             # still conflict ---> Generate random 4 uppercase character string
             i = 0  # i keeps track of infinite loop tune it according to the needs
-            while(True):
+            while (True):
                 if i > 10:
                     return None
-                business_code = ''.join(random.choice(string.ascii_uppercase ) for _ in range(4))
+                business_code = ''.join(random.choice(string.ascii_uppercase) for _ in range(4))
                 business_id = business_front + business_code
                 business = BusinessInfo.objects.get(business_id=business_id)
                 i += 1
@@ -240,10 +262,8 @@ class NewCampaignAPIView(APIView):
             return business_id.upper()
 
 
-
 def create_code(name, conflict=False):
     name = name.split()
-    print name
 
     if len(name) >= 4:
         code = name[0][0] + name[1][0] + name[2][0] + name[3][0]
@@ -286,6 +306,7 @@ def get_extra_character(size=1):
 
 
 class CreateCampaignAPIView(APIView):
+
     def post(self, request, format=None):
             response = {}
             current_user = request.user
@@ -423,6 +444,9 @@ class CreateCampaignAPIView(APIView):
 
 
 class GetAccountProposalsAPIView(APIView):
+    """
+    fetches proposals for a given account_id
+    """
     def get(self, request, account_id, format=None):
 
         try:
@@ -432,8 +456,10 @@ class GetAccountProposalsAPIView(APIView):
 
         proposals = ProposalInfo.objects.filter(account=account)
         proposal_serializer = ProposalInfoSerializer(proposals, many=True)
-
-        return Response(proposal_serializer.data, status=200)
+        if proposal_serializer.is_valid():
+            return Response(proposal_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(proposal_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CampaignAPIView(APIView):
@@ -442,7 +468,6 @@ class CampaignAPIView(APIView):
         try:
             status = request.query_params.get('status', None)
             if status:
-                print status
                 items = Campaign.objects.filter(booking_status=status)
             else:
                 items = Campaign.objects.all()
@@ -464,7 +489,6 @@ class CampaignAPIView(APIView):
         return Response(status=204)
 
 
-
 class CampaignInventoryAPIView(APIView):
 
     def get(self, request, id, format=None):
@@ -479,6 +503,14 @@ class CampaignInventoryAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
+        """
+        ---
+        parameters:
+        - name: request.data
+          description: dict having keys 'inventory', 'type'.
+          paramType: body
+
+        """
 
         try:
             for society in request.data['inventory']:
@@ -507,7 +539,6 @@ class CampaignInventoryAPIView(APIView):
                         return Response(serializer.errors, status=400)
 
             save_type = request.data['type']
-            print save_type
             if save_type and save_type=='submit':
                 campaign = Campaign.objects.get(pk=id)
                 campaign.booking_status = 'Finalized'
@@ -566,7 +597,6 @@ class ShortlistSocietyAPIView(APIView):
 
     def post(self, request, format=None):
 
-        print request.data
         if 'campaign_id' in request.data:
             try:
                 campaign = Campaign.objects.get(pk=request.data['campaign_id'])
@@ -626,14 +656,16 @@ class CreateProposalAPIView(APIView):
                 society_detail['flat_count'] = item.society.flat_count
                 society_detail['tower_count'] = item.society.tower_count
                 society_detail['inventory'] = []
-                inv_details = InventorySummary.objects.get(supplier_id=society_id)
+                inv_details = InventorySummary.objects.get_object(request.data.copy(), id)
+                if not inv_details:
+                    return Response({'status': False, 'error': 'Inventory object not found for {0} id'.format(id)},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                #inv_details = InventorySummary.objects.get(supplier_id=society_id)
                 for inv in inv_types:
                     inv_name = inv.type
                     inv_size = inv.sub_type
-                    #print inv_details.flier_allowed
-                    #print inv_name.lower() + allowed
                     if (hasattr(inv_details, inv_name.lower() + allowed) and getattr(inv_details, inv_name.lower() + allowed)):
-                        #print "has attribute"
                         if(inv_name == 'Flier'):
                             inv_count = 1
                         else:
@@ -646,7 +678,6 @@ class CreateProposalAPIView(APIView):
                         duration_type = DurationType.objects.get(id=int(price_dict[inv_name]['duration']))
                         adinventory_type = AdInventoryType.objects.get(id=int(price_dict[inv_name]['types'][inv_size]))
                         price_obj = PriceMappingDefault.objects.get(supplier=item.society,duration_type=duration_type, adinventory_type=adinventory_type)
-                        #print "price obj price is : " , price_obj.id
                         inv_price = price_obj.business_price
                         inv_info['count'] = str(inv_count)
                         inv_info['price'] = str(inv_price)
@@ -776,7 +807,6 @@ class InitialProposalAPIView(APIView):
                     center['proposal'] = proposal_object.proposal_id
                     address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + center['pincode']
                     geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
-                    print "geocoder------------------------", geocoder
                     try:
                         geo_object = geocoder.geocode(address)
                     except GeocoderError:
@@ -830,7 +860,6 @@ class InitialProposalAPIView(APIView):
                                             'errors' : inventory_type_serializer.errors
                                         })
                         except KeyError:
-                            # print 'KeyError occured'
                             pass
 
 
@@ -849,12 +878,14 @@ def return_price(adinventory_type_dict, duration_type_dict, inv_type, dur_type):
     return 0
 
 
-
 class SpacesOnCenterAPIView(APIView):
     def get(self,request,proposal_id=None, format=None):
         ''' This function filters all the spaces(Societies, Corporates etc.) based on the center and
         radius provided currently considering radius
-        This API is called before map view page is loaded'''
+        This API is called before map view page is loaded
+        center -- center id for which to filter societies and corporates.
+
+        '''
 
         ''' !IMPORTANT --> you have to manually add all the type of spaces that are being added apart from
         Corporate and Society '''
@@ -871,13 +902,10 @@ class SpacesOnCenterAPIView(APIView):
 
         # if center comes in get request then just return the result for that center
         # this is to implement the reset center functionality
-        if center_id :
+        if center_id:
             try:
-                print "center_id : ", center_id
-                print type(center_id)
                 center_id = int(center_id)
             except ValueError:
-                print "\n\nException occured\n\n"
                 return Response({'message' : 'Invalid Center ID provided'}, status=406)
             proposal_centers = ProposalCenterMapping.objects.filter(id=center_id)
             if not proposal_centers:
@@ -894,7 +922,7 @@ class SpacesOnCenterAPIView(APIView):
 
             space_info_dict = {}
 
-            delta_dict = get_delta_latitude_longitude(float(proposal_center.radius), float(proposal_center.latitude))
+            delta_dict = website_utils.get_delta_latitude_longitude(float(proposal_center.radius), float(proposal_center.latitude))
 
             delta_latitude = delta_dict['delta_latitude']
             min_latitude = proposal_center.latitude - delta_latitude
@@ -922,51 +950,49 @@ class SpacesOnCenterAPIView(APIView):
                     except KeyError:
                         pass
 
-
-
                 societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1', 'society_address2', 'society_subarea', 'society_locality', 'society_location_type', 'flat_count', 'average_rent', 'machadalo_index', 'society_type_quality','tower_count','flat_count')
                 societies = []
                 society_ids = []
                 societies_count = 0
                 for society in societies_temp:
-                    if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
+                    if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         society['society_latitude'], society['society_longitude']):
-                        print "\n\nsociety_id : ", society['supplier_id']
-                        society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
-                        society['shortlisted'] = True
-                        society['buffer_status'] = False
-                        obj = InventorySummaryAPIView()
-                        adinventory_type_dict = obj.adinventory_func()
-                        duration_type_dict = obj.duration_type_func()
-                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
-                            society['total_poster_count'] = society_inventory_obj.total_poster_count
-                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                    society['supplier_id'])
+                        adinventory_type_dict = ui_utils.adinventory_func()
+                        duration_type_dict = ui_utils.duration_type_func()
 
-                        if society_inventory_obj.standee_allowed:
-                            society['total_standee_count'] = society_inventory_obj.total_standee_count
-                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+                        if society_inventory_obj:
+                            #return Response({'status': False, 'error': 'Inventory object does not exist for {0}'. format(society['supplier_id'])} , status=400)
+                        # society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                            society['shortlisted'] = True
+                            society['buffer_status'] = False
+                            # obj = InventorySummaryAPIView()
 
-                        if society_inventory_obj.stall_allowed:
-                            society['total_stall_count'] = society_inventory_obj.total_stall_count
-                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
-                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+                            if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                                society['total_poster_count'] = society_inventory_obj.total_poster_count
+                                society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
 
-                        if society_inventory_obj.flier_allowed:
-                            society['flier_frequency'] = society_inventory_obj.flier_frequency
-                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+                            if society_inventory_obj.standee_allowed:
+                                society['total_standee_count'] = society_inventory_obj.total_standee_count
+                                society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
 
-                        # ADDNEW -->
+                            if society_inventory_obj.stall_allowed:
+                                society['total_stall_count'] = society_inventory_obj.total_stall_count
+                                society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                                society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+
+                            if society_inventory_obj.flier_allowed:
+                                society['flier_frequency'] = society_inventory_obj.flier_frequency
+                                society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+
                         society_ids.append(society['supplier_id'])
                         societies.append(society)
                         societies_count += 1
 
-                # societies_serializer =  ProposalSocietySerializer(societies, many=True)
 
-                # following query find sum of all the variables specified in a dictionary
-                # this finds sum of all inventories, if you don't need some of some inventory make it 0 in front end
                 societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
                     standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
-
 
                 space_info_dict['societies'] = societies
                 space_info_dict['societies_inventory_count'] = societies_inventory_count
@@ -1015,8 +1041,8 @@ class SpacesOnCenterAPIView(APIView):
             centers_data_list.append(space_info_dict)
 
 
-        response['centers'] = centers_data_list 
-    
+        response['centers'] = centers_data_list
+
         return Response(response, status=200)
 
 
@@ -1025,11 +1051,11 @@ class SpacesOnCenterAPIView(APIView):
         '''This API returns the spaces info when center or radius is changed
         API ONLY PRODUCE RESULTS FOR SOCIETIES ONLY
         Code to be written for other spaces
+        ---
+
+
         '''
         response = {}
-        print "\n\n\n"
-        print "request.data : ", request.data
-        print "\n\n\n"
         center_info = request.data
         try:
             center = center_info['center']
@@ -1042,7 +1068,7 @@ class SpacesOnCenterAPIView(APIView):
         longitude = float(center['longitude'])
         radius = float(center['radius'])
         # area= "Andheri(E)"
-        delta_dict = get_delta_latitude_longitude(radius, latitude)
+        delta_dict = website_utils.get_delta_latitude_longitude(radius, latitude)
 
         delta_latitude = delta_dict['delta_latitude']
         min_latitude = center['latitude'] - delta_latitude
@@ -1051,9 +1077,9 @@ class SpacesOnCenterAPIView(APIView):
         delta_longitude = delta_dict['delta_longitude']
         min_longitude = center['longitude'] - delta_longitude
         max_longitude = center['longitude'] + delta_longitude
-
+        q = Q()
         if space_mappings['society_allowed']:
-            q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
+            q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
             # p = Q(society_locality=area)
             try:
                 societies_inventory = center_info['societies_inventory']
@@ -1067,39 +1093,39 @@ class SpacesOnCenterAPIView(APIView):
                     elif societies_inventory[param]:
                         q &= Q(**{param : True})
                 except KeyError:
-                    print "key error occured"
                     pass
             # societies_temp1 = SupplierTypeSociety.objects.filter(p).values('supplier_id','society_latitude','society_longitude','society_zip')    
-            # print societies_temp1,"yogesh"     
-
             societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type','tower_count','flat_count','society_type_quality')
             societies = []
             society_ids = []
             societies_count = 0
             for society in societies_temp:
-                if space_on_circle(latitude, longitude, radius, society['society_latitude'], society['society_longitude']):
-                    society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
-                    society['shortlisted'] = True
-                    society['buffer_status'] = False
-                    obj = InventorySummaryAPIView()
-                    adinventory_type_dict = obj.adinventory_func()
-                    duration_type_dict = obj.duration_type_func()
-                    if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
-                        society['total_poster_count'] = society_inventory_obj.total_poster_count
-                        society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+                if website_utils.space_on_circle(latitude, longitude, radius, society['society_latitude'], society['society_longitude']):
+                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                society['supplier_id'])
+                    if society_inventory_obj:
+                    #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                        society['shortlisted'] = True
+                        society['buffer_status'] = False
+                        # obj = InventorySummaryAPIView()
+                        adinventory_type_dict = ui_utils.adinventory_func()
+                        duration_type_dict = ui_utils.duration_type_func()
+                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                            society['total_poster_count'] = society_inventory_obj.total_poster_count
+                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
 
-                    if society_inventory_obj.standee_allowed:
-                        society['total_standee_count'] = society_inventory_obj.total_standee_count
-                        society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+                        if society_inventory_obj.standee_allowed:
+                            society['total_standee_count'] = society_inventory_obj.total_standee_count
+                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
 
-                    if society_inventory_obj.stall_allowed:
-                        society['total_stall_count'] = society_inventory_obj.total_stall_count
-                        society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
-                        society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+                        if society_inventory_obj.stall_allowed:
+                            society['total_stall_count'] = society_inventory_obj.total_stall_count
+                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
-                    if society_inventory_obj.flier_allowed:
-                        society['flier_frequency'] = society_inventory_obj.flier_frequency
-                        society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+                        if society_inventory_obj.flier_allowed:
+                            society['flier_frequency'] = society_inventory_obj.flier_frequency
+                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
                     # ADDNEW -->
                     society_ids.append(society['supplier_id'])
@@ -1113,11 +1139,10 @@ class SpacesOnCenterAPIView(APIView):
             societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
                 standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
-
-            response['societies'] = societies
-            response['societies_inventory_count'] = societies_inventory_count
-            response['societies_inventory'] = societies_inventory
-            response['societies_count'] = societies_count
+            response['suppliers'] = societies
+            response['supplier_inventory_count'] = societies_inventory_count
+            response['supplier_inventory'] = societies_inventory
+            response['supplier_count'] = societies_count
             # response['area_societies'] = societies_temp1 
 
         if space_mappings['corporate_allowed']:
@@ -1161,279 +1186,166 @@ class SpacesOnCenterAPIView(APIView):
         return Response(response, status=200)
 
 
-
-def get_delta_latitude_longitude(radius, latitude):
-    delta_longitude = radius/(111.320 * math.cos(math.radians(latitude)))
-    delta_latitude = radius/ 110.574
-
-    return {'delta_latitude' : delta_latitude,
-            'delta_longitude' : delta_longitude}
-
-
-
-def space_on_circle(latitude, longitude, radius, space_lat, space_lng):
-    return (space_lat - latitude)**2 + (space_lng - longitude)**2 <= (radius/110.574)**2
-
-
-
-class GetFilteredSocietiesAPIView(APIView):
+class GetFilteredSuppliersAPIView(APIView):
+    """
+    This API gives suppliers based on different filters from mapView and gridView Page
+    Currently implemented filters are locality and location (Standard, Medium High etc.)
+    flat_count (100 - 250 etc.) flat_type(1BHK, 2BHK etc.)
+    """
 
     def get(self, request, format=None):
-        ''' This API gives societies based on different filters from mapView and gridView Page
-        Currently implemented filters are locality and location (Standard, Medium High etc.)
-        flat_count (100 - 250 etc.) flat_type(1BHK, 2BHK etc.) '''
-        response = {}
+        '''
+        lat -- latitude
+        lng -- longitude
+        r -- radius
+        loc -- location params
+        qlt -- supplier quality params example UH, HH, MH
+        qnt -- supplier quantity params example LA, MD
+        flc -- flat count
+        inv -- inventory params example PO, ST, SL
+        supplier_type_code -- RS, CP etc
 
-        latitude = request.query_params.get('lat', None)
-        longitude = request.query_params.get('lng',None)
-        radius = request.query_params.get('r',None) # radius change
-        location_params = request.query_params.get('loc',None)
-        society_quality_params = request.query_params.get('qlt',None)
-        society_quantity_params = request.query_params.get('qnt',None)
-        flat_count = request.query_params.get('flc',None)
-        flat_type_params = request.query_params.get('flt',None)
-        inventory_params = request.query_params.get('inv',None)
-
-
-
-        q = Q()
-        quality_dict , inventory_dict, society_quantity_dict = get_related_dict()
-
-        flat_type_dict = {
-            '1R' : '1 RK',      '1B' : '1 BHK',     '1-5B' : '1.5 BHK',     '2B' : '2 BHK',
-            '2-5B' : '2.5 BHK',    '3B' : '3 BHK',  '3-5B' : '3.5 BHK',     '4B' : '4 BHK',
-            '5B' : '5 BHK',         'PH' : 'PENT HOUSE',    'RH' : 'ROW HOUSE',  'DP' : 'DUPLEX'
-        }
-
-        # if not radius:
-
-        if not latitude or not longitude or not radius:
-            return Response({'message' : 'Please Provide longitude and latitude and radius as well'}, status=406)
-
-
-        if flat_type_params:
-            flat_types = []
-            flat_type_params = flat_type_params.split()
-            for param in flat_type_params:
-                try:
-                    flat_types.append(flat_type_dict[param])
-                    print flat_type_dict[param]
-                except KeyError:
-                    pass
-
-            if flat_types:
-                ''' We can improve performance here  by appending .distinct('society_id') when using postgresql '''
-                society_ids = set(FlatType.objects.filter(flat_type__in=flat_types).values_list('society_id',flat=True))
-                q &= Q(supplier_id__in=society_ids)
-                # here to include those societies which don't have this info nothing can be done
-                # It is simply all the societies -> filter becomes useless
-
-        # calculating for latitude and longitude
-        # this is done to ensure that the societies are sent according to the current radius and center in frontend
-        # user can change center and radius and it will not be stored in the database until saved
+        '''
         try:
+
+            response = {}
+
+            latitude = request.query_params.get('lat', None)
+            longitude = request.query_params.get('lng', None)
+            radius = request.query_params.get('r', None)  # radius change
+            location_params = request.query_params.get('loc', None)
+            supplier_quality_params = request.query_params.get('qlt', None)
+            supplier_quantity_params = request.query_params.get('qnt', None)
+            flat_count = request.query_params.get('flc', None)
+            flat_type_params = request.query_params.get('flt', None)
+            inventory_params = request.query_params.get('inv', None)
+            supplier_code = request.query_params.get('supplier_type_code')
+            filter_query = Q()
+
+            supplier_code = 'RS'
+
+            if not supplier_code:
+                return Response({'status': False, 'error': 'Provide supplier type code'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            if not latitude or not longitude or not radius:
+                return Response({'message': 'Please Provide longitude and latitude and radius as well'}, status=406)
+
             latitude = float(latitude)
             longitude = float(longitude)
             radius = float(radius)
-        except ValueError:
-            return Response({'message':'Invalid Format of latitude longitude or radius'}, status=406)
-
-        delta_dict = get_delta_latitude_longitude(radius, latitude)
-
-        max_latitude = latitude + delta_dict['delta_latitude']
-        min_latitude = latitude - delta_dict['delta_latitude']
-
-        delta_longitude = delta_dict['delta_longitude']
-        max_longitude = longitude + delta_dict['delta_longitude']
-        min_longitude = longitude - delta_dict['delta_longitude']
-
-        q &= Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-        if location_params:
-            location_ratings = []
-            location_params = location_params.split()
-            for param in location_params:
-                try:
-                    location_ratings.append(quality_dict[param])
-                except KeyError:
-                    pass
-            if location_ratings:
-                q &= Q(society_location_type__in=location_ratings)
-                # if required to include societies with null value of this parameter uncomment following line
-                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(society_location_type__isnull=True)
-
-        if society_quality_params:
-            society_quality_ratings = []
-            society_quality_params = society_quality_params.split()
-            for param in society_quality_params:
-                try:
-                    society_quality_ratings.append(quality_dict[param])
-                except KeyError:
-                    pass
-
-            if society_quality_ratings:
-                q &= Q(society_type_quality__in=society_quality_ratings)
-                # if required to include societies with null value of this parameter uncomment following line
-                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(society_type_quality__isnull=True)
-
-        if society_quantity_params:
-            society_quantity_ratings = []
-            society_quantity_params = society_quantity_params.split()
-            for param in society_quantity_params:
-                try:
-                    society_quantity_ratings.append(society_quantity_dict[param])
-                except KeyError:
-                    pass
-
-            if society_quantity_ratings:
-                q &= Q(society_type_quantity__in=society_quantity_ratings)
-                # if required to include societies with null value of this parameter uncomment following line
-                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(society_type_quantity__isnull=True)
-
-        if flat_count:
-            flat_count = flat_count.split()
-            if len(flat_count) == 2:
-                flat_min = flat_count[0]
-                flat_max = flat_count[1]
-
-                q &= Q(flat_count__gte=flat_min) & Q(flat_count__lte=flat_max)
-                # if required to include societies with null value of this parameter uncomment following line
-                # will not work if there is default value is something then replace __isnull=True --> = defaultValue
-                # q &= Q(flat_count__isnull=True)
-        p = None
-        if inventory_params:
-            inventory_params = inventory_params.split()
-            temp = None    #temporary variable     
-            for param in inventory_params:
-                try:
-                    
-                    # | 'STFL' | 'CDFL' | 'PSLF' | 'STSLFL' | 'POCDFL' | 'STCDFL'
-                    if (param == 'POFL') | (param == 'STFL') | (param == 'SLFL') | (param == 'CDFL') | (param == 'POSLFL') | (param == 'STSLFL') | (param == 'POCDFL') | (param == 'STCDFL'):
-
-                        if param == 'POFL':
-                            temp_q = (Q(poster_allowed_nb=True) & Q(flier_allowed=True))
-
-                        if param == 'SLFL':
-                            temp_q = (Q(stall_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'STFL':
-                            temp_q = (Q(standee_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'CDFL':
-                            temp_q = (Q(car_display_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'POSLFL':
-                            temp_q = (Q(poster_allowed_nb=True) & Q(stall_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'STSLFL':
-                            temp_q = (Q(stall_allowed=True) & Q(standee_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'POCDFL':
-                            temp_q = (Q(poster_allowed_nb=True) & Q(car_display_allowed=True) & Q(flier_allowed=True))
-
-                        if param == 'STCDFL':
-                            temp_q = (Q(standee_allowed=True) & Q(car_display_allowed=True) & Q(flier_allowed=True))
-
-                    else:
-                        temp_q = Q(**{"%s" % inventory_dict[param]:'True'})
-                        
-                    if temp:
-
-                        p = (p | temp_q)
-                    else:
-                        p = temp_q
-                        temp=1                                                                                                                                                                                                                                                             
-                except KeyError:
-                    pass
-        
-        #code changes & added for 'OR' filters of inventory and 'AND' filters with inventory and others
-        #code start
-        if p:
-            q&=p
-        #code end
-
-        societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type','flat_count','tower_count','society_type_quality')
-        societies = []
-        society_ids = []
-        societies_count = 0
-        for society in societies_temp:
-            if space_on_circle(latitude, longitude, radius ,society['society_latitude'], society['society_longitude']):
-                society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
-                society['shortlisted'] = True
-                society['buffer_status'] = False
-                obj = InventorySummaryAPIView()
-                adinventory_type_dict = obj.adinventory_func()
-                duration_type_dict = obj.duration_type_func()
-                if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
-                    society['total_poster_count'] = society_inventory_obj.total_poster_count
-                    society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
-
-                if society_inventory_obj.standee_allowed:
-                    society['total_standee_count'] = society_inventory_obj.total_standee_count
-                    society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
-
-                if society_inventory_obj.stall_allowed:
-                    society['total_stall_count'] = society_inventory_obj.total_stall_count
-                    society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
-                    society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
-
-                if society_inventory_obj.flier_allowed:
-                    society['flier_frequency'] = society_inventory_obj.flier_frequency
-                    society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
-
-                # ADDNEW -->
-
-                society_ids.append(society['supplier_id'])
-                societies.append(society)
-                societies_count += 1
-
-        # societies_serializer =  ProposalSocietySerializer(societies, many=True)
-
-        # following query find sum of all the variables specified in a dictionary
-        # this finds sum of all inventories, if you don't need some of some inventory make it 0 in front end
-        societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
-            standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
 
-        response['societies'] = societies
-        response['societies_inventory_count'] = societies_inventory_count
-        response['societies_count'] = societies_count
-        return Response(response, status=200)
+            if flat_type_params:
+                flat_types = []
+                flat_type_params = flat_type_params.split()
+                for param in flat_type_params:
+                    try:
+                        flat_types.append(flat_type_dict[param])
+                    except KeyError:
+                        pass
+                if flat_types:
+                    ''' We can improve performance here  by appending .distinct('supplier_id') when using postgresql '''
+                    supplier_ids = set(FlatType.objects.filter(flat_type__in=flat_types).values_list('object_id', flat=True))
+                    filter_query &= Q(supplier_id__in=supplier_ids)
+                    # here to include those suppliers which don't have this info nothing can be done
+                    # It is simply all the suppliers -> filter becomes useless
+            delta_dict = website_utils.get_delta_latitude_longitude(radius, latitude)
 
+            # add data to get min,max lat-long
+            delta_dict['latitude'] = float(latitude)
+            delta_dict['longitude'] = float(longitude)
+            delta_dict['supplier_type_code'] = supplier_code
 
-    def post(self, request, format=None):
-        ''' This API is for deep filtering
-        Basic Idea is that if filter is chosen on the left of the map view page get request is fired
-        But if he clicks on deep filters he can choose on almost anything like cars_count, luxury_cars_count,
-        avg_pg_occupancy, women_occupants, etc. whatever required. This is the approach most commonly found on
-        other websites '''
-        pass
+            # call the function to get min,max, lat,long data
+            min_max_lat_long_response = website_utils.get_min_max_lat_long(delta_dict)
+            if not min_max_lat_long_response.data['status']:
+                return min_max_lat_long_response
 
+            # make right params to call make_filter_query function
+            filter_query_params = min_max_lat_long_response.data['data']
+            filter_query_params['location_params'] = location_params
+            filter_query_params['supplier_quality_params'] = supplier_quality_params
+            filter_query_params['supplier_quantity_params'] = supplier_quantity_params
+            filter_query_params['flat_count'] = flat_count
+            filter_query_params['inventory_params'] = inventory_params
+            filter_query_params['supplier_type_code'] = supplier_code
 
+            # call function to make filter
+            #todo: make filter function specific to supplier
+            filter_query_response = website_utils.make_filter_query(filter_query_params)
+            if not filter_query_response.data['status']:
+                return filter_query_response
+            filter_query &= filter_query_response.data['data']
 
-def get_related_dict():
-    ''' This dictionary is simply a mapping from get params to their actual values '''
-    # quality_dict if for both society_quality and its location_quality and similarly for other spaces
-    quality_dict = {
-        'UH' : 'Ultra High',    'HH' : 'High',
-        'MH' : 'Medium High',   'ST' : 'Standard'
-    }
+            # get all suppliers  with all columns for the filter we constructed.
+            suppliers = ui_utils.get_model(supplier_code).objects.filter(filter_query)
+            # suppliers = supplier_code_filter_params[supplier_code]['MODEL'].objects.filter(filter_query)
 
-    inventory_dict = {
-        'PO' : 'poster_allowed_nb',    'ST' : 'standee_allowed',
-        'SL' : 'stall_allowed',     'FL' : 'flier_allowed',
-        'BA' : 'banner_allowed',    'CD' : 'car_display_allowed',
-    }
+            serializer = ui_utils.get_serializer(supplier_code)(suppliers, many=True)
+            #serializer = supplier_code_filter_params[supplier_code]['SERIALIZER'](suppliers, many=True)
+            suppliers = serializer.data
+            supplier_ids = []
+            suppliers_count = 0
+            suppliers_data = []
 
-    quantity_dict = {
-        'LA' : 'Large',     'MD' : 'Medium',
-        'VL' : 'Very Large',  'SM' : 'Small',
-    }
+            # iterate over all suppliers to  generate the final response
+            for supplier in suppliers:
+                supplier['supplier_latitude'] = supplier['society_latitude'] if supplier['society_latitude'] else supplier['latitude']
+                supplier['supplier_longitude'] = supplier['society_longitude'] if supplier['society_longitude'] else supplier['longitude']
+                if website_utils.space_on_circle(latitude, longitude, radius, supplier['supplier_latitude'],supplier['supplier_longitude']):
+                    supplier_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                 supplier['supplier_id'])
+                    if supplier_inventory_obj:
 
-    return quality_dict, inventory_dict, quantity_dict
+                    # supplier_inventory_obj = InventorySummary.objects.get(supplier_id=supplier['supplier_id'])
+                        supplier['shortlisted'] = True
+                        supplier['buffer_status'] = False
+                        # obj = InventorySummaryAPIView()
+                        adinventory_type_dict = ui_utils.adinventory_func()
+                        duration_type_dict = ui_utils.duration_type_func()
+                        if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
+                            supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
+                            supplier['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4',
+                                                                    'campaign_weekly')
 
+                        if supplier_inventory_obj.standee_allowed:
+                            supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
+                            supplier['standee_price'] = return_price(adinventory_type_dict, duration_type_dict,
+                                                                     'standee_small', 'campaign_weekly')
+
+                        if supplier_inventory_obj.stall_allowed:
+                            supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
+                            supplier['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small',
+                                                                   'unit_daily')
+                            supplier['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict,
+                                                                         'car_display_standard', 'unit_daily')
+
+                        if supplier_inventory_obj.flier_allowed:
+                            supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
+                            supplier['filer_price'] = return_price(adinventory_type_dict, duration_type_dict,
+                                                                   'flier_door_to_door', 'unit_daily')
+
+                        # ADDNEW -->
+
+                    supplier_ids.append(supplier['supplier_id'])
+                    suppliers_data.append(supplier)
+                    suppliers_count += 1
+
+            suppliers_inventory_count = InventorySummary.objects.filter_objects({'supplier_type_code': supplier_code},
+                                                                                supplier_ids).aggregate(posters=Sum('total_poster_count'), \
+                                                                                                        standees=Sum('total_standee_count'),
+                                                                                                        stalls=Sum('total_stall_count'),
+                                                                                                        fliers=Sum('flier_frequency'))
+
+            response['suppliers'] = suppliers_data
+            response['supplier_inventory_count'] = suppliers_inventory_count
+            response['supplier_count'] = suppliers_count
+            response['supplier_type_code'] = supplier_code
+            return Response(response, status=200)
+
+        except Exception as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class FinalProposalAPIView(APIView):
@@ -1498,12 +1410,14 @@ class FinalProposalAPIView(APIView):
                 for society in societies_temp:
                     if space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
                         society['society_latitude'], society['society_longitude']):
-                        society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                    society['supplier_id'])
+                        #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
                         society['buffer_status'] = False
-                        obj = InventorySummaryAPIView()
-                        adinventory_type_dict = obj.adinventory_func()
-                        duration_type_dict = obj.duration_type_func()
+                        # obj = InventorySummaryAPIView()
+                        adinventory_type_dict = ui_utils.adinventory_func()
+                        duration_type_dict = ui_utils.duration_type_func()
                         if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
                             society['total_poster_count'] = society_inventory_obj.total_poster_count
                             society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
@@ -1644,9 +1558,6 @@ class FinalProposalAPIView(APIView):
                             space_inventory_type = center_info[space_dict[space_name] + '_inventory']
                         except KeyError:
                             # Just ignoring because for corporate inventory is not made
-                            print "\n\n\n"
-                            print "Key Error Key is : " + space_dict[space_name] + '_inventory'
-                            print "\n\n\n"
                             continue
 
                         try:
@@ -1679,7 +1590,6 @@ class FinalProposalAPIView(APIView):
                         for space in center_info[space_dict[space_name]]:
                             if space['shortlisted']:
                                 object_id = space['supplier_id']
-                                print "space_mapping_id : ", space_mapping_object.id
                                 shortlisted_space = ShortlistedSpaces(space_mapping = space_mapping_object,content_type=content_type, \
                                     supplier_code=supplier_code, object_id=object_id, buffer_status = space['buffer_status'])
 
@@ -1749,12 +1659,14 @@ class CurrentProposalAPIView(APIView):
                 societies_shortlisted_count = 0
 
                 for society in societies_shortlisted_temp:
-                    society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                society['supplier_id'])
+                    #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                     society['shortlisted'] = True
                     society['buffer_status'] = False
-                    obj = InventorySummaryAPIView()
-                    adinventory_type_dict = obj.adinventory_func()
-                    duration_type_dict = obj.duration_type_func()
+                    # obj = InventorySummaryAPIView()
+                    adinventory_type_dict = ui_utils.adinventory_func()
+                    duration_type_dict = ui_utils.duration_type_func()
 
 
                     if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
@@ -1788,12 +1700,15 @@ class CurrentProposalAPIView(APIView):
                 societies_buffered = []
                 societies_buffered_count = 0
                 for society in societies_buffered_temp:
-                    society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                society['supplier_id'])
+
+                    #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                     society['shortlisted'] = True
                     society['buffer_status'] = False
-                    obj = InventorySummaryAPIView()
-                    adinventory_type_dict = obj.adinventory_func()
-                    duration_type_dict = obj.duration_type_func()
+                    # obj = InventorySummaryAPIView()
+                    adinventory_type_dict = ui_utils.adinventory_func()
+                    duration_type_dict = ui_utils.duration_type_func()
 
                     if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
                         society['total_poster_count'] = society_inventory_obj.poster_count_per_tower
@@ -1915,7 +1830,6 @@ class CurrentProposalAPIView(APIView):
         return Response(status=200)
 
 
-
 class ProposalHistoryAPIView(APIView):
     def get(self, request, proposal_id, format=None):
         ''' Sends the proposal versions for the particular proposal id
@@ -1952,12 +1866,15 @@ class ProposalHistoryAPIView(APIView):
                     societies_shortlisted_count = 0
                     # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
                     for society in societies_shortlisted_temp:
-                        society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                    society['supplier_id'])
+
+                        #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
                         society['buffer_status'] = False
-                        obj = InventorySummaryAPIView()
-                        adinventory_type_dict = obj.adinventory_func()
-                        duration_type_dict = obj.duration_type_func()
+                        # obj = InventorySummaryAPIView()
+                        adinventory_type_dict = ui_utils.adinventory_func()
+                        duration_type_dict = ui_utils.duration_type_func()
 
                         if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
                             society['total_poster_count'] = society_inventory_obj.total_poster_count
@@ -1990,12 +1907,15 @@ class ProposalHistoryAPIView(APIView):
                     societies_buffered = []
                     societies_buffered_count = 0
                     for society in societies_buffered_temp:
-                        society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                    society['supplier_id'])
+
+                        #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
                         society['buffer_status'] = False
-                        obj = InventorySummaryAPIView()
-                        adinventory_type_dict = obj.adinventory_func()
-                        duration_type_dict = obj.duration_type_func()
+                        # obj = InventorySummaryAPIView()
+                        adinventory_type_dict = ui_utils.adinventory_func()
+                        duration_type_dict = ui_utils.duration_type_func()
 
                         if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
                             society['total_poster_count'] = society_inventory_obj.total_poster_count
@@ -2011,7 +1931,7 @@ class ProposalHistoryAPIView(APIView):
                             society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
                         if society_inventory_obj.flier_allowed:
-                            society['flier_frequency'] = society_inventory_obj.flier_frequency
+                            society['flier_freqency'] = society_inventory_obj.flier_frequency
                             society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
                         societies_buffered.append(society)
@@ -2130,47 +2050,122 @@ class SaveSocietyData(APIView):
 class ExportData(APIView):
     """
      Exports supplier data on grid view page.
+     The API is divided into two phases :
+     1. extension of Headers and DATA keys. This is because one or more inventory type selected map to more HEADER
+     and hence more DATA keys
+     2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
     """
-    def post(self, request, proposal_id = None,  format=None):
-        wb = Workbook()
-        #ws = wb.active
-        ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
-        for col in range(1):
-            ws.append(proposal_header_keys)
 
-        master_list = [] 
-        for obj in request.data:
-         
-            for item in obj['societies']:
-                center_list = []
-                for key in center_keys:
-                    center_list.append(obj['center'][key])
-            
-                local_list = [] 
-                temp = website_utils.getList(item)
-                #print temp
-                local_list.extend(temp)
-            
-                center_list.extend(local_list)
-                print center_list
-                ws.append(center_list)
+    def post(self, request, proposal_id=None, format=None):
+        try:
+            wb = Workbook()
+            from constants import society_keys, proposal_header_keys
 
-            # apending from center
+            # ws = wb.active
+            ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
+
+            # iterating through centers in request.data array
+            for center in request.data:
+                inventory_array = center['center']['society_inventory_type_selected']
+
+                # get the unique codes by combining all the codes
+                response = website_utils.get_unique_inventory_codes(inventory_array)
+
+                if not response.data['status']:
+                    return response
+                unique_inventory_codes = response.data['data']
+
+                # get the union of HEADERS
+                response = website_utils.get_union_keys_inventory_code('HEADER', unique_inventory_codes)
+                if not response.data['status']:
+                    return response
+                extra_header_keys = response.data['data']
+
+                # get the union of DATA
+                response = website_utils.get_union_keys_inventory_code('DATA', unique_inventory_codes)
+                if not response.data['status']:
+                    return response
+                extra_supplier_keys = response.data['data']
+
+                # extend the society_keys
+                society_keys.extend(extra_supplier_keys)
+
+                # extend the proposal_header_keys
+                proposal_header_keys.extend(extra_header_keys)
+
+            # remove duplicates if any
+            proposal_header_keys = website_utils.remove_duplicates_preserver_order(proposal_header_keys)
+            society_keys = website_utils.remove_duplicates_preserver_order(society_keys)
+
+            # set the final headers in the sheet
+            for col in range(1):
+                ws.append(proposal_header_keys)
+
+            # populate sheet row by row. Number of rows will be equal to number of societies. 1 society = 1 row
+            master_list = []
+            # for all centers in request.data
+
+            for center in request.data:
+                # get the inventory_array containg all the codes selected for this center
+                inventory_array = center['center']['society_inventory_type_selected']
+
+                # get the unique codes by combining all the codes
+                response = website_utils.get_unique_inventory_codes(inventory_array)
+                if not response.data['status']:
+                    return response
+                unique_inventory_codes = response.data['data']
+
+                # for all societies in societies array
+                for index, item in enumerate(center['societies']):
+
+                    # iterate over center_keys and make a partial row with data from center object
+                    center_list = []
+                    for key in center_keys:
+                        center_list.append(center['center'][key])
+
+                    # calculates inventory price per flat and  store the result in dict itself
+                    local_list = []
+
+                    # modify the dict with extra keys for pricing
+                    response = website_utils.get_union_inventory_price_per_flat(item, unique_inventory_codes, index)
+                    if not response.data['status']:
+                        return response
+                    item = response.data['data']
+
+                    # use the modified dict in the getList function that makes a list out of keys present in society_keys
+                    temp = website_utils.getList(item, society_keys)
+                    local_list.extend(temp)
+
+                    # append this list to center_list to make final row.
+                    center_list.extend(local_list)
+
+                    # add row to the sheet
+                    ws.append(center_list)
+
+            file_name = 'machadalo_{0}.xlsx'.format(str(datetime.datetime.now()))
+            wb.save(file_name)
+
+            return Response(data={"successs"})
+        except Exception as e:
+            return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ImportData(APIView):
+    """
+    This API basically takes an excel sheet , process the data and saves it in the database.
+    """
+    def get(self, request, proposal_id=None):
+        """
+        Args:
+            request: request param
+            proposal_id: proposal_id
 
-        wb.save("getmachadalo4.xlsx")
+        Returns: Saves the  data in db
 
-        # centers = request.data[0]
-        # print centers
-        # ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
-        # for col in range(1):
-        #     ws.append(proposal_header_keys
-        # for key in export_keys:
-        #     for key1 in centers[key]
-        #     ws.append(website_utils.getList(key1))
+        """
+        pass
 
-        return Response(data={"successs"})
+
 
 
 class SaveContactDetails(APIView):
