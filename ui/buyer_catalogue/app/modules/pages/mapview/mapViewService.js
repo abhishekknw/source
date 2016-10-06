@@ -39,5 +39,9 @@
         return machadaloHttp.post(url, centers_data);
     }
 
+    mapViewService.uploadFile = function (proposal_id, file){
+      var url = url_base + proposal_id + '/import-society-data/';
+      return machadaloHttp.post(url, file);
+    }
     return mapViewService;
 }]);
