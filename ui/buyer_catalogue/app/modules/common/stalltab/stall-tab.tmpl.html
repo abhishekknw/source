@@ -5,7 +5,29 @@
        </div>
        <div class="col-md-10" style="text-align: center;">
            <div class="row">
-              <div style="margin-left:10px" ng-repeat="image in society_images" ng-if="image.name=='Stall Space'" class="col-md-4"><img src="http://mdimages.s3.amazonaws.com/{{image.image_url}}" width="180px" height="180px" alt=""/></div>
+
+// Start: Carousel added to slide images
+             <div class="carousel" id="slider-Stall">
+            <div class="carousel-inner" >
+                <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in StallImages">
+                  <div class="row">
+                    <img src="http://mdimages.s3.amazonaws.com/{{image.image_url}}"  width="240px" height="160"/>
+                    <img src="http://mdimages.s3.amazonaws.com/{{StallImages[$index+1].image_url}}"  width="240px" height="160" />
+                  </div>
+                  <a class="left carousel-control"  href="#slider-Stall" role="button" data-slide="prev">
+                   <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                   <span class="sr-only">Previous</span>
+                  </a>
+                  <a class="right carousel-control"   href="#slider-Stall" role="button" data-slide="next">
+                   <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                   <span class="sr-only">Next</span>
+                  </a>
+                </div>
+            </div>
+         </div>
+// End: Carousel added to slide images
+
+              <!-- <div style="margin-left:10px" ng-repeat="image in society_images" ng-if="image.name=='Stall Space'" class="col-md-4"><img src="http://mdimages.s3.amazonaws.com/{{image.image_url}}" width="180px" height="180px" alt=""/></div> -->
            </div>
       </div>
       <div class="col-md-1" style="margin-top:150px">

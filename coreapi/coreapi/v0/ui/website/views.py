@@ -1001,8 +1001,7 @@ class SpacesOnCenterAPIView(APIView):
 
 
             if space_mapping_object.corporate_allowed:
-                pass
-                # q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
+                q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
 
                 # ADDNEW --> uncomment this line when corporate inventory implemented
                 # corporates_inventory = space_mapping_object.get_corporate_inventories().
@@ -1010,21 +1009,57 @@ class SpacesOnCenterAPIView(APIView):
                 # then run for loop almost same as above for applying filter on inventory_allowed
                 # make a query for different inventory count (e.g. poster_count )
 
-                # corporates_temp = SupplierTypeCorporate.objects.filter(q)
-                # corporates = []
-                # corporates_count = 0
-                # for corporate in corporates_temp:
-                #     if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
-                #         corporate.latitude, corporate.longitude):
-                #         corporates.append(corporate)
-                #         corporates_count += 1
+                corporates_inventory = space_mapping_object.get_corporate_inventories()
+                corporates_inventory_serializer = InventoryTypeSerializer(corporates_inventory)
+                corporates_temp = SupplierTypeCorporate.objects.filter(q).values('supplier_id','latitude','longitude')
+                corporates = []
+                corporate_ids = []
+                corporates_count = 0
+                for corporate in corporates_temp:
+                    if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
+                        corporate['latitude'], corporate['longitude']):
+                        corporate_inventory_obj = InventorySummary.objects.get_inventory_object(request.data.copy(), corporate['supplier_id'])
+                        adinventory_type_dict = ui_utils.adinventory_func()
+                        duration_type_dict = ui_utils.duration_type_func()
+
+                        if corporate_inventory_obj:
+                            #return Response({'status': False, 'error': 'Inventory object does not exist for {0}'. format(society['supplier_id'])} , status=400)
+                        # society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                            corporate['shortlisted'] = True
+                            corporate['buffer_status'] = False
+                            # obj = InventorySummaryAPIView()
+                               
+                            if corporate_inventory_obj.poster_allowed_nb or corporate_inventory_obj.poster_allowed_lift:
+                                society['total_poster_count'] = corporate_inventory_obj.total_poster_count
+                                society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+
+                            if corporate_inventory_obj.standee_allowed:
+                                society['total_standee_count'] = corporate_inventory_obj.total_standee_count
+                                society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+
+                            if corporate_inventory_obj.stall_allowed:
+                                society['total_stall_count'] = corporate_inventory_obj.total_stall_count
+                                society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                                society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+
+                            if corporate_inventory_obj.flier_allowed:
+                                society['flier_frequency'] = corporate_inventory_obj.flier_frequency
+                                society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+
+                        corporate_ids.append(corporate['supplier_id'])
+                        corporates.append(corporate)
+                        corporates_count += 1
+                        
 
                 # corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
 
-                # space_info_dict['corporates'] = corporates_serializer.data
-                # space_info_dict['corporates_count'] = corporates_count
-                # space_info_dict['corporates_inventory_count'] = corporates_inventory_count  // implement this first
-                # space_info_dict['corporates_inventory'] = corporates_inventory_serializer.data
+                corporates_inventory_count =  InventorySummary.objects.filter(supplier_id__in=corporate_ids).aggregate(posters=Sum('total_poster_count'),\
+                    standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+                space_info_dict['corporates'] = corporates
+                space_info_dict['corporates_count'] = corporates_count
+                space_info_dict['corporates_inventory_count'] = corporates_inventory_count 
+                space_info_dict['corporates_inventory'] = corporates_inventory_serializer.data
 
             if space_mapping_object.gym_allowed:
                 # ADDNEW --> write gym code for filtering

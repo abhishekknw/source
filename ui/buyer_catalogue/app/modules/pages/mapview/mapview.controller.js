@@ -274,13 +274,16 @@ angular.module('catalogueApp')
                 });
                 return center_marker;
             }
-
+            var markers = [];
             function assignMarkersToMap(spaces) {
                 // assigns spaces(society, corporate) markers on the map
                 // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
-                var markers = [];
+
                 for (var i=0; i <spaces.length; i++) {
+                  if(spaces[i].society_latitude){
                     markers.push({
+                      // console.log(spaces[i].society_latitude);
+
                         latitude: spaces[i].society_latitude,
                         longitude: spaces[i].society_longitude,
                         id: spaces[i].supplier_id,
@@ -293,6 +296,7 @@ angular.module('catalogueApp')
                             subarea : spaces[i].society_subarea,
                             location_type : spaces[i].society_location_type,
                         },
+
                         // uncomments events to allow mouseover and set variable like in $scope.onClick to enable that
                         // events : {
                         //     mouseover: function (marker, eventName, model, args) {
@@ -314,6 +318,22 @@ angular.module('catalogueApp')
                         //     }
                         // }
                     });
+                  }else{
+                    markers.push({
+                    latitude: spaces[i].latitude,
+                    longitude: spaces[i].longitude,
+                    id: spaces[i].supplier_id,
+                    icon: "img/cleft.png",
+                    // icon: "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png",
+                    options : {draggable : false},
+                    title : {
+                        name : spaces[i].name,
+                        address1 : spaces[i].address1,
+                        subarea : spaces[i].subarea,
+                        // location_type : spaces[i].society_location_type,
+                    },
+                  });
+                  }
                 };
                 // console.log("markers done");
                 return markers;
@@ -389,6 +409,12 @@ angular.module('catalogueApp')
                         // $scope.society_allowed = true;
                         set_space_inventory($scope.current_center.societies_inventory, $scope.society_inventory_type);
                         $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
+                    }
+                    if($scope.current_center.center.space_mappings.corporate_allowed){
+                      console.log($scope.current_center.corporates);
+                        // $scope.society_allowed = true;
+                        // set_space_inventory($scope.current_center.societies_inventory, $scope.society_inventory_type);
+                        $scope.society_markers = assignMarkersToMap($scope.current_center.corporates);
                     }
                     // ADDNEW --> Do the same for corporates and gyms and salons
                     // Do the same for corporates and gyms and salons
@@ -485,7 +511,7 @@ angular.module('catalogueApp')
                   }else{
                     for(var i=0; i< $scope.centers1.length; i++){
                       $scope.society_markers = [];
-                      $scope.societyFilter($scope.centers1[i].societies_inventory);
+                      //$scope.societyFilter($scope.centers1[i].societies_inventory);
                       delete $scope.centers1[i].societies;
                       delete $scope.centers1[i].societies_inventory;
                       delete $scope.centers1[i].societies_count;
@@ -696,6 +722,7 @@ angular.module('catalogueApp')
           $q.all(promises).then(function(response){
             var length = $scope.centers1.length;
             for(var i=0; i<length; i++){
+              console.log(promises);
               $scope.centers1[i].societies = promises[i].$$state.value.data.suppliers;
               $scope.centers1[i].societies_inventory_count = promises[i].$$state.value.data.supplier_inventory_count;
               $scope.centers1[i].societies_count = promises[i].$$state.value.data.supplier_count;
@@ -835,7 +862,7 @@ angular.module('catalogueApp')
             $scope.centers[i].center['society_inventory_type_selected']=society_inventory_type_selected;
           }
         }
-        
+
         $scope.submitProposal = function(){
           getShortlistedFilteredSocieties();
 
@@ -843,7 +870,6 @@ angular.module('catalogueApp')
         };
         $scope.exportData = function(){
           getShortlistedFilteredSocieties();
-          console.log($scope.centers);
           mapViewService.exportProposalData($scope.proposal_id_temp, $scope.centers)
           .success(function(response){
               console.log("Successfully Exported");
