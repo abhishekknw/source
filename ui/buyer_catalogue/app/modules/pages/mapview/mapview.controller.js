@@ -811,56 +811,39 @@ angular.module('catalogueApp')
           }
         }
         //End: Function for calculating total impressions inventory wise
-        $scope.submitProposal = function(){
-          //Start: For sending only shortlisted society in request
-        //Start: For sending only shortlisted societies & selected inventory types
-        function getShortlistedFilteredSocieties(){
-          for(var i=0;i<$scope.centers.length;i++){
-            for(var j=0;j<$scope.centers[i].societies.length;j++){
-              if($scope.centers[i].societies[j].shortlisted == false){
-                 $scope.centers[i].societies.splice(j--,1);
-                 $scope.centers[i].societies_count--;
-              }
+
+      //Start: For sending only shortlisted societies & selected inventory types
+      function getShortlistedFilteredSocieties(){
+        for(var i=0;i<$scope.centers.length;i++){
+          for(var j=0;j<$scope.centers[i].societies.length;j++){
+            if($scope.centers[i].societies[j].shortlisted == false){
+               $scope.centers[i].societies.splice(j--,1);
+               $scope.centers[i].societies_count--;
             }
           }
-          //End: For sending only shortlisted society in
-          //Start: For sending filtered inventory type
-            var society_inventory_type_selected = [];
-            for(var i=0;i<$scope.society_inventory_type.length;i++){
-              if($scope.society_inventory_type[i].selected == true){
-                society_inventory_type_selected.push($scope.society_inventory_type[i].code);
-              }
+        }
+      //End: For sending only shortlisted society in
+      //Start: For sending filtered inventory type
+          var society_inventory_type_selected = [];
+          for(var i=0;i<$scope.society_inventory_type.length;i++){
+            if($scope.society_inventory_type[i].selected == true){
+              society_inventory_type_selected.push($scope.society_inventory_type[i].code);
             }
-            for(var i=0;i<$scope.centers.length;i++){
-              $scope.centers[i].center['society_inventory_type_selected']=society_inventory_type_selected;
-            }
-            //End: For sending filtered inventory type
+          }
+      //End: For sending filtered inventory type
+          for(var i=0;i<$scope.centers.length;i++){
+            $scope.centers[i].center['society_inventory_type_selected']=society_inventory_type_selected;
+          }
+        }
+        
+        $scope.submitProposal = function(){
+          getShortlistedFilteredSocieties();
+
             console.log("Submitting $scope.centers :", $scope.centers);
         };
-        //End: For sending only shortlisted societies & selected inventory types
         $scope.exportData = function(){
-          //Start: For sending only shortlisted society in request
-          for(var i=0;i<$scope.centers.length;i++){
-            for(var j=0;j<$scope.centers[i].societies.length;j++){
-              if($scope.centers[i].societies[j].shortlisted == false){
-                 $scope.centers[i].societies.splice(j--,1);
-                 $scope.centers[i].societies_count--;
-              }
-            }
-          }
-          //End: For sending only shortlisted society in
-          //Start: For sending filtered inventory type
-            var society_inventory_type_selected = [];
-            for(var i=0;i<$scope.society_inventory_type.length;i++){
-              if($scope.society_inventory_type[i].selected == true){
-                society_inventory_type_selected.push($scope.society_inventory_type[i].code);
-              }
-            }
-            for(var i=0;i<$scope.centers.length;i++){
-              $scope.centers[i].center['society_inventory_type_selected']=society_inventory_type_selected;
-            }
-            //End: For sending filtered inventory type
-            console.log($scope.centers);
+          getShortlistedFilteredSocieties();
+          console.log($scope.centers);
           mapViewService.exportProposalData($scope.proposal_id_temp, $scope.centers)
           .success(function(response){
               console.log("Successfully Exported");
@@ -880,7 +863,6 @@ angular.module('catalogueApp')
         $scope.importData = function(files, errFiles){
                 $scope.files = files;
                 $scope.errFile = errFiles;
-                /*if (files) {*/
               angular.forEach(files, function(file) {
                     var my_filename = "PR_" + $scope.proposal_id_temp + "_" + makeid();
                     files.upload = Upload.upload({
@@ -912,5 +894,5 @@ angular.module('catalogueApp')
                                                  evt.loaded / evt.total));
                     });
               });
-        }
+            }
 });
