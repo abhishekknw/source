@@ -69,9 +69,6 @@ class GetInventoryObjectManager(models.Manager):
 
         """
         try:
-            import pdb
-            pdb.set_trace()
-
             adinventory_type = data['adinventory_type']
             duration_type = data['duration_type']
 

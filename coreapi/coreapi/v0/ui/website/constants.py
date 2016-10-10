@@ -12,8 +12,8 @@ supplier_keys = [
 ]
 
 proposal_header_keys = [
-    'Center Name', 'Supplier Id', 'Supplier Name', 'Sub Area', 'Society Type', 'Tower Count', \
-    'Flat Count'
+    'Center Name','Center Proposal Id', 'Center Id', 'Space Mapping Id', 'Inventory Type Id', 'Supplier Id', 'Supplier Name', 'Supplier Sub Area', 'Supplier Type', 'Supplier Tower Count', \
+    'Supplier Flat Count',
 ]
 
 inventorylist = {
@@ -29,7 +29,7 @@ inventorylist = {
                  'standee_price_per_flat']
     },
     'FL': {
-        'HEADER': ['Flyer count', 'Flier Price', 'Flier Duration', 'Flier Price Factor', ],
+        'HEADER': ['Flier count', 'Flier Price', 'Flier Duration', 'Flier Price Factor', ],
         'DATA': ['flier_count', 'flier_price', 'flier_duration', 'flier_price_factor']
     },
     'SL': {
@@ -47,10 +47,10 @@ sample_data = [
 ]
 
 society_keys = ['supplier_id', 'society_name', 'society_subarea', 'society_type_quality', \
-                'tower_count', 'flat_count'
+                'tower_count', 'flat_count',
                 ]
 
-center_keys = ['center_name']
+center_keys = ['center_name', 'proposal', 'id']
 
 export_keys = ['center', 'societies', 'societies_inventory', 'societies_inventory_count']
 
@@ -95,3 +95,37 @@ flat_type_dict = {
 #     }
 #
 # }
+
+import_master_keys = ['societies_inventory', 'societies_inventory_count', 'societies', 'center', 'societies_count']
+
+society_inventory_keys = [
+     'space_mapping', 'id',
+]
+
+societies_header_to_field_mapping = {
+    'SUPPLIER ID': 'supplier_id',
+    'SUPPLIER NAME': 'society_name',
+    'SUB AREA': 'society_subarea',
+    'SOCIETY TYPE': 'society_type_quality',
+    'TOWER COUNT': 'tower_count',
+    'FLAT COUNT': 'flat_count'
+}
+
+import_center_keys = [
+    'center_name', 'proposal', 'id'
+]
+
+inventories_keys = {'BANNER': 'banner_allowed', 'POSTER': 'poster_allowed', 'FLIER': 'flier_allowed',
+
+               'STANDEE':'standee_allowed', 'STALL': 'stall_allowed'}
+
+index_of_center_id = 2
+
+header_to_field_mapping = {
+    'center name': 'center_name',
+    'center proposal id': 'prop'
+
+}
+
+# inventory related fields in the sheet
+inventory_fields = ['poster_count', 'stall_count', 'flier_count', 'standee_count', 'poster_price', 'stall_price', 'flier_price', 'standee_price']

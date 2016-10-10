@@ -26,7 +26,7 @@ urlpatterns = [
 
     # Beta Urls and Classes
     url(r'^(?P<account_id>[A-Z_a-z0-9]+)/createInitialProposal/$',views.InitialProposalAPIView.as_view()),
-    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/createFinalProposal/$',views.FinalProposalAPIView.as_view()),
+    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/createFinalProposal/$',views.FinalProposalAPIView.as_view(), name='create-final-proposal'),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/getSpaces/$', views.SpacesOnCenterAPIView.as_view()),
     # url(r'^getSpace/(?P<id>[A-Z_a-z0-9]+)/$', views.GetSpaceInfoAPIView.as_view()),
     url(r'^getFilteredSocieties/$', views.GetFilteredSuppliersAPIView.as_view()),
@@ -37,6 +37,8 @@ urlpatterns = [
     #url(r'^putSocietiesInTable/$', views.SocietySaveCSVAPIView.as_view()),
     url(r'^save-society-data/$', views.SaveSocietyData.as_view()),
     url(r'^save-contact-details/$', views.SaveContactDetails.as_view()),
-    
+
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/export-spaces-data/$', views.ExportData.as_view()),
+    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/import-society-data/$', views.ImportSocietyData.as_view()),
+
 ]

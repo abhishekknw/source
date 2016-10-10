@@ -722,7 +722,6 @@ angular.module('catalogueApp')
           $q.all(promises).then(function(response){
             var length = $scope.centers1.length;
             for(var i=0; i<length; i++){
-              console.log(promises);
               $scope.centers1[i].societies = promises[i].$$state.value.data.suppliers;
               $scope.centers1[i].societies_inventory_count = promises[i].$$state.value.data.supplier_inventory_count;
               $scope.centers1[i].societies_count = promises[i].$$state.value.data.supplier_count;
@@ -869,7 +868,10 @@ angular.module('catalogueApp')
             console.log("Submitting $scope.centers :", $scope.centers);
         };
         $scope.exportData = function(){
-          getShortlistedFilteredSocieties();
+        getShortlistedFilteredSocieties();
+        console.log($scope.centers);
+        getShortlistedFilteredSocieties();
+        console.log($scope.centers);
           mapViewService.exportProposalData($scope.proposal_id_temp, $scope.centers)
           .success(function(response){
               console.log("Successfully Exported");

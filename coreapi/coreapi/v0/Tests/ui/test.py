@@ -282,3 +282,203 @@ class SaveBuildingDetailsAPIViewTestCase(APITestCase):
 
         # check the response
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class CompanyDetailsAPIViewTestCases(APITestCase):
+    """
+    Test cases for CompanyDetails API View. Though the url is named  get_company_list, it brings list of
+    companies for a 'corporate'. it should be named 'get-corporate-company-details' or so.
+    """
+    def setUp(self):
+
+        self.supplier_id = 'SS1'
+
+        # create a SupplierTypeCorporate
+        self.supplier_type_corporate = models.SupplierTypeCorporate.objects.create(supplier_id=self.supplier_id, name="whatever")
+
+        # create buildings for this corporate
+        models.CorporateBuilding.objects.create(building_name='B1', number_of_wings=2,
+                                                corporatepark_id=self.supplier_type_corporate)
+        models.CorporateBuilding.objects.create(building_name='B2', number_of_wings=2,
+                                                corporatepark_id=self.supplier_type_corporate)
+
+        # create companies for this corporate
+        models.CorporateParkCompanyList.objects.create(name='C1', supplier_id=self.supplier_type_corporate)
+        models.CorporateParkCompanyList.objects.create(name='C2', supplier_id=self.supplier_type_corporate)
+        models.CorporateParkCompanyList.objects.create(name='C3', supplier_id=self.supplier_type_corporate)
+
+    def test_pass_get_all_companies_buildings(self):
+
+        # make the url
+        url = reverse('get-corporate-company-list', kwargs={'id': self.supplier_id})
+
+        # make the call
+        response = self.client.get(url)
+
+        # check the response
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class CorporateCompanyDetailsAPIView(APITestCase):
+    """
+    author: nikhil
+    Test cases for  CorporateCompanyDetailsAPIView
+
+    """
+    def setUp(self):
+        self.supplier_id = 'SS1'
+
+        # create a SupplierTypeCorporate
+        self.supplier_type_corporate = models.SupplierTypeCorporate.objects.create(supplier_id=self.supplier_id,
+                                                                                   name="whatever")
+        # create companies for this corporate
+        self.company1 = models.CorporateParkCompanyList.objects.create(name='C1', supplier_id=self.supplier_type_corporate)
+        self.company2 = models.CorporateParkCompanyList.objects.create(name='C2', supplier_id=self.supplier_type_corporate)
+        self.company3 = models.CorporateParkCompanyList.objects.create(name='C3', supplier_id=self.supplier_type_corporate)
+
+        # create buildings/name for some companies
+
+        self.comp_details_1 = models.CorporateCompanyDetails.objects.create(building_name='B1', wing_name='w1', company_id=self.company1)
+
+        self.comp_details_2 = models.CorporateCompanyDetails.objects.create(building_name='B2', wing_name='w2',
+                                                                   company_id=self.company1)
+
+        self.comp_details_3 = models.CorporateCompanyDetails.objects.create(building_name='B3', wing_name='w3', company_id=self.company2)
+
+        self.comp_details_4 = models.CorporateCompanyDetails.objects.create(building_name='B4', wing_name='w4', company_id=self.company3)
+
+        # create some floors for these buildings
+
+        self.floor_1 = models.CompanyFloor.objects.create(floor_number=4, company_details_id=self.comp_details_1)
+        self.floor_2 = models.CompanyFloor.objects.create(floor_number=5, company_details_id=self.comp_details_2)
+        self.floor_3 = models.CompanyFloor.objects.create(floor_number=10, company_details_id=self.comp_details_3)
+        self.floor_4 = models.CompanyFloor.objects.create(floor_number=2, company_details_id=self.comp_details_4)
+
+    def test_pass_get_company_data(self):
+        # url is v0/ui/get_company_data.
+
+        # make the url. calls the view  CorporateCompanyDetailsAPIView
+        url = reverse('get-company-data', kwargs={'id': self.supplier_id})
+
+        # make the call
+        response = self.client.get(url)
+
+        # check the response
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_pass_save_company_details(self):
+        # url is v0/ui/save_company_details.
+        # 3 companies, first company has 2 buildings, rest of them has 1 building each.
+        # each building has 1 floor object linked.
+
+        # make the url. calls the view  CorporateCompanyDetailsAPIView
+        url = reverse('save-company-details', kwargs={'id': self.supplier_id})
+
+        # get the data to send
+        self.data = make_save_company_details_data(self)
+
+        # make the call
+        response = self.client.post(url, data=json.dumps(self.data), content_type='application/json')
+
+        # check the response
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+def make_save_company_details_data(self):
+    """
+    Args:
+        self: self object
+
+    Returns: data required for calling save-company-details api.
+
+    """
+    return [
+
+        {
+            'supplier_id': self.supplier_id,
+            'id': self.company1.id,
+            'name': self.company1.name,
+            'companyDetailList': [
+                {
+
+                    'id': self.comp_details_1.id,
+                    'wing_name': self.comp_details_1.wing_name,
+                    'building_name': self.comp_details_1.building_name,
+                    'company_id': self.comp_details_1.id,
+                    'listOfFloors': [
+                        {
+                            'company_details_id': self.comp_details_1.id,
+                            'floor_number': self.floor_1.floor_number,
+                            'id': self.floor_1.id
+                        }
+                    ]
+                },
+                {
+                    'id': self.comp_details_2.id,
+                    'wing_name': self.comp_details_2.wing_name,
+                    'building_name': self.comp_details_2.building_name,
+                    'company_id': self.comp_details_2.id,
+                    'listOfFloors': [
+                        {
+                            'company_details_id': self.comp_details_2.id,
+                            'floor_number': self.floor_2.floor_number,
+                            'id': self.floor_2.id
+                        }
+                    ]
+                }
+            ]
+
+        },
+        {
+            'supplier_id': self.supplier_id,
+            'id': self.company2.id,
+            'name': self.company2.name,
+            'companyDetailList': [
+                {
+                    'id': self.comp_details_3.id,
+                    'wing_name': self.comp_details_3.wing_name,
+                    'building_name': self.comp_details_3.building_name,
+                    'company_id': self.comp_details_3.id,
+                    'listOfFloors': [
+                        {
+                            'company_details_id': self.comp_details_3.id,
+                            'floor_number': self.floor_3.floor_number,
+                            'id': self.floor_3.id
+                        }
+                    ]
+                },
+
+            ]
+
+        },
+        {
+            'supplier_id': self.supplier_id,
+            'id': self.company3.id,
+            'name': self.company3.name,
+            'companyDetailList': [
+                {
+                    'id': self.comp_details_4.id,
+                    'wing_name': self.comp_details_4.wing_name,
+                    'building_name': self.comp_details_4.building_name,
+                    'company_id': self.comp_details_4.id,
+                    'listOfFloors': [
+                        {
+                            'company_details_id': self.comp_details_4.id,
+                            'floor_number': self.floor_4.floor_number,
+                            'id': self.floor_4.id
+                        }
+                    ]
+                },
+            ]
+
+        }
+    ]
+
+
+
+
+
+
+
+
+

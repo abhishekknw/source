@@ -6,7 +6,9 @@ from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework import  status
 
+import constants as website_constants
 from constants import price_per_flat, inventorylist
+import v0.models as models
 from v0.models import PriceMappingDefault
 
 
@@ -311,3 +313,220 @@ def get_delta_latitude_longitude(radius, latitude):
 
 def space_on_circle(latitude, longitude, radius, space_lat, space_lng):
     return (space_lat - latitude)**2 + (space_lng - longitude)**2 <= (radius/110.574)**2
+
+
+def initialize_keys(center_object, row):
+    """
+    Args:
+        center_object: a dict representing one center object
+    goal is to make dict request.data type
+    Returns: intializes this dict  with all valid keys and defaults as values
+
+    """
+
+    try:
+
+        # set societies inventory key
+        center_object['societies_inventory'] = {}
+
+        # set societies key
+        center_object['societies'] = []
+
+        # set center key
+        center_object['center'] = {}
+
+        # set space mapping
+        center_object['center']['space_mappings'] = {}
+
+        # set societies count
+        center_object['societies_count'] = 0
+
+        # initialize the keys for total counts and  total price to zero to be filled later when we get prices and counts
+        for field in website_constants.inventory_fields:
+            if field in row.keys(): # add it only if the column is actualy present in the sheet
+                center_object['societies_inventory'][field] = 0
+
+        return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def make_societies_inventory(center_object, row):
+    """
+    Args:
+        center_object: a center object
+        row: 1 row of sheet
+    Returns: adds data for 'societies_inventory'
+
+    """
+    try:
+        center_object['societies_inventory']['supplier_code'] = 'RS'  # hardcoded for society
+        center_object['societies_inventory']['id'] = row['inventory_type_id']
+        center_object['societies_inventory']['space_mapping'] = row['space_mapping_id']
+
+        return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def make_societies(center_object, row):
+    """
+    Args:
+        center_object: a center_object
+        row: 1 row of data in sheet
+
+    Returns: adds the society that is present in this row to center_object and returns
+
+    """
+    try:
+        # collect society data in a dict and append it to the list of societies of center_object
+        society = {}
+        society['supplier_id'] = row['supplier_id']
+        society['society_name'] = row['supplier_name']
+        society['society_subarea'] = row['supplier_sub_area']
+        society['society_type_quality'] = row['supplier_type']
+        society['tower_count'] = row['supplier_tower_count']
+        society['flat_count'] = row['supplier_flat_count']
+
+        # put counts and prices of inventories for this society here
+        # increment the total counts for 'prices' and 'counts' of 'societies_inventory' each time we encounter a society
+
+        for field in website_constants.inventory_fields:
+            if row.get(field):
+                society[field] = row.get(field)
+                center_object['societies_inventory'][field] += int(row.get(field))
+
+        # add it to the list of center_object
+        center_object['societies'].append(society)
+
+        # return the result after we are done scanning
+        return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_center_id_list(ws, index_of_center_id):
+    """
+    Args:
+        ws: instance of worksheet
+        index_of_center_id: index of center_id column in the sheet
+    Returns: a list containing unique center_id's
+
+    """
+    try:
+        center_id_set = set()
+        for index, row in enumerate(ws.iter_rows()):
+            # skip the headers
+            if index == 0:
+                continue
+            if row[index_of_center_id].value:
+                center_id_set.add(int(row[index_of_center_id].value))
+        return Response({'status': True, 'data': list(center_id_set)}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_headers(ws):
+    """
+    Args:
+        ws: worksheet
+    Returns: a list of headers
+
+    """
+    try:
+        headers = []
+        for index, row in enumerate(ws.rows[0]):
+            headers[index] = row[index]
+        return Response({'status': True, 'data': headers}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_mapped_row(ws, row):
+    """
+    This makes a dict having headings with keys and corresponding cell values as values.
+    Args:
+        ws: worksheet instance
+        row_index: the row index  for which the modified row with underscore keys needs to be made
+
+    Returns: a dict in which keys are keys which are mapped to headers and value is the corresponding value from the row
+
+    """
+    try:
+        row_dict = {}
+        for index, cell in enumerate(row):
+            heading_with_spaces = ws.cell(row=1, column=index+1).value.lower()
+            heading_with_underscore = '_'.join(heading_with_spaces.split(' '))
+            row_dict[heading_with_underscore] = cell.value
+        return Response({'status': True, 'data': row_dict}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def make_center(center_object, row):
+    """
+    Args:
+        center_object: center_object
+        row: a dict containg data of one row
+
+    Returns: populates the center_object with data for it's 'center' key
+
+    """
+    try:
+        center_object['center']['center_name'] = row.get('center_name')
+        center_object['center']['proposal'] = row['center_proposal_id']
+        center_object['center']['id'] = row['center_id']
+        space_mapping_response = make_space_mappings(row)
+        if not space_mapping_response.data['status']:
+            return space_mapping_response
+        center_object['center']['space_mappings'] = space_mapping_response.data['data']
+        return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def make_space_mappings(row):
+    """
+    Args:
+        row: data of one row
+
+    Returns: a dict of space mappings
+
+    """
+    try:
+        space_mapping = {}
+        space_mapping['center'] = row['center_id']
+        space_mapping['proposal'] = row['center_proposal_id']
+        space_mapping['id'] = row['space_mapping_id']
+        return Response({'status': True, 'data': space_mapping}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def save_proposal_version(center_id):
+    """
+    Args:
+        center_id: center_id for which proposal version object is to be saved
+         used in FinalProposal post request
+
+    Returns:
+
+    """
+
+    try:
+        center_object = models.ProposalCenterMapping.objects.select_related('proposal').get(id=center_id)
+        proposal_object = center_object.proposal
+
+        # version save
+        proposal_version_object = models.ProposalInfoVersion(proposal=proposal_object, name=proposal_object.name,
+                                                      payment_status=proposal_object.payment_status, \
+                                                      created_on=proposal_object.created_on,
+                                                      created_by=proposal_object.created_by,
+                                                      tentative_cost=proposal_object.tentative_cost, \
+                                                      tentative_start_date=proposal_object.tentative_start_date,
+                                                      tentative_end_date=proposal_object.tentative_end_date)
+        proposal_version_object.save()
+        return Response({'status': True, 'data': proposal_version_object}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+

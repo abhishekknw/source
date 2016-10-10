@@ -2334,8 +2334,10 @@ class CompanyDetailsAPIView(APIView):
         return Response(response_dict,status=200)
 
 
-# This API is for saving details of all companies belonging to a specific corporate space.
 class CorporateCompanyDetailsAPIView(APIView):
+    '''
+    This API is for saving details of all companies belonging to a specific corporate space.
+    '''
     def get(self, request, id=None, format=None):
         try:
             corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
@@ -2347,13 +2349,14 @@ class CorporateCompanyDetailsAPIView(APIView):
 
         return Response(companies_serializer.data, status=200)
 
-
     def post(self, request, id, format=True):
         try:
             corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
         except SupplierTypeCorporate.DoesNotExist:
             return Response({'message' : "Corporate Doesn't Exist" }, status=404)
 
+        import pdb
+        pdb.set_trace()
 
         company_detail_list = []
         floor_list = []
@@ -2367,39 +2370,65 @@ class CorporateCompanyDetailsAPIView(APIView):
                 try:
                     if not company_detail['building_name']:
                         continue
+                    # get the right CorporateCompanyDetails object if 'id' exist in the company_detail object.
                     company_detail_instance = CorporateCompanyDetails.objects.get(id=company_detail['id'])
+
+                    # set the id of the company for which this object belongs to
                     company_detail['company_id'] = company['id']
+
+                    # remove the id of CorporateCompanyDetails object from the set of id's.
                     company_detail_ids.remove(company_detail['id'])
+
+                    # update this instance with new data
                     company_detail_instance.__dict__.update(company_detail)
+
+                    # save
                     company_detail_instance.save()
+
                     flag = True
                 except KeyError:
+                    # create the CorporateCompanyDetails object if 'id' is not in company_detail object
                     company_detail_instance = CorporateCompanyDetails(company_id_id=company['id'],building_name=company_detail['building_name'],wing_name=company_detail['wing_name'])
                     # company_detail_list.append(company_detail_instance)
                     # uncomment this line if error occurs
                     company_detail_instance.save()
                     flag = False
-            
+                # if the CorporateCompanyDetails object was updated
                 if flag:
+                    # for a given building, find all the floors
                     floor_ids = set(CompanyFloor.objects.filter(company_details_id_id=company_detail_instance.id).values_list('id',flat=True))
+
+                    # for each floor object in company_details['listOfFloors']
                     for floor in company_detail['listOfFloors']:
                         try:
+                            # get the floor object
                             floor_instance = CompanyFloor.objects.get(id=floor['id'])
+
+                            # remove the floor id from set of floor id's
                             floor_ids.remove(floor_instance.id)
+
+                            # if the floor number for this building is same as new floor number no point in updating
                             if floor_instance.floor_number == floor['floor_number']:
                                 continue
+
+                            # else update the new floor number and also save for which building ( CorporateCompanyDetails ) this floor was updated
                             floor_instance.company_detail_id, floor_instance.floor_number = company_detail_instance, floor['floor_number']
                             
                             # floor_instance.__dict__.update(floor)
                             floor_instance.save()
                         except KeyError:
+                            # if we do not find the floor object , create a new Floor object for this building instance
                             floor_list_instance = CompanyFloor(company_details_id=company_detail_instance,floor_number=floor['floor_number'])
+
+                            # append the floor instance to floor_list
                             floor_list.append(floor_list_instance)
                     floor_superset = floor_superset.union(floor_ids)
 
-
+                # if CorporateCompanydetails was not updated , it was created fresh new, then create new floor objects
                 else:
+                    # for each floor
                     for floor in company_detail['listOfFloors']:
+                        # create a new floor object
                         floor_list_instance = CompanyFloor(company_details_id=company_detail_instance,floor_number=floor['floor_number'])
                         floor_list.append(floor_list_instance)
 
@@ -2413,6 +2442,7 @@ class CorporateCompanyDetailsAPIView(APIView):
         # CorporateCompanyDetails.objects.bulk_create(company_detail_list)
         CompanyFloor.objects.filter(id__in=floor_superset).delete()
         CorporateCompanyDetails.objects.filter(id__in=company_detail_ids).delete()
+        # create all the floor objects at once
         CompanyFloor.objects.bulk_create(floor_list)
         return Response(status=200)
 
