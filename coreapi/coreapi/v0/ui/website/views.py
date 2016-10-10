@@ -20,6 +20,7 @@ from openpyxl.compat import range
 import requests
 #from import_export import resources
 
+import openpyxl
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer,  CampaignTypeMappingSerializer
 from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, BusinessInfo, \
@@ -1414,7 +1415,7 @@ class FinalProposalAPIView(APIView):
                 society_ids = []
                 societies_count = 0
                 for society in societies_temp:
-                    if space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
+                    if website_utils.space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
                         society['society_latitude'], society['society_longitude']):
                         society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
                                                                                     society['supplier_id'])
@@ -1476,8 +1477,6 @@ class FinalProposalAPIView(APIView):
         }
 
         return Response(response, status=200)
-
-
 
     def post(self, request, proposal_id=None, format=None):
         ''' Saving the proposal from the map view. Every time mapview page is loaded and grid view is submitted from there
@@ -2187,8 +2186,8 @@ class ImportSocietyData(APIView):
         """
         try:
 
-            import openpyxl
-            wb = openpyxl.load_workbook('/home/nikhil/Documents/machadalo/sample4.xlsx')
+            file_name = BASE_DIR + '/sample4.xlsx'
+            wb = openpyxl.load_workbook(file_name)
             ws = wb.get_sheet_by_name('Shortlisted Spaces Details')
 
             center_id_list_response = website_utils.get_center_id_list(ws, index_of_center_id)
