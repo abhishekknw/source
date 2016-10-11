@@ -140,14 +140,14 @@
           <tr ng-repeat = "society in society1.societies">
             <td>{{$index+1}}</td>
             <td>{{society1.center.center_name}}</td>
-            <td><a ng-href="http://mdbuyercatalog.s3-website-ap-southeast-1.amazonaws.com/#/campaign/5/societyDetails/{{society.supplier_id}}" target="_blank">{{society.society_name}}</a></td>
+            <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{society.supplier_id}}" target="_blank">{{society.society_name}}</a></td>
             <td>{{society.society_subarea + "," + society.society_locality}}</td>
             <td>{{society.flat_count}}</td>
             <td>{{society.average_rent}}</td>
             <td>{{society.society_type_quality}}</td>
             <td>{{society.society_location_type}}</td>
             <td>{{society.machadalo_index}}</td>
-            <td ng-if="inv_poster">{{society.flat_count}}</td>
+            <td ng-if="inv_poster">{{society.tower_count}}</td>
             <!-- <td ng-if="inv_poster">{{society.poster_price}}</td>-->
             <td ng-if="inv_standee">{{society.total_standee_count}}</td>
             <!-- <td ng-if="inv_standee">{{society.standee_price}}</td> -->
@@ -242,6 +242,8 @@
           <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
           <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
+          <button class="btn btn-danger active" type = "file" class="btn btn-default" ng-show="show_societies" ngf-select = "importData($files, $invalidFiles)"
+            accept = "/*" ngf-max-size = "5MB" >Upload excel</button>
           </div>
         </div>
 
