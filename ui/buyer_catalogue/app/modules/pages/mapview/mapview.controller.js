@@ -274,11 +274,10 @@ angular.module('catalogueApp')
                 });
                 return center_marker;
             }
-            var markers = [];
             function assignMarkersToMap(spaces) {
                 // assigns spaces(society, corporate) markers on the map
                 // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
-
+                var markers = [];
                 for (var i=0; i <spaces.length; i++) {
                   if(spaces[i].society_latitude){
                     markers.push({
