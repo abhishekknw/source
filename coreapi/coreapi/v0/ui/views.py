@@ -415,6 +415,7 @@ class CorporateAPIListView(APIView):
             user = request.user
             search_txt = request.query_params.get('search', None)
 
+
             if search_txt:
                 items = SupplierTypeCorporate.objects.filter(Q(supplier_id__icontains=search_txt) | Q(name__icontains=search_txt)| Q(address1__icontains=search_txt)| Q(city__icontains=search_txt)| Q(state__icontains=search_txt)).order_by('name')
             else:
@@ -2354,9 +2355,6 @@ class CorporateCompanyDetailsAPIView(APIView):
             corporate = SupplierTypeCorporate.objects.get(supplier_id=id)
         except SupplierTypeCorporate.DoesNotExist:
             return Response({'message' : "Corporate Doesn't Exist" }, status=404)
-
-        import pdb
-        pdb.set_trace()
 
         company_detail_list = []
         floor_list = []

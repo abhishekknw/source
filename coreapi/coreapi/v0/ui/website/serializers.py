@@ -20,7 +20,6 @@ class ProposalCenterMappingVersionSerializer(ModelSerializer):
 
     class Meta:
         model = ProposalCenterMappingVersion
-        fields = ('proposal_version', 'center_name', 'id')
 
 
 class SpaceMappingVersionSerializer(ModelSerializer):
@@ -80,14 +79,13 @@ class ProposalCenterMappingSerializer(ModelSerializer):
     # using this serializer to save the center object
     class Meta:
         model = ProposalCenterMapping
-        fields = ('proposal', 'center_name', 'id')
+        # fields = ('proposal', 'center_name', 'id')
 
 
 class ShortlistedSpacesSerializer(ModelSerializer):
 
     class Meta:
         model = ShortlistedSpaces
-
 
 
 class ProposalSocietySerializer(ModelSerializer):

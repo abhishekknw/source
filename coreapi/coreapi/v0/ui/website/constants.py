@@ -18,26 +18,26 @@ proposal_header_keys = [
 
 inventorylist = {
     'PO': {
-        'HEADER': ['Poster Count', 'Poster Price', 'Poster Duration', 'Poster Price Factor', 'Poster price per flat'],
+        'HEADER': ['Poster Count', 'Poster Price', 'Poster Duration', 'Poster Price Factor', 'Poster price per flat', 'Poster Business Price'],
         'DATA': ['total_poster_count', 'poster_price', 'poster_duration', 'poster_price_factor',
                  'poster_price_per_flat']
     },
     'ST': {
         'HEADER': ['Standee Count', 'Standee Price', 'Standee Duration', 'Standee Price factor',
-                   'Standee price per flat'],
+                   'Standee price per flat', 'Standee Business Price'],
         'DATA': ['total_standee_count', 'standee_price', 'standee_duration', 'standee_price_factor',
                  'standee_price_per_flat']
     },
     'FL': {
-        'HEADER': ['Flier count', 'Flier Price', 'Flier Duration', 'Flier Price Factor', ],
+        'HEADER': ['Flier count', 'Flier Price', 'Flier Duration', 'Flier Price Factor', 'Flier Business Price'],
         'DATA': ['flier_count', 'flier_price', 'flier_duration', 'flier_price_factor']
     },
     'SL': {
-        'HEADER': ['Stall Count', 'Stall Price', 'Stall Duration', 'Stall Price Factor'],
+        'HEADER': ['Stall Count', 'Stall Price', 'Stall Duration', 'Stall Price Factor', 'Stall Business Price'],
         'DATA': ['stall_count', 'stall_price', 'stall_duration', 'stall_price_factor']
     },
     'CD': {
-        'HEADER': ['Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor'],
+        'HEADER': ['Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor', 'Car Business Price' ],
         'DATA': ['car_display', 'car_display_price', 'car_display_duration', 'car_display_price_factor']
     }
 }
@@ -129,3 +129,16 @@ header_to_field_mapping = {
 
 # inventory related fields in the sheet
 inventory_fields = ['poster_count', 'stall_count', 'flier_count', 'standee_count', 'poster_price', 'stall_price', 'flier_price', 'standee_price']
+
+# this list is used to know if a particular inventory was really present in the sheet
+is_inventory_available = ['poster_count', 'stall_count', 'standee_count','flier_count']
+
+# this dict uses items of is_inventory_available list to get corresponding model names
+# BASE_NAME is available so that once we know what inventories are  in the sheet we can construct other inventory
+# headers based on the base name.
+inventory_models = {
+    'poster_count': {'MODEL': 'PosterInventory', 'BASE_NAME': 'poster'},
+    'stall_count': {'MODEL': 'StallInventory', 'BASE_NAME': 'stall'},
+    'flier_count': {'MODEL': 'FlierThroughLobbyInfo', 'BASE_NAME': 'flier'},
+    'standee_count': {'MODEL': 'StandeeInventory', 'BASE_NAME': 'standee'}
+}

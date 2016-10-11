@@ -144,8 +144,6 @@ def save_supplier_data(master_data):
     :return: saves corresponding supplier code data
     """
     try:
-        import pdb
-        pdb.set_trace()
         supplier_code = master_data['supplier_type_code']
         serializer_class = get_serializer(supplier_code)
         # serializer_class = master_data[supplier_code]['serializer']

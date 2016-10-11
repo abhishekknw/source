@@ -456,15 +456,14 @@ class GetAccountProposalsAPIView(APIView):
 
         try:
             account = AccountInfo.objects.get(account_id=account_id)
-        except AccountInfo.DoesNotExist:
-            return Response({'message': 'Invalid Account ID'}, status=406)
 
-        proposals = ProposalInfo.objects.filter(account=account)
-        proposal_serializer = ProposalInfoSerializer(proposals, many=True)
-        if proposal_serializer.is_valid():
+            proposals = ProposalInfo.objects.filter(account=account)
+            proposal_serializer = ProposalInfoSerializer(proposals, many=True)
             return Response(proposal_serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(proposal_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CampaignAPIView(APIView):
@@ -787,6 +786,7 @@ class InitialProposalAPIView(APIView):
             'society' : 'RS',   'corporate' : 'CP',
             'gym' : 'GY',       'salon' : 'SA'
         }
+
         with transaction.atomic():
             proposal_data = request.data
             proposal_data['proposal_id'] = self.create_proposal_id()
@@ -822,6 +822,7 @@ class InitialProposalAPIView(APIView):
                     except ConnectionError:
                         ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
                         return Response({'message' : 'Unable to connect to google Maps'}, status=406    )
+
                     center['latitude'] = geo_object.latitude
                     center['longitude'] = geo_object.longitude
 
@@ -1489,7 +1490,6 @@ class FinalProposalAPIView(APIView):
 
         with transaction.atomic():
             try:
-
                 shortlisted_space_list = []
                 shortlisted_space_version_list = []
                 for center_info in centers:
@@ -1859,130 +1859,136 @@ class ProposalHistoryAPIView(APIView):
         proposal_versions = proposal_object.get_proposal_versions()
         proposal_versions_list = []
 
-        for proposal_version_object in proposal_versions:
-            proposal_info_dict = {}
-            proposal_version_serializer = ProposalInfoVersionSerializer(proposal_version_object)
-            proposal_info_dict['proposal'] = proposal_version_serializer.data
-            proposal_center_versions = ProposalCenterMappingVersion.objects.filter(proposal_version=proposal_version_object)
-            center_versions_list = []
-            for center_version_object in proposal_center_versions:
-                space_info_dict = {}
-                center_version_serailizer = ProposalCenterMappingVersionSpaceSerializer(center_version_object)
-                space_info_dict['center'] = center_version_serailizer.data
+        try:
+            for proposal_version_object in proposal_versions:
+                proposal_info_dict = {}
+                proposal_version_serializer = ProposalInfoVersionSerializer(proposal_version_object)
+                proposal_info_dict['proposal'] = proposal_version_serializer.data
+                proposal_center_versions = ProposalCenterMappingVersion.objects.filter(proposal_version=proposal_version_object)
+                center_versions_list = []
+                for center_version_object in proposal_center_versions:
+                    space_info_dict = {}
+                    center_version_serailizer = ProposalCenterMappingVersionSpaceSerializer(center_version_object)
+                    space_info_dict['center'] = center_version_serailizer.data
 
-                space_mapping_version_object = SpaceMappingVersion.objects.get(center_version=center_version_object)
+                    space_mapping_version_object = SpaceMappingVersion.objects.get(center_version=center_version_object)
 
-                if space_mapping_version_object.society_allowed:
-                    societies_shortlisted_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
-                            supplier_code = 'RS', buffer_status=False).values_list('object_id',flat=True)
-                    societies_shortlisted_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_shortlisted_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
-                    societies_shortlisted = []
-                    societies_shortlisted_count = 0
-                    # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
-                    for society in societies_shortlisted_temp:
-                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                    society['supplier_id'])
+                    if space_mapping_version_object.society_allowed:
+                        societies_shortlisted_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
+                                supplier_code = 'RS', buffer_status=False).values_list('object_id',flat=True)
+                        societies_shortlisted_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_shortlisted_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+                        societies_shortlisted = []
+                        societies_shortlisted_count = 0
+                        # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
+                        for society in societies_shortlisted_temp:
+                            society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                        society['supplier_id'])
 
-                        #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
-                        society['shortlisted'] = True
-                        society['buffer_status'] = False
-                        # obj = InventorySummaryAPIView()
-                        adinventory_type_dict = ui_utils.adinventory_func()
-                        duration_type_dict = ui_utils.duration_type_func()
+                            #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                            society['shortlisted'] = True
+                            society['buffer_status'] = False
+                            # obj = InventorySummaryAPIView()
+                            adinventory_type_dict = ui_utils.adinventory_func()
+                            duration_type_dict = ui_utils.duration_type_func()
 
-                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
-                            society['total_poster_count'] = society_inventory_obj.total_poster_count
-                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+                            if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                                society['total_poster_count'] = society_inventory_obj.total_poster_count
+                                society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
 
-                        if society_inventory_obj.standee_allowed:
-                            society['total_standee_count'] = society_inventory_obj.total_standee_count
-                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+                            if society_inventory_obj.standee_allowed:
+                                society['total_standee_count'] = society_inventory_obj.total_standee_count
+                                society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
 
-                        if society_inventory_obj.stall_allowed:
-                            society['total_stall_count'] = society_inventory_obj.total_stall_count
-                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
-                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+                            if society_inventory_obj.stall_allowed:
+                                society['total_stall_count'] = society_inventory_obj.total_stall_count
+                                society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                                society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
-                        if society_inventory_obj.flier_allowed:
-                            society['flier_frequency'] = society_inventory_obj.flier_frequency
-                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+                            if society_inventory_obj.flier_allowed:
+                                society['flier_frequency'] = society_inventory_obj.flier_frequency
+                                society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
-                        societies_shortlisted.append(society)
-                        societies_shortlisted_count += 1
+                            societies_shortlisted.append(society)
+                            societies_shortlisted_count += 1
 
-                    space_info_dict['societies_shortlisted'] = societies_shortlisted
-                    space_info_dict['societies_shortlisted_count'] = societies_shortlisted_count
-
-
-                    societies_buffered_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
-                            supplier_code = 'RS', buffer_status=True).values_list('object_id',flat=True)
-                    societies_buffered_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_buffered_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
-                    # societies_buffered_serializer = ProposalSocietySerializer(societies_buffered, many=True)
-                    societies_buffered = []
-                    societies_buffered_count = 0
-                    for society in societies_buffered_temp:
-                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                    society['supplier_id'])
-
-                        #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
-                        society['shortlisted'] = True
-                        society['buffer_status'] = False
-                        # obj = InventorySummaryAPIView()
-                        adinventory_type_dict = ui_utils.adinventory_func()
-                        duration_type_dict = ui_utils.duration_type_func()
-
-                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
-                            society['total_poster_count'] = society_inventory_obj.total_poster_count
-                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
-
-                        if society_inventory_obj.standee_allowed:
-                            society['total_standee_count'] = society_inventory_obj.total_standee_count
-                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
-
-                        if society_inventory_obj.stall_allowed:
-                            society['total_stall_count'] = society_inventory_obj.total_stall_count
-                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
-                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
-
-                        if society_inventory_obj.flier_allowed:
-                            society['flier_freqency'] = society_inventory_obj.flier_frequency
-                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
-
-                        societies_buffered.append(society)
-                        societies_buffered_count += 1
+                        space_info_dict['societies_shortlisted'] = societies_shortlisted
+                        space_info_dict['societies_shortlisted_count'] = societies_shortlisted_count
 
 
-                    space_info_dict['societies_buffered'] = societies_buffered
-                    space_info_dict['societies_buffered_count'] = societies_buffered_count
+                        societies_buffered_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
+                                supplier_code = 'RS', buffer_status=True).values_list('object_id',flat=True)
+                        societies_buffered_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_buffered_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+                        # societies_buffered_serializer = ProposalSocietySerializer(societies_buffered, many=True)
+                        societies_buffered = []
+                        societies_buffered_count = 0
+                        for society in societies_buffered_temp:
+                            society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                        society['supplier_id'])
 
-                    societies_inventory = InventoryTypeVersion.objects.get(supplier_code='RS', \
-                            space_mapping_version=space_mapping_version_object)
-                    societies_inventory_serializer = InventoryTypeVersionSerializer(societies_inventory)
-                    societies_inventory_count = InventorySummary.objects.filter(supplier_id__in=societies_shortlisted_ids).aggregate(posters=Sum('total_poster_count'),\
-                    standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+                            #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                            society['shortlisted'] = True
+                            society['buffer_status'] = False
+                            # obj = InventorySummaryAPIView()
+                            adinventory_type_dict = ui_utils.adinventory_func()
+                            duration_type_dict = ui_utils.duration_type_func()
 
-                    # Count only for society_shortlisted
-                    space_info_dict['societies_inventory_count'] = societies_inventory_count
-                    space_info_dict['societies_inventory'] = societies_inventory_serializer.data
+                            if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                                society['total_poster_count'] = society_inventory_obj.total_poster_count
+                                society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
 
-                if space_mapping_version_object.corporate_allowed:
-                    # ADDNEW -->
-                    pass
+                            if society_inventory_obj.standee_allowed:
+                                society['total_standee_count'] = society_inventory_obj.total_standee_count
+                                society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
 
-                if space_mapping_version_object.gym_allowed:
-                    # ADDNEW -->
-                    pass
+                            if society_inventory_obj.stall_allowed:
+                                society['total_stall_count'] = society_inventory_obj.total_stall_count
+                                society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                                society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
-                if space_mapping_version_object.salon_allowed:
-                    # ADDNEW -->
-                    pass
+                            if society_inventory_obj.flier_allowed:
+                                society['flier_freqency'] = society_inventory_obj.flier_frequency
+                                society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
-                center_versions_list.append(space_info_dict)
+                            societies_buffered.append(society)
+                            societies_buffered_count += 1
 
-            proposal_info_dict['centers'] = center_versions_list
-            proposal_versions_list.append(proposal_info_dict)
 
-        return Response(proposal_versions_list, status=200)
+                        space_info_dict['societies_buffered'] = societies_buffered
+                        space_info_dict['societies_buffered_count'] = societies_buffered_count
+
+                        societies_inventory = InventoryTypeVersion.objects.get(supplier_code='RS', \
+                                space_mapping_version=space_mapping_version_object)
+                        societies_inventory_serializer = InventoryTypeVersionSerializer(societies_inventory)
+                        societies_inventory_count = InventorySummary.objects.filter(supplier_id__in=societies_shortlisted_ids).aggregate(posters=Sum('total_poster_count'),\
+                        standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+                        # Count only for society_shortlisted
+                        space_info_dict['societies_inventory_count'] = societies_inventory_count
+                        space_info_dict['societies_inventory'] = societies_inventory_serializer.data
+
+                    if space_mapping_version_object.corporate_allowed:
+                        # ADDNEW -->
+                        pass
+
+                    if space_mapping_version_object.gym_allowed:
+                        # ADDNEW -->
+                        pass
+
+                    if space_mapping_version_object.salon_allowed:
+                        # ADDNEW -->
+                        pass
+
+                    center_versions_list.append(space_info_dict)
+
+                proposal_info_dict['centers'] = center_versions_list
+                proposal_versions_list.append(proposal_info_dict)
+
+            return Response(proposal_versions_list, status=200)
+        except ObjectDoesNotExist as e:
+            Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class SaveSocietyData(APIView):
@@ -2186,7 +2192,7 @@ class ImportSocietyData(APIView):
         """
         try:
 
-            file_name = BASE_DIR + '/sample4.xlsx'
+            file_name = BASE_DIR + '/sample5.xlsx'
             wb = openpyxl.load_workbook(file_name)
             ws = wb.get_sheet_by_name('Shortlisted Spaces Details')
 
@@ -2257,6 +2263,11 @@ class ImportSocietyData(APIView):
 
                 # update the center dict in result with modified center_object
                 result[center_index] = center_object
+
+            # populate the shortlisted_inventory_details table before hiting the url
+            response = website_utils.populate_shortlisted_inventory_details(result)
+            if not response.data['status']:
+                return response
 
             # time to hit the url
             url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})

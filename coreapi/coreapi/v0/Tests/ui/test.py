@@ -9,6 +9,11 @@ from rest_framework import status
 import v0.models as models
 
 
+'''
+This file contains test cases for ui app
+'''
+
+
 class GenerateSupplieridTestCase(APITestCase):
     """
     Test case for GenerateSupplierIdAPIView

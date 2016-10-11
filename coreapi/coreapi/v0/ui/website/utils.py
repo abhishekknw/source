@@ -2,6 +2,9 @@ import math
 from types import *
 
 from django.db.models import Q
+from django.apps import apps
+from django.contrib.contenttypes.models import ContentType
+
 
 from rest_framework.response import Response
 from rest_framework import  status
@@ -341,10 +344,13 @@ def initialize_keys(center_object, row):
         # set societies count
         center_object['societies_count'] = 0
 
-        # initialize the keys for total counts and  total price to zero to be filled later when we get prices and counts
-        for field in website_constants.inventory_fields:
-            if field in row.keys(): # add it only if the column is actualy present in the sheet
-                center_object['societies_inventory'][field] = 0
+        # set for shortlisted_inventory_details
+        center_object['shortlisted_inventory_details'] = []
+
+        # # initialize the keys for total counts and  total price to zero to be filled later when we get prices and counts
+        # for field in website_constants.inventory_fields:
+        #     if field in row.keys(): # add it only if the column is actualy present in the sheet
+        #         center_object['societies_inventory'][field] = 0
 
         return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
     except Exception as e:
@@ -369,6 +375,52 @@ def make_societies_inventory(center_object, row):
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
+def make_shortlisted_inventory_list(row):
+    """
+    Args:
+        row: a single row of sheet.  it's dict
+
+    Returns: a list of shortlisted inventory types for this supplier
+
+    """
+    try:
+
+        shortlisted_inventory_list = []
+        # check for predefined keys in the row. if available, we have that inventory !
+        for inventory in website_constants.is_inventory_available:
+            if inventory in row.keys():
+                # create an empty dict to store individual inventory details
+                shortlisted_inventory_details = {}
+
+                # get the content_type for this inventory. when the time comes remove this get call out of loop
+                # to speed up the process.
+                inventory_type = ContentType.objects.get(model=website_constants.inventory_models[inventory]['MODEL'])
+
+                # get the base_name so that we can fetch other fields from row
+                base_name = website_constants.inventory_models[inventory]['BASE_NAME']
+
+                # set the supplier_id
+                shortlisted_inventory_details['supplier_id'] = row['supplier_id']
+
+                # set the inventory_type
+                shortlisted_inventory_details['inventory_type'] = inventory_type
+
+                # set inventory_business_price
+                shortlisted_inventory_details['inventory_price'] = row[base_name + '_business_price']
+
+                # set inventory_count
+                shortlisted_inventory_details['inventory_count'] = row[base_name + '_count']
+
+                # add it to the list
+                shortlisted_inventory_list.append(shortlisted_inventory_details)
+
+        return Response({'status': True, 'data': shortlisted_inventory_list}, status=status.HTTP_200_OK)
+    except KeyError as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
 def make_societies(center_object, row):
     """
     Args:
@@ -388,19 +440,46 @@ def make_societies(center_object, row):
         society['tower_count'] = row['supplier_tower_count']
         society['flat_count'] = row['supplier_flat_count']
 
-        # put counts and prices of inventories for this society here
-        # increment the total counts for 'prices' and 'counts' of 'societies_inventory' each time we encounter a society
+        # get the list of shortlisted inventory details
+        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row)
+        if not shortlisted_inventory_list_response.data['status']:
+            return shortlisted_inventory_list_response
 
-        for field in website_constants.inventory_fields:
-            if row.get(field):
-                society[field] = row.get(field)
-                center_object['societies_inventory'][field] += int(row.get(field))
+        shortlisted_inventory_list = shortlisted_inventory_list_response.data['data']
 
         # add it to the list of center_object
         center_object['societies'].append(society)
 
+        # add shortlisted_inventory_list to the list already initialized
+        center_object['shortlisted_inventory_details'].extend(shortlisted_inventory_list)
+
         # return the result after we are done scanning
         return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def populate_shortlisted_inventory_details(result):
+    """
+    Args:
+        result: it's a list containing final data
+
+    Returns: success if it's able to create objects in the list else failure
+
+    """
+    try:
+        # using a loop instead bulk_create() because bulk_create() will insert duplicates if the api
+        # is hit twice by mistake, will ignore the unique values etc. This problem can be only be
+        # solved by writing a custom raw SQL query which i think is an overkill right now. when the code gets slow
+        # write a RAW query.
+        for center in result:
+            for shortlisted_inventory_detail in center['shortlisted_inventory_details']:
+                is_created, obj = models.ShortlistedInventoryDetails.objects.get_or_create(**shortlisted_inventory_detail)
+
+            # we do not want to send this to other API, so we will rather delete it
+            del center['shortlisted_inventory_details']
+
+        return Response({'status': True, 'data': 'success'}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -472,10 +551,19 @@ def make_center(center_object, row):
     Returns: populates the center_object with data for it's 'center' key
 
     """
+    # get the fields which also needs to sent for the other api to work upon because they are required for serializing .
+    city, area, pincode, sub_area, latitude, longitude, radius = models.ProposalCenterMapping.objects.values_list('city', 'area', 'pincode', 'subarea', 'latitude', 'longitude', 'radius').get(id=row['center_id'])
     try:
         center_object['center']['center_name'] = row.get('center_name')
         center_object['center']['proposal'] = row['center_proposal_id']
         center_object['center']['id'] = row['center_id']
+        center_object['center']['city'] = city
+        center_object['center']['area'] = area
+        center_object['center']['subarea'] = sub_area
+        center_object['center']['pincode'] = pincode
+        center_object['center']['latitude'] = latitude
+        center_object['center']['longitude'] = longitude
+        center_object['center']['radius'] = radius
         space_mapping_response = make_space_mappings(row)
         if not space_mapping_response.data['status']:
             return space_mapping_response
