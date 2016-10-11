@@ -456,10 +456,10 @@ class GetAccountProposalsAPIView(APIView):
 
         proposals = ProposalInfo.objects.filter(account=account)
         proposal_serializer = ProposalInfoSerializer(proposals, many=True)
-        if proposal_serializer.is_valid():
-            return Response(proposal_serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(proposal_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(proposal_serializer.data, status=status.HTTP_200_OK)
+        # else:
+        #     return Response(proposal_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CampaignAPIView(APIView):
@@ -1408,7 +1408,7 @@ class FinalProposalAPIView(APIView):
                 society_ids = []
                 societies_count = 0
                 for society in societies_temp:
-                    if space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
+                    if website_utils.space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
                         society['society_latitude'], society['society_longitude']):
                         society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
                                                                                     society['supplier_id'])
