@@ -457,8 +457,10 @@ class GetAccountProposalsAPIView(APIView):
         try:
             account = AccountInfo.objects.get(account_id=account_id)
 
+
             proposals = ProposalInfo.objects.filter(account=account)
             proposal_serializer = ProposalInfoSerializer(proposals, many=True)
+        
             return Response(proposal_serializer.data, status=status.HTTP_200_OK)
         except ObjectDoesNotExist as e:
             return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
