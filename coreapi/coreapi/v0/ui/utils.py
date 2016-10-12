@@ -79,7 +79,7 @@ def save_basic_supplier_details(supplier_type_code, data):
             serializer = serializer_class(supplier, data=data)
             if serializer.is_valid():
                 serializer.save()
-                return handle_response(function_name, data='success', success=True)
+                return handle_response(function_name, data=serializer.data, success=True)
             else:
                 return handle_response(function_name, data=serializer.errors)
         else:

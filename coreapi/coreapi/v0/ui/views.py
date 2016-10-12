@@ -2607,4 +2607,5 @@ class BusShelter(APIView):
         basic_details_response = ui_utils.save_basic_supplier_details(supplier_type_code, data)
         if not basic_details_response.data['status']:
             return basic_details_response
-        return ui_utils.handle_response(class_name, data='successfully saved basic data', success=True)
+        return ui_utils.handle_response(class_name, data=basic_details_response.data['data'], success=True)
+
