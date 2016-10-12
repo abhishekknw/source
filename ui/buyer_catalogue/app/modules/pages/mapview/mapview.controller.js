@@ -4,17 +4,8 @@ angular.module('catalogueApp')
         // You have to initailise some value for the map center beforehand
         // $scope.map is just for that purpose --> Set it according to your needs.
         // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
-        $scope.map = {
-          zoom: 9,
-          bounds: {},
-          center: {
-            latitude: 19.119,
-            longitude: 73.48,
-          }
-        };
-        $scope.options = {
-          scrollwheel: false,
-          mapTypeControl: true,
+        $scope.map = { zoom: 9,bounds: {},center: {latitude: 19.119,longitude: 73.48,}};
+        $scope.options = { scrollwheel: false, mapTypeControl: true,
           mapTypeControlOptions: {
            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
            position: google.maps.ControlPosition.TOP_LEFT
@@ -374,9 +365,7 @@ angular.module('catalogueApp')
                     for(var i=0;i<$scope.centers.length; i++)
                         $scope.initial_center_changed.push(false);
                         $scope.current_center_id = $scope.current_center.center.id
-                        $scope.map = {
-                          zoom: 12,
-                          bounds: {},
+                        $scope.map = { zoom: 12, bounds: {},
                           center: {
                           latitude: $scope.current_center.center.latitude,
                           longitude: $scope.current_center.center.longitude,
@@ -702,8 +691,6 @@ angular.module('catalogueApp')
               get_url_string += makeString($scope.society_flat_type, "&flt=");
 
               promises.push(mapViewService.getFilterSocieties(get_url_string));
-
-
               // mapViewService.getFilterSocieties(get_url_string)
               // .success(function(response, status){
               //   console.log(i,response,"i");
@@ -880,7 +867,7 @@ angular.module('catalogueApp')
               console.log("Error response is : ", response);
           });
         }
-        $scope.images = [];
+        $scope.excelFile = [];
         function makeid(){
             var text = "";
             var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -892,6 +879,7 @@ angular.module('catalogueApp')
                 $scope.files = files;
                 $scope.errFile = errFiles;
               angular.forEach(files, function(file) {
+                console.log(file);
                     var my_filename = "PR_" + $scope.proposal_id_temp + "_" + makeid();
                     files.upload = Upload.upload({
                       url: 'http://mdimages.s3.amazonaws.com/', //S3 upload url including bucket name
@@ -908,8 +896,9 @@ angular.module('catalogueApp')
                     });
 
                     files.upload.then(function (response) {
-                      var my_file_url = {"image_details":[{"location_id":$rootScope.societyId, "image_url":my_filename}]};
-                      $scope.images.push({"proposal_id":$scope.proposal_id_temp, "image_url":my_filename})
+                      var my_file_url = {"file_details":[{"proposal_id":$scope.proposal_id_temp, "file_url":my_filename, "file_data" : file}]};
+                      console.log(my_file_url);
+                      $scope.excelFile.push({"proposal_id":$scope.proposal_id_temp, "file_url":my_filename})
                       mapViewService.uploadFile($scope.proposal_id_temp,my_file_url);
                         $timeout(function () {
                             file.result = response.data;
