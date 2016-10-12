@@ -1206,7 +1206,6 @@ class SocietyTower(models.Model):
         unique_together = (('tower_tag','supplier'),)
 
 
-
 class BusinessAccountContact(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
 
@@ -1259,7 +1258,6 @@ class BusinessInfo(models.Model):
     class Meta:
         #db_table = 'BUSINESS_INFO'
         db_table = 'business_info'
-
 
 
 
@@ -2213,8 +2211,38 @@ class ShortlistedInventoryDetails(models.Model):
         db_table = 'shortlisted_inventory_details'
 
 
+class BasicSupplierDetails(models.Model):
+    """
+    This is an abstract base class for all the suppliers. As we know more common fields, add
+    them here and run python manage.py makemigrations. all the models who inherit from this class
+    will have those fields automatically.
+    """
+    supplier_id = models.CharField(max_length=20, primary_key=True)
+    name = models.CharField(max_length=70, null=True, blank=True)
+    address1 = models.CharField(max_length=250, null=True, blank=True)
+    address2 = models.CharField(max_length=250, null=True, blank=True)
+    area = models.CharField(max_length=255, null=True, blank=True)
+    subarea = models.CharField(max_length=30, null=True, blank=True)
+    city = models.CharField(max_length=250, null=True, blank=True)
+    state = models.CharField(max_length=250, null=True, blank=True)
+    zipcode = models.IntegerField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True, default=0.0)
+    longitude = models.FloatField(null=True, blank=True, default=0.0)
+    locality_rating = models.CharField(max_length=50, null=True, blank=True)
+    quality_rating = models.CharField(max_length=50, null=True, blank=True)
+    machadalo_index = models.CharField(max_length=30, null=True, blank=True)
+
+    class Meta:
+        abstract = True
 
 
+class SupplierTypeBusShelter(BasicSupplierDetails):
+    """
+    model inherits basic supplier fields from abstract model BasicSupplierDetails
+    """
+    lit_status = models.CharField(max_length=255, null=True, blank=True)
+    halt_buses_count = models.IntegerField(null=True, blank=True)
 
-
-
+    class Meta:
+        db_table = 'supplier_bus_shelter'
+        

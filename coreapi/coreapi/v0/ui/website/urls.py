@@ -3,14 +3,14 @@ from v0.ui.website import views
 
 urlpatterns = [
 
-    url(r'^businesses/$', views.BusinessAPIListView.as_view()),
-    url(r'^business/(?P<id>[A-Z_a-z0-9]+)$', views.BusinessAPIView.as_view()),
+    url(r'^businesses/$', views.BusinessAPIListView.as_view(), name='get-all-business-info'),
+    url(r'^business/(?P<id>[A-Z_a-z0-9]+)$', views.BusinessAPIView.as_view(), name='get-one-business-data'),
     url(r'^accounts/$', views.AccountAPIListView.as_view()),
     url(r'^account/(?P<id>[A-Z_a-z0-9]+)$', views.AccountAPIView.as_view()),
     url(r'^newCampaign/$', views.NewCampaignAPIView.as_view()),
     url(r'^newAccountCampaign/$', views.CreateCampaignAPIView.as_view()),
 
-    url(r'^(?P<account_id>[A-Z_a-z0-9]+)/getAccountProposals/$', views.GetAccountProposalsAPIView.as_view()),
+    url(r'^(?P<account_id>[A-Z_a-z0-9]+)/getAccountProposals/$', views.GetAccountProposalsAPIView.as_view(), name='get-account-proposals'),
 
     url(r'^getCampaigns/$', views.CampaignAPIView.as_view()),
     url(r'^manageCampaign/(?P<id>[A-Z_a-z0-9]+)/proposal/$', views.CreateProposalAPIView.as_view()),
@@ -21,8 +21,8 @@ urlpatterns = [
     url(r'^campaign/society/shortlist/$', views.ShortlistSocietyAPIView.as_view()),
     url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/book/$', views.BookCampaignAPIView.as_view()),
     url(r'^finalbooking/(?P<id>[A-Z_a-z0-9]+)/$', views.FinalCampaignBookingAPIView.as_view()),
-    url(r'^create_business/load_business_types/$', views.getBusinessTypesAPIView.as_view()),
-    url(r'^subtypes/(?P<id>[A-Z_a-z0-9]+)/$', views.getBusinessSubTypesAPIView.as_view()),
+    url(r'^create_business/load_business_types/$', views.GetBusinessTypesAPIView.as_view(), name='get-business-types'),
+    url(r'^subtypes/(?P<id>[A-Z_a-z0-9]+)/$', views.GetBusinessSubTypesAPIView.as_view(), name='get-business-subtypes'),
 
     # Beta Urls and Classes
     url(r'^(?P<account_id>[A-Z_a-z0-9]+)/createInitialProposal/$',views.InitialProposalAPIView.as_view()),

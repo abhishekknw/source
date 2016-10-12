@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q, Sum
 from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericRelation
 
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
@@ -51,11 +52,13 @@ import v0.ui.utils as ui_utils
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 
 
-class getBusinessTypesAPIView(APIView):
+class GetBusinessTypesAPIView(APIView):
+    """
+    fetches all types of businesses.
+    """
     def get(self, request, format=None):
         try:
             busTypes = BusinessTypes.objects.all()
-
             serializer = BusinessTypesSerializer(busTypes, many=True)
             return Response(serializer.data, status=200)
         except :
@@ -84,20 +87,19 @@ class BusinessAPIListView(APIView):
         return Response(status=204)
 
 
-class getBusinessSubTypesAPIView(APIView):
+class GetBusinessSubTypesAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             items = BusinessSubTypes.objects.filter(business_type_id=id)
             serializer = BusinessSubTypesSerializer(items, many=True)
-
             return Response(serializer.data)
-        except :
-            return Response(status=404)
+        except Exception as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class BusinessAPIView(APIView):
     """
-    Fetches buisiness data
+    Fetches one buisiness data
     """
 
     def get(self, request, id, format=None):
