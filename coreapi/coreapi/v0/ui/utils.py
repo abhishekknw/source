@@ -8,6 +8,7 @@ order of imports
  -file imports
 
 '''
+import json
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
@@ -20,6 +21,72 @@ import v0.models
 import v0.serializers
 
 import constants as ui_constants
+
+
+def handle_response(object_name, data='some error occurred', exception_object=Exception, success=False):
+    """
+    Args:
+        success: determines wether to send success or failure messages
+        object_name: The function or class where the error occurrs
+        data: The user error which you want to display to user's on screens
+        exception_object: The exception object caught. an instance of Exception, KeyError etc.
+
+        This method can later be used to log the errors.
+
+    Returns: Response object
+
+    """
+    if not success:
+        # prepare the object to be sent in error response
+        data = {
+            'general_error': data,
+            'system_error': exception_object.message if exception_object.message else exception_object.args if exception_object.args else None,
+            'culprit_module': object_name
+        }
+        return Response({'status': False, 'data': json.dumps(data)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'status': True, 'data': data}, status=status.HTTP_200_OK)
+
+
+def save_basic_supplier_details(supplier_type_code, data):
+    '''
+    Args:
+        supplier_type_code: identifies a new supplier whose basic details we need to save
+        data: The actual data that's gonna be saved. a request.data object
+    Returns: Success or failure depending upon wether data was saved or not
+    '''
+    function_name = save_basic_supplier_details.__name__
+    try:
+        if 'supplier_id' in data:
+
+            if not supplier_type_code:
+                return handle_response(function_name, data='No supplier_type_code provided')
+
+            # get the model based on supplier_type_code
+            model = get_model(supplier_type_code)
+            if not model:
+                return handle_response(function_name, data='Model not found')
+
+            # get the serializer based on supplier_type_code
+            serializer_class = get_serializer(supplier_type_code)
+            if not serializer_class:
+                return handle_response(function_name, data='Serializer not found')
+
+            # get or create the model instance based on pk
+            supplier, is_created = model.objects.get_or_create(supplier_id=data['supplier_id'])
+
+            # update the instance
+            serializer = serializer_class(supplier, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return handle_response(function_name, data='success', success=True)
+            else:
+                return handle_response(function_name, data=serializer.errors)
+        else:
+            return handle_response(function_name, data='No supplier_id in request.data')
+
+    except Exception as e:
+        return handle_response(function_name, exception_object=e)
 
 
 def get_supplier_id(request, data):
@@ -529,7 +596,8 @@ def get_serializer(supplier_type_code):
             'RS': v0.serializers.SupplierTypeSocietySerializer,
             'CP': v0.serializers.SupplierTypeCorporateSerializer,
             'GY': v0.serializers.SupplierTypeGymSerializer,
-            'SA': v0.serializers.SupplierTypeSalonSerializer
+            'SA': v0.serializers.SupplierTypeSalonSerializer,
+            'BS': v0.serializers.SupplierTypeBusShelterSerializer
 
         }
         return serializers[supplier_type_code]

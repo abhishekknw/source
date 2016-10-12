@@ -2513,6 +2513,7 @@ class saveBasicSalonDetailsAPIView(APIView):
 
 # Saving and fetching basic data of a gym.
 class saveBasicGymDetailsAPIView(APIView):
+
     def get(self, request, id, format=None):
         try:
             data1 = SupplierTypeGym.objects.get(supplier_id=id)
@@ -2529,6 +2530,7 @@ class saveBasicGymDetailsAPIView(APIView):
 
     def post(self, request,id,format=None):
         error = {}
+        class_name = self.__class__.__name__
         if 'supplier_id' in request.data:
             gym = SupplierTypeGym.objects.filter(pk=request.data['supplier_id']).first()
             if gym:
@@ -2538,9 +2540,7 @@ class saveBasicGymDetailsAPIView(APIView):
         if gym_serializer.is_valid():
             gym_serializer.save()
         else:
-            error['message'] ='Invalid Gym Info data'
-            error = json.dumps(error)
-            return Response(response, status=406)
+            return ui_utils.handle_response(class_name, data='Invalid Gym Info data')
 
 
         # Now saving contacts
@@ -2576,3 +2576,35 @@ class saveBasicGymDetailsAPIView(APIView):
         return Response(status=200)
 
         # End of contact Saving
+
+
+class BusShelter(APIView):
+    """
+    The class provides api's for fetching and saving Bus Shelter details
+    """
+
+    def post(self, request, id):
+        """
+        API saves Bus Shelter details
+        ---
+        parameters:
+        - name: supplier_type_code
+          required: true
+        - name: lit_status
+        - name: halt_buses_count
+        - name: name
+        """
+
+        # save the name of the class you are in to be useful for logging purposes
+        class_name = self.__class__.__name__
+
+        # check for supplier_type_code
+        supplier_type_code = request.data.get('supplier_type_code')
+        if not supplier_type_code:
+            return ui_utils.handle_response(class_name, data='provide supplier type code', success=False)
+        data = request.data.copy()
+        data['supplier_id'] = id
+        basic_details_response = ui_utils.save_basic_supplier_details(supplier_type_code, data)
+        if not basic_details_response.data['status']:
+            return basic_details_response
+        return ui_utils.handle_response(class_name, data='successfully saved basic data', success=True)
