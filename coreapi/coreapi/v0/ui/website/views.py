@@ -825,7 +825,7 @@ class InitialProposalAPIView(APIView):
                         return Response({'message' : 'Latitude Longitude Not found for address : ' + address}, status=406)
                     except ConnectionError:
                         ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({'message' : 'Unable to connect to google Maps'}, status=406    )
+                        return Response({'message' : 'Unable to connect to google Maps'}, status=406)
 
                     center['latitude'] = geo_object.latitude
                     center['longitude'] = geo_object.longitude
@@ -1490,7 +1490,7 @@ class FinalProposalAPIView(APIView):
         '''
 
         centers = request.data
-        space_dict , supplier_code_dict = self.get_space_code_dict()
+        space_dict, supplier_code_dict = self.get_space_code_dict()
 
         with transaction.atomic():
             try:
@@ -2195,9 +2195,14 @@ class ImportSocietyData(APIView):
 
         """
         try:
+            class_name = self.__class__.__name__
 
-            file_name = BASE_DIR + '/sample5.xlsx'
-            wb = openpyxl.load_workbook(file_name)
+            # file_name = BASE_DIR + '/sample5.xlsx'
+
+            if not request.FILES:
+                return ui_utils.handle_response(class_name, data='No File Found')
+            my_file = request.FILES['society-file']
+            wb = openpyxl.load_workbook(my_file)
             ws = wb.get_sheet_by_name('Shortlisted Spaces Details')
 
             center_id_list_response = website_utils.get_center_id_list(ws, index_of_center_id)
