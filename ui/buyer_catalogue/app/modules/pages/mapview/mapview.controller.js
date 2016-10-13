@@ -888,7 +888,7 @@ angular.module('catalogueApp')
         //                   acl: 'public-read', // sets the access to the uploaded file in the bucket: private, public-read, ...
         //                   policy: "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
         //                   signature: "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=", // base64-encoded signature based on policy string (see article below)
-        //                   "Content-Type": file.type != '' ? file.type : 'application/octet-stream', // content type of the file (NotEmpty)
+        //                   "Content-Type": file.type != '' ? file.type : 'multipart/form-data', // content type of the file (NotEmpty)
         //                   file: file
         //               }
         //             });
@@ -910,10 +910,11 @@ angular.module('catalogueApp')
         //             });
         //       });
         //     }
-        $scope.importData = function(){
-          mapViewService.uploadFile($scope.proposal_id_temp)
-          .success(function(response){
-              console.log(response);
-          })
+        $scope.importData = function(societyfile){
+          console.log(societyfile);
+          // mapViewService.uploadFile($scope.proposal_id_temp)
+          // .success(function(response){
+          //     console.log(response);
+          // })
         }
 });
