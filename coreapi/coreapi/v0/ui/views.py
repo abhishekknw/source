@@ -933,7 +933,6 @@ class InventorySummaryAPIView(APIView):
             total_campaign = 0
 
             with transaction.atomic():
-
                 if request.data.get('poster_allowed_nb'):
                     if request.data.get('nb_count'):
                         supplier_object.poster_allowed_nb = True
@@ -2092,6 +2091,8 @@ def get_availability(data):
 class SaveBasicCorporateDetailsAPIView(APIView):
 
     def post(self, request,id,format=None):
+        class_name = self.__class__.__name__
+
         try:
 
             companies = []
@@ -2140,6 +2141,53 @@ class SaveBasicCorporateDetailsAPIView(APIView):
                 instance = SupplierTypeCorporate.objects.get(supplier_id=id)
             except SupplierTypeCorporate.DoesNotExist:
                 return Response({'message': 'This corporate park does not exist'}, status=406)
+
+            content_type = ContentType.objects.get_for_model(SupplierTypeCorporate)
+            object_id = instance.supplier_id
+            # in order to save get calls in a loop, prefetch all the contacts for this supplier beforehand
+            # making a dict which key is object id and contains another
+            contact_detail_objects = {contact.id: contact for contact in ContactDetails.objects.filter(content_type = content_type, object_id=object_id)}
+
+            # get all contact id's in a set. Required for contact deletion
+            contact_detail_ids = set([contact_id for contact_id in contact_detail_objects.keys()])
+
+            for contact in request.data.get('contacts'):
+
+                # make the data you want to save in contacts
+                contact_data = {
+                    'name': contact.get('name'),
+                    'country_code': contact.get('countrycode'),
+                    'std_code': contact.get('std_code'),
+                    'mobile': contact.get('mobile'),
+                    'contact_type': contact.get('contact_type'),
+                    'object_id': object_id,
+                    'content_type': content_type.id,
+                    'email': contact.get('email'),
+                    'salutation': contact.get('salutation'),
+                    'landline': contact.get('landline'),
+                }
+
+                # get the contact instance to be updated if id was present else create a brand new instance
+                contact_instance = contact_detail_objects[contact['id']] if 'id' in contact else None
+
+                # if contact instance was there this means this is an update request. we need to remove this id
+                # from the set of id's we are maintaining because we do not want this instance to be deleted.
+
+                if contact_instance:
+                    contact_detail_ids.remove(contact['id'])
+
+                # save the data
+                serializer = ContactDetailsSerializer(contact_instance, data=contact_data)
+
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return ui_utils.handle_response(class_name, data=serializer.errors)
+
+            # in the end we need to delete the crossed out contacts. all contacts now in the list of ids are
+            # being deleted by the user hence we delete it from here too.
+            ContactDetails.objects.filter(id__in=contact_detail_ids).delete()
+
 
             # todo: to be changed later
             '''
@@ -2196,14 +2244,16 @@ class SaveBasicCorporateDetailsAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
+
             supplier = SupplierTypeCorporate.objects.get(supplier_id=id)
             serializer = SupplierTypeCorporateSerializer(supplier)
             companies = CorporateParkCompanyList.objects.filter(supplier_id=id)
             corporate_serializer = CorporateParkCompanyListSerializer(companies, many=True)
-            contacts = ContactDetailsGeneric.objects.filter(object_id=id)
-            contact_detail_serializer = ContactDetailsGenericSerializer(contacts, many=True)
+            content_type = ContentType.objects.get_for_model(model=SupplierTypeCorporate)
+            contacts = ContactDetails.objects.filter(content_type=content_type, object_id=id)
+            contacts_serializer = ContactDetailsSerializer(contacts, many=True)
             result = {'basicData': serializer.data, 'companyList': corporate_serializer.data,
-                      'contactData': contact_detail_serializer.data}
+                      'contactData': contacts_serializer.data}
             return Response(result)
 
         except ObjectDoesNotExist as e:
@@ -2584,8 +2634,7 @@ class BusShelter(APIView):
     """
 
     def post(self, request, id):
-        import pdb
-        pdb.set_trace()
+        
         """
         API saves Bus Shelter details
         ---
@@ -2609,7 +2658,7 @@ class BusShelter(APIView):
         basic_details_response = ui_utils.save_basic_supplier_details(supplier_type_code, data)
         if not basic_details_response.data['status']:
             return basic_details_response
-        return ui_utils.handle_response(class_name, data='successfully saved basic data', success=True)
+        return ui_utils.handle_response(class_name, data=basic_details_response.data['data'], success=True)
 
     def get(self, request):
         # fetch all Bus Shelters 
@@ -2638,7 +2687,6 @@ class BusShelterSearchView(APIView):
         """
 
         class_name = self.__class__.__name__
-
         try:
             user = request.user
             search_txt = request.query_params.get('search', None)
@@ -2653,3 +2701,4 @@ class BusShelterSearchView(APIView):
             return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+

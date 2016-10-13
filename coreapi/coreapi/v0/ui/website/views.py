@@ -825,7 +825,7 @@ class InitialProposalAPIView(APIView):
                         return Response({'message' : 'Latitude Longitude Not found for address : ' + address}, status=406)
                     except ConnectionError:
                         ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({'message' : 'Unable to connect to google Maps'}, status=406    )
+                        return Response({'message' : 'Unable to connect to google Maps'}, status=406)
 
                     center['latitude'] = geo_object.latitude
                     center['longitude'] = geo_object.longitude
@@ -943,8 +943,6 @@ class SpacesOnCenterAPIView(APIView):
             delta_longitude = delta_dict['delta_longitude']
             min_longitude = proposal_center.longitude - delta_longitude
             max_longitude = proposal_center.longitude + delta_longitude
-
-
             # for society
             if space_mapping_object.society_allowed:
                 q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
@@ -1010,10 +1008,9 @@ class SpacesOnCenterAPIView(APIView):
                 space_info_dict['societies_inventory'] = societies_inventory_serializer.data
                 space_info_dict['societies_count'] = societies_count
 
-            import pdb
-            pdb.set_trace()
+            
             if space_mapping_object.corporate_allowed:
-                q &= Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
+                q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
 
                 # ADDNEW --> uncomment this line when corporate inventory implemented
                 corporates_inventory = space_mapping_object.get_corporate_inventories()
@@ -1026,17 +1023,46 @@ class SpacesOnCenterAPIView(APIView):
                 corporate_ids = []
                 corporates_count = 0
                 for corporate in corporates_temp:
-                    if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
+                    if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         corporate['latitude'], corporate['longitude']):
+                        corporate_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),corporate['supplier_id'])
+                        adinventory_type_dict = ui_utils.adinventory_func()
+                        duration_type_dict = ui_utils.duration_type_func()
+                        import pdb
+                        pdb.set_trace()
+                        if corporate_inventory_obj:
+                            corporate['shortlisted'] = True
+                            corporate['buffer_status'] = False
+
+                            if corporate_inventory_obj.poster_allowed_nb or corporate_inventory_obj.poster_allowed_lift:
+                                corporate['total_poster_count'] = corporate_inventory_obj.total_poster_count
+                                corporate['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+                            if corporate_inventory_obj.standee_allowed:
+                                corporate['total_standee_count'] = corporate_inventory_obj.total_standee_count
+                                corporate['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+                            if corporate_inventory_obj.stall_allowed:
+                                corporate['total_stall_count'] = corporate_inventory_obj.total_stall_count
+                                corporate['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                                corporate['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+                            if corporate_inventory_obj.flier_allowed:     
+                                corporate['flier_frequency'] = corporate_inventory_obj.flier_frequency
+                                corporate['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+
+
+
+                        corporate_ids.append(corporate['supplier_id'])
                         corporates.append(corporate)
                         corporates_count += 1
 
-                corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
+                # corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
 
-                space_info_dict['corporates'] = corporates_serializer.data
+                carporates_inventory_count =  InventorySummary.objects.filter(supplier_id__in=corporate_ids).aggregate(posters=Sum('total_poster_count'),\
+                    standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+                space_info_dict['corporates'] = corporates
                 space_info_dict['corporates_count'] = corporates_count
-                # space_info_dict['corporates_inventory_count'] = corporates_inventory_count  // implement this first
-                # space_info_dict['corporates_inventory'] = corporates_inventory_serializer.data
+                space_info_dict['corporates_inventory_count'] = carporates_inventory_count  #implement this first
+                space_info_dict['corporates_inventory'] = corporates_inventory_serializer.data
 
             if space_mapping_object.gym_allowed:
                 # ADDNEW --> write gym code for filtering
@@ -1490,7 +1516,7 @@ class FinalProposalAPIView(APIView):
         '''
 
         centers = request.data
-        space_dict , supplier_code_dict = self.get_space_code_dict()
+        space_dict, supplier_code_dict = self.get_space_code_dict()
 
         with transaction.atomic():
             try:
@@ -2195,9 +2221,14 @@ class ImportSocietyData(APIView):
 
         """
         try:
+            class_name = self.__class__.__name__
 
-            file_name = BASE_DIR + '/sample5.xlsx'
-            wb = openpyxl.load_workbook(file_name)
+            # file_name = BASE_DIR + '/sample5.xlsx'
+
+            if not request.FILES:
+                return ui_utils.handle_response(class_name, data='No File Found')
+            my_file = request.FILES['society-file']
+            wb = openpyxl.load_workbook(my_file)
             ws = wb.get_sheet_by_name('Shortlisted Spaces Details')
 
             center_id_list_response = website_utils.get_center_id_list(ws, index_of_center_id)

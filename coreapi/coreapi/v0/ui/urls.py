@@ -18,6 +18,7 @@ urlpatterns = [
     url(r'^salon/list/$', views.SalonAPIListView.as_view()),
     url(r'^gym/list/$', views.GymAPIListView.as_view()),
     url(r'^busshelter/list/$', views.BusShelter.as_view()),
+    url(r'^busshelter/search/$', views.BusShelterSearchView.as_view()),
     url(r'^society/filter/$', views.SocietyAPIFiltersView.as_view()),
     url(r'^society/filterList/$', views.SocietyAPIFiltersListView.as_view()),
     url(r'^society/filterSubArea/$',views.SocietyAPIFilterSubAreaView.as_view(),),
