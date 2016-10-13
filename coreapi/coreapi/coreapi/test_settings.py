@@ -1,17 +1,27 @@
-to_exclude = ['REST_FRAMEWORK']
 
 from settings import *
 
-for name in to_exclude:
-    del globals()[name]
-
 # make tests faster
-DATABASES = {
 
-    'default':  {
+# no need of authentication
+REST_FRAMEWORK = {
+    # other settings...
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+    ],
+}
+
+
+# set sqlite db for fast tests
+DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'testdb',
         'HOST': 'localhost'
     }
 
-}
+

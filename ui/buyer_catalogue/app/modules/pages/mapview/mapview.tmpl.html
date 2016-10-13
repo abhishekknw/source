@@ -244,6 +244,15 @@
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
           <button class="btn btn-danger active" type = "file" class="btn btn-default" ng-show="show_societies" ngf-select = "importData($files, $invalidFiles)"
             accept = "/*" ngf-max-size = "5MB" >Upload excel</button>
+
+            <div>
+              <form action="http://localhost:8000/v0/ui/website/JYFTnRON/import-society-data/" method="post" enctype="multipart/form-data">
+                <input type="file" name="society-file">
+                <input type="submit" value="upload" >
+              </form>
+            </div>
+
+
           </div>
         </div>
 
