@@ -39,16 +39,16 @@
         return machadaloHttp.post(url, centers_data);
     }
 
-    mapViewService.uploadFile = function (proposal_id){
-      var urlupload = 'http://localhost:8108/v0/ui/website/';
-      var url1 = urlupload + proposal_id + '/import-society-data/';
-      //return machadaloHttp.post(url);
-      return $http({
-          method: 'POST',
-          url: url1,
-          headers: {'Content-Type': 'multipart/form-data'},
-          data:proposal_id
-      })
+    mapViewService.uploadFile = function (proposal_id, societyfile){
+      //var urlupload = 'http://localhost:8108/v0/ui/website/';
+      var url = url_base + proposal_id + '/import-society-data/';
+      return machadaloHttp.post(url, societyfile);
+      // return $http({
+      //     method: 'POST',
+      //     url: url1,
+      //     headers: {'Content-Type': 'multipart/form-data'},
+      //     data:proposal_id
+      // })
     }
     return mapViewService;
 }]);
