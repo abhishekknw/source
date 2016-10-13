@@ -912,9 +912,9 @@ angular.module('catalogueApp')
         //     }
         $scope.importData = function(societyfile){
           console.log(societyfile);
-          // mapViewService.uploadFile($scope.proposal_id_temp)
-          // .success(function(response){
-          //     console.log(response);
-          // })
+          mapViewService.uploadFile($scope.proposal_id_temp)
+          .success(function(response){
+              console.log(response);
+          })
         }
 });
