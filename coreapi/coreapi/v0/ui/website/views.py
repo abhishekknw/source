@@ -961,7 +961,6 @@ class SpacesOnCenterAPIView(APIView):
                             
                     except KeyError:
                         pass
-
                 societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1', 'society_address2', 'society_subarea', 'society_locality', 'society_location_type', 'flat_count', 'average_rent', 'machadalo_index', 'society_type_quality','tower_count','flat_count')
                 societies = []
                 society_ids = []
@@ -1011,30 +1010,31 @@ class SpacesOnCenterAPIView(APIView):
                 space_info_dict['societies_inventory'] = societies_inventory_serializer.data
                 space_info_dict['societies_count'] = societies_count
 
-
+            import pdb
+            pdb.set_trace()
             if space_mapping_object.corporate_allowed:
-                pass
-                # q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
+                q &= Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
 
                 # ADDNEW --> uncomment this line when corporate inventory implemented
-                # corporates_inventory = space_mapping_object.get_corporate_inventories().
-                # corporates_inventory_serializer = InventoryTypeSerializer(inventory_type_corporate)
+                corporates_inventory = space_mapping_object.get_corporate_inventories()
+                corporates_inventory_serializer = InventoryTypeSerializer(corporates_inventory)
                 # then run for loop almost same as above for applying filter on inventory_allowed
                 # make a query for different inventory count (e.g. poster_count )
 
-                # corporates_temp = SupplierTypeCorporate.objects.filter(q)
-                # corporates = []
-                # corporates_count = 0
-                # for corporate in corporates_temp:
-                #     if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
-                #         corporate.latitude, corporate.longitude):
-                #         corporates.append(corporate)
-                #         corporates_count += 1
+                corporates_temp = SupplierTypeCorporate.objects.filter(q).values('supplier_id','latitude','longitude')
+                corporates = []
+                corporate_ids = []
+                corporates_count = 0
+                for corporate in corporates_temp:
+                    if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
+                        corporate['latitude'], corporate['longitude']):
+                        corporates.append(corporate)
+                        corporates_count += 1
 
-                # corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
+                corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
 
-                # space_info_dict['corporates'] = corporates_serializer.data
-                # space_info_dict['corporates_count'] = corporates_count
+                space_info_dict['corporates'] = corporates_serializer.data
+                space_info_dict['corporates_count'] = corporates_count
                 # space_info_dict['corporates_inventory_count'] = corporates_inventory_count  // implement this first
                 # space_info_dict['corporates_inventory'] = corporates_inventory_serializer.data
 

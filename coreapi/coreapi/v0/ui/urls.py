@@ -1,7 +1,6 @@
 from django.conf.urls import include, url
 from v0.ui import views
 # from v0.ui.website import views as web_views
-
 urlpatterns = [
 
     url(r'^website/', include('v0.ui.website.urls')),
@@ -18,6 +17,7 @@ urlpatterns = [
     url(r'^corporate/list/$', views.CorporateAPIListView.as_view(), name='corporate-list'),
     url(r'^salon/list/$', views.SalonAPIListView.as_view()),
     url(r'^gym/list/$', views.GymAPIListView.as_view()),
+    url(r'^busshelter/list/$', views.BusShelter.as_view()),
     url(r'^society/filter/$', views.SocietyAPIFiltersView.as_view()),
     url(r'^society/filterList/$', views.SocietyAPIFiltersListView.as_view()),
     url(r'^society/filterSubArea/$',views.SocietyAPIFilterSubAreaView.as_view(),),
@@ -64,6 +64,6 @@ urlpatterns = [
 
     url(r'^gym/(?P<id>[A-Z_a-z0-9]+)/save_basic_gym_details$', views.saveBasicGymDetailsAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_gym/$', views.saveBasicGymDetailsAPIView.as_view()),
-    url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_gym/$', views.saveBasicGymDetailsAPIView.as_view()),
+
     url(r'^(?P<id>[A-Z_a-z0-9]+)/bus-shelter/$', views.BusShelter.as_view()),
 ]

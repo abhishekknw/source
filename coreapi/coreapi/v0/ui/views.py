@@ -22,7 +22,7 @@ from rest_framework.views import APIView
 from rest_framework import permissions
 from v0.permissions import IsOwnerOrManager
 from rest_framework import filters
-from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, UIGymSerializer
+from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, UIGymSerializer, UIBusShelterSerializer
 from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer,\
                     DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer,\
                     CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer,\
@@ -33,11 +33,11 @@ from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, 
                     SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SocietyTowerSerializer, FlatTypeSerializer,\
                     CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateCompanyDetailsSerializer, \
                     CompanyFloorSerializer, CorporateBuildingGetSerializer, CorporateCompanySerializer, CorporateParkCompanySerializer, \
-                    SupplierTypeSalonSerializer, SupplierTypeGymSerializer, FlyerInventorySerializer
+                    SupplierTypeSalonSerializer, SupplierTypeGymSerializer, FlyerInventorySerializer, SupplierTypeBusShelterSerializer
 
 from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory
 from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuilding, \
-                    CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym
+                    CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
 from v0.ui.serializers import SocietyListSerializer
 
@@ -2584,6 +2584,8 @@ class BusShelter(APIView):
     """
 
     def post(self, request, id):
+        import pdb
+        pdb.set_trace()
         """
         API saves Bus Shelter details
         ---
@@ -2608,3 +2610,46 @@ class BusShelter(APIView):
         if not basic_details_response.data['status']:
             return basic_details_response
         return ui_utils.handle_response(class_name, data='successfully saved basic data', success=True)
+
+    def get(self, request):
+        # fetch all Bus Shelters 
+
+        class_name = self.__class__.__name__
+
+        try:
+            items = SupplierTypeBusShelter.objects.all().order_by('name')
+            paginator = PageNumberPagination()
+            result_page = paginator.paginate_queryset(items, request)
+            serializer = SupplierTypeBusShelterSerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except SupplierTypeBusShelter.DoesNotExist as e:
+            return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class BusShelterSearchView(APIView):
+    """
+    Searches particular bus shelters on the basis of search query 
+    """
+    def get(self, request, format=None):
+        """
+        GET api fetches all bus shelters on search query. later it's implentation will be changed. 
+        """
+
+        class_name = self.__class__.__name__
+
+        try:
+            user = request.user
+            search_txt = request.query_params.get('search', None)
+            if not search_txt:
+                return ui_utils.handle_response(class_name, data='Search Text is not provided')
+            items = SupplierTypeBusShelter.objects.filter(Q(supplier_id__icontains=search_txt) | Q(name__icontains=search_txt)| Q(address1__icontains=search_txt)| Q(city__icontains=search_txt)| Q(state__icontains=search_txt)).order_by('name') 
+            paginator = PageNumberPagination()
+            result_page = paginator.paginate_queryset(items, request)
+            serializer = SupplierTypeBusShelterSerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except SupplierTypeBusShelter.DoesNotExist as e:
+            return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)

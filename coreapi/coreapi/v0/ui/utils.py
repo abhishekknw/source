@@ -192,6 +192,18 @@ def make_supplier_data(data):
                 'serializer': get_serializer('GY')
             },
 
+            "BS": {
+                'data': {
+                    'supplier_id': data['supplier_id'],
+                    'name': data['supplier_name'],
+                    'city': city.city_name,
+                    'area': area.label,
+                    'subarea': subarea.subarea_name,
+                    'state': city.state_code.state_name
+                },
+                'serializer': get_serializer('BS')
+            },
+
             "supplier_type_code": data['supplier_type_code']
         }
         return Response(data={"status": True, "data": all_supplier_data}, status=status.HTTP_200_OK)
@@ -211,6 +223,7 @@ def save_supplier_data(master_data):
     :return: saves corresponding supplier code data
     """
     try:
+        function_name = save_supplier_data.__name__
         supplier_code = master_data['supplier_type_code']
         serializer_class = get_serializer(supplier_code)
         # serializer_class = master_data[supplier_code]['serializer']
@@ -590,7 +603,6 @@ def get_serializer(supplier_type_code):
     """
 
     try:
-
         serializers = {
 
             'RS': v0.serializers.SupplierTypeSocietySerializer,
