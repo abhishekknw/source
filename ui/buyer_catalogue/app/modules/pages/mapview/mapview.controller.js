@@ -874,47 +874,21 @@ angular.module('catalogueApp')
                 text += possible.charAt(Math.floor(Math.random() * possible.length));
             return text;
         }
-        // $scope.importData = function(files){
-        //         $scope.files = files;
-        //         //$scope.errFile = errFiles;
-        //       angular.forEach(files, function(file) {
-        //             var my_filename = "PR_" + $scope.proposal_id_temp + "_" + makeid();
-        //             files.upload = Upload.upload({
-        //               url: 'http://mdimages.s3.amazonaws.com/', //S3 upload url including bucket name
-        //               method: 'POST',
-        //               data: {
-        //                   key: my_filename, // the key to store the file on S3, could be file name or customized
-        //                   AWSAccessKeyId: 'AKIAI6PVCXJEAXV6UHUQ',
-        //                   acl: 'public-read', // sets the access to the uploaded file in the bucket: private, public-read, ...
-        //                   policy: "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
-        //                   signature: "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=", // base64-encoded signature based on policy string (see article below)
-        //                   "Content-Type": file.type != '' ? file.type : 'multipart/form-data', // content type of the file (NotEmpty)
-        //                   file: file
-        //               }
-        //             });
-        //
-        //             files.upload.then(function (response) {
-        //               var my_file_url = {"file_details":[{"proposal_id":$scope.proposal_id_temp, "file_url":my_filename, "file_data" : $scope.files}]};
-        //               console.log(my_file_url);
-        //               $scope.excelFile.push({"proposal_id":$scope.proposal_id_temp, "file_url":my_filename})
-        //               mapViewService.uploadFile($scope.proposal_id_temp,my_file_url);
-        //                 $timeout(function () {
-        //                     file.result = response.data;
-        //                 });
-        //             }, function (response) {
-        //                 if (response.status > 0)
-        //                     $scope.errorMsg = response.status + ': ' + response.data;
-        //             }, function (evt) {
-        //                 files.progress = Math.min(100, parseInt(100.0 *
-        //                                          evt.loaded / evt.total));
-        //             });
-        //       });
-        //     }
-        $scope.importData = function(societyfile){
-          console.log(societyfile);
-          mapViewService.uploadFile($scope.proposal_id_temp, societyfile)
-          .success(function(response){
-              console.log(response);
-          })
-        }
+
+        $scope.upload = function (file) {
+          console.log(file);
+          var url8 = 'http://localhost:8000/v0/ui/website/';
+       Upload.upload({
+           url: url8 + $scope.proposal_id_temp + '/import-society-data/',
+           data: {file: file, 'username': $scope.username}
+       }).then(function (resp) {
+           console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
+       }, function (resp) {
+           console.log('Error status: ' + resp.status);
+       }, function (evt) {
+           var progressPercentage = parseInt(100.0 * evt.loaded / evt.total);
+           console.log('progress: ' + progressPercentage + '% ' + evt.config.data.file.name);
+       });
+   };
+
 });
