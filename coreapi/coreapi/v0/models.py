@@ -125,7 +125,6 @@ class PriceMappingDefault(models.Model):
         db_table = 'price_mapping_default'
 
 
-
 class PriceMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='inv_prices', blank=True, null=True, on_delete=models.CASCADE)
@@ -336,6 +335,10 @@ class FlatType(models.Model):
     size_builtup_area = models.FloatField(db_column='SIZE_BUILTUP_AREA', blank=True, null=True)  # Field name made lowercase.
     flat_rent = models.IntegerField(db_column='FLAT_RENT', blank=True, null=True)  # Field name made lowercase.
     average_rent_per_sqft = models.FloatField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType,default=None, null=True)
+    object_id = models.CharField(max_length=12, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GetInventoryObjectManager()
 
     class Meta:
         db_table = 'flat_type'
@@ -1203,7 +1206,6 @@ class SocietyTower(models.Model):
         unique_together = (('tower_tag','supplier'),)
 
 
-
 class BusinessAccountContact(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
 
@@ -1256,7 +1258,6 @@ class BusinessInfo(models.Model):
     class Meta:
         #db_table = 'BUSINESS_INFO'
         db_table = 'business_info'
-
 
 
 
@@ -1387,7 +1388,6 @@ class ProposalInfo(models.Model):
         db_table = 'proposal_info'
 
 
-
 class ProposalCenterMapping(models.Model):
     """
     for a given proposal, stores lat, long, radius, city, pincode etc.
@@ -1395,9 +1395,9 @@ class ProposalCenterMapping(models.Model):
     proposal    = models.ForeignKey(ProposalInfo, db_index=True, related_name='centers', on_delete=models.CASCADE)
     center_name = models.CharField(max_length=50)
     address     = models.CharField(max_length=150,null=True, blank=True)
-    latitude    = models.FloatField()
-    longitude   = models.FloatField()
-    radius      = models.FloatField()
+    latitude    = models.FloatField(default=0.0)
+    longitude   = models.FloatField(default=0.0)
+    radius      = models.FloatField(default=0.0)
     subarea     = models.CharField(max_length=35)
     area        = models.CharField(max_length=35)
     city        = models.CharField(max_length=35)
@@ -1525,14 +1525,14 @@ class ProposalInfoVersion(models.Model):
 class ProposalCenterMappingVersion(models.Model):
     proposal_version    = models.ForeignKey(ProposalInfoVersion, db_index=True, related_name='centers_version', on_delete=models.CASCADE)
     center_name = models.CharField(max_length=50)
-    address     = models.CharField(max_length=150,null=True, blank=True)
+    address     = models.CharField(max_length=150, null=True, blank=True)
     latitude    = models.FloatField()
     longitude   = models.FloatField()
     radius      = models.FloatField()
-    subarea     = models.CharField(max_length=35)
-    area        = models.CharField(max_length=35)
-    city        = models.CharField(max_length=35)
-    pincode     = models.IntegerField()
+    subarea     = models.CharField(max_length=35, default='')
+    area        = models.CharField(max_length=35, default='')
+    city        = models.CharField(max_length=35, default='')
+    pincode     = models.IntegerField(default=0)
 
     def get_space_mappings_versions(self):
         return SpaceMappingVersion.objects.get(center_version=self)
@@ -2177,12 +2177,14 @@ class CorporateCompanyDetails(models.Model):
     class Meta:
         db_table='corporate_company_details'
 
+
 class CompanyFloor(models.Model):
     company_details_id = models.ForeignKey('CorporateCompanyDetails',db_column='COMPANY_DETAILS_ID',related_name='wingfloor', blank=True, null=True, on_delete=models.CASCADE)
     floor_number = models.IntegerField(db_column='FLOOR_NUMBER', blank=True, null=True)
 
     class Meta:
         db_table='corporate_building_floors'
+
 
 class SocietyLeads(models.Model):
     id = models.CharField(max_length=100,null=False,primary_key=True)
@@ -2193,3 +2195,54 @@ class SocietyLeads(models.Model):
 
     class Meta:
         db_table = 'society_leads'
+
+
+class ShortlistedInventoryDetails(models.Model):
+    """
+    Model for storing calculated price and count of an inventory for a given supplier.
+    A particular inventory type is identified by it's content_type_id.
+    """
+    supplier_id = models.CharField(max_length=100, null=True)
+    inventory_type = models.ForeignKey(ContentType, null=True)
+    inventory_price = models.FloatField(default=0.0, null=True)
+    inventory_count = models.IntegerField(default=0, null=True)
+    factor = models.IntegerField(default=0.0, null=True)
+    class Meta:
+        db_table = 'shortlisted_inventory_details'
+
+
+class BasicSupplierDetails(models.Model):
+    """
+    This is an abstract base class for all the suppliers. As we know more common fields, add
+    them here and run python manage.py makemigrations. all the models who inherit from this class
+    will have those fields automatically.
+    """
+    supplier_id = models.CharField(max_length=20, primary_key=True)
+    name = models.CharField(max_length=70, null=True, blank=True)
+    address1 = models.CharField(max_length=250, null=True, blank=True)
+    address2 = models.CharField(max_length=250, null=True, blank=True)
+    area = models.CharField(max_length=255, null=True, blank=True)
+    subarea = models.CharField(max_length=30, null=True, blank=True)
+    city = models.CharField(max_length=250, null=True, blank=True)
+    state = models.CharField(max_length=250, null=True, blank=True)
+    zipcode = models.IntegerField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True, default=0.0)
+    longitude = models.FloatField(null=True, blank=True, default=0.0)
+    locality_rating = models.CharField(max_length=50, null=True, blank=True)
+    quality_rating = models.CharField(max_length=50, null=True, blank=True)
+    machadalo_index = models.CharField(max_length=30, null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class SupplierTypeBusShelter(BasicSupplierDetails):
+    """
+    model inherits basic supplier fields from abstract model BasicSupplierDetails
+    """
+    lit_status = models.CharField(max_length=255, null=True, blank=True)
+    halt_buses_count = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'supplier_bus_shelter'
+        

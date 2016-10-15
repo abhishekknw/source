@@ -4,17 +4,8 @@ angular.module('catalogueApp')
         // You have to initailise some value for the map center beforehand
         // $scope.map is just for that purpose --> Set it according to your needs.
         // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
-        $scope.map = {
-          zoom: 9,
-          bounds: {},
-          center: {
-            latitude: 19.119,
-            longitude: 73.48,
-          }
-        };
-        $scope.options = {
-          scrollwheel: false,
-          mapTypeControl: true,
+        $scope.map = { zoom: 9,bounds: {},center: {latitude: 19.119,longitude: 73.48,}};
+        $scope.options = { scrollwheel: false, mapTypeControl: true,
           mapTypeControlOptions: {
            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
            position: google.maps.ControlPosition.TOP_LEFT
@@ -274,13 +265,15 @@ angular.module('catalogueApp')
                 });
                 return center_marker;
             }
-
             function assignMarkersToMap(spaces) {
                 // assigns spaces(society, corporate) markers on the map
                 // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
                 var markers = [];
                 for (var i=0; i <spaces.length; i++) {
+                  if(spaces[i].society_latitude){
                     markers.push({
+                      // console.log(spaces[i].society_latitude);
+
                         latitude: spaces[i].society_latitude,
                         longitude: spaces[i].society_longitude,
                         id: spaces[i].supplier_id,
@@ -293,6 +286,7 @@ angular.module('catalogueApp')
                             subarea : spaces[i].society_subarea,
                             location_type : spaces[i].society_location_type,
                         },
+
                         // uncomments events to allow mouseover and set variable like in $scope.onClick to enable that
                         // events : {
                         //     mouseover: function (marker, eventName, model, args) {
@@ -314,6 +308,22 @@ angular.module('catalogueApp')
                         //     }
                         // }
                     });
+                  }else{
+                    markers.push({
+                    latitude: spaces[i].latitude,
+                    longitude: spaces[i].longitude,
+                    id: spaces[i].supplier_id,
+                    icon: "img/cleft.png",
+                    // icon: "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png",
+                    options : {draggable : false},
+                    title : {
+                        name : spaces[i].name,
+                        address1 : spaces[i].address1,
+                        subarea : spaces[i].subarea,
+                        // location_type : spaces[i].society_location_type,
+                    },
+                  });
+                  }
                 };
                 // console.log("markers done");
                 return markers;
@@ -354,9 +364,7 @@ angular.module('catalogueApp')
                     for(var i=0;i<$scope.centers.length; i++)
                         $scope.initial_center_changed.push(false);
                         $scope.current_center_id = $scope.current_center.center.id
-                        $scope.map = {
-                          zoom: 12,
-                          bounds: {},
+                        $scope.map = { zoom: 12, bounds: {},
                           center: {
                           latitude: $scope.current_center.center.latitude,
                           longitude: $scope.current_center.center.longitude,
@@ -389,6 +397,12 @@ angular.module('catalogueApp')
                         // $scope.society_allowed = true;
                         set_space_inventory($scope.current_center.societies_inventory, $scope.society_inventory_type);
                         $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
+                    }
+                    if($scope.current_center.center.space_mappings.corporate_allowed){
+                      console.log($scope.current_center.corporates);
+                        // $scope.society_allowed = true;
+                        // set_space_inventory($scope.current_center.societies_inventory, $scope.society_inventory_type);
+                        $scope.society_markers = assignMarkersToMap($scope.current_center.corporates);
                     }
                     // ADDNEW --> Do the same for corporates and gyms and salons
                     // Do the same for corporates and gyms and salons
@@ -485,7 +499,7 @@ angular.module('catalogueApp')
                   }else{
                     for(var i=0; i< $scope.centers1.length; i++){
                       $scope.society_markers = [];
-                      $scope.societyFilter($scope.centers1[i].societies_inventory);
+                      //$scope.societyFilter($scope.centers1[i].societies_inventory);
                       delete $scope.centers1[i].societies;
                       delete $scope.centers1[i].societies_inventory;
                       delete $scope.centers1[i].societies_count;
@@ -676,8 +690,6 @@ angular.module('catalogueApp')
               get_url_string += makeString($scope.society_flat_type, "&flt=");
 
               promises.push(mapViewService.getFilterSocieties(get_url_string));
-
-
               // mapViewService.getFilterSocieties(get_url_string)
               // .success(function(response, status){
               //   console.log(i,response,"i");
@@ -811,56 +823,41 @@ angular.module('catalogueApp')
           }
         }
         //End: Function for calculating total impressions inventory wise
-        $scope.submitProposal = function(){
-          //Start: For sending only shortlisted society in request
-        //Start: For sending only shortlisted societies & selected inventory types
-        function getShortlistedFilteredSocieties(){
-          for(var i=0;i<$scope.centers.length;i++){
-            for(var j=0;j<$scope.centers[i].societies.length;j++){
-              if($scope.centers[i].societies[j].shortlisted == false){
-                 $scope.centers[i].societies.splice(j--,1);
-                 $scope.centers[i].societies_count--;
-              }
+
+      //Start: For sending only shortlisted societies & selected inventory types
+      function getShortlistedFilteredSocieties(){
+        for(var i=0;i<$scope.centers.length;i++){
+          for(var j=0;j<$scope.centers[i].societies.length;j++){
+            if($scope.centers[i].societies[j].shortlisted == false){
+               $scope.centers[i].societies.splice(j--,1);
+               $scope.centers[i].societies_count--;
             }
           }
-          //End: For sending only shortlisted society in
-          //Start: For sending filtered inventory type
-            var society_inventory_type_selected = [];
-            for(var i=0;i<$scope.society_inventory_type.length;i++){
-              if($scope.society_inventory_type[i].selected == true){
-                society_inventory_type_selected.push($scope.society_inventory_type[i].code);
-              }
+        }
+      //End: For sending only shortlisted society in
+      //Start: For sending filtered inventory type
+          var society_inventory_type_selected = [];
+          for(var i=0;i<$scope.society_inventory_type.length;i++){
+            if($scope.society_inventory_type[i].selected == true){
+              society_inventory_type_selected.push($scope.society_inventory_type[i].code);
             }
-            for(var i=0;i<$scope.centers.length;i++){
-              $scope.centers[i].center['society_inventory_type_selected']=society_inventory_type_selected;
-            }
-            //End: For sending filtered inventory type
+          }
+      //End: For sending filtered inventory type
+          for(var i=0;i<$scope.centers.length;i++){
+            $scope.centers[i].center['society_inventory_type_selected']=society_inventory_type_selected;
+          }
+        }
+
+        $scope.submitProposal = function(){
+          getShortlistedFilteredSocieties();
+
             console.log("Submitting $scope.centers :", $scope.centers);
         };
-        //End: For sending only shortlisted societies & selected inventory types
         $scope.exportData = function(){
-          //Start: For sending only shortlisted society in request
-          for(var i=0;i<$scope.centers.length;i++){
-            for(var j=0;j<$scope.centers[i].societies.length;j++){
-              if($scope.centers[i].societies[j].shortlisted == false){
-                 $scope.centers[i].societies.splice(j--,1);
-                 $scope.centers[i].societies_count--;
-              }
-            }
-          }
-          //End: For sending only shortlisted society in
-          //Start: For sending filtered inventory type
-            var society_inventory_type_selected = [];
-            for(var i=0;i<$scope.society_inventory_type.length;i++){
-              if($scope.society_inventory_type[i].selected == true){
-                society_inventory_type_selected.push($scope.society_inventory_type[i].code);
-              }
-            }
-            for(var i=0;i<$scope.centers.length;i++){
-              $scope.centers[i].center['society_inventory_type_selected']=society_inventory_type_selected;
-            }
-            //End: For sending filtered inventory type
-            console.log($scope.centers);
+        getShortlistedFilteredSocieties();
+        console.log($scope.centers);
+        getShortlistedFilteredSocieties();
+        console.log($scope.centers);
           mapViewService.exportProposalData($scope.proposal_id_temp, $scope.centers)
           .success(function(response){
               console.log("Successfully Exported");
@@ -869,7 +866,7 @@ angular.module('catalogueApp')
               console.log("Error response is : ", response);
           });
         }
-        $scope.images = [];
+        $scope.excelFile = [];
         function makeid(){
             var text = "";
             var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -877,40 +874,21 @@ angular.module('catalogueApp')
                 text += possible.charAt(Math.floor(Math.random() * possible.length));
             return text;
         }
-        $scope.importData = function(files, errFiles){
-                $scope.files = files;
-                $scope.errFile = errFiles;
-                /*if (files) {*/
-              angular.forEach(files, function(file) {
-                    var my_filename = "PR_" + $scope.proposal_id_temp + "_" + makeid();
-                    files.upload = Upload.upload({
-                      url: 'http://mdimages.s3.amazonaws.com/', //S3 upload url including bucket name
-                      method: 'POST',
-                      data: {
-                          key: my_filename, // the key to store the file on S3, could be file name or customized
-                          AWSAccessKeyId: 'AKIAI6PVCXJEAXV6UHUQ',
-                          acl: 'public-read', // sets the access to the uploaded file in the bucket: private, public-read, ...
-                          policy: "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
-                          signature: "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=", // base64-encoded signature based on policy string (see article below)
-                          "Content-Type": file.type != '' ? file.type : 'application/octet-stream', // content type of the file (NotEmpty)
-                          file: file
-                      }
-                    });
 
-                    files.upload.then(function (response) {
-                      var my_file_url = {"image_details":[{"location_id":$rootScope.societyId, "image_url":my_filename}]};
-                      $scope.images.push({"proposal_id":$scope.proposal_id_temp, "image_url":my_filename})
-                      mapViewService.uploadFile($scope.proposal_id_temp,my_file_url);
-                        $timeout(function () {
-                            file.result = response.data;
-                        });
-                    }, function (response) {
-                        if (response.status > 0)
-                            $scope.errorMsg = response.status + ': ' + response.data;
-                    }, function (evt) {
-                        files.progress = Math.min(100, parseInt(100.0 *
-                                                 evt.loaded / evt.total));
-                    });
-              });
-        }
+        $scope.upload = function (file) {
+          console.log(file);
+          var url8 = 'http://localhost:8000/v0/ui/website/';
+       Upload.upload({
+           url: url8 + $scope.proposal_id_temp + '/import-society-data/',
+           data: {file: file, 'username': $scope.username}
+       }).then(function (resp) {
+           console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
+       }, function (resp) {
+           console.log('Error status: ' + resp.status);
+       }, function (evt) {
+           var progressPercentage = parseInt(100.0 * evt.loaded / evt.total);
+           console.log('progress: ' + progressPercentage + '% ' + evt.config.data.file.name);
+       });
+   };
+
 });

@@ -55,13 +55,15 @@ urlpatterns = [
     # url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_contact_details$', views.ContactDetailsGenericAPIView.as_view()),
     # url(r'^corporate/save_basic_corporate_details$', views.saveBasicCorporateDetailsAPIView.as_view())
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_building_details$', views.SaveBuildingDetailsAPIView.as_view(), name='save-building-details'),
-    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/get_company_list$', views.CompanyDetailsAPIView.as_view()),
-    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_company_details$', views.CorporateCompanyDetailsAPIView.as_view()),
-    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/get_company_data$', views.CorporateCompanyDetailsAPIView.as_view()),
+    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/get_company_list$', views.CompanyDetailsAPIView.as_view(), name='get-corporate-company-list'),
+    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_company_details$', views.CorporateCompanyDetailsAPIView.as_view(), name='save-company-details'),
+    url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/get_company_data$', views.CorporateCompanyDetailsAPIView.as_view(), name='get-company-data'),
 
     url(r'^salon/(?P<id>[A-Z_a-z0-9]+)/save_basic_salon_details$', views.saveBasicSalonDetailsAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_salon/$', views.saveBasicSalonDetailsAPIView.as_view()),
 
     url(r'^gym/(?P<id>[A-Z_a-z0-9]+)/save_basic_gym_details$', views.saveBasicGymDetailsAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_gym/$', views.saveBasicGymDetailsAPIView.as_view()),
+    url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_gym/$', views.saveBasicGymDetailsAPIView.as_view()),
+    url(r'^(?P<id>[A-Z_a-z0-9]+)/bus-shelter/$', views.BusShelter.as_view()),
 ]

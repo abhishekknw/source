@@ -5,9 +5,11 @@ import json
 import datetime
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.urlresolvers import reverse
 from django.db.models import Q, Sum
 from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericRelation
 
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
@@ -16,8 +18,10 @@ from rest_framework.views import APIView
 from rest_framework import status
 from openpyxl import Workbook
 from openpyxl.compat import range
+import requests
 #from import_export import resources
 
+import openpyxl
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer,  CampaignTypeMappingSerializer
 from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, BusinessInfo, \
@@ -36,7 +40,7 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
 
 
 from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys,\
-                      inventorylist, society_keys, flat_type_dict
+                      inventorylist, society_keys, flat_type_dict, index_of_center_id
 
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
@@ -48,11 +52,13 @@ import v0.ui.utils as ui_utils
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 
 
-class getBusinessTypesAPIView(APIView):
+class GetBusinessTypesAPIView(APIView):
+    """
+    fetches all types of businesses.
+    """
     def get(self, request, format=None):
         try:
             busTypes = BusinessTypes.objects.all()
-
             serializer = BusinessTypesSerializer(busTypes, many=True)
             return Response(serializer.data, status=200)
         except :
@@ -81,20 +87,19 @@ class BusinessAPIListView(APIView):
         return Response(status=204)
 
 
-class getBusinessSubTypesAPIView(APIView):
+class GetBusinessSubTypesAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             items = BusinessSubTypes.objects.filter(business_type_id=id)
             serializer = BusinessSubTypesSerializer(items, many=True)
-
             return Response(serializer.data)
-        except :
-            return Response(status=404)
+        except Exception as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class BusinessAPIView(APIView):
     """
-    Fetches buisiness data
+    Fetches one buisiness data
     """
 
     def get(self, request, id, format=None):
@@ -111,6 +116,7 @@ class BusinessAPIView(APIView):
         except BusinessInfo.DoesNotExist:
             return Response(data={'status': False, 'error': "No Buisness data found"},
                             status=status.HTTP_400_BAD_REQUEST)
+
 
 class AccountAPIListView(APIView):
     def get(self, request, format=None):
@@ -447,19 +453,21 @@ class GetAccountProposalsAPIView(APIView):
     """
     fetches proposals for a given account_id
     """
+
     def get(self, request, account_id, format=None):
 
         try:
             account = AccountInfo.objects.get(account_id=account_id)
-        except AccountInfo.DoesNotExist:
-            return Response({'message': 'Invalid Account ID'}, status=406)
 
-        proposals = ProposalInfo.objects.filter(account=account)
-        proposal_serializer = ProposalInfoSerializer(proposals, many=True)
-        if proposal_serializer.is_valid():
+
+            proposals = ProposalInfo.objects.filter(account=account)
+            proposal_serializer = ProposalInfoSerializer(proposals, many=True)
+        
             return Response(proposal_serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(proposal_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CampaignAPIView(APIView):
@@ -725,6 +733,7 @@ class CreateProposalAPIView(APIView):
 
         return price_dict
 
+
 class BookCampaignAPIView(APIView):
 
     def get(self, request, id, format=None):
@@ -738,6 +747,7 @@ class BookCampaignAPIView(APIView):
             return Response(status=200)
         except :
             return Response(status=404)
+
 
 class FinalCampaignBookingAPIView(APIView):
 
@@ -780,6 +790,7 @@ class InitialProposalAPIView(APIView):
             'society' : 'RS',   'corporate' : 'CP',
             'gym' : 'GY',       'salon' : 'SA'
         }
+
         with transaction.atomic():
             proposal_data = request.data
             proposal_data['proposal_id'] = self.create_proposal_id()
@@ -814,7 +825,8 @@ class InitialProposalAPIView(APIView):
                         return Response({'message' : 'Latitude Longitude Not found for address : ' + address}, status=406)
                     except ConnectionError:
                         ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({'message' : 'Unable to connect to google Maps'}, status=406    )
+                        return Response({'message' : 'Unable to connect to google Maps'}, status=406)
+
                     center['latitude'] = geo_object.latitude
                     center['longitude'] = geo_object.longitude
 
@@ -1408,7 +1420,7 @@ class FinalProposalAPIView(APIView):
                 society_ids = []
                 societies_count = 0
                 for society in societies_temp:
-                    if space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
+                    if website_utils.space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
                         society['society_latitude'], society['society_longitude']):
                         society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
                                                                                     society['supplier_id'])
@@ -1471,138 +1483,134 @@ class FinalProposalAPIView(APIView):
 
         return Response(response, status=200)
 
-
-
     def post(self, request, proposal_id=None, format=None):
         ''' Saving the proposal from the map view. Every time mapview page is loaded and grid view is submitted from there
         This makes a new version of proposal. And also updates all the required table as well
         This expects id of both center and space mapping from the frontend as they are saved on basic proposal page (InitialProposalAPIView)
         '''
+
         centers = request.data
-        space_dict , supplier_code_dict = self.get_space_code_dict()
-
-        try:
-            center_id = centers[0]['center']['id']
-            center_object = ProposalCenterMapping.objects.select_related('proposal').get(id=center_id)
-            proposal_object = center_object.proposal
-        except IndexError:
-            return Response({'message' : 'No centers received'}, status=406)
-        except ProposalCenterMapping.DoesNotExist:
-            return Response({'message' : 'Invalid Center Received'}, status=406)
-
-        # version save
-        proposal_version_object = ProposalInfoVersion(proposal=proposal_object, name=proposal_object.name, payment_status=proposal_object.payment_status,\
-            created_on=proposal_object.created_on, created_by=proposal_object.created_by, tentative_cost=proposal_object.tentative_cost,\
-            tentative_start_date=proposal_object.tentative_start_date, tentative_end_date=proposal_object.tentative_end_date)
-        proposal_version_object.save()
+        space_dict, supplier_code_dict = self.get_space_code_dict()
 
         with transaction.atomic():
-            shortlisted_space_list = []
-            shortlisted_space_version_list = []
-            for center_info in centers:
-                center = center_info['center']
-                # try :   # transaction.atomic() doesn't work if we handle exceptions on our own
-                center_id = center['id']
-                # except KeyError:
-                #     return Response({'message':'Invalid Center ID'}, status=406)
+            try:
+                shortlisted_space_list = []
+                shortlisted_space_version_list = []
+                for center_info in centers:
+                    center = center_info['center']
+                    center_id = center['id']
 
-                center_object = ProposalCenterMapping.objects.select_related('proposal').get(id=center_id)
-                proposal_object = center_object.proposal
+                    proposal_version_object_response = website_utils.save_proposal_version(center_id)
+                    if not proposal_version_object_response.data['status']:
+                        return proposal_version_object_response
+                    proposal_version_object = proposal_version_object_response.data['data']
 
+                    center_object = ProposalCenterMapping.objects.select_related('proposal').get(id=center_id)
+                    proposal_object = center_object.proposal
 
-                center_serializer = ProposalCenterMappingSerializer(center_object,data=center)
-                if center_serializer.is_valid():
-                    center_object = center_serializer.save()
-                else:
-                    return Response({'message':'Invalid Center Data', 'errors': center_serializer.errors}, status=406)
+                    center_serializer = ProposalCenterMappingSerializer(center_object, data=center)
+                    if center_serializer.is_valid():
+                        center_object = center_serializer.save()
+                    else:
+                        return Response({'message': 'Invalid Center Data', 'errors': center_serializer.errors}, status=406)
 
-                # version save
-                center['proposal_version'] = proposal_version_object.id
-                del center['id']
-                center_version_serailizer = ProposalCenterMappingVersionSerializer(data=center)
-                if center_version_serailizer.is_valid():
-                    center_version_object = center_version_serailizer.save()
-                else:
-                    return Response({'message':'Invalid Center Version Data', 'errors' : center_version_serailizer.errors},\
-                            status = 406)
+                    # version save
+                    center['proposal_version'] = proposal_version_object.id
+                    del center['id']
+                    center_version_serailizer = ProposalCenterMappingVersionSerializer(data=center)
 
-
-                space_mappings = center['space_mappings']
-                space_mapping_id = space_mappings['id']
-                space_mapping_object = SpaceMapping.objects.get(id=space_mapping_id)
-
-                space_mapping_serializer = SpaceMappingSerializer(space_mapping_object, data=space_mappings)
-                if space_mapping_serializer.is_valid():
-                    space_mapping_object = space_mapping_serializer.save()
-                else:
-                    return Response({'message':'Invalid Space Mapping Data', 'errors': space_mapping_serializer.errors},\
-                            status = 406)
-
-                # version save
-                space_mappings['center_version'] = center_version_object.id
-                space_mappings['proposal_version'] = proposal_version_object.id
-                del space_mappings['id']
-                space_mapping_version_serializer = SpaceMappingVersionSerializer(data=space_mappings)
-                if space_mapping_version_serializer.is_valid():
-                    space_mapping_version_object = space_mapping_version_serializer.save()
-                else:
-                    return Response({'message' : 'Invalid Space Mapping Version Data', 'errors' : space_mapping_version_serializer.errors},\
+                    if center_version_serailizer.is_valid():
+                        center_version_object = center_version_serailizer.save()
+                    else:
+                        return Response(
+                            {'message': 'Invalid Center Version Data', 'errors': center_version_serailizer.errors}, \
                             status=406)
 
-                for space_name in ['society','corporate','gym','salon']:
-                    if space_mapping_object.__dict__[space_name+"_allowed"]:
-                        content_type = ContentType.objects.get(model='SupplierType' + space_name.title())
-                        supplier_code = supplier_code_dict[space_name]
+                    space_mappings = center['space_mappings']
+                    space_mapping_id = space_mappings['id']
+                    space_mapping_object = SpaceMapping.objects.get(id=space_mapping_id)
 
-                        try:
-                            space_inventory_type = center_info[space_dict[space_name] + '_inventory']
-                        except KeyError:
-                            # Just ignoring because for corporate inventory is not made
-                            continue
+                    space_mapping_serializer = SpaceMappingSerializer(space_mapping_object, data=space_mappings)
+                    if space_mapping_serializer.is_valid():
+                        space_mapping_object = space_mapping_serializer.save()
+                    else:
+                        return Response(
+                            {'message': 'Invalid Space Mapping Data', 'errors': space_mapping_serializer.errors}, \
+                            status=406)
 
-                        try:
-                            inventory_type_object = InventoryType.objects.get(id = space_inventory_type['id'])
-                            inventory_type_serializer = InventoryTypeSerializer(inventory_type_object, data=space_inventory_type)
-                            del space_inventory_type['id']
-                        except KeyError:
-                            space_inventory_type['space_mapping'] = space_mapping_object.id
-                            inventory_type_serializer = InventoryTypeSerializer(data=space_inventory_type)
+                    # version save
+                    space_mappings['center_version'] = center_version_object.id
+                    space_mappings['proposal_version'] = proposal_version_object.id
+                    del space_mappings['id']
+                    space_mapping_version_serializer = SpaceMappingVersionSerializer(data=space_mappings)
+                    if space_mapping_version_serializer.is_valid():
+                        space_mapping_version_object = space_mapping_version_serializer.save()
+                    else:
+                        return Response({'message': 'Invalid Space Mapping Version Data',
+                                         'errors': space_mapping_version_serializer.errors}, \
+                                        status=406)
 
-                        if inventory_type_serializer.is_valid():
-                            inventory_type_serializer.save()
-                        else:
-                            return Response({'message':'Invalid Inventory Details for ' + space_name, 'errors' : \
-                                inventory_type_serializer.errors }, status=406)
+                    for space_name in ['society', 'corporate', 'gym', 'salon']:
 
+                        if space_mapping_object.__dict__[space_name + "_allowed"]:
+                            content_type = ContentType.objects.get(model='SupplierType' + space_name.title())
+                            supplier_code = supplier_code_dict[space_name]
 
-                        # version save
-                        space_inventory_type['space_mapping_version'] = space_mapping_version_object.id
-                        inventory_type_version_serializer = InventoryTypeVersionSerializer(data=space_inventory_type)
-                        if inventory_type_version_serializer.is_valid():
-                            inventory_type_version_serializer.save()
-                        else:
-                            return Response({'message': 'Invalid Inventory Details Version for ' + space_name , ' errors' : \
-                                inventory_type_version_serializer.errors}, status=406)
+                            try:
+                                space_inventory_type = center_info[space_dict[space_name] + '_inventory']
+                            except KeyError:
+                                # Just ignoring because for corporate inventory is not made
+                                continue
 
+                            try:
+                                inventory_type_object = InventoryType.objects.get(id=space_inventory_type['id'])
+                                inventory_type_serializer = InventoryTypeSerializer(inventory_type_object,
+                                                                                    data=space_inventory_type)
+                                del space_inventory_type['id']
+                            except KeyError:
+                                space_inventory_type['space_mapping'] = space_mapping_object.id
+                                inventory_type_serializer = InventoryTypeSerializer(data=space_inventory_type)
 
-                        space_mapping_object.get_all_spaces().delete()
+                            if inventory_type_serializer.is_valid():
+                                inventory_type_serializer.save()
+                            else:
+                                return Response({'message': 'Invalid Inventory Details for ' + space_name, 'errors': \
+                                    inventory_type_serializer.errors}, status=406)
 
-                        for space in center_info[space_dict[space_name]]:
-                            if space['shortlisted']:
-                                object_id = space['supplier_id']
-                                shortlisted_space = ShortlistedSpaces(space_mapping = space_mapping_object,content_type=content_type, \
-                                    supplier_code=supplier_code, object_id=object_id, buffer_status = space['buffer_status'])
+                            # version save
+                            space_inventory_type['space_mapping_version'] = space_mapping_version_object.id
+                            inventory_type_version_serializer = InventoryTypeVersionSerializer(data=space_inventory_type)
+                            if inventory_type_version_serializer.is_valid():
+                                inventory_type_version_serializer.save()
+                            else:
+                                return Response(
+                                    {'message': 'Invalid Inventory Details Version for ' + space_name, ' errors': \
+                                        inventory_type_version_serializer.errors}, status=406)
 
-                                shortlisted_space_list.append(shortlisted_space)
+                            space_mapping_object.get_all_spaces().delete()
 
-                                # version save
-                                shortlisted_version_space = ShortlistedSpacesVersion(space_mapping_version=space_mapping_version_object,\
-                                    content_type=content_type, supplier_code=supplier_code, object_id=object_id, buffer_status=space['buffer_status'])
-                                shortlisted_space_version_list.append(shortlisted_version_space)
+                            for space in center_info[space_dict[space_name]]:
+                                if space.get('shortlisted'):
+                                    object_id = space['supplier_id']
+                                    shortlisted_space = ShortlistedSpaces(space_mapping=space_mapping_object,
+                                                                          content_type=content_type, \
+                                                                          supplier_code=supplier_code, object_id=object_id,
+                                                                          buffer_status=space['buffer_status'])
 
-            ShortlistedSpaces.objects.bulk_create(shortlisted_space_list)
-            # version save
-            ShortlistedSpacesVersion.objects.bulk_create(shortlisted_space_version_list)
+                                    shortlisted_space_list.append(shortlisted_space)
+
+                                    # version save
+                                    shortlisted_version_space = ShortlistedSpacesVersion(
+                                        space_mapping_version=space_mapping_version_object, \
+                                        content_type=content_type, supplier_code=supplier_code, object_id=object_id,
+                                        buffer_status=space['buffer_status'])
+                                    shortlisted_space_version_list.append(shortlisted_version_space)
+
+                ShortlistedSpaces.objects.bulk_create(shortlisted_space_list)
+                # version save
+                ShortlistedSpacesVersion.objects.bulk_create(shortlisted_space_version_list)
+            except Exception as e:
+                return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'message':'Successfully Saved'}, status=200)
 
@@ -1625,6 +1633,16 @@ class FinalProposalAPIView(APIView):
 
         return space_dict, supplier_code_dict
 
+
+class FinalProposalSubmit(APIView):
+    """
+    Saves final proposal
+    """
+
+    def post(self, request):
+        for center in request.data:
+            # create an entry of this proposal in  proposal_info_version table
+            pass
 
 
 class CurrentProposalAPIView(APIView):
@@ -1845,130 +1863,137 @@ class ProposalHistoryAPIView(APIView):
         proposal_versions = proposal_object.get_proposal_versions()
         proposal_versions_list = []
 
-        for proposal_version_object in proposal_versions:
-            proposal_info_dict = {}
-            proposal_version_serializer = ProposalInfoVersionSerializer(proposal_version_object)
-            proposal_info_dict['proposal'] = proposal_version_serializer.data
-            proposal_center_versions = ProposalCenterMappingVersion.objects.filter(proposal_version=proposal_version_object)
-            center_versions_list = []
-            for center_version_object in proposal_center_versions:
-                space_info_dict = {}
-                center_version_serailizer = ProposalCenterMappingVersionSpaceSerializer(center_version_object)
-                space_info_dict['center'] = center_version_serailizer.data
+        try:
+            for proposal_version_object in proposal_versions:
+                proposal_info_dict = {}
+                proposal_version_serializer = ProposalInfoVersionSerializer(proposal_version_object)
+                proposal_info_dict['proposal'] = proposal_version_serializer.data
+                proposal_center_versions = ProposalCenterMappingVersion.objects.filter(proposal_version=proposal_version_object)
+                center_versions_list = []
+                for center_version_object in proposal_center_versions:
+                    space_info_dict = {}
+                    center_version_serailizer = ProposalCenterMappingVersionSpaceSerializer(center_version_object)
+                    space_info_dict['center'] = center_version_serailizer.data
 
-                space_mapping_version_object = SpaceMappingVersion.objects.get(center_version=center_version_object)
+                    space_mapping_version_object = SpaceMappingVersion.objects.get(center_version=center_version_object)
 
-                if space_mapping_version_object.society_allowed:
-                    societies_shortlisted_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
-                            supplier_code = 'RS', buffer_status=False).values_list('object_id',flat=True)
-                    societies_shortlisted_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_shortlisted_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
-                    societies_shortlisted = []
-                    societies_shortlisted_count = 0
-                    # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
-                    for society in societies_shortlisted_temp:
-                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                    society['supplier_id'])
+                    if space_mapping_version_object.society_allowed:
+                        societies_shortlisted_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
+                                supplier_code = 'RS', buffer_status=False).values_list('object_id',flat=True)
+                        societies_shortlisted_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_shortlisted_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+                        societies_shortlisted = []
+                        societies_shortlisted_count = 0
+                        # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
+                        for society in societies_shortlisted_temp:
+                            society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                        society['supplier_id'])
 
-                        #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
-                        society['shortlisted'] = True
-                        society['buffer_status'] = False
-                        # obj = InventorySummaryAPIView()
-                        adinventory_type_dict = ui_utils.adinventory_func()
-                        duration_type_dict = ui_utils.duration_type_func()
+                            #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                            society['shortlisted'] = True
+                            society['buffer_status'] = False
+                            # obj = InventorySummaryAPIView()
+                            adinventory_type_dict = ui_utils.adinventory_func()
+                            duration_type_dict = ui_utils.duration_type_func()
 
-                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
-                            society['total_poster_count'] = society_inventory_obj.total_poster_count
-                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
+                            if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                                society['total_poster_count'] = society_inventory_obj.total_poster_count
+                                society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
 
-                        if society_inventory_obj.standee_allowed:
-                            society['total_standee_count'] = society_inventory_obj.total_standee_count
-                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
+                            if society_inventory_obj.standee_allowed:
+                                society['total_standee_count'] = society_inventory_obj.total_standee_count
+                                society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
 
-                        if society_inventory_obj.stall_allowed:
-                            society['total_stall_count'] = society_inventory_obj.total_stall_count
-                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
-                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
+                            if society_inventory_obj.stall_allowed:
+                                society['total_stall_count'] = society_inventory_obj.total_stall_count
+                                society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                                society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
-                        if society_inventory_obj.flier_allowed:
-                            society['flier_frequency'] = society_inventory_obj.flier_frequency
-                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
+                            if society_inventory_obj.flier_allowed:
+                                society['flier_frequency'] = society_inventory_obj.flier_frequency
+                                society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
-                        societies_shortlisted.append(society)
-                        societies_shortlisted_count += 1
+                            societies_shortlisted.append(society)
+                            societies_shortlisted_count += 1
 
-                    space_info_dict['societies_shortlisted'] = societies_shortlisted
-                    space_info_dict['societies_shortlisted_count'] = societies_shortlisted_count
-
-
-                    societies_buffered_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
-                            supplier_code = 'RS', buffer_status=True).values_list('object_id',flat=True)
-                    societies_buffered_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_buffered_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
-                    # societies_buffered_serializer = ProposalSocietySerializer(societies_buffered, many=True)
-                    societies_buffered = []
-                    societies_buffered_count = 0
-                    for society in societies_buffered_temp:
-                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                    society['supplier_id'])
-
-                        #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
-                        society['shortlisted'] = True
-                        society['buffer_status'] = False
-                        # obj = InventorySummaryAPIView()
-                        adinventory_type_dict = ui_utils.adinventory_func()
-                        duration_type_dict = ui_utils.duration_type_func()
-
-                        if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
-                            society['total_poster_count'] = society_inventory_obj.total_poster_count
-                            society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
-
-                        if society_inventory_obj.standee_allowed:
-                            society['total_standee_count'] = society_inventory_obj.total_standee_count
-                            society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
-
-                        if society_inventory_obj.stall_allowed:
-                            society['total_stall_count'] = society_inventory_obj.total_stall_count
-                            society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
-                            society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
-
-                        if society_inventory_obj.flier_allowed:
-                            society['flier_freqency'] = society_inventory_obj.flier_frequency
-                            society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
-
-                        societies_buffered.append(society)
-                        societies_buffered_count += 1
+                        space_info_dict['societies_shortlisted'] = societies_shortlisted
+                        space_info_dict['societies_shortlisted_count'] = societies_shortlisted_count
 
 
-                    space_info_dict['societies_buffered'] = societies_buffered
-                    space_info_dict['societies_buffered_count'] = societies_buffered_count
+                        societies_buffered_ids = ShortlistedSpacesVersion.objects.filter(space_mapping_version=space_mapping_version_object,\
+                                supplier_code = 'RS', buffer_status=True).values_list('object_id',flat=True)
+                        societies_buffered_temp = SupplierTypeSociety.objects.filter(supplier_id__in=societies_buffered_ids).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type')
+                        # societies_buffered_serializer = ProposalSocietySerializer(societies_buffered, many=True)
+                        societies_buffered = []
+                        societies_buffered_count = 0
+                        for society in societies_buffered_temp:
+                            society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
+                                                                                        society['supplier_id'])
 
-                    societies_inventory = InventoryTypeVersion.objects.get(supplier_code='RS', \
-                            space_mapping_version=space_mapping_version_object)
-                    societies_inventory_serializer = InventoryTypeVersionSerializer(societies_inventory)
-                    societies_inventory_count = InventorySummary.objects.filter(supplier_id__in=societies_shortlisted_ids).aggregate(posters=Sum('total_poster_count'),\
-                    standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+                            #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
+                            society['shortlisted'] = True
+                            society['buffer_status'] = False
+                            # obj = InventorySummaryAPIView()
+                            adinventory_type_dict = ui_utils.adinventory_func()
+                            duration_type_dict = ui_utils.duration_type_func()
 
-                    # Count only for society_shortlisted
-                    space_info_dict['societies_inventory_count'] = societies_inventory_count
-                    space_info_dict['societies_inventory'] = societies_inventory_serializer.data
+                            if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
+                                society['total_poster_count'] = society_inventory_obj.total_poster_count
+                                society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
 
-                if space_mapping_version_object.corporate_allowed:
-                    # ADDNEW -->
-                    pass
+                            if society_inventory_obj.standee_allowed:
+                                society['total_standee_count'] = society_inventory_obj.total_standee_count
+                                society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
 
-                if space_mapping_version_object.gym_allowed:
-                    # ADDNEW -->
-                    pass
+                            if society_inventory_obj.stall_allowed:
+                                society['total_stall_count'] = society_inventory_obj.total_stall_count
+                                society['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
+                                society['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
 
-                if space_mapping_version_object.salon_allowed:
-                    # ADDNEW -->
-                    pass
+                            if society_inventory_obj.flier_allowed:
+                                society['flier_freqency'] = society_inventory_obj.flier_frequency
+                                society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
-                center_versions_list.append(space_info_dict)
+                            societies_buffered.append(society)
+                            societies_buffered_count += 1
 
-            proposal_info_dict['centers'] = center_versions_list
-            proposal_versions_list.append(proposal_info_dict)
 
-        return Response(proposal_versions_list, status=200)
+                        space_info_dict['societies_buffered'] = societies_buffered
+                        space_info_dict['societies_buffered_count'] = societies_buffered_count
+
+                        societies_inventory = InventoryTypeVersion.objects.get(supplier_code='RS', \
+                                space_mapping_version=space_mapping_version_object)
+                        societies_inventory_serializer = InventoryTypeVersionSerializer(societies_inventory)
+                        societies_inventory_count = InventorySummary.objects.filter(supplier_id__in=societies_shortlisted_ids).aggregate(posters=Sum('total_poster_count'),\
+                        standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+
+                        # Count only for society_shortlisted
+                        space_info_dict['societies_inventory_count'] = societies_inventory_count
+                        space_info_dict['societies_inventory'] = societies_inventory_serializer.data
+
+                    if space_mapping_version_object.corporate_allowed:
+                        # ADDNEW -->
+                        pass
+
+                    if space_mapping_version_object.gym_allowed:
+                        # ADDNEW -->
+                        pass
+
+                    if space_mapping_version_object.salon_allowed:
+                        # ADDNEW -->
+                        pass
+
+                    center_versions_list.append(space_info_dict)
+
+                proposal_info_dict['centers'] = center_versions_list
+                proposal_versions_list.append(proposal_info_dict)
+
+            return Response(proposal_versions_list, status=200)
+        except ObjectDoesNotExist as e:
+            Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class SaveSocietyData(APIView):
     """
@@ -2123,6 +2148,12 @@ class ExportData(APIView):
                     for key in center_keys:
                         center_list.append(center['center'][key])
 
+                    # add space mapping id
+                    center_list.append(center['center']['space_mappings']['id'])
+
+                    # add inventory type id
+                    center_list.append(center['societies_inventory']['id'])
+
                     # calculates inventory price per flat and  store the result in dict itself
                     local_list = []
 
@@ -2150,11 +2181,11 @@ class ExportData(APIView):
             return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ImportData(APIView):
+class ImportSocietyData(APIView):
     """
     This API basically takes an excel sheet , process the data and saves it in the database.
     """
-    def get(self, request, proposal_id=None):
+    def post(self, request, proposal_id=None):
         """
         Args:
             request: request param
@@ -2163,9 +2194,104 @@ class ImportData(APIView):
         Returns: Saves the  data in db
 
         """
-        pass
+        try:
+            class_name = self.__class__.__name__
 
+            # file_name = BASE_DIR + '/sample5.xlsx'
 
+            if not request.FILES:
+                return ui_utils.handle_response(class_name, data='No File Found')
+            my_file = request.FILES['society-file']
+            wb = openpyxl.load_workbook(my_file)
+            ws = wb.get_sheet_by_name('Shortlisted Spaces Details')
+
+            center_id_list_response = website_utils.get_center_id_list(ws, index_of_center_id)
+
+            if not center_id_list_response.data['status']:
+                return center_id_list_response
+
+            center_id_list = center_id_list_response.data['data']
+
+            # normalize the center id's or map the actual center id's with indexes starting from zero
+            center_id_to_index_mapping = {}
+            result = []
+            for index, center_id in enumerate(center_id_list):
+                result.append({})
+                center_id_to_index_mapping[center_id] = index
+
+            # iterate through all rows and populate result array
+            for index, row in enumerate(ws.iter_rows()):
+                if index == 0:
+                    continue
+
+                """
+                  Number of rows in 'result' is number of distinct centers. each center has a center_id which is mapped
+                  to an index in the 'result' list. each element of result list is a center_object.
+                  Goal is to populate the right center_object with data of it's 3 keys:
+                 'societies_inventory', 'societies', 'center'
+
+                """
+                # in order to proceed further we need a dict in which keys are header names with spaces
+                # removed and values are value of the row which we are processing
+
+                row_response = website_utils.get_mapped_row(ws, row)
+                if not row_response.data['status']:
+                    return row_response
+                row = row_response.data['data']
+
+                # get the center index mapped for this center_id
+                center_index = center_id_to_index_mapping[row['center_id']]
+
+                # get the actual center_object from result list to process further
+                center_object = result[center_index]
+
+                # initialize the center_object  with necessary keys if not already
+                if not center_object:
+                    response = website_utils.initialize_keys(center_object, row)
+                    if not response.data['status']:
+                        return response
+                    center_object = response.data['data']
+
+                # add 'societies_inventory' data  in center_object. must be called before make_societies.
+                response = website_utils.make_societies_inventory(center_object, row)
+                if not response.data['status']:
+                    return response
+                center_object = response.data['data']
+
+                # add 1 society that represents this row to the list of societies this object has already
+                response = website_utils.make_societies(center_object, row)
+                if not response.data['status']:
+                    return response
+                center_object = response.data['data']
+
+                # add the 'center' data  in center_object
+                response = website_utils.make_center(center_object, row)
+                if not response.data['status']:
+                    return response
+                center_object = response.data['data']
+
+                # update the center dict in result with modified center_object
+                result[center_index] = center_object
+
+            # populate the shortlisted_inventory_details table before hiting the url
+            response = website_utils.populate_shortlisted_inventory_details(result)
+            if not response.data['status']:
+                return response
+
+            # time to hit the url
+            url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
+            url = BASE_URL + url[1:]
+
+            data = result
+            headers={
+                'Content-Type': 'application/json'
+            }
+            response = requests.post(url, json.dumps(data), headers=headers)
+            if response.status_code != status.HTTP_200_OK:
+                return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': True, 'data': 'successfully imported'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_200_OK)
 
 
 class SaveContactDetails(APIView):

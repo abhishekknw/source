@@ -1,4 +1,4 @@
-angular.module('machadaloPages')
+angular.module('machadaloPages',['ui.bootstrap'])
 .controller('SocietyCtrl',
     ['$scope', '$rootScope', '$window', '$location','societyDetailsService',
     function ($scope, $rootScope, $window, $location, societyDetailsService) {
@@ -10,11 +10,29 @@ angular.module('machadaloPages')
      $scope.totalInventoryCount = {};
      societyDetailsService.getSociety($rootScope.societyId)
       .success(function (response) {
+        $scope.myInterval=300;
         $scope.society_images = response.society_images;
         $scope.society = response.society_data;
         $rootScope.societyname = response.society_data.society_name;
         $scope.residentCount = estimatedResidents(response.society_data.flat_count);
         $scope.flatcountflier = response.society_data.flat_count;
+        // Start : Code added to seperate images by their image tag names
+        $scope.SocietyImages = [],$scope.FlierImages=[],$scope.PosterImages=[],$scope.StandeeImages=[],$scope.StallImages=[],$scope.CarImages=[];
+        for(var i=0;i<$scope.society_images.length;i++){
+          if($scope.society_images[i].name == 'Society')
+            $scope.SocietyImages.push($scope.society_images[i]);
+          if($scope.society_images[i].name == 'Standee Space')
+            $scope.StandeeImages.push($scope.society_images[i]);
+          if($scope.society_images[i].name == 'Stall Space')
+            $scope.StallImages.push($scope.society_images[i]);
+          if($scope.society_images[i].name == 'Fliers')
+            $scope.FlierImages.push($scope.society_images[i]);
+          if($scope.society_images[i].name == 'Car Display')
+            $scope.CarImages.push($scope.society_images[i]);
+          if($scope.society_images[i].name == 'Lift' || $scope.society_images[i].name == 'Notice Board')
+            $scope.PosterImages.push($scope.society_images[i]);
+      }
+      // End : Code added to seperate images by their image tag names
      });
 
      societyDetailsService.get_inventory_summary($rootScope.societyId)
@@ -66,8 +84,7 @@ angular.module('machadaloPages')
         }
     });
 
-
-    $scope.nextSociety = function(){
+        $scope.nextSociety = function(){
         $scope.index = $scope.index + 1;
         if($scope.index <= $scope.maxlength){
             // getsocietyfunc($scope.model[$scope.index].supplier_id)

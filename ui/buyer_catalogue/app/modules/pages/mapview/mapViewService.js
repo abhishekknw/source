@@ -1,7 +1,7 @@
  'use strict';
  angular.module('catalogueApp')
- .factory('mapViewService', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location',
-  function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
+ .factory('mapViewService', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location', '$http',
+  function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location, $http) {
 
     var url_base = 'v0/ui/website/';
     var mapViewService = {};
@@ -39,9 +39,16 @@
         return machadaloHttp.post(url, centers_data);
     }
 
-    mapViewService.uploadFile = function (proposal_id, file){
+    mapViewService.uploadFile = function (proposal_id, societyfile){
+      //var urlupload = 'http://localhost:8108/v0/ui/website/';
       var url = url_base + proposal_id + '/import-society-data/';
-      return machadaloHttp.post(url, file);
+      return machadaloHttp.post(url, societyfile);
+      // return $http({
+      //     method: 'POST',
+      //     url: url1,
+      //     headers: {'Content-Type': 'multipart/form-data'},
+      //     data:proposal_id
+      // })
     }
     return mapViewService;
 }]);
