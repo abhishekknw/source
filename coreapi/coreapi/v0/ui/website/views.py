@@ -2198,10 +2198,9 @@ class ImportSocietyData(APIView):
             class_name = self.__class__.__name__
 
             # file_name = BASE_DIR + '/sample5.xlsx'
-
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
-            my_file = request.FILES['society-file']
+            my_file = request.FILES['file']
             wb = openpyxl.load_workbook(my_file)
             ws = wb.get_sheet_by_name('Shortlisted Spaces Details')
 
