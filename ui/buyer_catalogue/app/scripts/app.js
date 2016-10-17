@@ -30,7 +30,6 @@ angular
     'angularjs-dropdown-multiselect',
     'ngFileUpload',
     'uiGmapgoogle-maps',
-    // ''
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
      // $routeProvider.otherwise('/');

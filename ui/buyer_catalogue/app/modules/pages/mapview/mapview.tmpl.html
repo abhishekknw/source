@@ -242,17 +242,8 @@
           <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
           <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
-          <!-- <form method="post" enctype="multipart/form-data">
-          <button class="btn btn-danger active" type = "file" name="society-file" class="btn btn-default" ng-show="show_societies"  ngf-select = "importData($files)"
-            accept = "/*" ngf-max-size = "5MB" >Upload excel</button>action="http://localhost:8108/v0/ui/website/DKWNYWzL/import-society-data/"
-          </form> -->
-          <div>
-             <form method="post"  enctype="multipart/form-data">
-               <input type="file" ng-show="show_societies" name="societyfile">
-               <input type="submit" class="btn btn-danger active" ng-show="show_societies" value="upload" ng-click = "importData($files)">
-            </form>
-         </div>
-          </div>
+          <div class="button" ngf-select="upload($file)">Click this to Upload</div>
+        </div>
         </div>
 
 

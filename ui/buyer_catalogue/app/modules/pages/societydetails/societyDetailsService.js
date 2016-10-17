@@ -21,9 +21,14 @@ angular.module('machadaloPages')
       return machadaloHttp.get(url);
    };
 
-   societyDetailsService.get_inventory_summary = function(id){
-    var url = url_base + "society/" + id + "/inventory_summary/";
-    return machadaloHttp.get(url);
+  //  societyDetailsService.get_inventory_summary = function(id){
+  //   var url = url_base + "society/" + id + "/inventory_summary/";
+  //   return machadaloHttp.get(url);
+  //  };
+
+   societyDetailsService.get_inventory_summary = function(id, supplierTypeCode){
+     var url = url_base + "society/" + id + "/inventory_summary/?supplierTypeCode=" + supplierTypeCode;
+     return machadaloHttp.get(url);
    };
 
    societyDetailsService.getSocietyList = function(data) {
