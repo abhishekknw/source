@@ -875,20 +875,16 @@ angular.module('catalogueApp')
             return text;
         }
 
-        $scope.upload = function (file) {
-          console.log(file);
-          var url8 = 'http://localhost:8000/v0/ui/website/';
+  $scope.upload = function (file) {
+       var uploadUrl = 'http://localhost:8108/v0/ui/website/';
        Upload.upload({
-           url: url8 + $scope.proposal_id_temp + '/import-society-data/',
+           url: uploadUrl + $scope.proposal_id_temp + '/import-society-data/',
            data: {file: file, 'username': $scope.username}
        }).then(function (resp) {
            console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
        }, function (resp) {
            console.log('Error status: ' + resp.status);
-       }, function (evt) {
-           var progressPercentage = parseInt(100.0 * evt.loaded / evt.total);
-           console.log('progress: ' + progressPercentage + '% ' + evt.config.data.file.name);
        });
-   };
+ };
 
 });
