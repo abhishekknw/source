@@ -40,7 +40,7 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
 
 
 from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys,\
-                      inventorylist, society_keys, flat_type_dict, index_of_center_id
+                      inventorylist, society_keys, flat_type_dict, index_of_center_id, offline_pricing_data
 
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
@@ -904,8 +904,6 @@ class SpacesOnCenterAPIView(APIView):
         response = {}
         center_id = request.query_params.get('center',None)
         try:
-            # if proposal_id is None:
-            #     proposal_id = 'AlntOlJi';
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
             response['business_name'] = proposal.account.business.name
         except ProposalInfo.DoesNotExist:
@@ -919,13 +917,16 @@ class SpacesOnCenterAPIView(APIView):
                 center_id = int(center_id)
             except ValueError:
                 return Response({'message' : 'Invalid Center ID provided'}, status=406)
+            # fetch center object
             proposal_centers = ProposalCenterMapping.objects.filter(id=center_id)
             if not proposal_centers:
                 return Response({'message' : 'Invalid Center ID provided'}, status=406)
         else :
+            # fetch all centers for this proposal id
             proposal_centers = ProposalCenterMapping.objects.filter(proposal=proposal)
 
         centers_data_list = []
+        # iterate all centers one by one
         for proposal_center in proposal_centers:
             try:
                 space_mapping_object = SpaceMapping.objects.get(center=proposal_center)
@@ -934,6 +935,7 @@ class SpacesOnCenterAPIView(APIView):
 
             space_info_dict = {}
 
+            # calculate the max, min lat long
             delta_dict = website_utils.get_delta_latitude_longitude(float(proposal_center.radius), float(proposal_center.latitude))
 
             delta_latitude = delta_dict['delta_latitude']
@@ -943,7 +945,6 @@ class SpacesOnCenterAPIView(APIView):
             delta_longitude = delta_dict['delta_longitude']
             min_longitude = proposal_center.longitude - delta_longitude
             max_longitude = proposal_center.longitude + delta_longitude
-
 
             # for society
             if space_mapping_object.society_allowed:
@@ -962,10 +963,19 @@ class SpacesOnCenterAPIView(APIView):
                     except KeyError:
                         pass
 
+                # get all societies based on the query q
                 societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1', 'society_address2', 'society_subarea', 'society_locality', 'society_location_type', 'flat_count', 'average_rent', 'machadalo_index', 'society_type_quality','tower_count','flat_count')
+
+                # to maintain list of shortlisted societies
                 societies = []
+
+                # to maintain list of society_ids
                 society_ids = []
+
+                # to maintain total count of societies
                 societies_count = 0
+
+                # for each society within defined lat long, process the society
                 for society in societies_temp:
                     if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         society['society_latitude'], society['society_longitude']):
@@ -975,11 +985,8 @@ class SpacesOnCenterAPIView(APIView):
                         duration_type_dict = ui_utils.duration_type_func()
 
                         if society_inventory_obj:
-                            #return Response({'status': False, 'error': 'Inventory object does not exist for {0}'. format(society['supplier_id'])} , status=400)
-                        # society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                             society['shortlisted'] = True
                             society['buffer_status'] = False
-                            # obj = InventorySummaryAPIView()
 
                             if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
                                 society['total_poster_count'] = society_inventory_obj.total_poster_count
@@ -998,61 +1005,38 @@ class SpacesOnCenterAPIView(APIView):
                                 society['flier_frequency'] = society_inventory_obj.flier_frequency
                                 society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
+                        # append the society id
                         society_ids.append(society['supplier_id'])
+
+                        # append the society object to list
                         societies.append(society)
+
+                        # increment the societies count
                         societies_count += 1
-
-
+                # aggregate information over counts of standee, flier, poster etc is required.
                 societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
                     standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
+                # add all societies shortlisted
                 space_info_dict['societies'] = societies
+
+                # add inventory count information
                 space_info_dict['societies_inventory_count'] = societies_inventory_count
+
+                # add InventoryType details
                 space_info_dict['societies_inventory'] = societies_inventory_serializer.data
+
+                # add the total count of shortlisted societies
                 space_info_dict['societies_count'] = societies_count
 
-
-            if space_mapping_object.corporate_allowed:
-                pass
-                # q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
-
-                # ADDNEW --> uncomment this line when corporate inventory implemented
-                # corporates_inventory = space_mapping_object.get_corporate_inventories().
-                # corporates_inventory_serializer = InventoryTypeSerializer(inventory_type_corporate)
-                # then run for loop almost same as above for applying filter on inventory_allowed
-                # make a query for different inventory count (e.g. poster_count )
-
-                # corporates_temp = SupplierTypeCorporate.objects.filter(q)
-                # corporates = []
-                # corporates_count = 0
-                # for corporate in corporates_temp:
-                #     if space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
-                #         corporate.latitude, corporate.longitude):
-                #         corporates.append(corporate)
-                #         corporates_count += 1
-
-                # corporates_serializer = ProposalCorporateSerializer(corporates, many=True)
-
-                # space_info_dict['corporates'] = corporates_serializer.data
-                # space_info_dict['corporates_count'] = corporates_count
-                # space_info_dict['corporates_inventory_count'] = corporates_inventory_count  // implement this first
-                # space_info_dict['corporates_inventory'] = corporates_inventory_serializer.data
-
-            if space_mapping_object.gym_allowed:
-                # ADDNEW --> write gym code for filtering
-                pass
-
-            if space_mapping_object.salon_allowed:
-                # ADDNEW --> write salon code for filtering
-                pass
-
-
+            # add center information
             proposal_center_serializer = ProposalCenterMappingSpaceSerializer(proposal_center)
             space_info_dict['center'] = proposal_center_serializer.data
 
+            # append the structure obtained into the list for centers
             centers_data_list.append(space_info_dict)
 
-
+        # return the result
         response['centers'] = centers_data_list
 
         return Response(response, status=200)
@@ -2198,10 +2182,9 @@ class ImportSocietyData(APIView):
             class_name = self.__class__.__name__
 
             # file_name = BASE_DIR + '/sample5.xlsx'
-
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
-            my_file = request.FILES['society-file']
+            my_file = request.FILES['file']
             wb = openpyxl.load_workbook(my_file)
             ws = wb.get_sheet_by_name('Shortlisted Spaces Details')
 
@@ -2292,6 +2275,62 @@ class ImportSocietyData(APIView):
             return Response({'status': True, 'data': 'successfully imported'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'status': False, 'error': e.message}, status=status.HTTP_200_OK)
+
+
+class ImportProposalCostData(APIView):
+    """
+    The class is responsible for importing proposal cost data from an excel sheet.
+    All the import api's heavily depend upon the structure of the sheet which it's importing.
+    so if you are trying to understand what this api does, understand the structure of the sheet first.
+
+    two phases: data collection and data insertion.
+    """
+
+    def post(self, request):
+
+        class_name = self.__class__.__name__
+
+        file_name = BASE_DIR + '/proposal_cost_data.xlsx'
+
+        # load the workbook
+        wb = openpyxl.load_workbook(file_name)
+        # read the sheet
+        ws = wb.get_sheet_by_name('Offline Pricing')
+
+        # before inserting delete all previous data as we don't want to duplicate things.
+        # this deletion will happen for a particular center and proposal id. currently it's left unhandled.
+        response = website_utils.delete_proposal_cost_data()
+        if not response.data['status']:
+            return response
+
+        with transaction.atomic():
+            try:
+                count = 0
+                master_data = {}
+                # DATA COLLECTION  in order to  collect data in master_data, initialize with proper data structures
+                master_data = website_utils.initialize_master_data(master_data)
+                for index, row in enumerate(ws.iter_rows()):
+
+                    # ignore empty rows
+                    if website_utils.is_empty_row(row):
+                        continue
+                    # send one row for processing
+                    response = website_utils.handle_offline_pricing_row(row, master_data)
+                    if not response.data['status']:
+                        return response
+                    # update master_data with response
+                    master_data = response.data['data']
+                    count += 1
+
+                # DATA INSERTION time to save the data
+                response = website_utils.save_master_data(master_data)
+                if not response.data['status']:
+                    return response
+                return ui_utils.handle_response(class_name, data='successfully imported.Saved {0} rows'.format(count),
+                                                success=
+                                                True)
+            except Exception as e:
+                return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class SaveContactDetails(APIView):

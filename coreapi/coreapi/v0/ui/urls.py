@@ -41,7 +41,7 @@ urlpatterns = [
 
     url(r'^create_supplier/load_initial_data/$', views.getInitialDataAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_corporate/$', views.SaveBasicCorporateDetailsAPIView.as_view(), name='load-initial-corporate-data'),
-    url(r'^locations/(?P<id>[A-Z_a-z0-9]+)/$', views.getLocationsAPIView.as_view()),
+    url(r'^locations/(?P<id>[A-Z_a-z0-9]+)/$', views.GetLocationsAPIView.as_view(), name='locations'),
     url(r'^supplier/generate_id/$', views.GenerateSupplierIdAPIView.as_view(), name='generate-id'),
     url(r'^check_supplier_code/(?P<code>[A-Z0-9]+)$', views.checkSupplierCodeAPIView.as_view()),
 

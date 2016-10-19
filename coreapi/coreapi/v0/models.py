@@ -1352,47 +1352,11 @@ class AccountInfo(models.Model):
 #         db_table = 'account_contact'
 
 
-
-
-
-
-
-
-class ProposalInfo(models.Model):
-    proposal_id         = models.CharField(db_column = 'PROPOSAL ID',max_length=15,primary_key=True)
-    account             = models.ForeignKey(AccountInfo,related_name='proposals', db_column ='ACCOUNT',on_delete=models.CASCADE)
-    name                = models.CharField(db_column='NAME', max_length=50,blank=True)
-    payment_status      = models.BooleanField(default=False, db_column='PAYMENT STATUS')
-    updated_on          = models.DateTimeField(auto_now=True, auto_now_add=False)
-    updated_by          = models.CharField(max_length=50,default='Admin')
-    created_on          = models.DateTimeField(auto_now_add=True,auto_now=False)
-    created_by          = models.CharField(max_length=50, default='Admin')
-    tentative_cost      = models.IntegerField(default=5000)
-    tentative_start_date = models.DateTimeField(null=True)
-    tentative_end_date  = models.DateTimeField(null=True)
-
-
-    def get_centers(self):
-        # ProposalCenterMapping --> related_name='centers'
-        try:
-            return self.centers.all()
-        except:
-            return None
-
-    def get_proposal_versions(self):
-        return self.proposal_versions.all().order_by('-timestamp')
-
-    class Meta:
-
-        #db_table = 'PROPOSAL_INFO'
-        db_table = 'proposal_info'
-
-
 class ProposalCenterMapping(models.Model):
     """
     for a given proposal, stores lat, long, radius, city, pincode etc.
     """
-    proposal    = models.ForeignKey(ProposalInfo, db_index=True, related_name='centers', on_delete=models.CASCADE)
+    proposal    = models.ForeignKey('ProposalInfo', db_index=True, related_name='centers', on_delete=models.CASCADE)
     center_name = models.CharField(max_length=50)
     address     = models.CharField(max_length=150,null=True, blank=True)
     latitude    = models.FloatField(default=0.0)
@@ -1412,10 +1376,12 @@ class ProposalCenterMapping(models.Model):
         unique_together = (('proposal','center_name'),)
 
 
-
 class SpaceMapping(models.Model):
+    """
+    This model talks about what spaces or suppliers are allowed or not at a center for a given proposal.
+    """
     center              = models.OneToOneField(ProposalCenterMapping,db_index=True, related_name='space_mappings', on_delete=models.CASCADE)
-    proposal            = models.ForeignKey(ProposalInfo, related_name='space_mapping', on_delete=models.CASCADE)
+    proposal            = models.ForeignKey('ProposalInfo', related_name='space_mapping', on_delete=models.CASCADE)
     society_allowed     = models.BooleanField(default=False)
     society_count       = models.IntegerField(default=0)
     society_buffer_count = models.IntegerField(default=0)
@@ -1486,26 +1452,10 @@ class InventoryType(models.Model):
 
 
 
-class ShortlistedSpaces(models.Model):
-    space_mapping   = models.ForeignKey(SpaceMapping,db_index=True, related_name='spaces',on_delete=models.CASCADE)
-    supplier_code   = models.CharField(max_length=4)
-    content_type    = models.ForeignKey(ContentType, related_name='spaces')
-    object_id       = models.CharField(max_length=12)
-    content_object  = generic.GenericForeignKey('content_type', 'object_id')
-    buffer_status   = models.BooleanField(default=False)
-
-    class Meta:
-        #db_table = 'SHORTLISTED_SPACES'
-        db_table = 'shortlisted_spaces'
-
-
-
-
-
 class ProposalInfoVersion(models.Model):
     # proposal_id         = models.CharField(db_column = 'PROPOSAL ID',max_length=15,primary_key=True)
     # account             = models.ForeignKey(AccountInfo,related_name='proposals', db_column ='ACCOUNT',on_delete=models.CASCADE)
-    proposal            = models.ForeignKey(ProposalInfo, related_name='proposal_versions', db_column='PROPOSAL', on_delete=models.CASCADE)
+    proposal            = models.ForeignKey('ProposalInfo', related_name='proposal_versions', db_column='PROPOSAL', on_delete=models.CASCADE)
     name                = models.CharField(db_column='NAME', max_length=50,blank=True)
     payment_status      = models.BooleanField(default=False, db_column='PAYMENT STATUS')
     # updated_on          = models.DateTimeField(auto_now=True, auto_now_add=False)
@@ -2245,4 +2195,183 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
 
     class Meta:
         db_table = 'supplier_bus_shelter'
-        
+
+
+class ProposalMasterCost(models.Model):
+    """
+    A table to store revenue related costs. currently it's content will be populated by a sheet. only fixed fields
+    and relations are covered up.
+    Only one instance of MasterCost exists for one proposal version, proposal
+    proposal_version alone does not make any sense. it's always tied to a proposal instance.
+    """
+    proposal = models.OneToOneField('ProposalInfo', null=True, blank=True)
+    agency_cost = models.FloatField(null=True, blank=True)
+    basic_cost = models.FloatField(null=True, blank=True)
+    discount = models.FloatField(null=True, blank=True)
+    total_cost = models.FloatField(null=True, blank=True)
+    tax = models.FloatField(null=True, blank=True)
+    total_impressions = models.FloatField(null=True, blank=True)
+    average_cost_per_impression = models.FloatField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'proposal_master_cost_details'
+
+
+class AbstractGeneralCost(models.Model):
+    """
+    This class is an abstract class for all types of cost's. Any type of cost example, PrintingCost, LogisticCost,
+    SpaceBookingCost etc are inherited from this basic cost table. A proposal version can only have one PrintingCost,
+    one LogisticCost, one SpaceBookingCost etc, hence this table is linked to proposal version by ONE to ONE relation.
+    also one mastercost sheet will only have one "cost", doesn't matter what type ( ofcourse different types of costs, but all are actualy
+    a cost ! ).
+    """
+    proposal_master_cost = models.OneToOneField(ProposalMasterCost, null=True, blank=True)
+    total_cost = models.FloatField(null=True, blank=True)
+    comment = models.CharField(max_length=1000, null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class PrintingCost(AbstractGeneralCost):
+    """
+    Printing cost is broken down into various costs. Hence a model is made to store it's pieces.
+    """
+    class Meta:
+        db_table = 'printing_cost'
+
+
+class LogisticOperationsCost(AbstractGeneralCost):
+    """
+    LogisticOperationsCost  is broken down into various costs. Hence a model is made to store it's pieces.
+    """
+
+    class Meta:
+        db_table = 'logistic_operations_cost'
+
+
+class IdeationDesignCost(AbstractGeneralCost):
+    """
+    IdeationDesignCost  is broken down into various costs. Hence a model is made to store it's pieces.
+    """
+
+    class Meta:
+        db_table = 'ideation_design_cost'
+
+
+class SpaceBookingCost(AbstractGeneralCost):
+    """
+    SpaceBookingCost  is broken down into various costs. Hence a model is made to store it's pieces.
+    """
+    supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
+
+    class Meta:
+        db_table = 'space_booking_cost'
+
+
+class EventStaffingCost(AbstractGeneralCost):
+    """
+    EventStaffingCost  is broken down into various costs. Hence a model is made to store it's pieces.
+    """
+
+    class Meta:
+        db_table = 'event_staffing_cost'
+
+
+class DataSciencesCost(AbstractGeneralCost):
+    """
+    DataSciencesCost is broken down into various costs. Hence a model is made to store it's pieces.
+    """
+
+    class Meta:
+        db_table = 'data_sciences_cost'
+
+
+class ProposalMetrics(models.Model):
+    """
+    Different types of  spaces/suppliers will have different metrics. a metrics is list of predefined headers.
+    one supplier can have many metrices. hence this model is used to store data for a given supplier that
+    exists as a list of values.
+    for proposal x, metric m1 has value of v1 for supplier S.
+    for proposal x, metric m2 has value of v2 for supplier S.
+    """
+    proposal_master_cost = models.OneToOneField(ProposalMasterCost, null=True, blank=True)
+    metric_name = models.CharField(max_length=255, null=True, blank=True)
+    supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
+    value = models.FloatField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'proposal_metrics'
+
+
+class ProposalInfo(models.Model):
+    """
+    Two extra fields called parent and is_campaign is added. parent is a self referencing field. it refers to itself.
+    parent stores the information that from what proposal_id, the current proposal_id was created.
+    is_campaign determines weather this proposal is a campaign or not.
+    """
+    proposal_id = models.CharField(db_column='PROPOSAL ID', max_length=15, primary_key=True)
+    account = models.ForeignKey(AccountInfo, related_name='proposals', db_column='ACCOUNT', on_delete=models.CASCADE)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    payment_status = models.BooleanField(default=False, db_column='PAYMENT STATUS')
+    updated_on = models.DateTimeField(auto_now=True, auto_now_add=False)
+    updated_by = models.CharField(max_length=50, default='Admin')
+    created_on = models.DateTimeField(auto_now_add=True, auto_now=False)
+    created_by = models.CharField(max_length=50, default='Admin')
+    tentative_cost = models.IntegerField(default=5000)
+    tentative_start_date = models.DateTimeField(null=True)
+    tentative_end_date = models.DateTimeField(null=True)
+    is_campaign = models.BooleanField(default=False, blank=True)
+    parent = models.ForeignKey('ProposalInfo', null=True, blank=True, default=None)
+
+    def get_centers(self):
+        try:
+            return self.centers.all()
+        except:
+            return None
+
+    def get_proposal_versions(self):
+        return self.proposal_versions.all().order_by('-timestamp')
+
+    class Meta:
+
+        db_table = 'proposal_info'
+
+
+class Filters(models.Model):
+    """
+    Stores all kinds of filters and there respective codes. Filters are used when you filter all the suppliers
+    on the basis of what inventories you would like to have in there, etc. because different suppliers can have
+    different types of filters, we have content_type field for capturing that. These filters are predefined in constants
+    and are populated from there.
+    """
+    center = models.ForeignKey(ProposalCenterMapping, null=True, blank=True)
+    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
+    supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
+    filter_name = models.CharField(max_length=255, null=True, blank=True)
+    filter_code = models.CharField(max_length=255, null=True, blank=True)
+    is_checked = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'filters'
+
+
+class ShortlistedSpaces(models.Model):
+    """
+    This model stores all the shortlisted spaces. One Supplier or space can be under different campaigns.
+    in one campaign it's status can be removed while in the other it's buffered. Hence this model is made
+    for mapping such relations.
+    """
+    space_mapping = models.ForeignKey(SpaceMapping, db_index=True, related_name='spaces', on_delete=models.CASCADE)
+    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
+    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
+    supplier_code = models.CharField(max_length=4)
+    content_type = models.ForeignKey(ContentType, related_name='spaces')
+    object_id = models.CharField(max_length=12)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    buffer_status = models.BooleanField(default=False)
+    status = models.CharField(max_length=10, null=True, blank=True)
+
+    class Meta:
+        db_table = 'shortlisted_spaces'
+

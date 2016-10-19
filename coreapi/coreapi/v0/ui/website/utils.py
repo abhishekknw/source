@@ -1,4 +1,5 @@
 import math
+import re
 from types import *
 
 from django.db.models import Q
@@ -13,6 +14,7 @@ import constants as website_constants
 from constants import price_per_flat, inventorylist
 import v0.models as models
 from v0.models import PriceMappingDefault
+import v0.ui.utils as ui_utils
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -617,4 +619,217 @@ def save_proposal_version(center_id):
         return Response({'status': True, 'data': proposal_version_object}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_model_name(model_name):
+    """
+    Args:
+        model_name: a model name in lower case joined with underscores
+
+    Returns: removes underscores and joins on Intials with a capital letter
+
+    """
+    return ' '.join(model_name.split('_')).title()
+
+
+def initialize_master_data(master_data):
+    """
+    Args:
+        master_data: empty dict for import proposal cost data api
+
+    Returns: initialized according to needs
+
+    """
+    # only one object exist per file hence a dict
+    master_data['ideation_design_cost'] = {}
+
+    # only one object exist per file hence a dict
+    master_data['logistic_operations_cost'] = {}
+
+    #  one object exist per supplier or row  hence a list
+    master_data['space_booking_cost'] = []
+
+    # only one object exist per file hence a dict
+    master_data['event_staffing_cost'] = {}
+
+    # only one object exist per file hence a dict
+    master_data['data_sciences_cost'] = {}
+
+    # only one object exist per file hence a dict
+    master_data['printing_cost'] = {}
+
+    # only one object exist per file hence a dict
+    master_data['proposal_master_cost'] = {}
+
+    # one object exist per supplier or row hence a list because there are multiple suppliers
+    master_data['proposal_metrics'] = []
+
+    return master_data
+
+
+def handle_offline_pricing_row(row, master_data):
+    """
+    Args:
+        row: a row of offline pricing sheet
+
+    Returns: saves the data in the right model after processing the row
+
+    """
+    try:
+        # this string is the base string against we perform the matching and determine to which model the
+        #  row data belongs. example  'Use of Data Sciences to Identify Targeted Spaces'
+        target_string = row[0].value
+
+        # for all models and their contents declared in constants
+        for model, model_content in website_constants.offline_pricing_data.iteritems():
+            # because model names are joined by _, join them without underscore with first letter as capital
+            # this is required for apps.get_model() to work. model_content is a list. each item of this list
+            # will map to a row in db
+
+            # for all types of row in model_content
+            for model_row in model_content:
+
+                # find the pattern which is predefined for the this model_row
+                pattern = model_row['match_term']
+
+                # match it
+                match = re.search(pattern, target_string, re.I)
+
+                # no point in going further if there is no match
+                if not match:
+                    continue
+                # get the column name
+                column_name = model_row['col_name']
+
+                # get the value for that column
+                value = row[website_constants.value_index].value
+
+                # set data to previously saved data dict if it's a dict because here it will be updated
+                # else set to an empty dict because it will be appended in the list
+                data = master_data[model] if type(master_data[model]) == DictType else {}
+
+                # add the content type information to data if 'specific' is not none
+                if model_row.get('specific'):
+                    supplier_content_type_response = ui_utils.get_content_type(model_row.get('specific')['code'])
+                    if not supplier_content_type_response.data['status']:
+                        return supplier_content_type_response
+                    supplier_content_type = supplier_content_type_response.data['data']
+                    data['supplier_type'] = supplier_content_type.id
+
+                # add comment information to data if comment is not none. index for comment col is defined in constants
+                if row[website_constants.comment_index].value:
+                    data['comment'] = row[website_constants.comment_index].value
+
+                # add the specific column and value
+                data[column_name] = value
+
+                # add metric_name and value of the metric in case it's a metric model
+                if model == website_constants.metric_model:
+                    data['metric_name'] = model_row.get('match_term')
+                    data['value'] = value
+
+                # we will not save here. we will collect the data in master_data
+                # dict and save later. This is because multiple rows represent one object in some cases and  many objects
+                # in other cases so saving on row by row basis cannot be done.
+                insert_master_data_response = insert_into_master_data(data, master_data, model)
+                if not insert_master_data_response.data['status']:
+                    import pdb
+                    pdb.set_trace()
+                    return insert_master_data_response
+                master_data = insert_master_data_response.data['data']
+
+        return ui_utils.handle_response(handle_offline_pricing_row.__name__, data=master_data, success=True)
+    except KeyError as e:
+        return ui_utils.handle_response(handle_offline_pricing_row.__name__, data='Key error', exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(handle_offline_pricing_row.__name__, exception_object=e)
+
+
+def insert_into_master_data(data, master_data, model_name):
+    """
+    Args:
+        data: data is dict containing data of one row
+        master_data: master data into which data can be assigned or appended depending upon what model_name is
+        This function is made because 'data' can either be assigned or appended in master_data depending upon
+        for which model you are collecting.
+
+    Returns: master_data with modified content
+
+    """
+    try:
+        # append the data to list
+        if type(master_data[model_name]) == ListType:
+            master_data[model_name].append(data)
+        else:
+            # update the existing dict with new data
+            master_data[model_name] = data
+        return ui_utils.handle_response(insert_into_master_data.__name__, data=master_data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(handle_offline_pricing_row.__name__, exception_object=e)
+
+
+def save_master_data(master_data):
+    """
+
+    Args:
+        master_data: the data to be saved in the models
+
+    Returns: success if models are saved successfully
+
+    """
+    try:
+        # get the right serializer and save the data
+        for model in website_constants.offline_pricing_data.keys():
+            # differentiate if we have list to save or a dict to save
+            if model in website_constants.one_obect_models:
+                serializer = ui_utils.get_serializer(model)(data=master_data[model])
+            else:
+                serializer = ui_utils.get_serializer(model)(data=master_data[model], many=True)
+
+            if not serializer:
+                return ui_utils.handle_response(save_master_data.__name__,
+                                                data='serializer not found for this model {0}'.format(model))
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return ui_utils.handle_response(save_master_data.__name__, data=serializer.errors)
+        return ui_utils.handle_response(save_master_data.__name__, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(save_master_data.__name__, exception_object=e)
+
+
+def is_empty_row(row):
+    """
+    Args:
+        row: row to be checked if empty or not
+          row is row read by openpyxl lib
+
+    Returns: true if empty else False
+
+    """
+    for x in row:
+        # if x has a value, row is not empty
+        if x.value:
+            return False
+    # return True, row is empty
+    return True
+
+
+def delete_proposal_cost_data():
+    """
+    Deletes the tables data associated with proposal cost each time the api is hit because we don't want
+    duplicates coming into the api each time it is hit
+    """
+    try:
+        models.ProposalMetrics.objects.all().delete()
+        models.PrintingCost.objects.all().delete()
+        models.DataSciencesCost.objects.all().delete()
+        models.EventStaffingCost.objects.all().delete()
+        models.SpaceBookingCost.objects.all().delete()
+        models.IdeationDesignCost.objects.all().delete()
+        models.LogisticOperationsCost.objects.all().delete()
+        models.ProposalMasterCost.objects.all().delete()
+        return ui_utils.handle_response(delete_proposal_cost_data.__name__, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(delete_proposal_cost_data.__name__, exception_object=e)
 
