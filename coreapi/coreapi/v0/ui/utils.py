@@ -150,6 +150,7 @@ def make_supplier_data(data):
                          'society_name': data['supplier_name'],
                          'supplier_id': data['supplier_id'],
                          'created_by': current_user.id,
+
                          'society_city': city.city_name,
                          'society_subarea': subarea.subarea_name,
                          'society_locality': area.label,
@@ -214,6 +215,8 @@ def save_supplier_data(master_data):
     :return: saves corresponding supplier code data
     """
     try:
+        #import pdb
+        #pdb.set_trace()
         supplier_code = master_data['supplier_type_code']
         serializer_class = get_serializer(supplier_code)
         # serializer_class = master_data[supplier_code]['serializer']
@@ -240,6 +243,7 @@ def set_default_pricing(supplier_id, supplier_type_code):
 
     """
     try:
+
         supplier = get_model(supplier_type_code).objects.get(pk=supplier_id)
         # supplier = supplier_code_filter_params[supplier_type_code]['MODEL'].objects.get(pk=supplier_id)
         content_type = ContentType.objects.get_for_model(supplier)

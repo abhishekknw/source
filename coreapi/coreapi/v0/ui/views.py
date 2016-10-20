@@ -218,6 +218,7 @@ class GenerateSupplierIdAPIView(APIView):
     """
     def post(self, request, format=None):
         try:
+
             data = {
                 'city': request.data['city_id'],
                 'area': request.data['area_id'],
@@ -230,19 +231,17 @@ class GenerateSupplierIdAPIView(APIView):
             response = ui_utils.get_supplier_id(request, data)
             if not response.data['status']:
                 return response
-            print response.data
 
             data['supplier_id'] = response.data['supplier_id']
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
 
             response = ui_utils.make_supplier_data(data)
-            print response
             if not response.data['status']:
                 return response
             all_supplier_data = response.data['data']
-
             response = ui_utils.save_supplier_data(all_supplier_data)
+
             if not response.data['status']:
                 return response
             return Response(data=response.data['data'], status=status.HTTP_200_OK)
