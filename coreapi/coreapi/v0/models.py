@@ -1785,7 +1785,6 @@ class CorporateBuildingWing(models.Model):
 #     class Meta:
 #         db_table='corporate_company'
 
-
 class CorporateCompanyDetails(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     company_id = models.ForeignKey('CorporateParkCompanyList', db_column='COMPANY_ID', related_name='companydetails', blank=True, null=True, on_delete=models.CASCADE)
