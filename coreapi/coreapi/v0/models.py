@@ -34,7 +34,30 @@ AD_INVENTORY_CHOICES = (
     ('BANNER', 'Banner'),
 )
 
+class BasicSupplierDetails(models.Model):
+    """
+    This is an abstract base class for all the suppliers. As we know more common fields, add
+    them here and run python manage.py makemigrations. all the models who inherit from this class
+    will have those fields automatically.
+    """
+    supplier_id = models.CharField(max_length=20, primary_key=True)
+    supplier_code = models.CharField(max_length=3, null=True)
+    name = models.CharField(max_length=70, null=True, blank=True)
+    address1 = models.CharField(max_length=250, null=True, blank=True)
+    address2 = models.CharField(max_length=250, null=True, blank=True)
+    area = models.CharField(max_length=255, null=True, blank=True)
+    subarea = models.CharField(max_length=30, null=True, blank=True)
+    city = models.CharField(max_length=250, null=True, blank=True)
+    state = models.CharField(max_length=250, null=True, blank=True)
+    zipcode = models.IntegerField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True, default=0.0)
+    longitude = models.FloatField(null=True, blank=True, default=0.0)
+    locality_rating = models.CharField(max_length=50, null=True, blank=True)
+    quality_rating = models.CharField(max_length=50, null=True, blank=True)
+    machadalo_index = models.CharField(max_length=30, null=True, blank=True)
 
+    class Meta:
+        abstract = True
 
 class ImageMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -973,48 +996,33 @@ class  SupplierTypeSociety(models.Model):
 
         db_table = 'supplier_society'
 
-class SupplierTypeCorporate(models.Model):
-    supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20) 
-    supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
-    name = models.CharField(db_column='CORPORATE_NAME', max_length=70, blank=True, null=True) 
-    address1 = models.CharField(db_column='CORPORATE_ADDRESS1', max_length=250, blank=True, null=True) 
-    address2 = models.CharField(db_column='CORPORATE_ADDRESS2', max_length=250, blank=True, null=True) 
-    zipcode = models.IntegerField(db_column='CORPORATE_ZIP', blank=True, null=True)
-    city = models.CharField(db_column='CORPORATE_CITY', max_length=250, blank=True, null=True)
-    state = models.CharField(db_column='CORPORATE_STATE', max_length=250, blank=True, null=True) 
-    longitude = models.FloatField(db_column='CORPORATE_LONGITUDE', blank=True, null=True, default=0.0)
-    locality = models.CharField(db_column='CORPORATE_LOCALITY', max_length=30, blank=True, null=True)
-    subarea = models.CharField(db_column='CORPORATE_SUB_AREA', max_length=30, blank=True, null=True)
-    latitude = models.FloatField(db_column='CORPORATE_LATITUDE', blank=True, null=True, default=0.0)
-    machadalo_index = models.CharField(db_column='MACHADALO_INDEX', max_length=30, blank=True, null=True)
-    quality_rating = models.CharField(db_column='CORPORATE_LOCATION_TYPE', max_length=50, blank=True, null=True)
-    locality_rating = models.CharField(db_column='CORPORATE_LOCALITY_RATING', max_length=50, blank=True, null=True)
-    corporate_type = models.CharField(db_column='CORPORATE_TYPE', max_length=25,blank=True, null= True)
-    industry_segment = models.CharField(db_column='CORPORATE_INDUSTRY_SEGMENT', max_length=30, blank=True, null=True) 
-    possession_year = models.CharField(db_column='CORPORATE_AGE', max_length=5, blank=True, null=True)
-    building_count = models.IntegerField(db_column='CORPORATE_BUILDING_COUNT', blank=True, null=True)
-    floorperbuilding_count = models.IntegerField(db_column='CORPORATE_FLOORPERBUILDING_COUNT', blank=True, null=True)
-    totalcompanies_count = models.IntegerField(db_column='CORPORATE_TOTALCOMPANIES_COUNT', blank=True, null=True)
-    totalemployees_count = models.IntegerField(db_column='CORPORATE_TOTALEMPLOYEES_COUNT', blank=True, null=True)
-    isrealestateallowed = models.BooleanField(db_column='CORPORATE_ISREALESTATEALLOWED', default=False)
-    quality_rating = models.CharField(db_column='QUALITY_RATING',max_length=50, blank=True, null=True)
-    total_area = models.FloatField(db_column='TOTAL_AREA', blank=True, null=True, default=0.0)
-    quantity_rating = models.CharField(db_column='QUANTITY_RATING',max_length=50, blank=True, null=True)
-    luxurycars_count = models.IntegerField(db_column='LUXURYCARS_COUNT', blank=True, null=True)
-    standardcars_count = models.IntegerField(db_column='STANDARDCARS_COUNT', blank=True, null=True)
-    totallift_count = models.IntegerField(db_column='TOTALLIFT_COUNT', blank=True, null=True)
-    parkingspaces_count = models.IntegerField(db_column='PARKINGSPACES_COUNT', blank=True, null=True)
-    entryexit_count = models.IntegerField(db_column='ENTRYEXIT_COUNT', blank=True, null=True)
-    openspaces_count = models.IntegerField(db_column='OPENSPACES_COUNT', blank=True, null=True)
-    constructionspaces_count = models.IntegerField(db_column='CONSTRUCTIONSPACES_COUNT', blank=True, null=True)
-    constructedspace = models.FloatField(db_column='CONSTRUCTEDSPACE', blank=True, null=True, default=0.0)
-    parkingspace = models.FloatField(db_column='PARKINGSPACE', blank=True, null=True, default=0.0)
-    openspace = models.FloatField(db_column='OPENSPACE', blank=True, null=True, default=0.0)
-    averagerent = models.FloatField(db_column='AVERAGERENT', blank=True, null=True, default=0.0)
-    corporate_name = models.CharField(db_column='CORPORATE_NAME_PAYMENT', max_length=30, blank=True, null=True)
-    bank_name = models.CharField(db_column='BANK_NAME', max_length=30, blank=True, null=True)
-    ifsc_code = models.CharField(db_column='IFSC_CODE', max_length=30, blank=True, null=True)
-    account_number = models.CharField(db_column='ACCOUNT_NUMBER', max_length=30, blank=True, null=True)
+class SupplierTypeCorporate(BasicSupplierDetails):
+
+    corporate_type = models.CharField(max_length=25,blank=True, null= True)
+    industry_segment = models.CharField(max_length=30, blank=True, null=True) 
+    possession_year = models.CharField(max_length=5, blank=True, null=True)
+    building_count = models.IntegerField(blank=True, null=True)
+    floorperbuilding_count = models.IntegerField(blank=True, null=True)
+    totalcompanies_count = models.IntegerField(blank=True, null=True)
+    totalemployees_count = models.IntegerField(blank=True, null=True)
+    isrealestateallowed = models.BooleanField(default=False)
+    total_area = models.FloatField(blank=True, null=True, default=0.0)
+    quantity_rating = models.CharField(max_length=50, blank=True, null=True)
+    luxurycars_count = models.IntegerField(blank=True, null=True)
+    standardcars_count = models.IntegerField(blank=True, null=True)
+    totallift_count = models.IntegerField(blank=True, null=True)
+    parkingspaces_count = models.IntegerField(blank=True, null=True)
+    entryexit_count = models.IntegerField(blank=True, null=True)
+    openspaces_count = models.IntegerField(blank=True, null=True)
+    constructionspaces_count = models.IntegerField(blank=True, null=True)
+    constructedspace = models.FloatField(blank=True, null=True, default=0.0)
+    parkingspace = models.FloatField(blank=True, null=True, default=0.0)
+    openspace = models.FloatField(blank=True, null=True, default=0.0)
+    averagerent = models.FloatField(blank=True, null=True, default=0.0)
+    corporate_name = models.CharField(max_length=30, blank=True, null=True)
+    bank_name = models.CharField(max_length=30, blank=True, null=True)
+    ifsc_code = models.CharField(max_length=30, blank=True, null=True)
+    account_number = models.CharField(max_length=30, blank=True, null=True)
     generic.GenericRelation(ContactDetailsGeneric)
 
 
@@ -2209,31 +2217,6 @@ class ShortlistedInventoryDetails(models.Model):
     factor = models.IntegerField(default=0.0, null=True)
     class Meta:
         db_table = 'shortlisted_inventory_details'
-
-
-class BasicSupplierDetails(models.Model):
-    """
-    This is an abstract base class for all the suppliers. As we know more common fields, add
-    them here and run python manage.py makemigrations. all the models who inherit from this class
-    will have those fields automatically.
-    """
-    supplier_id = models.CharField(max_length=20, primary_key=True)
-    name = models.CharField(max_length=70, null=True, blank=True)
-    address1 = models.CharField(max_length=250, null=True, blank=True)
-    address2 = models.CharField(max_length=250, null=True, blank=True)
-    area = models.CharField(max_length=255, null=True, blank=True)
-    subarea = models.CharField(max_length=30, null=True, blank=True)
-    city = models.CharField(max_length=250, null=True, blank=True)
-    state = models.CharField(max_length=250, null=True, blank=True)
-    zipcode = models.IntegerField(null=True, blank=True)
-    latitude = models.FloatField(null=True, blank=True, default=0.0)
-    longitude = models.FloatField(null=True, blank=True, default=0.0)
-    locality_rating = models.CharField(max_length=50, null=True, blank=True)
-    quality_rating = models.CharField(max_length=50, null=True, blank=True)
-    machadalo_index = models.CharField(max_length=30, null=True, blank=True)
-
-    class Meta:
-        abstract = True
 
 
 class SupplierTypeBusShelter(BasicSupplierDetails):

@@ -226,15 +226,18 @@ class GenerateSupplierIdAPIView(APIView):
                 'supplier_code': request.data['supplier_code'],
                 'supplier_name': request.data['supplier_name'],
             }
+    
             response = ui_utils.get_supplier_id(request, data)
             if not response.data['status']:
                 return response
+            print response.data
 
             data['supplier_id'] = response.data['supplier_id']
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
 
             response = ui_utils.make_supplier_data(data)
+            print response
             if not response.data['status']:
                 return response
             all_supplier_data = response.data['data']

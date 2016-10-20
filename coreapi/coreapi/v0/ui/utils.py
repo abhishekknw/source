@@ -113,6 +113,9 @@ def get_supplier_id(request, data):
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
             'supplier_type'] + data[
                           'supplier_code']
+                          
+        return Response(data={'status': True, 'supplier_id': supplier_id}, status=status.HTTP_200_OK)
+
     except KeyError as e:
         return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist as e:
@@ -120,7 +123,7 @@ def get_supplier_id(request, data):
     except Exception as e:
         return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(data={'status': True, 'supplier_id': supplier_id}, status=status.HTTP_200_OK)
+    
 
 
 def make_supplier_data(data):
