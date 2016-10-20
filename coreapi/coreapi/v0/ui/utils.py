@@ -124,8 +124,6 @@ def get_supplier_id(request, data):
         return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
     
-
-
 def make_supplier_data(data):
     try:
 
