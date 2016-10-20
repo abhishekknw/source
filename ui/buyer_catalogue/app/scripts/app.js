@@ -59,7 +59,6 @@ angular
           url : '/:account_id/createproposal',
           templateUrl : 'modules/pages/createProposal/createproposal.tmpl.html',
           controller : 'ProposalCtrl'
-          // controller : ''
         })
         .state('showProposalHistory',{
           url : '/:proposal_id/showproposalhistory',

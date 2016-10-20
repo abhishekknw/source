@@ -1,6 +1,5 @@
 <div ng-if="errormsg"><h3>{{errormsg}}</h3></div>
 
-<!DOCTYPE html>
 <link rel="stylesheet" href="modules/pages/createProposal/createproposal.tmpl.css" />
   <div class="page-container">
   	<div>
@@ -16,25 +15,6 @@
   					<div class="col-md-3"><label class="spacing">Name of Proposal</label></div>
   					<div class="col-md-3"><input type="text" ng-model="model.name" class="form-control spacing"></div>
   				</div>
-  				<!-- <div class="row">
-  					<div class="col-md-3"><label class="spacing">Types of Spaces</label></div>
-  					<div class="col-md-3"><select class="form-control spacing">
-  						<option>Society</option>
-  						<option>Corporate Park</option>
-  						<option>Bus Shelter</option>
-  						<option>Gym</option>
-  						<option>Salon</option>
-  					</select></div>
-  				</div>
-  				<div class="row">
-  					<div class="col-md-3"><label class="spacing">Types of Inventory</label></div>
-  					<div class="col-md-3"><select class="form-control spacing">
-  						<option>Poster</option>
-  						<option>Standee</option>
-  						<option>Stall</option>
-  						<option>Flyer</option>
-  					</select></div>
-  				</div> -->
   				<div class="row">
   					<div class="col-md-3"><label class="spacing">Tentative Budget</label></div>
   					<div class="col-md-3"><input type="number" ng-model="model.tentative_cost" class="form-control spacing"></div>
@@ -45,7 +25,7 @@
   	</form>
 
     <form name="centerDetail">
-    	<div class="panel panel-default business-panel">
+    	<div class="table-responsive panel panel-default business-panel">
     		<table class="table table-bordered">
     			<thead>
     				<tr>
@@ -85,47 +65,11 @@
               </td>
               <td><input type="text" ng-model="center.center.pincode" class="form-control spacing col-width"></td>
     					<td><input type="number" ng-model="center.center.radius" class="form-control spacing col-width"></td>
-    					<td><input type="checkbox" ng-model="center.center.space_mapping.society_allowed" ng-change="checkSpace(center, 'society')">Societies<br>
-              <input type="checkbox" ng-model="center.center.space_mapping.corporate_allowed" ng-change="checkSpace(center, 'corporate')">Corporate Parks
+    					<td>
+                <input type="checkbox" ng-model="center.center.space_mapping.society_allowed" ng-change="checkSpace(center, 'society')">Societies<br>
+                <input type="checkbox" ng-model="center.center.space_mapping.corporate_allowed" ng-change="checkSpace(center, 'corporate')">Corporate Parks
               </td>
-              <!-- For table structure of space details. Older requirement -->
-    						<!-- <table class="table table-bordered">
-    							<thead>
-    								<th></th>
-    								<th>Space Type</th>
-    								<th>Space Count</th>
-    								<th>Buffer Count</th>
-    								<th>Inventory Types</th>
-    							</thead>
-    							<tbody>
-    								<tr>
-    									<td><input type="checkbox" ng-model="center.center.space_mapping.society_allowed" ng-change="checkSpace(center, 'society')"></td>
-    									<td>Society</td>
-    									<td><input type="number" class="form-control" ng-model="center.center.space_mapping.society_count"></td>
-    									<td><input type="number" class="form-control" ng-model="center.center.space_mapping.society_buffer_count"></td>
-    									<td class="col-width">
-  				  						<input type="checkbox" ng-model="center.society_inventory.poster_allowed"> Poster<br>
-  										<input type="checkbox" ng-model="center.society_inventory.standee_allowed"> Standee<br>
-  										<input type="checkbox" ng-model="center.society_inventory.stall_allowed"> Stall<br>
-  										<input type="checkbox" ng-model="center.society_inventory.flier_allowed"> Flyer<br>
-  				  					</td>
-    								</tr>
-    								<tr>
-    									<td><input type="checkbox" ng-model="center.center.space_mapping.corporate_allowed" ng-change="checkSpace(center, 'corporate')"></td>
-    									<td>Corporate Park</td>
-    									<td><input type="number" class="form-control" ng-model="center.center.space_mapping.corporate_count"></td>
-    									<td><input type="number" class="form-control" ng-model="center.center.space_mapping.corporate_buffer_count"></td>
-    									<td class="col-width">
-  				  						<input type="checkbox" ng-model="center.society_inventory.poster_allowed"> Poster<br>
-  										<input type="checkbox" ng-model="center.society_inventory.standee_allowed"> Standee<br>
-  										<input type="checkbox" ng-model="center.society_inventory.stall_allowed"> Stall<br>
-  										<input type="checkbox" ng-model="center.society_inventory.flier_allowed"> Flyer<br>
-  				  					</td>
-    								</tr>
-    							</tbody>
-    						</table>
-    					</td> -->
-    					<td><button class="btn btn-danger spacing" ng-click="removeCenter($index)">Remove</button></td>
+    					<td><button class="btn btn-danger spacing" ng-click="removeCenter($index)">Remove Center</button></td>
     				</tr>
     			</tbody>
     		</table>

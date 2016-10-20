@@ -4,6 +4,7 @@ angular.module('catalogueApp')
         // You have to initailise some value for the map center beforehand
         // $scope.map is just for that purpose --> Set it according to your needs.
         // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
+        $scope.isCollapsed = false;
         $scope.map = { zoom: 9,bounds: {},center: {latitude: 19.119,longitude: 73.48,}};
         $scope.options = { scrollwheel: false, mapTypeControl: true,
           mapTypeControlOptions: {
@@ -886,5 +887,4 @@ angular.module('catalogueApp')
            console.log('Error status: ' + resp.status);
        });
  };
-
 });
