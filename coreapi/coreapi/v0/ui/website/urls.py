@@ -1,5 +1,9 @@
 from django.conf.urls import include, url
+
+from rest_framework.routers import DefaultRouter
+
 from v0.ui.website import views
+
 
 urlpatterns = [
 
@@ -41,5 +45,12 @@ urlpatterns = [
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/export-spaces-data/$', views.ExportData.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/import-society-data/$', views.ImportSocietyData.as_view()),
     url(r'^import-proposal-cost-data/$', views.ImportProposalCostData.as_view()),
+    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/create-final-proposal/$', views.CreateFinalProposal.as_view(), name='create-final-proposal'),
+    url(r'^(?P<account_id>[A-Z_a-z0-9]+)/create-initial-proposal/$', views.CreateInitialProposal.as_view(), name='create-initial-proposal'),
 
 ]
+
+router = DefaultRouter()
+router.include_format_suffixes = False
+router.register(r'^proposal', views.ProposalViewSet, base_name='Proposal')
+urlpatterns += router.urls

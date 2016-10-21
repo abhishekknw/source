@@ -2362,10 +2362,10 @@ class ShortlistedSpaces(models.Model):
     in one campaign it's status can be removed while in the other it's buffered. Hence this model is made
     for mapping such relations.
     """
-    space_mapping = models.ForeignKey(SpaceMapping, db_index=True, related_name='spaces', on_delete=models.CASCADE)
+    space_mapping = models.ForeignKey(SpaceMapping, db_index=True, related_name='spaces', on_delete=models.CASCADE, null=True, blank=True)
     center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
-    supplier_code = models.CharField(max_length=4)
+    supplier_code = models.CharField(max_length=4, null=True, blank=True)
     content_type = models.ForeignKey(ContentType, related_name='spaces')
     object_id = models.CharField(max_length=12)
     content_object = generic.GenericForeignKey('content_type', 'object_id')

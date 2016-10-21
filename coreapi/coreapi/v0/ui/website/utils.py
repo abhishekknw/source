@@ -5,16 +5,18 @@ from types import *
 from django.db.models import Q
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.response import Response
-from rest_framework import  status
+from rest_framework import status
+from pygeocoder import Geocoder, GeocoderError
 
 import constants as website_constants
 from constants import price_per_flat, inventorylist
 import v0.models as models
 from v0.models import PriceMappingDefault
 import v0.ui.utils as ui_utils
+import serializers
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -818,7 +820,7 @@ def is_empty_row(row):
 def delete_proposal_cost_data():
     """
     Deletes the tables data associated with proposal cost each time the api is hit because we don't want
-    duplicates coming into the api each time it is hit
+    duplicates.
     """
     try:
         models.ProposalMetrics.objects.all().delete()
@@ -833,3 +835,394 @@ def delete_proposal_cost_data():
     except Exception as e:
         return ui_utils.handle_response(delete_proposal_cost_data.__name__, exception_object=e)
 
+
+def create_basic_proposal(data):
+    """
+
+    Args:
+        data: data for ProposalInfo
+
+    Returns: success if proposalInfo  is created
+
+    """
+    function_name = create_basic_proposal.__name__
+    try:
+        proposal_serializer = serializers.ProposalInfoSerializer(data=data)
+        if proposal_serializer.is_valid():
+            proposal_serializer.save()
+        else:
+            return ui_utils.handle_response(function_name, data=proposal_serializer.errors)
+        return ui_utils.handle_response(function_name, data=proposal_serializer.data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def get_geo_object(address):
+    """
+
+    Args:
+        address: given an address in string, return it's geo object
+
+    Returns:
+
+    """
+    function_name = get_geo_object.__name__
+    try:
+        geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
+        geo_object = geocoder.geocode(address)
+        return ui_utils.handle_response(function_name, data=geo_object, success=True)
+    except GeocoderError as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def save_center_data(proposal_data):
+    """
+
+    Args:
+        proposal_data: a proposal_data with proposal_id as key must.
+
+    Returns: center data
+
+    """
+    function_name = save_center_data.__name__
+    try:
+        # get the proposal_id
+        proposal_id = proposal_data['proposal_id']
+
+        # for all centers
+        for center_info in proposal_data['centers']:
+            center = center_info['center']
+
+            # prepare center info
+            center['proposal'] = proposal_id
+            address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + \
+                      center['pincode']
+            geo_response = get_geo_object(address)
+            if not geo_response.data['status']:
+                return geo_response
+            geo_object = geo_response.data['data']
+            center['latitude'] = geo_object.latitude
+            center['longitude'] = geo_object.longitude
+
+            if 'id' in center_info:
+                # means an existing center was updated
+                center_instance = models.ProposalCenterMapping.objects.get(id=center_info['id'])
+                center_serializer = serializers.ProposalCenterMappingSerializer(center_instance, data=center)
+            else:
+                # means we need to create new center
+                center_serializer = serializers.ProposalCenterMappingSerializer(data=center)
+
+            # save center info
+            if center_serializer.is_valid():
+                center_serializer.save()
+            else:
+                return ui_utils.handle_response(function_name, data=center_serializer.errors)
+            return ui_utils.handle_response(function_name, data=center_serializer.data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def save_shortlisted_suppliers(proposal_data):
+    """
+    Args:
+        proposal_data: data of the proposal
+        proposal_id: proposal_id
+
+    Returns: collects all suppliers in societies array and inserts them into the db
+
+    """
+    function_name = save_shortlisted_suppliers.__name__
+    try:
+        # get the proposal_id
+        proposal_id = proposal_data['proposal_id']
+
+        # get the center id
+        center_id = proposal_data['center']['id']
+
+        # get the proposal object
+        proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+
+        # get the center object
+        center = models.ProposalCenterMapping.objects.get(id=center_id)
+
+        # to count how many new objects got created
+        count = 0
+
+        # for each supplier , do
+        for supplier in proposal_data['societies']:
+            supplier_type_code = supplier['supplier_type_code']
+
+            content_type_response = ui_utils.get_content_type(supplier_type_code)
+            if not content_type_response.data['status']:
+                return content_type_response
+
+            content_type = content_type_response.data['data']
+
+            # make the data to be saved in ShortListedSpaces
+            data = {
+                'content_type': content_type,
+                'status': supplier['status'],
+                'object_id': supplier['supplier_id'],
+                'center': center,
+                'proposal': proposal,
+            }
+            shortlisted_space, is_created = models.ShortlistedSpaces.objects.get_or_create(**data) #todo: to be changed if better solution found
+            if is_created:
+                count += 1
+
+        return ui_utils.handle_response(function_name, data=count,
+                                        success=True)
+    except KeyError as e:
+        return ui_utils.handle_response(function_name, data='Key Error', exception_object=e)
+    except ObjectDoesNotExist as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def save_filter_data(proposal_data):
+    """
+    Args:
+        proposal_data: data of proposal
+        proposal_id: proposal_id
+    Returns:
+
+    """
+    function_name = save_filter_data.__name__
+    try:
+        # get the proposal_id
+        proposal_id = proposal_data['proposal_id']
+
+        # get the center id
+        center_id = proposal_data['center']['id']
+
+        # get the proposal object
+        proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+
+        # get the center object
+        center = models.ProposalCenterMapping.objects.get(id=center_id)
+
+        #  to count how many filter objects were created
+        count = 0
+
+        filter_data = proposal_data['filters_data']
+
+        for supplier in filter_data:
+
+            supplier_type_code = supplier['supplier_type_code']
+            content_type_response = ui_utils.get_content_type(supplier_type_code)
+            if not content_type_response.data['status']:
+                return content_type_response
+
+            content_type = content_type_response.data['data']
+
+            for filter in supplier['filters']:
+                filter_name = filter['filter_name']
+                filter_code = filter['filter_code']
+                data = {
+                    'center': center,
+                    'proposal': proposal,
+                    'filter_name': filter_name,
+                    'filter_code': filter_code,
+                    'supplier_type': content_type,
+                    'is_checked': True
+                }
+                filer_object, is_created = models.Filters.objects.get_or_create(**data)
+                if is_created:
+                    count+=1
+
+        return ui_utils.handle_response(function_name, data=count, success=True)
+    except KeyError as e:
+        return ui_utils.handle_response(function_name, data='Key Error', exception_object=e)
+    except ObjectDoesNotExist as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def create_proposal_id():
+    import random, string
+    return ''.join(random.choice(string.ascii_letters) for _ in range(8))
+
+
+def get_coordinates(radius, latitude, longitude):
+    """
+
+    Args:
+        delta_dict: radius, latitude
+
+    Returns: min lat, max lat, min long, max long
+
+    """
+    function_name = get_coordinates.__name__
+    try:
+        delta_dict = get_delta_latitude_longitude(float(radius), float(latitude))
+
+        delta_latitude = delta_dict['delta_latitude']
+        min_latitude = latitude - delta_latitude
+        max_latitude = latitude + delta_latitude
+
+        delta_longitude = delta_dict['delta_longitude']
+        min_longitude = longitude - delta_longitude
+        max_longitude = longitude + delta_longitude
+        data = {
+            'min_lat': min_latitude,
+            'min_long': min_longitude,
+            'max_lat': max_latitude,
+            'max_long': max_longitude
+        }
+        return ui_utils.handle_response(function_name, data=data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def build_query(min_max_data, supplier_type_code):
+    """
+
+    Args:
+        min_max_data: data of min, max lat longs.
+        supplier_type_code: based on what supplier type code is, it constructs a query which shall be used
+        to filter objects.
+
+    Returns: a Q object.
+    """
+    function_name = build_query.__name__
+
+    try:
+
+        if supplier_type_code == 'RS':
+            q = Q(society_latitude__lt=min_max_data['max_lat']) & Q(society_latitude__gt=min_max_data['min_lat']) & Q(
+                society_longitude__lt=min_max_data['max_long']) & Q(society_longitude__gt=min_max_data['min_long'])
+        else:
+            q = Q(latitude__lt=min_max_data['max_lat']) & Q(latitude__gt=min_max_data['min_lat']) & Q(
+                longitude__lt=min_max_data['max_long']) & Q(longitude__gt=min_max_data['min_long'])
+
+        return ui_utils.handle_response(function_name, data=q, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def get_suppliers(query, supplier_type_code):
+    """
+    Args:
+        query. The Q object
+        supplier_type_code : 'RS', 'CP'
+    Returns: all the suppliers.
+
+    """
+    function_name = get_suppliers.__name__
+    try:
+        # get the suppliers data within that radius
+        supplier_model = ui_utils.get_model(supplier_type_code)
+        supplier_objects = supplier_model.objects.filter(query)
+        # need to set shorlisted=True for every supplier
+        serializer = ui_utils.get_serializer(supplier_type_code)(supplier_objects, many=True)
+        for supplier in serializer.data:
+            supplier['shortlisted'] = True
+        return ui_utils.handle_response(function_name, data=serializer.data, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def get_filters(data):
+    """
+    Args:
+        proposal_id: The proposal id
+        center_id: The center id
+        content_type: The content type
+
+    Returns: Filters data
+
+    """
+    function_name = get_filters.__name__
+    try:
+
+        proposal_id = data['proposal_id']
+        center_id = data['center_id']
+        supplier_content_type = data['content_type']
+
+        # get the filter's data
+        filter_objects = models.Filters.objects.filter(proposal_id=proposal_id, center_id=center_id,
+                                                       supplier_type=supplier_content_type)
+        filter_serializer = serializers.FiltersSerializer(filter_objects, many=True)
+        return ui_utils.handle_response(function_name, data=filter_serializer.data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def suppliers_within_radius(data):
+    """
+    Args:
+        data: a dict containing proposal_id, center_id, radius, supplier_codes.
+        Two kinds of data is prepared and sent as of now:
+        suppliers within radius and filters data
+
+    Returns: all the suppliers withing the radius defined.
+
+
+    """
+    function_name = suppliers_within_radius.__name__
+    try:
+        radius = data['radius']
+        proposal_id = data['proposal_id']
+        center_id = data['center_id']
+        supplier_codes = data['supplier_codes']
+        latitude, longitude = models.ProposalCenterMapping.objects.values_list('latitude', 'longitude').get(
+            id=center_id)
+
+        response = get_coordinates(radius, latitude, longitude)
+        if not response.data['status']:
+            return response
+
+        # min max data contains min, max lat longs
+        min_max_data = response.data['data']
+        centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id)
+        serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
+
+        result = {}
+
+        # make room for suppliers
+        result['suppliers'] = {}
+        # make room for centers
+        result['centers'] = serializer.data
+
+        for supplier_type_code in supplier_codes:
+            # make an entry against the code for storing the results
+            result['suppliers'][supplier_type_code] = {}
+
+            # fetch the right content_type for the suppliers
+            supplier_content_type_response = ui_utils.get_content_type(supplier_type_code)
+            if not supplier_content_type_response.data['status']:
+                return supplier_content_type_response
+            supplier_content_type = supplier_content_type_response.data['data']
+
+            # make a query
+            query_response = build_query(min_max_data, supplier_type_code)
+            if not query_response.data['status']:
+                return query_response
+            query = query_response.data['data']
+
+            # get the suppliers data
+            response = get_suppliers(query, supplier_type_code)
+            if not response.data['status']:
+                return response
+            suppliers_data = response.data['data']
+
+            # get the filter's data
+            response = get_filters({'proposal_id': proposal_id, 'center_id': center_id, 'content_type': supplier_content_type})
+            if not response.data['status']:
+                return response
+            filters_data = response.data['data']
+
+            # set in the result
+            result['suppliers'][supplier_type_code]['objects'] = suppliers_data
+            result['suppliers'][supplier_type_code]['filters'] = filters_data
+
+        return ui_utils.handle_response(function_name, data=result, success=True)
+    except KeyError as e:
+        return ui_utils.handle_response(function_name, data='Key Error occurred', exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)

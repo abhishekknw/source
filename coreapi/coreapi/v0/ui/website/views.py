@@ -16,6 +16,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.decorators import detail_route,list_route
 from openpyxl import Workbook
 from openpyxl.compat import range
 import requests
@@ -47,6 +49,8 @@ from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
 import utils as website_utils
 import v0.ui.utils as ui_utils
+import v0.models as models
+import serializers as website_serializers
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -763,125 +767,7 @@ class FinalCampaignBookingAPIView(APIView):
         return Response({"message": "Campaign Booked Successfully"}, status=200)
 
 
-
-
-
 # Beta API below this point. Be Careful. Danger Below
-
-class InitialProposalAPIView(APIView):
-    '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal
-    fields are stored in the database
-    ProposalInfo and ProposalCenterMapping models are used only'''
-
-    def post(self, request, account_id=None, format=None):
-        '''In this centers contain format like
-        centers : [
-            center : [
-                space_mapping : []
-            ]
-            society_inventory : []  // these will be made if in center[space_mapping][society_allowed] is true
-            corporate_inventory : []
-        ]
-        This is done to be in sync with the format on map view page as serializers.data dont allow to append
-        any new (key,value) pair to its existing data
-        '''
-
-        supplier_codes = {
-            'society' : 'RS',   'corporate' : 'CP',
-            'gym' : 'GY',       'salon' : 'SA'
-        }
-
-        with transaction.atomic():
-            proposal_data = request.data
-            proposal_data['proposal_id'] = self.create_proposal_id()
-            try:
-                account = AccountInfo.objects.get(account_id=account_id)
-            except AccountInfo.DoesNotExist:
-                return Response({'message':'Invalid Account ID'}, status=406)
-            proposal_data['account'] = account.account_id
-            try:
-                proposal_object = ProposalInfo.objects.get(proposal_id=proposal_data['proposal_id'])
-                # id already exists --> Do something
-                return Response(status=404)
-            except ProposalInfo.DoesNotExist:
-                proposal_serializer = ProposalInfoSerializer(data=proposal_data)
-
-                if proposal_serializer.is_valid():
-                    proposal_object = proposal_serializer.save()
-                else:
-                    return Response({'message' : 'Invalid Proposal Info', 'errors' : \
-                        proposal_serializer.errors}, status=406)
-
-                for center_info in proposal_data['centers']:
-                    center = center_info['center']
-                    space_mapping = center['space_mapping']
-                    center['proposal'] = proposal_object.proposal_id
-                    address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + center['pincode']
-                    geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
-                    try:
-                        geo_object = geocoder.geocode(address)
-                    except GeocoderError:
-                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({'message' : 'Latitude Longitude Not found for address : ' + address}, status=406)
-                    except ConnectionError:
-                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({'message' : 'Unable to connect to google Maps'}, status=406)
-
-                    center['latitude'] = geo_object.latitude
-                    center['longitude'] = geo_object.longitude
-
-                    center_serializer = ProposalCenterMappingSerializer(data=center)
-
-                    if center_serializer.is_valid():
-                        center_object = center_serializer.save()
-                    else:
-                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({'message' : 'Invalid Center Data', 'errors' : center_serializer.errors},\
-                            status=406)
-
-                    space_mapping['center'] = center_object.id
-                    space_mapping['proposal'] = proposal_object.proposal_id
-                    space_mapping_serializer = SpaceMappingSerializer(data=space_mapping)
-                    if space_mapping_serializer.is_valid():
-                        space_mapping_object = space_mapping_serializer.save()
-                    else:
-                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({
-                                'message' : 'Invalid Space Mapping Data',
-                                'errors' : space_mapping_serializer.errors
-                            }, status=406)
-
-
-                    # ADDNEW --> extend the list in for loop when new spaces added. Keep the variables names accordingly
-                    for space in ['society','corporate','gym','salon']:
-                        ''' This loops checks if the space is allowed and if it is allowed save the
-                        inventory types chosen by the user in the inventory_type table '''
-                        try:
-                            space_allowed = space + '_allowed'
-                            if space_mapping[space_allowed]:
-                                space_inventory = space + '_inventory'
-                                center_info[space_inventory]['supplier_code'] = supplier_codes[space]
-                                center_info[space_inventory]['space_mapping'] = space_mapping_object.id
-                                inventory_type_serializer = InventoryTypeSerializer(data=center_info[space_inventory])
-                                if inventory_type_serializer.is_valid():
-                                    inventory_type_serializer.save()
-                                else:
-                                    ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                                    return Response({
-                                            'message' : 'Invalid Inventory Type Info',
-                                            'errors' : inventory_type_serializer.errors
-                                        })
-                        except KeyError:
-                            pass
-
-
-        return Response(proposal_object.proposal_id,status=200)
-
-    def create_proposal_id(self):
-        import random, string
-        return ''.join(random.choice(string.ascii_letters) for _ in range(8))
-
-
 
 def return_price(adinventory_type_dict, duration_type_dict, inv_type, dur_type):
     price_mapping = PriceMappingDefault.objects.filter(adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type])
@@ -908,7 +794,6 @@ class SpacesOnCenterAPIView(APIView):
             response['business_name'] = proposal.account.business.name
         except ProposalInfo.DoesNotExist:
             return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
-
 
         # if center comes in get request then just return the result for that center
         # this is to implement the reset center functionality
@@ -988,10 +873,11 @@ class SpacesOnCenterAPIView(APIView):
                             society['shortlisted'] = True
                             society['buffer_status'] = False
 
+                            # not required
                             if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
                                 society['total_poster_count'] = society_inventory_obj.total_poster_count
                                 society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
-
+                            # not required
                             if society_inventory_obj.standee_allowed:
                                 society['total_standee_count'] = society_inventory_obj.total_standee_count
                                 society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
@@ -2331,6 +2217,291 @@ class ImportProposalCostData(APIView):
                                                 True)
             except Exception as e:
                 return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class CreateInitialProposal(APIView):
+    """
+    This is first step in creating proposal. Basic data get's stored here.
+    because we have reduced number of models in which Proposal
+    data is stored hence we have created new classes CreateInitialProposal and CreateFinalProposal API.
+    author: nikhil
+    """
+
+    def post(self, request, account_id):
+        """
+        Args:
+            request: request param
+            proposal_id:  proposal_id for which data is to be saved
+
+        Returns: success or failure depending an initial proposal is created or not.
+
+        """
+        class_name = self.__class__.__name__
+        try:
+
+            with transaction.atomic():
+                proposal_data = request.data
+
+                # create a unique proposal id
+                proposal_data['proposal_id'] = website_utils.create_proposal_id()
+
+                # get the account object. required for creating the proposal
+                account = AccountInfo.objects.get(account_id=account_id)
+                proposal_data['account'] = account.account_id
+
+                # query for parent. if available set it. if it's available, then this is an EDIT request.
+                parent = request.data.get('parent')
+
+                # set parent if available
+                if parent:
+                    parent_proposal = ProposalInfo.objects.get(proposal_id=parent)
+                    proposal_data['parent'] = parent_proposal.proposal_id
+
+                # call the function that saves basic proposal information
+                response = website_utils.create_basic_proposal(proposal_data)
+                if not response.data['status']:
+                    return response
+
+                # time to save all the centers data
+                response = website_utils.save_center_data(proposal_data)
+                if not response.data['status']:
+                    return response
+
+                # return the proposal_id of the new proposal created
+                return ui_utils.handle_response(class_name, data=proposal_data['proposal_id'], success=True)
+        except Exception as e:
+             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class CreateFinalProposal(APIView):
+    """
+    This is second step for creating proposal.
+    The proposal_id in the request is always a brand new proposal_id wether you hit this API from an EDIT form of
+    the proposal or you are creating an entirely new proposal.
+
+    structure of request.data is  a list. item of the list is the one center information. inside center
+    information we have all the suppliers shortlisted, all the Filters and all.
+    """
+
+    def post(self, request, proposal_id):
+        """
+        Args:
+            request: request data
+            proposal_id: proposal_id to be updated
+
+
+            author: nikhil
+
+        Returns: success if data is saved successfully.
+        """
+        class_name = self.__class__.__name__
+        try:
+            # simple dict to count new objects created each time the API is hit. a valuable information.
+            objects_created = {
+                'SHORTLISTED_SUPPLIERS': 0,
+                'FILTER_OBJECTS': 0
+            }
+            with transaction.atomic():
+                for proposal_data in request.data:
+
+                    proposal_data['proposal_id'] = proposal_id
+
+                    # you have to create suppliers shortlisted data
+                    response = website_utils.save_shortlisted_suppliers(proposal_data)
+                    if not response.data['status']:
+                        return response
+                    objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']
+
+                    # you have to create Filter data
+                    response = website_utils.save_filter_data(proposal_data)
+                    if not response.data['status']:
+                        return response
+                    objects_created['FILTER_OBJECTS'] += response.data['data']
+
+                return ui_utils.handle_response(class_name, data=objects_created, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ProposalViewSet(viewsets.ViewSet):
+    """
+     A viewset handling various operations related to ProposalModel
+    """
+
+    @detail_route(methods=['GET'])
+    def get_proposal(self, request, pk=None):
+        class_name = self.__class__.__name__
+        try:
+            proposal = ProposalInfo.objects.get(proposal_id=pk)
+            serializer = ProposalInfoSerializer(proposal)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['GET'])
+    def get_centers(self, request, pk=None):
+        class_name = self.__class__.__name__
+        try:
+            centers = ProposalCenterMapping.objects.filter(proposal_id=pk)
+            serializer = ProposalCenterMappingSerializer(centers, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['POST'])
+    def get_spaces(self, request, pk=None):
+        """
+        The API  fetches all the data required to display on the grid view page.
+        Args:
+            request:  request param
+            pk: proposal_id
+        Returns: collects data for all shortlisted suppliers and filters and send them.
+        ---
+        parameters:
+        - name: center_id
+          description:  center_id
+        - name: radius
+          description: radius
+        - name: supplier_codes
+          description:  array of codes like RS, CP, etc
+        """
+        class_name = self.__class__.__name__
+        try:
+            center_id = request.data.get('center_id')
+            radius = request.data.get('radius')
+            supplier_codes = request.data.get('supplier_codes')
+
+            data = {
+                'proposal_id': pk,
+                'center_id': center_id,
+                'radius': radius,
+                'supplier_codes': supplier_codes
+            }
+            response = website_utils.suppliers_within_radius(data)
+            if not response.data['status']:
+                return response
+
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+
+class InitialProposalAPIView(APIView):
+    '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal
+    fields are stored in the database
+    ProposalInfo and ProposalCenterMapping models are used only'''
+
+    def post(self, request, account_id=None, format=None):
+        '''In this centers contain format like
+        centers : [
+            center : [
+                space_mapping : []
+            ]
+            society_inventory : []  // these will be made if in center[space_mapping][society_allowed] is true
+            corporate_inventory : []
+        ]
+        This is done to be in sync with the format on map view page as serializers.data dont allow to append
+        any new (key,value) pair to its existing data
+        '''
+
+        supplier_codes = {
+            'society' : 'RS',   'corporate' : 'CP',
+            'gym' : 'GY',       'salon' : 'SA'
+        }
+
+        import pdb
+        pdb.set_trace()
+
+        with transaction.atomic():
+            proposal_data = request.data
+            proposal_data['proposal_id'] = self.create_proposal_id()
+            try:
+                account = AccountInfo.objects.get(account_id=account_id)
+            except AccountInfo.DoesNotExist:
+                return Response({'message':'Invalid Account ID'}, status=406)
+            proposal_data['account'] = account.account_id
+            try:
+                proposal_object = ProposalInfo.objects.get(proposal_id=proposal_data['proposal_id'])
+                # id already exists --> Do something
+                return Response(status=404)
+            except ProposalInfo.DoesNotExist:
+                proposal_serializer = ProposalInfoSerializer(data=proposal_data)
+
+                if proposal_serializer.is_valid():
+                    proposal_object = proposal_serializer.save()
+                else:
+                    return Response({'message' : 'Invalid Proposal Info', 'errors' : \
+                        proposal_serializer.errors}, status=406)
+
+                for center_info in proposal_data['centers']:
+                    center = center_info['center']
+                    space_mapping = center['space_mapping']
+                    center['proposal'] = proposal_object.proposal_id
+                    address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + center['pincode']
+                    geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
+                    try:
+                        geo_object = geocoder.geocode(address)
+                    except GeocoderError:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                        return Response({'message' : 'Latitude Longitude Not found for address : ' + address}, status=406)
+                    except ConnectionError:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                        return Response({'message' : 'Unable to connect to google Maps'}, status=406)
+
+                    center['latitude'] = geo_object.latitude
+                    center['longitude'] = geo_object.longitude
+
+                    center_serializer = ProposalCenterMappingSerializer(data=center)
+
+                    if center_serializer.is_valid():
+                        center_object = center_serializer.save()
+                    else:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                        return Response({'message' : 'Invalid Center Data', 'errors' : center_serializer.errors},\
+                            status=406)
+
+                    space_mapping['center'] = center_object.id
+                    space_mapping['proposal'] = proposal_object.proposal_id
+                    space_mapping_serializer = SpaceMappingSerializer(data=space_mapping)
+                    if space_mapping_serializer.is_valid():
+                        space_mapping_object = space_mapping_serializer.save()
+                    else:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                        return Response({
+                                'message' : 'Invalid Space Mapping Data',
+                                'errors' : space_mapping_serializer.errors
+                            }, status=406)
+
+
+                    # ADDNEW --> extend the list in for loop when new spaces added. Keep the variables names accordingly
+                    for space in ['society','corporate','gym','salon']:
+                        ''' This loops checks if the space is allowed and if it is allowed save the
+                        inventory types chosen by the user in the inventory_type table '''
+                        try:
+                            space_allowed = space + '_allowed'
+                            if space_mapping[space_allowed]:
+                                space_inventory = space + '_inventory'
+                                center_info[space_inventory]['supplier_code'] = supplier_codes[space]
+                                center_info[space_inventory]['space_mapping'] = space_mapping_object.id
+                                inventory_type_serializer = InventoryTypeSerializer(data=center_info[space_inventory])
+                                if inventory_type_serializer.is_valid():
+                                    inventory_type_serializer.save()
+                                else:
+                                    ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                                    return Response({
+                                            'message' : 'Invalid Inventory Type Info',
+                                            'errors' : inventory_type_serializer.errors
+                                        })
+                        except KeyError:
+                            pass
+
+
+        return Response(proposal_object.proposal_id,status=200)
+
+    def create_proposal_id(self):
+        import random, string
+        return ''.join(random.choice(string.ascii_letters) for _ in range(8))
 
 
 class SaveContactDetails(APIView):
