@@ -114,6 +114,9 @@ def get_supplier_id(request, data):
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
             'supplier_type'] + data[
                           'supplier_code']
+                          
+        return Response(data={'status': True, 'supplier_id': supplier_id}, status=status.HTTP_200_OK)
+
     except KeyError as e:
         return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist as e:
@@ -121,9 +124,7 @@ def get_supplier_id(request, data):
     except Exception as e:
         return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(data={'status': True, 'supplier_id': supplier_id}, status=status.HTTP_200_OK)
-
-
+    
 def make_supplier_data(data):
     try:
 
@@ -148,6 +149,7 @@ def make_supplier_data(data):
                          'society_name': data['supplier_name'],
                          'supplier_id': data['supplier_id'],
                          'created_by': current_user.id,
+
                          'society_city': city.city_name,
                          'society_subarea': subarea.subarea_name,
                          'society_locality': area.label,
@@ -225,6 +227,7 @@ def save_supplier_data(master_data):
     """
     try:
         function_name = save_supplier_data.__name__
+
         supplier_code = master_data['supplier_type_code']
         serializer_class = get_serializer(supplier_code)
         # serializer_class = master_data[supplier_code]['serializer']
@@ -251,6 +254,7 @@ def set_default_pricing(supplier_id, supplier_type_code):
 
     """
     try:
+
         supplier = get_model(supplier_type_code).objects.get(pk=supplier_id)
         # supplier = supplier_code_filter_params[supplier_type_code]['MODEL'].objects.get(pk=supplier_id)
         content_type = ContentType.objects.get_for_model(supplier)

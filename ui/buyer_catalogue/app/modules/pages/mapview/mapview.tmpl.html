@@ -9,23 +9,17 @@
           <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
          </select>
       </div>
-      <!-- <div class="col-md-1">New Center:</div> -->
       <div class="col-md-2">New Center Latitude & Longitude: </div>
       <div class="col-md-2">{{new_center.latitude}}/{{new_center.longitude}}</div>
       <div class="col-md-2">Business Name : {{business_name}}</div>
-      <!-- <div class="col-md-1">Longitude</div> -->
-      <!-- <div class="col-md-1">{{new_center.longitude}}</div> -->
     </div>
     <div class="row">
-      <!-- <div class="col-md-2"></div> -->
       <div class="col-md-1 aligndropdown">Radius:</div>
       <div class="col-md-1" style = "margin-left: 116px;">
         <input class="box-spacing" type="number" step="0.5" ng-model="current_center.center.radius">
       </div>
       <div class="col-md-3">
         <button class="btn btn-default active" ng-click="changeCenter()">Change Radius</button>
-      <!-- </div>
-      <div class="col-md-3"> -->
         <button class="btn btn-default active box-spacing" style = "margin-left: 10px;" ng-show="initial_center_changed[current_center_index]" ng-click="resetCenter()">Reset Center</button>
       </div>
       <div class="col-md-3">
@@ -48,26 +42,26 @@
       <hr>
       <form id = "filterPanelForm">
        <div class = "filterPanel">
-        <input type = "checkbox"  ng-model="current_center.center.space_mappings.society_allowed"  ng-click="spaceSociety()">
-          <span class = "filterPanelHeader">Society Filters</span><br>
-         <div ng-if = "current_center.center.space_mappings.society_allowed">
+        <input type = "checkbox"  ng-model="current_center.center.space_mappings.society_allowed"  ng-click="spaceSociety()"/>
+          <span class = "filterPanelHeader" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
+         <div ng-if = "current_center.center.space_mappings.society_allowed" uib-collapse="isCollapsed">
           <span class = "filterPanelHeader ">Inventory Type</span>
-          <div class = "nbCheckbox two-col" ng-repeat="inventory in society_inventory_type">
+          <div class = "nbCheckbox two-col" ng-repeat="inventory in space_inventory_type">
             <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
           </div>
           <hr>
           <span class = "filterPanelHeader ">Society Type</span>
-            <div class = "nbCheckbox two-col"  ng-repeat="quality_type in society_quality_type">
+            <div class = "nbCheckbox two-col"  ng-repeat="quality_type in space_quality_type">
                 <input type = "checkbox"  ng-model="quality_type.selected" ng-change="societyFilter()">{{ quality_type.name }}&nbsp;
             </div>
             <hr>
           <span class = "filterPanelHeader ">Society Size</span>
-            <div class = "nbCheckbox two-col" ng-repeat="quantity_type in society_quantity_type">
+            <div class = "nbCheckbox two-col" ng-repeat="quantity_type in space_quantity_type">
                 <input type = "checkbox" ng-model="quantity_type.selected" ng-change="societyFilter()">{{ quantity_type.name }}&nbsp;
             </div>
             <hr>
           <span class = "filterPanelHeader ">Society Location Rating</span>
-          <div class = "nbCheckbox two-col" ng-repeat="location in society_location">
+          <div class = "nbCheckbox two-col" ng-repeat="location in space_location">
             <input type = "checkbox" ng-model="location.selected" ng-change="societyFilter()">{{ location.name }}&nbsp;
           </div>
           <hr>
@@ -75,9 +69,19 @@
             <div class = "nbCheckbox two-col" ng-repeat="flat_type in society_flat_type">
                 <input type = "checkbox" ng-model="flat_type.selected" ng-change="societyFilter()">{{ flat_type.name }}&nbsp;
             </div>
-
           </div>
         </div>
+        <div class = "filterPanel">
+         <input type = "checkbox"  ng-model="current_center.center.space_mappings.corporate_allowed"  ng-click="spaceSociety()"/>
+           <span class = "filterPanelHeader"> Corporate Filters</span><br>
+          <div ng-if = "current_center.center.space_mappings.corporate_allowed">
+           <span class = "filterPanelHeader ">Inventory Type</span>
+           <div class = "nbCheckbox two-col" ng-repeat="inventory in space_inventory_type">
+             <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
+           </div>
+           <hr>
+           </div>
+         </div>
       </form>
      </div>
     </div>
@@ -171,11 +175,8 @@
         <button class="btn btn-danger active" ng-click="submitProposal()">Submit Final Proposal</button>
         <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" >Add Societies</button>
   </div>
-
   <!-- End: grid view -->
-
-    <!-- Start: Summary Section -->
-
+  <!-- Start: Summary Section -->
     <div class="col-md-2"  ng-if = "!show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
       <div class="panel panel-info">
         <div class="panel-body" id="searchBody">
@@ -200,7 +201,6 @@
              <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{impressions.stallImpression}}</div>
              <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{impressions.standeeImpression}}</div>
             <hr>
-             <!-- <span class = "space filterPanelHeader ">Total Price</span> -->
            </div>
         </div>
         <div>
@@ -208,9 +208,7 @@
          <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
        </div>
       </div>
-
       <!-- Start: Summary Section of Gridview-->
-
       <div class="col-md-2"  ng-if = "show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
         <div class="panel panel-info">
           <div class="panel-body" id="searchBody">
@@ -242,21 +240,9 @@
           <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
           <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
-          <!-- <form method="post" enctype="multipart/form-data">
-          <button class="btn btn-danger active" type = "file" name="society-file" class="btn btn-default" ng-show="show_societies"  ngf-select = "importData($files)"
-            accept = "/*" ngf-max-size = "5MB" >Upload excel</button>action="http://localhost:8108/v0/ui/website/DKWNYWzL/import-society-data/"
-          </form> -->
-          <div>
-             <form method="post" enctype="multipart/form-data">
-               <input type="file" ng-show="show_societies" name="societyfile">
-               <input type="submit" class="btn btn-danger active" ng-show="show_societies" value="upload" ng-click = "importData($files)">
-            </form>
-         </div>
-          </div>
+          <button class="btn btn-danger active" ngf-select="upload($file)">Upload</button>
         </div>
-
-
-
+        </div>
     </div><!-- row div ends here-->
 </div><!-- containner div ends here-->
 
@@ -269,8 +255,8 @@
           <hr/>
           <div class = "modal-body" style = "height: 300px;">
             <div class="row">
-              <div class = "col-md-3"><label>Account Email</label></div>
-              <div class = "col-md-3"><label>Account Phone</label></div>
+              <div class = "col-md-3"><label>Field1</label></div>
+              <div class = "col-md-3"><label>Field 2</label></div>
             </div>
           </div>
       </div>
