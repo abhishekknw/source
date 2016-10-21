@@ -837,21 +837,20 @@ angular.module('catalogueApp')
         }
       //End: For sending only shortlisted society in
       //Start: For sending filtered inventory type
-          var space_inventory_type_selected = [];
+          var society_inventory_type_selected = [];
           for(var i=0;i<$scope.space_inventory_type.length;i++){
             if($scope.space_inventory_type[i].selected == true){
-              space_inventory_type_selected.push($scope.space_inventory_type[i].code);
+              society_inventory_type_selected.push($scope.space_inventory_type[i].code);
             }
           }
       //End: For sending filtered inventory type
           for(var i=0;i<$scope.centers.length;i++){
-            $scope.centers[i].center['space_inventory_type_selected']=space_inventory_type_selected;
+            $scope.centers[i].center['society_inventory_type_selected']=society_inventory_type_selected;
           }
         }
 
         $scope.submitProposal = function(){
           getShortlistedFilteredSocieties();
-
             console.log("Submitting $scope.centers :", $scope.centers);
         };
         $scope.exportData = function(){
