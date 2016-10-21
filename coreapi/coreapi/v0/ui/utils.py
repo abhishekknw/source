@@ -13,6 +13,7 @@ import json
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 from django.apps import apps
+from django.forms.models import model_to_dict
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -396,8 +397,8 @@ def get_supplier_inventory(data, id):
     """
 
     try:
-        #supplier_code = data['supplier_type_code']
-        supplier_code = 'CP' #todo: change this when get clearity
+        supplier_code = data['supplier_type_code']
+        # supplier_code = 'CP' #todo: change this when get clearity
         if not supplier_code or not id:
             return Response(data={"status": False, "error": "provide supplier code and  supplier id"},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -615,3 +616,24 @@ def get_serializer(supplier_type_code):
         return serializers[supplier_type_code]
     except Exception as e:
         return None
+
+def get_supplier_image(supplier_objects,supplier_name):
+    """
+    Args:
+        supplier_objects : SupplierTypeSociety, SupplierTypeCorporate
+        supplier_type_code: CP, RS
+
+    Returns: list of supplier_objects by appending image_url
+
+    """
+    images = v0.models.ImageMapping.objects.all()
+    result = [] 
+    # To optimize this for loop, Join query can be used
+    for model in supplier_objects:
+        data = model_to_dict(model)
+        for image in images:
+            if (data['supplier_id'] == image.object_id):
+                if (image.name == supplier_name):
+                    data['image_url'] = image.image_url
+        result.append(data)
+    return result

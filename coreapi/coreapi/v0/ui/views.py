@@ -400,11 +400,13 @@ class SocietyAPIListView(APIView):
                     items = SupplierTypeSociety.objects.all().order_by('society_name')
                 elif user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
                     items = SupplierTypeSociety.objects.filter(Q(society_city__in=[item.city.city_name for item in user.cities.all()]) | Q(created_by=user.id))
-
+            
+        #Changes in code to show images for society list                    
+            items = ui_utils.get_supplier_image(items,'Society')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
-            serializer = SocietyListSerializer(result_page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+            #serializer = SocietyListSerializer(result_page, many=True)
+            return paginator.get_paginated_response(result_page)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
@@ -423,10 +425,12 @@ class CorporateAPIListView(APIView):
                     items = SupplierTypeCorporate.objects.all().order_by('name')
                 else:
                     items = SupplierTypeCorporate.objects.filter(created_by=user.id)#todo : No field created by !
+        #Changes in code to show images for Corporate list
+            items = ui_utils.get_supplier_image(items,'Corporate')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
-            serializer = UICorporateSerializer(result_page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+            #serializer = UICorporateSerializer(result_page, many=True)
+            return paginator.get_paginated_response(result_page)
         except SupplierTypeCorporate.DoesNotExist:
             return Response(status=404)
         except Exception as e:
@@ -828,10 +832,13 @@ class InventorySummaryAPIView(APIView):
 
     def get(self, request, id):
         try:
+        # Start: code added and changed for getting supplier_type_code
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            # supplier_type_code = 'CP'
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
             inventory_object = InventorySummary.objects.get_object(data, id)
+        # End: code added and changed for getting supplier_type_code
             if not inventory_object:
                 return Response(data={'Inventory object does not exist for this supplier id {0}'.format(id)},
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -908,7 +915,6 @@ class InventorySummaryAPIView(APIView):
 
         """
         try:
-
             response = ui_utils.get_supplier_inventory(request.data.copy(), id)
 
             if not response.data['status']:
@@ -916,9 +922,8 @@ class InventorySummaryAPIView(APIView):
             data = response.data['data']['request_data']
             supplier_object = response.data['data']['supplier_object']
             inventory_object = response.data['data']['inventory_object']
-            #supplier_type_code = request.data['supplier_type_code']
-            supplier_type_code = 'CP'
-
+            supplier_type_code = request.data['supplier_type_code']
+            # supplier_type_code = 'CP'
             # society = SupplierTypeSociety.objects.get(pk=id)
             # item = InventorySummary.objects.get(supplier=society)
             tower_response = ui_utils.get_tower_count(supplier_object, supplier_type_code)
@@ -931,7 +936,6 @@ class InventorySummaryAPIView(APIView):
             stall_campaign = 0
             flier_campaign = 0
             total_campaign = 0
-
             with transaction.atomic():
                 if request.data.get('poster_allowed_nb'):
                     if request.data.get('nb_count'):
@@ -1033,7 +1037,6 @@ class InventorySummaryAPIView(APIView):
                 adinventory_dict = ui_utils.adinventory_func()
                 duration_type_dict = ui_utils.duration_type_func()
                 price_list = []
-
                 if request.data.get('poster_price_week_nb'):
                     posPrice = request.data.get('poster_price_week_nb')
                     if request.data.get('poster_allowed_nb'):
@@ -1209,8 +1212,9 @@ class BasicPricingAPIView(APIView):
         response = {}
         try:
             # get the supplier_type_code
-            supplier_type_code = request.data.get('supplier_type_code')
-            supplier_type_code = 'CP' #todo: change this when get supplier_type_code
+            supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            # supplier_type_code = request.data.get('supplier_type_code')
+            # supplier_type_code = 'RS' #todo: change this when get supplier_type_code
             if not supplier_type_code:
                 return Response({'status': False, 'error': 'Provide supplier_type_code'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1303,11 +1307,16 @@ class InventoryPricingAPIView(APIView):
 class TowerAPIView(APIView):
     def get(self, request, id, format=None):
         try:
+        # start: code added and changed for getting supplier_type_code
+            supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            data = request.data.copy()
+            data['supplier_type_code'] = supplier_type_code
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
             serializer_tower = UITowerSerializer(towers, many=True)
             #inventory_summary = InventorySummary.objects.get(supplier_id=id)
 
-            inventory_summary = InventorySummary.objects.get_object(request.data.copy(), id)
+            inventory_summary = InventorySummary.objects.get_object(data, id)
+        # End: code added and changed for getting supplier_type_code
             if not inventory_summary:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             serializer_inventory = InventorySummarySerializer(inventory_summary)
@@ -1338,8 +1347,12 @@ class TowerAPIView(APIView):
             total_standee_count += tower['standee_count']
 
         try:
-
-            inventory_obj = InventorySummary.objects.get_object(request.data.copy(), id)
+        # Start: code added and changed for getting supplier_type_code
+            supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            data = request.data.copy()
+            data['supplier_type_code'] = supplier_type_code
+        # End: code added and changed for getting supplier_type_code
+            inventory_obj = InventorySummary.objects.get_object(data, id)
             if not inventory_obj:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             #inventory_obj = InventorySummary.objects.get(supplier=society)
@@ -2026,11 +2039,15 @@ class ImageLocationsAPIView(APIView):
 
         return Response({"response":response}, status=201)
 
-
+#my code
 class ImageMappingAPIView(APIView):
     def get(self, request, id, format=None):
+        '''
+        get the ImageMapping objects based on supplier_id
+        '''
         try:
-            images = SupplierTypeSociety.objects.get(pk=id).images.all()
+            # images = SupplierTypeSociety.objects.get(pk=id).images.all()
+            images = ImageMapping.objects.filter(object_id=id)
             serializer = ImageMappingSerializer(images, many=True)
 
             return Response(serializer.data, status=200)
@@ -2040,23 +2057,48 @@ class ImageMappingAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        #print request.data
-        society=SupplierTypeSociety.objects.get(pk=id)
+        '''
+        create new ImageMapping objects
+        '''
+        supplier_type_code = request.query_params.get('supplierTypeCode', None)
+        print supplier_type_code
+        content_type_response = ui_utils.get_content_type(supplier_type_code)
+        if not content_type_response.data['status']:
+            return None
+        content_type = content_type_response.data['data']
+        supplier_object = ui_utils.get_model(supplier_type_code).objects.get(pk=id)
         for key in request.data['image_details']:
-            if 'id' in key:
-                item = ImageMapping.objects.get(pk=key['id'])
-                serializer = ImageMappingSerializer(item, data=key)
-            else:
-                serializer = ImageMappingSerializer(data=key)
+            key['object_id'] = id
+            key['content_type'] = content_type.id
+            
+            serializer = ImageMappingSerializer(data=key)
 
             if serializer.is_valid():
-                serializer.save(supplier=society)
+                serializer.save()
             else:
                 return Response(serializer.errors, status=400)
 
         return Response(serializer.data, status=201)
 
+    def put(self, request, id):
+        """ 
+        updates the ImageMapping objects 
+        """
+        supplier_type_code = 'RS'
+        
+        for key in request.data['image_details']:
+            
+            item = ImageMapping.objects.get(pk=key['id'])
+            serializer = ImageMappingSerializer(item, data=key)
+        
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors, status=400)
 
+        return Response(serializer.data, status=200)
+
+#end code
 
 def generate_location_tag(initial_tag, type, index):
     return ''.join((initial_tag.upper() , type.upper()[:3], str(index)))
