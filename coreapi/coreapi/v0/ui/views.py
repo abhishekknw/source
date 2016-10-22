@@ -2680,16 +2680,17 @@ class BusShelter(APIView):
         return ui_utils.handle_response(class_name, data=basic_details_response.data['data'], success=True)
 
     def get(self, request):
-        # fetch all Bus Shelters 
+        # fetch all and list Bus Shelters 
 
         class_name = self.__class__.__name__
 
         try:
             items = SupplierTypeBusShelter.objects.all().order_by('name')
+            items = ui_utils.get_supplier_image(items,'Bus Shelter')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
-            serializer = SupplierTypeBusShelterSerializer(result_page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+            # serializer = SupplierTypeBusShelterSerializer(result_page, many=True)
+            return paginator.get_paginated_response(result_page)
         except SupplierTypeBusShelter.DoesNotExist as e:
             return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:
