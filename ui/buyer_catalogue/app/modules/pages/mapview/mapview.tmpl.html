@@ -52,22 +52,22 @@
           <span class = "filterPanelHeader">Society Filters</span><br>
          <div ng-if = "current_center.center.space_mappings.society_allowed">
           <span class = "filterPanelHeader ">Inventory Type</span>
-          <div class = "nbCheckbox two-col" ng-repeat="inventory in society_inventory_type">
+          <div class = "nbCheckbox two-col" ng-repeat="inventory in space_inventory_type">
             <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
           </div>
           <hr>
           <span class = "filterPanelHeader ">Society Type</span>
-            <div class = "nbCheckbox two-col"  ng-repeat="quality_type in society_quality_type">
+            <div class = "nbCheckbox two-col"  ng-repeat="quality_type in space_quality_type">
                 <input type = "checkbox"  ng-model="quality_type.selected" ng-change="societyFilter()">{{ quality_type.name }}&nbsp;
             </div>
             <hr>
           <span class = "filterPanelHeader ">Society Size</span>
-            <div class = "nbCheckbox two-col" ng-repeat="quantity_type in society_quantity_type">
+            <div class = "nbCheckbox two-col" ng-repeat="quantity_type in space_quantity_type">
                 <input type = "checkbox" ng-model="quantity_type.selected" ng-change="societyFilter()">{{ quantity_type.name }}&nbsp;
             </div>
             <hr>
           <span class = "filterPanelHeader ">Society Location Rating</span>
-          <div class = "nbCheckbox two-col" ng-repeat="location in society_location">
+          <div class = "nbCheckbox two-col" ng-repeat="location in space_location">
             <input type = "checkbox" ng-model="location.selected" ng-change="societyFilter()">{{ location.name }}&nbsp;
           </div>
           <hr>
@@ -75,7 +75,6 @@
             <div class = "nbCheckbox two-col" ng-repeat="flat_type in society_flat_type">
                 <input type = "checkbox" ng-model="flat_type.selected" ng-change="societyFilter()">{{ flat_type.name }}&nbsp;
             </div>
-
           </div>
         </div>
       </form>
