@@ -233,3 +233,24 @@ one_obect_models = ['ideation_design_cost', 'logistic_operations_cost', 'event_s
 value_index = 1
 comment_index = 2
 metric_model = 'proposal_metrics'
+
+# information of center to be sent back in get-spaces api
+get_spaces_api_center_keys = [ 'id', 'name', 'proposal', 'latitude', 'longitude' ]
+
+# in order to display data we need common keys. This mapping is for society uncommon keys map to common ketys.
+society_common_keys = {
+    'supplier_id': 'supplier_id',
+    'supplier_code': 'supplier_code',
+    'society_name': 'name',
+    'society_address1': 'address1',
+    'society_address2': 'address2',
+    'society_locality': 'area',
+    'society_subarea': 'subarea',
+    'society_city': 'city',
+    'society_state': 'state',
+    'society_zip': 'zipcode',
+    'society_latitude': 'latitude',
+    'society_longitude': 'longitude',
+    'society_type_quantity': 'locality_rating',
+    'society_type_quality': 'quality_rating',
+}

@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
   <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
   <div class="page-container">
@@ -17,23 +16,6 @@
             <div class="col-md-3"><label>End Date:</label></div>
             <div class="col-md-3">{{proposal.proposal.tentative_end_date}}</div>
           </div>
-         <!--  <div class="row">
-            <div class="col-md-5"><label>Types of Spaces and their Counts:</label></div>
-          </div>
-          <div class="row">
-            <div class="table table-align">
-              <div class="row">
-                <div class="col-md-2 table-align"><b>Spaces</b></div>
-                <div class="col-md-2"><b>Counts</b></div>
-                <div class="col-md-2"><b>Buffer Count</b></div>
-              </div>
-              <div class="row">
-                <div class="col-md-2 table-align"></div>
-                <div class="col-md-2"></div>
-                <div class="col-md-2"></div>
-              </div>
-            </div>  
-          </div> -->
           <div class="row">
             <div class="col-md-5"><label>Center Details:</label></div>
           </div>
@@ -52,7 +34,10 @@
                 <div class="col-md-2">{{center.center.subarea}}</div>
                 <div class="col-md-2">{{center.center.radius}}</div>
               </div>
-            </div>  
+            </div>
+            <div>
+              <a href="" ng-click="editInitialProposal(proposal.proposal.proposal_id)">Edit Initial Proposal</a>
+            </div>
           </div>
         </div>
       </div>
@@ -72,7 +57,7 @@
           <!-- <th class="col-md-2 table-heading">Status</th> -->
         </tr>
       </thead>
-      <tbody ng-repeat="society in proposal.centers track by $index">           
+      <tbody ng-repeat="society in proposal.centers track by $index">
         	<tr ng-repeat="center1 in society.societies_shortlisted track by $index">
               <td>{{center1.society_name}}</td>
               <td>{{society.center.center_name}}</td>
@@ -81,7 +66,7 @@
               <td>{{center1.total_stall_count}}</td>
               <td>{{center1.flier_frequency}}</td>
               <!-- <td>{{center.shortlisted}}</td> -->
-          	</tr>            
+          	</tr>
       </tbody>
      </table>
     </div>
@@ -101,7 +86,7 @@
           <th class="col-md-2 table-heading">Flyer Count</th>
         </tr>
       </thead>
-      <tbody ng-repeat="society in proposal.centers track by $index">           
+      <tbody ng-repeat="society in proposal.centers track by $index">
         	<tr ng-repeat="center in society.societies_buffered track by $index">
               <td>{{center.society_name}}</td>
               <td>{{center.center}}</td>
@@ -109,7 +94,7 @@
               <td>{{center.total_standee_count}}</td>
               <td>{{center.total_stall_count}}</td>
               <td>{{center.flier_frequency}}</td>
-          	</tr>            
+          	</tr>
       </tbody>
      </table>
     </div>
@@ -132,7 +117,7 @@
 	        <div class="col-md-3">{{proposal.centers[0].societies_buffered_count}}</div>
        	</div>
        	<div class="row">
-       		<div class="col-md-3"><label>Inventory Details:</label></div>	
+       		<div class="col-md-3"><label>Inventory Details:</label></div>
        	</div>
        	<div class="row">
         <div class="table table-align">
@@ -181,10 +166,10 @@
 		          <th class="col-md-2 table-heading">Society Name</th>
 				  <th class="col-md-2 table-heading">Society Address</th>
 				  <th class="col-md-2 table-heading">Sub Area</th>
-				  <th class="col-md-2 table-heading">Action</th>	
+				  <th class="col-md-2 table-heading">Action</th>
 				</tr>
 			   </thead>
-			   <tbody ng-repeat="society in proposal.centers track by $index">           
+			   <tbody ng-repeat="society in proposal.centers track by $index">
         			<tr ng-repeat="center in society.societies_shortlisted track by $index">
               			<td>{{center.society_name}}</td>
               			<td>{{center.society_address1}}</td>
@@ -207,8 +192,8 @@
 						    </span><br>
               			</td>
 		    		</tr>
-			   </tbody>	
-			  </table>		
+			   </tbody>
+			  </table>
 			</div>
 		</div>
 		<button class="btn btn-default" ng-click="submit()">Update Proposal</button>

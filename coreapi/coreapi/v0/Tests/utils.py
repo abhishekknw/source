@@ -39,7 +39,8 @@ def create_centers():
                 'longitude': '',
                 'radius': 1,
                 'address': 'powai',
-                'latitude': ''
+                'latitude': '',
+                'supplier_codes': ['RS', 'CP'],
             },
             'area': u'17'
         },
@@ -54,7 +55,8 @@ def create_centers():
                 'longitude': '',
                 'radius': 1,
                 'address': 'juhu',
-                'latitude': ''
+                'latitude': '',
+                'supplier_codes': ['GY']
             },
             'area': '14'
         }

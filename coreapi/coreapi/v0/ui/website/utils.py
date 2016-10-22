@@ -877,6 +877,62 @@ def get_geo_object(address):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
+def save_suppliers_allowed(center_info, proposal_id, center_id):
+    """
+    Args:
+        center_info: One center data
+        proposal_id: The proposal_id
+        center_id: The newly created center_id
+
+    Returns: saves what suppliers are allowed in each center. and returns on success.
+    """
+    function_name = save_suppliers_allowed.__name__
+
+    try:
+        # fetch all the supplier codes.
+        suppliers_codes = center_info['center']['supplier_codes']
+
+        # for all the codes
+        for code in suppliers_codes:
+            content_type_response = ui_utils.get_content_type(code)
+            if not content_type_response.data['status']:
+                return content_type_response
+
+            content_type = content_type_response.data['data']
+
+            # prepare the data
+            data = {
+                'proposal_id': proposal_id,
+                'center_id': center_id,
+                'supplier_content_type': content_type,
+                'supplier_type_code': code
+            }
+            models.ProposalCenterSuppliers.objects.get_or_create(**data)
+        # return success if done
+        return ui_utils.handle_response(function_name, data='success', success=True)
+    except KeyError as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def calculate_address(center):
+    """
+    Args:
+        center: makes address for this center
+    Returns: address for this center
+
+    """
+    function_name = calculate_address.__name__
+    try:
+        address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + \
+                  center['pincode']
+        return ui_utils.handle_response(function_name, data=address, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
 def save_center_data(proposal_data):
     """
 
@@ -897,8 +953,15 @@ def save_center_data(proposal_data):
 
             # prepare center info
             center['proposal'] = proposal_id
-            address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + \
-                      center['pincode']
+
+            # get address for this center. because address can contain a complicated logic in future, it's in separate
+            # function
+            address_response = calculate_address(center)
+            if not address_response.data['data']:
+                return address_response
+            address = address_response.data['data']
+
+            # add lat long to center's data based on address calculated
             geo_response = get_geo_object(address)
             if not geo_response.data['status']:
                 return geo_response
@@ -917,9 +980,13 @@ def save_center_data(proposal_data):
             # save center info
             if center_serializer.is_valid():
                 center_serializer.save()
+                # now save all the suppliers associated with this center
+                response = save_suppliers_allowed(center_info, proposal_id, center_serializer.data['id'])
+                if not response.data['status']:
+                    return response
             else:
                 return ui_utils.handle_response(function_name, data=center_serializer.errors)
-            return ui_utils.handle_response(function_name, data=center_serializer.data, success=True)
+        return ui_utils.handle_response(function_name, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
 
@@ -1120,6 +1187,12 @@ def get_suppliers(query, supplier_type_code):
         # need to set shorlisted=True for every supplier
         serializer = ui_utils.get_serializer(supplier_type_code)(supplier_objects, many=True)
         for supplier in serializer.data:
+            # replace all society specific keys with common supplier keys
+            for society_key, actual_key in website_constants.society_common_keys.iteritems():
+                if society_key in supplier.keys():
+                    value = supplier[society_key]
+                    del supplier[society_key]
+                    supplier[actual_key] = value
             supplier['shortlisted'] = True
         return ui_utils.handle_response(function_name, data=serializer.data, success=True)
 
@@ -1153,51 +1226,39 @@ def get_filters(data):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def suppliers_within_radius(data):
+def handle_single_center(center, result):
     """
+
     Args:
-        data: a dict containing proposal_id, center_id, radius, supplier_codes.
-        Two kinds of data is prepared and sent as of now:
-        suppliers within radius and filters data
+        center: One center data.
+        result : the final result array.
 
-    Returns: all the suppliers withing the radius defined.
-
+    Returns:
 
     """
-    function_name = suppliers_within_radius.__name__
+    function_name = handle_single_center.__name__
     try:
-        radius = data['radius']
-        proposal_id = data['proposal_id']
-        center_id = data['center_id']
-        supplier_codes = data['supplier_codes']
-        latitude, longitude = models.ProposalCenterMapping.objects.values_list('latitude', 'longitude').get(
-            id=center_id)
+        center_data = {}
+
+        center_data['center'] = center
+
+        radius = center['radius']
+        latitude = center['latitude']
+        longitude = center['longitude']
 
         response = get_coordinates(radius, latitude, longitude)
         if not response.data['status']:
             return response
 
-        # min max data contains min, max lat longs
         min_max_data = response.data['data']
-        centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id)
-        serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
 
-        result = {}
+        # make room for storing supplier data
+        center_data['suppliers'] = {}
 
-        # make room for suppliers
-        result['suppliers'] = {}
-        # make room for centers
-        result['centers'] = serializer.data
-
-        for supplier_type_code in supplier_codes:
+        # store data for each type of supplier
+        for supplier_type_code in center['codes']:
             # make an entry against the code for storing the results
-            result['suppliers'][supplier_type_code] = {}
-
-            # fetch the right content_type for the suppliers
-            supplier_content_type_response = ui_utils.get_content_type(supplier_type_code)
-            if not supplier_content_type_response.data['status']:
-                return supplier_content_type_response
-            supplier_content_type = supplier_content_type_response.data['data']
+            center_data['suppliers'][supplier_type_code] = {}
 
             # make a query
             query_response = build_query(min_max_data, supplier_type_code)
@@ -1211,15 +1272,79 @@ def suppliers_within_radius(data):
                 return response
             suppliers_data = response.data['data']
 
-            # get the filter's data
-            response = get_filters({'proposal_id': proposal_id, 'center_id': center_id, 'content_type': supplier_content_type})
+            # set in the result
+            center_data['suppliers'][supplier_type_code] = suppliers_data
+
+        result.append(center_data)
+        return ui_utils.handle_response(function_name, data=result, success=True)
+    except KeyError as e:
+        return ui_utils.handle_response(function_name, data='Key Error occurred', exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def merge_two_dicts(x, y):
+    '''Given two dicts, merge them into a new dict as a shallow copy.'''
+    z = x.copy()
+    z.update(y)
+    return z
+
+
+def suppliers_within_radius(data):
+    """
+    Args:
+        data: a dict containing proposal_id, center_id, radius, supplier_codes.
+        Two kinds of data is prepared and sent as of now:
+        suppliers within radius and filters data
+
+    Returns: all the suppliers withing the radius defined.
+
+
+    """
+    function_name = suppliers_within_radius.__name__
+    try:
+        proposal_id = data['proposal_id']
+        center_id = data['center_id']
+
+        result = []
+
+        if center_id:
+            # the queries will change if center_id is provided because we want to process
+            # for this center only.
+            if not data['radius'] or not data['latitude'] or not data['longitude']:
+                return ui_utils.handle_response(function_name, data='if giving center_id, give radius, lat, long too!')
+
+            centers = models.ProposalCenterMapping.objects.filter(id=center_id)
+            serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
+            serializer.data[0]['radius'] = data['radius']
+            serializer.data[0]['latitude'] = data['latitude']
+            serializer.data[0]['longitude'] = data['longitude']
+            supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter(
+                center_id=center_id).select_related('center').values('center', 'supplier_type_code')
+        else:
+            centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id)
+            supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter(
+                proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
+
+        # if not center_id, then fetch all the centers. centers can be a list if you do not provide lat, long, radius.
+        # we add an extra attribute for each center object we get. Thats called codes. codes contain a list
+        # of supplier_type_codees  like RS, CP.
+
+        serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
+        supplier_codes_dict = {center['id']: [] for center in serializer.data}
+        for data in supplier_type_codes_list:
+            center_id = data['center']
+            code = data['supplier_type_code']
+            supplier_codes_dict[center_id].append(code)
+
+        for center in serializer.data:
+            center['codes'] = supplier_codes_dict[center['id']]
+
+        for center in serializer.data:
+            response = handle_single_center(center, result)
             if not response.data['status']:
                 return response
-            filters_data = response.data['data']
-
-            # set in the result
-            result['suppliers'][supplier_type_code]['objects'] = suppliers_data
-            result['suppliers'][supplier_type_code]['filters'] = filters_data
+            result = response.data['data']
 
         return ui_utils.handle_response(function_name, data=result, success=True)
     except KeyError as e:
