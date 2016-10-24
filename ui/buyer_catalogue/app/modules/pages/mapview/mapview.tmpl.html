@@ -6,7 +6,7 @@
       <div class="col-md-2 aligndropdown">Select Advertising Location</div>
       <div class="col-md-2">
         <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
-          <option ng-repeat="center_var in centers" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
+          <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
          </select>
       </div>
       <div class="col-md-2">New Center Latitude & Longitude: </div>
@@ -44,7 +44,7 @@
        <div class = "filterPanel">
         <input type = "checkbox"  ng-model="current_center.center.space_mappings.society_allowed"  ng-click="spaceSociety()"/>
           <span class = "filterPanelHeader" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
-         <div ng-if = "current_center.center.space_mappings.society_allowed" uib-collapse="isCollapsed">
+         <div ng-if = "current_center.center.code='RS'" uib-collapse="isCollapsed">
           <span class = "filterPanelHeader ">Inventory Type</span>
           <div class = "nbCheckbox two-col" ng-repeat="inventory in space_inventory_type">
             <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
@@ -126,8 +126,8 @@
             <th class = "col-md-4">SubArea-Area</th>
             <th class = "col-md-4">Flat Count</th>
             <th class = "col-md-4">Average Rent</th>
-            <th class = "col-md-4">Society Type</th>
-            <th class = "col-md-4">Locality Rating</th>
+            <!-- <th class = "col-md-4">Society Type</th> -->
+            <!-- <th class = "col-md-4">Locality Rating</th> -->
             <th class = "col-md-4">Machadalo Index</th>
             <th class="center-align" ng-if="inv_poster">Poster Count</th>
             <th class="center-align" ng-if="inv_standee">Standee Count</th>
@@ -140,35 +140,35 @@
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
-        <tbody ng-repeat = "society1 in centers1">
-          <tr ng-repeat = "society in society1.societies">
+        <tbody ng-repeat = "center in center_data">
+          <tr ng-repeat = "supplier in getsuppliers('RS',center)">
             <td>{{$index+1}}</td>
-            <td>{{society1.center.center_name}}</td>
-            <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{society.supplier_id}}" target="_blank">{{society.society_name}}</a></td>
-            <td>{{society.society_subarea + "," + society.society_locality}}</td>
-            <td>{{society.flat_count}}</td>
-            <td>{{society.average_rent}}</td>
-            <td>{{society.society_type_quality}}</td>
-            <td>{{society.society_location_type}}</td>
-            <td>{{society.machadalo_index}}</td>
-            <td ng-if="inv_poster">{{society.tower_count}}</td>
+            <td>{{center.center.center_name}}</td>
+            <td>{{supplier.name}}</td>
+            <td>{{supplier.subarea}}</td>
+            <td>{{supplier.flat_count}}</td>
+            <td>{{supplier.average_rent}}</td>
+            <!-- <td>{{society.society_type_quality}}</td> -->
+            <!-- <td>{{society.society_location_type}}</td> -->
+            <td>{{supplier.machadalo_index}}</td>
+            <td ng-if="inv_poster">{{supplier.tower_count}}</td>
             <!-- <td ng-if="inv_poster">{{society.poster_price}}</td>-->
-            <td ng-if="inv_standee">{{society.total_standee_count}}</td>
+            <td ng-if="inv_standee">{{supplier.total_standee_count}}</td>
             <!-- <td ng-if="inv_standee">{{society.standee_price}}</td> -->
-            <td ng-if="inv_stall">{{society.total_stall_count}}</td>
+            <td ng-if="inv_stall">{{supplier.total_stall_count}}</td>
             <!-- <td ng-if="inv_stall">{{society.stall_price}}</td> -->
-            <td ng-if="inv_flier">{{society.flat_count}}</td>
+            <td ng-if="inv_flier">{{supplier.flat_count}}</td>
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
             <td>
-              <button class="btn btn-success active" ng-if="!society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Shortlist</button>
-              <span ng-if="society.shortlisted">
-              <input type="checkbox" ng-model="society.buffer_status"> Buffer
+              <button class="btn btn-success active" ng-if="!supplier.shortlisted" ng-click="supplier.shortlisted = !society.shortlisted">Shortlist</button>
+              <span ng-if="supplier.shortlisted">
+              <input type="checkbox" ng-model="supplier.buffer_status"> Buffer
               </span>
             </td>
             <td>
-              <button class="btn btn-danger active" ng-if="society.shortlisted" ng-click="society.shortlisted = !society.shortlisted">Remove</button>
+              <button class="btn btn-danger active" ng-if="supplier.shortlisted" ng-click="supplier.shortlisted = !supplier.shortlisted">Remove</button>
             </td>
-          </tr>
+          <!-- </tr> -->
         </tbody>
       </table>
       <!-- <div  ng-repeat="society in current_center.societies"></div> -->

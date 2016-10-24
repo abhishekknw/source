@@ -34,7 +34,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   $scope.show_societies = false;
   $scope.society_markers = []; // markers on the map
   $scope.circle = {};
-
+  
 // after angular-google-maps is loaded properly only then proces code inside then
   uiGmapGoogleMapApi.then(function(maps) {
       function assignCenterMarkerToMap(center){
@@ -82,6 +82,35 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           });
           return markers;
       };
+      $scope.changeCurrentCenter = function(center_id){
+            // changes the center currently shown on the map
+            // only front end work
+            for(var i=0;i<$scope.center_data.length; i++)
+                if($scope.center_data[i].center.id == center_id){
+                    $scope.current_center = $scope.center_data[i]
+                    $scope.current_center_index = i;
+                }
+            // make the current center of map equal to center of the map
+            $scope.map.center.latitude = $scope.current_center.center.latitude;
+            $scope.map.center.longitude = $scope.current_center.center.longitude;
+            $scope.circle.center.latitude = $scope.current_center.center.latitude;
+            $scope.circle.center.longitude = $scope.current_center.center.longitude;
+            $scope.circle.radius = $scope.current_center.center.radius * 1000;
+            // set_centers();
+            // deselect_all_society_filters();
+            // show the societies only if selected in this center
+            // if($scope.current_center.center.space_mappings.society_allowed){
+                $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+            // }else{
+            //     $scope.society_markers = [];
+            //     deselect_space_inventory($scope.space_inventory_type);
+            // }
+            //ADDNEW -->  do the same for corporate and gym and salonS
+            // do the same for corporate and gym and salons
+            // reassing the center_marker acc. to the selected center
+            $scope.center_marker =assignCenterMarkerToMap($scope.current_center.center);
+        }
+
 // Execute code inside them only when uiGMapIsReady is done --> map is loaded properly
       uiGmapIsReady.promise()
         .then(function(instances) {
@@ -378,6 +407,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             gridView_Summary();
           }) // end of q
       }
+
+      //End: angular-google-maps is loaded properly only then proces code inside then
+      var makeString = function(filter_array, filter_keyword){
             var makeString = function(filter_array, filter_keyword){
                 var my_string = filter_keyword;
                 var length = filter_array.length;
@@ -393,5 +425,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                     my_string = filter_keyword;
                 return my_string;
             }
-        });
+        };
+});
+//Start: Function added to show all suppliers on gridView
+  $scope.getsuppliers = function(space,supplier){
+    return supplier.suppliers[space];
+  }
+//End: Function added to show all suppliers on gridView
 });
