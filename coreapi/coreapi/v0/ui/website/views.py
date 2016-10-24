@@ -21,6 +21,7 @@ from rest_framework.decorators import detail_route,list_route
 from openpyxl import Workbook
 from openpyxl.compat import range
 import requests
+from rest_framework.parsers import JSONParser, FormParser
 #from import_export import resources
 
 import openpyxl
@@ -2326,8 +2327,11 @@ class CreateFinalProposal(APIView):
 
 class ProposalViewSet(viewsets.ViewSet):
     """
-     A viewset handling various operations related to ProposalModel
+     A viewset handling various operations related to ProposalModel.
+     This viewset was made instead of creating separate ApiView's because all the api's in this viewset
+     are related to Proposal domain.
     """
+    parser_classes = (JSONParser, FormParser)
 
     @detail_route(methods=['GET'])
     def get_proposal(self, request, pk=None):
@@ -2353,6 +2357,17 @@ class ProposalViewSet(viewsets.ViewSet):
     def get_spaces(self, request, pk=None):
         """
         The API  fetches all the data required to display on the grid view page.
+        response looks like :
+        {
+           'status': true,
+           'data' : [
+                {
+                   suppliers: { RS: [], CP: [] } ,
+                   center: { ...   codes: [] }
+                }
+           ]
+
+        }
         Args:
             request:  request param
             pk: proposal_id
@@ -2373,7 +2388,6 @@ class ProposalViewSet(viewsets.ViewSet):
             latitude = request.data.get('latitude')
             longitude = request.data.get('longitude')
 
-
             data = {
                 'proposal_id': pk,
                 'center_id': center_id,
@@ -2389,6 +2403,33 @@ class ProposalViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+    @detail_route(methods=['GET'])
+    def child_proposals(self, request, pk=None):
+        class_name = self.__class__.__name__
+        try:
+            data = {
+                'proposal_id': pk
+            }
+            response = website_utils.child_proposals(data)
+            if not response:
+                return response
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['GET'])
+    def shortlisted_suppliers(self, request, pk=None):
+        class_name = self.__class__.__name__
+        try:
+            data = {
+                'proposal_id': pk
+            }
+            response = website_utils.proposal_shortlisted_spaces(data)
+            if not response.data['status']:
+                return response
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class InitialProposalAPIView(APIView):
@@ -2413,9 +2454,6 @@ class InitialProposalAPIView(APIView):
             'society' : 'RS',   'corporate' : 'CP',
             'gym' : 'GY',       'salon' : 'SA'
         }
-
-        import pdb
-        pdb.set_trace()
 
         with transaction.atomic():
             proposal_data = request.data
