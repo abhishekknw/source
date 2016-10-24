@@ -413,6 +413,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           }) // end of q
       }
             var makeString = function(filter_array, filter_keyword){
+      //End: angular-google-maps is loaded properly only then proces code inside then
+      var makeString = function(filter_array, filter_keyword){
+            var makeString = function(filter_array, filter_keyword){
                 var my_string = filter_keyword;
                 var length = filter_array.length;
                 var count = 0;
