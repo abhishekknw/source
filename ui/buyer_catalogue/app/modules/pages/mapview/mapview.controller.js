@@ -139,7 +139,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               console.log(response);
                 $scope.business_name = response.business_name;
                 $scope.center_data = response.data;
-                console.log($scope.center_data);
+                console.log($scope.center_data[0].center);
                 // $scope.centers1 = response.centers;
                 $scope.current_center = response.data[0];
 
@@ -432,4 +432,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             }
         };
 });
+//Start: Function added to show all suppliers on gridView
+  $scope.getsuppliers = function(space,supplier){
+    return supplier.suppliers[space];
+  }
+//End: Function added to show all suppliers on gridView
 });
