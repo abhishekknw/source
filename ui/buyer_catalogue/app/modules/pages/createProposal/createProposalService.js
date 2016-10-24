@@ -31,7 +31,7 @@
 
 
   	createProposalService.saveInitialProposal = function(account_id, data){
-  		var url = url_base + account_id + '/createInitialProposal/';
+  		var url = url_base + account_id + '/create-initial-proposal/';
   		return machadaloHttp.post(url,data);
   	}
 
