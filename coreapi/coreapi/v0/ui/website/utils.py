@@ -735,8 +735,6 @@ def handle_offline_pricing_row(row, master_data):
                 # in other cases so saving on row by row basis cannot be done.
                 insert_master_data_response = insert_into_master_data(data, master_data, model)
                 if not insert_master_data_response.data['status']:
-                    import pdb
-                    pdb.set_trace()
                     return insert_master_data_response
                 master_data = insert_master_data_response.data['data']
 
