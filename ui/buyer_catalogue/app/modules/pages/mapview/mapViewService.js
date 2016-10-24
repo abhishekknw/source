@@ -9,7 +9,8 @@
     mapViewService.getSpaces = function(proposal_id){
         // done
         var url = url_base + "proposal/"+ proposal_id + "/get_spaces/";
-        return machadaloHttp.post(url, proposal_id);
+
+        return machadaloHttp.post(url, {});
     };
 
     mapViewService.getChangedCenterSpaces = function(proposal_id, data){

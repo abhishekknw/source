@@ -3,7 +3,7 @@ angular.module('catalogueApp')
 .controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http){
 	$scope.model = {}
 	$scope.model.centers = new Array();
-
+	$scope.society = 'RS';
 	$scope.addCenter = function(){
 		var new_center = {
 			center_name : '',
@@ -15,6 +15,7 @@ angular.module('catalogueApp')
 			area  : '',
 			city : '',
 			pincode : '',
+			supplier_codes :[],
 			space_mapping : {
 				society_allowed : false,
 				corporate_allowed : false,
@@ -67,23 +68,26 @@ angular.module('catalogueApp')
 		$scope.model.centers.splice(index,1);
 	}
 
-	$scope.checkSpace = function(center, space_name){
-		if(center.center.space_mapping[space_name + '_allowed']){
-			center.center.space_mapping[space_name + '_count'] = 0;
-			center.center.space_mapping[space_name + '_buffer_count'] = 0;
-			center[space_name + '_inventory'] = {
-				poster_allowed : false,
-				standee_allowed : false,
-				stall_allowed : false,
-				flier_allowed : false,
-				banner_allowed : false,
-			};
-			console.log(center[space_name + '_inventory']);
-		}else{
-			center.center.space_mapping[space_name + '_count'] = undefined;
-			center.center.space_mapping[space_name + '_buffer_count'] = undefined;
-			delete center[space_name + '_inventory']
-		}
+	$scope.checkSpace = function(space,center){
+		console.log("hello",space,center.center.supplier_codes);
+		center.center.supplier_codes.push(space);
+		console.log(	center.center.supplier_codes);
+		// if(center.center.space_mapping[space_name + '_allowed']){
+		// 	center.center.space_mapping[space_name + '_count'] = 0;
+		// 	center.center.space_mapping[space_name + '_buffer_count'] = 0;
+		// 	center[space_name + '_inventory'] = {
+		// 		poster_allowed : false,
+		// 		standee_allowed : false,
+		// 		stall_allowed : false,
+		// 		flier_allowed : false,
+		// 		banner_allowed : false,
+		// 	};
+		// 	console.log(center[space_name + '_inventory']);
+		// }else{
+		// 	center.center.space_mapping[space_name + '_count'] = undefined;
+		// 	center.center.space_mapping[space_name + '_buffer_count'] = undefined;
+		// 	delete center[space_name + '_inventory']
+		// }
 	}
 
 	$scope.submit = function(){
@@ -91,12 +95,13 @@ angular.module('catalogueApp')
 		// call backend to save only if all the latitudes are found
 			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)
 			.success(function(response, status){
+				console.log($scope.model.data);
 				$scope.errormsg = undefined;
 				console.log("Successfully Saved");
 				console.log("response is : ", response);
 				$scope.proposal_id = response;
 				createProposalService.setProposalId($scope.proposal_id);
-				$location.path('/' + $scope.proposal_id + '/mapview');
+				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){
 				console.log("Error");
