@@ -735,8 +735,6 @@ def handle_offline_pricing_row(row, master_data):
                 # in other cases so saving on row by row basis cannot be done.
                 insert_master_data_response = insert_into_master_data(data, master_data, model)
                 if not insert_master_data_response.data['status']:
-                    import pdb
-                    pdb.set_trace()
                     return insert_master_data_response
                 master_data = insert_master_data_response.data['data']
 
@@ -1307,7 +1305,7 @@ def suppliers_within_radius(data):
         center_id = data['center_id']
 
         result = []
-
+        # todo: think of better way of separating this logic. looks ugly right now
         if center_id:
             # the queries will change if center_id is provided because we want to process
             # for this center only.
@@ -1322,11 +1320,16 @@ def suppliers_within_radius(data):
             supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter(
                 center_id=center_id).select_related('center').values('center', 'supplier_type_code')
         else:
-            centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id)
             supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter(
                 proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
 
-        # if not center_id, then fetch all the centers. centers can be a list if you do not provide lat, long, radius.
+            # fetch the mapped centers. This centers were saved when CreateInitialproposal was hit.
+            center_id_list = [data['center'] for data in supplier_type_codes_list]
+
+            # query the center objects
+            centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id, id__in=center_id_list)
+
+        # if not center_id, then fetch all the centers. centers can be a list
         # we add an extra attribute for each center object we get. Thats called codes. codes contain a list
         # of supplier_type_codees  like RS, CP.
 
@@ -1349,5 +1352,131 @@ def suppliers_within_radius(data):
         return ui_utils.handle_response(function_name, data=result, success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error occurred', exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def child_proposals(data):
+    """
+    Args:
+        data: a dict containing proposal_id for which we have to fetch all children proposals data
+    Returns: all the proposalInfo data that is children of the given proposal_id
+
+    """
+    function_name = child_proposals.__name__
+    try:
+        # fetch all children of proposal_id and return.
+        proposal_id = data['proposal_id']
+        proposal_children = models.ProposalInfo.objects.filter(parent=proposal_id).order_by('-created_on')
+        serializer = serializers.ProposalInfoSerializer(proposal_children, many=True)
+        return ui_utils.handle_response(function_name, data=serializer.data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def construct_proposal_response(proposal_id):
+    """
+    Args:
+        proposal_id: proposal_id for which response structure is built
+    appends a list called codes in each center object.
+
+    Returns: constructs the data in required form to be sent back to API response
+    """
+    function_name = construct_proposal_response.__name__
+    try:
+
+        supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter(
+                proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
+
+        # fetch the mapped centers. This centers were saved when CreateInitialproposal was hit.
+        center_id_list = [data['center'] for data in supplier_type_codes_list]
+
+        # query the center objects
+        centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id, id__in=center_id_list)
+
+        serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
+        supplier_codes_dict = {center['id']: [] for center in serializer.data}
+        for data in supplier_type_codes_list:
+            center_id = data['center']
+            code = data['supplier_type_code']
+            supplier_codes_dict[center_id].append(code)
+
+        for center in serializer.data:
+            center['codes'] = supplier_codes_dict[center['id']]
+
+        return ui_utils.handle_response(function_name, data=serializer.data, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers):
+    """
+
+    Args:
+        supplier_type_code_list: ['RS', 'CP', 'GY']
+        shortlisted_suppliers:  a list of object id's
+
+    Returns: { RS: [], CP: [], GY: [] } a dict containing each type of suppliers in the list
+
+    """
+    function_name = add_shortlisted_suppliers.__name__
+    try:
+        # from the codes, fetch the right supplier model, supplier serializer, and put in the dict against that code
+        result = {}
+        for code in supplier_type_code_list:
+            supplier_model = ui_utils.get_model(code)
+            supplier_serializer = ui_utils.get_serializer(code)
+            suppliers = supplier_model.objects.filter(supplier_id__in=shortlisted_suppliers)
+            serializer = supplier_serializer(suppliers, many=True)
+            result[code] = serializer.data
+
+        # return the result
+        return ui_utils.handle_response(function_name, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def proposal_shortlisted_spaces(data):
+    """
+    Args:
+        data: a dict containing proposal_id for which we have to fetch all shortlisted spaces
+
+    Returns: all shortlisted spaces
+    """
+    function_name = proposal_shortlisted_spaces.__name__
+    try:
+        proposal_id = data['proposal_id']
+
+        # fetch all shortlisted suppliers object id's for this proposal
+        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).select_related(
+            'content_object').values_list('object_id')
+
+        # construction of proposal response is isolated
+        response = construct_proposal_response(proposal_id)
+        if not response.data['status']:
+            return response
+
+        # result
+        result = []
+
+        # all connected centers data
+        centers = response.data['data']
+
+        # add extra information in each center object
+        for center in centers:
+            # empty dict to store intermidiate result
+            center_result = {}
+
+            response = add_shortlisted_suppliers(center['codes'], shortlisted_suppliers)
+            if not response.data['status']:
+                return response
+
+            center_result['suppliers'] = response.data['data']
+            center_result['center'] = center
+
+            result.append(center_result)
+
+        return ui_utils.handle_response(function_name, data=result, success=True)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
