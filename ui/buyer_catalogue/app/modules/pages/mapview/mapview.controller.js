@@ -412,7 +412,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             gridView_Summary();
           }) // end of q
       }
-            var makeString = function(filter_array, filter_keyword){
+
       //End: angular-google-maps is loaded properly only then proces code inside then
       var makeString = function(filter_array, filter_keyword){
             var makeString = function(filter_array, filter_keyword){
@@ -430,5 +430,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                     my_string = filter_keyword;
                 return my_string;
             }
-        });
+        };
+});
 });
