@@ -2291,7 +2291,6 @@ class CreateFinalProposal(APIView):
             request: request data
             proposal_id: proposal_id to be updated
 
-
             author: nikhil
 
         Returns: success if data is saved successfully.
@@ -2327,28 +2326,26 @@ class CreateFinalProposal(APIView):
 
 class ProposalViewSet(viewsets.ViewSet):
     """
-     A viewset handling various operations related to ProposalModel.
+     A ViewSet handling various operations related to ProposalModel.
      This viewset was made instead of creating separate ApiView's because all the api's in this viewset
-     are related to Proposal domain.
+     are related to Proposal domain. so keeping them at one place makes sense.
     """
     parser_classes = (JSONParser, FormParser)
 
-    @detail_route(methods=['GET'])
-    def get_proposal(self, request, pk=None):
+    def retrieve(self, request, pk=None):
+        """
+        Fetches one Proposal object
+        Args:
+            request: request parameter
+            pk: primary key of proposal
+
+        Returns: one proposal object
+
+        """
         class_name = self.__class__.__name__
         try:
             proposal = ProposalInfo.objects.get(proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    @detail_route(methods=['GET'])
-    def get_centers(self, request, pk=None):
-        class_name = self.__class__.__name__
-        try:
-            centers = ProposalCenterMapping.objects.filter(proposal_id=pk)
-            serializer = ProposalCenterMappingSerializer(centers, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -2405,10 +2402,19 @@ class ProposalViewSet(viewsets.ViewSet):
 
     @detail_route(methods=['GET'])
     def child_proposals(self, request, pk=None):
+        """
+        Fetches all proposals who have parent = pk
+        Args:
+            request: request param
+            pk: parent pk value. if pk == '0',this means we need to fetch all proposals whose parent is NULL.
+
+        Returns:
+
+        """
         class_name = self.__class__.__name__
         try:
             data = {
-                'proposal_id': pk
+                'parent': pk if pk != '0' else None
             }
             response = website_utils.child_proposals(data)
             if not response:
@@ -2419,6 +2425,26 @@ class ProposalViewSet(viewsets.ViewSet):
 
     @detail_route(methods=['GET'])
     def shortlisted_suppliers(self, request, pk=None):
+        """
+        Fetches all shortlisted suppliers for this proposal.
+        Response looks like :
+        {
+           'status': true,
+           'data' : [
+                {
+                   suppliers: { RS: [], CP: [] } ,
+                   center: { ...   codes: [] }
+                }
+           ]
+        }
+
+        Args:
+            request: request
+            pk: pk
+
+        Returns:
+
+        """
         class_name = self.__class__.__name__
         try:
             data = {
