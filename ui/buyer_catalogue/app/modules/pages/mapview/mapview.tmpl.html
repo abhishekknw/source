@@ -42,9 +42,9 @@
       <hr>
       <form id = "filterPanelForm">
        <div class = "filterPanel">
-        <input type = "checkbox"  ng-model="current_center.center.space_mappings.society_allowed"  ng-click="spaceSociety()"/>
+        <input type = "checkbox"  ng-model="society_checked" ng-click="spaceSupplier(society_checked)"/>
           <span class = "filterPanelHeader" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
-         <div ng-if = "current_center.center.code='RS'" uib-collapse="isCollapsed">
+         <div ng-if = "society_checked" uib-collapse="isCollapsed">
           <span class = "filterPanelHeader ">Inventory Type</span>
           <div class = "nbCheckbox two-col" ng-repeat="inventory in space_inventory_type">
             <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
@@ -117,7 +117,7 @@
   <!-- Start: grid view -->
   <div class="col-md-4 table-responsive" ng-if="show_societies" style="width: 800px; height: 550px">
       <h2>Grid View</h2>
-      <table class="table table-bordered">
+      <table class="table table-bordered" ng-repeat = "code in supplier_codes">
         <thead>
           <tr>
             <th class = "col-md-1">#</th>
@@ -136,12 +136,10 @@
             <th class = "col-md-4">Shortlisted/Buffer</th>
             <th class = "col-md-4">Action</th>
           </tr>
-          <tr>
-          </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
-        <tbody ng-repeat = "center in center_data">
-          <tr ng-repeat = "supplier in getsuppliers('RS',center)">
+        <tbody ng-repeat = "center in center_data" >
+        <tr ng-repeat = "supplier in center.suppliers[code]">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
             <td>{{supplier.name}}</td>
@@ -168,9 +166,10 @@
             <td>
               <button class="btn btn-danger active" ng-if="supplier.shortlisted" ng-click="supplier.shortlisted = !supplier.shortlisted">Remove</button>
             </td>
-          <!-- </tr> -->
-        </tbody>
+        </tr>
+      </tbody>
       </table>
+
       <!-- <div  ng-repeat="society in current_center.societies"></div> -->
         <button class="btn btn-danger active" ng-click="submitProposal()">Submit Final Proposal</button>
         <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" >Add Societies</button>

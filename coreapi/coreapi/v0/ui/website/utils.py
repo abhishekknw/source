@@ -1314,6 +1314,7 @@ def suppliers_within_radius(data):
 
             centers = models.ProposalCenterMapping.objects.filter(id=center_id)
             serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
+
             serializer.data[0]['radius'] = data['radius']
             serializer.data[0]['latitude'] = data['latitude']
             serializer.data[0]['longitude'] = data['longitude']
@@ -1329,11 +1330,13 @@ def suppliers_within_radius(data):
             # query the center objects
             centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id, id__in=center_id_list)
 
+            serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
+
+
         # if not center_id, then fetch all the centers. centers can be a list
         # we add an extra attribute for each center object we get. Thats called codes. codes contain a list
         # of supplier_type_codees  like RS, CP.
 
-        serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
         supplier_codes_dict = {center['id']: [] for center in serializer.data}
         for data in supplier_type_codes_list:
             center_id = data['center']
