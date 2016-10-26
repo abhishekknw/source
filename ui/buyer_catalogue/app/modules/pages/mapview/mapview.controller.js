@@ -34,7 +34,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   $scope.show_societies = false;
   $scope.society_markers = []; // markers on the map
   $scope.circle = {};
-  $scope.impressions = {};
+
 // after angular-google-maps is loaded properly only then proces code inside then
   uiGmapGoogleMapApi.then(function(maps) {
       function assignCenterMarkerToMap(center){
@@ -62,7 +62,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           // assigns spaces(society, corporate) markers on the map
           // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
           var markers = [];
-          console.log(spaces);
+          //console.log("printing spaces", spaces);
           angular.forEach(spaces, function(suppliers) {
             for (var i=0; i <suppliers.length; i++) {
                 markers.push({
@@ -193,14 +193,15 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           ];
 // This service gets all the spaces according to center specification like society_allowed
           $scope.proposal_id_temp = $stateParams.proposal_id;
-          console.log($scope.proposal_id_temp);
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
-              console.log("initial_response",response);
+
                 $scope.business_name = response.business_name;
                 $scope.center_data = response.data;
+                console.log("printing center_data", $scope.center_data);
                 $scope.current_center = response.data[0];
-                $scope.selectSuppliers($scope.current_center.center.codes);
+                console.log("printing current_center", $scope.current_center);
+
                 $scope.current_center_index = 0;
                 // gridView_Summary();
                 for(var i=0;i<$scope.center_data.length; i++)
@@ -241,7 +242,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                   $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                 })
             .error(function(response, status){
-              console.log(response);
                 $scope.get_spaces_error = response.message;
                 console.log("Error response : ",response);
             });

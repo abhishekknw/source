@@ -44,6 +44,7 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
 
 from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys,\
                       inventorylist, society_keys, flat_type_dict, index_of_center_id, offline_pricing_data
+from constants import *
 
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
@@ -1069,7 +1070,7 @@ class SpacesOnCenterAPIView(APIView):
         return Response(response, status=200)
 
 
-class GetFilteredSuppliersAPIView(APIView):
+class FilteredSuppliersAPIView(APIView):
     """
     This API gives suppliers based on different filters from mapView and gridView Page
     Currently implemented filters are locality and location (Standard, Medium High etc.)
@@ -1078,6 +1079,27 @@ class GetFilteredSuppliersAPIView(APIView):
 
     def get(self, request, format=None):
         '''
+        Response is in form
+        {
+            "status": true,
+            "data": {
+                "suppliers": {
+                    "RS": []
+                },
+                "suppliers_meta": {
+                    "RS": {
+                        "count": 0,
+                        "inventory_count": {
+                            "posters": null,
+                            "stalls": null,
+                            "standees": null,
+                            "fliers": null
+                        }
+                    }
+                }
+            }
+        }
+
         lat -- latitude
         lng -- longitude
         r -- radius
@@ -1087,8 +1109,8 @@ class GetFilteredSuppliersAPIView(APIView):
         flc -- flat count
         inv -- inventory params example PO, ST, SL
         supplier_type_code -- RS, CP etc
-
         '''
+        class_name = self.__class__.__name__
         try:
 
             response = {}
@@ -1163,30 +1185,31 @@ class GetFilteredSuppliersAPIView(APIView):
 
             # get all suppliers  with all columns for the filter we constructed.
             suppliers = ui_utils.get_model(supplier_code).objects.filter(filter_query)
-            # suppliers = supplier_code_filter_params[supplier_code]['MODEL'].objects.filter(filter_query)
 
             serializer = ui_utils.get_serializer(supplier_code)(suppliers, many=True)
-            #serializer = supplier_code_filter_params[supplier_code]['SERIALIZER'](suppliers, many=True)
+
             suppliers = serializer.data
             supplier_ids = []
             suppliers_count = 0
             suppliers_data = []
 
+
             # iterate over all suppliers to  generate the final response
             for supplier in suppliers:
+
                 supplier['supplier_latitude'] = supplier['society_latitude'] if supplier['society_latitude'] else supplier['latitude']
                 supplier['supplier_longitude'] = supplier['society_longitude'] if supplier['society_longitude'] else supplier['longitude']
+
                 if website_utils.space_on_circle(latitude, longitude, radius, supplier['supplier_latitude'],supplier['supplier_longitude']):
                     supplier_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
                                                                                  supplier['supplier_id'])
                     if supplier_inventory_obj:
 
-                    # supplier_inventory_obj = InventorySummary.objects.get(supplier_id=supplier['supplier_id'])
                         supplier['shortlisted'] = True
                         supplier['buffer_status'] = False
-                        # obj = InventorySummaryAPIView()
                         adinventory_type_dict = ui_utils.adinventory_func()
                         duration_type_dict = ui_utils.duration_type_func()
+
                         if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
                             supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
                             supplier['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4',
@@ -1221,12 +1244,25 @@ class GetFilteredSuppliersAPIView(APIView):
                                                                                                         stalls=Sum('total_stall_count'),
                                                                                                         fliers=Sum('flier_frequency'))
 
-            response['suppliers'] = suppliers_data
-            response['supplier_inventory_count'] = suppliers_inventory_count
-            response['supplier_count'] = suppliers_count
-            response['supplier_type_code'] = supplier_code
-            return Response(response, status=200)
+            result = {}
 
+            result['suppliers'] = {}
+            result['suppliers_meta'] = {}
+
+            result['suppliers']['RS'] = suppliers_data
+
+            result['suppliers_meta']['RS'] = {}
+
+            result['suppliers_meta']['RS']['count'] = suppliers_count
+            result['suppliers_meta']['RS']['inventory_count'] = suppliers_inventory_count
+
+            return ui_utils.handle_response(class_name, data=result, success=True)
+
+            # response['suppliers'] = suppliers_data
+            # response['supplier_inventory_count'] = suppliers_inventory_count
+            # response['supplier_count'] = suppliers_count
+            # response['supplier_type_code'] = supplier_code
+            # return Response(response, status=200)
         except Exception as e:
             return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1945,6 +1981,17 @@ class SaveSocietyData(APIView):
 
 class ExportData(APIView):
     """
+     The request is in form:
+      [
+          {
+               center : { id : 1 , center_name: c1, ...   } ,
+               suppliers: [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
+               suppliers_meta: {
+                                  'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                  'CP': { 'inventory_type_selected':  ['ST']
+                              }
+           }
+      ]
      Exports supplier data on grid view page.
      The API is divided into two phases :
      1. extension of Headers and DATA keys. This is because one or more inventory type selected map to more HEADER
@@ -1955,14 +2002,14 @@ class ExportData(APIView):
     def post(self, request, proposal_id=None, format=None):
         try:
             wb = Workbook()
-            from constants import society_keys, proposal_header_keys
+
 
             # ws = wb.active
             ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
 
             # iterating through centers in request.data array
             for center in request.data:
-                inventory_array = center['center']['society_inventory_type_selected']
+                inventory_array = center['inventory_type_selected']
 
                 # get the unique codes by combining all the codes
                 response = website_utils.get_unique_inventory_codes(inventory_array)
@@ -2003,7 +2050,7 @@ class ExportData(APIView):
 
             for center in request.data:
                 # get the inventory_array containg all the codes selected for this center
-                inventory_array = center['center']['society_inventory_type_selected']
+                inventory_array = center['inventory_type_selected']
 
                 # get the unique codes by combining all the codes
                 response = website_utils.get_unique_inventory_codes(inventory_array)
@@ -2012,7 +2059,7 @@ class ExportData(APIView):
                 unique_inventory_codes = response.data['data']
 
                 # for all societies in societies array
-                for index, item in enumerate(center['societies']):
+                for index, item in enumerate(center['suppliers']):
 
                     # iterate over center_keys and make a partial row with data from center object
                     center_list = []
@@ -2020,10 +2067,10 @@ class ExportData(APIView):
                         center_list.append(center['center'][key])
 
                     # add space mapping id
-                    center_list.append(center['center']['space_mappings']['id'])
+                    # center_list.append(center['center']['space_mappings']['id'])
 
                     # add inventory type id
-                    center_list.append(center['societies_inventory']['id'])
+                    # center_list.append(center['societies_inventory']['id'])
 
                     # calculates inventory price per flat and  store the result in dict itself
                     local_list = []
@@ -2291,7 +2338,6 @@ class CreateFinalProposal(APIView):
             request: request data
             proposal_id: proposal_id to be updated
 
-
             author: nikhil
 
         Returns: success if data is saved successfully.
@@ -2327,28 +2373,26 @@ class CreateFinalProposal(APIView):
 
 class ProposalViewSet(viewsets.ViewSet):
     """
-     A viewset handling various operations related to ProposalModel.
+     A ViewSet handling various operations related to ProposalModel.
      This viewset was made instead of creating separate ApiView's because all the api's in this viewset
-     are related to Proposal domain.
+     are related to Proposal domain. so keeping them at one place makes sense.
     """
     parser_classes = (JSONParser, FormParser)
 
-    @detail_route(methods=['GET'])
-    def get_proposal(self, request, pk=None):
+    def retrieve(self, request, pk=None):
+        """
+        Fetches one Proposal object
+        Args:
+            request: request parameter
+            pk: primary key of proposal
+
+        Returns: one proposal object
+
+        """
         class_name = self.__class__.__name__
         try:
             proposal = ProposalInfo.objects.get(proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    @detail_route(methods=['GET'])
-    def get_centers(self, request, pk=None):
-        class_name = self.__class__.__name__
-        try:
-            centers = ProposalCenterMapping.objects.filter(proposal_id=pk)
-            serializer = ProposalCenterMappingSerializer(centers, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -2405,10 +2449,19 @@ class ProposalViewSet(viewsets.ViewSet):
 
     @detail_route(methods=['GET'])
     def child_proposals(self, request, pk=None):
+        """
+        Fetches all proposals who have parent = pk
+        Args:
+            request: request param
+            pk: parent pk value. if pk == '0',this means we need to fetch all proposals whose parent is NULL.
+
+        Returns:
+
+        """
         class_name = self.__class__.__name__
         try:
             data = {
-                'proposal_id': pk
+                'parent': pk if pk != '0' else None
             }
             response = website_utils.child_proposals(data)
             if not response:
@@ -2419,6 +2472,26 @@ class ProposalViewSet(viewsets.ViewSet):
 
     @detail_route(methods=['GET'])
     def shortlisted_suppliers(self, request, pk=None):
+        """
+        Fetches all shortlisted suppliers for this proposal.
+        Response looks like :
+        {
+           'status': true,
+           'data' : [
+                {
+                   suppliers: { RS: [], CP: [] } ,
+                   center: { ...   codes: [] }
+                }
+           ]
+        }
+
+        Args:
+            request: request
+            pk: pk
+
+        Returns:
+
+        """
         class_name = self.__class__.__name__
         try:
             data = {

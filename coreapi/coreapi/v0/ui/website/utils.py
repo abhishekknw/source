@@ -1028,12 +1028,13 @@ def save_shortlisted_suppliers(proposal_data):
             # make the data to be saved in ShortListedSpaces
             data = {
                 'content_type': content_type,
-                'status': supplier['status'],
                 'object_id': supplier['supplier_id'],
                 'center': center,
                 'proposal': proposal,
             }
             shortlisted_space, is_created = models.ShortlistedSpaces.objects.get_or_create(**data) #todo: to be changed if better solution found
+            shortlisted_space.status = supplier['status']
+            shortlisted_space.save()
             if is_created:
                 count += 1
 
@@ -1362,15 +1363,15 @@ def suppliers_within_radius(data):
 def child_proposals(data):
     """
     Args:
-        data: a dict containing proposal_id for which we have to fetch all children proposals data
+        data: a dict containing parent_id for which we have to fetch all children proposals data
     Returns: all the proposalInfo data that is children of the given proposal_id
 
     """
     function_name = child_proposals.__name__
     try:
         # fetch all children of proposal_id and return.
-        proposal_id = data['proposal_id']
-        proposal_children = models.ProposalInfo.objects.filter(parent=proposal_id).order_by('-created_on')
+        parent = data['parent']
+        proposal_children = models.ProposalInfo.objects.filter(parent=parent).order_by('-created_on')
         serializer = serializers.ProposalInfoSerializer(proposal_children, many=True)
         return ui_utils.handle_response(function_name, data=serializer.data, success=True)
     except Exception as e:
@@ -1468,9 +1469,9 @@ def proposal_shortlisted_spaces(data):
 
         # add extra information in each center object
         for center in centers:
-            # empty dict to store intermidiate result
+            # empty dict to store intermediate result
             center_result = {}
-
+            # add shortlisted suppliers for codes available for this center
             response = add_shortlisted_suppliers(center['codes'], shortlisted_suppliers)
             if not response.data['status']:
                 return response
