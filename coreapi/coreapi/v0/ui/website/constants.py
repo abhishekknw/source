@@ -20,25 +20,37 @@ inventorylist = {
     'PO': {
         'HEADER': ['Poster Count', 'Poster Price', 'Poster Duration', 'Poster Price Factor', 'Poster price per flat', 'Poster Business Price'],
         'DATA': ['total_poster_count', 'poster_price', 'poster_duration', 'poster_price_factor',
-                 'poster_price_per_flat']
+                 'poster_price_per_flat', 'poster_business_price']
     },
     'ST': {
         'HEADER': ['Standee Count', 'Standee Price', 'Standee Duration', 'Standee Price factor',
                    'Standee price per flat', 'Standee Business Price'],
         'DATA': ['total_standee_count', 'standee_price', 'standee_duration', 'standee_price_factor',
-                 'standee_price_per_flat']
+                 'standee_price_per_flat', 'standee_business_price']
     },
     'FL': {
         'HEADER': ['Flier count', 'Flier Price', 'Flier Duration', 'Flier Price Factor', 'Flier Business Price'],
-        'DATA': ['flier_count', 'flier_price', 'flier_duration', 'flier_price_factor']
+        'DATA': ['flier_count', 'flier_price', 'flier_duration', 'flier_price_factor', 'flier_business_price']
     },
     'SL': {
         'HEADER': ['Stall Count', 'Stall Price', 'Stall Duration', 'Stall Price Factor', 'Stall Business Price'],
-        'DATA': ['stall_count', 'stall_price', 'stall_duration', 'stall_price_factor']
+        'DATA': ['stall_count', 'stall_price', 'stall_duration', 'stall_price_factor', 'stall_business_price']
     },
     'CD': {
         'HEADER': ['Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor', 'Car Business Price' ],
-        'DATA': ['car_display', 'car_display_price', 'car_display_duration', 'car_display_price_factor']
+        'DATA': ['car_display', 'car_display_price', 'car_display_duration', 'car_display_price_factor', 'car_business_price']
+    },
+    'RS': {
+        'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA','SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT'],
+        'DATA': ['supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ]
+    },
+    'CP': {
+        'HEADER': ['SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA'],
+        'DATA': ['supplier_id', 'name', 'subarea']
+    },
+    'CENTER': {
+        'HEADER': ['CENTER ID', 'CENTER NAME', 'PROPOSAL'],
+        'DATA': ['id', 'center_name', 'proposal']
     }
 }
 
@@ -46,10 +58,12 @@ sample_data = [
     'vvhbhb', 'bhbhbh'
 ]
 
+# society keys
 society_keys = ['supplier_id', 'society_name', 'society_subarea', 'society_type_quality', \
                 'tower_count', 'flat_count',
                 ]
 
+# keys for the center
 center_keys = ['center_name', 'proposal', 'id']
 
 export_keys = ['center', 'societies', 'societies_inventory', 'societies_inventory_count']
@@ -253,4 +267,44 @@ society_common_keys = {
     'society_longitude': 'longitude',
     'society_type_quantity': 'locality_rating',
     'society_type_quality': 'quality_rating',
+}
+
+
+# export master data. each key represents a list of list. each list in that list forms a row in the sheet
+master_data = {
+    'RS': {
+           'sheet_name': 'Shortlisted Spaces Details',
+           'headers': [],
+           'data': []
+           },
+    'CP': {
+           'sheet_name': 'Corporate Park Details',
+           'headers': [],
+           'data': []
+    },
+}
+
+# chose sheet names from just supplier_type_code
+sheet_names = {
+    'RS': 'Shortlisted Spaces Details',
+    'CP': 'Corporate Park Details',
+    'GY': 'Gym details'
+}
+
+# supplier keys which you want to be included in the sheet in specific order. do not change this order.
+# header keys must be in sync with these keys. The following keys will be queried  in db of respective
+# supplier models so keys names must match with db column names.
+
+export_supplier_database_keys = {
+    'RS': [ 'id', 'proposal', 'center_name', 'supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ],
+    'CP': [ 'id', 'proposal', 'center_name',  'supplier_id', 'name', 'subarea']
+}
+
+# these HEADER keys are specific to the supplier. the sequence and count of HEADER keys must match with sequence
+# and count of database keys.
+export_supplier_header_keys = {
+
+    'RS': ['CENTER_ID', 'CENTER_NAME', 'PROPOSAL', 'SUPPLIER_ID', 'SOCIETY NAME', 'SOCIETY_SUBAREA',
+           'SOCIETY_TYPE_QUALITY', 'TOWER_COUNT', 'FLAT_COUNT'],
+    'CP': ['CENTER_ID', 'CENTER_NAME', 'PROPOSAL', 'SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA']
 }
