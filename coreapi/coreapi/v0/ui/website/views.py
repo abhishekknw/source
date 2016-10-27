@@ -53,6 +53,7 @@ import utils as website_utils
 import v0.ui.utils as ui_utils
 import v0.models as models
 import serializers as website_serializers
+import constants as website_constants
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -1233,11 +1234,15 @@ class FilteredSuppliersAPIView(APIView):
                                                                    'flier_door_to_door', 'unit_daily')
 
                         # ADDNEW -->
-
                     supplier_ids.append(supplier['supplier_id'])
                     suppliers_data.append(supplier)
                     suppliers_count += 1
 
+                for society_key, actual_key in website_constants.society_common_keys.iteritems():
+                    if society_key in supplier.keys():
+                        value = supplier[society_key]
+                        del supplier[society_key]
+                        supplier[actual_key] = value         
             suppliers_inventory_count = InventorySummary.objects.filter_objects({'supplier_type_code': supplier_code},
                                                                                 supplier_ids).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
