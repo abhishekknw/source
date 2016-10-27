@@ -42,7 +42,7 @@ urlpatterns = [
     url(r'^save-society-data/$', views.SaveSocietyData.as_view()),
     url(r'^save-contact-details/$', views.SaveContactDetails.as_view()),
 
-    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/export-spaces-data/$', views.ExportData.as_view()),
+    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/export-spaces-data/$', views.GenericExportData.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/import-society-data/$', views.ImportSocietyData.as_view()),
     url(r'^import-proposal-cost-data/$', views.ImportProposalCostData.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/create-final-proposal/$', views.CreateFinalProposal.as_view(), name='create-final-proposal'),

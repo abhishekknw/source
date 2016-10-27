@@ -1982,16 +1982,16 @@ class SaveSocietyData(APIView):
 class ExportData(APIView):
     """
      The request is in form:
-      [
+     [
           {
                center : { id : 1 , center_name: c1, ...   } ,
-               suppliers: [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
+               suppliers: [  'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
                suppliers_meta: {
                                   'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
                                   'CP': { 'inventory_type_selected':  ['ST']
-                              }
-           }
-      ]
+               }
+          }
+     ]
      Exports supplier data on grid view page.
      The API is divided into two phases :
      1. extension of Headers and DATA keys. This is because one or more inventory type selected map to more HEADER
@@ -2003,12 +2003,14 @@ class ExportData(APIView):
         try:
             wb = Workbook()
 
-
             # ws = wb.active
             ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
 
             # iterating through centers in request.data array
             for center in request.data:
+
+                supplier_codes = center['supplier_codes']
+
                 inventory_array = center['inventory_type_selected']
 
                 # get the unique codes by combining all the codes
@@ -2099,6 +2101,78 @@ class ExportData(APIView):
             return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class GenericExportData(APIView):
+    """
+        The request is in form:
+        [
+             {
+                  center : { id : 1 , center_name: c1, ...   } ,
+                  suppliers: [  'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
+                  suppliers_meta: {
+                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                     'CP': { 'inventory_type_selected':  ['ST']
+                  }
+             }
+        ]
+        Exports supplier data on grid view page.
+        The API is divided into two phases :
+        1. extension of Headers and DATA keys. This is because one or more inventory type selected map to more HEADER
+        and hence more DATA keys
+        2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
+    """
+    def post(self, request, proposal_id=None):
+        class_name = self.__class__.__name__
+        try:
+            workbook = Workbook()
+
+            # ws = wb.active
+            # ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
+            # iterating through centers in request.data array
+
+            data = request.data
+
+            # get the supplier type codes available in the request
+            response = website_utils.unique_supplier_type_codes(data)
+            if not response.data['status']:
+                return response
+            unique_supplier_codes = response.data['data']
+
+            result = {}
+
+            # initialize the result = {} dict which will be used in inserting into sheet
+            response = website_utils.initialize_export_final_response(unique_supplier_codes, result)
+            if not response.data['status']:
+                return response
+            result = response.data['data']
+
+            # collect all the extra header and database keys for all the supplier type codes and all inv codes in them
+            response = website_utils.extra_header_database_keys(unique_supplier_codes, data, result)
+            if not response.data['status']:
+                return response
+            result = response.data['data']
+
+            # make the call to generate data in the result
+            response = website_utils.make_export_final_response(result, data)
+            if not response.data['status']:
+                return response
+            result = response.data['data']
+
+            # print result
+            response = website_utils.insert_supplier_sheet(workbook, result)
+            if not response.data['status']:
+                return response
+
+            file_name = 'machadalo_{0}.xlsx'.format(str(datetime.datetime.now()))
+
+            workbook = response.data['data']
+            workbook.save(file_name)
+
+            return ui_utils.handle_response(class_name, data=result, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
 class ImportSocietyData(APIView):
     """
     This API basically takes an excel sheet , process the data and saves it in the database.
@@ -2110,7 +2184,6 @@ class ImportSocietyData(APIView):
             proposal_id: proposal_id
 
         Returns: Saves the  data in db
-
         """
         try:
             class_name = self.__class__.__name__
@@ -2330,6 +2403,7 @@ class CreateFinalProposal(APIView):
 
     structure of request.data is  a list. item of the list is the one center information. inside center
     information we have all the suppliers shortlisted, all the Filters and all.
+
     """
 
     def post(self, request, proposal_id):
@@ -2337,7 +2411,6 @@ class CreateFinalProposal(APIView):
         Args:
             request: request data
             proposal_id: proposal_id to be updated
-
             author: nikhil
 
         Returns: success if data is saved successfully.

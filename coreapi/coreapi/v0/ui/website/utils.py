@@ -100,6 +100,32 @@ def get_union_inventory_price_per_flat(data, unique_inventory_codes, index):
                         status=status.HTTP_400_BAD_REQUEST)
 
 
+def insert_supplier_sheet(workbook, result):
+    """
+    Args:
+        workbook: a worksheet object
+        result
+    Returns: a worksheet in which the right rows are inserted and returned.
+    """
+    function_name = insert_supplier_sheet.__name__
+    try:
+        for code, supplier_data in result.iteritems():
+
+            # create a new sheet for each supplier type
+            ws = workbook.create_sheet(index=0, title=supplier_data['sheet_name'])
+
+            # set the heading
+            ws.append(supplier_data['header_keys'])
+
+            for supplier_object in supplier_data['objects']:
+                ws.append([ supplier_object[key] for key in supplier_data['data_keys']])
+
+        # return a workbook object
+        return ui_utils.handle_response(function_name, data=workbook, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
 def get_related_dict():
     ''' This dictionary is simply a mapping from get params to their actual values '''
     # quality_dict if for both society_quality and its location_quality and similarly for other spaces
@@ -1183,7 +1209,7 @@ def get_suppliers(query, supplier_type_code):
         # get the suppliers data within that radius
         supplier_model = ui_utils.get_model(supplier_type_code)
         supplier_objects = supplier_model.objects.filter(query)
-        # need to set shorlisted=True for every supplier
+        # need to set shortlisted=True for every supplier
         serializer = ui_utils.get_serializer(supplier_type_code)(supplier_objects, many=True)
         for supplier in serializer.data:
             # replace all society specific keys with common supplier keys
@@ -1284,9 +1310,17 @@ def handle_single_center(center, result):
 
 def merge_two_dicts(x, y):
     '''Given two dicts, merge them into a new dict as a shallow copy.'''
-    z = x.copy()
-    z.update(y)
-    return z
+    function = merge_two_dicts.__name__
+    try:
+        # update x with keys which are not in x.
+        x = x.copy()
+        x_keys = x.keys()
+        for key, value in y.iteritems():
+            if key not in x_keys:
+                x[key] = value
+        return ui_utils.handle_response(function, data=x, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def suppliers_within_radius(data):
@@ -1481,3 +1515,176 @@ def proposal_shortlisted_spaces(data):
         return ui_utils.handle_response(function_name, data=result, success=True)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def unique_supplier_type_codes(data):
+    """
+    because the information that which  supplier types are shortlisted is not in the request,we need to derive it
+    from data itself.
+    Args:
+        data: data
+    Returns: unique supplier codes available
+    """
+    function_name = unique_supplier_type_codes.__name__
+    try:
+        supplier_type_codes = []
+        for center in data:
+            codes = center['suppliers'].keys()
+            supplier_type_codes.extend(codes)
+        return ui_utils.handle_response(function_name, data=list(set(supplier_type_codes)), success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def extra_header_database_keys(supplier_type_codes, data, result):
+    """
+    because depending upon inventory types selected for each supplier, the headers can be extended and hence the database
+    keys shall be extended hence this function returns a dict for each of the suppliers the extra headers and database keys
+    Args:
+        data: data
+    Returns: a dict containing header and database keys
+    """
+    function = extra_header_database_keys.__name__
+    try:
+        for code in supplier_type_codes:
+            for center in data:
+                inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
+
+                response = get_unique_inventory_codes(inventory_codes)
+                if not response.data['status']:
+                    return response
+                unique_inv_codes = response.data['data']
+
+                # extend the header keys with header for supplier type codes
+                response = get_union_keys_inventory_code('HEADER', unique_inv_codes)
+                if not response.data['status']:
+                    return response
+                result[code]['header_keys'].extend(response.data['data'])
+
+                # extend the data keys with header for supplier type codes
+                response = get_union_keys_inventory_code('DATA', unique_inv_codes)
+                if not response.data['status']:
+                    return response
+                result[code]['data_keys'].extend(response.data['data'])
+
+            # remove duplicates for this supplier code. we hell can't use sets because that thing will destroy the order
+            # of the keys which is important and the order must match
+            result[code]['header_keys'] = remove_duplicates_preserver_order(result[code]['header_keys'])
+            result[code]['data_keys'] = remove_duplicates_preserver_order(result[code]['data_keys'])
+
+            # set the counts for validation.
+            result[code]['header_keys_count'] = len(result[code]['header_keys'])
+            result[code]['data_keys_count'] = len(result[code]['data_keys'])
+
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def initialize_export_final_response(supplier_type_codes, result):
+    """
+    because there can be multiple type of supplier_type_codes, this function prepares a dict and sets it to
+    keys and values required  for further processing for example with sheet names etc.
+    Args:
+        supplier_type_codes: ['RS', 'CP']
+
+    Returns: a initialized dict
+
+    """
+    function = initialize_export_final_response.__name__
+    try:
+        for code in supplier_type_codes:
+
+            result[code] = {}
+            sheet_name = website_constants.sheet_names[code]
+            result[code]['sheet_name'] = sheet_name
+
+            # set fixed headers for center
+            response = get_union_keys_inventory_code('HEADER', ['CENTER'])
+            if not response.data['status']:
+                return response
+            result[code]['header_keys'] = response.data['data']
+
+            # set fixed data keys for center
+            response = get_union_keys_inventory_code('DATA', ['CENTER'])
+            if not response.data['status']:
+                return response
+            result[code]['data_keys'] = response.data['data']
+
+            # set fixed header keys for supplier
+            response = get_union_keys_inventory_code('HEADER', [code])
+            if not response.data['status']:
+                return response
+            result[code]['header_keys'].extend(response.data['data'])
+
+            # set fixed data keys for supplier
+            response = get_union_keys_inventory_code('DATA', [code])
+            if not response.data['status']:
+                return response
+            result[code]['data_keys'].extend(response.data['data'])
+
+            result[code]['objects'] = []
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def construct_single_supplier_row(object, keys):
+    """
+    Args:
+        object: The  object which is a dict
+        keys a list of keys
+
+    Returns: a dict containing final data
+
+    """
+    function = construct_single_supplier_row.__name__
+    try:
+        result = {key: object.get(key) for key in keys}
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def make_export_final_response(result, data):
+    """
+    This function populates the result with objects per supplier_type_codes.
+    Args:
+        result: result dict where objects will be stored
+        data: the entire request.data
+    Returns:
+
+    """
+    function = make_export_final_response.__name__
+    try:
+        for center in data:
+
+            response = construct_single_supplier_row(center['center'], website_constants.center_keys)
+            if not response.data['status']:
+                return response
+
+            # obtain the dict containing centre information
+            center_info_dict = response.data['data'].copy()
+
+            for code, supplier_object_list in center['suppliers'].iteritems():
+
+                for supplier_object in supplier_object_list:
+
+                    # obtain the dict containing non-center information
+                    response = construct_single_supplier_row(supplier_object, result[code]['data_keys'])
+                    if not response.data['status']:
+                        return response
+
+                    supplier_info_dict = response.data['data']
+
+                    # merge the two dicts
+                    response = merge_two_dicts(center_info_dict, supplier_info_dict)
+                    if not response.data['status']:
+                        return response
+
+                    # append it to the result
+                    result[code]['objects'].append(response.data['data'])
+
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
