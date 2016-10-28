@@ -26,7 +26,6 @@ angular.module('machadaloPages')
       $scope.popup2 = false;
       $scope.error = false;
 
-
       $scope.setDate = function(year, month, day) {
         $scope.dt = new Date(year, month, day);
       };
@@ -64,8 +63,6 @@ angular.module('machadaloPages')
           console.log("BusTypes : ");
           console.log($scope.busTypes);
         });
-
-
       $scope.getBusiness = function() {
         pagesService.getBusiness($scope.bsSelect)
         .success(function (response, status) {
@@ -88,8 +85,7 @@ angular.module('machadaloPages')
         $scope.getBusiness();
       };
 
-
-        $scope.getSubTypes = function() {
+      $scope.getSubTypes = function() {
           // debugger;
             console.log($scope.model.business.business_type_id);
             if($scope.model.business.business_type_id == ''){
@@ -112,7 +108,6 @@ angular.module('machadaloPages')
             });
             console.log($scope.model.business.contacts);
         };
-
 
       $scope.remove = function(index) {
         $scope.model.business.contacts.splice(index, 1);
@@ -230,7 +225,6 @@ angular.module('machadaloPages')
                console.log($scope.errorMsg);
              // $location.path("");
             }
-
         })
         };
       //[TODO] implement this

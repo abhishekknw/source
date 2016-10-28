@@ -30,7 +30,6 @@ angular
     'angularjs-dropdown-multiselect',
     'ngFileUpload',
     'uiGmapgoogle-maps',
-    // ''
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
      // $routeProvider.otherwise('/');
@@ -60,7 +59,6 @@ angular
           url : '/:account_id/createproposal',
           templateUrl : 'modules/pages/createProposal/createproposal.tmpl.html',
           controller : 'ProposalCtrl'
-          // controller : ''
         })
         .state('showProposalHistory',{
           url : '/:proposal_id/showproposalhistory',
