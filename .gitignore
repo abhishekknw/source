@@ -2,7 +2,15 @@ env
 env.bk
 coreapi/coreapi/static
 db.sqlite3
+.idea/*
+*.swp
+*.csv
+*.sql
+*.txt
+*.deb
 *.pyc
+*.csv#
+*.xlsx#
 */*.pyc
 */*/*.pyc
 */*/*/*.pyc

@@ -167,7 +167,6 @@ class deleteUsersAPIView(APIView):
         return Response(status=204)
 
 
-
 class getInitialDataAPIView(APIView):
     def get(self, request, format=None):
         try:
@@ -188,8 +187,9 @@ class getInitialDataAPIView(APIView):
             return Response(status=404)
 
 
-class getLocationsAPIView(APIView):
+class GetLocationsAPIView(APIView):
     def get(self, request, id, format=None):
+        class_name = self.__class__.__name__
         try:
             type = request.query_params.get('type', None)
             if type=='areas':
@@ -199,8 +199,8 @@ class getLocationsAPIView(APIView):
                 items = CitySubArea.objects.filter(area_code__id=id)
                 serializer = CitySubAreaSerializer(items, many=True)
             return Response(serializer.data)
-        except :
-            return Response(status=404)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 class checkSupplierCodeAPIView(APIView):
     def get(self, request, code, format=None):
