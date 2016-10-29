@@ -1178,33 +1178,33 @@ class AccountInfo(models.Model):
     class Meta:
         db_table = 'account_info'
 
-class ProposalInfo(models.Model):
-    proposal_id         = models.CharField(db_column = 'PROPOSAL ID',max_length=15,primary_key=True)
-    account             = models.ForeignKey(AccountInfo,related_name='proposals', db_column ='ACCOUNT',on_delete=models.CASCADE)
-    name                = models.CharField(db_column='NAME', max_length=50,blank=True)
-    payment_status      = models.BooleanField(default=False, db_column='PAYMENT STATUS')
-    updated_on          = models.DateTimeField(auto_now=True, auto_now_add=False)
-    updated_by          = models.CharField(max_length=50,default='Admin')
-    created_on          = models.DateTimeField(auto_now_add=True,auto_now=False)
-    created_by          = models.CharField(max_length=50, default='Admin')
-    tentative_cost      = models.IntegerField(default=5000)
-    tentative_start_date = models.DateTimeField(null=True)
-    tentative_end_date  = models.DateTimeField(null=True)
-
-    def get_centers(self):
-        # ProposalCenterMapping --> related_name='centers'
-        try:
-            return self.centers.all()
-        except:
-            return None
-
-    def get_proposal_versions(self):
-        return self.proposal_versions.all().order_by('-timestamp')
-
-    class Meta:
-
-        #db_table = 'PROPOSAL_INFO'
-        db_table = 'proposal_info'
+# class ProposalInfo(models.Model):
+#     proposal_id         = models.CharField(db_column = 'PROPOSAL ID',max_length=15,primary_key=True)
+#     account             = models.ForeignKey(AccountInfo,related_name='proposals', db_column ='ACCOUNT',on_delete=models.CASCADE)
+#     name                = models.CharField(db_column='NAME', max_length=50,blank=True)
+#     payment_status      = models.BooleanField(default=False, db_column='PAYMENT STATUS')
+#     updated_on          = models.DateTimeField(auto_now=True, auto_now_add=False)
+#     updated_by          = models.CharField(max_length=50,default='Admin')
+#     created_on          = models.DateTimeField(auto_now_add=True,auto_now=False)
+#     created_by          = models.CharField(max_length=50, default='Admin')
+#     tentative_cost      = models.IntegerField(default=5000)
+#     tentative_start_date = models.DateTimeField(null=True)
+#     tentative_end_date  = models.DateTimeField(null=True)
+#
+#     def get_centers(self):
+#         # ProposalCenterMapping --> related_name='centers'
+#         try:
+#             return self.centers.all()
+#         except:
+#             return None
+#
+#     def get_proposal_versions(self):
+#         return self.proposal_versions.all().order_by('-timestamp')
+#
+#     class Meta:
+#
+#         #db_table = 'PROPOSAL_INFO'
+#         db_table = 'proposal_info'
 
 
 
