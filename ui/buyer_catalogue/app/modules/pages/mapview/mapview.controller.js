@@ -34,7 +34,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   $scope.show_societies = false;
   $scope.society_markers = []; // markers on the map
   $scope.circle = {};
-  
+
 // after angular-google-maps is loaded properly only then proces code inside then
   uiGmapGoogleMapApi.then(function(maps) {
       function assignCenterMarkerToMap(center){
@@ -110,6 +110,130 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             // reassing the center_marker acc. to the selected center
             $scope.center_marker =assignCenterMarkerToMap($scope.current_center.center);
         }
+        //Start:reset center to original center
+        //End: reset center to original center
+        // Start: Change center,change radius functionality
+          $scope.changeCenter = function(change_center){
+              // if change_center present then change center to new_center latitude longitude
+              // calls backend and modifies the current_center and ultimately the actual center (doesn't save at this point)
+              // on changing center lot of things changes
+              // map center || circle center and radius || current_center || society_markers || old_center new_center
+              $scope.initial_center_changed[$scope.current_center_index] = true;
+              if(change_center){
+                  // only if change_center present center is changed
+                  $scope.old_center = {
+                      latitude : $scope.new_center.latitude,
+                      longitude : $scope.new_center.longitude,
+                  }
+                  $scope.current_center.center.latitude = $scope.new_center.latitude;
+                  $scope.current_center.center.longitude = $scope.new_center.longitude;
+                  // change map center to new lat lng
+                  $scope.map.center.latitude = $scope.new_center.latitude;
+                  $scope.map.center.longitude = $scope.new_center.longitude;
+                  $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
+                  $scope.center_changed = false;
+              }
+              $scope.circle.center.latitude = $scope.current_center.center.latitude;
+              $scope.circle.center.longitude = $scope.current_center.center.longitude;
+              $scope.circle.radius = $scope.current_center.center.radius * 1000;
+              // saves bandwidth
+              // ADDNEW --> add new spaces variables as well
+              // delete $scope.current_center.society_inventory;
+              // delete $scope.current_center.societies;
+              // delete $scope.current_center.corporate_inventory;
+              // delete $scope.current_center.corporates;
+              // this service will return above deleted variables if checked in the filter
+              $scope.current_center.center.center_id = $scope.current_center.center.id;
+              mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center.center)
+              .success(function(response, status){
+                console.log("change center",response);
+                // Start : Code changes to add response of suppliers
+                $scope.current_center.suppliers = response.data[0].suppliers;
+                // $scope.current_center = response;
+                $scope.center_data[$scope.current_center_index].suppliers = response.data[0].suppliers;
+                // $scope.centers1[$scope.current_center_index].societies_count = response.supplier_count;
+                // $scope.centers1[$scope.current_center_index].societies_inventory_count = response.supplier_inventory_count;
+                // $scope.centers = $scope.centers1;
+                // End : Code changes to add response of suppliers
+                  // gridView_Summary();
+                  $scope.center_data[$scope.current_center_index] = $scope.current_center;
+                  // $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
+                  if($scope.current_center.suppliers != undefined){
+                      $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+                      // $scope.society_markers1 = assignMarkersToMap($scope.area_societies);
+                  }else
+                      $scope.society_markers = [];
+              })
+              .error(function(response, status){
+                  if (typeof(response) == typeof([]))
+                      console.log("Error fetching : ", response.message);
+              });
+          }
+        //End: Change center,change radius and reset center functionality
+    //start: mapview basic summary required when load a page
+      var mapViewBasicSummary = function(){
+          $scope.flat_count =0, $scope.tower_count=0;
+          if($scope.current_center.suppliers['RS'] != undefined){
+              $scope.societies_count = $scope.current_center.suppliers['RS'].length;
+              for(var temp=0;temp<$scope.societies_count;temp++){
+                $scope.flat_count += $scope.current_center.suppliers['RS'][temp].flat_count;
+                $scope.tower_count += $scope.current_center.suppliers['RS'][temp].tower_count;
+              }
+            }
+          if($scope.current_center.suppliers['CP'] != undefined){
+          }
+      }
+    //End: mapview basic summary
+    //Start: mapview filter summary required after applying filters
+     var mapViewFiltersSummary = function(){
+       $scope.stall_count = 0, $scope.standee_count = 0;
+       if($scope.current_center.suppliers['RS'] != undefined){
+         $scope.stall_count += $scope.current_center.suppliers_meta['RS'].inventory_count.stalls;
+         $scope.standee_count += $scope.current_center.suppliers_meta['RS'].inventory_count.standees;
+       }
+       if($scope.current_center.suppliers['CP'] != undefined){
+         $scope.stall_count += $scope.current_center.suppliers_meta['CP'].inventory_count.stalls;
+         $scope.standee_count += $scope.current_center.suppliers_meta['CP'].inventory_count.standees;
+       }
+     }
+    //End: mapview filter summary required after applying filters
+    //Start: impressions
+      var mapViewImpressions = function(){
+        $scope.posterMapImpressions = $scope.flat_count*4*7*2;
+        $scope.standeeMapImpression = $scope.flat_count*4*7*2;
+        $scope.stallMapImpression = $scope.flat_count*4*2;
+        $scope.flierMapImpressions = $scope.flat_count * 4*1;
+
+      }
+    //End: impressions
+    //
+      // var suppliersData = function(){
+      //   $scope.total_societies = [];
+      //   for (var temp=0;temp<$scope.center_data.length;temp++){
+      //     if($scope.center_data[temp].suppliers['RS']!=undefined){
+      //       $scope.total_societies.append($scope.center_data[temp].suppliers['RS']);
+      //     }
+      //     if($scope.center_data[temp].suppliers['CP']!=undefined){
+      //       $scope.total_societies.append($scope.center_data[temp].suppliers['CP']);
+      //     }
+      //   }
+      //   console.log($scope.total_societies);
+      // }
+    //
+    //Start: gridView basic summarytart: gridView basic summary
+      var gridViewBasicSummary = function(){
+        var length = $scope.center_data.length;
+        $scope.total_societies = 0;
+        console.log(length);
+        for (var temp=0;temp<$scope.center_data.length;temp++){
+          if($scope.center_data[temp].suppliers['RS']!=undefined){
+            $scope.total_societies += $scope.center_data[temp].suppliers['RS'].length;
+          }
+        }
+        console.log($scope.total_societies);
+        // $scope.total_societies =
+      }
+    //End: gridView basic summary$scope.total_societies
 
 // Execute code inside them only when uiGMapIsReady is done --> map is loaded properly
       uiGmapIsReady.promise()
@@ -135,13 +259,18 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           $scope.proposal_id_temp = $stateParams.proposal_id;
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
+
                 $scope.business_name = response.business_name;
                 $scope.center_data = response.data;
                 console.log("printing center_data", $scope.center_data);
                 $scope.current_center = response.data[0];
                 console.log("printing current_center", $scope.current_center);
+
                 $scope.current_center_index = 0;
-                gridView_Summary();
+                mapViewBasicSummary();
+                // suppliersData();
+                gridViewBasicSummary();
+                // gridView_Summary();
                 for(var i=0;i<$scope.center_data.length; i++)
                   $scope.initial_center_changed.push(false);
                   $scope.current_center_id = $scope.current_center.center.id
@@ -238,64 +367,52 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 {name : 'ROW HOUSE',    code : 'RH',      selected : false},
                 {name : 'DUPLEX',       code : 'DP',      selected : false},
             ];
-            $scope.centers1 = [];
-            $scope.spaceSociety = function(){
+// Start: supplier filters select deselecting functionality
+    $scope.society_checked = false;
+    $scope.selectSuppliers = function(spaces){
+      angular.forEach(spaces, function(supplier){
+        if(spaces == 'RS'){
+          $scope.society_checked =true;
+        }
+        if(spaces == 'CP'){
+          $scope.corporate_checked =true;
+        }
+      });
+    }
+
+    $scope.spaceSupplier = function(supplier){
     // this function handles selecting/deselecting society space i.e. society_allowed = true/false
     // code changed after changes done for adding two centers on gridView
-            if($scope.current_center.center.space_mappings.society_allowed){
-              for(var i=0;i<$scope.centers1.length;i++){
-                $scope.centers1[i].center.space_mappings.society_allowed = $scope.current_center.center.space_mappings.society_allowed;
-              }
-               $scope.getFilteredSocieties();
-               for(var i=0; i<$scope.centers1.length; i++){
-               if(!$scope.centers1[i].societies_inventory){
-                   $scope.centers1[i].societies_inventory = {
-                        banner_allowed : false,
-                        flier_allowed : false,
-                        poster_allowed : false,
-                        stall_allowed : false,
-                        standee_allowed : false,
-                        supplier_code : 'RS',
-                   };
-                }else{
-                    set_space_inventory($scope.centers1[i].societies_inventory, $scope.space_inventory_type);
-                }
-             }
-            }else{
-                for(var i=0; i< $scope.centers1.length; i++){
-                  $scope.society_markers = [];
-                  delete $scope.centers1[i].societies;
-                  delete $scope.centers1[i].societies_inventory;
-                  delete $scope.centers1[i].societies_count;
-                  delete $scope.centers1[i].societies_inventory_count;
-                  deselect_space_inventory($scope.space_inventory_type)
-                }
-            }
-        }
+        if($scope.supplier == true)
+          $scope.supplier = false;
+        else
+          $scope.supplier = true;
+      }
+// End: supplier filters select deselecting functionality
     // function to show gridView_Summary on gridView page
-         $scope.total_societies, $scope.total_standees, $scope.total_stalls;
-         $scope.total_posters, $scope.total_flats;
-         function gridView_Summary(){
-            $scope.total_societies = 0,$scope.total_standees = 0,$scope.total_stalls = 0;
-            $scope.total_posters = 0,$scope.total_flats = 0;
-            var merge_societies = [];
-            for(var i=0;i<$scope.centers1.length;i++){
-              $scope.total_societies+= $scope.centers1[i].societies_count;
-              $scope.total_standees+= $scope.centers1[i].societies_inventory_count.standees;
-              $scope.total_stalls+= $scope.centers1[i].societies_inventory_count.stalls;
-              merge_societies = merge_societies.concat($scope.centers1[i].societies);
-            }
-            for(var i=0; i<merge_societies.length; i++){
-              $scope.total_posters +=merge_societies[i].tower_count;
-              $scope.total_flats +=merge_societies[i].flat_count;
-            }
-            // impressions for gridView
-            $scope.total_posterImpressions = $scope.total_flats*4*7*2;
-            $scope.total_flierImpressions = $scope.total_flats*4*1;
-            $scope.total_standeeImpressions = $scope.total_flats*4*7*2;
-            $scope.total_stallImpressions = $scope.total_flats*4*2;
-         }
-      // This function is for showing societies on the map view
+      //    $scope.total_societies, $scope.total_standees, $scope.total_stalls;
+      //    $scope.total_posters, $scope.total_flats;
+      //    function gridView_Summary(){
+      //       $scope.total_societies = 0,$scope.total_standees = 0,$scope.total_stalls = 0;
+      //       $scope.total_posters = 0,$scope.total_flats = 0;
+      //       var merge_societies = [];
+      //       for(var i=0;i<$scope.centers1.length;i++){
+      //         $scope.total_societies+= $scope.centers1[i].societies_count;
+      //         $scope.total_standees+= $scope.centers1[i].societies_inventory_count.standees;
+      //         $scope.total_stalls+= $scope.centers1[i].societies_inventory_count.stalls;
+      //         merge_societies = merge_societies.concat($scope.centers1[i].societies);
+      //       }
+      //       for(var i=0; i<merge_societies.length; i++){
+      //         $scope.total_posters +=merge_societies[i].tower_count;
+      //         $scope.total_flats +=merge_societies[i].flat_count;
+      //       }
+      //       // impressions for gridView
+      //       $scope.total_posterImpressions = $scope.total_flats*4*7*2;
+      //       $scope.total_flierImpressions = $scope.total_flats*4*1;
+      //       $scope.total_standeeImpressions = $scope.total_flats*4*7*2;
+      //       $scope.total_stallImpressions = $scope.total_flats*4*2;
+      //    }
+      // // This function is for showing societies on the map view
          $scope.showSocieties = function(){
                 $scope.show_societies = !$scope.show_societies
          }
@@ -307,7 +424,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             if(value){
               var inventory_name = value.name.toLowerCase();
               var inventory_code = value.code;
-              $scope.current_center.societies_inventory[inventory_name + '_allowed'] = value.selected;
+              // $scope.current_center.societies_inventory[inventory_name + '_allowed'] = value.selected;
               if(inventory_code =='PO' || inventory_code =='POFL' || inventory_code =='POSLFL' || inventory_code =='POCDFL'){
                 if($scope.inv_poster == true && value.selected == false ){
                   --pcount;
@@ -374,10 +491,10 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             $scope.getFilteredSocieties = function(){
             promises = [];
             var defer = $q.defer();
-            for(var i=0; i<$scope.centers1.length; i++){
-              var lat = "?lat=" + $scope.centers1[i].center.latitude ;
-              var lng = "&lng=" + $scope.centers1[i].center.longitude;
-              var radius = "&r=" + $scope.centers1[i].center.radius;
+            // for(var i=0; i<$scope.centers1.length; i++){
+              var lat = "?lat=" + $scope.current_center.center.latitude ;
+              var lng = "&lng=" + $scope.current_center.center.longitude;
+              var radius = "&r=" + $scope.current_center.center.radius;
               var get_url_string = lat + lng + radius;
               get_url_string += makeString($scope.space_inventory_type, "&inv=");
               get_url_string += makeString($scope.space_location, "&loc=");
@@ -385,32 +502,31 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               get_url_string += makeString($scope.space_quantity_type, "&qnt=");
               get_url_string += makeString($scope.society_flat_type, "&flt=");
 
-              promises.push(mapViewService.getFilterSocieties(get_url_string));
-          } //end of for loop
+              // promises.push(mapViewService.getFilterSocieties(get_url_string));
+          // } //end of for loop
 
           // promises handled
-          $q.all(promises).then(function(response){
-            var length = $scope.centers1.length;
-            for(var i=0; i<length; i++){
-              $scope.centers1[i].societies = promises[i].$$state.value.data.suppliers;
-              $scope.centers1[i].societies_inventory_count = promises[i].$$state.value.data.supplier_inventory_count;
-              $scope.centers1[i].societies_count = promises[i].$$state.value.data.supplier_count;
-              $scope.centers[i] = $scope.centers1[i];
-              calculateQualityType($scope.centers1[i].societies);
-            } //end of for loop
-            $scope.current_center.societies = $scope.centers1[$scope.current_center_index].societies;
-            $scope.current_center.societies_inventory_count = $scope.centers1[$scope.current_center_index].societies_inventory_count;
-            $scope.current_center.societies_count = $scope.centers1[$scope.current_center_index].societies_count;
-            $scope.towers = calculatetowers();
-            $scope.society_markers = assignMarkersToMap($scope.current_center.societies);
-            $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
-            gridView_Summary();
-          }) // end of q
+          mapViewService.getFilterSocieties(get_url_string)
+                .success(function(response, status){
+                  console.log(response);
+                  response.data.center = $scope.current_center.center;
+                    $scope.current_center = response.data;
+                    // $scope.current_center.societies_inventory_count = response.societies_inventory_count;
+                    // $scope.current_center.societies_count = response.societies_count;
+                    // console.log("\n\n$scope.centers : ", $scope.centers);
+                    $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+                    mapViewBasicSummary();
+                    mapViewFiltersSummary();
+                    mapViewImpressions();
+                    gridViewBasicSummary();
+                })
+                .error(function(response, status){
+                    console.log("Error Happened while filtering");
+                });// end of q
       }
 
       //End: angular-google-maps is loaded properly only then proces code inside then
       var makeString = function(filter_array, filter_keyword){
-            var makeString = function(filter_array, filter_keyword){
                 var my_string = filter_keyword;
                 var length = filter_array.length;
                 var count = 0;
@@ -424,12 +540,17 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 if(count==length)
                     my_string = filter_keyword;
                 return my_string;
-            }
-        };
-});
+          }
+        });
 //Start: Function added to show all suppliers on gridView
-  $scope.getsuppliers = function(space,supplier){
-    return supplier.suppliers[space];
+  $scope.supplier_codes =['RS','CP','GY'];
+  $scope.getSuppliers = function(suppl){
+      // angular.forEach(supplier, function(suppliers) {
+      //   console.log("hi",index,suppliers);
+      // });
+
+    return suppl;
   }
 //End: Function added to show all suppliers on gridView
+
 });
