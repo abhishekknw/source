@@ -1207,6 +1207,27 @@ class AccountInfo(models.Model):
 #         db_table = 'proposal_info'
 
 
+
+# class AccountContact(models.Model):
+#     id = models.AutoField(db_column='ID', primary_key=True)
+#     name = models.CharField(db_column='NAME', max_length=50, blank=True)
+#     designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
+#     department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
+#     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
+#     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+#     account = models.ForeignKey(AccountInfo, related_name='contacts', db_column='ACCOUNT_ID', null=True, on_delete=models.CASCADE)
+#     spoc = models.BooleanField(db_column='SPOC', default=False)
+#     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+#     class Meta:
+#
+#         #db_table = 'PROPOSAL_INFO'
+#         db_table = 'proposal_info'
+
+#         db_table = 'account_contact'
+
+
 class ProposalCenterMapping(models.Model):
     """
     for a given proposal, stores lat, long, radius, city, pincode etc.
