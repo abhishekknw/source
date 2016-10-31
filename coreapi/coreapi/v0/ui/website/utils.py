@@ -1015,8 +1015,57 @@ def save_center_data(proposal_data):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def save_shortlisted_suppliers(proposal_data):
+def save_shortlisted_suppliers(suppliers, fixed_data):
     """
+    Args:
+        suppliers: a list of suppliers
+        fixed_data: The data that will not change.
+
+    Returns: saves the list of suppliers into shortlistedspaces model
+
+    """
+    function_name = save_shortlisted_suppliers.__name__
+    try:
+        center = fixed_data.get('center')
+        proposal = fixed_data.get('proposal')
+        code = fixed_data.get('supplier_code')
+        content_type = fixed_data.get('content_type')
+
+        count = 0
+        for supplier in suppliers:
+
+            # make the data to be saved in ShortListedSpaces
+            data = {
+                'content_type': content_type,
+                'object_id': supplier['supplier_id'],
+                'center': center,
+                'proposal': proposal,
+                'supplier_code': code
+            }
+            shortlisted_space, is_created = models.ShortlistedSpaces.objects.get_or_create(
+                **data)  # todo: to be changed if better solution found
+            shortlisted_space.status = supplier['status']
+            shortlisted_space.save()
+            if is_created:
+                count += 1
+        return ui_utils.handle_response(function_name, data=count, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
+def save_final_proposal(proposal_data, unique_supplier_codes):
+    """
+    The request is in form:
+        [
+             {
+                  center : { id : 1 , center_name: c1, ...   } ,
+                  suppliers: {  'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ],  }
+                  suppliers_meta: {
+                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                     'CP': { 'inventory_type_selected':  ['ST']
+                  }
+             }
+        ]
     Args:
         proposal_data: data of the proposal
         proposal_id: proposal_id
@@ -1024,7 +1073,7 @@ def save_shortlisted_suppliers(proposal_data):
     Returns: collects all suppliers in societies array and inserts them into the db
 
     """
-    function_name = save_shortlisted_suppliers.__name__
+    function_name = save_final_proposal.__name__
     try:
         # get the proposal_id
         proposal_id = proposal_data['proposal_id']
@@ -1038,33 +1087,50 @@ def save_shortlisted_suppliers(proposal_data):
         # get the center object
         center = models.ProposalCenterMapping.objects.get(id=center_id)
 
-        # to count how many new objects got created
-        count = 0
+        fixed_data = {
+            'center': center,
+            'proposal': proposal,
+        }
 
-        # for each supplier , do
-        for supplier in proposal_data['societies']:
-            supplier_type_code = supplier['supplier_type_code']
+        # to keep count of new objects created
+        objects_created = {
+            'SHORTLISTED_SUPPLIERS': 0,
+            'FILTER_OBJECTS': 0
+        }
 
-            content_type_response = ui_utils.get_content_type(supplier_type_code)
+        filter_name = 'inventory_type_selected'
+
+        for code in unique_supplier_codes:
+
+            # get the list of suppliers
+            suppliers = proposal_data['suppliers'][code]
+
+            # get the content type for this supplier
+            content_type_response = ui_utils.get_content_type(code)
             if not content_type_response.data['status']:
                 return content_type_response
 
             content_type = content_type_response.data['data']
 
-            # make the data to be saved in ShortListedSpaces
-            data = {
-                'content_type': content_type,
-                'object_id': supplier['supplier_id'],
-                'center': center,
-                'proposal': proposal,
-            }
-            shortlisted_space, is_created = models.ShortlistedSpaces.objects.get_or_create(**data) #todo: to be changed if better solution found
-            shortlisted_space.status = supplier['status']
-            shortlisted_space.save()
-            if is_created:
-                count += 1
+            fixed_data['supplier_code'] = code
+            fixed_data['content_type'] = content_type
 
-        return ui_utils.handle_response(function_name, data=count,
+            # save data of shortlisted suppliers
+            response = save_shortlisted_suppliers(suppliers, fixed_data)
+            if not response.data['status']:
+                return response
+            objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']
+
+            fixed_data['filter_name'] = filter_name
+            inventories_selected = proposal_data['suppliers_meta'][code][filter_name]
+
+            # save data of inventories selected
+            response = save_filter_data(inventories_selected, fixed_data)
+            if not response.data['status']:
+                return response
+            objects_created['FILTER_OBJECTS'] += response.data['data']
+
+        return ui_utils.handle_response(function_name, data=objects_created,
                                         success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error', exception_object=e)
@@ -1074,56 +1140,41 @@ def save_shortlisted_suppliers(proposal_data):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def save_filter_data(proposal_data):
+def save_filter_data(inventories_selected, fixed_data):
     """
     Args:
-        proposal_data: data of proposal
-        proposal_id: proposal_id
+        inventories_selected: the list of inventories which are selected
+        fixed_data: The data that is fixed data and will not change
     Returns:
 
     """
     function_name = save_filter_data.__name__
     try:
-        # get the proposal_id
-        proposal_id = proposal_data['proposal_id']
 
-        # get the center id
-        center_id = proposal_data['center']['id']
-
-        # get the proposal object
-        proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-
-        # get the center object
-        center = models.ProposalCenterMapping.objects.get(id=center_id)
+        center = fixed_data.get('center')
+        proposal = fixed_data.get('proposal')
+        code = fixed_data.get('supplier_code')
+        content_type = fixed_data.get('content_type')
+        filter_name = fixed_data.get('inventory_type_selected')
 
         #  to count how many filter objects were created
         count = 0
 
-        filter_data = proposal_data['filters_data']
+        for inventory_code in inventories_selected:
+            data = {
+                'center': center,
+                'proposal': proposal,
+                'supplier_type': content_type,
+                'supplier_type_code': code
+            }
+            filer_object, is_created = models.Filters.objects.get_or_create(**data)
+            filer_object.filter_name = filter_name
+            filer_object.filter_code = inventory_code
+            filer_object.is_checked = True
+            filer_object.save()
 
-        for supplier in filter_data:
-
-            supplier_type_code = supplier['supplier_type_code']
-            content_type_response = ui_utils.get_content_type(supplier_type_code)
-            if not content_type_response.data['status']:
-                return content_type_response
-
-            content_type = content_type_response.data['data']
-
-            for filter in supplier['filters']:
-                filter_name = filter['filter_name']
-                filter_code = filter['filter_code']
-                data = {
-                    'center': center,
-                    'proposal': proposal,
-                    'filter_name': filter_name,
-                    'filter_code': filter_code,
-                    'supplier_type': content_type,
-                    'is_checked': True
-                }
-                filer_object, is_created = models.Filters.objects.get_or_create(**data)
-                if is_created:
-                    count+=1
+            if is_created:
+                count += 1
 
         return ui_utils.handle_response(function_name, data=count, success=True)
     except KeyError as e:

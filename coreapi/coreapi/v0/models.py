@@ -2019,6 +2019,7 @@ class Filters(models.Model):
     filter_name = models.CharField(max_length=255, null=True, blank=True)
     filter_code = models.CharField(max_length=255, null=True, blank=True)
     is_checked = models.BooleanField(default=False)
+    supplier_type_code = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'filters'

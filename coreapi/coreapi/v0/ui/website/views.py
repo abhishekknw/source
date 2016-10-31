@@ -2112,7 +2112,7 @@ class GenericExportData(APIView):
         [
              {
                   center : { id : 1 , center_name: c1, ...   } ,
-                  suppliers: [  'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
+                  suppliers: { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} }
                   suppliers_meta: {
                                      'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
                                      'CP': { 'inventory_type_selected':  ['ST']
@@ -2402,6 +2402,17 @@ class CreateInitialProposal(APIView):
 
 class CreateFinalProposal(APIView):
     """
+    The request is in form:
+        [
+             {
+                  center : { id : 1 , center_name: c1, ...   } ,
+                  suppliers:  { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...}  }
+                  suppliers_meta: {
+                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                     'CP': { 'inventory_type_selected':  ['ST']
+                  }
+             }
+        ]
     This is second step for creating proposal.
     The proposal_id in the request is always a brand new proposal_id wether you hit this API from an EDIT form of
     the proposal or you are creating an entirely new proposal.
@@ -2423,26 +2434,27 @@ class CreateFinalProposal(APIView):
         class_name = self.__class__.__name__
         try:
             # simple dict to count new objects created each time the API is hit. a valuable information.
+
+            # to keep count of new objects created
             objects_created = {
                 'SHORTLISTED_SUPPLIERS': 0,
                 'FILTER_OBJECTS': 0
             }
+            # get the supplier type codes available in the request
+            response = website_utils.unique_supplier_type_codes(request.data)
+            if not response.data['status']:
+                return response
+            unique_supplier_codes = response.data['data']
+
             with transaction.atomic():
                 for proposal_data in request.data:
 
                     proposal_data['proposal_id'] = proposal_id
-
-                    # you have to create suppliers shortlisted data
-                    response = website_utils.save_shortlisted_suppliers(proposal_data)
+                    response = website_utils.save_final_proposal(proposal_data, unique_supplier_codes)
                     if not response.data['status']:
                         return response
-                    objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']
-
-                    # you have to create Filter data
-                    response = website_utils.save_filter_data(proposal_data)
-                    if not response.data['status']:
-                        return response
-                    objects_created['FILTER_OBJECTS'] += response.data['data']
+                    objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']['SHORTLISTED_SUPPLIERS']
+                    objects_created['FILTER_OBJECTS'] += response.data['data']['FILTER_OBJECTS']
 
                 return ui_utils.handle_response(class_name, data=objects_created, success=True)
         except Exception as e:
