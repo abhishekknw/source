@@ -348,7 +348,7 @@ def space_on_circle(latitude, longitude, radius, space_lat, space_lng):
     return (space_lat - latitude)**2 + (space_lng - longitude)**2 <= (radius/110.574)**2
 
 
-def initialize_keys(center_object, row):
+def initialize_keys(center_object, supplier_type_code):
     """
     Args:
         center_object: a dict representing one center object
@@ -360,19 +360,22 @@ def initialize_keys(center_object, row):
     try:
 
         # set societies inventory key
-        center_object['societies_inventory'] = {}
+        # center_object['societies_inventory'] = {}
 
-        # set societies key
-        center_object['societies'] = []
+        # set suppliers dict
+        center_object['suppliers'] = {supplier_type_code: []}
 
         # set center key
         center_object['center'] = {}
 
+        # set inventory type selected
+        # center_object['suppliers_meta'] = {supplier_type_code: {'inventory_type_selected': []}}
+
         # set space mapping
-        center_object['center']['space_mappings'] = {}
+        # center_object['center']['space_mappings'] = {}
 
         # set societies count
-        center_object['societies_count'] = 0
+        # center_object['societies_count'] = 0
 
         # set for shortlisted_inventory_details
         center_object['shortlisted_inventory_details'] = []
@@ -405,7 +408,7 @@ def make_societies_inventory(center_object, row):
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def make_shortlisted_inventory_list(row):
+def make_shortlisted_inventory_list(row, supplier_type_code):
     """
     Args:
         row: a single row of sheet.  it's dict
@@ -441,6 +444,9 @@ def make_shortlisted_inventory_list(row):
                 # set inventory_count
                 shortlisted_inventory_details['inventory_count'] = row[base_name + '_count']
 
+                # set supplier_type_code
+                shortlisted_inventory_details['supplier_type_code'] = supplier_type_code
+
                 # add it to the list
                 shortlisted_inventory_list.append(shortlisted_inventory_details)
 
@@ -451,7 +457,7 @@ def make_shortlisted_inventory_list(row):
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def make_societies(center_object, row):
+def make_suppliers(center_object, row, supplier_type_code):
     """
     Args:
         center_object: a center_object
@@ -460,25 +466,24 @@ def make_societies(center_object, row):
     Returns: adds the society that is present in this row to center_object and returns
 
     """
+    function = make_suppliers.__name__
     try:
         # collect society data in a dict and append it to the list of societies of center_object
-        society = {}
-        society['supplier_id'] = row['supplier_id']
-        society['society_name'] = row['supplier_name']
-        society['society_subarea'] = row['supplier_sub_area']
-        society['society_type_quality'] = row['supplier_type']
-        society['tower_count'] = row['supplier_tower_count']
-        society['flat_count'] = row['supplier_flat_count']
+
+        supplier_header_keys = ['_'.join(header.split(' ')) for header in website_constants.inventorylist[supplier_type_code]['HEADER']]
+        supplier_header_keys = [header.lower() for header in supplier_header_keys]
+        supplier_data_keys = website_constants.inventorylist[supplier_type_code]['DATA']
+        supplier = {data_key: row[header] for header, data_key in zip(supplier_header_keys, supplier_data_keys)}
 
         # get the list of shortlisted inventory details
-        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row)
+        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row, supplier_type_code)
         if not shortlisted_inventory_list_response.data['status']:
             return shortlisted_inventory_list_response
 
         shortlisted_inventory_list = shortlisted_inventory_list_response.data['data']
 
         # add it to the list of center_object
-        center_object['societies'].append(society)
+        center_object['suppliers'][supplier_type_code].append(supplier)
 
         # add shortlisted_inventory_list to the list already initialized
         center_object['shortlisted_inventory_details'].extend(shortlisted_inventory_list)
@@ -486,7 +491,7 @@ def make_societies(center_object, row):
         # return the result after we are done scanning
         return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def populate_shortlisted_inventory_details(result):
@@ -522,6 +527,7 @@ def get_center_id_list(ws, index_of_center_id):
     Returns: a list containing unique center_id's
 
     """
+    function = get_center_id_list.__name__
     try:
         center_id_set = set()
         for index, row in enumerate(ws.iter_rows()):
@@ -530,9 +536,9 @@ def get_center_id_list(ws, index_of_center_id):
                 continue
             if row[index_of_center_id].value:
                 center_id_set.add(int(row[index_of_center_id].value))
-        return Response({'status': True, 'data': list(center_id_set)}, status=status.HTTP_200_OK)
+        return ui_utils.handle_response(function, data=list(center_id_set), success=True)
     except Exception as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def get_headers(ws):
@@ -582,22 +588,22 @@ def make_center(center_object, row):
 
     """
     # get the fields which also needs to sent for the other api to work upon because they are required for serializing .
-    city, area, pincode, sub_area, latitude, longitude, radius = models.ProposalCenterMapping.objects.values_list('city', 'area', 'pincode', 'subarea', 'latitude', 'longitude', 'radius').get(id=row['center_id'])
+    # city, area, pincode, sub_area, latitude, longitude, radius = models.ProposalCenterMapping.objects.values_list('city', 'area', 'pincode', 'subarea', 'latitude', 'longitude', 'radius').get(id=row['center_id'])
     try:
         center_object['center']['center_name'] = row.get('center_name')
-        center_object['center']['proposal'] = row['center_proposal_id']
+        center_object['center']['proposal'] = row['proposal']
         center_object['center']['id'] = row['center_id']
-        center_object['center']['city'] = city
-        center_object['center']['area'] = area
-        center_object['center']['subarea'] = sub_area
-        center_object['center']['pincode'] = pincode
-        center_object['center']['latitude'] = latitude
-        center_object['center']['longitude'] = longitude
-        center_object['center']['radius'] = radius
-        space_mapping_response = make_space_mappings(row)
-        if not space_mapping_response.data['status']:
-            return space_mapping_response
-        center_object['center']['space_mappings'] = space_mapping_response.data['data']
+        # center_object['center']['city'] = city
+        # center_object['center']['area'] = area
+        # center_object['center']['subarea'] = sub_area
+        # center_object['center']['pincode'] = pincode
+        # center_object['center']['latitude'] = latitude
+        # center_object['center']['longitude'] = longitude
+        # center_object['center']['radius'] = radius
+        # space_mapping_response = make_space_mappings(row)
+        # if not space_mapping_response.data['status']:
+        #     return space_mapping_response
+        # center_object['center']['space_mappings'] = space_mapping_response.data['data']
         return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
@@ -1121,14 +1127,15 @@ def save_final_proposal(proposal_data, unique_supplier_codes):
                 return response
             objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']
 
-            fixed_data['filter_name'] = filter_name
-            inventories_selected = proposal_data['suppliers_meta'][code][filter_name]
+            if proposal_data.get('suppliers_meta'):
+                fixed_data['filter_name'] = filter_name
+                inventories_selected = proposal_data['suppliers_meta'][code][filter_name]
 
-            # save data of inventories selected
-            response = save_filter_data(inventories_selected, fixed_data)
-            if not response.data['status']:
-                return response
-            objects_created['FILTER_OBJECTS'] += response.data['data']
+                # save data of inventories selected
+                response = save_filter_data(inventories_selected, fixed_data)
+                if not response.data['status']:
+                    return response
+                objects_created['FILTER_OBJECTS'] += response.data['data']
 
         return ui_utils.handle_response(function_name, data=objects_created,
                                         success=True)

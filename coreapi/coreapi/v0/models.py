@@ -1840,6 +1840,7 @@ class SocietyLeads(models.Model):
     class Meta:
         db_table = 'society_leads'
 
+
 class ShortlistedInventoryDetails(models.Model):
     """
     Model for storing calculated price and count of an inventory for a given supplier.
@@ -1850,6 +1851,7 @@ class ShortlistedInventoryDetails(models.Model):
     inventory_price = models.FloatField(default=0.0, null=True)
     inventory_count = models.IntegerField(default=0, null=True)
     factor = models.IntegerField(default=0.0, null=True)
+    supplier_type_code = models.CharField(max_length=255, null=True)
     class Meta:
         db_table = 'shortlisted_inventory_details'
 
