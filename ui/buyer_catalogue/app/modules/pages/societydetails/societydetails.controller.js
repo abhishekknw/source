@@ -13,6 +13,7 @@ angular.module('machadaloPages',['ui.bootstrap'])
         $scope.myInterval=300;
         $scope.society_images = response.society_images;
         $scope.society = response.society_data;
+        console.log(response.society_data);
         $rootScope.societyname = response.society_data.society_name;
         $scope.residentCount = estimatedResidents(response.society_data.flat_count);
         $scope.flatcountflier = response.society_data.flat_count;
@@ -35,10 +36,18 @@ angular.module('machadaloPages',['ui.bootstrap'])
       // End : Code added to seperate images by their image tag names
      });
 
-     societyDetailsService.get_inventory_summary($rootScope.societyId)
+    //  societyDetailsService.get_inventory_summary($rootScope.societyId)
+    //  .success(function (response){
+    //       $scope.inventoryDetails = response;
+    //       $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);
+    //  });
+
+     //$scope.model.supplier_type_code = "RS";
+     //alert($scope.model.supplier_type_code);
+     societyDetailsService.get_inventory_summary($rootScope.supplierId, "RS")
      .success(function (response){
-          $scope.inventoryDetails = response;
-          $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);
+          $scope.model = response;
+          console.log($scope.model);
      });
 
      function estimatedResidents (flatcount){

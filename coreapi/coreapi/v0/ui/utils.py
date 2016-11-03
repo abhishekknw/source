@@ -40,7 +40,7 @@ def handle_response(object_name, data='some error occurred', exception_object=Ex
         # prepare the object to be sent in error response
         data = {
             'general_error': data,
-            'system_error': exception_object.message if exception_object.message else exception_object.args if exception_object.args else None,
+            'system_error': str(exception_object.message) if exception_object.message else str(exception_object.args) if exception_object.args else None,
             'culprit_module': object_name
         }
         return Response({'status': False, 'data': json.dumps(data)}, status=status.HTTP_400_BAD_REQUEST)
@@ -113,6 +113,9 @@ def get_supplier_id(request, data):
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
             'supplier_type'] + data[
                           'supplier_code']
+                          
+        return Response(data={'status': True, 'supplier_id': supplier_id}, status=status.HTTP_200_OK)
+
     except KeyError as e:
         return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
     except ObjectDoesNotExist as e:
@@ -120,9 +123,7 @@ def get_supplier_id(request, data):
     except Exception as e:
         return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(data={'status': True, 'supplier_id': supplier_id}, status=status.HTTP_200_OK)
-
-
+    
 def make_supplier_data(data):
     try:
 
@@ -147,6 +148,7 @@ def make_supplier_data(data):
                          'society_name': data['supplier_name'],
                          'supplier_id': data['supplier_id'],
                          'created_by': current_user.id,
+
                          'society_city': city.city_name,
                          'society_subarea': subarea.subarea_name,
                          'society_locality': area.label,
@@ -211,6 +213,8 @@ def save_supplier_data(master_data):
     :return: saves corresponding supplier code data
     """
     try:
+        #import pdb
+        #pdb.set_trace()
         supplier_code = master_data['supplier_type_code']
         serializer_class = get_serializer(supplier_code)
         # serializer_class = master_data[supplier_code]['serializer']
@@ -237,6 +241,7 @@ def set_default_pricing(supplier_id, supplier_type_code):
 
     """
     try:
+
         supplier = get_model(supplier_type_code).objects.get(pk=supplier_id)
         # supplier = supplier_code_filter_params[supplier_type_code]['MODEL'].objects.get(pk=supplier_id)
         content_type = ContentType.objects.get_for_model(supplier)
@@ -580,10 +585,10 @@ def get_model(supplier_type_code):
         return None
 
 
-def get_serializer(supplier_type_code):
+def get_serializer(query):
     """
     Args:
-        supplier_type_code: CP, RS
+        query: CP, RS or table name in db
 
     Returns: right SerializerClass
 
@@ -597,9 +602,17 @@ def get_serializer(supplier_type_code):
             'CP': v0.serializers.SupplierTypeCorporateSerializer,
             'GY': v0.serializers.SupplierTypeGymSerializer,
             'SA': v0.serializers.SupplierTypeSalonSerializer,
-            'BS': v0.serializers.SupplierTypeBusShelterSerializer
+            'BS': v0.serializers.SupplierTypeBusShelterSerializer,
+            'ideation_design_cost': v0.serializers.IdeationDesignCostSerializer,
+            'logistic_operations_cost': v0.serializers.LogisticOperationsCostSerializer,
+            'space_booking_cost': v0.serializers.SpaceBookingCostSerializer,
+            'event_staffing_cost': v0.serializers.EventStaffingCostSerializer,
+            'data_sciences_cost': v0.serializers.DataSciencesCostSerializer,
+            'printing_cost': v0.serializers.PrintingCostSerializer,
+            'proposal_metrics': v0.serializers.ProposalMetricsSerializer,
+            'proposal_master_cost': v0.serializers.ProposalMasterCostSerializer
 
         }
-        return serializers[supplier_type_code]
+        return serializers[query]
     except Exception as e:
         return None

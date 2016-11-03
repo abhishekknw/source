@@ -34,4 +34,4 @@ tower_count_attribute_mapping = {
     'SA': 'none'
 }
 string_suppliers = {'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate',
-                    'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon', 'BS': 'SupplierTypeBusShelter'}
+                    'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon', 'BS': 'SupplierTypeBusShelter',}

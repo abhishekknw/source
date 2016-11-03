@@ -11,7 +11,7 @@ from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSo
     OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, FlyerInventory, \
     StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SupplierTypeCorporate, SocietyTower, FlatType, \
     AccountInfo, ContactDetailsGeneric, SupplierTypeSalon, SupplierTypeGym
-from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, JMN_society, \
+from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySummary, SocietyMajorEvents, \
     UserProfile, CorporateParkCompanyList, CorporateBuilding, CorporateBuildingWing, CorporateCompanyDetails, \
     CompanyFloor
 import models
@@ -29,12 +29,6 @@ class UserProfileSerializer(ModelSerializer):
         # read_only_fields = (
     #    'user1'
     # )
-
-
-class JMN_societySerializer(ModelSerializer):
-    class Meta:
-        model = JMN_society
-
 
 class ImageMappingSerializer(ModelSerializer):
     class Meta:
@@ -432,3 +426,43 @@ class CorporateCompanyDetailsSerializer(ModelSerializer):
 class SupplierTypeBusShelterSerializer(ModelSerializer):
     class Meta:
         model = models.SupplierTypeBusShelter
+
+
+class ProposalMasterCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.ProposalMasterCost
+
+
+class PrintingCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.PrintingCost
+
+
+class LogisticOperationsCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.LogisticOperationsCost
+
+
+class IdeationDesignCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.IdeationDesignCost
+
+
+class SpaceBookingCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.SpaceBookingCost
+
+
+class EventStaffingCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.EventStaffingCost
+
+
+class DataSciencesCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.DataSciencesCost
+
+
+class ProposalMetricsSerializer(ModelSerializer):
+    class Meta:
+        model = models.ProposalMetrics

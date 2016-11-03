@@ -167,7 +167,6 @@ class deleteUsersAPIView(APIView):
         return Response(status=204)
 
 
-
 class getInitialDataAPIView(APIView):
     def get(self, request, format=None):
         try:
@@ -188,8 +187,9 @@ class getInitialDataAPIView(APIView):
             return Response(status=404)
 
 
-class getLocationsAPIView(APIView):
+class GetLocationsAPIView(APIView):
     def get(self, request, id, format=None):
+        class_name = self.__class__.__name__
         try:
             type = request.query_params.get('type', None)
             if type=='areas':
@@ -199,8 +199,8 @@ class getLocationsAPIView(APIView):
                 items = CitySubArea.objects.filter(area_code__id=id)
                 serializer = CitySubAreaSerializer(items, many=True)
             return Response(serializer.data)
-        except :
-            return Response(status=404)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 class checkSupplierCodeAPIView(APIView):
     def get(self, request, code, format=None):
@@ -218,6 +218,7 @@ class GenerateSupplierIdAPIView(APIView):
     """
     def post(self, request, format=None):
         try:
+
             data = {
                 'city': request.data['city_id'],
                 'area': request.data['area_id'],
@@ -226,6 +227,7 @@ class GenerateSupplierIdAPIView(APIView):
                 'supplier_code': request.data['supplier_code'],
                 'supplier_name': request.data['supplier_name'],
             }
+    
             response = ui_utils.get_supplier_id(request, data)
             if not response.data['status']:
                 return response
@@ -238,8 +240,8 @@ class GenerateSupplierIdAPIView(APIView):
             if not response.data['status']:
                 return response
             all_supplier_data = response.data['data']
-
             response = ui_utils.save_supplier_data(all_supplier_data)
+
             if not response.data['status']:
                 return response
             return Response(data=response.data['data'], status=status.HTTP_200_OK)
@@ -2263,31 +2265,6 @@ class SaveBasicCorporateDetailsAPIView(APIView):
             return Response({"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-# class ContactDetailsGenericAPIView(APIView):
-
-#     def post(self,request,id=None,format=None):
-#         print "Hello  ", id
-#         # instance = get_object_or_404(SupplierTypeCorporate, supplier_id=id)
-#         try:
-#             instance = SupplierTypeCorporate.objects.get(supplier_id=id)
-#         except SupplierTypeCorporate.DoesNotExist:
-#             print "id does not exist in database"
-#             return Response({'message': 'This corporate park does not exist'}, status=406)
-
-#         print "Hello123"
-#         content_type = ContentType.objects.get_for_model(SupplierTypeCorporate)
-#         print request.data
-#         request.data['contact']['object_id'] = instance.supplier_id
-#         serializer = ContactDetailsGenericSerializer(data=request.data['contact'])
-#         if serializer.is_valid():
-#             print serializer.validated_data
-#             serializer.save(content_type=content_type)
-#             print "serializer saved"
-#             return Response(serializer.data, status=200)
-#         return Response(serializers.errors, status=400)
 
 
 # This API is for saving the buildings and wings details of a corporate space

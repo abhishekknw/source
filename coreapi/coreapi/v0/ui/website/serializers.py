@@ -9,6 +9,7 @@ from v0.serializers import SocietyInventoryBookingSerializer, BusinessInfoSerial
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety,\
                     ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion
 
+import v0.models as models
 
 class ProposalInfoVersionSerializer(ModelSerializer):
 
@@ -145,7 +146,6 @@ class ProposalCorporateSerializer(ModelSerializer):
         )
 
 
-
 class UISocietyInventorySerializer(ModelSerializer):
     inventory_price = serializers.IntegerField(source='get_price')
     type = CampaignTypeMappingSerializer(source='get_type')
@@ -208,3 +208,4 @@ class CampaignInventorySerializer(ModelSerializer):
         'inventories'
 
         )
+

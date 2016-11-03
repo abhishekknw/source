@@ -6,7 +6,7 @@
   function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
 
   	var url_base = 'v0/ui/website/';
-    var url_base1 = 'v0/ui/'; 
+    var url_base1 = 'v0/ui/';
 
   	var createProposalService = {};
   	var proposal_id = undefined;

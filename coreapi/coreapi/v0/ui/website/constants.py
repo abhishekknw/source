@@ -142,3 +142,94 @@ inventory_models = {
     'flier_count': {'MODEL': 'FlierThroughLobbyInfo', 'BASE_NAME': 'flier'},
     'standee_count': {'MODEL': 'StandeeInventory', 'BASE_NAME': 'standee'}
 }
+
+# a mapping from table names to serializers
+table_to_serializer = {
+    'ideation_design_cost': 'IdeationDesignCostSerializer',
+    'logistic_operations_cost': 'LogisticOperationsCostSerializer',
+    'space_booking_cost': 'SpaceBookingCostSerializer',
+    'event_staffing_cost': 'EventStaffingCostSerializer',
+    'data_sciences_cost': 'DataSciencesCostSerializer',
+    'printing_cost': 'PrintingCostSerializer',
+    'proposal_metrics': 'ProposalMetricsSerializer',
+    'proposal_master_cost': 'ProposalMasterCostSerializer'
+}
+
+
+# predefined keys in data dict for Offline pricing. we need to make spaces for diff kinds of data
+# the following data structure is a dict with keys as model names. values are a list of columns and some other details
+# which are required to populate the db. each row of the sheet is mapped to a specific column of a specific model and
+# has a particular value.
+
+offline_pricing_data = {
+    'ideation_design_cost': [{'match_term': 'ideation', 'col_name': 'total_cost', 'specific': None, 'value': 0}, ],
+
+    'logistic_operations_cost': [
+        {'match_term': 'logistics and operations', 'col_name': 'total_cost', 'specific': None, 'value': 0}],
+
+    'space_booking_cost': [
+        {'match_term': 'space booking charges society', 'col_name': 'total_cost', 'specific': {'code': 'RS'}, 'value': 0},
+        {'match_term': 'space booking charges corporates', 'col_name': 'total_cost', 'specific': {'code': 'CP'},
+         'value': 0},
+
+    ],
+
+    'event_staffing_cost': [
+
+        {'match_term': 'event staffing cost', 'col_name': 'total_cost', 'specific': None, 'value': 0},
+
+    ],
+
+    'data_sciences_cost': [
+        {'match_term': 'data sciences', 'col_name': 'total_cost', 'specific': None, 'value': 0},
+
+    ],
+
+    'printing_cost': [
+        {'match_term': 'printing cost', 'col_name': 'total_cost', 'specific': None, 'value': 0},
+    ],
+
+    'proposal_master_cost': [
+
+        {'match_term': 'Agency Charges', 'col_name': 'agency_cost', 'specific': None, 'value': 0},
+        {'match_term': 'Basic Cost(Without Tax)', 'col_name': 'basic_cost', 'specific': None, 'value': 0},
+        {'match_term': 'discount', 'col_name': 'discount', 'specific': None, 'value': 0},
+        {'match_term': 'Total Cost with Tax', 'col_name': 'total_cost', 'specific': None, 'value': 0},
+        {'match_term': 'Total Cost with Tax', 'col_name': 'total_cost', 'specific': None, 'value': 0},
+        {'match_term': 'Tax', 'col_name': 'tax', 'specific': None, 'value': 0},
+        {'match_term': 'Total Impressions', 'col_name': 'total_impressions', 'specific': None, 'value': 0},
+        {'match_term': 'Average Cost per Impression', 'col_name': 'average_cost_per_impression', 'specific': None,
+         'value': 0},
+
+    ],
+    'proposal_metrics': [
+
+        {'match_term': 'Societies Covered ', 'col_name': 'metric_name', 'specific': {'code': 'RS',  }, 'value': 0},
+        {'match_term': 'Corporate Parks Covered', 'col_name': 'metric_name', 'specific': {'code': 'CP'}, 'value': 0},
+
+        {'match_term': 'Total Society Impressions', 'col_name': 'metric_name', 'specific': {'code': 'RS'}, 'value': 0},
+        {'match_term': 'Total Corporates Impressions', 'col_name': 'metric_name', 'specific': {'code': 'CP',},'value': 0},
+
+        {'match_term': 'Average Cost per Corporate', 'col_name': 'metric_name', 'specific': {'code': 'CP'}, 'value': 0},
+        {'match_term': 'Average Cost per Society', 'col_name': 'metric_name', 'specific': {'code': 'RS'}, 'value': 0},
+        {'match_term': 'Average Cost per Gym', 'col_name': 'metric_name', 'specific': {'code': 'GY'}, 'value': 0},
+        {'match_term': 'Average Cost per Salon', 'col_name': 'metric_name', 'specific': {'code': 'SA'}, 'value': 0},
+
+        {'match_term': 'Estimated Flat Covered', 'col_name': 'metric_name', 'specific': {'code': 'RS', }, 'value': 0},
+        {'match_term': 'Estimated Tower Covered', 'col_name': 'metric_name', 'specific': {'code': 'CP'}, 'value': 0},
+        {'match_term': 'Estimated Residents', 'col_name': 'metric_name', 'specific': {'code': 'RS'}, 'value': 0},
+        {'match_term': 'Estimated Employess', 'col_name': 'metric_name', 'specific': {'code': 'CP'}, 'value': 0},
+
+    ]
+
+}
+
+# models whose only one object exists in the sheet and data is made up of  content of  many rows
+one_obect_models = ['ideation_design_cost', 'logistic_operations_cost', 'event_staffing_cost', 'data_sciences_cost', 'printing_cost',
+                    'proposal_master_cost', ]
+
+
+# set the column index in the sheet that determines the values for Offline prricing
+value_index = 1
+comment_index = 2
+metric_model = 'proposal_metrics'
