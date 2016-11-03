@@ -109,6 +109,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             // do the same for corporate and gym and salons
             // reassing the center_marker acc. to the selected center
             $scope.center_marker =assignCenterMarkerToMap($scope.current_center.center);
+            suppliersData();
+            mapViewBasicSummary();
+            // mapViewFiltersSummary();
+            // mapViewImpressions();
+            gridViewBasicSummary();
         }
         //Start:reset center to original center
         //End: reset center to original center

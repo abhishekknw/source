@@ -1233,9 +1233,9 @@ class FilteredSuppliersAPIView(APIView):
                                                                    'flier_door_to_door', 'unit_daily')
 
                         # ADDNEW -->
-                    supplier_ids.append(supplier['supplier_id'])
-                    suppliers_data.append(supplier)
-                    suppliers_count += 1
+                supplier_ids.append(supplier['supplier_id'])
+                suppliers_data.append(supplier)
+                suppliers_count += 1
 
                 for society_key, actual_key in website_constants.society_common_keys.iteritems():
                     if society_key in supplier.keys():
@@ -1247,7 +1247,7 @@ class FilteredSuppliersAPIView(APIView):
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
                                                                                                         fliers=Sum('flier_frequency'))
-
+                                                                   
             result = {}
 
             result['suppliers'] = {}
