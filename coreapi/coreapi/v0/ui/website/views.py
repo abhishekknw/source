@@ -16,9 +16,12 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.decorators import detail_route,list_route
 from openpyxl import Workbook
 from openpyxl.compat import range
 import requests
+from rest_framework.parsers import JSONParser, FormParser
 #from import_export import resources
 
 import openpyxl
@@ -40,13 +43,17 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
 
 
 from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys,\
-                      inventorylist, society_keys, flat_type_dict, index_of_center_id
+                      inventorylist, society_keys, flat_type_dict, index_of_center_id, offline_pricing_data
+from constants import *
 
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
 import utils as website_utils
 import v0.ui.utils as ui_utils
+import v0.models as models
+import serializers as website_serializers
+import constants as website_constants
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -763,125 +770,7 @@ class FinalCampaignBookingAPIView(APIView):
         return Response({"message": "Campaign Booked Successfully"}, status=200)
 
 
-
-
-
 # Beta API below this point. Be Careful. Danger Below
-
-class InitialProposalAPIView(APIView):
-    '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal
-    fields are stored in the database
-    ProposalInfo and ProposalCenterMapping models are used only'''
-
-    def post(self, request, account_id=None, format=None):
-        '''In this centers contain format like
-        centers : [
-            center : [
-                space_mapping : []
-            ]
-            society_inventory : []  // these will be made if in center[space_mapping][society_allowed] is true
-            corporate_inventory : []
-        ]
-        This is done to be in sync with the format on map view page as serializers.data dont allow to append
-        any new (key,value) pair to its existing data
-        '''
-
-        supplier_codes = {
-            'society' : 'RS',   'corporate' : 'CP',
-            'gym' : 'GY',       'salon' : 'SA'
-        }
-
-        with transaction.atomic():
-            proposal_data = request.data
-            proposal_data['proposal_id'] = self.create_proposal_id()
-            try:
-                account = AccountInfo.objects.get(account_id=account_id)
-            except AccountInfo.DoesNotExist:
-                return Response({'message':'Invalid Account ID'}, status=406)
-            proposal_data['account'] = account.account_id
-            try:
-                proposal_object = ProposalInfo.objects.get(proposal_id=proposal_data['proposal_id'])
-                # id already exists --> Do something
-                return Response(status=404)
-            except ProposalInfo.DoesNotExist:
-                proposal_serializer = ProposalInfoSerializer(data=proposal_data)
-
-                if proposal_serializer.is_valid():
-                    proposal_object = proposal_serializer.save()
-                else:
-                    return Response({'message' : 'Invalid Proposal Info', 'errors' : \
-                        proposal_serializer.errors}, status=406)
-
-                for center_info in proposal_data['centers']:
-                    center = center_info['center']
-                    space_mapping = center['space_mapping']
-                    center['proposal'] = proposal_object.proposal_id
-                    address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + center['pincode']
-                    geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
-                    try:
-                        geo_object = geocoder.geocode(address)
-                    except GeocoderError:
-                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({'message' : 'Latitude Longitude Not found for address : ' + address}, status=406)
-                    except ConnectionError:
-                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({'message' : 'Unable to connect to google Maps'}, status=406)
-
-                    center['latitude'] = geo_object.latitude
-                    center['longitude'] = geo_object.longitude
-
-                    center_serializer = ProposalCenterMappingSerializer(data=center)
-
-                    if center_serializer.is_valid():
-                        center_object = center_serializer.save()
-                    else:
-                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({'message' : 'Invalid Center Data', 'errors' : center_serializer.errors},\
-                            status=406)
-
-                    space_mapping['center'] = center_object.id
-                    space_mapping['proposal'] = proposal_object.proposal_id
-                    space_mapping_serializer = SpaceMappingSerializer(data=space_mapping)
-                    if space_mapping_serializer.is_valid():
-                        space_mapping_object = space_mapping_serializer.save()
-                    else:
-                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                        return Response({
-                                'message' : 'Invalid Space Mapping Data',
-                                'errors' : space_mapping_serializer.errors
-                            }, status=406)
-
-
-                    # ADDNEW --> extend the list in for loop when new spaces added. Keep the variables names accordingly
-                    for space in ['society','corporate','gym','salon']:
-                        ''' This loops checks if the space is allowed and if it is allowed save the
-                        inventory types chosen by the user in the inventory_type table '''
-                        try:
-                            space_allowed = space + '_allowed'
-                            if space_mapping[space_allowed]:
-                                space_inventory = space + '_inventory'
-                                center_info[space_inventory]['supplier_code'] = supplier_codes[space]
-                                center_info[space_inventory]['space_mapping'] = space_mapping_object.id
-                                inventory_type_serializer = InventoryTypeSerializer(data=center_info[space_inventory])
-                                if inventory_type_serializer.is_valid():
-                                    inventory_type_serializer.save()
-                                else:
-                                    ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
-                                    return Response({
-                                            'message' : 'Invalid Inventory Type Info',
-                                            'errors' : inventory_type_serializer.errors
-                                        })
-                        except KeyError:
-                            pass
-
-
-        return Response(proposal_object.proposal_id,status=200)
-
-    def create_proposal_id(self):
-        import random, string
-        return ''.join(random.choice(string.ascii_letters) for _ in range(8))
-
-
 
 def return_price(adinventory_type_dict, duration_type_dict, inv_type, dur_type):
     price_mapping = PriceMappingDefault.objects.filter(adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type])
@@ -904,13 +793,10 @@ class SpacesOnCenterAPIView(APIView):
         response = {}
         center_id = request.query_params.get('center',None)
         try:
-            # if proposal_id is None:
-            #     proposal_id = 'AlntOlJi';
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
             response['business_name'] = proposal.account.business.name
         except ProposalInfo.DoesNotExist:
             return Response({'message' : 'Invalid Proposal ID sent'}, status=406)
-
 
         # if center comes in get request then just return the result for that center
         # this is to implement the reset center functionality
@@ -919,13 +805,16 @@ class SpacesOnCenterAPIView(APIView):
                 center_id = int(center_id)
             except ValueError:
                 return Response({'message' : 'Invalid Center ID provided'}, status=406)
+            # fetch center object
             proposal_centers = ProposalCenterMapping.objects.filter(id=center_id)
             if not proposal_centers:
                 return Response({'message' : 'Invalid Center ID provided'}, status=406)
         else :
+            # fetch all centers for this proposal id
             proposal_centers = ProposalCenterMapping.objects.filter(proposal=proposal)
 
         centers_data_list = []
+        # iterate all centers one by one
         for proposal_center in proposal_centers:
             try:
                 space_mapping_object = SpaceMapping.objects.get(center=proposal_center)
@@ -934,6 +823,7 @@ class SpacesOnCenterAPIView(APIView):
 
             space_info_dict = {}
 
+            # calculate the max, min lat long
             delta_dict = website_utils.get_delta_latitude_longitude(float(proposal_center.radius), float(proposal_center.latitude))
 
             delta_latitude = delta_dict['delta_latitude']
@@ -959,10 +849,20 @@ class SpacesOnCenterAPIView(APIView):
                             
                     except KeyError:
                         pass
+
+                # get all societies based on the query q
                 societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1', 'society_address2', 'society_subarea', 'society_locality', 'society_location_type', 'flat_count', 'average_rent', 'machadalo_index', 'society_type_quality','tower_count','flat_count')
+
+                # to maintain list of shortlisted societies
                 societies = []
+
+                # to maintain list of society_ids
                 society_ids = []
+
+                # to maintain total count of societies
                 societies_count = 0
+
+                # for each society within defined lat long, process the society
                 for society in societies_temp:
                     if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         society['society_latitude'], society['society_longitude']):
@@ -972,16 +872,14 @@ class SpacesOnCenterAPIView(APIView):
                         duration_type_dict = ui_utils.duration_type_func()
 
                         if society_inventory_obj:
-                            #return Response({'status': False, 'error': 'Inventory object does not exist for {0}'. format(society['supplier_id'])} , status=400)
-                        # society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                             society['shortlisted'] = True
                             society['buffer_status'] = False
-                            # obj = InventorySummaryAPIView()
 
+                            # not required
                             if society_inventory_obj.poster_allowed_nb or society_inventory_obj.poster_allowed_lift:
                                 society['total_poster_count'] = society_inventory_obj.total_poster_count
                                 society['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4', 'campaign_weekly')
-
+                            # not required
                             if society_inventory_obj.standee_allowed:
                                 society['total_standee_count'] = society_inventory_obj.total_standee_count
                                 society['standee_price'] = return_price(adinventory_type_dict, duration_type_dict, 'standee_small', 'campaign_weekly')
@@ -995,15 +893,21 @@ class SpacesOnCenterAPIView(APIView):
                                 society['flier_frequency'] = society_inventory_obj.flier_frequency
                                 society['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
+                        # append the society id
                         society_ids.append(society['supplier_id'])
+
+                        # append the society object to list
                         societies.append(society)
+
+                        # increment the societies count
                         societies_count += 1
-
-
+                # aggregate information over counts of standee, flier, poster etc is required.
                 societies_inventory_count =  InventorySummary.objects.filter(supplier_id__in=society_ids).aggregate(posters=Sum('total_poster_count'),\
                     standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
 
+                # add all societies shortlisted
                 space_info_dict['societies'] = societies
+
                 space_info_dict['societies_inventory_count'] = societies_inventory_count
                 space_info_dict['societies_inventory'] = societies_inventory_serializer.data
                 space_info_dict['societies_count'] = societies_count
@@ -1062,21 +966,23 @@ class SpacesOnCenterAPIView(APIView):
                 space_info_dict['corporates_inventory_count'] = carporates_inventory_count  #implement this first
                 space_info_dict['corporates_inventory'] = corporates_inventory_serializer.data
 
-            if space_mapping_object.gym_allowed:
-                # ADDNEW --> write gym code for filtering
-                pass
+                # add inventory count information
+                space_info_dict['societies_inventory_count'] = societies_inventory_count
 
-            if space_mapping_object.salon_allowed:
-                # ADDNEW --> write salon code for filtering
-                pass
+                # add InventoryType details
+                space_info_dict['societies_inventory'] = societies_inventory_serializer.data
 
+                # add the total count of shortlisted societies
+                space_info_dict['societies_count'] = societies_count
 
+            # add center information
             proposal_center_serializer = ProposalCenterMappingSpaceSerializer(proposal_center)
             space_info_dict['center'] = proposal_center_serializer.data
 
+            # append the structure obtained into the list for centers
             centers_data_list.append(space_info_dict)
 
-
+        # return the result
         response['centers'] = centers_data_list
 
         return Response(response, status=200)
@@ -1222,7 +1128,7 @@ class SpacesOnCenterAPIView(APIView):
         return Response(response, status=200)
 
 
-class GetFilteredSuppliersAPIView(APIView):
+class FilteredSuppliersAPIView(APIView):
     """
     This API gives suppliers based on different filters from mapView and gridView Page
     Currently implemented filters are locality and location (Standard, Medium High etc.)
@@ -1231,6 +1137,27 @@ class GetFilteredSuppliersAPIView(APIView):
 
     def get(self, request, format=None):
         '''
+        Response is in form
+        {
+            "status": true,
+            "data": {
+                "suppliers": {
+                    "RS": []
+                },
+                "suppliers_meta": {
+                    "RS": {
+                        "count": 0,
+                        "inventory_count": {
+                            "posters": null,
+                            "stalls": null,
+                            "standees": null,
+                            "fliers": null
+                        }
+                    }
+                }
+            }
+        }
+
         lat -- latitude
         lng -- longitude
         r -- radius
@@ -1240,8 +1167,8 @@ class GetFilteredSuppliersAPIView(APIView):
         flc -- flat count
         inv -- inventory params example PO, ST, SL
         supplier_type_code -- RS, CP etc
-
         '''
+        class_name = self.__class__.__name__
         try:
 
             response = {}
@@ -1316,10 +1243,9 @@ class GetFilteredSuppliersAPIView(APIView):
 
             # get all suppliers  with all columns for the filter we constructed.
             suppliers = ui_utils.get_model(supplier_code).objects.filter(filter_query)
-            # suppliers = supplier_code_filter_params[supplier_code]['MODEL'].objects.filter(filter_query)
 
             serializer = ui_utils.get_serializer(supplier_code)(suppliers, many=True)
-            #serializer = supplier_code_filter_params[supplier_code]['SERIALIZER'](suppliers, many=True)
+
             suppliers = serializer.data
             supplier_ids = []
             suppliers_count = 0
@@ -1327,19 +1253,20 @@ class GetFilteredSuppliersAPIView(APIView):
 
             # iterate over all suppliers to  generate the final response
             for supplier in suppliers:
+
                 supplier['supplier_latitude'] = supplier['society_latitude'] if supplier['society_latitude'] else supplier['latitude']
                 supplier['supplier_longitude'] = supplier['society_longitude'] if supplier['society_longitude'] else supplier['longitude']
+
                 if website_utils.space_on_circle(latitude, longitude, radius, supplier['supplier_latitude'],supplier['supplier_longitude']):
                     supplier_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
                                                                                  supplier['supplier_id'])
                     if supplier_inventory_obj:
 
-                    # supplier_inventory_obj = InventorySummary.objects.get(supplier_id=supplier['supplier_id'])
                         supplier['shortlisted'] = True
                         supplier['buffer_status'] = False
-                        # obj = InventorySummaryAPIView()
                         adinventory_type_dict = ui_utils.adinventory_func()
                         duration_type_dict = ui_utils.duration_type_func()
+
                         if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
                             supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
                             supplier['poster_price'] = return_price(adinventory_type_dict, duration_type_dict, 'poster_a4',
@@ -1363,23 +1290,40 @@ class GetFilteredSuppliersAPIView(APIView):
                                                                    'flier_door_to_door', 'unit_daily')
 
                         # ADDNEW -->
+                supplier_ids.append(supplier['supplier_id'])
+                suppliers_data.append(supplier)
+                suppliers_count += 1
 
-                    supplier_ids.append(supplier['supplier_id'])
-                    suppliers_data.append(supplier)
-                    suppliers_count += 1
-
+                for society_key, actual_key in website_constants.society_common_keys.iteritems():
+                    if society_key in supplier.keys():
+                        value = supplier[society_key]
+                        del supplier[society_key]
+                        supplier[actual_key] = value         
             suppliers_inventory_count = InventorySummary.objects.filter_objects({'supplier_type_code': supplier_code},
                                                                                 supplier_ids).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
                                                                                                         fliers=Sum('flier_frequency'))
+                                                                   
+            result = {}
 
-            response['suppliers'] = suppliers_data
-            response['supplier_inventory_count'] = suppliers_inventory_count
-            response['supplier_count'] = suppliers_count
-            response['supplier_type_code'] = supplier_code
-            return Response(response, status=200)
+            result['suppliers'] = {}
+            result['suppliers_meta'] = {}
 
+            result['suppliers']['RS'] = suppliers_data
+
+            result['suppliers_meta']['RS'] = {}
+
+            result['suppliers_meta']['RS']['count'] = suppliers_count
+            result['suppliers_meta']['RS']['inventory_count'] = suppliers_inventory_count
+
+            return ui_utils.handle_response(class_name, data=result, success=True)
+
+            # response['suppliers'] = suppliers_data
+            # response['supplier_inventory_count'] = suppliers_inventory_count
+            # response['supplier_count'] = suppliers_count
+            # response['supplier_type_code'] = supplier_code
+            # return Response(response, status=200)
         except Exception as e:
             return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -2098,6 +2042,17 @@ class SaveSocietyData(APIView):
 
 class ExportData(APIView):
     """
+     The request is in form:
+     [
+          {
+               center : { id : 1 , center_name: c1, ...   } ,
+               suppliers: [  'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
+               suppliers_meta: {
+                                  'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                  'CP': { 'inventory_type_selected':  ['ST']
+               }
+          }
+     ]
      Exports supplier data on grid view page.
      The API is divided into two phases :
      1. extension of Headers and DATA keys. This is because one or more inventory type selected map to more HEADER
@@ -2108,14 +2063,16 @@ class ExportData(APIView):
     def post(self, request, proposal_id=None, format=None):
         try:
             wb = Workbook()
-            from constants import society_keys, proposal_header_keys
 
             # ws = wb.active
             ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
 
             # iterating through centers in request.data array
             for center in request.data:
-                inventory_array = center['center']['society_inventory_type_selected']
+
+                supplier_codes = center['supplier_codes']
+
+                inventory_array = center['inventory_type_selected']
 
                 # get the unique codes by combining all the codes
                 response = website_utils.get_unique_inventory_codes(inventory_array)
@@ -2156,7 +2113,7 @@ class ExportData(APIView):
 
             for center in request.data:
                 # get the inventory_array containg all the codes selected for this center
-                inventory_array = center['center']['society_inventory_type_selected']
+                inventory_array = center['inventory_type_selected']
 
                 # get the unique codes by combining all the codes
                 response = website_utils.get_unique_inventory_codes(inventory_array)
@@ -2165,7 +2122,7 @@ class ExportData(APIView):
                 unique_inventory_codes = response.data['data']
 
                 # for all societies in societies array
-                for index, item in enumerate(center['societies']):
+                for index, item in enumerate(center['suppliers']):
 
                     # iterate over center_keys and make a partial row with data from center object
                     center_list = []
@@ -2173,10 +2130,10 @@ class ExportData(APIView):
                         center_list.append(center['center'][key])
 
                     # add space mapping id
-                    center_list.append(center['center']['space_mappings']['id'])
+                    # center_list.append(center['center']['space_mappings']['id'])
 
                     # add inventory type id
-                    center_list.append(center['societies_inventory']['id'])
+                    # center_list.append(center['societies_inventory']['id'])
 
                     # calculates inventory price per flat and  store the result in dict itself
                     local_list = []
@@ -2205,9 +2162,93 @@ class ExportData(APIView):
             return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ImportSocietyData(APIView):
+class GenericExportData(APIView):
+    """
+        The request is in form:
+        [
+             {
+                  center : { id : 1 , center_name: c1, ...   } ,
+                  suppliers: { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} }
+                  suppliers_meta: {
+                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                     'CP': { 'inventory_type_selected':  ['ST']
+                  }
+             }
+        ]
+        Exports supplier data on grid view page.
+        The API is divided into two phases :
+        1. extension of Headers and DATA keys. This is because one or more inventory type selected map to more HEADER
+        and hence more DATA keys
+        2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
+    """
+    def post(self, request, proposal_id=None):
+        class_name = self.__class__.__name__
+        try:
+            workbook = Workbook()
+
+            # ws = wb.active
+            # ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
+            # iterating through centers in request.data array
+
+            data = request.data
+
+            # get the supplier type codes available in the request
+            response = website_utils.unique_supplier_type_codes(data)
+            if not response.data['status']:
+                return response
+            unique_supplier_codes = response.data['data']
+
+            result = {}
+
+            # initialize the result = {} dict which will be used in inserting into sheet
+            response = website_utils.initialize_export_final_response(unique_supplier_codes, result)
+            if not response.data['status']:
+                return response
+            result = response.data['data']
+
+            # collect all the extra header and database keys for all the supplier type codes and all inv codes in them
+            response = website_utils.extra_header_database_keys(unique_supplier_codes, data, result)
+            if not response.data['status']:
+                return response
+            result = response.data['data']
+
+            # make the call to generate data in the result
+            response = website_utils.make_export_final_response(result, data)
+            if not response.data['status']:
+                return response
+            result = response.data['data']
+
+            # print result
+            response = website_utils.insert_supplier_sheet(workbook, result)
+            if not response.data['status']:
+                return response
+
+            file_name = 'machadalo_{0}.xlsx'.format(str(datetime.datetime.now()))
+
+            workbook = response.data['data']
+            workbook.save(file_name)
+
+            return ui_utils.handle_response(class_name, data=result, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ImportSupplierData(APIView):
     """
     This API basically takes an excel sheet , process the data and saves it in the database.
+
+    The request by which the sheet is made  is in form:
+    [
+         {
+              center : { id : 1 , center_name: c1, ...   } ,
+              suppliers: { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} }
+              suppliers_meta: {
+                                 'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                 'CP': { 'inventory_type_selected':  ['ST']
+              }
+         }
+    ]
     """
     def post(self, request, proposal_id=None):
         """
@@ -2216,105 +2257,532 @@ class ImportSocietyData(APIView):
             proposal_id: proposal_id
 
         Returns: Saves the  data in db
-
         """
+        class_name = self.__class__.__name__
         try:
-            class_name = self.__class__.__name__
 
-            # file_name = BASE_DIR + '/sample5.xlsx'
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
             my_file = request.FILES['file']
             wb = openpyxl.load_workbook(my_file)
-            ws = wb.get_sheet_by_name('Shortlisted Spaces Details')
 
-            center_id_list_response = website_utils.get_center_id_list(ws, index_of_center_id)
+            # fetch all sheets
+            all_sheets = wb.get_sheet_names()
 
-            if not center_id_list_response.data['status']:
-                return center_id_list_response
+            # iterate over multiple sheets
+            for sheet in all_sheets:
 
-            center_id_list = center_id_list_response.data['data']
-
-            # normalize the center id's or map the actual center id's with indexes starting from zero
-            center_id_to_index_mapping = {}
-            result = []
-            for index, center_id in enumerate(center_id_list):
-                result.append({})
-                center_id_to_index_mapping[center_id] = index
-
-            # iterate through all rows and populate result array
-            for index, row in enumerate(ws.iter_rows()):
-                if index == 0:
+                # fetch supplier_type_code from sheet name
+                supplier_type_code = website_constants.sheet_names_to_codes.get(sheet)
+                if not supplier_type_code:
                     continue
 
-                """
-                  Number of rows in 'result' is number of distinct centers. each center has a center_id which is mapped
-                  to an index in the 'result' list. each element of result list is a center_object.
-                  Goal is to populate the right center_object with data of it's 3 keys:
-                 'societies_inventory', 'societies', 'center'
+                # fetch the worksheet object to work with
+                ws = wb.get_sheet_by_name(sheet)
 
-                """
-                # in order to proceed further we need a dict in which keys are header names with spaces
-                # removed and values are value of the row which we are processing
+                # fetch all the center id's
+                center_id_list_response = website_utils.get_center_id_list(ws, index_of_center_id)
 
-                row_response = website_utils.get_mapped_row(ws, row)
-                if not row_response.data['status']:
-                    return row_response
-                row = row_response.data['data']
+                if not center_id_list_response.data['status']:
+                    return center_id_list_response
 
-                # get the center index mapped for this center_id
-                center_index = center_id_to_index_mapping[row['center_id']]
+                center_id_list = center_id_list_response.data['data']
 
-                # get the actual center_object from result list to process further
-                center_object = result[center_index]
+                # normalize the center id's or map the actual center id's with indexes starting from zero
+                center_id_to_index_mapping = {}
+                result = []
+                for index, center_id in enumerate(center_id_list):
+                    result.append({})
+                    center_id_to_index_mapping[center_id] = index
 
-                # initialize the center_object  with necessary keys if not already
-                if not center_object:
-                    response = website_utils.initialize_keys(center_object, row)
+                # iterate through all rows and populate result array
+                for index, row in enumerate(ws.iter_rows()):
+                    if index == 0:
+                        continue
+
+                    """
+                      Number of rows in 'result' is number of distinct centers. each center has a center_id which is mapped
+                      to an index in the 'result' list. each element of result list is a center_object.
+                      Goal is to populate the right center_object with data of it's 3 keys:
+                     'societies_inventory', 'societies', 'center'
+
+                    """
+                    # in order to proceed further we need a dict in which keys are header names with spaces
+                    # removed and values are value of the row which we are processing
+
+                    row_response = website_utils.get_mapped_row(ws, row)
+                    if not row_response.data['status']:
+                        return row_response
+                    row = row_response.data['data']
+
+                    # get the center index mapped for this center_id
+                    center_index = center_id_to_index_mapping[int(row['center_id'])]
+
+                    # get the actual center_object from result list to process further
+                    center_object = result[center_index]
+
+                    # initialize the center_object  with necessary keys if not already
+                    if not center_object:
+                        response = website_utils.initialize_keys(center_object, supplier_type_code)
+                        if not response.data['status']:
+                            return response
+                        center_object = response.data['data']
+
+                    # add 1 society that represents this row to the list of societies this object has already
+                    response = website_utils.make_suppliers(center_object, row, supplier_type_code)
                     if not response.data['status']:
                         return response
                     center_object = response.data['data']
 
-                # add 'societies_inventory' data  in center_object. must be called before make_societies.
-                response = website_utils.make_societies_inventory(center_object, row)
+                    # add the 'center' data  in center_object
+                    response = website_utils.make_center(center_object, row)
+                    if not response.data['status']:
+                        return response
+                    center_object = response.data['data']
+
+                    # update the center dict in result with modified center_object
+                    result[center_index] = center_object
+
+                # populate the shortlisted_inventory_details table before hiting the url
+                response = website_utils.populate_shortlisted_inventory_details(result)
                 if not response.data['status']:
                     return response
-                center_object = response.data['data']
 
-                # add 1 society that represents this row to the list of societies this object has already
-                response = website_utils.make_societies(center_object, row)
+                # time to hit the url
+                url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
+                url = BASE_URL + url[1:]
+
+                data = result
+                headers={
+                    'Content-Type': 'application/json'
+                }
+                response = requests.post(url, json.dumps(data), headers=headers)
+
+                if response.status_code != status.HTTP_200_OK:
+                    return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': True, 'data': 'successfully imported'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ImportProposalCostData(APIView):
+    """
+    The class is responsible for importing proposal cost data from an excel sheet.
+    All the import api's heavily depend upon the structure of the sheet which it's importing.
+    so if you are trying to understand what this api does, understand the structure of the sheet first.
+
+    two phases: data collection and data insertion.
+    """
+
+    def post(self, request):
+
+        class_name = self.__class__.__name__
+
+        file_name = BASE_DIR + '/proposal_cost_data.xlsx'
+
+        # load the workbook
+        wb = openpyxl.load_workbook(file_name)
+        # read the sheet
+        ws = wb.get_sheet_by_name('Offline Pricing')
+
+        # before inserting delete all previous data as we don't want to duplicate things.
+        # this deletion will happen for a particular center and proposal id. currently it's left unhandled.
+        response = website_utils.delete_proposal_cost_data()
+        if not response.data['status']:
+            return response
+
+        with transaction.atomic():
+            try:
+                count = 0
+                master_data = {}
+                # DATA COLLECTION  in order to  collect data in master_data, initialize with proper data structures
+                master_data = website_utils.initialize_master_data(master_data)
+                for index, row in enumerate(ws.iter_rows()):
+
+                    # ignore empty rows
+                    if website_utils.is_empty_row(row):
+                        continue
+                    # send one row for processing
+                    response = website_utils.handle_offline_pricing_row(row, master_data)
+                    if not response.data['status']:
+                        return response
+                    # update master_data with response
+                    master_data = response.data['data']
+                    count += 1
+
+                # DATA INSERTION time to save the data
+                response = website_utils.save_master_data(master_data)
                 if not response.data['status']:
                     return response
-                center_object = response.data['data']
+                return ui_utils.handle_response(class_name, data='successfully imported.Saved {0} rows'.format(count),
+                                                success=
+                                                True)
+            except Exception as e:
+                return ui_utils.handle_response(class_name, exception_object=e)
 
-                # add the 'center' data  in center_object
-                response = website_utils.make_center(center_object, row)
+
+class CreateInitialProposal(APIView):
+    """
+    This is first step in creating proposal. Basic data get's stored here.
+    because we have reduced number of models in which Proposal
+    data is stored hence we have created new classes CreateInitialProposal and CreateFinalProposal API.
+    author: nikhil
+    """
+
+    def post(self, request, account_id):
+        """
+        Args:
+            request: request param
+            proposal_id:  proposal_id for which data is to be saved
+
+
+        Returns: success or failure depending an initial proposal is created or not.
+
+        """
+        class_name = self.__class__.__name__
+        try:
+
+            with transaction.atomic():
+                proposal_data = request.data
+
+                # create a unique proposal id
+                proposal_data['proposal_id'] = website_utils.create_proposal_id()
+
+                # get the account object. required for creating the proposal
+                account = AccountInfo.objects.get(account_id=account_id)
+                proposal_data['account'] = account.account_id
+
+                # query for parent. if available set it. if it's available, then this is an EDIT request.
+                parent = request.data.get('parent')
+
+                # set parent if available
+                if parent:
+                    parent_proposal = ProposalInfo.objects.get(proposal_id=parent)
+                    proposal_data['parent'] = parent_proposal.proposal_id
+
+                # call the function that saves basic proposal information
+                response = website_utils.create_basic_proposal(proposal_data)
                 if not response.data['status']:
                     return response
-                center_object = response.data['data']
 
-                # update the center dict in result with modified center_object
-                result[center_index] = center_object
+                # time to save all the centers data
+                response = website_utils.save_center_data(proposal_data)
+                if not response.data['status']:
+                    return response
 
-            # populate the shortlisted_inventory_details table before hiting the url
-            response = website_utils.populate_shortlisted_inventory_details(result)
+                # return the proposal_id of the new proposal created
+                return ui_utils.handle_response(class_name, data=proposal_data['proposal_id'], success=True)
+        except Exception as e:
+             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class CreateFinalProposal(APIView):
+    """
+    The request is in form:
+        [
+             {
+                  center : { id : 1 , center_name: c1, ...   } ,
+                  suppliers:  { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...}  }
+                  suppliers_meta: {
+                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                     'CP': { 'inventory_type_selected':  ['ST']
+                  }
+             }
+        ]
+    This is second step for creating proposal.
+    The proposal_id in the request is always a brand new proposal_id wether you hit this API from an EDIT form of
+    the proposal or you are creating an entirely new proposal.
+
+    structure of request.data is  a list. item of the list is the one center information. inside center
+    information we have all the suppliers shortlisted, all the Filters and all.
+
+    """
+
+    def post(self, request, proposal_id):
+        """
+        Args:
+            request: request data
+            proposal_id: proposal_id to be updated
+            author: nikhil
+
+        Returns: success if data is saved successfully.
+        """
+        class_name = self.__class__.__name__
+        try:
+            # simple dict to count new objects created each time the API is hit. a valuable information.
+
+            # to keep count of new objects created
+            objects_created = {
+                'SHORTLISTED_SUPPLIERS': 0,
+                'FILTER_OBJECTS': 0
+            }
+            # get the supplier type codes available in the request
+            response = website_utils.unique_supplier_type_codes(request.data)
+            if not response.data['status']:
+                return response
+            unique_supplier_codes = response.data['data']
+
+            with transaction.atomic():
+                for proposal_data in request.data:
+
+                    proposal_data['proposal_id'] = proposal_id
+                    response = website_utils.save_final_proposal(proposal_data, unique_supplier_codes)
+                    if not response.data['status']:
+                        return response
+                    objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']['SHORTLISTED_SUPPLIERS']
+                    objects_created['FILTER_OBJECTS'] += response.data['data']['FILTER_OBJECTS']
+
+                return ui_utils.handle_response(class_name, data=objects_created, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ProposalViewSet(viewsets.ViewSet):
+    """
+     A ViewSet handling various operations related to ProposalModel.
+     This viewset was made instead of creating separate ApiView's because all the api's in this viewset
+     are related to Proposal domain. so keeping them at one place makes sense.
+    """
+    parser_classes = (JSONParser, FormParser)
+
+    def retrieve(self, request, pk=None):
+        """
+        Fetches one Proposal object
+        Args:
+            request: request parameter
+            pk: primary key of proposal
+
+        Returns: one proposal object
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposal = ProposalInfo.objects.get(proposal_id=pk)
+            serializer = ProposalInfoSerializer(proposal)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['POST'])
+    def get_spaces(self, request, pk=None):
+        """
+        The API  fetches all the data required to display on the grid view page.
+        response looks like :
+        {
+           'status': true,
+           'data' : [
+                {
+                   suppliers: { RS: [], CP: [] } ,
+                   center: { ...   codes: [] }
+                }
+           ]
+
+        }
+        Args:
+            request:  request param
+            pk: proposal_id
+        Returns: collects data for all shortlisted suppliers and filters and send them.
+        ---
+        parameters:
+        - name: center_id
+          description:  center_id
+        - name: radius
+          description: radius
+        - name: supplier_codes
+          description:  array of codes like RS, CP, etc
+        """
+        class_name = self.__class__.__name__
+        try:
+            center_id = request.data.get('center_id')
+            radius = request.data.get('radius')
+            latitude = request.data.get('latitude')
+            longitude = request.data.get('longitude')
+
+            data = {
+                'proposal_id': pk,
+                'center_id': center_id,
+                'radius': radius,
+                'latitude': latitude,
+                'longitude': longitude
+            }
+            response = website_utils.suppliers_within_radius(data)
             if not response.data['status']:
                 return response
 
-            # time to hit the url
-            url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
-            url = BASE_URL + url[1:]
-
-            data = result
-            headers={
-                'Content-Type': 'application/json'
-            }
-            response = requests.post(url, json.dumps(data), headers=headers)
-            if response.status_code != status.HTTP_200_OK:
-                return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
-            return Response({'status': True, 'data': 'successfully imported'}, status=status.HTTP_200_OK)
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
-            return Response({'status': False, 'error': e.message}, status=status.HTTP_200_OK)
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['GET'])
+    def child_proposals(self, request, pk=None):
+        """
+        Fetches all proposals who have parent = pk
+        Args:
+            request: request param
+            pk: parent pk value. if pk == '0',this means we need to fetch all proposals whose parent is NULL.
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = {
+                'parent': pk if pk != '0' else None
+            }
+            response = website_utils.child_proposals(data)
+            if not response:
+                return response
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['GET'])
+    def shortlisted_suppliers(self, request, pk=None):
+        """
+        Fetches all shortlisted suppliers for this proposal.
+        Response looks like :
+        {
+           'status': true,
+           'data' : [
+                {
+                   suppliers: { RS: [], CP: [] } ,
+                   center: { ...   codes: [] }
+                }
+           ]
+        }
+
+        Args:
+            request: request
+            pk: pk
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = {
+                'proposal_id': pk
+            }
+            response = website_utils.proposal_shortlisted_spaces(data)
+            if not response.data['status']:
+                return response
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class InitialProposalAPIView(APIView):
+    '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal
+    fields are stored in the database
+    ProposalInfo and ProposalCenterMapping models are used only'''
+
+    def post(self, request, account_id=None, format=None):
+        '''In this centers contain format like
+        centers : [
+            center : [
+                space_mapping : []
+            ]
+            society_inventory : []  // these will be made if in center[space_mapping][society_allowed] is true
+            corporate_inventory : []
+        ]
+        This is done to be in sync with the format on map view page as serializers.data dont allow to append
+        any new (key,value) pair to its existing data
+        '''
+
+        supplier_codes = {
+            'society' : 'RS',   'corporate' : 'CP',
+            'gym' : 'GY',       'salon' : 'SA'
+        }
+
+        with transaction.atomic():
+            proposal_data = request.data
+            proposal_data['proposal_id'] = self.create_proposal_id()
+            try:
+                account = AccountInfo.objects.get(account_id=account_id)
+            except AccountInfo.DoesNotExist:
+                return Response({'message':'Invalid Account ID'}, status=406)
+            proposal_data['account'] = account.account_id
+            try:
+                proposal_object = ProposalInfo.objects.get(proposal_id=proposal_data['proposal_id'])
+                # id already exists --> Do something
+                return Response(status=404)
+            except ProposalInfo.DoesNotExist:
+                proposal_serializer = ProposalInfoSerializer(data=proposal_data)
+
+                if proposal_serializer.is_valid():
+                    proposal_object = proposal_serializer.save()
+                else:
+                    return Response({'message' : 'Invalid Proposal Info', 'errors' : \
+                        proposal_serializer.errors}, status=406)
+
+                for center_info in proposal_data['centers']:
+                    center = center_info['center']
+                    space_mapping = center['space_mapping']
+                    center['proposal'] = proposal_object.proposal_id
+                    address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + center['pincode']
+                    geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
+                    try:
+                        geo_object = geocoder.geocode(address)
+                    except GeocoderError:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                        return Response({'message' : 'Latitude Longitude Not found for address : ' + address}, status=406)
+                    except ConnectionError:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                        return Response({'message' : 'Unable to connect to google Maps'}, status=406)
+
+                    center['latitude'] = geo_object.latitude
+                    center['longitude'] = geo_object.longitude
+
+                    center_serializer = ProposalCenterMappingSerializer(data=center)
+
+                    if center_serializer.is_valid():
+                        center_object = center_serializer.save()
+                    else:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                        return Response({'message' : 'Invalid Center Data', 'errors' : center_serializer.errors},\
+                            status=406)
+
+                    space_mapping['center'] = center_object.id
+                    space_mapping['proposal'] = proposal_object.proposal_id
+                    space_mapping_serializer = SpaceMappingSerializer(data=space_mapping)
+                    if space_mapping_serializer.is_valid():
+                        space_mapping_object = space_mapping_serializer.save()
+                    else:
+                        ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                        return Response({
+                                'message' : 'Invalid Space Mapping Data',
+                                'errors' : space_mapping_serializer.errors
+                            }, status=406)
+
+
+                    # ADDNEW --> extend the list in for loop when new spaces added. Keep the variables names accordingly
+                    for space in ['society','corporate','gym','salon']:
+                        ''' This loops checks if the space is allowed and if it is allowed save the
+                        inventory types chosen by the user in the inventory_type table '''
+                        try:
+                            space_allowed = space + '_allowed'
+                            if space_mapping[space_allowed]:
+                                space_inventory = space + '_inventory'
+                                center_info[space_inventory]['supplier_code'] = supplier_codes[space]
+                                center_info[space_inventory]['space_mapping'] = space_mapping_object.id
+                                inventory_type_serializer = InventoryTypeSerializer(data=center_info[space_inventory])
+                                if inventory_type_serializer.is_valid():
+                                    inventory_type_serializer.save()
+                                else:
+                                    ProposalInfo.objects.get(proposal_id=proposal_object.proposal_id).delete()
+                                    return Response({
+                                            'message' : 'Invalid Inventory Type Info',
+                                            'errors' : inventory_type_serializer.errors
+                                        })
+                        except KeyError:
+                            pass
+
+
+        return Response(proposal_object.proposal_id,status=200)
+
+    def create_proposal_id(self):
+        import random, string
+        return ''.join(random.choice(string.ascii_letters) for _ in range(8))
 
 
 class SaveContactDetails(APIView):
@@ -2382,3 +2850,41 @@ class SaveContactDetails(APIView):
                                                                                                   failure_count),
             status=status.HTTP_200_OK)
 
+
+class ImportCampaignLeads(APIView):
+    """
+    The api to import campaign leads data
+    """
+
+    def post(self, request):
+        class_name = self.__class__.__name__
+        if not request.FILES:
+            return ui_utils.handle_response(class_name, data='No File Found')
+        my_file = request.FILES['file']
+        wb = openpyxl.load_workbook(my_file)
+
+        ws = wb.get_sheet_by_name('campaign_leads')
+
+        result = []
+
+        try:
+            # iterate through all rows and populate result array
+            for index, row in enumerate(ws.iter_rows()):
+                if index == 0:
+                    continue
+
+                # make a dict of the row
+                row_response = website_utils.get_mapped_row(ws, row)
+                if not row_response.data['status']:
+                    return row_response
+                row = row_response.data['data']
+
+                # handle it
+                response = website_utils.handle_campaign_leads(row)
+                if not response.data['status']:
+                    return response
+
+                result.append(response.data['data'])
+            return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)

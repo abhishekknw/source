@@ -46,7 +46,7 @@ class GetInventoryObjectManager(models.Manager):
         try:
             # supplier_code = data['supplier_type_code']
 
-            supplier_code = 'CP'  # todo: change this when get clearity
+            supplier_code = 'RS'  # todo: change this when get clearity
             content_type = self.get_content_type(supplier_code)
             inventory_objects = self.filter(object_id__in=supplier_ids, content_type=content_type)
             return inventory_objects

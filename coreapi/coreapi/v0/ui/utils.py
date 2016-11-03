@@ -41,10 +41,10 @@ def handle_response(object_name, data='some error occurred', exception_object=Ex
         # prepare the object to be sent in error response
         data = {
             'general_error': data,
-            'system_error': exception_object.message if exception_object.message else exception_object.args if exception_object.args else None,
+            'system_error': str(exception_object.message) if exception_object.message else str(exception_object.args) if exception_object.args else "",
             'culprit_module': object_name
         }
-        return Response({'status': False, 'data': json.dumps(data)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status': False, 'data': data}, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'status': True, 'data': data}, status=status.HTTP_200_OK)
 
@@ -598,10 +598,10 @@ def get_model(supplier_type_code):
         return None
 
 
-def get_serializer(supplier_type_code):
+def get_serializer(query):
     """
     Args:
-        supplier_type_code: CP, RS
+        query: CP, RS or table name in db
 
     Returns: right SerializerClass
 
@@ -614,10 +614,18 @@ def get_serializer(supplier_type_code):
             'CP': v0.serializers.SupplierTypeCorporateSerializer,
             'GY': v0.serializers.SupplierTypeGymSerializer,
             'SA': v0.serializers.SupplierTypeSalonSerializer,
-            'BS': v0.serializers.SupplierTypeBusShelterSerializer
+            'BS': v0.serializers.SupplierTypeBusShelterSerializer,
+            'ideation_design_cost': v0.serializers.IdeationDesignCostSerializer,
+            'logistic_operations_cost': v0.serializers.LogisticOperationsCostSerializer,
+            'space_booking_cost': v0.serializers.SpaceBookingCostSerializer,
+            'event_staffing_cost': v0.serializers.EventStaffingCostSerializer,
+            'data_sciences_cost': v0.serializers.DataSciencesCostSerializer,
+            'printing_cost': v0.serializers.PrintingCostSerializer,
+            'proposal_metrics': v0.serializers.ProposalMetricsSerializer,
+            'proposal_master_cost': v0.serializers.ProposalMasterCostSerializer
 
         }
-        return serializers[supplier_type_code]
+        return serializers[query]
     except Exception as e:
         return None
 

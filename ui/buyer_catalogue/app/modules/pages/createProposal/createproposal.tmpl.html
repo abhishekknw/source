@@ -66,8 +66,8 @@
               <td><input type="text" ng-model="center.center.pincode" class="form-control spacing col-width"></td>
     					<td><input type="number" ng-model="center.center.radius" class="form-control spacing col-width"></td>
     					<td>
-                <input type="checkbox" ng-model="center.center.space_mapping.society_allowed" ng-change="checkSpace(center, 'society')">Societies<br>
-                <input type="checkbox" ng-model="center.center.space_mapping.corporate_allowed" ng-change="checkSpace(center, 'corporate')">Corporate Parks
+                <input type="checkbox"  ng-click="checkSpace('RS',center)">Societies<br>
+                <input type="checkbox"  ng-click="checkSpace('CP',center)">Corporate Parks
               </td>
     					<td><button class="btn btn-danger spacing" ng-click="removeCenter($index)">Remove Center</button></td>
     				</tr>

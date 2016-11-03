@@ -426,3 +426,43 @@ class CorporateCompanyDetailsSerializer(ModelSerializer):
 class SupplierTypeBusShelterSerializer(ModelSerializer):
     class Meta:
         model = models.SupplierTypeBusShelter
+
+
+class ProposalMasterCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.ProposalMasterCost
+
+
+class PrintingCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.PrintingCost
+
+
+class LogisticOperationsCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.LogisticOperationsCost
+
+
+class IdeationDesignCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.IdeationDesignCost
+
+
+class SpaceBookingCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.SpaceBookingCost
+
+
+class EventStaffingCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.EventStaffingCost
+
+
+class DataSciencesCostSerializer(ModelSerializer):
+    class Meta:
+        model = models.DataSciencesCost
+
+
+class ProposalMetricsSerializer(ModelSerializer):
+    class Meta:
+        model = models.ProposalMetrics
