@@ -177,7 +177,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         //End: Change center,change radius and reset center functionality
     //start: mapview basic summary required when load a page
       var mapViewBasicSummary = function(){
-          $scope.flat_count =0, $scope.tower_count=0;
+          $scope.flat_count = 0, $scope.tower_count = 0;
           if($scope.current_center.suppliers['RS'] != undefined){
               $scope.societies_count = $scope.current_center.suppliers['RS'].length;
               for(var temp=0;temp<$scope.societies_count;temp++){
@@ -279,7 +279,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           $scope.proposal_id_temp = $stateParams.proposal_id;
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
-
+              console.log("center",response);
                 $scope.business_name = response.business_name;
                 $scope.center_data = response.data;
                 console.log("printing center_data", $scope.center_data);
