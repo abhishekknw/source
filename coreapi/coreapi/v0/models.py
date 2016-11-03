@@ -889,6 +889,7 @@ class  SupplierTypeSociety(models.Model):
 
         db_table = 'supplier_society'
 
+
 class SupplierTypeCorporate(BasicSupplierDetails):
 
     corporate_type = models.CharField(max_length=25,blank=True, null= True)
@@ -2060,4 +2061,41 @@ class ProposalCenterSuppliers(models.Model):
 
     class Meta:
         db_table = 'proposal_center_suppliers'
+
+
+class Lead(models.Model):
+    """
+    A model to store the leads data. This user is different django from auth_user. it's a 'lead'.
+    """
+    email = models.EmailField(primary_key=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    gender = models.CharField(max_length=255, null=True, blank=True)
+    age = models.FloatField(null=True, blank=True)
+    phone = models.IntegerField(null=True, blank=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    lead_type = models.CharField(max_length=255, null=True, blank=True)
+    lead_status = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'lead'
+
+
+class CampaignLeads(models.Model):
+    """
+    a campaign can have multiple leads. a lead can go in multiple campaigns.
+    campaign stores the campaign id.
+    lead stores the lead id
+    """
+    campaign_id = models.IntegerField(default=0)
+    lead_email = models.EmailField(default='')
+    comments = models.CharField(max_length=255, null=True)
+
+    class Meta:
+        db_table = 'campaign_leads'
+        unique_together = (('campaign_id', 'lead_email'),)
+
+
+
+
+
 

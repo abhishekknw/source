@@ -1194,7 +1194,6 @@ class FilteredSuppliersAPIView(APIView):
             suppliers_count = 0
             suppliers_data = []
 
-
             # iterate over all suppliers to  generate the final response
             for supplier in suppliers:
 
@@ -2794,3 +2793,41 @@ class SaveContactDetails(APIView):
                                                                                                   failure_count),
             status=status.HTTP_200_OK)
 
+
+class ImportCampaignLeads(APIView):
+    """
+    The api to import campaign leads data
+    """
+
+    def post(self, request):
+        class_name = self.__class__.__name__
+        if not request.FILES:
+            return ui_utils.handle_response(class_name, data='No File Found')
+        my_file = request.FILES['file']
+        wb = openpyxl.load_workbook(my_file)
+
+        ws = wb.get_sheet_by_name('campaign_leads')
+
+        result = []
+
+        try:
+            # iterate through all rows and populate result array
+            for index, row in enumerate(ws.iter_rows()):
+                if index == 0:
+                    continue
+
+                # make a dict of the row
+                row_response = website_utils.get_mapped_row(ws, row)
+                if not row_response.data['status']:
+                    return row_response
+                row = row_response.data['data']
+
+                # handle it
+                response = website_utils.handle_campaign_leads(row)
+                if not response.data['status']:
+                    return response
+
+                result.append(response.data['data'])
+            return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)

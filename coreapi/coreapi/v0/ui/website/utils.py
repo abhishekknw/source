@@ -2,6 +2,7 @@ import math
 import re
 from types import *
 
+from django.db import transaction
 from django.db.models import Q
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
@@ -150,8 +151,7 @@ def get_related_dict():
 
 def make_filter_query(data):
     """
-    This function constructs the filter that later on will be used to query InventorySummary table.
-
+    This function constructs the filter that later on will be used to query the supplier table.
     """
     try:
         quality_dict, inventory_dict, supplier_quantity_dict = get_related_dict()
@@ -181,7 +181,6 @@ def make_filter_query(data):
                     filter_query &= Q(society_location_type__in=location_ratings)
                 else:
                     filter_query &= Q(location_type__in=location_ratings)
-
 
                 # if required to include suppliers with null value of this parameter uncomment following line
                 # will not work if there is default value is something then replace __isnull=True --> = defaultValue
@@ -220,7 +219,6 @@ def make_filter_query(data):
                     filter_query &= Q(society_type_quantity__in=supplier_quantity_ratings)
                 else:
                     filter_query &= Q(quantity_rating__in=supplier_quantity_ratings)
-
 
                 # if required to include suppliers with null value of this parameter uncomment following line
                 # will not work if there is default value is something then replace __isnull=True --> = defaultValue
@@ -1747,5 +1745,88 @@ def make_export_final_response(result, data):
                     result[code]['objects'].append(response.data['data'])
 
         return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def save_leads(row):
+    """
+    Args:
+        row: a dict representing one row of campaign_leads.
+
+    Returns: tries to save leads data  into lead model and returns either newly created object or old object.
+
+    """
+    function = save_leads.__name__
+    try:
+        lead_data = {lead_key: row[lead_key] for lead_key in website_constants.lead_keys}
+        email = lead_data['email']
+        if not email:
+            return ui_utils.handle_response(function, data='please provide email')
+        import pdb
+        pdb.set_trace()
+        lead_object, is_created = models.Lead.objects.get_or_create(email=email)
+        serializer = serializers.LeadSerializer(lead_object, data=lead_data)
+        if serializer.is_valid():
+            serializer.save()
+            return ui_utils.handle_response(function, data=lead_object, success=True)
+        return ui_utils.handle_response(function, data=serializer.errors)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def save_campaign_leads(row):
+    """
+
+    Args:
+        row: a dict representing one row of campaign_leads sheet.
+
+    Returns: tries to save on campaign_leads table. return the newly created campaign_leads object.
+
+    """
+    function = save_campaign_leads.__name__
+    try:
+        campaign_id = row['campaign_id']
+        lead_email = row['email']
+        campaign_lead_object, is_created = models.CampaignLeads.objects.get_or_create(campaign_id=campaign_id,
+                                                                                      lead_email=lead_email)
+        campaign_lead_object.comments = row['comments']
+        campaign_lead_object.save()
+        return ui_utils.handle_response(function, data=campaign_lead_object, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def handle_campaign_leads(row):
+    """
+    Args:
+        row: row is a dict containing one row information of campaign-leads sheet.
+         currently i am inserting into db directly instead of a bulk_create. will change in future if performance
+         is compromised.
+
+    Returns: success in case db hit is success, failure otherwise
+
+    """
+    function = save_campaign_leads.__name__
+    try:
+        with transaction.atomic():
+            response = save_leads(row)
+            if not response.data['status']:
+                return response
+            lead_object = response.data['data']
+
+            response = save_campaign_leads(row)
+            if not response.data['status']:
+                return response
+
+            campaign_lead_object = response.data['data']
+
+            # send some useful information back
+            data = {
+                'lead_email': lead_object.email,
+                'campaign_lead_id': campaign_lead_object.id,
+                'campaign_id': row['campaign_id']
+            }
+            return ui_utils.handle_response(function, data=data, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)

@@ -12,6 +12,11 @@ from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping
 import v0.models as models
 
 
+class LeadSerializer(ModelSerializer):
+    class Meta:
+        model = models.Lead
+
+
 class FiltersSerializer(ModelSerializer):
     class Meta:
         model = models.Filters
