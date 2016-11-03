@@ -270,82 +270,89 @@ This file contains test cases for website app.
 #         # check the response
 #         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-class GetLocationsAPIViewTestCase(APITestCase):
+
+#
+# class GetLocationsAPIViewTestCase(APITestCase):
+#     """
+#     GetLocationsAPIView test cases.
+#     """
+#     def setUp(self):
+#
+#         # use a function to make necessary database. it's cleaner
+#         self.context = test_utils.create_city_area_subarea()
+#
+#     def test_pass_get_area(self):
+#         """
+#         Test passes on fetching area as type parameter
+#         """
+#
+#         # make the url
+#         url = reverse('locations', kwargs={'id' : self.context['city'].id})
+#
+#         # query params
+#         data = {
+#             'type': 'areas'
+#         }
+#
+#         # make the call
+#         response = self.client.get(url, data=data)
+#
+#         # check the response
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+#
+#     def test_pass_get_sub_area(self):
+#         """
+#         Test passes on fetching sub area as type parameter
+#         """
+#
+#         # make the url
+#         url = reverse('locations', kwargs={'id': self.context['area'].id})
+#
+#         # query params
+#         data = {
+#             'type': 'sub_areas'
+#         }
+#
+#         # make the call
+#         response = self.client.get(url, data=data)
+#
+#         # check the response
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+#
+#     def test_fail_get_sub_area(self):
+#         """
+#         Test fails on providing wrong type
+#         """
+#
+#         # make the url
+#         url = reverse('locations', kwargs={'id': self.context['area'].id})
+#
+#         # query params
+#         data = {
+#             'type': 'xxxx'
+#         }
+#
+#         # make the call
+#         response = self.client.get(url, data=data)
+#
+#         # check the response
+#         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+#
+#
+#
+#
+#
+
+
+class CreateInitialProposalTestCases(APITestCase):
     """
-    GetLocationsAPIView test cases.
+    Test cases for CreateInitialProposal. This view is first step in creating proposal.
     """
     def setUp(self):
 
-        # use a function to make necessary database. it's cleaner
-        self.context = test_utils.create_city_area_subarea()
+        # create account
+        # setup proposal data
 
-    def test_pass_get_area(self):
-        """
-        Test passes on fetching area as type parameter
-        """
-
-        # make the url
-        url = reverse('locations', kwargs={'id' : self.context['city'].id})
-
-        # query params
-        data = {
-            'type': 'areas'
-        }
-
-        # make the call
-        response = self.client.get(url, data=data)
-
-        # check the response
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_pass_get_sub_area(self):
-        """
-        Test passes on fetching sub area as type parameter
-        """
-
-        # make the url
-        url = reverse('locations', kwargs={'id': self.context['area'].id})
-
-        # query params
-        data = {
-            'type': 'sub_areas'
-        }
-
-        # make the call
-        response = self.client.get(url, data=data)
-
-        # check the response
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_fail_get_sub_area(self):
-        """
-        Test fails on providing wrong type
-        """
-
-        # make the url
-        url = reverse('locations', kwargs={'id': self.context['area'].id})
-
-        # query params
-        data = {
-            'type': 'xxxx'
-        }
-
-        # make the call
-        response = self.client.get(url, data=data)
-
-        # check the response
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-
-
-
-
-
-def create_basic_proposal(proposal_id):
-        """
-        Returns: a proposal object
-
-        """
         # make business_type
         business_type = models.BusinessTypes.objects.create(business_type='EDUCATION', business_type_code='EDU')
 
@@ -359,30 +366,91 @@ def create_basic_proposal(proposal_id):
                                                            sub_type=business_sub_type, )
 
         # make account
-        account = models.AccountInfo.objects.create(account_id='a1', business=business, name='A1', phone='960790857',
+        self.account = models.AccountInfo.objects.create(account_id='a1', business=business, name='A1', phone='960790857',
                                           email='whatever@gmail.com')
 
-        # make some proposals for this account
+        self.proposal_data = {
 
-        proposal = models.ProposalInfo.objects.create(proposal_id=proposal_id, account=account, name='P1', tentative_cost=500)
+            'tentative_cost': 1000,
+            'name': 'garam_masala',
+            'centers': test_utils.create_centers(),
+        }
 
-        return proposal
+    def test_pass_create_fresh_proposal(self):
+        """
+        Test should pass with fresh proposal data
+        """
+        # make the url
+        url = reverse('create-initial-proposal', kwargs={'account_id': self.account.account_id})
+
+        # make the call
+        response = self.client.post(url, data=json.dumps(self.proposal_data), content_type='application/json')
+
+        # check the response
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_pass_create_child_proposal(self):
+        """
+        Test should pass. use  case is, first we create a proposal. Then we hit the API. Then we again hit the
+        api with parent set to id of the previous proposal.
+        """
+        url = reverse('create-initial-proposal', kwargs={'account_id': self.account.account_id})
+
+        # make the call
+        response = self.client.post(url, data=json.dumps(self.proposal_data), content_type='application/json')
+
+        proposal_id_created = response.data['data']
+
+        # copy the old proposal data to new data
+        self.new_proposal = self.proposal_data
+
+        # set the parent this time.
+        self.new_proposal['parent'] = proposal_id_created
+
+        # again hit the url. because a parent is set, now when  a new proposal_id is created, it's parent attribute
+        # is set to this parent value which we are sending.
+        url = reverse('create-initial-proposal', kwargs={'account_id': self.account.account_id})
+
+        # make the call
+        response = self.client.post(url, data=json.dumps(self.new_proposal), content_type='application/json')
+
+        # fetch the new proposal_id created second time.
+        child_proposal_id = response.data['data']
+
+        # fetch the parent for this proposal_id.
+        parent_id = models.ProposalInfo.objects.get(proposal_id=child_proposal_id).parent.proposal_id
+
+        # this should be the same parent which was supplied
+        self.assertEqual(parent_id, proposal_id_created)
+
+        # check the response
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
+class CreateFinalProposalTestCase(APITestCase):
+    """
+    Test cases for CreateFinalProposal API view. This view is the second step in creating proposal.
+    """
+    def setUp(self):
+        """
+        proposal_data = {
+           center : { center data } ,
+           suppliers: [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
+        }
+        """
+        self.data, self.proposal_id = test_utils.create_final_proposal_data()
 
+    def test_pass_create_final_proposal(self):
+        # make the url
+        url = reverse('create-final-proposal', kwargs={'proposal_id': self.proposal_id})
 
+        # make the call
+        response = self.client.post(url, data=json.dumps(self.data), content_type='application/json')
 
+        print response.data
 
-
-
-
-
-
-
-
-
-
-
+        # check the response
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 

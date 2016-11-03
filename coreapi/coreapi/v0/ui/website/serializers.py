@@ -11,6 +11,17 @@ from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping
 
 import v0.models as models
 
+
+class LeadSerializer(ModelSerializer):
+    class Meta:
+        model = models.Lead
+
+
+class FiltersSerializer(ModelSerializer):
+    class Meta:
+        model = models.Filters
+
+
 class ProposalInfoVersionSerializer(ModelSerializer):
 
     class Meta:
@@ -87,6 +98,7 @@ class ShortlistedSpacesSerializer(ModelSerializer):
 
     class Meta:
         model = ShortlistedSpaces
+        exclude = ('space_mapping', 'buffer_status')
 
 
 class ProposalSocietySerializer(ModelSerializer):

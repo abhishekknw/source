@@ -119,7 +119,7 @@ class AdInventoryType(models.Model):
 
     def __str__(self):
         return self.adinventory_name
-        
+
     class Meta:
         db_table = 'ad_inventory_type'
 
@@ -471,8 +471,8 @@ class ContactDetailsGeneric(models.Model):
     mobile = models.BigIntegerField(db_column='CONTACT_MOBILE', blank=True, null=True)  # Field name made lowercase.
     countrycode = models.CharField(db_column='COUNTRY_CODE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     email = models.CharField(db_column='CONTACT_EMAILID',  max_length=50, blank=True, null=True)  # Field name made lowercase.
-    
-    
+
+
     class Meta:
 
         db_table = 'contact_details_generic'
@@ -889,6 +889,7 @@ class  SupplierTypeSociety(models.Model):
 
         db_table = 'supplier_society'
 
+
 class SupplierTypeCorporate(BasicSupplierDetails):
 
     corporate_type = models.CharField(max_length=25,blank=True, null= True)
@@ -928,7 +929,7 @@ class CorporateParkCompanyList(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='COMPANY_NAME',max_length='50', blank=True, null=True)
     supplier_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_ID', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
-    
+
     def get_company_details(self):
         return self.companydetails.all()
 
@@ -1221,6 +1222,9 @@ class AccountInfo(models.Model):
 
 
 #     class Meta:
+#
+#         #db_table = 'PROPOSAL_INFO'
+#         db_table = 'proposal_info'
 
 #         db_table = 'account_contact'
 
@@ -1272,7 +1276,7 @@ class SpaceMapping(models.Model):
 
     def get_society_inventories(self):
         return self.inventory_types.get(supplier_code='RS')
-    
+
     def get_corporate_inventories(self):
         return self.inventory_types.get(supplier_code='CP')
 
@@ -1319,18 +1323,18 @@ class InventoryType(models.Model):
 
         #db_table = 'INVENTORY_TYPE'
         db_table = 'inventory_type'
-
-class ShortlistedSpaces(models.Model):
-    space_mapping   = models.ForeignKey(SpaceMapping,db_index=True, related_name='spaces',on_delete=models.CASCADE)
-    supplier_code   = models.CharField(max_length=4)
-    content_type    = models.ForeignKey(ContentType, related_name='spaces')
-    object_id       = models.CharField(max_length=12)
-    content_object  = generic.GenericForeignKey('content_type', 'object_id')
-    buffer_status   = models.BooleanField(default=False)
-
-    class Meta:
-        #db_table = 'SHORTLISTED_SPACES'
-        db_table = 'shortlisted_spaces'
+#
+# class ShortlistedSpaces(models.Model):
+#     space_mapping   = models.ForeignKey(SpaceMapping,db_index=True, related_name='spaces',on_delete=models.CASCADE)
+#     supplier_code   = models.CharField(max_length=4)
+#     content_type    = models.ForeignKey(ContentType, related_name='spaces')
+#     object_id       = models.CharField(max_length=12)
+#     content_object  = generic.GenericForeignKey('content_type', 'object_id')
+#     buffer_status   = models.BooleanField(default=False)
+#
+#     class Meta:
+#         #db_table = 'SHORTLISTED_SPACES'
+#         db_table = 'shortlisted_spaces'
 
 class ProposalInfoVersion(models.Model):
     # proposal_id         = models.CharField(db_column = 'PROPOSAL ID',max_length=15,primary_key=True)
@@ -1660,7 +1664,7 @@ class CitySubArea(models.Model):
     area_code = models.ForeignKey(CityArea, related_name='areacode', db_column='AREA_CODE', null=True,on_delete=models.CASCADE)
 
     class Meta:
-        
+
         db_table = 'city_area_subarea'
         unique_together = (('area_code','subarea_code'),)
 
@@ -1795,7 +1799,7 @@ class CorporateBuildingWing(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     wing_name = models.CharField(db_column='WING_NAME', max_length=50, null=True, blank=True)
     number_of_floors = models.IntegerField(db_column='NUMBER_OF_FLOORS', null=True, blank=True)
-    building_id = models.ForeignKey('CorporateBuilding',db_index=True, db_column='BUILDING_ID',related_name='buildingwing', blank=True, null=True, on_delete=models.CASCADE)    
+    building_id = models.ForeignKey('CorporateBuilding',db_index=True, db_column='BUILDING_ID',related_name='buildingwing', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table='corporate_building_wing'
@@ -1803,7 +1807,7 @@ class CorporateBuildingWing(models.Model):
 # class CorporateCompany(models.Model):
 #     id = models.AutoField(db_column='ID', primary_key=True)
 #     company_name = models.CharField(db_column='COMPANY_NAME',max_length=50,blank=True,null=True)
-#     corporatepark_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_NAME', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)    
+#     corporatepark_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_NAME', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
 
 #     class Meta:
 #         db_table='corporate_company'
@@ -1812,7 +1816,7 @@ class CorporateCompanyDetails(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     company_id = models.ForeignKey('CorporateParkCompanyList', db_column='COMPANY_ID', related_name='companydetails', blank=True, null=True, on_delete=models.CASCADE)
     building_name = models.CharField(db_column='BUILDING_NAME', max_length=20, blank=True, null=True)
-    wing_name = models.CharField(db_column='WING_NAME', max_length=20, blank=True, null=True)    
+    wing_name = models.CharField(db_column='WING_NAME', max_length=20, blank=True, null=True)
 
     def get_floors(self):
         return self.wingfloor.all()
@@ -1837,6 +1841,7 @@ class SocietyLeads(models.Model):
     class Meta:
         db_table = 'society_leads'
 
+
 class ShortlistedInventoryDetails(models.Model):
     """
     Model for storing calculated price and count of an inventory for a given supplier.
@@ -1847,6 +1852,7 @@ class ShortlistedInventoryDetails(models.Model):
     inventory_price = models.FloatField(default=0.0, null=True)
     inventory_count = models.IntegerField(default=0, null=True)
     factor = models.IntegerField(default=0.0, null=True)
+    supplier_type_code = models.CharField(max_length=255, null=True)
     class Meta:
         db_table = 'shortlisted_inventory_details'
 
@@ -1859,6 +1865,7 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
 
     class Meta:
         db_table = 'supplier_bus_shelter'
+
 
 
 class ProposalMasterCost(models.Model):
@@ -1974,10 +1981,10 @@ class ProposalInfo(models.Model):
     parent stores the information that from what proposal_id, the current proposal_id was created.
     is_campaign determines weather this proposal is a campaign or not.
     """
-    proposal_id = models.CharField(db_column='PROPOSAL ID', max_length=15, primary_key=True)
-    account = models.ForeignKey(AccountInfo, related_name='proposals', db_column='ACCOUNT', on_delete=models.CASCADE)
-    name = models.CharField(db_column='NAME', max_length=50, blank=True)
-    payment_status = models.BooleanField(default=False, db_column='PAYMENT STATUS')
+    proposal_id = models.CharField(max_length=15, primary_key=True)
+    account = models.ForeignKey(AccountInfo, related_name='proposals',on_delete=models.CASCADE)
+    name = models.CharField(max_length=50, blank=True, null=True)
+    payment_status = models.BooleanField(default=False,)
     updated_on = models.DateTimeField(auto_now=True, auto_now_add=False)
     updated_by = models.CharField(max_length=50, default='Admin')
     created_on = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -2015,6 +2022,7 @@ class Filters(models.Model):
     filter_name = models.CharField(max_length=255, null=True, blank=True)
     filter_code = models.CharField(max_length=255, null=True, blank=True)
     is_checked = models.BooleanField(default=False)
+    supplier_type_code = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'filters'
@@ -2026,10 +2034,10 @@ class ShortlistedSpaces(models.Model):
     in one campaign it's status can be removed while in the other it's buffered. Hence this model is made
     for mapping such relations.
     """
-    space_mapping = models.ForeignKey(SpaceMapping, db_index=True, related_name='spaces', on_delete=models.CASCADE)
+    space_mapping = models.ForeignKey(SpaceMapping, db_index=True, related_name='spaces', on_delete=models.CASCADE, null=True, blank=True)
     center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
-    supplier_code = models.CharField(max_length=4)
+    supplier_code = models.CharField(max_length=4, null=True, blank=True)
     content_type = models.ForeignKey(ContentType, related_name='spaces')
     object_id = models.CharField(max_length=12)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
@@ -2038,4 +2046,56 @@ class ShortlistedSpaces(models.Model):
 
     class Meta:
         db_table = 'shortlisted_spaces'
+
+
+class ProposalCenterSuppliers(models.Model):
+    """
+    which suppliers are allowed in a given center under a proposal ?
+    used when CreateInitialProposal is called. each center can have different suppliers allowed.
+    each supplier is identified by a content_type and a unique code predefined for it.
+    """
+    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
+    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
+    supplier_content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    supplier_type_code = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'proposal_center_suppliers'
+
+
+class Lead(models.Model):
+    """
+    A model to store the leads data. This user is different django from auth_user. it's a 'lead'.
+    """
+    email = models.EmailField(primary_key=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    gender = models.CharField(max_length=255, null=True, blank=True)
+    age = models.FloatField(null=True, blank=True)
+    phone = models.IntegerField(null=True, blank=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    lead_type = models.CharField(max_length=255, null=True, blank=True)
+    lead_status = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'lead'
+
+
+class CampaignLeads(models.Model):
+    """
+    a campaign can have multiple leads. a lead can go in multiple campaigns.
+    campaign stores the campaign id.
+    lead stores the lead id
+    """
+    campaign_id = models.IntegerField(default=0)
+    lead_email = models.EmailField(default='')
+    comments = models.CharField(max_length=255, null=True)
+
+    class Meta:
+        db_table = 'campaign_leads'
+        unique_together = (('campaign_id', 'lead_email'),)
+
+
+
+
+
 

@@ -1,5 +1,9 @@
 from django.conf.urls import include, url
+
+from rest_framework.routers import DefaultRouter
+
 from v0.ui.website import views
+
 
 urlpatterns = [
 
@@ -29,7 +33,7 @@ urlpatterns = [
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/createFinalProposal/$',views.FinalProposalAPIView.as_view(), name='create-final-proposal'),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/getSpaces/$', views.SpacesOnCenterAPIView.as_view(), name='get-spaces'),
     # url(r'^getSpace/(?P<id>[A-Z_a-z0-9]+)/$', views.GetSpaceInfoAPIView.as_view()),
-    url(r'^getFilteredSocieties/$', views.GetFilteredSuppliersAPIView.as_view()),
+    url(r'^getFilteredSocieties/$', views.FilteredSuppliersAPIView.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/currentProposal/$',views.CurrentProposalAPIView.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/getProposalVersion/$', views.ProposalHistoryAPIView.as_view()),
 
@@ -38,8 +42,16 @@ urlpatterns = [
     url(r'^save-society-data/$', views.SaveSocietyData.as_view()),
     url(r'^save-contact-details/$', views.SaveContactDetails.as_view()),
 
-    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/export-spaces-data/$', views.ExportData.as_view()),
-    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/import-society-data/$', views.ImportSocietyData.as_view()),
+    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/export-spaces-data/$', views.GenericExportData.as_view()),
+    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/import-supplier-data/$', views.ImportSupplierData.as_view()),
     url(r'^import-proposal-cost-data/$', views.ImportProposalCostData.as_view()),
+    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/create-final-proposal/$', views.CreateFinalProposal.as_view(), name='create-final-proposal'),
+    url(r'^(?P<account_id>[A-Z_a-z0-9]+)/create-initial-proposal/$', views.CreateInitialProposal.as_view(), name='create-initial-proposal'),
+    url(r'^import-campaign-leads-data/$', views.ImportCampaignLeads.as_view()),
 
 ]
+
+router = DefaultRouter()
+router.include_format_suffixes = False
+router.register(r'^proposal', views.ProposalViewSet, base_name='Proposal')
+urlpatterns += router.urls

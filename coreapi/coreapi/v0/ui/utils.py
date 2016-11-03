@@ -40,10 +40,10 @@ def handle_response(object_name, data='some error occurred', exception_object=Ex
         # prepare the object to be sent in error response
         data = {
             'general_error': data,
-            'system_error': str(exception_object.message) if exception_object.message else str(exception_object.args) if exception_object.args else None,
+            'system_error': str(exception_object.message) if exception_object.message else str(exception_object.args) if exception_object.args else "",
             'culprit_module': object_name
         }
-        return Response({'status': False, 'data': json.dumps(data)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status': False, 'data': data}, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'status': True, 'data': data}, status=status.HTTP_200_OK)
 
@@ -213,8 +213,6 @@ def save_supplier_data(master_data):
     :return: saves corresponding supplier code data
     """
     try:
-        #import pdb
-        #pdb.set_trace()
         supplier_code = master_data['supplier_type_code']
         serializer_class = get_serializer(supplier_code)
         # serializer_class = master_data[supplier_code]['serializer']
