@@ -1194,7 +1194,6 @@ class FilteredSuppliersAPIView(APIView):
             suppliers_count = 0
             suppliers_data = []
 
-
             # iterate over all suppliers to  generate the final response
             for supplier in suppliers:
 
@@ -2112,7 +2111,7 @@ class GenericExportData(APIView):
         [
              {
                   center : { id : 1 , center_name: c1, ...   } ,
-                  suppliers: [  'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
+                  suppliers: { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} }
                   suppliers_meta: {
                                      'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
                                      'CP': { 'inventory_type_selected':  ['ST']
@@ -2178,9 +2177,21 @@ class GenericExportData(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
-class ImportSocietyData(APIView):
+class ImportSupplierData(APIView):
     """
     This API basically takes an excel sheet , process the data and saves it in the database.
+
+    The request by which the sheet is made  is in form:
+    [
+         {
+              center : { id : 1 , center_name: c1, ...   } ,
+              suppliers: { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} }
+              suppliers_meta: {
+                                 'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                 'CP': { 'inventory_type_selected':  ['ST']
+              }
+         }
+    ]
     """
     def post(self, request, proposal_id=None):
         """
@@ -2190,103 +2201,111 @@ class ImportSocietyData(APIView):
 
         Returns: Saves the  data in db
         """
+        class_name = self.__class__.__name__
         try:
-            class_name = self.__class__.__name__
 
-            # file_name = BASE_DIR + '/sample5.xlsx'
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
             my_file = request.FILES['file']
             wb = openpyxl.load_workbook(my_file)
-            ws = wb.get_sheet_by_name('Shortlisted Spaces Details')
 
-            center_id_list_response = website_utils.get_center_id_list(ws, index_of_center_id)
+            # fetch all sheets
+            all_sheets = wb.get_sheet_names()
 
-            if not center_id_list_response.data['status']:
-                return center_id_list_response
+            # iterate over multiple sheets
+            for sheet in all_sheets:
 
-            center_id_list = center_id_list_response.data['data']
-
-            # normalize the center id's or map the actual center id's with indexes starting from zero
-            center_id_to_index_mapping = {}
-            result = []
-            for index, center_id in enumerate(center_id_list):
-                result.append({})
-                center_id_to_index_mapping[center_id] = index
-
-            # iterate through all rows and populate result array
-            for index, row in enumerate(ws.iter_rows()):
-                if index == 0:
+                # fetch supplier_type_code from sheet name
+                supplier_type_code = website_constants.sheet_names_to_codes.get(sheet)
+                if not supplier_type_code:
                     continue
 
-                """
-                  Number of rows in 'result' is number of distinct centers. each center has a center_id which is mapped
-                  to an index in the 'result' list. each element of result list is a center_object.
-                  Goal is to populate the right center_object with data of it's 3 keys:
-                 'societies_inventory', 'societies', 'center'
+                # fetch the worksheet object to work with
+                ws = wb.get_sheet_by_name(sheet)
 
-                """
-                # in order to proceed further we need a dict in which keys are header names with spaces
-                # removed and values are value of the row which we are processing
+                # fetch all the center id's
+                center_id_list_response = website_utils.get_center_id_list(ws, index_of_center_id)
 
-                row_response = website_utils.get_mapped_row(ws, row)
-                if not row_response.data['status']:
-                    return row_response
-                row = row_response.data['data']
+                if not center_id_list_response.data['status']:
+                    return center_id_list_response
 
-                # get the center index mapped for this center_id
-                center_index = center_id_to_index_mapping[row['center_id']]
+                center_id_list = center_id_list_response.data['data']
 
-                # get the actual center_object from result list to process further
-                center_object = result[center_index]
+                # normalize the center id's or map the actual center id's with indexes starting from zero
+                center_id_to_index_mapping = {}
+                result = []
+                for index, center_id in enumerate(center_id_list):
+                    result.append({})
+                    center_id_to_index_mapping[center_id] = index
 
-                # initialize the center_object  with necessary keys if not already
-                if not center_object:
-                    response = website_utils.initialize_keys(center_object, row)
+                # iterate through all rows and populate result array
+                for index, row in enumerate(ws.iter_rows()):
+                    if index == 0:
+                        continue
+
+                    """
+                      Number of rows in 'result' is number of distinct centers. each center has a center_id which is mapped
+                      to an index in the 'result' list. each element of result list is a center_object.
+                      Goal is to populate the right center_object with data of it's 3 keys:
+                     'societies_inventory', 'societies', 'center'
+
+                    """
+                    # in order to proceed further we need a dict in which keys are header names with spaces
+                    # removed and values are value of the row which we are processing
+
+                    row_response = website_utils.get_mapped_row(ws, row)
+                    if not row_response.data['status']:
+                        return row_response
+                    row = row_response.data['data']
+
+                    # get the center index mapped for this center_id
+                    center_index = center_id_to_index_mapping[int(row['center_id'])]
+
+                    # get the actual center_object from result list to process further
+                    center_object = result[center_index]
+
+                    # initialize the center_object  with necessary keys if not already
+                    if not center_object:
+                        response = website_utils.initialize_keys(center_object, supplier_type_code)
+                        if not response.data['status']:
+                            return response
+                        center_object = response.data['data']
+
+                    # add 1 society that represents this row to the list of societies this object has already
+                    response = website_utils.make_suppliers(center_object, row, supplier_type_code)
                     if not response.data['status']:
                         return response
                     center_object = response.data['data']
 
-                # add 'societies_inventory' data  in center_object. must be called before make_societies.
-                response = website_utils.make_societies_inventory(center_object, row)
+                    # add the 'center' data  in center_object
+                    response = website_utils.make_center(center_object, row)
+                    if not response.data['status']:
+                        return response
+                    center_object = response.data['data']
+
+                    # update the center dict in result with modified center_object
+                    result[center_index] = center_object
+
+                # populate the shortlisted_inventory_details table before hiting the url
+                response = website_utils.populate_shortlisted_inventory_details(result)
                 if not response.data['status']:
                     return response
-                center_object = response.data['data']
 
-                # add 1 society that represents this row to the list of societies this object has already
-                response = website_utils.make_societies(center_object, row)
-                if not response.data['status']:
-                    return response
-                center_object = response.data['data']
+                # time to hit the url
+                url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
+                url = BASE_URL + url[1:]
 
-                # add the 'center' data  in center_object
-                response = website_utils.make_center(center_object, row)
-                if not response.data['status']:
-                    return response
-                center_object = response.data['data']
+                data = result
+                headers={
+                    'Content-Type': 'application/json'
+                }
+                response = requests.post(url, json.dumps(data), headers=headers)
 
-                # update the center dict in result with modified center_object
-                result[center_index] = center_object
-
-            # populate the shortlisted_inventory_details table before hiting the url
-            response = website_utils.populate_shortlisted_inventory_details(result)
-            if not response.data['status']:
-                return response
-
-            # time to hit the url
-            url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
-            url = BASE_URL + url[1:]
-
-            data = result
-            headers={
-                'Content-Type': 'application/json'
-            }
-            response = requests.post(url, json.dumps(data), headers=headers)
-            if response.status_code != status.HTTP_200_OK:
-                return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
+                if response.status_code != status.HTTP_200_OK:
+                    return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
             return Response({'status': True, 'data': 'successfully imported'}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response({'status': False, 'error': e.message}, status=status.HTTP_200_OK)
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class ImportProposalCostData(APIView):
@@ -2402,6 +2421,17 @@ class CreateInitialProposal(APIView):
 
 class CreateFinalProposal(APIView):
     """
+    The request is in form:
+        [
+             {
+                  center : { id : 1 , center_name: c1, ...   } ,
+                  suppliers:  { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...}  }
+                  suppliers_meta: {
+                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                     'CP': { 'inventory_type_selected':  ['ST']
+                  }
+             }
+        ]
     This is second step for creating proposal.
     The proposal_id in the request is always a brand new proposal_id wether you hit this API from an EDIT form of
     the proposal or you are creating an entirely new proposal.
@@ -2423,26 +2453,27 @@ class CreateFinalProposal(APIView):
         class_name = self.__class__.__name__
         try:
             # simple dict to count new objects created each time the API is hit. a valuable information.
+
+            # to keep count of new objects created
             objects_created = {
                 'SHORTLISTED_SUPPLIERS': 0,
                 'FILTER_OBJECTS': 0
             }
+            # get the supplier type codes available in the request
+            response = website_utils.unique_supplier_type_codes(request.data)
+            if not response.data['status']:
+                return response
+            unique_supplier_codes = response.data['data']
+
             with transaction.atomic():
                 for proposal_data in request.data:
 
                     proposal_data['proposal_id'] = proposal_id
-
-                    # you have to create suppliers shortlisted data
-                    response = website_utils.save_shortlisted_suppliers(proposal_data)
+                    response = website_utils.save_final_proposal(proposal_data, unique_supplier_codes)
                     if not response.data['status']:
                         return response
-                    objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']
-
-                    # you have to create Filter data
-                    response = website_utils.save_filter_data(proposal_data)
-                    if not response.data['status']:
-                        return response
-                    objects_created['FILTER_OBJECTS'] += response.data['data']
+                    objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']['SHORTLISTED_SUPPLIERS']
+                    objects_created['FILTER_OBJECTS'] += response.data['data']['FILTER_OBJECTS']
 
                 return ui_utils.handle_response(class_name, data=objects_created, success=True)
         except Exception as e:
@@ -2762,3 +2793,41 @@ class SaveContactDetails(APIView):
                                                                                                   failure_count),
             status=status.HTTP_200_OK)
 
+
+class ImportCampaignLeads(APIView):
+    """
+    The api to import campaign leads data
+    """
+
+    def post(self, request):
+        class_name = self.__class__.__name__
+        if not request.FILES:
+            return ui_utils.handle_response(class_name, data='No File Found')
+        my_file = request.FILES['file']
+        wb = openpyxl.load_workbook(my_file)
+
+        ws = wb.get_sheet_by_name('campaign_leads')
+
+        result = []
+
+        try:
+            # iterate through all rows and populate result array
+            for index, row in enumerate(ws.iter_rows()):
+                if index == 0:
+                    continue
+
+                # make a dict of the row
+                row_response = website_utils.get_mapped_row(ws, row)
+                if not row_response.data['status']:
+                    return row_response
+                row = row_response.data['data']
+
+                # handle it
+                response = website_utils.handle_campaign_leads(row)
+                if not response.data['status']:
+                    return response
+
+                result.append(response.data['data'])
+            return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)

@@ -889,6 +889,7 @@ class  SupplierTypeSociety(models.Model):
 
         db_table = 'supplier_society'
 
+
 class SupplierTypeCorporate(BasicSupplierDetails):
 
     corporate_type = models.CharField(max_length=25,blank=True, null= True)
@@ -1205,6 +1206,27 @@ class AccountInfo(models.Model):
 #
 #         #db_table = 'PROPOSAL_INFO'
 #         db_table = 'proposal_info'
+
+
+
+# class AccountContact(models.Model):
+#     id = models.AutoField(db_column='ID', primary_key=True)
+#     name = models.CharField(db_column='NAME', max_length=50, blank=True)
+#     designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
+#     department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
+#     phone = models.CharField(db_column='PHONE', max_length=10,  blank=True)
+#     email = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
+#     account = models.ForeignKey(AccountInfo, related_name='contacts', db_column='ACCOUNT_ID', null=True, on_delete=models.CASCADE)
+#     spoc = models.BooleanField(db_column='SPOC', default=False)
+#     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
+
+
+#     class Meta:
+#
+#         #db_table = 'PROPOSAL_INFO'
+#         db_table = 'proposal_info'
+
+#         db_table = 'account_contact'
 
 
 class ProposalCenterMapping(models.Model):
@@ -1819,6 +1841,7 @@ class SocietyLeads(models.Model):
     class Meta:
         db_table = 'society_leads'
 
+
 class ShortlistedInventoryDetails(models.Model):
     """
     Model for storing calculated price and count of an inventory for a given supplier.
@@ -1829,6 +1852,7 @@ class ShortlistedInventoryDetails(models.Model):
     inventory_price = models.FloatField(default=0.0, null=True)
     inventory_count = models.IntegerField(default=0, null=True)
     factor = models.IntegerField(default=0.0, null=True)
+    supplier_type_code = models.CharField(max_length=255, null=True)
     class Meta:
         db_table = 'shortlisted_inventory_details'
 
@@ -1998,6 +2022,7 @@ class Filters(models.Model):
     filter_name = models.CharField(max_length=255, null=True, blank=True)
     filter_code = models.CharField(max_length=255, null=True, blank=True)
     is_checked = models.BooleanField(default=False)
+    supplier_type_code = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'filters'
@@ -2036,4 +2061,41 @@ class ProposalCenterSuppliers(models.Model):
 
     class Meta:
         db_table = 'proposal_center_suppliers'
+
+
+class Lead(models.Model):
+    """
+    A model to store the leads data. This user is different django from auth_user. it's a 'lead'.
+    """
+    email = models.EmailField(primary_key=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    gender = models.CharField(max_length=255, null=True, blank=True)
+    age = models.FloatField(null=True, blank=True)
+    phone = models.IntegerField(null=True, blank=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    lead_type = models.CharField(max_length=255, null=True, blank=True)
+    lead_status = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'lead'
+
+
+class CampaignLeads(models.Model):
+    """
+    a campaign can have multiple leads. a lead can go in multiple campaigns.
+    campaign stores the campaign id.
+    lead stores the lead id
+    """
+    campaign_id = models.IntegerField(default=0)
+    lead_email = models.EmailField(default='')
+    comments = models.CharField(max_length=255, null=True)
+
+    class Meta:
+        db_table = 'campaign_leads'
+        unique_together = (('campaign_id', 'lead_email'),)
+
+
+
+
+
 

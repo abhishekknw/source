@@ -41,12 +41,12 @@ inventorylist = {
         'DATA': ['car_display', 'car_display_price', 'car_display_duration', 'car_display_price_factor', 'car_business_price']
     },
     'RS': {
-        'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA','SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT'],
-        'DATA': ['supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ]
+        'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA','SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT', 'STATUS'],
+        'DATA': ['supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', 'status' ]
     },
     'CP': {
-        'HEADER': ['SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA'],
-        'DATA': ['supplier_id', 'name', 'subarea']
+        'HEADER': ['SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA', 'STATUS'],
+        'DATA': ['supplier_id', 'name', 'subarea', 'status']
     },
     'CENTER': {
         'HEADER': ['CENTER ID', 'CENTER NAME', 'PROPOSAL'],
@@ -133,7 +133,7 @@ inventories_keys = {'BANNER': 'banner_allowed', 'POSTER': 'poster_allowed', 'FLI
 
                'STANDEE':'standee_allowed', 'STALL': 'stall_allowed'}
 
-index_of_center_id = 2
+index_of_center_id = 0
 
 header_to_field_mapping = {
     'center name': 'center_name',
@@ -291,6 +291,16 @@ sheet_names = {
     'GY': 'Gym details'
 }
 
+# chose codes from supplier sheet names
+# sheet_names_to_codes
+
+sheet_names_to_codes = {
+    'Shortlisted Spaces Details': 'RS',
+    'Corporate Park Details': 'CP',
+    'Gym details': 'GY'
+}
+
+
 # supplier keys which you want to be included in the sheet in specific order. do not change this order.
 # header keys must be in sync with these keys. The following keys will be queried  in db of respective
 # supplier models so keys names must match with db column names.
@@ -308,3 +318,6 @@ export_supplier_header_keys = {
            'SOCIETY_TYPE_QUALITY', 'TOWER_COUNT', 'FLAT_COUNT'],
     'CP': ['CENTER_ID', 'CENTER_NAME', 'PROPOSAL', 'SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA']
 }
+
+# lead keys
+lead_keys = ['name', 'email', 'phone', 'address', 'gender', 'age', 'lead_type', 'lead_status']
