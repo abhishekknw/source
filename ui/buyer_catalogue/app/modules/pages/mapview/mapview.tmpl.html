@@ -215,22 +215,22 @@
               <span class="filterHeader">Comprehensive Summary </span></div>
               <hr>
                <span class = "space filterPanelHeader ">Space Count</span>
-               <div class = "nbCheckbox two-col">Societies:  {{total_societies}}</div>
-               <div class = "nbCheckbox two-col">Flat Count:  {{total_flats}}</div>
-               <div class = "nbCheckbox two-col">Tower Count:  {{total_posters}}</div>
+               <div class = "nbCheckbox two-col">Societies:  {{total_societies_count}}</div>
+               <div class = "nbCheckbox two-col">Flat Count:  {{total_flat_count}}</div>
+               <div class = "nbCheckbox two-col">Tower Count:  {{total_tower_count}}</div>
               <!--added if condition below to display those inventories selected by user in sumarry section-->
               <hr>
                 <span class = "space filterPanelHeader">Inventory Count</span>
-                <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{total_flats}}</div>
-                <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{total_posters}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{total_flat_count}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{total_tower_count}}</div>
                 <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{stall_count}}</div>
                 <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{standee_count}}</div>
               <hr>
                <span class = "space filterPanelHeader">Total Number of Impressions</span>
-               <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{total_flierImpressions}}</div>
-               <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{total_posterImpressions}}</div>
-               <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{total_stallImpressions}}</div>
-               <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{total_standeeImpressions}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{flierGridImpressions}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{posterGridImpressions}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{stallGridImpression}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{standeeGridImpression}}</div>
               <hr>
                <!-- <span class = "space filterPanelHeader ">Total Price</span> -->
              </div>
