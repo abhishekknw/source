@@ -630,14 +630,17 @@ def get_supplier_image(supplier_objects,supplier_name):
     Returns: list of supplier_objects by appending image_url
 
     """
-    images = v0.models.ImageMapping.objects.all()
-    result = [] 
-    # To optimize this for loop, Join query can be used
-    for model in supplier_objects:
-        data = model_to_dict(model)
-        for image in images:
-            if (data['supplier_id'] == image.object_id):
-                if (image.name == supplier_name):
-                    data['image_url'] = image.image_url
-        result.append(data)
-    return result
+    try:
+        images = v0.models.ImageMapping.objects.all()
+        result = [] 
+        # To optimize this for loop, Join query can be used
+        for model in supplier_objects:
+            data = model_to_dict(model)
+            for image in images:
+                if (data['supplier_id'] == image.object_id):
+                    if (image.name == supplier_name):
+                        data['image_url'] = image.image_url
+            result.append(data)
+        return result
+    except Exception as e:
+        return None

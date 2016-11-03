@@ -2041,7 +2041,6 @@ class ImageLocationsAPIView(APIView):
 
         return Response({"response":response}, status=201)
 
-#my code
 class ImageMappingAPIView(APIView):
     def get(self, request, id, format=None):
         '''
@@ -2063,24 +2062,21 @@ class ImageMappingAPIView(APIView):
         create new ImageMapping objects
         '''
         supplier_type_code = request.query_params.get('supplierTypeCode', None)
-        print supplier_type_code
         content_type_response = ui_utils.get_content_type(supplier_type_code)
         if not content_type_response.data['status']:
             return None
         content_type = content_type_response.data['data']
         supplier_object = ui_utils.get_model(supplier_type_code).objects.get(pk=id)
-        for key in request.data['image_details']:
-            key['object_id'] = id
-            key['content_type'] = content_type.id
-            
-            serializer = ImageMappingSerializer(data=key)
-
+        for image in request.data['image_details']:
+            image['object_id'] = id
+            image['content_type'] = content_type.id            
+            serializer = ImageMappingSerializer(data=image)
             if serializer.is_valid():
                 serializer.save()
             else:
                 return Response(serializer.errors, status=400)
-
-        return Response(serializer.data, status=201)
+        # return Response(serializer.data, status=201)
+        return ui_utils.handle_response(data=serializer.data , status=201)
 
     def put(self, request, id):
         """ 
@@ -2088,19 +2084,16 @@ class ImageMappingAPIView(APIView):
         """
         supplier_type_code = 'RS'
         
-        for key in request.data['image_details']:
-            
-            item = ImageMapping.objects.get(pk=key['id'])
-            serializer = ImageMappingSerializer(item, data=key)
-        
+        for image in request.data['image_details']:
+            item = ImageMapping.objects.get(pk=image['id'])
+            serializer = ImageMappingSerializer(item, data=image)
             if serializer.is_valid():
                 serializer.save()
             else:
-                return Response(serializer.errors, status=400)
-
-        return Response(serializer.data, status=200)
-
-#end code
+                # return Response(serializer.errors, status=400)
+                return ui_utils.handle_response(data=serializer.errors, status=400)
+        # return Response(serializer.data, status=200)
+        return ui_utils.handle_response(data=serializer.data , status=200)
 
 def generate_location_tag(initial_tag, type, index):
     return ''.join((initial_tag.upper() , type.upper()[:3], str(index)))

@@ -1028,8 +1028,6 @@ class SpacesOnCenterAPIView(APIView):
                         corporate_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),corporate['supplier_id'])
                         adinventory_type_dict = ui_utils.adinventory_func()
                         duration_type_dict = ui_utils.duration_type_func()
-                        import pdb
-                        pdb.set_trace()
                         if corporate_inventory_obj:
                             corporate['shortlisted'] = True
                             corporate['buffer_status'] = False
