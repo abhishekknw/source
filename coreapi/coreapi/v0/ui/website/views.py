@@ -1074,6 +1074,7 @@ class SpacesOnCenterAPIView(APIView):
 class FilteredSuppliers(APIView):
     """
     This API gives suppliers based on different filters from mapView and gridView Page.
+    Very expensive API. Use carefully.
     """
 
     def post(self, request):
@@ -1082,8 +1083,9 @@ class FilteredSuppliers(APIView):
         {
           'supplier_type_code': 'CP',
           'common_filters': { 'latitude': 12, 'longitude': 11, 'radius': 2, 'quality': [ 'UH', 'H' ],
-           'quantity': ['VL'], 'inventories': ['PO', 'ST']
+           'quantity': ['VL'],
            },
+           'inventory_filters': ['PO', 'ST'],
           'specific_filters': { 'real_estate_allowed': True, 'total_employees_count': 100,}
         }
         and the response looks like:
@@ -1112,61 +1114,77 @@ class FilteredSuppliers(APIView):
         try:
             # if not supplier type code, return
             supplier_type_code = request.data.get('supplier_type_code')
-            common_filters = request.data.get('common_filters')
-
             if not supplier_type_code:
                 return ui_utils.handle_response(class_name, data='provide supplier type code')
 
+            common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model
+            inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
+            specific_filters = request.data.get('specific_filters')  # mapss to specific supplier table
+
+            # get the right model and content_type
+            supplier_model = ui_utils.get_model(supplier_type_code)
             response = ui_utils.get_content_type(supplier_type_code)
             if not response:
                 return response
             content_type = response.data.get('data')
+            # first fetch common query which is applicable to all suppliers. The results of this query will form
+            # our master suppplier list.
+            response = website_utils.handle_common_filters(common_filters, supplier_type_code)
+            if not response.data['status']:
+                return response
+            common_filters_query = response.data['data']
+
+            # container to store specific_filters type of suppliers
+            specific_filters_suppliers = []
+            # container to store inventory filters type of suppliers
+            inventory_type_query_suppliers = []
+            # this is the main list. if no filter is selected this is what is returned by default
+
+            master_suppliers_list = supplier_model.objects.filter(common_filters_query).values_list('supplier_id')
+
+            # now fetch all inventory_related suppliers
+            # handle inventory related filters. it involves quite an involved logic hence it is in another function.
+            response = website_utils.handle_inventory_filters(inventory_filters)
+            if not response.data['status']:
+                return response
+            inventory_type_query = response.data['data']
+
+            if inventory_type_query.__len__():
+                inventory_type_query &= Q(content_type=content_type)
+                inventory_type_query_suppliers = list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id'))
+
+            # fetch specific_filters suppliers
+            response = website_utils.handle_specific_filters(specific_filters, supplier_type_code)
+            if not response.data['status']:
+                return response
+            specific_filters_query = response.data['data']
+
+            if specific_filters_query.__len__():
+                specific_filters_suppliers = list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id'))
+
+            # extend the specific_filters to include inventory_type suppliers
+            specific_filters_suppliers.extend(inventory_type_query_suppliers)
+            # assign final_suppliers_list to specific_filters for simplicity
+            final_suppliers_list = specific_filters_suppliers
+            # pull only the ID's, not the tuples !
+            master_suppliers_list = set([supplier_tuple[0] for supplier_tuple in master_suppliers_list])
+            final_suppliers_list = set([supplier_tuple[0] for supplier_tuple in final_suppliers_list])
+            # if there was any filter other than common filter, we need to  take intersection. think why !
+            if specific_filters_query.__len__() or inventory_type_query.__len__():
+                final_suppliers_list = final_suppliers_list.intersection(master_suppliers_list)
+            # else the master list is the required answer by default
+            else:
+                final_suppliers_list = master_suppliers_list
 
             result = {}
-            suppliers_id_list = []
-
-            # build the query
-            response = website_utils.construct_query(request.data)
-            if not response.data['status']:
-                return response
-
-            # a q object is returned
-            query = response.data['data']
-
-            # handle inventory related filters. it involves quite an involved logic hence it is in another function.
-            response = website_utils.handle_inventory_filters(common_filters.get('inventories'))
-            if not response.data['status']:
-                return response
-
-            # because the model to query is different in this case hence it is not include in 'query' variable
-            # defined above. suppliers are fetched here on the basis of inventories and later
-            # combined with the main results
-
-            inventory_type_query = response.data['data']
-            # fetch the right content type as it can be for any supplier
-            if inventory_type_query:
-                inventory_type_query &= Q(content_type=content_type)
-                suppliers_id_list = list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id'))
-
-            # query the right model and query it based on the query we received earlier
-            supplier_model = ui_utils.get_model(supplier_type_code)
-
-            # extend the suppliers we got from inventory query
-            suppliers_id_list.extend((supplier_model.objects.filter(query).values_list('supplier_id')))
-
-            # to be on safe side, just make this list unique set of supplier id's
-            suppliers_id_list = list(set(suppliers_id_list))
-
-            # contents of suppliers_id_list are a list of tuples. each tuple's first value contains the supplier_id
-            suppliers_id_list = [supplier_tuple[0] for supplier_tuple in suppliers_id_list]
 
             # query now for real objects for supplier_id in the list
-            suppliers = supplier_model.objects.filter(supplier_id__in=suppliers_id_list)
+            suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_list)
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
             serializer = supplier_serializer(suppliers, many=True)
 
             # calculate total aggregate count
-            suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=suppliers_id_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
+            suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=final_suppliers_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
                                                                                                         fliers=Sum('flier_frequency'))
