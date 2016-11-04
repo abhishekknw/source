@@ -1143,7 +1143,7 @@ class FilteredSuppliers(APIView):
            'quantity': ['VL'],
            },
            'inventory_filters': ['PO', 'ST'],
-          'specific_filters': { 'real_estate_allowed': True, 'total_employees_count': 100,}
+          'specific_filters': { 'real_estate_allowed': True, 'total_employees_count': {min: 10, max: 100},}
         }
         and the response looks like:
         {
@@ -1198,6 +1198,7 @@ class FilteredSuppliers(APIView):
             # this is the main list. if no filter is selected this is what is returned by default
 
             master_suppliers_list = supplier_model.objects.filter(common_filters_query).values_list('supplier_id')
+            final_suppliers_list = []
 
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
@@ -1215,17 +1216,28 @@ class FilteredSuppliers(APIView):
             if not response.data['status']:
                 return response
             specific_filters_query = response.data['data']
-
+            # if indeed there was something in the query
             if specific_filters_query.__len__():
                 specific_filters_suppliers = list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id'))
 
-            # extend the specific_filters to include inventory_type suppliers
-            specific_filters_suppliers.extend(inventory_type_query_suppliers)
-            # assign final_suppliers_list to specific_filters for simplicity
-            final_suppliers_list = specific_filters_suppliers
+            inventory_type_query_suppliers = set([supplier_tuple[0] for supplier_tuple in inventory_type_query_suppliers])
+            specific_filters_suppliers = set([supplier_tuple[0] for supplier_tuple in specific_filters_suppliers])
+
+            # if both available, find the intersection. basically it's another way of doing AND query.
+            if inventory_type_query_suppliers and specific_filters_suppliers:
+                final_suppliers_list = specific_filters_suppliers.intersection(inventory_type_query_suppliers)
+            # if only inventory suppliers available, set it. Take the UNION in this case
+            elif inventory_type_query_suppliers:
+                final_suppliers_list = inventory_type_query_suppliers
+            # if only specific suppliers available, set it. Take the UNION in this case.
+            elif specific_filters_suppliers:
+                final_suppliers_list = specific_filters_suppliers
+            # if nobody is available, set it to None
+            else:
+                final_suppliers_list = set()
+
             # pull only the ID's, not the tuples !
             master_suppliers_list = set([supplier_tuple[0] for supplier_tuple in master_suppliers_list])
-            final_suppliers_list = set([supplier_tuple[0] for supplier_tuple in final_suppliers_list])
             # if there was any filter other than common filter, we need to  take intersection. think why !
             if specific_filters_query.__len__() or inventory_type_query.__len__():
                 final_suppliers_list = final_suppliers_list.intersection(master_suppliers_list)

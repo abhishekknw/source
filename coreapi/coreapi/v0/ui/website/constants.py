@@ -320,7 +320,6 @@ lead_keys = ['name', 'email', 'phone', 'address', 'gender', 'age', 'lead_type', 
 supplier_filters = {
     'CP': {
         'real_estate_allowed': 'isrealestateallowed',
-        'total_employees_count': 'totalemployees_count',
         'building_count': 'building_count',
     },
     'RS': {

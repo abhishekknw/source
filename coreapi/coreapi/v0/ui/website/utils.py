@@ -1882,28 +1882,30 @@ def handle_common_filters(common_filters, supplier_type_code):
         if supplier_type_code == 'RS':
             # check if quality available
             if common_filters.get('quality'):
+                quality_list = common_filters.get('quality')
                 supplier_quality_ratings = [website_constants.quality_dict[quality] for quality in
-                                            common_filters.get('quality')]
-                query['society_type_quality'] = supplier_quality_ratings
+                                           quality_list ]
+                query['society_type_quality__in'] = supplier_quality_ratings
 
             # check if quantity available
             if common_filters.get('quantity'):
+                quantity_list = common_filters.get('quantity')
                 supplier_quantity_ratings = [website_constants.quantity_dict[quantity] for quantity in
-                                             common_filters.get('quantity')]
-                query['society_type_quantity'] = supplier_quantity_ratings
+                                             quantity_list]
+                query['society_type_quantity__in'] = supplier_quantity_ratings
 
         else:
             # check if quality available
             if common_filters.get('quality'):
                 supplier_quality_ratings = [website_constants.quality_dict[quality] for quality in
                                             common_filters.get('quality')]
-                query['quality_rating'] = supplier_quality_ratings
+                query['quality_rating__in'] = supplier_quality_ratings
 
             # check if quantity available
             if common_filters.get('quantity'):
                 supplier_quantity_ratings = [website_constants.quantity_dict[quantity] for quantity in
                                              common_filters.get('quantity')]
-                query['quantity_rating'] = supplier_quantity_ratings
+                query['quantity_rating__in'] = supplier_quantity_ratings
 
         # build the actual Q object once the fields are fixed
         common_filter_query = Q(**query)
@@ -1958,7 +1960,10 @@ def handle_inventory_filters(inventory_list):
                 query[website_constants.inventory_dict[code]] = True
 
             # make a new Q object with query and OR it with previously calculated inventory_query.
-            inventory_query |= Q(**query)
+            if inventory_query:
+                inventory_query |= Q(**query)
+            else:
+                inventory_query = Q(**query)
 
         return ui_utils.handle_response(function, data=inventory_query, success=True)
     except Exception as e:
@@ -2001,10 +2006,21 @@ def handle_specific_filters(specific_filters, supplier_type_code):
         # do if else check on supplier type code to include things particular to that supplier. Things which
         # cannot be mapped to a particular supplier
         if supplier_type_code == 'RS':
-            flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
-            supplier_ids = models.FlatType.objects.filter(flat_type__in=flat_type_values).values_list('object_id')
-            specific_filters_query &= Q(supplier_id__in=supplier_ids)
+            if specific_filters.get('flat_type'):
+                flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
+                supplier_ids = models.FlatType.objects.filter(flat_type__in=flat_type_values).values_list('object_id')
+                specific_filters_query &= Q(supplier_id__in=supplier_ids)
 
+        if supplier_type_code == 'CP':
+            # well, we can receive a multiple dicts for employee counts. each describing min and max employee counts.
+            if specific_filters.get('employees_count'):
+                for employees_count_range in specific_filters.get('employees_count'):
+                    max = employees_count_range['max']
+                    min = employees_count_range['min']
+                    if specific_filters_query:
+                        specific_filters_query |= Q(totalemployees_count__gte=min, totalemployees_count__lte=max)
+                    else:
+                        specific_filters_query = Q(totalemployees_count__gte=min, totalemployees_count__lte=max)
         # return it
         return ui_utils.handle_response(function, data=specific_filters_query, success=True)
 
