@@ -1159,20 +1159,20 @@ class FilteredSuppliers(APIView):
             if not response.data['status']:
                 return response
             specific_filters_query = response.data['data']
-
+            # if indeed there was something in the query
             if specific_filters_query.__len__():
                 specific_filters_suppliers = list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id'))
 
             inventory_type_query_suppliers = set([supplier_tuple[0] for supplier_tuple in inventory_type_query_suppliers])
             specific_filters_suppliers = set([supplier_tuple[0] for supplier_tuple in specific_filters_suppliers])
 
-            # if both available, find the intersection
+            # if both available, find the intersection. basically it's another way of doing AND query.
             if inventory_type_query_suppliers and specific_filters_suppliers:
                 final_suppliers_list = specific_filters_suppliers.intersection(inventory_type_query_suppliers)
-            # if only inventory suppliers available, set it
+            # if only inventory suppliers available, set it. Take the UNION in this case
             elif inventory_type_query_suppliers:
                 final_suppliers_list = inventory_type_query_suppliers
-            # if only specific suppliers available, set it
+            # if only specific suppliers available, set it. Take the UNION in this case.
             elif specific_filters_suppliers:
                 final_suppliers_list = specific_filters_suppliers
             # if nobody is available, set it to None

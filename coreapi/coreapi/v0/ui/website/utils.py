@@ -1882,28 +1882,30 @@ def handle_common_filters(common_filters, supplier_type_code):
         if supplier_type_code == 'RS':
             # check if quality available
             if common_filters.get('quality'):
+                quality_list = common_filters.get('quality')
                 supplier_quality_ratings = [website_constants.quality_dict[quality] for quality in
-                                            common_filters.get('quality')]
-                query['society_type_quality'] = supplier_quality_ratings
+                                           quality_list ]
+                query['society_type_quality__in'] = supplier_quality_ratings
 
             # check if quantity available
             if common_filters.get('quantity'):
+                quantity_list = common_filters.get('quantity')
                 supplier_quantity_ratings = [website_constants.quantity_dict[quantity] for quantity in
-                                             common_filters.get('quantity')]
-                query['society_type_quantity'] = supplier_quantity_ratings
+                                             quantity_list]
+                query['society_type_quantity__in'] = supplier_quantity_ratings
 
         else:
             # check if quality available
             if common_filters.get('quality'):
                 supplier_quality_ratings = [website_constants.quality_dict[quality] for quality in
                                             common_filters.get('quality')]
-                query['quality_rating'] = supplier_quality_ratings
+                query['quality_rating__in'] = supplier_quality_ratings
 
             # check if quantity available
             if common_filters.get('quantity'):
                 supplier_quantity_ratings = [website_constants.quantity_dict[quantity] for quantity in
                                              common_filters.get('quantity')]
-                query['quantity_rating'] = supplier_quantity_ratings
+                query['quantity_rating__in'] = supplier_quantity_ratings
 
         # build the actual Q object once the fields are fixed
         common_filter_query = Q(**query)
