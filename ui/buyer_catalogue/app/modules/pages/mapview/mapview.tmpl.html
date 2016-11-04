@@ -82,8 +82,28 @@
             </div>
 
            <span class = "filterPanelHeader ">Inventory Type</span>
-           <div class = "nbCheckbox two-col" ng-repeat="inventory in space_inventory_type">
+           <div class = "nbCheckbox two-col" ng-repeat="inventory in CP_filters.inventory">
              <input type = "checkbox"  ng-model="inventory.selected" ng-change="corporateFilters()">{{ inventory.name }}&nbsp;
+           </div>
+           <hr>
+           <span class = "filterPanelHeader ">Corporate Type</span>
+             <div class = "nbCheckbox two-col"  ng-repeat="quality_type in space_quality_type">
+                 <input type = "checkbox"  ng-model="quality_type.selected" ng-change="corporateFilters()">{{ quality_type.name }}&nbsp;
+             </div>
+             <hr>
+           <span class = "filterPanelHeader ">Corporate Size</span>
+             <div class = "nbCheckbox two-col" ng-repeat="quantity_type in space_quantity_type">
+                 <input type = "checkbox" ng-model="quantity_type.selected" ng-change="corporateFilters()">{{ quantity_type.name }}&nbsp;
+             </div>
+             <hr>
+           <span class = "filterPanelHeader ">Corporate Location Rating</span>
+           <div class = "nbCheckbox two-col" ng-repeat="location in space_location">
+             <input type = "checkbox" ng-model="location.selected" ng-change="corporateFilters()">{{ location.name }}&nbsp;
+           </div>
+           <hr>
+           <span class = "filterPanelHeader ">Employee Count</span>
+           <div class = "nbCheckbox two-col" ng-repeat="count in employee_count">
+             <input type = "checkbox" ng-model="count.selected" ng-change="corporateFilters()">{{ count.name }}&nbsp;
            </div>
            <hr>
            </div>

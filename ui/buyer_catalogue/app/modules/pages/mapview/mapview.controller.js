@@ -265,21 +265,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         .then(function(instances) {
             // initiated here as this is used in the service below
             // similarly initiate for other spacecs as well
-          $scope.space_inventory_type = [
-              {name : 'Poster(PO)',  code : 'PO',   selected : false },
-              {name : 'Standee(ST)', code : 'ST',   selected : false },
-              {name : 'Stall(SL)',   code : 'SL',   selected : false },
-              {name : 'Flyer(FL)',   code : 'FL',   selected : false },
-              {name : 'Car(CD)',     code : 'CD',   selected : false },
-              {name : 'PO & FL',     code : 'POFL',   selected : false },
-              {name : 'ST & FL',     code : 'STFL',   selected : false },
-              {name : 'SL & FL',     code : 'SLFL',   selected : false },
-              {name : 'CD & FL',     code : 'CDFL',   selected : false },
-              {name : 'PO & SL & FL',code : 'POSLFL',   selected : false },
-              {name : 'ST & SL& FL', code : 'STSLFL',   selected : false },
-              {name : 'PO & CD & FL',code : 'POCDFL',   selected : false },
-              {name : 'ST & CD & FL',code : 'STCDFL',   selected : false },
-          ];
+
 // This service gets all the spaces according to center specification like society_allowed
           $scope.proposal_id_temp = $stateParams.proposal_id;
           mapViewService.getSpaces($scope.proposal_id_temp)
@@ -361,6 +347,21 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.show = false;
             };
             // different society filters
+            $scope.space_inventory_type = [
+                {name : 'Poster(PO)',  code : 'PO',   selected : false },
+                {name : 'Standee(ST)', code : 'ST',   selected : false },
+                {name : 'Stall(SL)',   code : 'SL',   selected : false },
+                {name : 'Flyer(FL)',   code : 'FL',   selected : false },
+                {name : 'Car(CD)',     code : 'CD',   selected : false },
+                {name : 'PO & FL',     code : 'POFL',   selected : false },
+                {name : 'ST & FL',     code : 'STFL',   selected : false },
+                {name : 'SL & FL',     code : 'SLFL',   selected : false },
+                {name : 'CD & FL',     code : 'CDFL',   selected : false },
+                {name : 'PO & SL & FL',code : 'POSLFL',   selected : false },
+                {name : 'ST & SL& FL', code : 'STSLFL',   selected : false },
+                {name : 'PO & CD & FL',code : 'POCDFL',   selected : false },
+                {name : 'ST & CD & FL',code : 'STCDFL',   selected : false },
+            ];
             $scope.space_location = [
                 {name : 'Ultra High',   code : 'UH',    selected : false},
                 {name : 'High',         code : 'HH',    selected : false},
@@ -393,6 +394,14 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 {name : 'ROW HOUSE',    code : 'RH',      selected : false},
                 {name : 'DUPLEX',       code : 'DP',      selected : false},
             ];
+        //Start: filters for suppliers
+            $scope.CP_filters = {
+              inventory : $scope.space_inventory_type,
+              location : $scope.space_location,
+              quality_type : $scope.space_quality_type,
+              quantity_type : $scope.space_quantity_type,
+            };
+        //End: filters for suppliers
 // Start: supplier filters select deselecting functionality
     $scope.society_allowed = false, $scope.corporate_allowed = false;
     $scope.selectSuppliers = function(spaces){
@@ -643,41 +652,55 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 
 //Start: code for corporate filters
 $scope.real_estate_allowed = false;
+$scope.employee_count = [
+  {name:'0-1000',     min:'0',      max:'1000',   selected:false},
+  {name:'1000-3000',  min:'1000',   max:'3000',   selected:false},
+  {name:'3000-6000',  min:'3000',   max:'6000',   selected:false},
+  {name:'6000-10000', min:'6000',   max:'10000',  selected:false},
+
+];
   $scope.corporateFilters = function(value){
     var code = 'CP';
-    console.log($scope.space_inventory_type);
-    $scope.real_estate_allowed = value;
-    var commonFilters = {
-      latitude : $scope.current_center.center.latitude,
-      longitude : $scope.current_center.center.longitude,
-      radius : $scope.current_center.center.radius,
-      quality : [],
-      quantity : [],
-      inventories : [],
+    // if($scope.real_estate_allowed != undefined)
+      $scope.real_estate_allowed = value;
+    // else
+      // $scope.real_estate_allowed = false;
+    console.log($scope.real_estate_allowed);
+    var filters = {
+      'supplier_type_code' : 'CP',
+        common_filters : {
+        latitude : $scope.current_center.center.latitude,
+        longitude : $scope.current_center.center.longitude,
+        radius : $scope.current_center.center.radius,
+      },
+      inventory_filters : [],
+      specific_filters : {
+        real_estate_allowed : $scope.real_estate_allowed,
+      },
     };
-    var specificFilters = {
-      real_estate_allowed : $scope.real_estate_allowed,
-    };
-    makeFilters($scope.space_inventory_type,commonFilters.inventories);
-    console.log(commonFilters.inventories);
-    filterSupllierData(code,commonFilters,specificFilters);
+
+    makeFilters($scope.CP_filters.inventory,filters.inventory_filters);
+    filterSupllierData(filters);
   }
 
   var makeFilters = function(filter_array,filter_list){
-    console.log(filter_array);
     for(var i=0; i<filter_array.length; i++){
       if(filter_array[i].selected == true)
         filter_list.push(filter_array[i].code);
     }
   }
 
-  var filterSupllierData = function (code,commonFilters,specificFilters){
-    $scope.model = {
-      'supplier_type_code' : code,
-      common_filters : commonFilters,
-      specific_filters : specificFilters,
-    }
-    console.log($scope.model);
+  var filterSupllierData = function (supplier_filters){
+
+    console.log(supplier_filters);
+
+    mapViewService.getFilterSuppliers(supplier_filters)
+          .success(function(response, status){
+            console.log(response);
+          })
+          .error(function(response, status){
+              console.log("Error Happened while filtering");
+          });
   }
 //End: code for corporate filters
 });

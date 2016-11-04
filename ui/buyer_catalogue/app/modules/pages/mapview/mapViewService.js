@@ -30,6 +30,11 @@
         return machadaloHttp.get(url);
     }
 
+    mapViewService.getFilterSuppliers = function(supplier_data){
+        var url = url_base + 'filtered-suppliers/';
+        return machadaloHttp.post(url,supplier_data);
+    }
+
     mapViewService.createFinalProposal = function(proposal_id, centers_data){
         var url = url_base + proposal_id + '/createFinalProposal/';
         return machadaloHttp.post(url, centers_data);
