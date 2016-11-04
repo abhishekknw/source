@@ -72,7 +72,7 @@
           </div>
         </div>
         <div class = "filterPanel">
-         <input type = "checkbox"  ng-model="corporate_allowed"  ng-click="spaceSupplier()"/>
+         <input type = "checkbox"  ng-model="corporate_allowed"  ng-click="spaceSupplier('CP',corporate_allowed)"/>
            <span class = "filterPanelHeader"> Corporate Filters</span><br>
           <div ng-if = "corporate_allowed">
             <div>
@@ -87,7 +87,7 @@
            </div>
            <hr>
            <span class = "filterPanelHeader ">Corporate Type</span>
-             <div class = "nbCheckbox two-col"  ng-repeat="quality_type in space_quality_type">
+             <div class = "nbCheckbox two-col"  ng-repeat="quality_type in CP_filters.quality_type">
                  <input type = "checkbox"  ng-model="quality_type.selected" ng-change="corporateFilters()">{{ quality_type.name }}&nbsp;
              </div>
              <hr>
@@ -97,13 +97,13 @@
              </div>
              <hr>
            <span class = "filterPanelHeader ">Corporate Location Rating</span>
-           <div class = "nbCheckbox two-col" ng-repeat="location in space_location">
+           <div class = "nbCheckbox two-col" ng-repeat="location in CP_filters.locality_rating">
              <input type = "checkbox" ng-model="location.selected" ng-change="corporateFilters()">{{ location.name }}&nbsp;
            </div>
            <hr>
            <span class = "filterPanelHeader ">Employee Count</span>
-           <div class = "nbCheckbox two-col" ng-repeat="count in employee_count">
-             <input type = "checkbox" ng-model="count.selected" ng-change="corporateFilters()">{{ count.name }}&nbsp;
+           <div class = "nbCheckbox two-col" ng-repeat="range in CP_filters.employee_count">
+             <input type = "checkbox" ng-model="range.selected" ng-change="corporateFilters()">{{ range.name }}&nbsp;
            </div>
            <hr>
            </div>
@@ -210,6 +210,7 @@
             <hr>
              <span class = "space filterPanelHeader ">Space Count</span>
              <div class = "nbCheckbox two-col">Societies:  {{societies_count}}</div>
+             <div ng-if ="corporate_allowed" class = "nbCheckbox two-col">Corporates:  {{corporates_count}}</div>
              <div class = "nbCheckbox two-col">Flat Count:  {{flat_count}}</div>
              <div class = "nbCheckbox two-col">Tower Count:  {{tower_count}}</div>
             <!--added if condition below to display those inventories selected by user in sumarry section-->

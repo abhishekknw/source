@@ -191,6 +191,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               }
             }
           if($scope.current_center.suppliers['CP'] != undefined){
+            $scope.corporates_count = $scope.current_center.suppliers['CP'].length;
           }
       }
     //End: mapview basic summary
@@ -394,12 +395,20 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 {name : 'ROW HOUSE',    code : 'RH',      selected : false},
                 {name : 'DUPLEX',       code : 'DP',      selected : false},
             ];
+            $scope.employee_count = [
+              {name:'0-1000',     code : {min:'0',      max:'1000'},   selected:false},
+              {name:'1000-3000',  code : {min:'1000',   max:'3000'},   selected:false},
+              {name:'3000-6000',  code : {min:'3000',   max:'6000'},   selected:false},
+              {name:'6000-10000', code : {min:'6000',   max:'10000'},  selected:false},
+
+            ];
         //Start: filters for suppliers
             $scope.CP_filters = {
               inventory : $scope.space_inventory_type,
-              location : $scope.space_location,
+              locality_rating : $scope.space_location,
               quality_type : $scope.space_quality_type,
               quantity_type : $scope.space_quantity_type,
+              employee_count : $scope.employee_count,
             };
         //End: filters for suppliers
 // Start: supplier filters select deselecting functionality
@@ -415,13 +424,24 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       });
     }
 
-    $scope.spaceSupplier = function(supplier){
+    $scope.spaceSupplier = function(code,supplier){
     // this function handles selecting/deselecting society space i.e. society_allowed = true/false
     // code changed after changes done for adding two centers on gridView
-        if($scope.supplier == true)
-          $scope.supplier = false;
-        else
+    console.log(code,supplier);
+        if($scope.supplier == false){
+          if(code == 'CP'){
+            $scope.corporateFilters();
+          }
           $scope.supplier = true;
+        }
+        else{
+          if(code == 'CP'){
+            delete $scope.current_center.suppliers['CP'];
+          }
+
+          $scope.supplier = false;
+        }
+        $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
       }
 // End: supplier filters select deselecting functionality
     // function to show gridView_Summary on gridView page
@@ -522,6 +542,72 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 filter_array[i].selected = false;
               }
             }
+
+  //Start: code for corporate filters
+            $scope.real_estate_allowed = false;
+
+              $scope.corporateFilters = function(value){
+                var code = 'CP';
+                // if($scope.real_estate_allowed != undefined)
+                  $scope.real_estate_allowed = value;
+                // else
+                  // $scope.real_estate_allowed = false;
+                var filters = {
+                  'supplier_type_code' : 'CP',
+                    common_filters : {
+                    latitude : $scope.current_center.center.latitude,
+                    longitude : $scope.current_center.center.longitude,
+                    radius : $scope.current_center.center.radius,
+                    quality : [],
+                    locality : [],
+                  },
+                  inventory_filters : [],
+                  specific_filters : {
+                    real_estate_allowed : $scope.real_estate_allowed,
+                    employee_count : [],
+                  },
+                };
+
+                makeFilters($scope.CP_filters.inventory,filters.inventory_filters);
+                makeFilters($scope.CP_filters.employee_count,filters.specific_filters.employee_count);
+                makeFilters($scope.CP_filters.quality_type,filters.common_filters.quality);
+                makeFilters($scope.CP_filters.quality_type,filters.common_filters.locality);
+                filterSupllierData(filters);
+              }
+
+              var makeFilters = function(filter_array,filter_list){
+                for(var i=0; i<filter_array.length; i++){
+                  if(filter_array[i].selected == true)
+                    filter_list.push(filter_array[i].code);
+                }
+              }
+
+              var filterSupllierData = function (supplier_filters){
+
+                console.log("filters",supplier_filters);
+
+                mapViewService.getFilterSuppliers(supplier_filters)
+                      .success(function(response, status){
+                        console.log($scope.current_center);
+                        console.log("response of filters",response);
+                          $scope.society_markers = assignMarkersToMap(response.data.suppliers);
+                          response.data.center = $scope.current_center.center;
+                          $scope.center_data[$scope.current_center_index] = response.data;
+                          $scope.current_center = response.data;
+                          suppliersData();
+                          mapViewBasicSummary();
+                          // mapViewFiltersSummary();
+                          // mapViewImpressions();
+                          gridViewBasicSummary();
+                      })
+                      .error(function(response, status){
+                          console.log("Error Happened while filtering");
+                      });
+              }
+  //End: code for corporate filters
+
+
+
             var promises = [];
             $scope.getFilteredSocieties = function(){
             promises = [];
@@ -650,57 +736,4 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   }
 //End: Function added to show all suppliers on gridView
 
-//Start: code for corporate filters
-$scope.real_estate_allowed = false;
-$scope.employee_count = [
-  {name:'0-1000',     min:'0',      max:'1000',   selected:false},
-  {name:'1000-3000',  min:'1000',   max:'3000',   selected:false},
-  {name:'3000-6000',  min:'3000',   max:'6000',   selected:false},
-  {name:'6000-10000', min:'6000',   max:'10000',  selected:false},
-
-];
-  $scope.corporateFilters = function(value){
-    var code = 'CP';
-    // if($scope.real_estate_allowed != undefined)
-      $scope.real_estate_allowed = value;
-    // else
-      // $scope.real_estate_allowed = false;
-    console.log($scope.real_estate_allowed);
-    var filters = {
-      'supplier_type_code' : 'CP',
-        common_filters : {
-        latitude : $scope.current_center.center.latitude,
-        longitude : $scope.current_center.center.longitude,
-        radius : $scope.current_center.center.radius,
-      },
-      inventory_filters : [],
-      specific_filters : {
-        real_estate_allowed : $scope.real_estate_allowed,
-      },
-    };
-
-    makeFilters($scope.CP_filters.inventory,filters.inventory_filters);
-    filterSupllierData(filters);
-  }
-
-  var makeFilters = function(filter_array,filter_list){
-    for(var i=0; i<filter_array.length; i++){
-      if(filter_array[i].selected == true)
-        filter_list.push(filter_array[i].code);
-    }
-  }
-
-  var filterSupllierData = function (supplier_filters){
-
-    console.log(supplier_filters);
-
-    mapViewService.getFilterSuppliers(supplier_filters)
-          .success(function(response, status){
-            console.log(response);
-          })
-          .error(function(response, status){
-              console.log("Error Happened while filtering");
-          });
-  }
-//End: code for corporate filters
 });
