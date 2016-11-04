@@ -1128,6 +1128,110 @@ class SpacesOnCenterAPIView(APIView):
         return Response(response, status=200)
 
 
+class FilteredSuppliers(APIView):
+    """
+    This API gives suppliers based on different filters from mapView and gridView Page.
+    """
+
+    def post(self, request):
+        """
+        The request looks like :
+        {
+          'supplier_type_code': 'CP',
+          'common_filters': { 'latitude': 12, 'longitude': 11, 'radius': 2, 'quality': [ 'UH', 'H' ],
+           'quantity': ['VL'], 'inventories': ['PO', 'ST']
+           },
+          'specific_filters': { 'real_estate_allowed': True, 'total_employees_count': 100,}
+        }
+        and the response looks like:
+        {
+            "status": true,
+            "data": {
+                "suppliers": {
+                    "RS": []
+                },
+                "suppliers_meta": {
+                    "RS": {
+                        "count": 0,
+                        "inventory_count": {
+                            "posters": null,
+                            "stalls": null,
+                            "standees": null,
+                            "fliers": null
+                        }
+                    }
+                }
+            }
+        }
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            # if not supplier type code, return
+            supplier_type_code = request.data.get('supplier_type_code')
+            common_filters = request.data.get('common_filters')
+
+            if not supplier_type_code:
+                return ui_utils.handle_response(class_name, data='provide supplier type code')
+
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response:
+                return response
+            content_type = response.data.get('data')
+
+            result = {}
+            suppliers = []
+
+            # build the query
+            response = website_utils.construct_query(request.data)
+            if not response.data['status']:
+                return response
+
+            query = response.data['data']
+
+            # handle inventory related filters. it involves quite an involved logic hence it is in another function.
+            response = website_utils.handle_inventory_filters(common_filters.get('inventories'))
+            if not response.data['status']:
+                return response
+
+            # because the model to query is different in this case hence it is not include in 'query' variable
+            # defined above. suppliers are fetched here on the basis of inventories and later
+            #  combined with the main results
+
+            inventory_type_query = response.data['data']
+            inventory_type_query &= Q(content_type=content_type)
+            suppliers_id_list = list(models.InventorySummary.objects.filter(inventory_type_query).values('object_id'))
+
+            # query the right model and query it based on the query we received earlier
+            supplier_model = ui_utils.get_model(supplier_type_code)
+            suppliers = list(supplier_model.objects.filter(supplier_id__in=suppliers_id_list))
+            suppliers.extend(list(supplier_model.objects.filter(query)))
+            supplier_serializer = ui_utils.get_serializer(supplier_type_code)
+            serializer = supplier_serializer(list(set(suppliers)), many=True)
+
+            # calculate total aggregate count
+            suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=suppliers, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
+                                                                                                        standees=Sum('total_standee_count'),
+                                                                                                        stalls=Sum('total_stall_count'),
+                                                                                                        fliers=Sum('flier_frequency'))
+
+            # construct the response and return
+            result['suppliers'] = {}
+            result['suppliers_meta'] = {}
+
+            result['suppliers'][supplier_type_code] = serializer.data
+
+            result['suppliers_meta'][supplier_type_code] = {}
+
+            result['suppliers_meta'][supplier_type_code]['count'] = 0
+            result['suppliers_meta'][supplier_type_code]['inventory_count'] = suppliers_inventory_count
+
+            return ui_utils.handle_response(class_name, data=result, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
 class FilteredSuppliersAPIView(APIView):
     """
     This API gives suppliers based on different filters from mapView and gridView Page
@@ -1298,13 +1402,14 @@ class FilteredSuppliersAPIView(APIView):
                     if society_key in supplier.keys():
                         value = supplier[society_key]
                         del supplier[society_key]
-                        supplier[actual_key] = value         
+                        supplier[actual_key] = value
+
             suppliers_inventory_count = InventorySummary.objects.filter_objects({'supplier_type_code': supplier_code},
                                                                                 supplier_ids).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
                                                                                                         fliers=Sum('flier_frequency'))
-                                                                   
+
             result = {}
 
             result['suppliers'] = {}

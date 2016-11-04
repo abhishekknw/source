@@ -84,12 +84,6 @@ price_per_flat = {
     'FL': ['flier_price_per_flat', 'filer_price'], #todo: change the spelling from filer to flier once fixed
 }
 
-flat_type_dict = {
-    '1R': '1 RK', '1B': '1 BHK', '1-5B': '1.5 BHK', '2B': '2 BHK',
-    '2-5B': '2.5 BHK', '3B': '3 BHK', '3-5B': '3.5 BHK', '4B': '4 BHK',
-    '5B': '5 BHK', 'PH': 'PENT HOUSE', 'RH': 'ROW HOUSE', 'DP': 'DUPLEX'
-}
-
 # supplier_code_filter_params = {
 #     'RS': {
 #         'MODEL': SupplierTypeSociety,
@@ -321,3 +315,52 @@ export_supplier_header_keys = {
 
 # lead keys
 lead_keys = ['name', 'email', 'phone', 'address', 'gender', 'age', 'lead_type', 'lead_status']
+
+# filters. the following dict maps supplier specific filters to database fields directly
+supplier_filters = {
+    'CP': {
+        'real_estate_allowed': 'isrealestateallowed',
+        'total_employees_count': 'totalemployees_count',
+        'building_count': 'building_count',
+    },
+    'RS': {
+    }
+}
+
+quality_dict = {
+    'UH': 'Ultra High',
+    'HH': 'High',
+    'MH': 'Medium High',
+    'ST': 'Standard'
+}
+
+inventory_dict = {
+    'PO': 'poster_allowed_nb',
+    'ST': 'standee_allowed',
+    'SL': 'stall_allowed',
+    'FL': 'flier_allowed',
+    'BA': 'banner_allowed',
+    'CD': 'car_display_allowed',
+}
+
+quantity_dict = {
+    'LA': 'Large',
+    'MD': 'Medium',
+    'VL': 'Very Large',
+    'SM': 'Small',
+}
+
+flat_type_dict = {
+    '1R': '1 RK',
+    '1B': '1 BHK',
+    '1-5B': '1.5 BHK',
+    '2B': '2 BHK',
+    '2-5B': '2.5 BHK',
+    '3B': '3 BHK',
+    '3-5B': '3.5 BHK',
+    '4B': '4 BHK',
+    '5B': '5 BHK',
+    'PH': 'PENT HOUSE',
+    'RH': 'ROW HOUSE',
+    'DP': 'DUPLEX'
+}

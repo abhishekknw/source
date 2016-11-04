@@ -48,6 +48,7 @@ urlpatterns = [
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/create-final-proposal/$', views.CreateFinalProposal.as_view(), name='create-final-proposal'),
     url(r'^(?P<account_id>[A-Z_a-z0-9]+)/create-initial-proposal/$', views.CreateInitialProposal.as_view(), name='create-initial-proposal'),
     url(r'^import-campaign-leads-data/$', views.ImportCampaignLeads.as_view()),
+    url(r'^filtered-suppliers/$', views.FilteredSuppliers.as_view()),
 
 ]
 

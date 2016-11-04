@@ -1216,10 +1216,10 @@ def get_coordinates(radius, latitude, longitude):
         min_longitude = longitude - delta_longitude
         max_longitude = longitude + delta_longitude
         data = {
-            'min_lat': min_latitude,
-            'min_long': min_longitude,
-            'max_lat': max_latitude,
-            'max_long': max_longitude
+            'min_lat': float(min_latitude),
+            'min_long': float(min_longitude),
+            'max_lat': float(max_latitude),
+            'max_long': float(max_longitude)
         }
         return ui_utils.handle_response(function_name, data=data, success=True)
     except Exception as e:
@@ -1830,3 +1830,216 @@ def handle_campaign_leads(row):
             return ui_utils.handle_response(function, data=data, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def handle_common_filters(common_filters, supplier_type_code):
+    """
+    This function is called from construct_query and handles only common filters
+    Args:
+        common_filters: { 'latitude': 10, 'longitude': 12, 'radius': 1, 'quality': ['UH', 'H'],
+        'quantity': ['VL', 'L'], inventories: ['PO', 'ST'] }
+
+    Returns: a Q object based on above filters
+
+    """
+    function = handle_common_filters.__name__
+    try:
+        if not common_filters:
+            return ui_utils.handle_response(function,data=Q(), success=True)
+
+        # we will store field and values in this dict and later on use it to construct Q object
+        query = {}
+
+        # fetch the lat long radius
+        latitude = float(common_filters['latitude'])
+        longitude = float(common_filters['longitude'])
+        radius = float(common_filters['radius'])
+        response = get_coordinates(radius, latitude, longitude)
+        if not response.data['status']:
+            return response
+        # get the coordinates
+        coordinates = response.data['data']
+
+        max_latitude = coordinates['max_lat']
+        max_longitude = coordinates['max_long']
+        min_latitude = coordinates['min_lat']
+        min_longitude = coordinates['min_long']
+
+        # start build the query
+        if supplier_type_code == 'RS':
+            query['society_latitude__lt'] = max_latitude
+            query['society_latitude__gt'] = min_latitude
+            query['society_longitude__lt'] = max_longitude
+            query['society_longitude__gt'] = min_longitude
+
+        else:
+            query['latitude__lt'] = max_latitude
+            query['latitude__gt'] = min_latitude
+            query['longitude__lt'] = max_longitude
+            query['longitude__gt'] = min_longitude
+
+        # separate on RS and other supplier types.
+        if supplier_type_code == 'RS':
+            # check if quality available
+            if common_filters.get('quality'):
+                supplier_quality_ratings = [website_constants.quality_dict[quality] for quality in
+                                            common_filters.get('quality')]
+                query['society_type_quality'] = supplier_quality_ratings
+
+            # check if quantity available
+            if common_filters.get('quantity'):
+                supplier_quantity_ratings = [website_constants.quantity_dict[quantity] for quantity in
+                                             common_filters.get('quantity')]
+                query['society_type_quantity'] = supplier_quantity_ratings
+
+        else:
+            # check if quality available
+            if common_filters.get('quality'):
+                supplier_quality_ratings = [website_constants.quality_dict[quality] for quality in
+                                            common_filters.get('quality')]
+                query['quality_rating'] = supplier_quality_ratings
+
+            # check if quantity available
+            if common_filters.get('quantity'):
+                supplier_quantity_ratings = [website_constants.quantity_dict[quantity] for quantity in
+                                             common_filters.get('quantity')]
+                query['quantity_rating'] = supplier_quantity_ratings
+
+        # build the actual Q object once the fields are fixed
+        common_filter_query = Q(**query)
+
+        import pdb
+        pdb.set_trace()
+
+        # return the query
+        return ui_utils.handle_response(function, data=common_filter_query, success=True)
+
+    except KeyError as e:
+        return ui_utils.handle_response(function, data='Key Error occurred', exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def handle_inventory_filters(inventory_list):
+    """
+    Args:
+        inventory_list: ['PO', 'POST', 'ST' ]
+        supplier_type_code: RS, CP etc
+
+    Returns: a Q object after handling each inventory code
+    query = PO | ST | (POST) | CD | (STFL)
+    for single codes like 'PO', 'ST', etc the query is just there corresponding db field.
+    for complex codes like 'POST', each individual code is extracted and individual database fields are joined by 'and'.
+    """
+    function = handle_inventory_filters.__name__
+    try:
+        if not inventory_list:
+            return ui_utils.handle_response(function, data=Q(), success=True)
+
+        # final Q object to be returned
+        inventory_query = Q()
+        # atomic inventories means 'PO', 'ST' etc.
+        valid_atomic_inventories = website_constants.inventory_dict.keys()
+        # iterate through all the inventory list
+        for inventory in inventory_list:
+            # if it is atomic, that means you only need to fetch it's db field and set it to Q object
+            if inventory in valid_atomic_inventories:
+                inventory_query |= Q({website_constants.inventory_dict[inventory]: True})
+                continue
+            # come here only it it's non atomic inventory code.
+            query = {}
+            step = 2
+            # split the non atomic inventory code into size of 2 letters.
+            individual_codes = [inventory[i:i+step] for i in range(0, len(inventory), step)]
+            # for each code
+            for code in individual_codes:
+                # set the query
+                query[website_constants.inventory_dict[code]] = True
+
+            # make a new Q object with query and OR it with previously calculated inventory_query.
+            inventory_query |= Q(**query)
+
+        return ui_utils.handle_response(function, data=inventory_query, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def handle_specific_filters(specific_filters, supplier_type_code):
+    """
+    This function is called from construct query which handles filters specific to supplier
+    Args:
+        specific_filters: { 'real_estate_allowed': True, 'total_employee_count': 120, 'flat_type': [ '1RK', '2BHK' ]
+
+          }
+    Returns: a Q object based on above filters
+
+    """
+    function = handle_specific_filters.__name__
+    try:
+        if not specific_filters:
+            return ui_utils.handle_response(function, data=Q(), success=True)
+
+        # get the predefined dict of specific filters for this supplier
+        master_specific_filters = website_constants.supplier_filters[supplier_type_code]
+
+        # construct a dict for storing query values.
+        query = {}
+        # the following loop stores those fields in received filters which can be mapped directly to db columns.
+        for received_filter, filter_value in specific_filters.iteritems():
+
+            # get the database field for this specific filter
+            database_field = master_specific_filters.get(received_filter)
+
+            if database_field:
+                # set it to the dict
+                query[database_field] = filter_value
+
+        # make the query for fields in the request that map directly to model fields.
+        specific_filters_query = Q(**query)
+
+        # do if else check on supplier type code to include things particular to that supplier. Things which
+        # cannot be mapped to a particular supplier
+        if supplier_type_code == 'RS':
+            flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
+            supplier_ids = models.FlatType.objects.filter(flat_type__in=flat_type_values).values_list('object_id')
+            specific_filters_query &= Q(supplier_id__in=supplier_ids)
+
+        # return it
+        return ui_utils.handle_response(function, data=specific_filters_query, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def construct_query(data):
+    """
+    This function builds the right query for FilterSuppliers API.
+    Args:
+        data: the request.data
+
+    Returns: Returns a Q object tha holds the final query object
+    """
+    function = construct_query.__name__
+    try:
+        supplier_type_code = data.get('supplier_type_code')
+
+        # build the common filter query
+        common_filters = data.get('common_filters')
+        response = handle_common_filters(common_filters, supplier_type_code)
+        if not response.data['status']:
+            return response
+        common_filter_query_object = response.data['data']
+
+        # build the specific filter query
+        specific_filters = data.get('specific_filters')
+        response = handle_specific_filters(specific_filters, supplier_type_code)
+        if not response.data['status']:
+            return response
+
+        specific_filter_query_object = response.data['data']
+
+        return ui_utils.handle_response(function, data=common_filter_query_object&specific_filter_query_object, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
