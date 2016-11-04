@@ -62,7 +62,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           // assigns spaces(society, corporate) markers on the map
           // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
           var markers = [];
-          //console.log("printing spaces", spaces);
           angular.forEach(spaces, function(suppliers) {
             for (var i=0; i <suppliers.length; i++) {
                 markers.push({
@@ -208,7 +207,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
        }
      }
     //End: mapview filter summary required after applying filters
-    //Start: impressions
+    //Start: impressions on mapview
       var mapViewImpressions = function(){
         $scope.posterMapImpressions = $scope.flat_count*4*7*2;
         $scope.standeeMapImpression = $scope.flat_count*4*7*2;
@@ -216,7 +215,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         $scope.flierMapImpressions = $scope.flat_count * 4*1;
 
       }
-    //End: impressions
+    //End: impressions on mapview
     //Start: collectng all centers suppliers data in one varible for RS,CP..etc
       var suppliersData = function(){
         $scope.total_societies = [];
@@ -293,6 +292,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 console.log("printing current_center", $scope.current_center);
 
                 $scope.current_center_index = 0;
+                $scope.selectSuppliers($scope.center_data);
                 mapViewBasicSummary();
                 suppliersData();
                 gridViewBasicSummary();
@@ -394,14 +394,14 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 {name : 'DUPLEX',       code : 'DP',      selected : false},
             ];
 // Start: supplier filters select deselecting functionality
-    $scope.society_checked = false;
+    $scope.society_allowed = false, $scope.corporate_allowed = false;
     $scope.selectSuppliers = function(spaces){
       angular.forEach(spaces, function(supplier){
-        if(spaces == 'RS'){
-          $scope.society_checked =true;
+        if(supplier.suppliers['RS'] != undefined){
+          $scope.society_allowed =true;
         }
-        if(spaces == 'CP'){
-          $scope.corporate_checked =true;
+        if(supplier.suppliers['CP'] != undefined){
+          $scope.corporate_allowed =true;
         }
       });
     }
@@ -641,4 +641,43 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   }
 //End: Function added to show all suppliers on gridView
 
+//Start: code for corporate filters
+$scope.real_estate_allowed = false;
+  $scope.corporateFilters = function(value){
+    var code = 'CP';
+    console.log($scope.space_inventory_type);
+    $scope.real_estate_allowed = value;
+    var commonFilters = {
+      latitude : $scope.current_center.center.latitude,
+      longitude : $scope.current_center.center.longitude,
+      radius : $scope.current_center.center.radius,
+      quality : [],
+      quantity : [],
+      inventories : [],
+    };
+    var specificFilters = {
+      real_estate_allowed : $scope.real_estate_allowed,
+    };
+    makeFilters($scope.space_inventory_type,commonFilters.inventories);
+    console.log(commonFilters.inventories);
+    filterSupllierData(code,commonFilters,specificFilters);
+  }
+
+  var makeFilters = function(filter_array,filter_list){
+    console.log(filter_array);
+    for(var i=0; i<filter_array.length; i++){
+      if(filter_array[i].selected == true)
+        filter_list.push(filter_array[i].code);
+    }
+  }
+
+  var filterSupllierData = function (code,commonFilters,specificFilters){
+    $scope.model = {
+      'supplier_type_code' : code,
+      common_filters : commonFilters,
+      specific_filters : specificFilters,
+    }
+    console.log($scope.model);
+  }
+//End: code for corporate filters
 });
