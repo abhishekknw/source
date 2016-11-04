@@ -1908,9 +1908,6 @@ def handle_common_filters(common_filters, supplier_type_code):
         # build the actual Q object once the fields are fixed
         common_filter_query = Q(**query)
 
-        import pdb
-        pdb.set_trace()
-
         # return the query
         return ui_utils.handle_response(function, data=common_filter_query, success=True)
 
@@ -1944,7 +1941,11 @@ def handle_inventory_filters(inventory_list):
         for inventory in inventory_list:
             # if it is atomic, that means you only need to fetch it's db field and set it to Q object
             if inventory in valid_atomic_inventories:
-                inventory_query |= Q({website_constants.inventory_dict[inventory]: True})
+                # the policy is to  OR the atomic inventories
+                if inventory_query:
+                    inventory_query |= Q(**{website_constants.inventory_dict[inventory]: True})
+                else:
+                    inventory_query = Q(**{website_constants.inventory_dict[inventory]: True})
                 continue
             # come here only it it's non atomic inventory code.
             query = {}

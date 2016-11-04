@@ -1123,13 +1123,14 @@ class FilteredSuppliers(APIView):
             content_type = response.data.get('data')
 
             result = {}
-            suppliers = []
+            suppliers_id_list = []
 
             # build the query
             response = website_utils.construct_query(request.data)
             if not response.data['status']:
                 return response
 
+            # a q object is returned
             query = response.data['data']
 
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
@@ -1139,21 +1140,33 @@ class FilteredSuppliers(APIView):
 
             # because the model to query is different in this case hence it is not include in 'query' variable
             # defined above. suppliers are fetched here on the basis of inventories and later
-            #  combined with the main results
+            # combined with the main results
 
             inventory_type_query = response.data['data']
-            inventory_type_query &= Q(content_type=content_type)
-            suppliers_id_list = list(models.InventorySummary.objects.filter(inventory_type_query).values('object_id'))
+            # fetch the right content type as it can be for any supplier
+            if inventory_type_query:
+                inventory_type_query &= Q(content_type=content_type)
+                suppliers_id_list = list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id'))
 
             # query the right model and query it based on the query we received earlier
             supplier_model = ui_utils.get_model(supplier_type_code)
-            suppliers = list(supplier_model.objects.filter(supplier_id__in=suppliers_id_list))
-            suppliers.extend(list(supplier_model.objects.filter(query)))
+
+            # extend the suppliers we got from inventory query
+            suppliers_id_list.extend((supplier_model.objects.filter(query).values_list('supplier_id')))
+
+            # to be on safe side, just make this list unique set of supplier id's
+            suppliers_id_list = list(set(suppliers_id_list))
+
+            # contents of suppliers_id_list are a list of tuples. each tuple's first value contains the supplier_id
+            suppliers_id_list = [supplier_tuple[0] for supplier_tuple in suppliers_id_list]
+
+            # query now for real objects for supplier_id in the list
+            suppliers = supplier_model.objects.filter(supplier_id__in=suppliers_id_list)
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
-            serializer = supplier_serializer(list(set(suppliers)), many=True)
+            serializer = supplier_serializer(suppliers, many=True)
 
             # calculate total aggregate count
-            suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=suppliers, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
+            suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=suppliers_id_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
                                                                                                         fliers=Sum('flier_frequency'))
