@@ -2011,36 +2011,3 @@ def handle_specific_filters(specific_filters, supplier_type_code):
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
-
-def construct_query(data):
-    """
-    This function builds the right query for FilterSuppliers API.
-    Args:
-        data: the request.data
-
-    Returns: Returns a Q object tha holds the final query object
-    """
-    function = construct_query.__name__
-    try:
-        supplier_type_code = data.get('supplier_type_code')
-
-        # build the common filter query
-        common_filters = data.get('common_filters')
-        response = handle_common_filters(common_filters, supplier_type_code)
-        if not response.data['status']:
-            return response
-        common_filter_query_object = response.data['data']
-
-        # build the specific filter query
-        specific_filters = data.get('specific_filters')
-        response = handle_specific_filters(specific_filters, supplier_type_code)
-        if not response.data['status']:
-            return response
-
-        specific_filter_query_object = response.data['data']
-
-        return ui_utils.handle_response(function, data=common_filter_query_object&specific_filter_query_object, success=True)
-
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
-
