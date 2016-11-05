@@ -1940,7 +1940,6 @@ def handle_inventory_filters(inventory_list):
     """
     Args:
         inventory_list: ['PO', 'POST', 'ST' ]
-        supplier_type_code: RS, CP etc
 
     Returns: a Q object after handling each inventory code
     query = PO | ST | (POST) | CD | (STFL)
@@ -2044,3 +2043,23 @@ def handle_specific_filters(specific_filters, supplier_type_code):
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
+
+def is_fulltext_index(model_name, column_name, index_type):
+    """
+    Args:
+        model_name: table name
+        column_name: column name
+        index_type: 'FULLTEXT'
+
+    Returns: True if columnn of table has a FullText index, False otherwise
+
+    """
+    function = is_fulltext_index.__name__
+    try:
+        table_name = model_name._meta.db_table
+        raw_query_set = model_name.objects.raw(
+            'show index from {0} where column_name={1} and index_type={2}'.format(table_name, column_name, index_type))
+        answer = True if raw_query_set else False
+        return ui_utils.handle_response(function, data=answer, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
