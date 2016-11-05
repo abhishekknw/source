@@ -1834,10 +1834,10 @@ def handle_campaign_leads(row):
 
 def handle_common_filters(common_filters, supplier_type_code):
     """
-    This function is called from construct_query and handles only common filters
+    This function handles only common filters.
     Args:
         common_filters: { 'latitude': 10, 'longitude': 12, 'radius': 1, 'quality': ['UH', 'H'],
-        'quantity': ['VL', 'L'], inventories: ['PO', 'ST'] }
+        'quantity': ['VL', 'L'] }
 
     Returns: a Q object based on above filters
 
@@ -1854,6 +1854,7 @@ def handle_common_filters(common_filters, supplier_type_code):
         latitude = float(common_filters['latitude'])
         longitude = float(common_filters['longitude'])
         radius = float(common_filters['radius'])
+
         response = get_coordinates(radius, latitude, longitude)
         if not response.data['status']:
             return response
@@ -1877,35 +1878,24 @@ def handle_common_filters(common_filters, supplier_type_code):
             query['latitude__gt'] = min_latitude
             query['longitude__lt'] = max_longitude
             query['longitude__gt'] = min_longitude
-
-        # separate on RS and other supplier types.
-        if supplier_type_code == 'RS':
-            # check if quality available
-            if common_filters.get('quality'):
-                quality_list = common_filters.get('quality')
-                supplier_quality_ratings = [website_constants.quality_dict[quality] for quality in
-                                           quality_list ]
-                query['society_type_quality__in'] = supplier_quality_ratings
-
-            # check if quantity available
-            if common_filters.get('quantity'):
-                quantity_list = common_filters.get('quantity')
-                supplier_quantity_ratings = [website_constants.quantity_dict[quantity] for quantity in
-                                             quantity_list]
-                query['society_type_quantity__in'] = supplier_quantity_ratings
-
-        else:
-            # check if quality available
-            if common_filters.get('quality'):
-                supplier_quality_ratings = [website_constants.quality_dict[quality] for quality in
-                                            common_filters.get('quality')]
-                query['quality_rating__in'] = supplier_quality_ratings
-
-            # check if quantity available
-            if common_filters.get('quantity'):
-                supplier_quantity_ratings = [website_constants.quantity_dict[quantity] for quantity in
-                                             common_filters.get('quantity')]
-                query['quantity_rating__in'] = supplier_quantity_ratings
+        # the keys like 'locality', 'quantity', 'quality' we receive from front end are already defined in constants
+        predefined_common_filter_keys = website_constants.query_dict[supplier_type_code].keys()
+        # we may receive a subset of already defined keys. obtain that subset
+        received_common_filter_keys = common_filters.keys()
+        # iterate over each predefined key and check if it is what we have received.
+        for filter_term in predefined_common_filter_keys:
+            if filter_term in received_common_filter_keys:
+                # if received, obtain the query term for that filter key. query term looks like 'locality_rating__in'
+                query_term = website_constants.query_dict[supplier_type_code][filter_term]['query']
+                # fetch the query dict associated. it contains the code-value mapping of the filters codes
+                query_dict = website_constants.query_dict[supplier_type_code][filter_term]['dict']
+                # fetch the filter codes received like ['HH', 'UH']
+                filter_codes = common_filters.get(filter_term)
+                # get the actual values against these codes for example, 'Ulta High' for 'UH'. These values are defined
+                # in the query_dict fetched above.
+                filter_term_value_list = [query_dict.get(code) for code in filter_codes]
+                # set the query dict to list of values calculated against the db field term
+                query[query_term] = filter_term_value_list
 
         # build the actual Q object once the fields are fixed
         common_filter_query = Q(**query)

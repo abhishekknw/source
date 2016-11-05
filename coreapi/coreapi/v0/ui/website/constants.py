@@ -326,13 +326,21 @@ supplier_filters = {
     }
 }
 
+# from the front end we recieve only the codes, hence there is a mapping to actual values. Do not change it's name
 quality_dict = {
     'UH': 'Ultra High',
     'HH': 'High',
     'MH': 'Medium High',
     'ST': 'Standard'
 }
-
+# from the front end we recieve only the codes, hence there is a mapping to actual values. Do not change it's name.
+locality_dict = {
+    'UH': 'Ultra High',
+    'HH': 'High',
+    'MH': 'Medium High',
+    'ST': 'Standard'
+}
+# from the front end we recieve only the codes, hence there is a mapping to actual values
 inventory_dict = {
     'PO': 'poster_allowed_nb',
     'ST': 'standee_allowed',
@@ -341,14 +349,14 @@ inventory_dict = {
     'BA': 'banner_allowed',
     'CD': 'car_display_allowed',
 }
-
+# from the front end we recieve only the codes, hence there is a mapping to actual values. Do not change it's name.
 quantity_dict = {
     'LA': 'Large',
     'MD': 'Medium',
     'VL': 'Very Large',
     'SM': 'Small',
 }
-
+# from the front end we recieve only the codes, hence there is a mapping to actual values
 flat_type_dict = {
     '1R': '1 RK',
     '1B': '1 BHK',
@@ -362,4 +370,31 @@ flat_type_dict = {
     'PH': 'PENT HOUSE',
     'RH': 'ROW HOUSE',
     'DP': 'DUPLEX'
+}
+# currently some db columns which mean the same are named differently in society and other suppliers. hence in order to
+# to reduce code, this is a mapping for each type of supplier, from the term we get from front end to the term
+# that is there in db as a column
+query_dict = {
+    'RS': {
+        'quantity': {'query': 'society_type_quantity__in',
+                     'dict': quantity_dict
+                     },
+        'quality': {'query': 'society_type_quality__in',
+                    'dict': quality_dict
+                   },
+        'locality': {'query': 'society_locality__in',
+                     'dict': locality_dict
+                    }
+    },
+    'CP': {
+        'quantity': {'query': 'quantity_rating__in',
+                     'dict': quantity_dict,
+                    },
+        'quality': {'query': 'quality_rating__in',
+                    'dict': quality_dict
+                   },
+        'locality': {'query': 'locality_rating__in',
+                     'dict': locality_dict
+                    }
+    }
 }

@@ -1086,7 +1086,7 @@ class FilteredSuppliers(APIView):
            'quantity': ['VL'],
            },
            'inventory_filters': ['PO', 'ST'],
-          'specific_filters': { 'real_estate_allowed': True, 'total_employees_count': {min: 10, max: 100},}
+          'specific_filters': { 'real_estate_allowed': True, 'employees_count': {min: 10, max: 100},}
         }
         and the response looks like:
         {
@@ -1104,7 +1104,7 @@ class FilteredSuppliers(APIView):
                             "standees": null,
                             "fliers": null
                         }
-                    }
+                    },
                 }
             }
         }
@@ -1141,7 +1141,6 @@ class FilteredSuppliers(APIView):
             # this is the main list. if no filter is selected this is what is returned by default
 
             master_suppliers_list = supplier_model.objects.filter(common_filters_query).values_list('supplier_id')
-            final_suppliers_list = []
 
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
