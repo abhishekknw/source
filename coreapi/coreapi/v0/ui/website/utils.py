@@ -1897,6 +1897,12 @@ def handle_common_filters(common_filters, supplier_type_code):
                 # set the query dict to list of values calculated against the db field term
                 query[query_term] = filter_term_value_list
 
+        # remove those fields that have False value or Empty values.
+        response = remove_empty_fields(query)
+        if not response.data['status']:
+            return response
+        query = response.data['data']
+
         # build the actual Q object once the fields are fixed
         common_filter_query = Q(**query)
 
@@ -1905,6 +1911,27 @@ def handle_common_filters(common_filters, supplier_type_code):
 
     except KeyError as e:
         return ui_utils.handle_response(function, data='Key Error occurred', exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def remove_empty_fields(q_object_dict):
+    """
+    Args:
+        q_object_dict: This function takes a dict called q_object_dict, and removes all those keys that have None value
+        against it. This is because we do not want to query against a NULL value as it produces inconsistent
+        results.
+
+    Returns: q dict with keys whose value is None removed.
+
+    """
+    function = remove_empty_fields.__name__
+    try:
+        q_object_dict_copy = q_object_dict.copy()
+        for key, value in q_object_dict.iteritems():
+            if not value:
+                del q_object_dict_copy[key]
+        return ui_utils.handle_response(function, data=q_object_dict_copy, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
