@@ -3066,12 +3066,15 @@ class SupplierSearch(APIView):
 
             suppliers = model.objects.filter(search_query)
             serializer_class = ui_utils.get_serializer(supplier_type_code)
+            serializer = serializer_class(suppliers, many=True)
+            if supplier_type_code == 'RS':
+                for supplier in serializer.data:
+                    for society_key, common_key in website_constants.society_common_keys.iteritems():
+                        supplier_key_value = supplier[society_key]
+                        del supplier[society_key]
+                        supplier[common_key] = supplier_key_value
 
-            paginator = PageNumberPagination()
-            result_page = paginator.paginate_queryset(suppliers, request)
-            serializer = serializer_class(result_page, many=True)
-            return ui_utils.handle_response(class_name, data=paginator.get_paginated_response(serializer.data).data,
-                                            success=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, exception_object=e)
         except Exception as e:
