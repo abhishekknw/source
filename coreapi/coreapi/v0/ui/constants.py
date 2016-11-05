@@ -35,3 +35,15 @@ tower_count_attribute_mapping = {
 }
 string_suppliers = {'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate',
                     'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon', 'BS': 'SupplierTypeBusShelter',}
+
+# searching fields per supplier
+search_fields = {
+    'RS': ['supplier_id__icontains', 'society_name__icontains', 'society_address1__icontains',
+           'society_city__icontains',
+           'society_state__icontains'
+           ],
+    'CP': ['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
+           'subarea__icontains',
+           'city__icontains', 'state__icontains', 'zipcode__icontains'
+           ]
+}
