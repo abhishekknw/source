@@ -61,8 +61,10 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       function assignMarkersToMap(spaces) {
           // assigns spaces(society, corporate) markers on the map
           // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
+console.log(spaces);
           var markers = [];
           angular.forEach(spaces, function(suppliers) {
+            console.log(suppliers);
             for (var i=0; i <suppliers.length; i++) {
                 markers.push({
                     latitude: suppliers[i].latitude,
@@ -101,6 +103,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             // show the societies only if selected in this center
             // if($scope.current_center.center.space_mappings.society_allowed){
                 $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+
             // }else{
             //     $scope.society_markers = [];
             //     deselect_space_inventory($scope.space_inventory_type);
@@ -109,6 +112,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             // do the same for corporate and gym and salons
             // reassing the center_marker acc. to the selected center
             $scope.center_marker =assignCenterMarkerToMap($scope.current_center.center);
+            $scope.selectSuppliers($scope.current_center.suppliers);
             suppliersData();
             mapViewBasicSummary();
             // mapViewFiltersSummary();
@@ -266,7 +270,91 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         .then(function(instances) {
             // initiated here as this is used in the service below
             // similarly initiate for other spacecs as well
+            $scope.space_inventory_type = [
+                {name : 'Poster(PO)',  code : 'PO',   selected : false },
+                {name : 'Standee(ST)', code : 'ST',   selected : false },
+                {name : 'Stall(SL)',   code : 'SL',   selected : false },
+                {name : 'Flyer(FL)',   code : 'FL',   selected : false },
+                {name : 'Car(CD)',     code : 'CD',   selected : false },
+                {name : 'PO & FL',     code : 'POFL',   selected : false },
+                {name : 'ST & FL',     code : 'STFL',   selected : false },
+                {name : 'SL & FL',     code : 'SLFL',   selected : false },
+                {name : 'CD & FL',     code : 'CDFL',   selected : false },
+                {name : 'PO & SL & FL',code : 'POSLFL',   selected : false },
+                {name : 'ST & SL& FL', code : 'STSLFL',   selected : false },
+                {name : 'PO & CD & FL',code : 'POCDFL',   selected : false },
+                {name : 'ST & CD & FL',code : 'STCDFL',   selected : false },
+            ];
+            $scope.space_location = [
+                {name : 'Ultra High',   code : 'UH',    selected : false},
+                {name : 'High',         code : 'HH',    selected : false},
+                {name : 'Medium High',  code : 'MH',    selected : false},
+                {name : 'Standard',     code : 'ST',    selected : false},
+            ];
+            $scope.space_quality_type = [
+                {name : 'Ultra High',   code : 'UH',    selected : false},
+                {name : 'High',         code : 'HH',    selected : false},
+                {name : 'Medium High',  code : 'MH',    selected : false},
+                {name : 'Standard',     code : 'ST',    selected : false},
+            ];
+            $scope.space_quantity_type = [
+                {name : 'Small',        code : 'SM',    selected : false},
+                {name : 'Medium',       code : 'MD',    selected : false},
+                {name : 'Large',        code : 'LA',    selected : false},
+                {name : 'Very Large',   code : 'VL',    selected : false},
+            ];
+            $scope.society_flat_type = [
+                {name : '1 RK',         code : '1R',      selected : false},
+                {name : '1 BHK',        code : '1B',      selected : false},
+                {name : '1.5 BHK',      code : '1-5B',    selected : false},
+                {name : '2 BHK',        code : '2B',    selected : false},
+                {name : '2.5 BHK',      code : '2-5B',    selected : false},
+                {name : '3 BHK',        code : '3B',      selected : false},
+                {name : '3.5 BHK',      code : '3-5B',    selected : false},
+                {name : '4 BHK',        code : '4B',      selected : false},
+                {name : '5 BHK',        code : '5B',      selected : false},
+                {name : 'PENT HOUSE',   code : 'PH',      selected : false},
+                {name : 'ROW HOUSE',    code : 'RH',      selected : false},
+                {name : 'DUPLEX',       code : 'DP',      selected : false},
+            ];
+            $scope.employee_count = [
+              {name:'0-1000',     code : {min:'0',      max:'1000'},   selected:false},
+              {name:'1000-3000',  code : {min:'1000',   max:'3000'},   selected:false},
+              {name:'3000-6000',  code : {min:'3000',   max:'6000'},   selected:false},
+              {name:'6000-10000', code : {min:'6000',   max:'10000'},  selected:false},
 
+            ];
+        //Start: filters for suppliers
+            var RS_filters = {
+              inventory : $scope.space_inventory_type,
+              locality_rating : $scope.space_location,
+              quality_type : $scope.space_quality_type,
+              quantity_type : $scope.space_quantity_type,
+              flat_type : $scope.society_flat_type,
+            };
+            var CP_filters = {
+              inventory : $scope.space_inventory_type,
+              locality_rating : $scope.space_location,
+              quality_type : $scope.space_quality_type,
+              quantity_type : $scope.space_quantity_type,
+              employee_count : $scope.employee_count,
+            };
+        //End: filters for suppliers
+//Start: add filter varible for each supplier in each center
+    var addSupplierFilters = function(centers){
+      angular.forEach(centers, function(center){
+       if(center.suppliers['RS'] != undefined){
+         center.RS_filters = angular.copy(RS_filters);
+         center.suppliers_meta = {};
+       }
+       if(center.suppliers['CP'] != undefined){
+         center.CP_filters =  angular.copy(CP_filters);
+         center.suppliers_meta = {};
+       }
+     });
+     console.log(centers);
+    }
+//End: add filter varible for each supplier in each center
 // This service gets all the spaces according to center specification like society_allowed
           $scope.proposal_id_temp = $stateParams.proposal_id;
           mapViewService.getSpaces($scope.proposal_id_temp)
@@ -274,12 +362,14 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               console.log("center",response);
                 $scope.business_name = response.business_name;
                 $scope.center_data = response.data;
+                addSupplierFilters($scope.center_data);
                 console.log("printing center_data", $scope.center_data);
                 $scope.current_center = response.data[0];
+                console.log($scope.current_center);
                 console.log("printing current_center", $scope.current_center);
-
                 $scope.current_center_index = 0;
-                $scope.selectSuppliers($scope.center_data);
+                $scope.selectSuppliers($scope.center_data[0].suppliers);
+
                 mapViewBasicSummary();
                 suppliersData();
                 gridViewBasicSummary();
@@ -348,80 +438,22 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.show = false;
             };
             // different society filters
-            $scope.space_inventory_type = [
-                {name : 'Poster(PO)',  code : 'PO',   selected : false },
-                {name : 'Standee(ST)', code : 'ST',   selected : false },
-                {name : 'Stall(SL)',   code : 'SL',   selected : false },
-                {name : 'Flyer(FL)',   code : 'FL',   selected : false },
-                {name : 'Car(CD)',     code : 'CD',   selected : false },
-                {name : 'PO & FL',     code : 'POFL',   selected : false },
-                {name : 'ST & FL',     code : 'STFL',   selected : false },
-                {name : 'SL & FL',     code : 'SLFL',   selected : false },
-                {name : 'CD & FL',     code : 'CDFL',   selected : false },
-                {name : 'PO & SL & FL',code : 'POSLFL',   selected : false },
-                {name : 'ST & SL& FL', code : 'STSLFL',   selected : false },
-                {name : 'PO & CD & FL',code : 'POCDFL',   selected : false },
-                {name : 'ST & CD & FL',code : 'STCDFL',   selected : false },
-            ];
-            $scope.space_location = [
-                {name : 'Ultra High',   code : 'UH',    selected : false},
-                {name : 'High',         code : 'HH',    selected : false},
-                {name : 'Medium High',  code : 'MH',    selected : false},
-                {name : 'Standard',     code : 'ST',    selected : false},
-            ];
-            $scope.space_quality_type = [
-                {name : 'Ultra High',   code : 'UH',    selected : false},
-                {name : 'High',         code : 'HH',    selected : false},
-                {name : 'Medium High',  code : 'MH',    selected : false},
-                {name : 'Standard',     code : 'ST',    selected : false},
-            ];
-            $scope.space_quantity_type = [
-                {name : 'Small',        code : 'SM',    selected : false},
-                {name : 'Medium',       code : 'MD',    selected : false},
-                {name : 'Large',        code : 'LA',    selected : false},
-                {name : 'Very Large',   code : 'VL',    selected : false},
-            ];
-            $scope.society_flat_type = [
-                {name : '1 RK',         code : '1R',      selected : false},
-                {name : '1 BHK',        code : '1B',      selected : false},
-                {name : '1.5 BHK',      code : '1-5B',    selected : false},
-                {name : '2 BHK',        code : '2B',    selected : false},
-                {name : '2.5 BHK',      code : '2-5B',    selected : false},
-                {name : '3 BHK',        code : '3B',      selected : false},
-                {name : '3.5 BHK',      code : '3-5B',    selected : false},
-                {name : '4 BHK',        code : '4B',      selected : false},
-                {name : '5 BHK',        code : '5B',      selected : false},
-                {name : 'PENT HOUSE',   code : 'PH',      selected : false},
-                {name : 'ROW HOUSE',    code : 'RH',      selected : false},
-                {name : 'DUPLEX',       code : 'DP',      selected : false},
-            ];
-            $scope.employee_count = [
-              {name:'0-1000',     code : {min:'0',      max:'1000'},   selected:false},
-              {name:'1000-3000',  code : {min:'1000',   max:'3000'},   selected:false},
-              {name:'3000-6000',  code : {min:'3000',   max:'6000'},   selected:false},
-              {name:'6000-10000', code : {min:'6000',   max:'10000'},  selected:false},
 
-            ];
-        //Start: filters for suppliers
-            $scope.CP_filters = {
-              inventory : $scope.space_inventory_type,
-              locality_rating : $scope.space_location,
-              quality_type : $scope.space_quality_type,
-              quantity_type : $scope.space_quantity_type,
-              employee_count : $scope.employee_count,
-            };
-        //End: filters for suppliers
 // Start: supplier filters select deselecting functionality
     $scope.society_allowed = false, $scope.corporate_allowed = false;
-    $scope.selectSuppliers = function(spaces){
-      angular.forEach(spaces, function(supplier){
-        if(supplier.suppliers['RS'] != undefined){
-          $scope.society_allowed =true;
+    $scope.selectSuppliers = function(suppliers){
+        if(suppliers['RS'] != undefined){
+          $scope.society_allowed = true;
         }
-        if(supplier.suppliers['CP'] != undefined){
+        else{
+          $scope.society_allowed = false;
+        }
+        if(suppliers['CP'] != undefined){
           $scope.corporate_allowed =true;
         }
-      });
+        else {
+          $scope.corporate_allowed = false;
+        }
     }
 
     $scope.spaceSupplier = function(code,supplier){
@@ -542,12 +574,36 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 filter_array[i].selected = false;
               }
             }
+  //Start:code for society filters
+  $scope.societyFilters = function(value){
+    console.log("hello");
+    var filters = {
+      'supplier_type_code' : 'RS',
+        common_filters : {
+        latitude : $scope.current_center.center.latitude,
+        longitude : $scope.current_center.center.longitude,
+        radius : $scope.current_center.center.radius,
+        quality : [],
+        locality : [],
+        quantity : [],
+      },
+      inventory_filters : [],
+      specific_filters : {
+        flat_type : [],
+      },
+    };
 
+    makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
+    makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
+    makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
+    makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.locality);
+    filterSupllierData(filters.supplier_type_code,filters);
+  }
+  //End: code for society filters
   //Start: code for corporate filters
             $scope.real_estate_allowed = false;
 
               $scope.corporateFilters = function(value){
-                var code = 'CP';
                 // if($scope.real_estate_allowed != undefined)
                   $scope.real_estate_allowed = value;
                 // else
@@ -568,45 +624,47 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                   },
                 };
 
-                makeFilters($scope.CP_filters.inventory,filters.inventory_filters);
-                makeFilters($scope.CP_filters.employee_count,filters.specific_filters.employee_count);
-                makeFilters($scope.CP_filters.quality_type,filters.common_filters.quality);
-                makeFilters($scope.CP_filters.quality_type,filters.common_filters.locality);
-                filterSupllierData(filters);
+                makeFilters($scope.current_center.CP_filters.inventory,filters.inventory_filters);
+                makeFilters($scope.current_center.CP_filters.employee_count,filters.specific_filters.employee_count);
+                makeFilters($scope.current_center.CP_filters.quality_type,filters.common_filters.quality);
+                makeFilters($scope.current_center.CP_filters.quality_type,filters.common_filters.locality);
+                console.log($scope.space_inventory_type);
+                filterSupllierData(filters.supplier_type_code,filters);
               }
-
+//End: code for corporate filters
+//Start: function for adding filters code to provided filter type list
               var makeFilters = function(filter_array,filter_list){
                 for(var i=0; i<filter_array.length; i++){
                   if(filter_array[i].selected == true)
                     filter_list.push(filter_array[i].code);
                 }
               }
-
-              var filterSupllierData = function (supplier_filters){
-
-                console.log("filters",supplier_filters);
-
+//End: function for adding filters code to provided filter type list
+//start: generic function for fetching all supplier filters
+              var filterSupllierData = function (code,supplier_filters){
                 mapViewService.getFilterSuppliers(supplier_filters)
                       .success(function(response, status){
                         console.log($scope.current_center);
                         console.log("response of filters",response);
-                          $scope.society_markers = assignMarkersToMap(response.data.suppliers);
                           response.data.center = $scope.current_center.center;
-                          $scope.center_data[$scope.current_center_index] = response.data;
-                          $scope.current_center = response.data;
+                          $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.suppliers[code];
+                          $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.suppliers_meta[code];
+                          $scope.current_center = $scope.center_data[$scope.current_center_index];
+
+                          console.log($scope.current_center);
                           suppliersData();
                           mapViewBasicSummary();
                           // mapViewFiltersSummary();
                           // mapViewImpressions();
                           gridViewBasicSummary();
+                          $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+                          $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                       })
                       .error(function(response, status){
                           console.log("Error Happened while filtering");
                       });
               }
-  //End: code for corporate filters
-
-
+  //End: generic function for fetching all supplier filters
 
             var promises = [];
             $scope.getFilteredSocieties = function(){

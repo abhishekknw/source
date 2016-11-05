@@ -46,28 +46,28 @@
           <span class = "filterPanelHeader" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
          <div ng-if = "society_allowed" uib-collapse="isCollapsed">
           <span class = "filterPanelHeader ">Inventory Type</span>
-          <div class = "nbCheckbox two-col" ng-repeat="inventory in space_inventory_type">
-            <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
+          <div class = "nbCheckbox two-col" ng-repeat="inventory in current_center.RS_filters.inventory">
+            <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilters(inventory)">{{ inventory.name }}&nbsp;
           </div>
           <hr>
           <span class = "filterPanelHeader ">Society Type</span>
-            <div class = "nbCheckbox two-col"  ng-repeat="quality_type in space_quality_type">
-                <input type = "checkbox"  ng-model="quality_type.selected" ng-change="societyFilter()">{{ quality_type.name }}&nbsp;
+            <div class = "nbCheckbox two-col"  ng-repeat="quality_type in current_center.RS_filters.quality_type">
+                <input type = "checkbox"  ng-model="quality_type.selected" ng-change="societyFilters()">{{ quality_type.name }}&nbsp;
             </div>
             <hr>
           <span class = "filterPanelHeader ">Society Size</span>
-            <div class = "nbCheckbox two-col" ng-repeat="quantity_type in space_quantity_type">
-                <input type = "checkbox" ng-model="quantity_type.selected" ng-change="societyFilter()">{{ quantity_type.name }}&nbsp;
+            <div class = "nbCheckbox two-col" ng-repeat="quantity_type in current_center.RS_filters.quantity_type">
+                <input type = "checkbox" ng-model="quantity_type.selected" ng-change="societyFilters()">{{ quantity_type.name }}&nbsp;
             </div>
             <hr>
           <span class = "filterPanelHeader ">Society Location Rating</span>
-          <div class = "nbCheckbox two-col" ng-repeat="location in space_location">
-            <input type = "checkbox" ng-model="location.selected" ng-change="societyFilter()">{{ location.name }}&nbsp;
+          <div class = "nbCheckbox two-col" ng-repeat="location in current_center.RS_filters.locality_rating">
+            <input type = "checkbox" ng-model="location.selected" ng-change="societyFilters()">{{ location.name }}&nbsp;
           </div>
           <hr>
           <span class = "filterPanelHeader ">Society Flat Type</span>
-            <div class = "nbCheckbox two-col" ng-repeat="flat_type in society_flat_type">
-                <input type = "checkbox" ng-model="flat_type.selected" ng-change="societyFilter()">{{ flat_type.name }}&nbsp;
+            <div class = "nbCheckbox two-col" ng-repeat="flat_type in current_center.RS_filters.flat_type">
+                <input type = "checkbox" ng-model="flat_type.selected" ng-change="societyFilters()">{{ flat_type.name }}&nbsp;
             </div>
           </div>
         </div>
@@ -82,27 +82,27 @@
             </div>
 
            <span class = "filterPanelHeader ">Inventory Type</span>
-           <div class = "nbCheckbox two-col" ng-repeat="inventory in CP_filters.inventory">
+           <div class = "nbCheckbox two-col" ng-repeat="inventory in current_center.CP_filters.inventory">
              <input type = "checkbox"  ng-model="inventory.selected" ng-change="corporateFilters()">{{ inventory.name }}&nbsp;
            </div>
            <hr>
            <span class = "filterPanelHeader ">Corporate Type</span>
-             <div class = "nbCheckbox two-col"  ng-repeat="quality_type in CP_filters.quality_type">
+             <div class = "nbCheckbox two-col"  ng-repeat="quality_type in current_center.CP_filters.quality_type">
                  <input type = "checkbox"  ng-model="quality_type.selected" ng-change="corporateFilters()">{{ quality_type.name }}&nbsp;
              </div>
              <hr>
            <span class = "filterPanelHeader ">Corporate Size</span>
-             <div class = "nbCheckbox two-col" ng-repeat="quantity_type in space_quantity_type">
+             <div class = "nbCheckbox two-col" ng-repeat="quantity_type in current_center.CP_filters.quantity_type">
                  <input type = "checkbox" ng-model="quantity_type.selected" ng-change="corporateFilters()">{{ quantity_type.name }}&nbsp;
              </div>
              <hr>
            <span class = "filterPanelHeader ">Corporate Location Rating</span>
-           <div class = "nbCheckbox two-col" ng-repeat="location in CP_filters.locality_rating">
+           <div class = "nbCheckbox two-col" ng-repeat="location in current_center.CP_filters.locality_rating">
              <input type = "checkbox" ng-model="location.selected" ng-change="corporateFilters()">{{ location.name }}&nbsp;
            </div>
            <hr>
            <span class = "filterPanelHeader ">Employee Count</span>
-           <div class = "nbCheckbox two-col" ng-repeat="range in CP_filters.employee_count">
+           <div class = "nbCheckbox two-col" ng-repeat="range in current_center.CP_filters.employee_count">
              <input type = "checkbox" ng-model="range.selected" ng-change="corporateFilters()">{{ range.name }}&nbsp;
            </div>
            <hr>
@@ -281,8 +281,11 @@
           <hr/>
           <div class = "modal-body" style = "height: 300px;">
             <div class="row">
-              <div class = "col-md-3"><label>Field1</label></div>
-              <div class = "col-md-3"><label>Field 2</label></div>
+
+              <div class = "col-md-4"><select class="form-control input-size"  ng-model="suppliler_code">
+                <option value="">Select Supplier</option></div>
+              <div class = "col-md-4"><input type="text" ng-model="searchText" class="form-control spacing col-width"></div>
+              <button data-target = "" class="btn btn-danger active" data-toggle="modal" >Search</button>
             </div>
           </div>
       </div>
