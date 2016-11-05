@@ -2977,3 +2977,45 @@ class ImportCampaignLeads(APIView):
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class SupplierSearch(APIView):
+    """
+    Generic API to perform simple search on predefined fields. The API will be slow because search uses
+    basic icontains query. It can be made faster by making  FULLTEXT indexes on the db columns
+    #todo: attach user level permissions later
+    """
+
+    def get(self, request):
+
+        class_name = self.__class__.__name__
+        try:
+            search_txt = request.query_params.get('search')
+            supplier_type_code = request.query_params.get('supplier_type_code')
+            if not supplier_type_code:
+                return ui_utils.handle_response(class_name, data='provide supplier type code')
+
+            if not search_txt:
+                return ui_utils.handle_response(class_name, data=[], success=True)
+
+            model = ui_utils.get_model(supplier_type_code)
+            search_query = Q()
+            for search_field in website_constants.search_fields[supplier_type_code]:
+                if search_query:
+                    search_query |= Q(**{search_field: search_txt})
+                else:
+                    search_query = Q(**{search_field: search_txt})
+
+            suppliers = model.objects.filter(search_query)
+            serializer_class = ui_utils.get_serializer(supplier_type_code)
+
+            paginator = PageNumberPagination()
+            result_page = paginator.paginate_queryset(suppliers, request)
+            serializer = serializer_class(result_page, many=True)
+            return ui_utils.handle_response(class_name, data=paginator.get_paginated_response(serializer.data).data,
+                                            success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
