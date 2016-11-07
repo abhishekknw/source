@@ -1216,34 +1216,33 @@ class FilteredSuppliers(APIView):
                 return response
             specific_filters_query = response.data['data']
             # if indeed there was something in the query
+           
             if specific_filters_query.__len__():
                 specific_filters_suppliers = list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id'))
 
+            # pull only the ID's, not the tuples !
             inventory_type_query_suppliers = set([supplier_tuple[0] for supplier_tuple in inventory_type_query_suppliers])
             specific_filters_suppliers = set([supplier_tuple[0] for supplier_tuple in specific_filters_suppliers])
-
+            master_suppliers_list = set([supplier_tuple[0] for supplier_tuple in master_suppliers_list])
+            
             # if both available, find the intersection. basically it's another way of doing AND query.
-            if inventory_type_query_suppliers and specific_filters_suppliers:
+            # the following conditions are use case dependent. The checking is done on the basis of 
+            # query length. an empty query lenth means that query didn't contain any thing in it. 
+            if inventory_type_query.__len__() and specific_filters_query.__len__():
                 final_suppliers_list = specific_filters_suppliers.intersection(inventory_type_query_suppliers)
             # if only inventory suppliers available, set it. Take the UNION in this case
-            elif inventory_type_query_suppliers:
+            elif inventory_type_query.__len__():
                 final_suppliers_list = inventory_type_query_suppliers
             # if only specific suppliers available, set it. Take the UNION in this case.
-            elif specific_filters_suppliers:
+            elif specific_filters_query.__len__():
                 final_suppliers_list = specific_filters_suppliers
-            # if nobody is available, set it to None
-            else:
-                final_suppliers_list = set()
-
-            # pull only the ID's, not the tuples !
-            master_suppliers_list = set([supplier_tuple[0] for supplier_tuple in master_suppliers_list])
-            # if there was any filter other than common filter, we need to  take intersection. think why !
-            if specific_filters_query.__len__() or inventory_type_query.__len__():
-                final_suppliers_list = final_suppliers_list.intersection(master_suppliers_list)
-            # else the master list is the required answer by default
+            # if nobody is available, set it to master supplier list
             else:
                 final_suppliers_list = master_suppliers_list
 
+            # when the final supplier list is prepared. we need to take intersection with master list. 
+            final_suppliers_list = final_suppliers_list.intersection(master_suppliers_list)
+        
             result = {}
 
             # query now for real objects for supplier_id in the list
@@ -2339,6 +2338,8 @@ class GenericExportData(APIView):
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:
+            import pdb
+            pdb.set_trace()
             workbook = Workbook()
 
             # ws = wb.active
