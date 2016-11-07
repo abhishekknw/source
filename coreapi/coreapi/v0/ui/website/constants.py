@@ -382,7 +382,7 @@ query_dict = {
         'quality': {'query': 'society_type_quality__in',
                     'dict': quality_dict
                    },
-        'locality': {'query': 'society_locality__in',
+        'locality': {'query': 'society_location_type__in',
                      'dict': locality_dict
                     }
     },

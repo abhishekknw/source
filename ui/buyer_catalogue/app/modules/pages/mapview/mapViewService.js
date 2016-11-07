@@ -30,9 +30,16 @@
         return machadaloHttp.get(url);
     }
 
+    //added to get supplier filters like for RS,CP...etc
     mapViewService.getFilterSuppliers = function(supplier_data){
         var url = url_base + 'filtered-suppliers/';
         return machadaloHttp.post(url,supplier_data);
+    }
+
+    //added to search suppliers based on supplier code and search text
+    mapViewService.searchSuppliers = function(code,searchtext){
+        var url = url_base + 'supplier-search/?' + "search=" + searchtext + "&supplier_type_code=" + code ;
+        return machadaloHttp.get(url);
     }
 
     mapViewService.createFinalProposal = function(proposal_id, centers_data){

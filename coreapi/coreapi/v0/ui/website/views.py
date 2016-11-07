@@ -1250,6 +1250,14 @@ class FilteredSuppliers(APIView):
             suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_list)
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
             serializer = supplier_serializer(suppliers, many=True)
+            
+            # removing society specific fields from response
+            if supplier_type_code == 'RS':
+                for supplier in serializer.data:
+                    for society_key, common_key in website_constants.society_common_keys.iteritems():
+                        supplier_key_value = supplier[society_key]
+                        del supplier[society_key]
+                        supplier[common_key] = supplier_key_value
 
             # calculate total aggregate count
             suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=final_suppliers_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \

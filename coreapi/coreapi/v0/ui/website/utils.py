@@ -2024,7 +2024,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
         if supplier_type_code == 'RS':
             if specific_filters.get('flat_type'):
                 flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
-                supplier_ids = models.FlatType.objects.filter(flat_type__in=flat_type_values).values_list('object_id')
+                supplier_ids = models.FlatType.objects.filter(flat_type__in=flat_type_values).values_list('society__supplier_id')
                 specific_filters_query &= Q(supplier_id__in=supplier_ids)
 
         if supplier_type_code == 'CP':

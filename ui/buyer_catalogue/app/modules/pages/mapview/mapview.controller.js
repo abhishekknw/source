@@ -61,7 +61,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       function assignMarkersToMap(spaces) {
           // assigns spaces(society, corporate) markers on the map
           // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
-console.log(spaces);
+          console.log(spaces);
           var markers = [];
           angular.forEach(spaces, function(suppliers) {
             console.log(suppliers);
@@ -202,11 +202,12 @@ console.log(spaces);
     //Start: mapview filter summary required after applying filters
      var mapViewFiltersSummary = function(){
        $scope.stall_count = 0, $scope.standee_count = 0;
-       if($scope.current_center.suppliers['RS'] != undefined){
+       if($scope.current_center.suppliers_meta['RS'] != undefined){
          $scope.stall_count += $scope.current_center.suppliers_meta['RS'].inventory_count.stalls;
          $scope.standee_count += $scope.current_center.suppliers_meta['RS'].inventory_count.standees;
        }
-       if($scope.current_center.suppliers['CP'] != undefined){
+       if($scope.current_center.suppliers_meta['CP'] != undefined){
+         console.log($scope.current_center);
          $scope.stall_count += $scope.current_center.suppliers_meta['CP'].inventory_count.stalls;
          $scope.standee_count += $scope.current_center.suppliers_meta['CP'].inventory_count.standees;
        }
@@ -243,11 +244,12 @@ console.log(spaces);
     //End: gridView basic summary
     //Start: summary on gridview for total stalls & standees after applying filters
     var gridViewFilterSummary = function(){
+      $scope.total_stalls = 0, $scope.total_standees = 0;
       for(var center = 0; center < $scope.center_data.length; center++){
-        if($scope.total_stalls = $scope.center_data[center].suppliers_meta !=undefined){
+        if($scope.center_data[center].suppliers_meta !=undefined){
           if($scope.center_data[center].suppliers_meta['RS'] != undefined){
-            $scope.total_stalls = $scope.center_data[center].suppliers_meta['RS'].inventory_count.stalls;
-            $scope.total_standees = $scope.center_data[center].suppliers_meta['RS'].inventory_count.standees;
+            $scope.total_stalls += $scope.center_data[center].suppliers_meta['RS'].inventory_count.stalls;
+            $scope.total_standees += $scope.center_data[center].suppliers_meta['RS'].inventory_count.standees;
           }
         }
       }
@@ -508,6 +510,7 @@ console.log(spaces);
          // $scope.current_center.societies_inventory as well (this is present only if society_allowed is true)
          // change from inventory_name to inventory_code
           $scope.societyFilter = function(value){
+            console.log(value);
             if(value){
               var inventory_name = value.name.toLowerCase();
               var inventory_code = value.code;
@@ -553,7 +556,8 @@ console.log(spaces);
                   }
               }
           }
-              $scope.getFilteredSocieties();
+          $scope.societyFilters();
+              // $scope.getFilteredSocieties();
           }
       // Just deselects all the checkboxes of filter_array passed.Added reset function to deselct all inventoriesclearAllFilters
             $scope.clearAllFilters = function(){
@@ -596,41 +600,45 @@ console.log(spaces);
     makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
     makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
     makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
-    makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.locality);
-    filterSupllierData(filters.supplier_type_code,filters);
+    makeFilters($scope.current_center.RS_filters.locality_rating,filters.common_filters.locality);
+    makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
+    console.log(filters.common_filters.locality);
+    filterSupplierData(filters.supplier_type_code,filters);
   }
   //End: code for society filters
   //Start: code for corporate filters
-            $scope.real_estate_allowed = false;
+      $scope.real_estate_allowed = false;
 
-              $scope.corporateFilters = function(value){
-                // if($scope.real_estate_allowed != undefined)
-                  $scope.real_estate_allowed = value;
-                // else
-                  // $scope.real_estate_allowed = false;
-                var filters = {
-                  'supplier_type_code' : 'CP',
-                    common_filters : {
-                    latitude : $scope.current_center.center.latitude,
-                    longitude : $scope.current_center.center.longitude,
-                    radius : $scope.current_center.center.radius,
-                    quality : [],
-                    locality : [],
-                  },
-                  inventory_filters : [],
-                  specific_filters : {
-                    real_estate_allowed : $scope.real_estate_allowed,
-                    employee_count : [],
-                  },
-                };
+        $scope.corporateFilters = function(value){
+          // if($scope.real_estate_allowed != undefined)
+            $scope.real_estate_allowed = value;
+          // else
+            // $scope.real_estate_allowed = false;
+          var filters = {
+            'supplier_type_code' : 'CP',
+              common_filters : {
+              latitude : $scope.current_center.center.latitude,
+              longitude : $scope.current_center.center.longitude,
+              radius : $scope.current_center.center.radius,
+              quality : [],
+              locality : [],
+              quantity : [],
+            },
+            inventory_filters : [],
+            specific_filters : {
+              real_estate_allowed : $scope.real_estate_allowed,
+              employees_count : [],
+            },
+          };
 
-                makeFilters($scope.current_center.CP_filters.inventory,filters.inventory_filters);
-                makeFilters($scope.current_center.CP_filters.employee_count,filters.specific_filters.employee_count);
-                makeFilters($scope.current_center.CP_filters.quality_type,filters.common_filters.quality);
-                makeFilters($scope.current_center.CP_filters.quality_type,filters.common_filters.locality);
-                console.log($scope.space_inventory_type);
-                filterSupllierData(filters.supplier_type_code,filters);
-              }
+          makeFilters($scope.current_center.CP_filters.inventory,filters.inventory_filters);
+          makeFilters($scope.current_center.CP_filters.employee_count,filters.specific_filters.employees_count);
+          makeFilters($scope.current_center.CP_filters.quality_type,filters.common_filters.quality);
+          makeFilters($scope.current_center.CP_filters.locality_rating,filters.common_filters.locality);
+          makeFilters($scope.current_center.CP_filters.quantity_type,filters.common_filters.quantity);
+
+          filterSupplierData(filters.supplier_type_code,filters);
+        }
 //End: code for corporate filters
 //Start: function for adding filters code to provided filter type list
               var makeFilters = function(filter_array,filter_list){
@@ -641,7 +649,7 @@ console.log(spaces);
               }
 //End: function for adding filters code to provided filter type list
 //start: generic function for fetching all supplier filters
-              var filterSupllierData = function (code,supplier_filters){
+              var filterSupplierData = function (code,supplier_filters){
                 mapViewService.getFilterSuppliers(supplier_filters)
                       .success(function(response, status){
                         console.log($scope.current_center);
@@ -651,12 +659,13 @@ console.log(spaces);
                           $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.suppliers_meta[code];
                           $scope.current_center = $scope.center_data[$scope.current_center_index];
 
-                          console.log($scope.current_center);
                           suppliersData();
                           mapViewBasicSummary();
-                          // mapViewFiltersSummary();
-                          // mapViewImpressions();
+                          mapViewFiltersSummary();
+                          mapViewImpressions();
                           gridViewBasicSummary();
+                          gridViewFilterSummary();
+                          gridViewImpressions();
                           $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
                           $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                       })
@@ -785,13 +794,22 @@ console.log(spaces);
         });
 //Start: Function added to show all suppliers on gridView
   $scope.supplier_codes =['RS','CP','GY'];
-  $scope.getSuppliers = function(suppl){
-      // angular.forEach(supplier, function(suppliers) {
-      //   console.log("hi",index,suppliers);
-      // });
-
-    return suppl;
+  $scope.supplier_names = [
+    { name: 'Residential',      code:'RS'},
+    { name: 'Corporate Parks',  code:'CP'},
+    ];
+  $scope.search;
+  $scope.supplier_type_code;
+  $scope.searchSuppliers = function(){
+    mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
+      .success(function(response, status){
+        console.log(response);
+        $scope.search_SupplierData = response.data;
+        console.log($scope.search_SupplierData);
+      })
+      .error(function(response, status){
+          console.log("Error Happened while searching");
+      });
   }
 //End: Function added to show all suppliers on gridView
-
 });

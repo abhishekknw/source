@@ -47,7 +47,7 @@
          <div ng-if = "society_allowed" uib-collapse="isCollapsed">
           <span class = "filterPanelHeader ">Inventory Type</span>
           <div class = "nbCheckbox two-col" ng-repeat="inventory in current_center.RS_filters.inventory">
-            <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilters(inventory)">{{ inventory.name }}&nbsp;
+            <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
           </div>
           <hr>
           <span class = "filterPanelHeader ">Society Type</span>
@@ -279,15 +279,37 @@
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
           <h4 class="modal-title">Add New Socities</h4>
           <hr/>
-          <div class = "modal-body" style = "height: 300px;">
+          <div class = "modal-body" style = "height: 100px;">
             <div class="row">
 
-              <div class = "col-md-4"><select class="form-control input-size"  ng-model="suppliler_code">
+              <div class = "col-md-4"><select class="form-control input-size"  ng-model="supplier_type_code">
                 <option value="">Select Supplier</option></div>
-              <div class = "col-md-4"><input type="text" ng-model="searchText" class="form-control spacing col-width"></div>
-              <button data-target = "" class="btn btn-danger active" data-toggle="modal" >Search</button>
+                <option  ng-repeat="supplier in supplier_names" value="{{supplier.code}}" required>{{supplier.name}}</option>
+              <div class = "col-md-4"><input type="text" ng-model="search" class="form-control spacing col-width"></div>
+              <button data-target = "" class="btn btn-danger active" data-toggle="modal" ng-click="searchSuppliers()">Search</button>
             </div>
           </div>
+          <div class="modal-body col-md-4 table-responsive" style="width: 600px; height: 550px">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th class = "col-md-1">Name</th>
+                    <th class = "col-md-1">City</th>
+                    <th class = "col-md-1">Area</th>
+                    <th class = "col-md-1">SubArea</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat = "supplier in search_SupplierData">
+                    <td>{{supplier.name}}</td>
+                    <td>{{supplier.city}}</td>
+                    <td>{{supplier.area}}</td>
+                    <td>{{supplier.subarea}}</td>
+                    <td><button class="btn btn-danger active" ng-click="">Add</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
       </div>
     </div>
   </div>
