@@ -42,7 +42,7 @@ inventorylist = {
     },
     'RS': {
         'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA','SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT', 'STATUS'],
-        'DATA': ['supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', 'status' ]
+        'DATA': ['supplier_id', 'name', 'subarea', 'quality_rating', 'tower_count', 'flat_count', 'status' ]
     },
     'CP': {
         'HEADER': ['SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA', 'STATUS'],

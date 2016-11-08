@@ -1395,6 +1395,14 @@ def suppliers_within_radius(data):
         proposal_id = data['proposal_id']
         center_id = data['center_id']
 
+        business_name = models.ProposalInfo.objects.get(proposal_id=proposal_id).account.business.name
+
+        master_result = {}
+        # set the business_name
+        master_result['business_name'] = business_name
+        # space to store the suppliers
+        master_result['suppliers'] = []
+
         result = []
         # todo: think of better way of separating this logic. looks ugly right now
         if center_id:
@@ -1442,8 +1450,9 @@ def suppliers_within_radius(data):
             if not response.data['status']:
                 return response
             result = response.data['data']
-
-        return ui_utils.handle_response(function_name, data=result, success=True)
+        
+        master_result['suppliers'] = result
+        return ui_utils.handle_response(function_name, data=master_result, success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error occurred', exception_object=e)
     except Exception as e:
