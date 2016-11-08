@@ -168,7 +168,7 @@
         <tr ng-repeat = "supplier in center.suppliers[code]">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
-            <td>{{supplier.name}}</td>
+            <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{supplier.supplier_id}}" target="_blank">{{supplier.name}}</a></td>
             <td>{{supplier.subarea}}</td>
             <td>{{supplier.flat_count}}</td>
             <td>{{supplier.average_rent}}</td>
