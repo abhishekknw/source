@@ -2338,8 +2338,6 @@ class GenericExportData(APIView):
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:
-            import pdb
-            pdb.set_trace()
             workbook = Workbook()
 
             # ws = wb.active

@@ -9,8 +9,8 @@
           <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
          </select>
       </div>
-      <div class="col-md-2">New Center Latitude & Longitude: </div>
-      <div class="col-md-2">{{new_center.latitude}}/{{new_center.longitude}}</div>
+      <div class="col-md-2">Center Latitude & Longitude: </div>
+      <div class="col-md-2">{{current_center.center.latitude}}/{{current_center.center.longitude}}</div>
       <div class="col-md-2">Business Name : {{business_name}}</div>
     </div>
     <div class="row">
@@ -20,7 +20,7 @@
       </div>
       <div class="col-md-3">
         <button class="btn btn-default active" ng-click="changeCenter()">Change Radius</button>
-        <button class="btn btn-default active box-spacing" style = "margin-left: 10px;" ng-show="initial_center_changed[current_center_index]" ng-click="resetCenter()">Reset Center</button>
+        <button class="btn btn-default active box-spacing" style = "margin-left: 10px;" ng-show="initial_center_changed[current_center_index]" ng-click="changeCenter(false)">Reset Center</button>
       </div>
       <div class="col-md-3">
         <button class = "btn btn-default active box-spacing" ng-show="center_changed" ng-click="changeCenter(true)">Change Center</button>
@@ -42,7 +42,7 @@
       <hr>
       <form id = "filterPanelForm">
        <div class = "filterPanel">
-        <input type = "checkbox"  ng-model="society_allowed" ng-click="spaceSupplier(society_allowed)"/>
+        <input type = "checkbox"  ng-model="society_allowed" ng-click="spaceSupplier('RS',society_allowed)"/>
           <span class = "filterPanelHeader" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
          <div ng-if = "society_allowed" uib-collapse="isCollapsed">
           <span class = "filterPanelHeader ">Inventory Type</span>
@@ -206,7 +206,7 @@
       <div class="panel panel-info">
         <div class="panel-body" id="searchBody">
           <div class="filterPanel">
-            <span class="filterHeader"> Summary for {{centers1[current_center_index].center.center_name}}</span></div>
+            <span class="filterHeader"> Summary for {{center_data[current_center_index].center.center_name}}</span></div>
             <hr>
              <span class = "space filterPanelHeader ">Space Count</span>
              <div class = "nbCheckbox two-col">Societies:  {{societies_count}}</div>

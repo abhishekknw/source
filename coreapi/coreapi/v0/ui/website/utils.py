@@ -1607,7 +1607,10 @@ def extra_header_database_keys(supplier_type_codes, data, result):
     try:
         for code in supplier_type_codes:
             for center in data:
-                inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
+                if center['suppliers_meta'].get('code'):
+                    inventory_codes = center['suppliers_meta']['code']['inventory_type_selected']
+                else:
+                    inventory_codes = []
 
                 response = get_unique_inventory_codes(inventory_codes)
                 if not response.data['status']:

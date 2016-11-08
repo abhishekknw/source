@@ -64,7 +64,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           console.log(spaces);
           var markers = [];
           angular.forEach(spaces, function(suppliers) {
-            console.log(suppliers);
             for (var i=0; i <suppliers.length; i++) {
                 markers.push({
                     latitude: suppliers[i].latitude,
@@ -139,9 +138,16 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                   // change map center to new lat lng
                   $scope.map.center.latitude = $scope.new_center.latitude;
                   $scope.map.center.longitude = $scope.new_center.longitude;
-                  $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                   $scope.center_changed = false;
               }
+              if(change_center == false){
+                console.log("hdafas");
+                $scope.current_center.center.latitude = $scope.old_data[$scope.current_center_index].center.latitude;
+                $scope.current_center.center.longitude = $scope.old_data[$scope.current_center_index].center.longitude;
+                $scope.current_center.center.radius = $scope.old_data[$scope.current_center_index].center.radius;
+              }
+              $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
+
               $scope.circle.center.latitude = $scope.current_center.center.latitude;
               $scope.circle.center.longitude = $scope.current_center.center.longitude;
               $scope.circle.radius = $scope.current_center.center.radius * 1000;
@@ -327,14 +333,14 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 
             ];
         //Start: filters for suppliers
-            var RS_filters = {
+            $scope.RS_filters = {
               inventory : $scope.space_inventory_type,
               locality_rating : $scope.space_location,
               quality_type : $scope.space_quality_type,
               quantity_type : $scope.space_quantity_type,
               flat_type : $scope.society_flat_type,
             };
-            var CP_filters = {
+            $scope.CP_filters = {
               inventory : $scope.space_inventory_type,
               locality_rating : $scope.space_location,
               quality_type : $scope.space_quality_type,
@@ -346,11 +352,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     var addSupplierFilters = function(centers){
       angular.forEach(centers, function(center){
        if(center.suppliers['RS'] != undefined){
-         center.RS_filters = angular.copy(RS_filters);
+         center.RS_filters = angular.copy($scope.RS_filters);
          center.suppliers_meta = {};
        }
        if(center.suppliers['CP'] != undefined){
-         center.CP_filters =  angular.copy(CP_filters);
+         center.CP_filters =  angular.copy($scope.CP_filters);
          center.suppliers_meta = {};
        }
      });
@@ -370,6 +376,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 console.log($scope.current_center);
                 console.log("printing current_center", $scope.current_center);
                 $scope.current_center_index = 0;
+                $scope.old_data = angular.copy($scope.center_data);
                 $scope.selectSuppliers($scope.center_data[0].suppliers);
 
                 mapViewBasicSummary();
@@ -466,11 +473,19 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           if(code == 'CP'){
             $scope.corporateFilters();
           }
+          if(code == 'RS'){
+            $scope.societyFilters();
+          }
           $scope.supplier = true;
         }
         else{
           if(code == 'CP'){
+            deselectFilters(code);
             delete $scope.current_center.suppliers['CP'];
+          }
+          if(code == 'RS'){
+            deselectFilters(code);
+            delete $scope.current_center.suppliers['RS'];
           }
 
           $scope.supplier = false;
@@ -558,7 +573,20 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           }
           $scope.societyFilters();
               // $scope.getFilteredSocieties();
-          }
+        }
+      //Start: remove selected supplier filters
+      var deselectFilters = function(code){
+        if(code == 'RS'){
+          console.log($scope.current_center);
+          $scope.current_center.RS_filters = angular.copy($scope.RS_filters);
+          $scope.inv_poster=false,$scope.inv_flier=false,$scope.inv_stall=false,$scope.inv_standee=false;
+          pcount=0,stcount=0,slcount=0,flcount=0;
+        }
+        if(code == 'CP'){
+          $scope.current_center.CP_filters =  angular.copy($scope.CP_filters);
+        }
+      }
+      //End:  remove selected supplier filters
       // Just deselects all the checkboxes of filter_array passed.Added reset function to deselct all inventoriesclearAllFilters
             $scope.clearAllFilters = function(){
                 reset($scope.space_quality_type);
@@ -602,7 +630,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
     makeFilters($scope.current_center.RS_filters.locality_rating,filters.common_filters.locality);
     makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
-    console.log(filters.common_filters.locality);
+    console.log(filters.specific_filters.flat_type);
     filterSupplierData(filters.supplier_type_code,filters);
   }
   //End: code for society filters
@@ -812,4 +840,74 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       });
   }
 //End: Function added to show all suppliers on gridView
+
+//Start: upload and import functionality
+//Start: For sending only shortlisted societies & selected inventory types
+     function getShortlistedFilteredSocieties(){
+      //  for(var i=0;i<$scope.center_data.length;i++){
+      //    for(var j=0;j<$scope.center_data[i].societies.length;j++){
+      //      if($scope.center_data[i].societies[j].shortlisted == false){
+      //         $scope.center_data[i].societies.splice(j--,1);
+      //         $scope.center_data[i].societies_count--;
+      //      }
+      //    }
+      //  }
+     //End: For sending only shortlisted society in
+     //Start: For sending filtered inventory type
+
+         var society_inventory_type_selected = [];
+         console.log($scope.center_data);
+         for(var center = 0; center<$scope.center_data.length; center++){
+           for(var filter = 0; filter<$scope.center_data[0].RS_filters.inventory.length; filter++){
+             if($scope.center_data[center].RS_filters.inventory[filter].selected == true){
+               society_inventory_type_selected.push($scope.center_data[0].RS_filters.inventory[filter].code);
+             }
+           }
+         }
+     //End: For sending filtered inventory type
+         for(var i=0;i<$scope.center_data.length;i++){
+           $scope.center_data[0].suppliers_meta['RS']['inventory_type_selected']=society_inventory_type_selected;
+         }
+       }
+
+       $scope.submitProposal = function(){
+         getShortlistedFilteredSocieties();
+           console.log("Submitting $scope.centers :", $scope.centers);
+       };
+       $scope.exportData = function(){
+         getShortlistedFilteredSocieties();
+         console.log($scope.center_data);
+         getShortlistedFilteredSocieties();
+         console.log($scope.proposal_id_temp);
+           mapViewService.exportProposalData($scope.proposal_id_temp, $scope.center_data)
+           .success(function(response){
+               console.log("Successfully Exported");
+           })
+           .error(function(response){
+               console.log("Error response is : ", response);
+           });
+       }
+       $scope.excelFile = [];
+       function makeid(){
+           var text = "";
+           var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+           for( var i=0; i < 10; i++ )
+               text += possible.charAt(Math.floor(Math.random() * possible.length));
+           return text;
+       }
+
+    $scope.upload = function (file) {
+      var uploadUrl = 'http://localhost:8108/v0/ui/website/';
+      Upload.upload({
+          url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
+          data: {file: file, 'username': $scope.username}
+      }).then(function (resp) {
+        console.log(resp);
+          console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
+      }, function (resp) {
+          console.log('Error status: ' + resp.status);
+      });
+    };
+    //End: upload and import functionality
+
 });
