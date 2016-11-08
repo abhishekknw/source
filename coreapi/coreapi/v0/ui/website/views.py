@@ -2309,6 +2309,7 @@ class ExportData(APIView):
                     ws.append(center_list)
 
             file_name = 'machadalo_{0}.xlsx'.format(str(datetime.datetime.now()))
+
             wb.save(file_name)
 
             return Response(data={"successs"})
@@ -2377,7 +2378,8 @@ class GenericExportData(APIView):
             if not response.data['status']:
                 return response
 
-            file_name = 'machadalo_{0}.xlsx'.format(str(datetime.datetime.now()))
+            #file_name = 'machadalo_{0}.xlsx'.format(str(datetime.datetime.now()))
+            file_name = 'machadalo_{0}.xlsx'.format(str(datetime.date.today()))
 
             workbook = response.data['data']
             workbook.save(file_name)
