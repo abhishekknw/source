@@ -280,7 +280,7 @@ master_data = {
 
 # chose sheet names from just supplier_type_code
 sheet_names = {
-    'RS': 'Shortlisted Spaces Details',
+    'RS': 'Society Details',
     'CP': 'Corporate Park Details',
     'GY': 'Gym details'
 }
@@ -289,7 +289,7 @@ sheet_names = {
 # sheet_names_to_codes
 
 sheet_names_to_codes = {
-    'Shortlisted Spaces Details': 'RS',
+    'Society Details': 'RS',
     'Corporate Park Details': 'CP',
     'Gym details': 'GY'
 }
