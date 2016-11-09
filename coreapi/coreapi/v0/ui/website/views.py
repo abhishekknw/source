@@ -2379,10 +2379,13 @@ class GenericExportData(APIView):
             response = website_utils.insert_supplier_sheet(workbook, result)
             if not response.data['status']:
                 return response
-
-            file_name = 'machadalo_{0}.xlsx'.format(str(datetime.datetime.now()))
-
             workbook = response.data['data']
+
+            # make a file name for this file
+            response = website_utils.get_file_name(request.user, proposal_id)
+            if not response.data['status']:
+                return response
+            file_name = response.data['data']
             workbook.save(file_name)
 
             return ui_utils.handle_response(class_name, data=result, success=True)

@@ -419,3 +419,6 @@ inventory_duration_dict = {
     'FL': {'name': 'FLIER', 'type_duration': [{'type': 'flier_door_to_door', 'duration': 'unit_daily'}, ]},
     'CD': {'name': 'CAR DISPLAY', 'tye_duration':  [{'type': 'car_display_price', 'duration': 'unit_daily'}]}
 }
+
+# format to be used in datetime
+datetime_format = '%d-%m-%Y %H-%M-%S'

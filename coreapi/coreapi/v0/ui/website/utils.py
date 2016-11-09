@@ -1,5 +1,6 @@
 import math
 import re
+import datetime
 from types import *
 
 from django.db import transaction
@@ -1775,8 +1776,6 @@ def save_leads(row):
         email = lead_data['email']
         if not email:
             return ui_utils.handle_response(function, data='please provide email')
-        import pdb
-        pdb.set_trace()
         lead_object, is_created = models.Lead.objects.get_or_create(email=email)
         serializer = serializers.LeadSerializer(lead_object, data=lead_data)
         if serializer.is_valid():
@@ -2372,3 +2371,27 @@ def calculate_price(inv_type, dur_type):
         return price_mapping[0].business_price
     return 0
 
+
+def get_file_name(user, proposal_id):
+    """
+    Args:
+        user: The user name
+        proposal_id: proposal_id
+
+    Returns: a string that wil be used as file name.
+
+    """
+    function = get_file_name.__name__
+    try:
+        format = website_constants.datetime_format
+        datetime_stamp = datetime.datetime.now().strftime(format)
+        account = models.ProposalInfo.objects.get(proposal_id=proposal_id).account
+        business = account.business
+        if user.is_anonymous():
+            user_string = 'Anonymous'
+        else:
+            user_string = user.name
+        file_name = user_string + '_' + business.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
+        return ui_utils.handle_response(function, data=file_name, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
