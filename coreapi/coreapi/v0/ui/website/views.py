@@ -2954,8 +2954,8 @@ class SaveContactDetails(APIView):
 
         with transaction.atomic():
 
-            file = open(BASE_DIR + '/contacts.csv', 'rb')
-            file_errros = open(BASE_DIR + '/contacts_errors.txt', 'w')
+            file = open(BASE_DIR + '/files/contacts.csv', 'rb')
+            file_errros = open(BASE_DIR + '/files/contacts_errors.txt', 'w')
 
             try:
                 reader = csv.reader(file)
@@ -3114,9 +3114,8 @@ class ImportAreaSubArea(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            if not request.FILES:
-                return ui_utils.handle_response(class_name, data='No File Found')
-            my_file = request.FILES['file']
+            # fetch the file from files dir
+            my_file = open(BASE_DIR + '/files/new_area_subarea.xlsx', 'rb')
             wb = openpyxl.load_workbook(my_file)
             ws = wb.get_sheet_by_name('new_area_sheet')
 
