@@ -2235,9 +2235,6 @@ def set_supplier_extra_attributes(suppliers, supplier_type_code,  inventory_code
         if not response.data['status']:
             return response
         inventory_pricing = response.data['data']
-        import pdb
-        pdb.set_trace()
-
         return ui_utils.handle_response(function, data=suppliers, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
@@ -2305,3 +2302,73 @@ def save_area_subarea(result):
             return ui_utils.handle_response(function, data=total_new_objects_created, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code):
+    """
+    Args:
+        suppliers: a list of supplier dicts
+        supplier_ids: a list of supplier id's
+        supplier_type_code: CP, RS
+
+    Returns:
+
+    """
+    function = set_pricing_temproray.__name__
+    # fetch all inventory_summary objects related to each one of suppliers
+    inventory_summary_objects = models.InventorySummary.objects.filter_objects(
+        {'supplier_type_code': supplier_type_code}, supplier_ids)
+    # generate a mapping from object_id to inv_summ_object in a dict so that right object can be fetched up
+    inventory_summary_objects_mapping = {inv_summary_object.object_id: inv_summary_object for inv_summary_object in
+                                         inventory_summary_objects}
+    try:
+        for supplier in suppliers:
+
+            # change the response for societies
+            if supplier_type_code == 'RS':
+                for society_key, common_key in website_constants.society_common_keys.iteritems():
+                    supplier_key_value = supplier[society_key]
+                    del supplier[society_key]
+                    supplier[common_key] = supplier_key_value
+
+            supplier_inventory_obj = inventory_summary_objects_mapping[supplier['supplier_id']]
+            supplier['shortlisted'] = True
+            supplier['buffer_status'] = False
+
+            if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
+                supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
+                supplier['poster_price'] = calculate_price('poster_a4', 'campaign_weekly')
+
+            if supplier_inventory_obj.standee_allowed:
+                supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
+                supplier['standee_price'] = calculate_price('standee_small', 'campaign_weekly')
+
+            if supplier_inventory_obj.stall_allowed:
+                supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
+                supplier['stall_price'] = calculate_price('stall_small', 'unit_daily')
+                supplier['car_display_price'] = calculate_price('car_display_standard', 'unit_daily')
+
+            if supplier_inventory_obj.flier_allowed:
+                supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
+                supplier['filer_price'] = calculate_price('flier_door_to_door', 'unit_daily')
+        return ui_utils.handle_response(function, data=suppliers, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+
+def calculate_price(inv_type, dur_type):
+    """
+    Args:
+        inv_type: type of inventory
+        dur_type: duration
+
+    Returns: prince for the inventory, for this inventory type and this duration
+    """
+    adinventory_type_dict = ui_utils.adinventory_func()
+    duration_type_dict = ui_utils.duration_type_func()
+    price_mapping = PriceMappingDefault.objects.filter(adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type])
+    if price_mapping:
+        return price_mapping[0].business_price
+    return 0
+

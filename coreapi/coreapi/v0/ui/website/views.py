@@ -1248,19 +1248,17 @@ class FilteredSuppliers(APIView):
             suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_list)
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
             serializer = supplier_serializer(suppliers, many=True)
-            
-            # removing society specific fields from response
-            if supplier_type_code == 'RS':
-                for supplier in serializer.data:
-                    for society_key, common_key in website_constants.society_common_keys.iteritems():
-                        supplier_key_value = supplier[society_key]
-                        del supplier[society_key]
-                        supplier[common_key] = supplier_key_value
 
-            response = website_utils.set_supplier_extra_attributes(serializer.data, supplier_type_code, inventory_filters)
+            # the following function sets the pricing as before and it's temproaray.
+            response = website_utils.set_pricing_temproray(serializer.data, final_suppliers_list, supplier_type_code)
             if not response.data['status']:
                 return response
-            serializer.data = response.data['data']
+            suppliers = response.data['data']
+
+            # response = website_utils.set_supplier_extra_attributes(serializer.data, supplier_type_code, inventory_filters)
+            # if not response.data['status']:
+            #     return response
+            # serializer.data = response.data['data']
 
             # calculate total aggregate count
             suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=final_suppliers_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
@@ -1273,7 +1271,7 @@ class FilteredSuppliers(APIView):
             result['suppliers'] = {}
             result['suppliers_meta'] = {}
 
-            result['suppliers'][supplier_type_code] = serializer.data
+            result['suppliers'][supplier_type_code] = suppliers
 
             result['suppliers_meta'][supplier_type_code] = {}
 
