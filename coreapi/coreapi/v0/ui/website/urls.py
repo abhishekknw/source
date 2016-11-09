@@ -50,6 +50,7 @@ urlpatterns = [
     url(r'^import-campaign-leads-data/$', views.ImportCampaignLeads.as_view()),
     url(r'^filtered-suppliers/$', views.FilteredSuppliers.as_view()),
     url(r'^supplier-search/$', views.SupplierSearch.as_view()),
+    url(r'^import-area-subarea/$', views.ImportAreaSubArea.as_view()),
 
 ]
 

@@ -1124,7 +1124,6 @@ class SpacesOnCenterAPIView(APIView):
             # ADDNEW --> write code for salon
             pass
 
-
         return Response(response, status=200)
 
 
@@ -1145,7 +1144,7 @@ class FilteredSuppliers(APIView):
            'inventory_filters': ['PO', 'ST'],
           'specific_filters': { 'real_estate_allowed': True, 'employees_count': {min: 10, max: 100},}
         }
-        and the response looks like:
+        and the response looks like.:
         {
             "status": true,
             "data": {
@@ -1176,7 +1175,7 @@ class FilteredSuppliers(APIView):
 
             common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model
             inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
-            specific_filters = request.data.get('specific_filters')  # mapss to specific supplier table
+            specific_filters = request.data.get('specific_filters')  # maps to specific supplier table
 
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
@@ -1185,7 +1184,7 @@ class FilteredSuppliers(APIView):
                 return response
             content_type = response.data.get('data')
             # first fetch common query which is applicable to all suppliers. The results of this query will form
-            # our master suppplier list.
+            # our master supplier list.
             response = website_utils.handle_common_filters(common_filters, supplier_type_code)
             if not response.data['status']:
                 return response
@@ -1258,10 +1257,16 @@ class FilteredSuppliers(APIView):
                         del supplier[society_key]
                         supplier[common_key] = supplier_key_value
 
+            response = website_utils.set_supplier_extra_attributes(serializer.data, supplier_type_code, inventory_filters)
+            if not response.data['status']:
+                return response
+            serializer.data = response.data['data']
+
             # calculate total aggregate count
             suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=final_suppliers_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
+
                                                                                                         fliers=Sum('flier_frequency'))
 
             # construct the response and return
@@ -3048,7 +3053,7 @@ class SupplierSearch(APIView):
     """
     Generic API to perform simple search on predefined fields. The API will be slow because search uses
     basic icontains query. It can be made faster by making  FULLTEXT indexes on the db columns
-    #todo: attach user level permissions later
+    todo: attach user level permissions later
     """
 
     def get(self, request):
@@ -3086,4 +3091,86 @@ class SupplierSearch(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ImportAreaSubArea(APIView):
+    """
+    This API populates AREA and SUBAREA tables from an excel sheet.
+    """
+    def post(self, request):
+        """
+        Args:
+            request: request data
+            The data structure it makes is to create a list of form
+             [
+                { 'state': {}, 'city': {}, 'area': {}, 'subarea': {} },
+                { 'state': {}, 'city': {}, 'area': {}, 'subarea': {} },
+             ]
+             The structure of this data structure does not follows FK relationships in the table. This is because
+             constructing this data structure is far more easier than constructing the one which follows FK relationships
+             which will add more complexity.
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            if not request.FILES:
+                return ui_utils.handle_response(class_name, data='No File Found')
+            my_file = request.FILES['file']
+            wb = openpyxl.load_workbook(my_file)
+            ws = wb.get_sheet_by_name('new_area_sheet')
+
+            result = []
+            result_index = 0
+
+            # iterate through all rows and populate result array
+            for index, row in enumerate(ws.iter_rows()):
+
+                if index == 0 or website_utils.is_empty_row(row):
+                    continue
+
+                result.extend([None])
+                # in order to proceed further we need a dict in which keys are header names with spaces
+                # removed and values are value of the row which we are processing
+                row_response = website_utils.get_mapped_row(ws, row)
+                if not row_response.data['status']:
+                    return row_response
+                row = row_response.data['data']
+
+                response = website_utils.initialize_area_subarea(result, result_index)
+                if not response.data['status']:
+                    return response
+                result = response.data['data']
+
+                response = website_utils.handle_states(result, result_index, row)
+                if not response.data['status']:
+                    return response
+                result = response.data['data']
+
+                response = website_utils.handle_city(result, result_index, row)
+                if not response.data['status']:
+                    return response
+                result = response.data['data']
+
+                response = website_utils.handle_area(result, result_index, row)
+                if not response.data['status']:
+                    return response
+                result = response.data['data']
+
+                response = website_utils.handle_subarea(result, result_index, row)
+                if not response.data['status']:
+                    return response
+                result = response.data['data']
+
+                result_index += 1
+
+            # once the data is collected, time to save it
+            response = website_utils.save_area_subarea(result)
+            if not response.data['status']:
+                return response
+
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
 

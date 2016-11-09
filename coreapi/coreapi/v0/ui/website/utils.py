@@ -2032,7 +2032,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
         specific_filters_query = Q(**query)
 
         # do if else check on supplier type code to include things particular to that supplier. Things which
-        # cannot be mapped to a particular supplier
+        # cannot be mapped to a particular supplier and vary from supplier to supplier
         if supplier_type_code == 'RS':
             if specific_filters.get('flat_type'):
                 flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
@@ -2073,5 +2073,235 @@ def is_fulltext_index(model_name, column_name, index_type):
             'show index from {0} where column_name={1} and index_type={2}'.format(table_name, column_name, index_type))
         answer = True if raw_query_set else False
         return ui_utils.handle_response(function, data=answer, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def initialize_area_subarea(result, index):
+    """
+    Args:
+        result: a list
+        index: index of the list to initialize with a dict containing 'state', 'city' , 'area', 'subarea'.
+
+    Returns:
+
+    """
+    function = initialize_area_subarea.__name__
+    try:
+        # empty dict
+        area_subarea_object = {}
+        # set a state dict
+        area_subarea_object['state'] = {}
+        # set a city dict
+        area_subarea_object['city'] = {}
+        # set a area dict
+        area_subarea_object['area'] = {}
+        # set a subarea dict
+        area_subarea_object['subarea'] = {}
+        # set the final dict to this index
+        result[index] = area_subarea_object
+
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def handle_states(result, index, row):
+    """
+    Args:
+        result: The result list
+        index: index of the list for which state object is to be modified
+        row:  a single row of the sheet
+
+    Returns:
+
+    """
+    function = handle_states.__name__
+    try:
+        state_object = result[index]['state']
+        state_object['state_code'] = row['state_code']
+        state_object['state_name'] = row['state_name']
+        result[index]['state'] = state_object
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def handle_city(result, index, row):
+    """
+    Args:
+        result: The result list
+        index: index of the list for which city object is to be modified
+        row:  a single row of the sheet
+
+    Returns:
+
+    """
+    function = handle_city.__name__
+    try:
+        city_object = result[index]['city']
+        city_object['city_code'] = row['city_code']
+        city_object['city_name'] = row['city_name']
+        result[index]['city'] = city_object
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def handle_area(result, index, row):
+    """
+    Args:
+        result: The result list
+        index: index of the list for which area object is to be modified
+        row:  a single row of the sheet
+
+    Returns:
+
+    """
+    function = handle_area.__name__
+    try:
+        area_object = result[index]['area']
+        area_object['area_code'] = row['area_code']
+        area_object['label'] = row['area_name']
+        result[index]['area'] = area_object
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def handle_subarea(result, index, row):
+    """
+    Args:
+        result: The result list
+        index: index of the list for which subarea object is to be modified
+        row:  a single row of the sheet
+
+    Returns:
+
+    """
+    function = handle_subarea.__name__
+    try:
+        subarea_object = result[index]['subarea']
+        subarea_object['subarea_code'] = row['subarea_code']
+        subarea_object['subarea_name'] = row['subarea_name']
+        subarea_object['locality_rating'] = row.get('locality_rating')
+        result[index]['subarea'] = subarea_object
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_inventory_pricing(supplier_type_code, inventory_names, inventory_types, inventory_durations):
+    """
+    Args:
+        inventory_code: fetches price details for one inventory_code, 'PO', 'ST'.
+        inventory_type: 'Canopy', 'Small', 'Large'
+        inventory_duration: 'Campaign Weekly', 'Campaign Monthly'.
+
+    Returns: price for that inventory from PriceMappingDefault table
+    """
+    function = get_inventory_pricing.__name__
+    try:
+       supplier_content_type = ui_utils.get_content_type(supplier_type_code)
+       adinventory_type_objects = models.AdInventoryType.objects.filter(adinventory_name__in=inventory_names, adinventory_type__in=inventory_types)
+       duration_type_objects = models.DurationType.objects.filter(duration_name__in=inventory_durations)
+       inventory_prices = models.PriceMappingDefault.objects.prefetch_related('content_object').filter(content_type=supplier_content_type).values('object_id', 'business_price', 'adinventory_type__name', 'adinventory_type__type', 'duration__type__name' ).filter(adinventory_type__in=adinventory_type_objects, duration_type__in=duration_type_objects)
+
+       return ui_utils.handle_response(function, data=inventory_prices, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def set_supplier_extra_attributes(suppliers, supplier_type_code,  inventory_codes):
+    """
+    Args:
+        suppliers: a list containg dict for each supplier
+
+    Returns: modified each supplier by adding some attributes
+
+    """
+    function = set_supplier_extra_attributes.__name__
+    try:
+        inventory_names = []
+        inventory_types = []
+        inventory_durations = []
+        for inventory_code in inventory_codes:
+             inventory_duration_dict = website_constants.inventory_duration_dict[inventory_code]
+             inventory_types.extend(type_dur_dict['type'] for type_dur_dict in inventory_duration_dict['type_duration'])
+             inventory_durations.extend(type_dur_dict['duration'] for type_dur_dict in inventory_duration_dict['type_duration'])
+             inventory_names.extend(inventory_duration_dict['name'])
+
+        response = get_inventory_pricing(supplier_type_code, inventory_names, inventory_types, inventory_durations)
+        if not response.data['status']:
+            return response
+        inventory_pricing = response.data['data']
+        import pdb
+        pdb.set_trace()
+
+        return ui_utils.handle_response(function, data=suppliers, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def save_area_subarea(result):
+    """
+    The result looks like this
+     [
+        {
+          "city": {
+            "city_name": "Mumabi",
+            "city_code": "BOM"
+          },
+          "state": {
+            "state_code": "MH",
+            "state_name": "Maharashtra"
+          },
+          "subarea": {
+            "locality_rating": "high",
+            "subarea_code": "AE",
+            "subarea_name": "Andheri(E)"
+          },
+          "area": {
+            "area_code": "AE",
+            "label": "Andheri(E)"
+          }
+        },
+        {..}
+     ]
+    Args:
+        result: The result
+
+    Returns: success if the data in result is saved, else failure
+
+    """
+    function = save_area_subarea.__name__
+    try:
+        total_new_objects_created = 0
+        with transaction.atomic():
+            for data in result:
+                # make state
+                state_object, is_created = models.State.objects.get_or_create(**data['state'])
+                if is_created:
+                    total_new_objects_created += 1
+
+                data['city']['state_code'] = state_object
+                # make city
+                city_object, is_created = models.City.objects.get_or_create(**data['city'])
+                if is_created:
+                    total_new_objects_created += 1
+
+                data['area']['city_code'] = city_object
+                # make area
+                area, is_created = models.CityArea.objects.get_or_create(**data['area'])
+                if is_created:
+                    total_new_objects_created += 1
+
+                data['subarea']['area_code'] = area
+                # make subarea
+                subarea, is_created = models.CitySubArea.objects.get_or_create(**data['subarea'])
+                if is_created:
+                    total_new_objects_created += 1
+
+            return ui_utils.handle_response(function, data=total_new_objects_created, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)

@@ -410,3 +410,12 @@ search_fields = {
            ]
 }
 
+# to calculate what cost of each inventory. currently we are using only these. type and duration are used to fetch
+# inventory type objects adn duration type objects.
+inventory_duration_dict = {
+    'PO': {'name': 'POSTER', 'type_duration': [{'type': 'poster_a4', 'duration': 'campaign_weekly'}]},
+    'ST': {'name': 'STANDEE', 'type_duration': [{'type': 'standee_small', 'duration': 'campaign_weekly'}]},
+    'SL': {'name': 'STALL',   'type_duration':  [{'type': 'stall_small', 'duration': 'unit_daily'}]},
+    'FL': {'name': 'FLIER', 'type_duration': [{'type': 'flier_door_to_door', 'duration': 'unit_daily'}, ]},
+    'CD': {'name': 'CAR DISPLAY', 'tye_duration':  [{'type': 'car_display_price', 'duration': 'unit_daily'}]}
+}
