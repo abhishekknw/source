@@ -1856,6 +1856,7 @@ class ShortlistedInventoryDetails(models.Model):
     class Meta:
         db_table = 'shortlisted_inventory_details'
 
+
 class SupplierTypeBusShelter(BasicSupplierDetails):
     """
     model inherits basic supplier fields from abstract model BasicSupplierDetails
@@ -1865,7 +1866,6 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
 
     class Meta:
         db_table = 'supplier_bus_shelter'
-
 
 
 class ProposalMasterCost(models.Model):
@@ -1896,7 +1896,7 @@ class AbstractGeneralCost(models.Model):
     also one mastercost sheet will only have one "cost", doesn't matter what type ( ofcourse different types of costs, but all are actualy
     a cost ! ).
     """
-    proposal_master_cost = models.OneToOneField(ProposalMasterCost, null=True, blank=True)
+    proposal_master_cost = models.ForeignKey(ProposalMasterCost, null=True, blank=True)
     total_cost = models.FloatField(null=True, blank=True)
     comment = models.CharField(max_length=1000, null=True, blank=True)
 
@@ -1966,7 +1966,7 @@ class ProposalMetrics(models.Model):
     for proposal x, metric m1 has value of v1 for supplier S.
     for proposal x, metric m2 has value of v2 for supplier S.
     """
-    proposal_master_cost = models.OneToOneField(ProposalMasterCost, null=True, blank=True)
+    proposal_master_cost = models.ForeignKey(ProposalMasterCost, null=True, blank=True)
     metric_name = models.CharField(max_length=255, null=True, blank=True)
     supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
     value = models.FloatField(null=True, blank=True)

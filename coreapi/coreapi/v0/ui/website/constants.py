@@ -1,3 +1,5 @@
+from coreapi.settings import BASE_DIR
+
 supplier_keys = [
     'city', 'area', 'sub_area', 'supplier_type', 'supplier_code', 'society_name'
 
@@ -233,8 +235,7 @@ offline_pricing_data = {
 }
 
 # models whose only one object exists in the sheet and data is made up of  content of  many rows
-one_obect_models = ['ideation_design_cost', 'logistic_operations_cost', 'event_staffing_cost', 'data_sciences_cost', 'printing_cost',
-                    'proposal_master_cost', ]
+one_obect_models = ['ideation_design_cost', 'logistic_operations_cost', 'event_staffing_cost', 'data_sciences_cost', 'printing_cost', ]
 
 
 # set the column index in the sheet that determines the values for Offline prricing
@@ -422,3 +423,7 @@ inventory_duration_dict = {
 
 # format to be used in datetime
 datetime_format = '%d-%m-%Y %H-%M-%S'
+
+# metric file details
+metric_file_path = BASE_DIR + '/files/empty_proposal_cost_data.xlsx'
+metric_sheet_name = 'Offline Pricing'

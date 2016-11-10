@@ -2508,7 +2508,9 @@ class ImportSupplierData(APIView):
                 if not response.data['status']:
                     return response
 
-                # time to hit the url
+                # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
+                # once data is prepared for one sheet, we hit the url. if it creates problems in future, me might change
+                # it.
                 url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
                 url = BASE_URL + url[1:]
 
@@ -2520,6 +2522,23 @@ class ImportSupplierData(APIView):
 
                 if response.status_code != status.HTTP_200_OK:
                     return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
+
+            # hit metric url to save metric data. current m sending the entire file, though only first sheet sending
+            # is required.
+            url = reverse('import-metric-data', kwargs={'proposal_id': proposal_id})
+            url = BASE_URL + url[1:]
+
+            # set the pointer to zero to be read again in next api
+            my_file.seek(0)
+            files = {
+                'file': my_file
+            }
+            response = requests.post(url, files=files)
+
+            if response.status_code != status.HTTP_200_OK:
+                return Response({'status': False, 'error in import-metric-data api ': response.text},
+                                status=status.HTTP_400_BAD_REQUEST)
+
             return Response({'status': True, 'data': 'successfully imported'}, status=status.HTTP_200_OK)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -2533,21 +2552,21 @@ class ImportProposalCostData(APIView):
 
     two phases: data collection and data insertion.
     """
-
-    def post(self, request):
+    def post(self, request, proposal_id):
 
         class_name = self.__class__.__name__
 
-        file_name = BASE_DIR + '/proposal_cost_data.xlsx'
+        if not request.FILES:
+            return ui_utils.handle_response(class_name, data='No files found')
 
+        file = request.FILES['file']
         # load the workbook
-        wb = openpyxl.load_workbook(file_name)
+        wb = openpyxl.load_workbook(file)
         # read the sheet
-        ws = wb.get_sheet_by_name('Offline Pricing')
+        ws = wb.get_sheet_by_name(website_constants.metric_sheet_name)
 
         # before inserting delete all previous data as we don't want to duplicate things.
-        # this deletion will happen for a particular center and proposal id. currently it's left unhandled.
-        response = website_utils.delete_proposal_cost_data()
+        response = website_utils.delete_proposal_cost_data(proposal_id)
         if not response.data['status']:
             return response
 
@@ -2571,6 +2590,7 @@ class ImportProposalCostData(APIView):
                     count += 1
 
                 # DATA INSERTION time to save the data
+                master_data['proposal_master_cost']['proposal'] = proposal_id
                 response = website_utils.save_master_data(master_data)
                 if not response.data['status']:
                     return response

@@ -8,10 +8,13 @@ from django.db.models import Q
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import get_object_or_404
+from django.http import Http404
 
 from rest_framework.response import Response
 from rest_framework import status
 from pygeocoder import Geocoder, GeocoderError
+import openpyxl
 
 import constants as website_constants
 from constants import price_per_flat, inventorylist
@@ -101,7 +104,6 @@ def get_union_inventory_price_per_flat(data, unique_inventory_codes, index):
         return Response({'status': False, 'error': '{0} at society index {1}'.format(e.message, index)},
                         status=status.HTTP_400_BAD_REQUEST)
 
-
 def insert_supplier_sheet(workbook, result):
     """
     Args:
@@ -111,6 +113,7 @@ def insert_supplier_sheet(workbook, result):
     """
     function_name = insert_supplier_sheet.__name__
     try:
+
         for code, supplier_data in result.iteritems():
 
             # create a new sheet for each supplier type
@@ -121,6 +124,12 @@ def insert_supplier_sheet(workbook, result):
 
             for supplier_object in supplier_data['objects']:
                 ws.append([ supplier_object[key] for key in supplier_data['data_keys']])
+
+        # we also need to add metric sheet as part of export
+        response = add_metric_sheet(workbook)
+        if not response.data['status']:
+            return response
+        workbook = response.data['data']
 
         # return a workbook object
         return ui_utils.handle_response(function_name, data=workbook, success=True)
@@ -760,7 +769,6 @@ def handle_offline_pricing_row(row, master_data):
                 if model == website_constants.metric_model:
                     data['metric_name'] = model_row.get('match_term')
                     data['value'] = value
-
                 # we will not save here. we will collect the data in master_data
                 # dict and save later. This is because multiple rows represent one object in some cases and  many objects
                 # in other cases so saving on row by row basis cannot be done.
@@ -803,27 +811,90 @@ def save_master_data(master_data):
     """
 
     Args:
-        master_data: the data to be saved in the models
-
+        master_data: the data to be saved in the models looks like
+        {
+           'data_sciences_cost':{
+              'total_cost':40
+           },
+           'ideation_design_cost':{
+              'total_cost':40
+           },
+           'logistic_operations_cost':{
+              'total_cost':40
+           },
+           'space_booking_cost':[
+              {
+                 'total_cost':40
+                 'supplier_type':46
+              },
+              {
+                 'total_cost':40
+                 'supplier_type':45
+              }
+           ],
+           'event_staffing_cost':{
+              'total_cost':40      L
+           },
+           'proposal_master_cost':{
+              'discount':40 ,
+              'total_cost':40 ,
+              'tax':40 ,
+              'total_impressions':50,
+              'average_cost_per_impression':50 ,
+              'agency_cost':40,
+              'proposal':u'jogXxEUu'
+           },
+           'printing_cost':{
+              'total_cost':40
+           },
+           'proposal_metrics':[
+              {
+                 'supplier_type':45,
+                 'metric_name':'Average Cost per Society',
+                 'value':40
+              },
+              {
+                 'supplier_type':48,
+                 'metric_name':'Average Cost per Salon',
+                 'value':40
+              },
+            ]
+   }
     Returns: success if models are saved successfully
 
     """
+    function = save_master_data.__name__
     try:
-        # get the right serializer and save the data
-        for model in website_constants.offline_pricing_data.keys():
-            # differentiate if we have list to save or a dict to save
-            if model in website_constants.one_obect_models:
-                serializer = ui_utils.get_serializer(model)(data=master_data[model])
-            else:
-                serializer = ui_utils.get_serializer(model)(data=master_data[model], many=True)
-
-            if not serializer:
-                return ui_utils.handle_response(save_master_data.__name__,
-                                                data='serializer not found for this model {0}'.format(model))
+        with transaction.atomic():
+            # save into proposal master cost table first because it's id is required later
+            serializer = ui_utils.get_serializer('proposal_master_cost')(data=master_data['proposal_master_cost'])
             if serializer.is_valid():
                 serializer.save()
+                proposal_master_cost_id = serializer.data['id']
             else:
-                return ui_utils.handle_response(save_master_data.__name__, data=serializer.errors)
+                return ui_utils.handle_response(function, data=serializer.errors)
+
+            # pull the model names to process except proposal_master_cost which has been done
+            model_name_list = list(website_constants.offline_pricing_data.keys())
+            model_name_list.remove('proposal_master_cost')
+
+            # get the right serializer and save the data
+            for model in model_name_list:
+                # differentiate if we have list to save or a dict to save
+                if model in website_constants.one_obect_models:
+                    # need to set id of proposal master cost as according to model structure
+                    master_data[model]['proposal_master_cost'] = proposal_master_cost_id
+                    serializer = ui_utils.get_serializer(model)(data=master_data[model])
+                else:
+                    # need to set id of proposal master cost as according to model structure
+                    for data in master_data[model]:
+                        data['proposal_master_cost'] = proposal_master_cost_id
+                    serializer = ui_utils.get_serializer(model)(data=master_data[model], many=True)
+
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return ui_utils.handle_response(save_master_data.__name__, data=serializer.errors)
         return ui_utils.handle_response(save_master_data.__name__, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(save_master_data.__name__, exception_object=e)
@@ -846,21 +917,25 @@ def is_empty_row(row):
     return True
 
 
-def delete_proposal_cost_data():
+def delete_proposal_cost_data(proposal_id):
     """
     Deletes the tables data associated with proposal cost each time the api is hit because we don't want
     duplicates.
     """
     try:
-        models.ProposalMetrics.objects.all().delete()
-        models.PrintingCost.objects.all().delete()
-        models.DataSciencesCost.objects.all().delete()
-        models.EventStaffingCost.objects.all().delete()
-        models.SpaceBookingCost.objects.all().delete()
-        models.IdeationDesignCost.objects.all().delete()
-        models.LogisticOperationsCost.objects.all().delete()
-        models.ProposalMasterCost.objects.all().delete()
+        proposal_master_cost_object = get_object_or_404(models.ProposalMasterCost, proposal__proposal_id=proposal_id)
+        models.ProposalMetrics.objects.filter(proposal_master_cost=proposal_master_cost_object).delete()
+        models.PrintingCost.objects.filter(proposal_master_cost=proposal_master_cost_object).delete()
+        models.DataSciencesCost.objects.filter(proposal_master_cost=proposal_master_cost_object).delete()
+        models.EventStaffingCost.objects.filter(proposal_master_cost=proposal_master_cost_object).delete()
+        models.SpaceBookingCost.objects.filter(proposal_master_cost=proposal_master_cost_object).delete()
+        models.IdeationDesignCost.objects.filter(proposal_master_cost=proposal_master_cost_object).delete()
+        models.LogisticOperationsCost.objects.filter(proposal_master_cost=proposal_master_cost_object).delete()
+        proposal_master_cost_object.delete()
         return ui_utils.handle_response(delete_proposal_cost_data.__name__, data='success', success=True)
+    except Http404:
+        # first time call of this function will not fetch object, but must be a success return.
+        return ui_utils.handle_response(delete_proposal_cost_data.__name__, data='', success=True)
     except Exception as e:
         return ui_utils.handle_response(delete_proposal_cost_data.__name__, exception_object=e)
 
@@ -2393,5 +2468,28 @@ def get_file_name(user, proposal_id):
             user_string = user.name
         file_name = user_string + '_' + business.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
         return ui_utils.handle_response(function, data=file_name, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def add_metric_sheet(workbook):
+    """
+    Args:
+        workbook: a workbook object
+    Returns:  reads a sheet from empty_proposal_cost_data.xlsx, add it to export sheet for metrics.
+    """
+    function = add_metric_sheet.__name__
+    try:
+        my_file = open(website_constants.metric_file_path, 'rb')
+        wb = openpyxl.load_workbook(my_file)
+        # copy first sheet from saved workbook
+        first_sheet = wb.get_sheet_by_name(website_constants.metric_sheet_name)
+        # create a target sheet where data will be copied
+        target_sheet = workbook.create_sheet(index=0, title=website_constants.metric_sheet_name)
+        # for each row, copy it to new sheet
+        for row in first_sheet.iter_rows():
+            target_row_list = [cell.value for cell in row]
+            target_sheet.append(target_row_list)
+        return ui_utils.handle_response(function, data=workbook, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
