@@ -12,6 +12,8 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.forms.models import model_to_dict
+from django.core.urlresolvers import reverse
+
 
 # third party imports
 import requests
@@ -758,29 +760,20 @@ class FlatTypeAPIView(APIView):
 class SaveSummaryData(APIView):
     """
     Saves inventory summary data from csv sheet.
-
     """
 
     def get(self, request):
         """
         returns success or failure depending on weather the data was successfully saved or not.
         the csv file should be named 'inventory_summary.csv and should be parallel to manage.py file
-
         """
-
-        with transaction.atomic():
-
+        class_name = self.__class__.__name__
+        try:
             source_file = open(BASE_DIR + '/inventory_summary.csv', 'rb')
-            error_file = open(BASE_DIR + '/inventory_summary_errors.csv', 'w')
-
-            try:
+            error_list = []
+            with transaction.atomic():
                 reader = csv.reader(source_file)
-                failure_count = 0  # to report failure rows
-                total_count = sum(1 for row in reader) - 1
                 source_file.seek(0)
-
-                sess = requests.Session()
-
                 for num, row in enumerate(reader):
                     data = {}
                     if num == 0:
@@ -797,33 +790,25 @@ class SaveSummaryData(APIView):
                                 data[key] = row[index]
 
                         response = ui_utils.get_supplier_id(request, data)
-                        # this method of handing error code will  change in future
-                        if response.status_code == status.HTTP_200_OK:
-                            data['supplier_id'] = response.data['supplier_id']
-                            url = BASE_URL + 'v0/ui/society/' + data['supplier_id'] + '/inventory_summary/'  # verify
-                            r = sess.post(url, data=data, timeout=5)
+                        if not response.data['status']:
+                            return ui_utils.handle_response(class_name, data='Error in making supplier id {0} for row number {1}'.format(response.data['error'], num))
 
-                            if r.status_code != status.HTTP_200_OK:
-                                error_file.write(
-                                    "POST API failed for entry of row index {0} and error is {1} \n ------------\n".format(num,
-                                                                                                                  r.text))
-                                failure_count += 1
-                                continue
-                        else:
-                            error_file.write("Error in making supplier id {0} for row number {1} \n".format(response.data['error'], num))
-                            failure_count += 1
-                            continue
+                        data['supplier_id'] = response.data['supplier_id']
+                        data['supplier_type_code'] = 'RS'
+                        url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
+                        url = BASE_URL + url[1:]
+                        headers = {
+                            'Content-Type': 'application/json'
+                        }
+                        response = requests.post(url, json.dumps(data), headers=headers)
+                        response_json = response.json()
+                        response_json['supplier_id'] = data['supplier_id']
+                        error_list.append(response_json)
 
-            except Exception as e:
-                return Response(data=str(e.message), status=status.HTTP_400_BAD_REQUEST)
-            finally:
-                source_file.close()
-                error_file.close()
-
-        return Response(data="Information:  out of {0} rows, {1} successfully saved and {2} failed ".format(total_count,
-                                                                                                       total_count - failure_count,
-                                                                                                       failure_count),
-                        status=status.HTTP_200_OK)
+            source_file.close()
+            return ui_utils.handle_response(class_name, data=error_list, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class InventorySummaryAPIView(APIView):
@@ -917,6 +902,7 @@ class InventorySummaryAPIView(APIView):
           description : flier lobby allowed or not
 
         """
+        class_name = self.__class__.__name__
         try:
             response = ui_utils.get_supplier_inventory(request.data.copy(), id)
 
@@ -1204,7 +1190,8 @@ class InventorySummaryAPIView(APIView):
                     return Response(serializer.data, status=status.HTTP_200_OK)
                 else:
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
         except Exception as e:
             return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
