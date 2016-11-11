@@ -433,10 +433,16 @@ class CreateFinalProposalTestCase(APITestCase):
     """
     def setUp(self):
         """
-        proposal_data = {
-           center : { center data } ,
-           suppliers: [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
-        }
+         [
+             {
+                  center : { id : 1 , center_name: c1, ...   } ,
+                  suppliers:  { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...}  }
+                  suppliers_meta: {
+                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                     'CP': { 'inventory_type_selected':  ['ST']
+                  }
+             }
+        ]
         """
         self.data, self.proposal_id = test_utils.create_final_proposal_data()
 

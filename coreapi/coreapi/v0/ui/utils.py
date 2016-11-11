@@ -24,7 +24,7 @@ import v0.serializers
 import constants as ui_constants
 
 
-def handle_response(object_name, data='some error occurred', exception_object=Exception, success=False):
+def handle_response(object_name, data='some error occurred', exception_object=None, success=False):
     """
     Args:
         success: determines wether to send success or failure messages
@@ -41,12 +41,26 @@ def handle_response(object_name, data='some error occurred', exception_object=Ex
         # prepare the object to be sent in error response
         data = {
             'general_error': data,
-            'system_error': str(exception_object.message) if exception_object.message else str(exception_object.args) if exception_object.args else "",
+            'system_error': get_system_error(exception_object),
             'culprit_module': object_name
         }
         return Response({'status': False, 'data': data}, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'status': True, 'data': data}, status=status.HTTP_200_OK)
+
+
+def get_system_error(exception_object):
+    """
+    Takes an exception object and returns system error.
+    Args:
+        exception_object:
+
+    Returns: system error
+
+    """
+    if not exception_object:
+        return []
+    return str(exception_object.message) if exception_object.message else str(exception_object.args) if exception_object.args else ""
 
 
 def save_basic_supplier_details(supplier_type_code, data):

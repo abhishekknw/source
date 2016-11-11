@@ -728,7 +728,6 @@ class FlatTypeAPIView(APIView):
             if totalFlats > 0 and society.flat_count != totalFlats:
                 return Response({'message':'No of Flats entered does not match total flat count of society'},status=400)
 
-
         for key in request.data['flat_details']:
             if 'id' in key:
                 item = FlatType.objects.get(pk=key['id'])
@@ -757,7 +756,7 @@ class FlatTypeAPIView(APIView):
             return Response(status=404)
 
 
-class SaveSummaryData(APIView):
+class ImportSummaryData(APIView):
     """
     Saves inventory summary data from csv sheet.
     """
@@ -817,16 +816,15 @@ class InventorySummaryAPIView(APIView):
     supplierTypeCode -- supplier type code RS, CP etc
 
     """
-
     def get(self, request, id):
         try:
-        # Start: code added and changed for getting supplier_type_code
+            # Start: code added and changed for getting supplier_type_code
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
             # supplier_type_code = 'CP'
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
             inventory_object = InventorySummary.objects.get_object(data, id)
-        # End: code added and changed for getting supplier_type_code
+            # End: code added and changed for getting supplier_type_code
             if not inventory_object:
                 return Response(data={'Inventory object does not exist for this supplier id {0}'.format(id)},
                                 status=status.HTTP_400_BAD_REQUEST)

@@ -1,4 +1,5 @@
 import v0.models as models
+import v0.ui.website.serializers as website_serializers
 
 
 def create_city_area_subarea():
@@ -106,32 +107,61 @@ def create_final_proposal_data():
     # create a proposal
     proposal = create_basic_proposal(proposal_id)
 
-    # create a center
-    center = create_centers()[0]['center']
-
     # create some suppliers
     models.SupplierTypeSociety.objects.create(supplier_id='s1', society_name='Gajar')
     models.SupplierTypeSociety.objects.create(supplier_id='s2', society_name='Bhindi')
 
+    center_data = {
+        'proposal': proposal,
+        'city': 'Mumbai',
+        'area': 'Jogeshwari(E)',
+        'center_name': 'juhu',
+        'subarea': 'Parsi Colony',
+        'pincode': 401345,
+        'longitude': 0,
+        'radius': 1,
+        'address': 'juhu',
+        'latitude': 0,
+    }
+    # create a center
+    center = create_db_center(center_data)
+
     data = [
         {
             'center': center,
-            'societies': [
+            'suppliers':
                 {
-                    'supplier_type_code': supplier_type_code,
-                    'status': 'R',
-                    'supplier_id': supplier_id_1,
+                    'RS': [
+                        {
+                           'supplier_type_code': supplier_type_code,
+                           'status': 'R',
+                           'supplier_id': supplier_id_1
+                        },
+                        {
+
+                            'supplier_type_code': supplier_type_code,
+                            'status': 'B',
+                            'supplier_id': supplier_id_2
+                        }
+
+                    ]
                 },
-                {
-                    'supplier_type_code': supplier_type_code,
-                    'status': 'B',
-                    'supplier_id': supplier_id_2,
-                },
-            ],
-            'filters_data': create_filter_data()
+            'suppliers_meta': {
+
+                'RS':  {'inventory_type_selected': ['PO', 'ST']}
+            }
         }
     ]
     return data, proposal.proposal_id
+
+
+def create_db_center(data):
+    center = models.ProposalCenterMapping.objects.create(**data)
+    serializer = website_serializers.ProposalCenterMappingSerializer(data=center)
+    if serializer.is_valid():
+        return serializer.data
+    else:
+        return []
 
 
 def create_filter_data():

@@ -1282,6 +1282,10 @@ def get_coordinates(radius, latitude, longitude):
     """
     function_name = get_coordinates.__name__
     try:
+        radius = float(radius)
+        latitude = float(latitude)
+        longitude = float(longitude)
+
         delta_dict = get_delta_latitude_longitude(float(radius), float(latitude))
 
         delta_latitude = delta_dict['delta_latitude']
@@ -1472,7 +1476,6 @@ def suppliers_within_radius(data):
         center_id = data['center_id']
 
         business_name = models.ProposalInfo.objects.get(proposal_id=proposal_id).account.business.name
-
         master_result = {}
         # set the business_name
         master_result['business_name'] = business_name
@@ -1507,12 +1510,13 @@ def suppliers_within_radius(data):
 
             serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
 
-
         # if not center_id, then fetch all the centers. centers can be a list
         # we add an extra attribute for each center object we get. Thats called codes. codes contain a list
         # of supplier_type_codees  like RS, CP.
 
         supplier_codes_dict = {center['id']: [] for center in serializer.data}
+        if not supplier_codes_dict:
+            return ui_utils.handle_response(function_name, data='Not found any centers in database against {0}'.format(proposal_id))
         for data in supplier_type_codes_list:
             center_id = data['center']
             code = data['supplier_type_code']

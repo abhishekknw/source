@@ -2965,10 +2965,10 @@ class InitialProposalAPIView(APIView):
         return ''.join(random.choice(string.ascii_letters) for _ in range(8))
 
 
-class SaveContactDetails(APIView):
+class ImportContactDetails(APIView):
     """
     Saves contact details in db for each supplier.
-    The API expects source file to be named as contacts.csv and should be placed parrallel to manage.py
+    The API expects source file to be named as contacts.csv and should be placed in a folder called 'file'.
     """
 
     def get(self, request):
