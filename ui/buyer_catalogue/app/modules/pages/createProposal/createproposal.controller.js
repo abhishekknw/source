@@ -67,9 +67,11 @@ angular.module('catalogueApp')
 	$scope.removeCenter = function(index){
 		$scope.model.centers.splice(index,1);
 	}
-	// code chnaged to send supplier_codes for each center like RS,CP..etc
+
 	$scope.checkSpace = function(space,center){
+		console.log("hello",space,center.center.supplier_codes);
 		center.center.supplier_codes.push(space);
+		console.log(	center.center.supplier_codes);
 		// if(center.center.space_mapping[space_name + '_allowed']){
 		// 	center.center.space_mapping[space_name + '_count'] = 0;
 		// 	center.center.space_mapping[space_name + '_buffer_count'] = 0;

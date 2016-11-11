@@ -34,17 +34,19 @@
    <div class="col-md-2 search-bin" id="searchBinHolder">
     <div class="panel panel-info filterscroll ">
      <div class="panel-body" id="searchBody">
-     <!--Start: Filter Section -->
+
       <div class="filterPanel ">
        <span class="filterHeader"> Filter your Search </span>
          <a class="btn btn-xs pull-right" style="border: 1px solid #e1e1e1;color: #707070;" ng-click="clearAllFilters()"> Reset filters</a>
       </div>
       <hr>
-      <form id = "filterPanelForm">
-       <div class = "filterPanel">
-        <input type = "checkbox"  ng-model="society_allowed" ng-click="spaceSupplier('RS',society_allowed)"/>
+       <!--Start: Filter Section on mapview-->
+      <form id = "filterPanelForm" ng-if="!show_societies">
+       <div class = "filterPanel" ng-show = "current_center.suppliers_allowed.society_show">
+        <input type = "checkbox"  ng-model="current_center.suppliers_allowed.society_allowed" ng-click="spaceSupplier('RS',current_center.suppliers_allowed.society_allowed)"/>
           <span class = "filterPanelHeader" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
-         <div ng-if = "society_allowed" uib-collapse="isCollapsed">
+
+         <div ng-if = "current_center.suppliers_allowed.society_allowed" uib-collapse="isCollapsed">
           <span class = "filterPanelHeader ">Inventory Type</span>
           <div class = "nbCheckbox two-col" ng-repeat="inventory in current_center.RS_filters.inventory">
             <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
@@ -71,10 +73,10 @@
             </div>
           </div>
         </div>
-        <div class = "filterPanel">
-         <input type = "checkbox"  ng-model="corporate_allowed"  ng-click="spaceSupplier('CP',corporate_allowed)"/>
+        <div class = "filterPanel" ng-if = "current_center.suppliers_allowed.corporate_show">
+         <input type = "checkbox"  ng-model="current_center.suppliers_allowed.corporate_allowed"  ng-click="spaceSupplier('CP',current_center.suppliers_allowed.corporate_allowed)"/>
            <span class = "filterPanelHeader"> Corporate Filters</span><br>
-          <div ng-if = "corporate_allowed">
+          <div ng-if = "current_center.suppliers_allowed.corporate_allowed">
             <div>
               <input type = "checkbox"  ng-model="real_estate_allowed" ng-click="corporateFilters(real_estate_allowed)">
               <span style="color:crimson">Real Estate Allowed
@@ -109,10 +111,83 @@
            </div>
          </div>
       </form>
+<!-- Filter Section on mapview End -->
+<!--Start: Filter Section on gridview-->
+ <form id = "filterPanelForm" ng-if="show_societies">
+  <div class = "filterPanel"  ng-show="society_show">
+   <input type = "checkbox"  ng-model="society_allowed_gridview" ng-click="checkSuppliers('RS')"/>
+     <span class = "filterPanelHeader" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
+
+    <div ng-if = "society_allowed_gridview" uib-collapse="isCollapsed">
+     <span class = "filterPanelHeader ">Inventory Type</span>
+     <div class = "nbCheckbox two-col" ng-repeat="inventory in gridView_RS_filters.inventory">
+       <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
      </div>
+     <hr>
+     <span class = "filterPanelHeader ">Society Type</span>
+       <div class = "nbCheckbox two-col"  ng-repeat="quality_type in gridView_RS_filters.quality_type">
+           <input type = "checkbox"  ng-model="quality_type.selected" ng-change="societyFilters()">{{ quality_type.name }}&nbsp;
+       </div>
+       <hr>
+     <span class = "filterPanelHeader ">Society Size</span>
+       <div class = "nbCheckbox two-col" ng-repeat="quantity_type in gridView_RS_filters.quantity_type">
+           <input type = "checkbox" ng-model="quantity_type.selected" ng-change="societyFilters()">{{ quantity_type.name }}&nbsp;
+       </div>
+       <hr>
+     <span class = "filterPanelHeader ">Society Location Rating</span>
+     <div class = "nbCheckbox two-col" ng-repeat="location in gridView_RS_filters.locality_rating">
+       <input type = "checkbox" ng-model="location.selected" ng-change="societyFilters()">{{ location.name }}&nbsp;
+     </div>
+     <hr>
+     <span class = "filterPanelHeader ">Society Flat Type</span>
+       <div class = "nbCheckbox two-col" ng-repeat="flat_type in gridView_RS_filters.flat_type">
+           <input type = "checkbox" ng-model="flat_type.selected" ng-change="societyFilters()">{{ flat_type.name }}&nbsp;
+       </div>
+     </div>
+   </div>
+   <div class = "filterPanel" ng-show="corporate_show">
+    <input type = "checkbox"  ng-model="corporate_allowed_gridview"  ng-click="checkSuppliers('CP')"/>
+      <span class = "filterPanelHeader"> Corporate Filters</span><br>
+     <div ng-if = "corporate_allowed_gridview">
+       <div>
+         <input type = "checkbox"  ng-model="real_estate_allowed" ng-click="corporateFilters(real_estate_allowed)">
+         <span style="color:crimson">Real Estate Allowed
+         </span>
+       </div>
+
+      <span class = "filterPanelHeader ">Inventory Type</span>
+      <div class = "nbCheckbox two-col" ng-repeat="inventory in gridView_CP_filters.inventory">
+        <input type = "checkbox"  ng-model="inventory.selected" ng-change="corporateFilters()">{{ inventory.name }}&nbsp;
+      </div>
+      <hr>
+      <span class = "filterPanelHeader ">Corporate Type</span>
+        <div class = "nbCheckbox two-col"  ng-repeat="quality_type in gridView_CP_filters.quality_type">
+            <input type = "checkbox"  ng-model="quality_type.selected" ng-change="corporateFilters()">{{ quality_type.name }}&nbsp;
+        </div>
+        <hr>
+      <span class = "filterPanelHeader ">Corporate Size</span>
+        <div class = "nbCheckbox two-col" ng-repeat="quantity_type in gridView_CP_filters.quantity_type">
+            <input type = "checkbox" ng-model="quantity_type.selected" ng-change="corporateFilters()">{{ quantity_type.name }}&nbsp;
+        </div>
+        <hr>
+      <span class = "filterPanelHeader ">Corporate Location Rating</span>
+      <div class = "nbCheckbox two-col" ng-repeat="location in gridView_CP_filters.locality_rating">
+        <input type = "checkbox" ng-model="location.selected" ng-change="corporateFilters()">{{ location.name }}&nbsp;
+      </div>
+      <hr>
+      <span class = "filterPanelHeader ">Employee Count</span>
+      <div class = "nbCheckbox two-col" ng-repeat="range in gridView_CP_filters.employee_count">
+        <input type = "checkbox" ng-model="range.selected" ng-change="corporateFilters()">{{ range.name }}&nbsp;
+      </div>
+      <hr>
+      </div>
     </div>
-  </div>
-<!-- Filter Section End -->
+ </form>
+<!--End: Filter Section on gridview-->
+</div>
+</div>
+</div>
+
 <!-- Map Starts here -->
 <div class="col-md-3 map-width" ng-if="!show_societies">
 <style type="text/css">
@@ -143,7 +218,7 @@
   <!-- Start: grid view -->
   <div class="col-md-4 table-responsive" ng-if="show_societies" style="width: 800px; height: 550px">
       <h2>Grid View</h2>
-      <table class="table table-bordered" ng-repeat = "code in supplier_codes">
+      <table class="table table-bordered"  ng-if = "society_allowed_gridview">
         <thead>
           <tr>
             <th class = "col-md-1">#</th>
@@ -165,7 +240,60 @@
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
         <tbody ng-repeat = "center in center_data" >
-        <tr ng-repeat = "supplier in center.suppliers[code]">
+        <tr ng-repeat = "supplier in center.suppliers['RS']">
+            <td>{{$index+1}}</td>
+            <td>{{center.center.center_name}}</td>
+            <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{supplier.supplier_id}}" target="_blank">{{supplier.name}}</a></td>
+            <td>{{supplier.subarea}}</td>
+            <td>{{supplier.flat_count}}</td>
+            <td>{{supplier.average_rent}}</td>
+            <!-- <td>{{society.society_type_quality}}</td> -->
+            <!-- <td>{{society.society_location_type}}</td> -->
+            <td>{{supplier.machadalo_index}}</td>
+            <td ng-if="inv_poster">{{supplier.tower_count}}</td>
+            <!-- <td ng-if="inv_poster">{{society.poster_price}}</td>-->
+            <td ng-if="inv_standee">{{supplier.standee_count}}</td>
+            <!-- <td ng-if="inv_standee">{{society.standee_price}}</td> -->
+            <td ng-if="inv_stall">{{supplier.stall_count}}</td>
+            <!-- <td ng-if="inv_stall">{{society.stall_price}}</td> -->
+            <td ng-if="inv_flier">{{supplier.flat_count}}</td>
+            <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
+            <td>
+              <button class="btn btn-success active" ng-if="!supplier.shortlisted" ng-click="supplier.shortlisted = !society.shortlisted">Shortlist</button>
+              <span ng-if="supplier.shortlisted">
+              <input type="checkbox" ng-model="supplier.buffer_status"> Buffer
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-danger active" ng-if="supplier.shortlisted" ng-click="supplier.shortlisted = !supplier.shortlisted">Remove</button>
+            </td>
+        </tr>
+      </tbody>
+      </table>
+      <!--Start : adding table for corporates  -->
+      <table class="table table-bordered" ng-if = "corporate_allowed_gridview">
+        <thead>
+          <tr>
+            <th class = "col-md-1">#</th>
+            <th class = "col-md-4">Center Name</th>
+            <th class = "col-md-4">Supplier Name</th>
+            <th class = "col-md-4">SubArea-Area</th>
+            <th class = "col-md-4">Flat Count</th>
+            <th class = "col-md-4">Average Rent</th>
+            <!-- <th class = "col-md-4">Society Type</th> -->
+            <!-- <th class = "col-md-4">Locality Rating</th> -->
+            <th class = "col-md-4">Machadalo Index</th>
+            <th class="center-align" ng-if="inv_poster">Poster Count</th>
+            <th class="center-align" ng-if="inv_standee">Standee Count</th>
+            <th class="center-align" ng-if="inv_stall">Stall Count</th>
+            <th class="center-align" ng-if="inv_flier">Flyer Count</th>
+            <th class = "col-md-4">Shortlisted/Buffer</th>
+            <th class = "col-md-4">Action</th>
+          </tr>
+        </thead>
+        <!--Changes for displaying all center's societies in gridView  -->
+        <tbody ng-repeat = "center in center_data" >
+        <tr ng-repeat = "supplier in center.suppliers['CP']">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
             <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{supplier.supplier_id}}" target="_blank">{{supplier.name}}</a></td>
@@ -195,6 +323,7 @@
         </tr>
       </tbody>
       </table>
+    <!--End : adding table for corporates  -->
 
       <!-- <div  ng-repeat="society in current_center.societies"></div> -->
         <button class="btn btn-danger active" ng-click="submitProposal()">Submit Final Proposal</button>
@@ -209,23 +338,23 @@
             <span class="filterHeader"> Summary for {{center_data[current_center_index].center.center_name}}</span></div>
             <hr>
              <span class = "space filterPanelHeader ">Space Count</span>
-             <div class = "nbCheckbox two-col">Societies:  {{societies_count}}</div>
-             <div ng-if ="corporate_allowed" class = "nbCheckbox two-col">Corporates:  {{corporates_count}}</div>
-             <div class = "nbCheckbox two-col">Flat Count:  {{flat_count}}</div>
-             <div class = "nbCheckbox two-col">Tower Count:  {{tower_count}}</div>
+             <div ng-if = "current_center.suppliers_allowed.society_allowed "class = "nbCheckbox two-col">Societies:  {{societies_count}}</div>
+             <div ng-if ="current_center.suppliers_allowed.corporate_allowed" class = "nbCheckbox two-col">Corporates:  {{corporates_count}}</div>
+             <div ng-if = "current_center.suppliers_allowed.society_allowed" class = "nbCheckbox two-col">Flat Count:  {{flat_count}}</div>
+             <div ng-if = "current_center.suppliers_allowed.society_allowed" class = "nbCheckbox two-col">Tower Count:  {{tower_count}}</div>
             <!--added if condition below to display those inventories selected by user in sumarry section-->
             <hr>
               <span class = "space filterPanelHeader">Inventory Count</span>
-              <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{flat_count}}</div>
-              <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{tower_count}}</div>
-              <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{stall_count}}</div>
-              <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{standee_count}}</div>
+              <div class = "nbCheckbox two-col" ng-if="inv_flier && current_center.suppliers_allowed.society_allowed">Flyers: {{flat_count}}</div>
+              <div class = "nbCheckbox two-col" ng-if="inv_poster && current_center.suppliers_allowed.society_allowed">Posters: {{tower_count}}</div>
+              <div class = "nbCheckbox two-col" ng-if="inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{stall_count}}</div>
+              <div class = "nbCheckbox two-col" ng-if="inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{standee_count}}</div>
             <hr>
              <span class = "space filterPanelHeader">Total Number of Impressions</span>
-             <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{flierMapImpressions}}</div>
-             <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{posterMapImpressions}}</div>
-             <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{stallMapImpression}}</div>
-             <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{standeeMapImpression}}</div>
+             <div class = "nbCheckbox two-col" ng-if="inv_flier && current_center.suppliers_allowed.society_allowed">Flyers: {{flierMapImpressions}}</div>
+             <div class = "nbCheckbox two-col" ng-if="inv_poster && current_center.suppliers_allowed.society_allowed">Posters: {{posterMapImpressions}}</div>
+             <div class = "nbCheckbox two-col" ng-if="inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{stallMapImpression}}</div>
+             <div class = "nbCheckbox two-col" ng-if="inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{standeeMapImpression}}</div>
             <hr>
            </div>
         </div>
@@ -242,22 +371,23 @@
               <span class="filterHeader">Comprehensive Summary </span></div>
               <hr>
                <span class = "space filterPanelHeader ">Space Count</span>
-               <div class = "nbCheckbox two-col">Societies:  {{total_societies_count}}</div>
-               <div class = "nbCheckbox two-col">Flat Count:  {{total_flat_count}}</div>
-               <div class = "nbCheckbox two-col">Tower Count:  {{total_tower_count}}</div>
+               <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Societies:  {{total_societies_count}}</div>
+               <div ng-if = "corporate_allowed_gridview" class = "nbCheckbox two-col">Corporates:  {{total_corporates_count}}</div>
+               <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Flat Count:  {{total_flat_count}}</div>
+               <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Tower Count:  {{total_tower_count}}</div>
               <!--added if condition below to display those inventories selected by user in sumarry section-->
               <hr>
                 <span class = "space filterPanelHeader">Inventory Count</span>
-                <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{total_flat_count}}</div>
-                <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{total_tower_count}}</div>
-                <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{total_stalls}}</div>
-                <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{total_standees}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inv_flier && society_allowed_gridview">Flyers: {{total_flat_count}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inv_poster && society_allowed_gridview">Posters: {{total_tower_count}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inv_stall && society_allowed_gridview">Stalls: {{total_stalls}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inv_standee && society_allowed_gridview">Standees: {{total_standees}}</div>
               <hr>
                <span class = "space filterPanelHeader">Total Number of Impressions</span>
-               <div class = "nbCheckbox two-col" ng-if="inv_flier">Flyers: {{flierGridImpressions}}</div>
-               <div class = "nbCheckbox two-col" ng-if="inv_poster">Posters: {{posterGridImpressions}}</div>
-               <div class = "nbCheckbox two-col" ng-if="inv_stall">Stalls: {{stallGridImpression}}</div>
-               <div class = "nbCheckbox two-col" ng-if="inv_standee">Standees: {{standeeGridImpression}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_flier && society_allowed_gridview">Flyers: {{flierGridImpressions}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_poster && society_allowed_gridview">Posters: {{posterGridImpressions}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_stall && society_allowed_gridview">Stalls: {{stallGridImpression}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inv_standee && society_allowed_gridview">Standees: {{standeeGridImpression}}</div>
               <hr>
                <!-- <span class = "space filterPanelHeader ">Total Price</span> -->
              </div>
