@@ -2433,6 +2433,9 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
     latitude = float(coordinates['latitude'])
     longitude = float(coordinates['longitude'])
 
+    # container to hold final suppliers
+    result = []
+
     try:
         for supplier in suppliers:
 
@@ -2467,7 +2470,8 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
                 if supplier_inventory_obj.flier_allowed:
                     supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
                     supplier['filer_price'] = calculate_price('flier_door_to_door', 'unit_daily')
-        return ui_utils.handle_response(function, data=suppliers, success=True)
+                result.append(supplier)
+        return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
