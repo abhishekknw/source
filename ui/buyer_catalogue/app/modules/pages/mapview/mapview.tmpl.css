@@ -58,10 +58,15 @@ body{
 .drop-width{
 	width: 40% !important;
 }
-.box-spacing{
+.box-spacing-radius{
 	margin-bottom: 5px;
 	margin-top: 5px;
 	width: 60%;
+}
+.box-spacing{
+	margin-bottom: 5px;
+	margin-top: 5px;
+	width: 40%;
 }
 .map-width{
 	width: 50% !important;
