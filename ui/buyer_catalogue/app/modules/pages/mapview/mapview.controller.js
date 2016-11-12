@@ -1058,12 +1058,20 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
              }
            }
          }
-     //End: For sending filtered inventory type
-        //  for(var i=0;i<$scope.center_data.length;i++){
-        //    $scope.center_data[0].suppliers_meta['RS']['inventory_type_selected'] = society_inventory_type_selected;
-        //  }
        }
-
+       //End: For sending filtered inventory type
+       //Start: setting status of suppliers like shortlisted, removed or buffer
+       $scope.setSupplierStatus = function (supplier,value){
+          if(supplier.buffer_status == false && value == 'B')
+              supplier.status = 'S';
+          else if(supplier.buffer_status == true && value != 'R')
+            supplier.status = 'B';
+          else
+            supplier.status = value;
+          if(value != 'B')
+            supplier.shortlisted = !supplier.shortlisted;
+       };
+       //End: setting status of suppliers like shortlisted, removed or buffer
        $scope.submitProposal = function(){
          getShortlistedFilteredSocieties();
            console.log("Submitting $scope.centers :", $scope.centers);
