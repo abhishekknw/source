@@ -1249,12 +1249,17 @@ class FilteredSuppliers(APIView):
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
             serializer = supplier_serializer(suppliers, many=True)
 
+            # to incllude only those suppliers that lie within radius, we need to send coordinates
+            coordinates = {
+                'radius': common_filters['radius'],
+                'latitude': common_filters['latitude'],
+                'longitude': common_filters['longitude']
+            }
             # the following function sets the pricing as before and it's temproaray.
-            response = website_utils.set_pricing_temproray(serializer.data, final_suppliers_list, supplier_type_code)
+            response = website_utils.set_pricing_temproray(serializer.data, final_suppliers_list, supplier_type_code, coordinates)
             if not response.data['status']:
                 return response
             suppliers = response.data['data']
-
             # response = website_utils.set_supplier_extra_attributes(serializer.data, supplier_type_code, inventory_filters)
             # if not response.data['status']:
             #     return response
