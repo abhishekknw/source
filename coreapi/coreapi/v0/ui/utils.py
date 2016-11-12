@@ -179,7 +179,7 @@ def make_supplier_data(data):
                     'supplier_id': data['supplier_id'],
                     'name': data['supplier_name'],
                     'city': city.city_name,
-                    'locality': area.label,
+                    'area': area.label,
                     'subarea': subarea.subarea_name,
                     'state': city.state_code.state_name
                 },
