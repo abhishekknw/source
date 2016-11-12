@@ -4,7 +4,7 @@ import datetime
 from types import *
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, F
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -353,6 +353,17 @@ def get_delta_latitude_longitude(radius, latitude):
 
 
 def space_on_circle(latitude, longitude, radius, space_lat, space_lng):
+    """
+    Args:
+        latitude: latitude of the center
+        longitude: longitude of the center
+        radius: radius of center
+        space_lat: supplier latitude
+        space_lng: supplier longitude
+
+    Returns: weather the supplier coordinates actually lie within a circle drawn with  given radius  ? The center
+    coordinates being latitude, longitude in the params. The function uses simple pythagoras theorem to test this.
+    """
     return (space_lat - latitude)**2 + (space_lng - longitude)**2 <= (radius/110.574)**2
 
 
@@ -364,7 +375,6 @@ def initialize_keys(center_object, supplier_type_code):
     Returns: intializes this dict  with all valid keys and defaults as values
 
     """
-
     try:
 
         # set societies inventory key
@@ -578,9 +588,11 @@ def get_mapped_row(ws, row):
     try:
         row_dict = {}
         for index, cell in enumerate(row):
-            heading_with_spaces = ws.cell(row=1, column=index+1).value.lower()
-            heading_with_underscore = '_'.join(heading_with_spaces.split(' '))
-            row_dict[heading_with_underscore] = cell.value
+            heading_cell = ws.cell(row=1, column=index+1)
+            if heading_cell.value:
+                heading_with_spaces = heading_cell.value.lower()
+                heading_with_underscore = '_'.join(heading_with_spaces.split(' '))
+                row_dict[heading_with_underscore] = cell.value
         return Response({'status': True, 'data': row_dict}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
@@ -2385,7 +2397,7 @@ def save_area_subarea(result):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code):
+def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinates):
     """
     Args:
         suppliers: a list of supplier dicts
@@ -2402,6 +2414,10 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code):
     # generate a mapping from object_id to inv_summ_object in a dict so that right object can be fetched up
     inventory_summary_objects_mapping = {inv_summary_object.object_id: inv_summary_object for inv_summary_object in
                                          inventory_summary_objects}
+    radius = coordinates['radius']
+    latitude = coordinates['latitude']
+    longitude = coordinates['longitude']
+
     try:
         for supplier in suppliers:
 
@@ -2412,28 +2428,30 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code):
                     del supplier[society_key]
                     supplier[common_key] = supplier_key_value
 
-            supplier_inventory_obj = inventory_summary_objects_mapping[supplier['supplier_id']]
-            supplier['shortlisted'] = True
-            supplier['buffer_status'] = False
-            # status is shortlisted initially
-            supplier['status'] = 'S'
+            # include only those suppliers that lie within the circle of radius given
+            if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
+                supplier_inventory_obj = inventory_summary_objects_mapping[supplier['supplier_id']]
+                supplier['shortlisted'] = True
+                supplier['buffer_status'] = False
+                # status is shortlisted initially
+                supplier['status'] = 'S'
 
-            if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
-                supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
-                supplier['poster_price'] = calculate_price('poster_a4', 'campaign_weekly')
+                if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
+                    supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
+                    supplier['poster_price'] = calculate_price('poster_a4', 'campaign_weekly')
 
-            if supplier_inventory_obj.standee_allowed:
-                supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
-                supplier['standee_price'] = calculate_price('standee_small', 'campaign_weekly')
+                if supplier_inventory_obj.standee_allowed:
+                    supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
+                    supplier['standee_price'] = calculate_price('standee_small', 'campaign_weekly')
 
-            if supplier_inventory_obj.stall_allowed:
-                supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
-                supplier['stall_price'] = calculate_price('stall_small', 'unit_daily')
-                supplier['car_display_price'] = calculate_price('car_display_standard', 'unit_daily')
+                if supplier_inventory_obj.stall_allowed:
+                    supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
+                    supplier['stall_price'] = calculate_price('stall_small', 'unit_daily')
+                    supplier['car_display_price'] = calculate_price('car_display_standard', 'unit_daily')
 
-            if supplier_inventory_obj.flier_allowed:
-                supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
-                supplier['filer_price'] = calculate_price('flier_door_to_door', 'unit_daily')
+                if supplier_inventory_obj.flier_allowed:
+                    supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
+                    supplier['filer_price'] = calculate_price('flier_door_to_door', 'unit_daily')
         return ui_utils.handle_response(function, data=suppliers, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
@@ -2502,3 +2520,4 @@ def add_metric_sheet(workbook):
         return ui_utils.handle_response(function, data=workbook, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
