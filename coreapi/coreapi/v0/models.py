@@ -1626,6 +1626,7 @@ class AuditorSocietyMapping(models.Model):
 
         db_table = 'auditor_society_mapping'
 
+
 class State(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     state_name = models.CharField(db_column='STATE_NAME', max_length=50, null=True)
@@ -1634,6 +1635,7 @@ class State(models.Model):
     class Meta:
 
         db_table = 'state'
+
 
 class City(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -1644,6 +1646,9 @@ class City(models.Model):
     class Meta:
 
         db_table = 'city'
+        # a city can only contain unique state_codes
+        unique_together = (('state_code','city_code'),)
+
 
 class CityArea(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -1655,6 +1660,7 @@ class CityArea(models.Model):
 
         db_table = 'city_area'
         unique_together = (('area_code','city_code'),)
+
 
 class CitySubArea(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)

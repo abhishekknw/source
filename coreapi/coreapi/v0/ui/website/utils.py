@@ -1344,7 +1344,7 @@ def build_query(min_max_data, supplier_type_code):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def get_suppliers(query, supplier_type_code):
+def get_suppliers(query, supplier_type_code, coordinates):
     """
     Args:
         query. The Q object
@@ -1354,11 +1354,17 @@ def get_suppliers(query, supplier_type_code):
     """
     function_name = get_suppliers.__name__
     try:
+        radius = coordinates.get('radius', 0)
+        latitude = coordinates.get('latitude', 0)
+        longitude = coordinates.get('longitude', 0)
+
         # get the suppliers data within that radius
         supplier_model = ui_utils.get_model(supplier_type_code)
         supplier_objects = supplier_model.objects.filter(query)
         # need to set shortlisted=True for every supplier
         serializer = ui_utils.get_serializer(supplier_type_code)(supplier_objects, many=True)
+        # result to store final suppliers
+        result = []
         for supplier in serializer.data:
             # replace all society specific keys with common supplier keys
             for society_key, actual_key in website_constants.society_common_keys.iteritems():
@@ -1366,10 +1372,12 @@ def get_suppliers(query, supplier_type_code):
                     value = supplier[society_key]
                     del supplier[society_key]
                     supplier[actual_key] = value
-            supplier['shortlisted'] = True
-            # set status= 'S' as suppliers are shortlisted inititially.
-            supplier['status'] = 'S'
-        return ui_utils.handle_response(function_name, data=serializer.data, success=True)
+            if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
+                supplier['shortlisted'] = True
+                # set status= 'S' as suppliers are shortlisted inititially.
+                supplier['status'] = 'S'
+                result.append(supplier)
+        return ui_utils.handle_response(function_name, data=result, success=True)
 
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
@@ -1441,8 +1449,15 @@ def handle_single_center(center, result):
                 return query_response
             query = query_response.data['data']
 
+            #prepare coordiantes
+            coordinates = {
+                'radius': radius,
+                'latitude': latitude,
+                'longitude': longitude
+            }
+
             # get the suppliers data
-            response = get_suppliers(query, supplier_type_code)
+            response = get_suppliers(query, supplier_type_code, coordinates)
             if not response.data['status']:
                 return response
             suppliers_data = response.data['data']
@@ -2414,9 +2429,9 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
     # generate a mapping from object_id to inv_summ_object in a dict so that right object can be fetched up
     inventory_summary_objects_mapping = {inv_summary_object.object_id: inv_summary_object for inv_summary_object in
                                          inventory_summary_objects}
-    radius = coordinates['radius']
-    latitude = coordinates['latitude']
-    longitude = coordinates['longitude']
+    radius = float(coordinates['radius'])
+    latitude = float(coordinates['latitude'])
+    longitude = float(coordinates['longitude'])
 
     try:
         for supplier in suppliers:
