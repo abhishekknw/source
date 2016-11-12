@@ -259,13 +259,13 @@
             <td ng-if="inv_flier">{{supplier.flat_count}}</td>
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
             <td>
-              <button class="btn btn-success active" ng-if="!supplier.shortlisted" ng-click="supplier.shortlisted = !society.shortlisted">Shortlist</button>
+              <button class="btn btn-success active" ng-model="supplier.status" ng-if="!supplier.shortlisted" ng-click="setSupplierStatus(supplier,'S')">Shortlist</button>
               <span ng-if="supplier.shortlisted">
-              <input type="checkbox" ng-model="supplier.buffer_status"> Buffer
+              <input type="checkbox" ng-model="supplier.buffer_status" ng-click="setSupplierStatus(supplier,'B')"> Buffer
               </span>
             </td>
             <td>
-              <button class="btn btn-danger active" ng-if="supplier.shortlisted" ng-click="supplier.shortlisted = !supplier.shortlisted">Remove</button>
+              <button class="btn btn-danger active" ng-model="supplier.status" ng-if="supplier.shortlisted" ng-click="setSupplierStatus(supplier,'R')">Remove</button>
             </td>
         </tr>
       </tbody>
@@ -312,13 +312,13 @@
             <td ng-if="inv_flier">{{supplier.flat_count}}</td>
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
             <td>
-              <button class="btn btn-success active" ng-if="!supplier.shortlisted" ng-click="supplier.shortlisted = !society.shortlisted">Shortlist</button>
+              <button class="btn btn-success active" ng-model="supplier.status" ng-if="!supplier.shortlisted" ng-click="setSupplierStatus(supplier,'S')">Shortlist</button>
               <span ng-if="supplier.shortlisted">
-              <input type="checkbox" ng-model="supplier.buffer_status"> Buffer
+              <input type="checkbox" ng-model="supplier.buffer_status" ng-click="setSupplierStatus(supplier,'B')"> Buffer
               </span>
             </td>
             <td>
-              <button class="btn btn-danger active" ng-if="supplier.shortlisted" ng-click="supplier.shortlisted = !supplier.shortlisted">Remove</button>
+              <button class="btn btn-danger active" ng-model="supplier.status" ng-if="supplier.shortlisted" ng-click="setSupplierStatus(supplier,'R')">Remove</button>
             </td>
         </tr>
       </tbody>
