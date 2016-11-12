@@ -1355,6 +1355,8 @@ def get_suppliers(query, supplier_type_code):
                     del supplier[society_key]
                     supplier[actual_key] = value
             supplier['shortlisted'] = True
+            # set status= 'S' as suppliers are shortlisted inititially.
+            supplier['status'] = 'S'
         return ui_utils.handle_response(function_name, data=serializer.data, success=True)
 
     except Exception as e:
@@ -1514,13 +1516,13 @@ def suppliers_within_radius(data):
         # we add an extra attribute for each center object we get. Thats called codes. codes contain a list
         # of supplier_type_codees  like RS, CP.
 
-        supplier_codes_dict = {center['id']: [] for center in serializer.data}
+        supplier_codes_dict = {center['id']: set() for center in serializer.data}
         if not supplier_codes_dict:
             return ui_utils.handle_response(function_name, data='Not found any centers in database against {0}'.format(proposal_id))
         for data in supplier_type_codes_list:
             center_id = data['center']
             code = data['supplier_type_code']
-            supplier_codes_dict[center_id].append(code)
+            supplier_codes_dict[center_id].add(code)
 
         for center in serializer.data:
             center['codes'] = supplier_codes_dict[center['id']]
@@ -2088,6 +2090,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
     """
     function = handle_specific_filters.__name__
     try:
+
         if not specific_filters:
             return ui_utils.handle_response(function, data=Q(), success=True)
 
@@ -2412,6 +2415,8 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code):
             supplier_inventory_obj = inventory_summary_objects_mapping[supplier['supplier_id']]
             supplier['shortlisted'] = True
             supplier['buffer_status'] = False
+            # status is shortlisted initially
+            supplier['status'] = 'S'
 
             if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
                 supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
