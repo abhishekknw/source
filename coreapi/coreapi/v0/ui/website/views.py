@@ -2393,7 +2393,9 @@ class GenericExportData(APIView):
             file_name = response.data['data']
             workbook.save(file_name)
 
-            return ui_utils.handle_response(class_name, data=result, success=True)
+            return website_utils.send_excel_file(file_name)
+
+            #return ui_utils.handle_response(class_name, data=workbook, success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)

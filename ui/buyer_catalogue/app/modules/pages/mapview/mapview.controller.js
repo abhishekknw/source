@@ -1077,11 +1077,36 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
            console.log("Submitting $scope.centers :", $scope.centers);
        };
        $scope.exportData = function(){
+           $scope.download = false;
          getShortlistedFilteredSocieties();
          console.log($scope.center_data);
            mapViewService.exportProposalData($scope.proposal_id_temp, $scope.center_data)
-           .success(function(response){
+           .success(function(data, status, headers, config){
                console.log("Successfully Exported");
+               $scope.file_name = headers('file_name');
+               console.log($scope.file_name);
+               console.log(headers());
+              //  window.open($scope.file_name);
+              var file = data;
+              var file_type = headers('content-type');
+              console.log(file_type);
+              // saveAs(file,$scope.file_name);
+              var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
+              console.log(uploadUrl+$scope.file_name);
+              Upload.upload({
+                  url: uploadUrl + $scope.file_name,
+                  method : 'PUT',
+                  data: {
+                    key: $scope.file_name, // the key to store the file on S3, could be file name or customized
+                    AWSAccessKeyId: 'AKIAI6PVCXJEAXV6UHUQ',
+                    acl: 'public-read', // sets the access to the uploaded file in the bucket: private, public-read, ...
+                    policy: "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
+                    signature: "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=", // base64-encoded signature based on policy string (see article below)
+                    "Content-Type": file_type, // content type of the file (NotEmpty)
+                    file: file}
+              });
+              $scope.download_url = uploadUrl + $scope.file_name;
+              $scope.download = true;
            })
            .error(function(response){
                console.log("Error response is : ", response);
