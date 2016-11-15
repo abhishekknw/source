@@ -71,8 +71,18 @@ class GetInventoryObjectManager(models.Manager):
             duration_type = data['duration_type']
 
             content_type = self.get_content_type(supplier_type_code)
-            price_object = self.get(object_id=id,
-                                                content_type=content_type, adinventory_type=adinventory_type, duration_type=duration_type)
+            # collect data that is used to get or create price mapping default object
+            data = {
+                'object_id': id,
+                'content_type': content_type,
+                'adinventory_type': adinventory_type,
+                'duration_type': duration_type
+            }
+            # get or create price mapping object
+            price_object, is_created = self.get_or_create(**data)
+            # if object is created, set the business_price = 0
+            if is_created:
+                price_object.business_price = 0
             return price_object
 
         except ObjectDoesNotExist as e:

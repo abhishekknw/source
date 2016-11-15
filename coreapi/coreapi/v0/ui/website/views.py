@@ -2162,10 +2162,9 @@ class SaveSocietyData(APIView):
                             response = get_supplier_id(request, d)
                             # this method of handing error code will  change in future
                             if response.status_code == status.HTTP_200_OK:
-                                d['supplier_id'] = response.data['supplier_id']
+                                d['supplier_id'] = response.data['data']
                             else:
-                                file_errros.write("Error in generating supplier id {0} ". format(response.data['error']))
-                                continue
+                                return response
 
                             (society_object, value) = SupplierTypeSociety.objects.get_or_create(
                                 supplier_id=d['supplier_id'])
@@ -2392,7 +2391,7 @@ class GenericExportData(APIView):
 
             return website_utils.send_excel_file(file_name)
 
-            #return ui_utils.handle_response(class_name, data=workbook, success=True)
+            # return ui_utils.handle_response(class_name, data=workbook, success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -2976,16 +2975,12 @@ class ImportContactDetails(APIView):
     """
 
     def get(self, request):
-
+        class_name = self.__class__.__name__
         with transaction.atomic():
 
             file = open(BASE_DIR + '/files/contacts.csv', 'rb')
-            file_errros = open(BASE_DIR + '/files/contacts_errors.txt', 'w')
-
             try:
                 reader = csv.reader(file)
-                total_count = sum(1 for row in reader) - 1
-                failure_count = 0
                 file.seek(0)
                 for num, row in enumerate(reader):
                     if num == 0:
@@ -3006,11 +3001,10 @@ class ImportContactDetails(APIView):
                             response = get_supplier_id(request, data)
                             # this method of handing error code will  change in future
                             if response.status_code == status.HTTP_200_OK:
-                                data['supplier_id'] = response.data['supplier_id']
+                                data['supplier_id'] = response.data['data']
                             else:
-                                file_errros.write("Error in generating supplier id {0} ".format(response.data['error']))
-                                failure_count += 1
-                                continue
+                                return response
+
                             society_object = SupplierTypeSociety.objects.get(supplier_id=data['supplier_id'])
                             data['spoc'] = False
                             data['supplier'] = society_object
@@ -3019,20 +3013,13 @@ class ImportContactDetails(APIView):
                             contact_object.save()
 
                         except ObjectDoesNotExist as e:
-                            file_errros.write("Supplier object not found for {0}".format(data['supplier_id']))
-                            failure_count += 1
-                            continue
+                            return ui_utils.handle_response(class_name, exception_object=e)
                         except Exception as e:
                             return Response(data={str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
             finally:
                 file.close()
-                file_errros.close()
-        return Response(
-            data="Information: out of {0} rows, {1} successfully inserted and {2} failed ".format(total_count,
-                                                                                                  total_count - failure_count,
-                                                                                                  failure_count),
-            status=status.HTTP_200_OK)
+            return ui_utils.handle_response(class_name, data='success', success=True)
 
 
 class ImportCampaignLeads(APIView):

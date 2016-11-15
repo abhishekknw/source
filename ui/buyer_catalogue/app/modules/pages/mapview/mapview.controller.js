@@ -1094,8 +1094,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
               console.log(uploadUrl+$scope.file_name);
               Upload.upload({
-                  url: uploadUrl + $scope.file_name,
-                  method : 'PUT',
+                  url: uploadUrl,
+                  method : 'POST',
                   data: {
                     key: $scope.file_name, // the key to store the file on S3, could be file name or customized
                     AWSAccessKeyId: 'AKIAI6PVCXJEAXV6UHUQ',
