@@ -1100,9 +1100,17 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          getShortlistedFilteredSocieties();
            console.log("Submitting $scope.centers :", $scope.centers);
        };
+       var getExtraSocieties = function(){
+         for(var i=0;i<$scope.center_data.length;i++){
+           if($scope.center_data[i].suppliers['RS'] != undefined)
+            $scope.center_data[i].suppliers['RS'].concat($scope.center_data[i].suppliers['ES']);
+            delete $scope.center_data[i].suppliers['ES'];
+         }
+       }
        $scope.exportData = function(){
            $scope.download = false;
          getShortlistedFilteredSocieties();
+         getExtraSocieties();
          console.log($scope.center_data);
            mapViewService.exportProposalData($scope.proposal_id_temp, $scope.center_data)
            .success(function(data, status, headers, config){
