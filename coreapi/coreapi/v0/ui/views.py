@@ -222,8 +222,6 @@ class GenerateSupplierIdAPIView(APIView):
     def post(self, request, format=None):
         try:
 
-            import pdb
-            pdb.set_trace()
             print "area"
 
             data = {
@@ -239,7 +237,7 @@ class GenerateSupplierIdAPIView(APIView):
             if not response.data['status']:
                 return response
 
-            data['supplier_id'] = response.data['supplier_id']
+            data['supplier_id'] = response.data['data']
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
 
@@ -794,9 +792,9 @@ class ImportSummaryData(APIView):
 
                         response = ui_utils.get_supplier_id(request, data)
                         if not response.data['status']:
-                            return ui_utils.handle_response(class_name, data='Error in making supplier id {0} for row number {1}'.format(response.data['error'], num))
+                            return response
 
-                        data['supplier_id'] = response.data['supplier_id']
+                        data['supplier_id'] = response.data['data']
                         data['supplier_type_code'] = 'RS'
                         url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
                         url = BASE_URL + url[1:]

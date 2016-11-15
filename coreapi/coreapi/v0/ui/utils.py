@@ -111,8 +111,9 @@ def get_supplier_id(request, data):
     'supplier_code' for this to work
     :return:  Response in which data has a key 'supplier_id' containing supplier_id
     """
-    try:
+    function = get_supplier_id.__name__
 
+    try:
         try:
 
             city_object = v0.models.City.objects.get(city_name=data['city'])
@@ -128,15 +129,14 @@ def get_supplier_id(request, data):
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
             'supplier_type'] + data[
                           'supplier_code']
-                          
-        return Response(data={'status': True, 'supplier_id': supplier_id}, status=status.HTTP_200_OK)
+        return handle_response(function, data=supplier_id, success=True)
 
     except KeyError as e:
-        return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        return handle_response(function, exception_object=e)
     except ObjectDoesNotExist as e:
-        return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        return handle_response(function, exception_object=e)
     except Exception as e:
-        return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        return handle_response(function, exception_object=e)
 
     
 def make_supplier_data(data):
