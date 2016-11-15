@@ -2124,7 +2124,6 @@ class ProposalHistoryAPIView(APIView):
             Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class SaveSocietyData(APIView):
     """
     This API reads a csv file and  makes supplier id's for each row. then it adds the data along with
@@ -2136,7 +2135,7 @@ class SaveSocietyData(APIView):
         :param request: request object
         :return: success response in case it succeeds else failure message.
         """
-
+        class_name = self.__class__.__name__
         with transaction.atomic():
 
             source_file = open(BASE_DIR + '/modified_new_tab.csv', 'rb')
@@ -2149,6 +2148,7 @@ class SaveSocietyData(APIView):
                     if num == 0:
                         continue
                     else:
+
                         for index, key in enumerate(supplier_keys):
                             if row[index] == '':
                                 d[key] = None
@@ -2185,14 +2185,11 @@ class SaveSocietyData(APIView):
                                     tower.save()
 
                         except ObjectDoesNotExist as e:
-                            file_errros.write(str(e.message) + "," + str(e.args) + ' for ' + str(d['sub_area']) + ' and ' + str(area_object.area_code)
-                                              )
-                            continue
+                            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
                         except KeyError as e:
-                            return Response(data=str(e.message), status=status.HTTP_400_BAD_REQUEST)
+                            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
                         except Exception as e:
-                            # severe error if reached here, must be returned
-                            return Response(data=str(e.message), status=status.HTTP_400_BAD_REQUEST)
+                            return ui_utils.handle_response(class_name, exception_object=e)
             except Exception as e:
                 return Response(data=str(e.message), status=status.HTTP_400_BAD_REQUEST)
 
