@@ -365,6 +365,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 
         center.suppliers_allowed = {};
        if(center.suppliers['RS'] != undefined){
+         center.suppliers['ES'] = [];
          center.suppliers_allowed.society_allowed = true;
          $scope.unique_suppliers.add('RS');
          center.suppliers_allowed['society_show'] = true;
@@ -373,6 +374,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          $scope.supplier_centers_list.RS.push(center_id);
        }
        if(center.suppliers['CP'] != undefined){
+         center.suppliers['ES'] = [];
         center.suppliers_allowed['corporate_allowed'] =  true;
         $scope.unique_suppliers.add('CP');
         center.suppliers_allowed['corporate_show'] =  true;
@@ -382,7 +384,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
        }
        center_id++;
      });
-     console.log($scope.supplier_centers_list);
+     console.log(centers);
      //Start : code added to display filter panel for all centers on gridview
      if($scope.unique_suppliers.has('RS')){
         $scope.gridView_RS_filters = angular.copy($scope.RS_filters);
@@ -1003,28 +1005,50 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                     my_string = filter_keyword;
                 return my_string;
           }
-        });
-//Start: Function added to show all suppliers on gridView
-  $scope.supplier_codes =['RS','CP','GY'];
+
+//Start: code added to search & show all suppliers on add societies tab
   $scope.supplier_names = [
     { name: 'Residential',      code:'RS'},
     { name: 'Corporate Parks',  code:'CP'},
     ];
   $scope.search;
+  $scope.search_status = false;
   $scope.supplier_type_code;
   $scope.searchSuppliers = function(){
     mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
       .success(function(response, status){
-        console.log(response);
-        $scope.search_SupplierData = response.data;
-        console.log($scope.search_SupplierData);
+        console.log("search Data:",response);
+        $scope.supplierData = response.data;
+        $scope.search_status = true;
+
       })
       .error(function(response, status){
           console.log("Error Happened while searching");
       });
   }
-//End: Function added to show all suppliers on gridView
-
+//End: code added to search & show all suppliers on add societies tab
+    //Start: To add searched societies in given center
+          $scope.suppliersList = {
+            'ES':[],
+          };
+          $scope.addMoreSuppliers = function(supplier,id){
+            $scope.suppliersList['ES'].push(supplier);
+            $scope.center_data[$scope.current_center_index].suppliers['ES'].push(supplier);
+            $scope.supplierData.splice(id,1);
+             alert("Society added Successfully");
+          }
+    //End: To add searched societies in given center
+    //Start: function to select center at add more suplliers
+    $scope.selectCenter = function(center_id){
+      for(var i=0;i<$scope.center_data.length; i++){
+        if($scope.center_data[i].center.id == center_id){
+            // $scope.current_center = $scope.center_data[i]
+            $scope.current_center_index = i;
+        }
+      }
+    }
+    //End: function to select center at add more suplliers
+});
 //Start: upload and import functionality
 //Start: For sending only shortlisted societies & selected inventory types
      function getShortlistedFilteredSocieties(){
@@ -1076,9 +1100,17 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          getShortlistedFilteredSocieties();
            console.log("Submitting $scope.centers :", $scope.centers);
        };
+       var getExtraSocieties = function(){
+         for(var i=0;i<$scope.center_data.length;i++){
+           if($scope.center_data[i].suppliers['RS'] != undefined)
+            $scope.center_data[i].suppliers['RS'].concat($scope.center_data[i].suppliers['ES']);
+            delete $scope.center_data[i].suppliers['ES'];
+         }
+       }
        $scope.exportData = function(){
            $scope.download = false;
          getShortlistedFilteredSocieties();
+         getExtraSocieties();
          console.log($scope.center_data);
            mapViewService.exportProposalData($scope.proposal_id_temp, $scope.center_data)
            .success(function(data, status, headers, config){

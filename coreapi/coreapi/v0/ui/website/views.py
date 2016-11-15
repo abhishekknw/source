@@ -3093,6 +3093,7 @@ class SupplierSearch(APIView):
             serializer = serializer_class(suppliers, many=True)
             if supplier_type_code == 'RS':
                 for supplier in serializer.data:
+                    supplier['shortlisted'] = True
                     for society_key, common_key in website_constants.society_common_keys.iteritems():
                         supplier_key_value = supplier[society_key]
                         del supplier[society_key]
