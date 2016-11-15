@@ -1,4 +1,6 @@
 <link rel="stylesheet" href="modules/pages/mapview/mapview.tmpl.css"/>
+<script src="https://rawgithub.com/eligrey/FileSaver.js/master/FileSaver.js" type="text/javascript"></script>
+
 <!-- Start: Center and Radius Detail Section -->
 <div class="navbar-default nav-subtab space">
   <div class="table">
@@ -396,6 +398,7 @@
           <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
           <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
+          <a ng-if="download" href="{{download_url}}" download="">Download</a>
           <button class="btn btn-danger active" ngf-select="upload($file)">Upload</button>
         </div>
         </div>

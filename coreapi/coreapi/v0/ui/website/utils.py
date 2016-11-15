@@ -1,7 +1,9 @@
 import math
 import re
 import datetime
+import StringIO
 from types import *
+import os
 
 from django.db import transaction
 from django.db.models import Q, F
@@ -2505,14 +2507,26 @@ def get_file_name(user, proposal_id):
     function = get_file_name.__name__
     try:
         format = website_constants.datetime_format
-        datetime_stamp = datetime.datetime.now().strftime(format)
-        account = models.ProposalInfo.objects.get(proposal_id=proposal_id).account
+        now_time = datetime.datetime.now()
+        datetime_stamp = now_time.strftime(format)
+        proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id) 
+        account = proposal.account
         business = account.business
         if user.is_anonymous():
             user_string = 'Anonymous'
         else:
-            user_string = user.name
+            user_string = user.get_username()
         file_name = user_string + '_' + business.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
+        # save this file in db 
+        data = {
+            'user':  user,
+            'business': business,
+            'account': account,
+            'proposal': proposal,
+            'date': now_time,
+            'file_name': file_name
+        }
+        models.GenericExportFileName.objects.get_or_create(**data)
         return ui_utils.handle_response(function, data=file_name, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
@@ -2537,6 +2551,34 @@ def add_metric_sheet(workbook):
             target_row_list = [cell.value for cell in row]
             target_sheet.append(target_row_list)
         return ui_utils.handle_response(function, data=workbook, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+def send_excel_file(file_name):
+    """
+    """
+    function = send_excel_file.__name__
+    try:
+
+        if os.path.exists(file_name):
+            excel = open(file_name, "rb")
+            output = StringIO.StringIO(excel.read())
+            out_content = output.getvalue()
+            content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            # in order to provide custom headers in response in angularjs, we need to set this header
+            # first
+            headers = { 
+                'Access-Control-Expose-Headers': "file_name, Content-Disposition"
+            }
+            output.close()
+            # set content_type and make Response() 
+            response = Response(data=out_content, headers=headers, content_type=content_type)
+            # attach some custom headers 
+            response['Content-Disposition'] = 'attachment; filename=%s' % file_name
+            response['file_name'] = file_name
+            return response
+        # return response
+
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 

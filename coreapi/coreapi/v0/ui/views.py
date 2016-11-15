@@ -222,6 +222,10 @@ class GenerateSupplierIdAPIView(APIView):
     def post(self, request, format=None):
         try:
 
+            import pdb
+            pdb.set_trace()
+            print "area"
+
             data = {
                 'city': request.data['city_id'],
                 'area': request.data['area_id'],
@@ -2032,54 +2036,68 @@ class ImageMappingAPIView(APIView):
         '''
         get the ImageMapping objects based on supplier_id
         '''
+        class_name = self.__class__.__name__
+
         try:
             # images = SupplierTypeSociety.objects.get(pk=id).images.all()
             images = ImageMapping.objects.filter(object_id=id)
             serializer = ImageMappingSerializer(images, many=True)
 
-            return Response(serializer.data, status=200)
-        except SupplierTypeSociety.DoesNotExist:
-            return Response(status=404)
-        except ImageMapping.DoesNotExist:
-            return Response(status=404)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
     def post(self, request, id, format=None):
         '''
         create new ImageMapping objects
         '''
-        supplier_type_code = request.query_params.get('supplierTypeCode', None)
-        content_type_response = ui_utils.get_content_type(supplier_type_code)
-        if not content_type_response.data['status']:
-            return None
-        content_type = content_type_response.data['data']
-        supplier_object = ui_utils.get_model(supplier_type_code).objects.get(pk=id)
-        for image in request.data['image_details']:
-            image['object_id'] = id
-            image['content_type'] = content_type.id            
-            serializer = ImageMappingSerializer(data=image)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                return Response(serializer.errors, status=400)
-        # return Response(serializer.data, status=201)
-        return ui_utils.handle_response(data=serializer.data , status=201)
+        class_name = self.__class__.__name__
+
+        try:
+            supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            content_type_response = ui_utils.get_content_type(supplier_type_code)
+            if not content_type_response.data['status']:
+                return None
+            content_type = content_type_response.data['data']
+            supplier_object = ui_utils.get_model(supplier_type_code).objects.get(pk=id)
+            for image in request.data['image_details']:
+                image['object_id'] = id
+                image['content_type'] = content_type.id            
+                serializer = ImageMappingSerializer(data=image)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return ui_utils.handle_response(class_name, data=serializer.errors)
+            # return Response(serializer.data, status=201)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
     def put(self, request, id):
         """ 
         updates the ImageMapping objects 
         """
-        supplier_type_code = 'RS'
-        
-        for image in request.data['image_details']:
-            item = ImageMapping.objects.get(pk=image['id'])
-            serializer = ImageMappingSerializer(item, data=image)
+        # supplier_type_code = 'RS'
+
+        class_name = self.__class__.__name__
+
+        try:
+            # collect all image ids
+            image_data =  request.data['image_details'][0]
+            image_id = image_data['id']
+            image_object = ImageMapping.objects.get(pk=image_id)
+      
+            serializer = ImageMappingSerializer(image_object,data=image_data)
             if serializer.is_valid():
                 serializer.save()
+                # return  it
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             else:
-                # return Response(serializer.errors, status=400)
-                return ui_utils.handle_response(data=serializer.errors, status=400)
-        # return Response(serializer.data, status=200)
-        return ui_utils.handle_response(data=serializer.data , status=200)
+                return ui_utils.handle_response(class_name, data=serializer.errors)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
 
 def generate_location_tag(initial_tag, type, index):
     return ''.join((initial_tag.upper() , type.upper()[:3], str(index)))
