@@ -111,32 +111,35 @@ def get_supplier_id(request, data):
     'supplier_code' for this to work
     :return:  Response in which data has a key 'supplier_id' containing supplier_id
     """
+    function = get_supplier_id.__name__
+
     try:
-
         try:
-
-            city_object = v0.models.City.objects.get(city_name=data['city'])
-            area_object = v0.models.CityArea.objects.get(label=data['area'])
-            subarea_object = v0.models.CitySubArea.objects.get(subarea_name=data['sub_area'],
+            state_name = ui_constants.state_name
+            state_code = ui_constants.state_code
+            state_object = v0.models.State.objects.get(state_name=state_name, state_code=state_code)
+            city_object = v0.models.City.objects.get(city_code=data['city_code'], state_code=state_object)
+            area_object = v0.models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
+            subarea_object = v0.models.CitySubArea.objects.get(subarea_code=data['subarea_code'],
                                                      area_code=area_object)
-        except ObjectDoesNotExist as e:
-            city_object = v0.models.City.objects.get(id=data['city'])
-            area_object = v0.models.CityArea.objects.get(id=data['area'])
-            subarea_object = v0.models.CitySubArea.objects.get(id=data['sub_area'],
+
+        except ObjectDoesNotExist:
+            city_object = v0.models.City.objects.get(id=data['city_id'])
+            area_object = v0.models.CityArea.objects.get(id=data['area_id'])
+            subarea_object = v0.models.CitySubArea.objects.get(id=data['subarea_id'],
                                                      area_code=area_object)
 
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
             'supplier_type'] + data[
                           'supplier_code']
-                          
-        return Response(data={'status': True, 'supplier_id': supplier_id}, status=status.HTTP_200_OK)
+        return handle_response(function, data=supplier_id, success=True)
 
     except KeyError as e:
-        return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        return handle_response(function, exception_object=e)
     except ObjectDoesNotExist as e:
-        return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        return handle_response(function, exception_object=e)
     except Exception as e:
-        return Response(data={'status': False, 'error': str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        return handle_response(function, exception_object=e)
 
     
 def make_supplier_data(data):

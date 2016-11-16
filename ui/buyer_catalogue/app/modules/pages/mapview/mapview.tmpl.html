@@ -242,7 +242,8 @@
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
         <tbody ng-repeat = "center in center_data" >
-        <tr ng-repeat = "supplier in center.suppliers['RS']">
+          <tr ng-repeat = "supplier in combined = center.suppliers['RS'].concat(center.suppliers['ES'])">
+            <!-- <tr ng-if="center.suppliers['ES']==null" ng-repeat = "supplier in center.suppliers['RS']"> -->
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
             <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{supplier.supplier_id}}" target="_blank">{{supplier.name}}</a></td>
@@ -404,7 +405,7 @@
         </div>
     </div><!-- row div ends here-->
 </div><!-- containner div ends here-->
-
+<!-- Start: code for add more societies-->
 <div id = "addNewSocities" class = "modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -413,32 +414,40 @@
           <h4 class="modal-title">Add New Socities</h4>
           <hr/>
           <div class = "modal-body" style = "height: 100px;">
-            <div class="row">
-
-              <div class = "col-md-4"><select class="form-control input-size"  ng-model="supplier_type_code">
-                <option value="">Select Supplier</option></div>
+            <div class="row form-inline">
+              <!-- <span style="float:left"> -->
+              <select class="form-control input-size"  ng-model="supplier_type_code">
+                <option value="">Select Supplier</option>
                 <option  ng-repeat="supplier in supplier_names" value="{{supplier.code}}" required>{{supplier.name}}</option>
-              <div class = "col-md-4"><input type="text" ng-model="search" class="form-control spacing col-width"></div>
+              </select>
+                  <label style="margin-left: 20px;margin-right: 20px;">Enter Search Text<label><input class="form-control input-size" type="text" ng-model="search" class="form-control spacing col-width">
               <button data-target = "" class="btn btn-danger active" data-toggle="modal" ng-click="searchSuppliers()">Search</button>
             </div>
+        <br>
           </div>
-          <div class="modal-body col-md-4 table-responsive" style="width: 600px; height: 550px">
-              <table class="table table-bordered">
+          <div ng-if="search_status">
+            <label style="margin-left: 20px;margin-right: 20px;">Select Center</label><select class="box-spacin" ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
+              <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
+             </select>
+          </div>
+          <div class="modal-body col-md-4 table-responsive" style="width: 550px; height: 550px">
+              <table class="table table-bordered" ng-if="search_status">
                 <thead>
                   <tr>
-                    <th class = "col-md-1">Name</th>
-                    <th class = "col-md-1">City</th>
-                    <th class = "col-md-1">Area</th>
-                    <th class = "col-md-1">SubArea</th>
+                    <th class="center-align">Name</th>
+                    <th class="center-align">City</th>
+                    <th class="center-align">Area</th>
+                    <th class="center-align">SubArea</th>
+                    <th class = "col-md-2">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr ng-repeat = "supplier in search_SupplierData">
+                  <tr ng-repeat = "supplier in supplierData">
                     <td>{{supplier.name}}</td>
                     <td>{{supplier.city}}</td>
                     <td>{{supplier.area}}</td>
                     <td>{{supplier.subarea}}</td>
-                    <td><button class="btn btn-danger active" ng-click="">Add</button></td>
+                    <td><button class="btn btn-danger active" ng-click="addMoreSuppliers(supplier,$index)">Add</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -447,3 +456,4 @@
     </div>
   </div>
 </div>
+<!-- End: code for add more societies-->

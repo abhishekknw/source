@@ -223,9 +223,9 @@ class GenerateSupplierIdAPIView(APIView):
         try:
 
             data = {
-                'city': request.data['city_id'],
-                'area': request.data['area_id'],
-                'sub_area': request.data['subarea_id'],
+                'city_id': request.data['city_id'],
+                'area_id': request.data['area_id'],
+                'subarea_id': request.data['subarea_id'],
                 'supplier_type': request.data['supplier_type'],
                 'supplier_code': request.data['supplier_code'],
                 'supplier_name': request.data['supplier_name'],
@@ -235,7 +235,7 @@ class GenerateSupplierIdAPIView(APIView):
             if not response.data['status']:
                 return response
 
-            data['supplier_id'] = response.data['supplier_id']
+            data['supplier_id'] = response.data['data']
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
 
@@ -778,6 +778,11 @@ class ImportSummaryData(APIView):
                     if num == 0:
                         continue
                     else:
+
+                        if len(row) != len(keys):
+                            error = 'length of row read {0} does not match with number of predefined keys {1}'.format(len(row), len(keys))
+                            return ui_utils.handle_response(class_name, data=error)
+
                         for index, key in enumerate(keys):
                             if row[index] == '':
                                 data[key] = None
@@ -790,9 +795,9 @@ class ImportSummaryData(APIView):
 
                         response = ui_utils.get_supplier_id(request, data)
                         if not response.data['status']:
-                            return ui_utils.handle_response(class_name, data='Error in making supplier id {0} for row number {1}'.format(response.data['error'], num))
+                            return response
 
-                        data['supplier_id'] = response.data['supplier_id']
+                        data['supplier_id'] = response.data['data']
                         data['supplier_type_code'] = 'RS'
                         url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
                         url = BASE_URL + url[1:]

@@ -1427,9 +1427,9 @@ def handle_single_center(center, result):
 
         center_data['center'] = center
 
-        radius = center['radius']
-        latitude = center['latitude']
-        longitude = center['longitude']
+        radius = float(center['radius'])
+        latitude = float(center['latitude'])
+        longitude = float(center['longitude'])
 
         response = get_coordinates(radius, latitude, longitude)
         if not response.data['status']:
@@ -1451,7 +1451,7 @@ def handle_single_center(center, result):
                 return query_response
             query = query_response.data['data']
 
-            #prepare coordiantes
+            # prepare coordinates
             coordinates = {
                 'radius': radius,
                 'latitude': latitude,
@@ -2555,6 +2555,7 @@ def add_metric_sheet(workbook):
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
+
 def send_excel_file(file_name):
     """
     """
@@ -2566,12 +2567,16 @@ def send_excel_file(file_name):
             output = StringIO.StringIO(excel.read())
             out_content = output.getvalue()
             content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            # content_type = 'application/vnd.ms-excel'
             # in order to provide custom headers in response in angularjs, we need to set this header
             # first
             headers = { 
                 'Access-Control-Expose-Headers': "file_name, Content-Disposition"
             }
             output.close()
+            # remove the file from the disk
+            os.remove(file_name)
+
             # set content_type and make Response() 
             response = Response(data=out_content, headers=headers, content_type=content_type)
             # attach some custom headers 
