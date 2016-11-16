@@ -122,6 +122,7 @@ def get_supplier_id(request, data):
             area_object = v0.models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
             subarea_object = v0.models.CitySubArea.objects.get(subarea_code=data['subarea_code'],
                                                      area_code=area_object)
+
         except ObjectDoesNotExist:
             city_object = v0.models.City.objects.get(id=data['city_id'])
             area_object = v0.models.CityArea.objects.get(id=data['area_id'])
@@ -204,7 +205,7 @@ def make_supplier_data(data):
                     'supplier_id': data['supplier_id'],
                     'name': data['supplier_name'],
                     'city': city.city_name,
-                    'locality': area.label,
+                    'area': area.label,
                     'subarea': subarea.subarea_name,
                     'state': city.state_code.state_name
                 },

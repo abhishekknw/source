@@ -222,8 +222,6 @@ class GenerateSupplierIdAPIView(APIView):
     def post(self, request, format=None):
         try:
 
-            print "area"
-
             data = {
                 'city_id': request.data['city_id'],
                 'area_id': request.data['area_id'],
@@ -477,11 +475,12 @@ class GymAPIListView(APIView):
                     items = SupplierTypeGym.objects.all().order_by('name')
                 else:
                     items = SupplierTypeGym.objects.filter(created_by=user.id)
-
+            #code added to show image for each gym when it list down
+            items = ui_utils.get_supplier_image(items,'Gym')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
-            serializer = UIGymSerializer(result_page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+            # serializer = UIGymSerializer(result_page, many=True)
+            return paginator.get_paginated_response(result_page)
         except SupplierTypeGym.DoesNotExist:
             return Response(status=404)
 
@@ -807,9 +806,8 @@ class ImportSummaryData(APIView):
                             'Content-Type': 'application/json'
                         }
                         response = requests.post(url, json.dumps(data), headers=headers)
-                        response_json = response.json()
-                        response_json['supplier_id'] = data['supplier_id']
-                        error_list.append(response_json)
+                        if response.status_code != status.HTTP_200_OK:
+                            return ui_utils.handle_response(class_name, data=response.json())
 
             source_file.close()
             return ui_utils.handle_response(class_name, data=error_list, success=True)
