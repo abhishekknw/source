@@ -1,7 +1,8 @@
 from coreapi.settings import BASE_DIR
 
 supplier_keys = [
-    'city', 'area', 'sub_area', 'supplier_type', 'supplier_code', 'society_name'
+
+    'city', 'city_code', 'society_locality', 'area_code', 'society_subarea', 'subarea_code', 'supplier_type', 'supplier_code', 'society_name'
 
     , 'society_address1', 'society_address2', 'society_zip', \
  \

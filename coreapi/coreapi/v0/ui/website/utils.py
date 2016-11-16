@@ -1296,7 +1296,7 @@ def create_proposal_id(business_id, account_id):
             return ui_utils.handle_response(function, data='provide business and account ids')
         # get number of business letters to append
         business_letters = website_constants.business_letters
-        # get number of account letters to append 
+        # get number of account letters to append
         account_letters = website_constants.account_letters
         # make the proposal id.
         proposal_id = business_id[-business_letters:].upper() + account_id[-account_letters:].upper() + str(uuid.uuid4())
