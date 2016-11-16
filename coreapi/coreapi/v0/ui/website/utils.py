@@ -4,6 +4,7 @@ import datetime
 import StringIO
 from types import *
 import os
+import uuid
 
 from django.db import transaction
 from django.db.models import Q, F
@@ -1280,9 +1281,29 @@ def save_filter_data(inventories_selected, fixed_data):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def create_proposal_id():
-    import random, string
-    return ''.join(random.choice(string.ascii_letters) for _ in range(8))
+def create_proposal_id(business_id, account_id):
+    """
+    Args:
+        business_id: The business_id
+        account_id:  The account id
+
+    Returns: A unique proposal id
+
+    """
+    function = create_proposal_id.__name__
+    try:
+        if not business_id or not account_id:
+            return ui_utils.handle_response(function, data='provide business and account ids')
+        # get number of business letters to append
+        business_letters = website_constants.business_letters
+        # get number of account letters to append
+        account_letters = website_constants.account_letters
+        # make the proposal id.
+        proposal_id = business_id[-business_letters:].upper() + account_id[-account_letters:].upper() + str(uuid.uuid4())
+
+        return ui_utils.handle_response(function, data=proposal_id, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def get_coordinates(radius, latitude, longitude):
