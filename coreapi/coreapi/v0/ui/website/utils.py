@@ -2514,6 +2514,7 @@ def get_file_name(user, proposal_id):
         business = account.business
         if user.is_anonymous():
             user_string = 'Anonymous'
+            user = None
         else:
             user_string = user.get_username()
         file_name = user_string + '_' + business.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
@@ -2557,6 +2558,8 @@ def add_metric_sheet(workbook):
 
 def send_excel_file(file_name):
     """
+    This sets the appropriate headers in the response for file of type xlsx.
+    It also converts the file in binary before sending it.
     """
     function = send_excel_file.__name__
     try:

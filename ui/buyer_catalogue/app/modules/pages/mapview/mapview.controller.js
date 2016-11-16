@@ -1107,64 +1107,92 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             delete $scope.center_data[i].suppliers['ES'];
          }
        }
-       $scope.exportData = function(){
-           $scope.download = false;
-         getShortlistedFilteredSocieties();
-         getExtraSocieties();
-         console.log($scope.center_data);
-           mapViewService.exportProposalData($scope.proposal_id_temp, $scope.center_data)
-           .success(function(data, status, headers, config){
-               console.log("Successfully Exported");
-               $scope.file_name = headers('file_name');
-               console.log($scope.file_name);
-               console.log(headers());
-              //  window.open($scope.file_name);
-              var file = data;
-              var file_type = headers('content-type');
-              console.log(file_type);
-              // saveAs(file,$scope.file_name);
-              var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
-              console.log(uploadUrl+$scope.file_name);
-              Upload.upload({
-                  url: uploadUrl,
-                  method : 'POST',
-                  data: {
-                    key: $scope.file_name, // the key to store the file on S3, could be file name or customized
-                    AWSAccessKeyId: 'AKIAI6PVCXJEAXV6UHUQ',
-                    acl: 'public-read', // sets the access to the uploaded file in the bucket: private, public-read, ...
-                    policy: "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
-                    signature: "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=", // base64-encoded signature based on policy string (see article below)
-                    "Content-Type": file_type, // content type of the file (NotEmpty)
-                    file: file}
-              });
-              $scope.download_url = uploadUrl + $scope.file_name;
-              $scope.download = true;
-           })
-           .error(function(response){
-               console.log("Error response is : ", response);
-           });
-       }
-       $scope.excelFile = [];
-       function makeid(){
-           var text = "";
-           var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-           for( var i=0; i < 10; i++ )
-               text += possible.charAt(Math.floor(Math.random() * possible.length));
-           return text;
-       }
+     $scope.exportData = function(){
+            /*
+            Put all connstants like base_url, url_base, access_id, policy, signature,  etc in some constants and
+            use those variables here.
+            remove all console.log() if any left on this page.
+            remove the download button and it's functionality from front-end
+            */
+
+             $scope.download = false;
+             getShortlistedFilteredSocieties();
+             getExtraSocieties();
+             console.log($scope.center_data);
+
+             var url_base = 'v0/ui/website/';
+             var base_url = 'http://localhost:8000/'
+
+             $http({
+                  url: base_url + url_base + $scope.proposal_id_temp + '/export-spaces-data/',
+                  method: 'POST',
+                  responseType: 'arraybuffer',
+                  data: $scope.center_data, //this is your json data string
+                  headers: {
+                      'Content-type': 'application/json',
+                      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                  }
+             }).success(function(data, status, headers, config){
+
+                  // convert it onto Blob object because it's a binary file.
+                  var blob = new Blob([data], {
+                      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                  });
+
+                  console.log(headers()) ;
+
+                  // fetch the content_type and file name from headers
+                  $scope.content_type = headers('content-type');
+                  $scope.file_name = headers('file_name');
+
+                  // set the file to blob
+                  $scope.file_data = blob
+
+                  var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
+                  // upload it to S3 Bucket
+                  Upload.upload({
+                      url: uploadUrl,
+                      method : 'POST',
+                      data: {
+                          key: $scope.file_name, // the key to store the file on S3, could be file name or customized
+                          AWSAccessKeyId: 'AKIAI6PVCXJEAXV6UHUQ',
+                          acl: 'public-read', // sets the access to the uploaded file in the bucket: private, public-read, ...
+                          policy: "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
+                          signature: "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=", // base64-encoded signature based on policy string (see article below)
+                          "Content-Type": $scope.content_type, // content type of the file (NotEmpty)
+                          file: $scope.file_data }
+                  });
+
+                  // download it immediately
+                  saveAs(blob, $scope.file_name);
+
+             }).error(function(){
+                  //Some error log
+                  alert('Error in exporting the file');
+             });
+     }
+
+   $scope.excelFile = [];
+   function makeid(){
+       var text = "";
+       var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+       for( var i=0; i < 10; i++ )
+           text += possible.charAt(Math.floor(Math.random() * possible.length));
+       return text;
+   }
 
     $scope.upload = function (file) {
-      var uploadUrl = 'http://localhost:8108/v0/ui/website/';
-      Upload.upload({
-          url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
-          data: {file: file, 'username': $scope.username}
-      }).then(function (resp) {
-        console.log(resp);
-          console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
-      }, function (resp) {
-          console.log('Error status: ' + resp.status);
-      });
-    };
+    var uploadUrl = 'http://localhost:8108/v0/ui/website/';
+    Upload.upload({
+        url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
+        data: {file: file, 'username': $scope.username}
+    }).then(function (resp) {
+      console.log(resp);
+        console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
+    }, function (resp) {
+        console.log('Error status: ' + resp.status);
+    });
+  };
     //End: upload and import functionality
 
 });

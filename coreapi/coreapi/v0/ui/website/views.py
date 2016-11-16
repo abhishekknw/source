@@ -54,6 +54,7 @@ import v0.ui.utils as ui_utils
 import v0.models as models
 import serializers as website_serializers
 import constants as website_constants
+import renderers as website_renderers
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -2339,6 +2340,8 @@ class GenericExportData(APIView):
         and hence more DATA keys
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
     """
+    renderer_classes = (website_renderers.XlsxRenderer, )
+
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:
