@@ -794,7 +794,14 @@ class ImportSummaryData(APIView):
                             else:
                                 data[key] = row[index]
 
-                        response = ui_utils.get_supplier_id(request, data)
+                        # make the data in order to make supplier_id
+                        supplier_id_data = {
+                            'city_code': data['city_code'],
+                            'area_code': data['area_code'],
+                            'subarea_code': data['subarea_code']
+                        }
+
+                        response = ui_utils.get_supplier_id(request, supplier_id_data)
                         if not response.data['status']:
                             return response
 

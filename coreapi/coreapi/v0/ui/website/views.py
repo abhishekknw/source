@@ -2126,7 +2126,7 @@ class ProposalHistoryAPIView(APIView):
             Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SaveSocietyData(APIView):
+class ImportSocietyData(APIView):
     """
     This API reads a csv file and  makes supplier id's for each row. then it adds the data along with
     supplier id in the  supplier_society table. it also populates society_tower table.
@@ -2164,6 +2164,7 @@ class SaveSocietyData(APIView):
                             area_object = models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
                             subarea_object = models.CitySubArea.objects.get(subarea_code=data['subarea_code'],area_code=area_object)
 
+                            # make the data needed to make supplier_id
                             supplier_id_data = {
                                 'city_code': data['city_code'],
                                 'area_code': data['area_code'],
