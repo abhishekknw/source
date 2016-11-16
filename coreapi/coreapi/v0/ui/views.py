@@ -475,11 +475,12 @@ class GymAPIListView(APIView):
                     items = SupplierTypeGym.objects.all().order_by('name')
                 else:
                     items = SupplierTypeGym.objects.filter(created_by=user.id)
-
+            #code added to show image for each gym when it list down
+            items = ui_utils.get_supplier_image(items,'Gym')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
-            serializer = UIGymSerializer(result_page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+            # serializer = UIGymSerializer(result_page, many=True)
+            return paginator.get_paginated_response(result_page)
         except SupplierTypeGym.DoesNotExist:
             return Response(status=404)
 
