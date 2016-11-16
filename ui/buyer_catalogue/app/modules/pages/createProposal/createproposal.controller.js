@@ -67,11 +67,9 @@ angular.module('catalogueApp')
 	$scope.removeCenter = function(index){
 		$scope.model.centers.splice(index,1);
 	}
-
+	// code chnaged to send supplier_codes like RS
 	$scope.checkSpace = function(space,center){
-		console.log("hello",space,center.center.supplier_codes);
 		center.center.supplier_codes.push(space);
-		console.log(	center.center.supplier_codes);
 		// if(center.center.space_mapping[space_name + '_allowed']){
 		// 	center.center.space_mapping[space_name + '_count'] = 0;
 		// 	center.center.space_mapping[space_name + '_buffer_count'] = 0;
@@ -91,6 +89,11 @@ angular.module('catalogueApp')
 	}
 
 	$scope.submit = function(){
+		$scope.model.account_id = $rootScope.account_id;
+		$scope.model.business_id = $rootScope.business_id;
+		$scope.model.parent = null;
+
+		console.log($scope.model);
 		console.log("vidhi inside submit", $scope.model);
 		// call backend to save only if all the latitudes are found
 			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)

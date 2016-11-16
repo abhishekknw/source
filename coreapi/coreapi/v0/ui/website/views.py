@@ -2633,7 +2633,6 @@ class CreateInitialProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
-
             with transaction.atomic():
                 proposal_data = request.data
 

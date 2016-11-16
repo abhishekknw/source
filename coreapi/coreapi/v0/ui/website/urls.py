@@ -4,7 +4,6 @@ from rest_framework.routers import DefaultRouter
 
 from v0.ui.website import views
 
-
 urlpatterns = [
 
     url(r'^businesses/$', views.BusinessAPIListView.as_view(), name='get-all-business-info'),
@@ -42,7 +41,7 @@ urlpatterns = [
     url(r'^save-society-data/$', views.ImportSocietyData.as_view()),
     url(r'^save-contact-details/$', views.ImportContactDetails.as_view()),
 
-    url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/export-spaces-data/$', views.GenericExportData.as_view()),
+    url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/export-spaces-data/$', views.GenericExportData.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/import-supplier-data/$', views.ImportSupplierData.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/import-proposal-cost-data/$', views.ImportProposalCostData.as_view(), name='import-metric-data'),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9]+)/create-final-proposal/$', views.CreateFinalProposal.as_view(), name='create-final-proposal'),

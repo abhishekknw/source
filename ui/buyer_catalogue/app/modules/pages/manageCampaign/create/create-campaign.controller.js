@@ -70,6 +70,8 @@ angular.module('machadaloPages')
               console.log(response);
               $scope.model.business = response.business;
               $scope.model.accounts = response.accounts;
+              $rootScope.business_id = response.business.business_id;
+              $rootScope.business_name = response.business.name;
               $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
               $scope.getSubTypes();
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
@@ -159,6 +161,7 @@ angular.module('machadaloPages')
           $scope.error = false;
           // pass account_id of selected account radio button
           $scope.sel_account_id = sel_account_id;
+          $rootScope.account_id = sel_account_id;
           pagesService.getAccountProposal(sel_account_id)
           .success(function(response, status){
               $scope.account_proposals = response;
