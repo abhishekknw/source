@@ -120,8 +120,7 @@ def get_supplier_id(request, data):
             state_object = v0.models.State.objects.get(state_name=state_name, state_code=state_code)
             city_object = v0.models.City.objects.get(city_code=data['city_code'], state_code=state_object)
             area_object = v0.models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
-            subarea_object = v0.models.CitySubArea.objects.get(subarea_code=data['subarea_code'],
-                                                     area_code=area_object)
+            subarea_object = v0.models.CitySubArea.objects.get(subarea_code=data['subarea_code'], area_code=area_object)
 
         except ObjectDoesNotExist as e:
             import pdb
@@ -207,7 +206,7 @@ def make_supplier_data(data):
                     'supplier_id': data['supplier_id'],
                     'name': data['supplier_name'],
                     'city': city.city_name,
-                    'locality': area.label,
+                    'area': area.label,
                     'subarea': subarea.subarea_name,
                     'state': city.state_code.state_name
                 },

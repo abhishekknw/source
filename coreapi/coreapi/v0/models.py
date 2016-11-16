@@ -1989,7 +1989,7 @@ class ProposalInfo(models.Model):
     parent stores the information that from what proposal_id, the current proposal_id was created.
     is_campaign determines weather this proposal is a campaign or not.
     """
-    proposal_id = models.CharField(max_length=15, primary_key=True)
+    proposal_id = models.CharField(max_length=255, primary_key=True)
     account = models.ForeignKey(AccountInfo, related_name='proposals',on_delete=models.CASCADE)
     name = models.CharField(max_length=50, blank=True, null=True)
     payment_status = models.BooleanField(default=False,)

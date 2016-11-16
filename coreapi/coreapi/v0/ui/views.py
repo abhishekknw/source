@@ -475,11 +475,12 @@ class GymAPIListView(APIView):
                     items = SupplierTypeGym.objects.all().order_by('name')
                 else:
                     items = SupplierTypeGym.objects.filter(created_by=user.id)
-
+            #code added to show image for each gym when it list down
+            items = ui_utils.get_supplier_image(items,'Gym')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
-            serializer = UIGymSerializer(result_page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+            # serializer = UIGymSerializer(result_page, many=True)
+            return paginator.get_paginated_response(result_page)
         except SupplierTypeGym.DoesNotExist:
             return Response(status=404)
 
@@ -793,7 +794,14 @@ class ImportSummaryData(APIView):
                             else:
                                 data[key] = row[index]
 
-                        response = ui_utils.get_supplier_id(request, data)
+                        # make the data in order to make supplier_id
+                        supplier_id_data = {
+                            'city_code': data['city_code'],
+                            'area_code': data['area_code'],
+                            'subarea_code': data['subarea_code']
+                        }
+
+                        response = ui_utils.get_supplier_id(request, supplier_id_data)
                         if not response.data['status']:
                             return response
 

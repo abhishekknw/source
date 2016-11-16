@@ -4,6 +4,7 @@ import datetime
 import StringIO
 from types import *
 import os
+import uuid
 
 from django.db import transaction
 from django.db.models import Q, F
@@ -1280,9 +1281,29 @@ def save_filter_data(inventories_selected, fixed_data):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def create_proposal_id():
-    import random, string
-    return ''.join(random.choice(string.ascii_letters) for _ in range(8))
+def create_proposal_id(business_id, account_id):
+    """
+    Args:
+        business_id: The business_id
+        account_id:  The account id
+
+    Returns: A unique proposal id
+
+    """
+    function = create_proposal_id.__name__
+    try:
+        if not business_id or not account_id:
+            return ui_utils.handle_response(function, data='provide business and account ids')
+        # get number of business letters to append
+        business_letters = website_constants.business_letters
+        # get number of account letters to append
+        account_letters = website_constants.account_letters
+        # make the proposal id.
+        proposal_id = business_id[-business_letters:].upper() + account_id[-account_letters:].upper() + str(uuid.uuid4())
+
+        return ui_utils.handle_response(function, data=proposal_id, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def get_coordinates(radius, latitude, longitude):
@@ -2515,6 +2536,7 @@ def get_file_name(user, proposal_id):
         business = account.business
         if user.is_anonymous():
             user_string = 'Anonymous'
+            user = None
         else:
             user_string = user.get_username()
         file_name = user_string + '_' + business.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
@@ -2558,6 +2580,8 @@ def add_metric_sheet(workbook):
 
 def send_excel_file(file_name):
     """
+    This sets the appropriate headers in the response for file of type xlsx.
+    It also converts the file in binary before sending it.
     """
     function = send_excel_file.__name__
     try:

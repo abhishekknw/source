@@ -54,6 +54,8 @@ import v0.ui.utils as ui_utils
 import v0.models as models
 import serializers as website_serializers
 import constants as website_constants
+import renderers as website_renderers
+import v0.ui.constants as ui_constants
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -2124,7 +2126,7 @@ class ProposalHistoryAPIView(APIView):
             Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SaveSocietyData(APIView):
+class ImportSocietyData(APIView):
     """
     This API reads a csv file and  makes supplier id's for each row. then it adds the data along with
     supplier id in the  supplier_society table. it also populates society_tower table.
@@ -2136,66 +2138,70 @@ class SaveSocietyData(APIView):
         :return: success response in case it succeeds else failure message.
         """
         class_name = self.__class__.__name__
-        with transaction.atomic():
-
+        try:
             source_file = open(BASE_DIR + '/files/modified_new_tab.csv', 'rb')
-            file_errros = open(BASE_DIR + '/errors.txt', 'w')
-            try:
+            with transaction.atomic():
                 reader = csv.reader(source_file)
-
                 for num, row in enumerate(reader):
-                    d = {}
+                    data = {}
                     if num == 0:
                         continue
                     else:
 
+                        if len(row) != len(supplier_keys):
+                            return ui_utils.handle_response(class_name, data='length of row {0} and length of supplier_keys do not match {1}'.format(len(row), len(supplier_keys)))
+
                         for index, key in enumerate(supplier_keys):
                             if row[index] == '':
-                                d[key] = None
+                                data[key] = None
                             else:
                                 d[key] = row[index]
 
                         try:
-                            area_object = CityArea.objects.get(label=d['area'])
-                            subarea_object = CitySubArea.objects.get(subarea_name=d['sub_area'],
-                                                                     area_code=area_object)
-                            response =  ui_utils.get_supplier_id(request, d)
+                            state_name = ui_constants.state_name
+                            state_code = ui_constants.state_code
+                            state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
+                            city_object = models.City.objects.get(city_code=data['city_code'], state_code=state_object)
+                            area_object = models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
+                            subarea_object = models.CitySubArea.objects.get(subarea_code=data['subarea_code'],area_code=area_object)
+
+                            # make the data needed to make supplier_id
+                            supplier_id_data = {
+                                'city_code': data['city_code'],
+                                'area_code': data['area_code'],
+                                'subarea_code': data['subarea_code']
+                            }
+
+                            response = get_supplier_id(request, supplier_id_data)
                             # this method of handing error code will  change in future
                             if response.status_code == status.HTTP_200_OK:
-                                d['supplier_id'] = response.data['data']
+                                data['supplier_id'] = response.data['data']
                             else:
                                 return response
 
-                            (society_object, value) = SupplierTypeSociety.objects.get_or_create(
-                                supplier_id=d['supplier_id'])
-                            d['society_location_type'] = subarea_object.locality_rating
-                            d['society_state'] = 'Maharashtra'
-                            society_object.__dict__.update(d)
+                            (society_object, value) = SupplierTypeSociety.objects.get_or_create(supplier_id=data['supplier_id'])
+                            data['society_location_type'] = subarea_object.locality_rating
+                            data['society_state'] = 'Maharashtra'
+                            society_object.__dict__.update(data)
                             society_object.save()
 
                             towercount = SocietyTower.objects.filter(supplier=society_object).count()
 
                             # what to do if tower are less
-                            tower_count_given = int(d['tower_count'])
+                            tower_count_given = int(data['tower_count'])
                             if tower_count_given > towercount:
                                 abc = tower_count_given - towercount
                                 for i in range(abc):
                                     tower = SocietyTower(supplier=society_object)
                                     tower.save()
-
-                        except ObjectDoesNotExist as e:
-                            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
-                        except KeyError as e:
-                            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
-                        except Exception as e:
-                            return ui_utils.handle_response(class_name, exception_object=e)
-            except Exception as e:
-                return Response(data=str(e.message), status=status.HTTP_400_BAD_REQUEST)
-
-            finally:
-                source_file.close()
-                file_errros.close()
-        return Response(data="success", status=status.HTTP_200_OK)
+            source_file.close()
+            return Response(data="success", status=status.HTTP_200_OK)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+        except KeyError as e:
+            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class ExportData(APIView):
@@ -2339,6 +2345,8 @@ class GenericExportData(APIView):
         and hence more DATA keys
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
     """
+    renderer_classes = (website_renderers.XlsxRenderer, )
+
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:
@@ -2628,8 +2636,14 @@ class CreateInitialProposal(APIView):
             with transaction.atomic():
                 proposal_data = request.data
 
+                business_id = proposal_data.get('business_id')
+                account_id = proposal_data.get('account_id')
+
                 # create a unique proposal id
-                proposal_data['proposal_id'] = website_utils.create_proposal_id()
+                response = website_utils.create_proposal_id(business_id, account_id)
+                if not response.data['status']:
+                    return response
+                proposal_data['proposal_id'] = response.data['data']
 
                 # get the account object. required for creating the proposal
                 account = AccountInfo.objects.get(account_id=account_id)

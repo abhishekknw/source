@@ -1,6 +1,14 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout) {
+    .constant('constants',{
+      base_url : 'http://localhost:8108/',
+      url_base : 'v0/ui/website/',
+      AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
+      policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
+      acl : 'public-read',
+      signature : "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=",
+    })
+    .controller('MapCtrl', function(constants, $scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout) {
 // You have to initailise some value for the map center beforehand
 // $scope.map is just for that purpose --> Set it according to your needs.
 // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
@@ -61,7 +69,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       function assignMarkersToMap(spaces) {
           // assigns spaces(society, corporate) markers on the map
           // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
-          console.log(spaces);
           var markers = [];
           angular.forEach(spaces, function(suppliers) {
             for (var i=0; i <suppliers.length; i++) {
@@ -212,7 +219,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          $scope.standee_count += $scope.current_center.suppliers_meta['RS'].inventory_count.standees;
        }
        if($scope.current_center.suppliers_meta['CP'] != undefined){
-         console.log($scope.current_center);
          $scope.stall_count += $scope.current_center.suppliers_meta['CP'].inventory_count.stalls;
          $scope.standee_count += $scope.current_center.suppliers_meta['CP'].inventory_count.standees;
        }
@@ -384,7 +390,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
        }
        center_id++;
      });
-     console.log(centers);
      //Start : code added to display filter panel for all centers on gridview
      if($scope.unique_suppliers.has('RS')){
         $scope.gridView_RS_filters = angular.copy($scope.RS_filters);
@@ -417,7 +422,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           $scope.proposal_id_temp = $stateParams.proposal_id;
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
-              console.log("center",response);
                 $scope.business_name = response.data.business_name;
                 $scope.center_data = response.data.suppliers;
                 $scope.addSupplierFilters($scope.center_data);
@@ -589,7 +593,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          // $scope.current_center.societies_inventory as well (this is present only if society_allowed is true)
          // change from inventory_name to inventory_code
           $scope.societyFilter = function(value){
-            console.log(value);
             if(value){
               var inventory_name = value.name.toLowerCase();
               var inventory_code = value.code;
@@ -780,7 +783,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             makeFilters($scope.center_data[i].CP_filters.quality_type,filters.common_filters.quality);
             makeFilters($scope.center_data[i].CP_filters.locality_rating,filters.common_filters.locality);
             makeFilters($scope.center_data[i].CP_filters.quantity_type,filters.common_filters.quantity);
-            console.log($scope.real_estate_allowed);
             if($scope.real_estate_allowed == true)
               filters.specific_filters.real_estate_allowed = true;
             promises.push(mapViewService.getFilterSuppliers(filters));
@@ -825,11 +827,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 //End: code for corporate filters
 //Start: for handling multiplse center response in promises for all suppliers
       var handleSupplierPromise = function(responseData,code){
-        console.log(responseData);
           for(var index=0;index<$scope.supplier_centers_list[code].length;index++){
             $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code] = responseData[index].$$state.value.data.data.suppliers[code];
             $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers_meta[code] = responseData[index].$$state.value.data.data.suppliers_meta[code];
-            console.log($scope.center_data);
           }
         $scope.current_center = $scope.center_data[$scope.current_center_index];
         suppliersData();
@@ -881,7 +881,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   var filterAllCenterSupplierData = function (code,supplier_filters){
     mapViewService.getFilterSuppliers(supplier_filters)
           .success(function(response, status){
-            console.log(response);
           })
           .error(function(response, status){
               console.log("Error Happened while filtering");
@@ -1107,64 +1106,74 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             delete $scope.center_data[i].suppliers['ES'];
          }
        }
-       $scope.exportData = function(){
-           $scope.download = false;
-         getShortlistedFilteredSocieties();
-         getExtraSocieties();
-         console.log($scope.center_data);
-           mapViewService.exportProposalData($scope.proposal_id_temp, $scope.center_data)
-           .success(function(data, status, headers, config){
-               console.log("Successfully Exported");
-               $scope.file_name = headers('file_name');
-               console.log($scope.file_name);
-               console.log(headers());
-              //  window.open($scope.file_name);
-              var file = data;
-              var file_type = headers('content-type');
-              console.log(file_type);
-              // saveAs(file,$scope.file_name);
-              var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
-              console.log(uploadUrl+$scope.file_name);
-              Upload.upload({
-                  url: uploadUrl,
-                  method : 'POST',
-                  data: {
-                    key: $scope.file_name, // the key to store the file on S3, could be file name or customized
-                    AWSAccessKeyId: 'AKIAI6PVCXJEAXV6UHUQ',
-                    acl: 'public-read', // sets the access to the uploaded file in the bucket: private, public-read, ...
-                    policy: "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
-                    signature: "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=", // base64-encoded signature based on policy string (see article below)
-                    "Content-Type": file_type, // content type of the file (NotEmpty)
-                    file: file}
-              });
-              $scope.download_url = uploadUrl + $scope.file_name;
-              $scope.download = true;
-           })
-           .error(function(response){
-               console.log("Error response is : ", response);
-           });
-       }
-       $scope.excelFile = [];
-       function makeid(){
-           var text = "";
-           var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-           for( var i=0; i < 10; i++ )
-               text += possible.charAt(Math.floor(Math.random() * possible.length));
-           return text;
-       }
+     $scope.exportData = function(){
+             getShortlistedFilteredSocieties();
+             getExtraSocieties();
+             $http({
+                  url: constants.base_url + constants.url_base + $scope.proposal_id_temp + '/export-spaces-data/',
+                  method: 'POST',
+                  responseType: 'arraybuffer',
+                  data: $scope.center_data, //this is your json data string
+                  headers: {
+                      'Content-type': 'application/json',
+                      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                  }
+             }).success(function(data, status, headers, config){
+                  // convert it onto Blob object because it's a binary file.
+                  var blob = new Blob([data], {
+                      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                  });
+                  console.log(headers()) ;
+                  // fetch the content_type and file name from headers
+                  $scope.content_type = headers('content-type');
+                  $scope.file_name = headers('file_name');
+                  // set the file to blob
+                  $scope.file_data = blob
+                  var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
+                  // upload it to S3 Bucket
+                  Upload.upload({
+                      url: uploadUrl,
+                      method : 'POST',
+                      data: {
+                          key: $scope.file_name, // the key to store the file on S3, could be file name or customized
+                          AWSAccessKeyId : constants.AWSAccessKeyId,
+                          acl : constants.acl, // sets the access to the uploaded file in the bucket: private, public-read, ...
+                          policy : constants.policy,
+                          signature : constants.signature, // base64-encoded signature based on policy string (see article below)
+                          "Content-Type": $scope.content_type, // content type of the file (NotEmpty)
+                          file: $scope.file_data }
+                  });
+
+                  // download it immediately
+                  saveAs(blob, $scope.file_name);
+
+             }).error(function(){
+                  //Some error log
+                  alert('Error in exporting the file');
+             });
+     }
+
+   $scope.excelFile = [];
+   function makeid(){
+       var text = "";
+       var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+       for( var i=0; i < 10; i++ )
+           text += possible.charAt(Math.floor(Math.random() * possible.length));
+       return text;
+   }
 
     $scope.upload = function (file) {
-      var uploadUrl = 'http://localhost:8108/v0/ui/website/';
-      Upload.upload({
-          url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
-          data: {file: file, 'username': $scope.username}
-      }).then(function (resp) {
-        console.log(resp);
-          console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
-      }, function (resp) {
-          console.log('Error status: ' + resp.status);
-      });
-    };
+    var uploadUrl = 'http://localhost:8108/v0/ui/website/';
+    Upload.upload({
+        url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
+        data: {file: file, 'username': $scope.username}
+    }).then(function (resp) {
+      console.log(resp);
+        console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
+    }, function (resp) {
+        console.log('Error status: ' + resp.status);
+    });
+  };
     //End: upload and import functionality
 
 });
