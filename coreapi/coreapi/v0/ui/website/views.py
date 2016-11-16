@@ -2632,8 +2632,14 @@ class CreateInitialProposal(APIView):
             with transaction.atomic():
                 proposal_data = request.data
 
+                business_id = proposal_data.get('business_id')
+                account_id = proposal_data.get('account_id')
+
                 # create a unique proposal id
-                proposal_data['proposal_id'] = website_utils.create_proposal_id()
+                response = website_utils.create_proposal_id(business_id, account_id)
+                if not response.data['status']:
+                    return response
+                proposal_data['proposal_id'] = response.data['data']
 
                 # get the account object. required for creating the proposal
                 account = AccountInfo.objects.get(account_id=account_id)

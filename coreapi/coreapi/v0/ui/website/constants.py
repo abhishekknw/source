@@ -427,3 +427,7 @@ datetime_format = '%d-%m-%Y %H-%M-%S'
 # metric file details
 metric_file_path = BASE_DIR + '/files/empty_proposal_cost_data.xlsx'
 metric_sheet_name = 'Offline Pricing'
+
+# settings to tune in generation of proposal_id
+business_letters = 4
+account_letters = 4
