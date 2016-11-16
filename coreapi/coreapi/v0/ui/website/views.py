@@ -2159,8 +2159,7 @@ class SaveSocietyData(APIView):
                             area_object = CityArea.objects.get(label=d['area'])
                             subarea_object = CitySubArea.objects.get(subarea_name=d['sub_area'],
                                                                      area_code=area_object)
-
-                            response = get_supplier_id(request, d)
+                            response =  ui_utils.get_supplier_id(request, d)
                             # this method of handing error code will  change in future
                             if response.status_code == status.HTTP_200_OK:
                                 d['supplier_id'] = response.data['data']

@@ -123,7 +123,9 @@ def get_supplier_id(request, data):
             subarea_object = v0.models.CitySubArea.objects.get(subarea_code=data['subarea_code'],
                                                      area_code=area_object)
 
-        except ObjectDoesNotExist:
+        except ObjectDoesNotExist as e:
+            import pdb
+            pdb.set_trace()
             city_object = v0.models.City.objects.get(id=data['city_id'])
             area_object = v0.models.CityArea.objects.get(id=data['area_id'])
             subarea_object = v0.models.CitySubArea.objects.get(id=data['subarea_id'],
@@ -552,8 +554,8 @@ def save_price_data(price_object, posprice, buisiness_price):
 
     """
     try:
-        price_object.business_price = posprice
-        price_object.supplier_price = buisiness_price
+        price_object.business_price = buisiness_price
+        price_object.supplier_price = posprice
         price_object.save()
     except Exception as e:
         pass
