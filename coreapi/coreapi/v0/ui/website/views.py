@@ -2155,8 +2155,9 @@ class ImportSocietyData(APIView):
                             if row[index] == '':
                                 data[key] = None
                             else:
-                                data[key] = row[index]
+                                d[key] = row[index]
 
+                        try:
                             state_name = ui_constants.state_name
                             state_code = ui_constants.state_code
                             state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
