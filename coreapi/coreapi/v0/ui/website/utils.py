@@ -2398,6 +2398,7 @@ def save_area_subarea(result):
                     total_new_objects_created += 1
 
                 data['area']['city_code'] = city_object
+
                 # make area
                 area, is_created = models.CityArea.objects.get_or_create(**data['area'])
                 if is_created:

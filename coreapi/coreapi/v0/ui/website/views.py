@@ -2139,7 +2139,7 @@ class SaveSocietyData(APIView):
 
         with transaction.atomic():
 
-            source_file = open(BASE_DIR + '/modified_new_tab.csv', 'rb')
+            source_file = open(BASE_DIR + '/files/modified_new_tab.csv', 'rb')
             file_errros = open(BASE_DIR + '/errors.txt', 'w')
             try:
                 reader = csv.reader(source_file)
@@ -2159,6 +2159,7 @@ class SaveSocietyData(APIView):
                             area_object = CityArea.objects.get(label=d['area'])
                             subarea_object = CitySubArea.objects.get(subarea_name=d['sub_area'],
                                                                      area_code=area_object)
+
                             response = get_supplier_id(request, d)
                             # this method of handing error code will  change in future
                             if response.status_code == status.HTTP_200_OK:

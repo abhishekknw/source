@@ -222,10 +222,6 @@ class GenerateSupplierIdAPIView(APIView):
     def post(self, request, format=None):
         try:
 
-            import pdb
-            pdb.set_trace()
-            print "area"
-
             data = {
                 'city': request.data['city_id'],
                 'area': request.data['area_id'],
@@ -772,7 +768,7 @@ class ImportSummaryData(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            source_file = open(BASE_DIR + '/inventory_summary.csv', 'rb')
+            source_file = open(BASE_DIR + '/files/inventory_summary.csv', 'rb')
             error_list = []
             with transaction.atomic():
                 reader = csv.reader(source_file)
@@ -804,9 +800,8 @@ class ImportSummaryData(APIView):
                             'Content-Type': 'application/json'
                         }
                         response = requests.post(url, json.dumps(data), headers=headers)
-                        response_json = response.json()
-                        response_json['supplier_id'] = data['supplier_id']
-                        error_list.append(response_json)
+                        if response.status_code != status.HTTP_200_OK:
+                            return ui_utils.handle_response(class_name, data=response.json())
 
             source_file.close()
             return ui_utils.handle_response(class_name, data=error_list, success=True)
