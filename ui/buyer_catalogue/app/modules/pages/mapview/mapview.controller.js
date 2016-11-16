@@ -441,7 +441,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 for(var i=0;i<$scope.center_data.length; i++)
                   $scope.initial_center_changed.push(false);
                   $scope.current_center_id = $scope.current_center.center.id
-                  $scope.map = { zoom: 12, bounds: {},
+                  $scope.map = { zoom: 13, bounds: {},
                     center: {
                       latitude: $scope.current_center.center.latitude,
                       longitude: $scope.current_center.center.longitude,
