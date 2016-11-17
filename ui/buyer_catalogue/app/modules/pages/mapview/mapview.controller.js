@@ -1102,13 +1102,16 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
        var getExtraSocieties = function(){
          for(var i=0;i<$scope.center_data.length;i++){
            if($scope.center_data[i].suppliers['RS'] != undefined)
-            $scope.center_data[i].suppliers['RS'].concat($scope.center_data[i].suppliers['ES']);
+            $scope.center_data[i].suppliers['RS'].push.apply($scope.center_data[i].suppliers['RS'],$scope.center_data[i].suppliers['ES']);
             delete $scope.center_data[i].suppliers['ES'];
          }
+         console.log($scope.center_data);
        }
      $scope.exportData = function(){
              getShortlistedFilteredSocieties();
              getExtraSocieties();
+             console.log($scope.center_data);
+
              $http({
                   url: constants.base_url + constants.url_base + $scope.proposal_id_temp + '/export-spaces-data/',
                   method: 'POST',
