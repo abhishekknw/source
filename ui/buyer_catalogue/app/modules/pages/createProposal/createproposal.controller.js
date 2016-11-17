@@ -1,14 +1,9 @@
 "use strict";
-
 angular.module('catalogueApp')
 .controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http){
-
-	console.log("Inside Controller");
-
-	console.log("account_id : ", $stateParams.account_id);
 	$scope.model = {}
 	$scope.model.centers = new Array();
-
+	$scope.society = 'RS';
 	$scope.addCenter = function(){
 		var new_center = {
 			center_name : '',
@@ -20,19 +15,12 @@ angular.module('catalogueApp')
 			area  : '',
 			city : '',
 			pincode : '',
+			supplier_codes :[],
 			space_mapping : {
 				society_allowed : false,
-				society_count : undefined,
-				society_buffer_count : undefined,
 				corporate_allowed : false,
-				corporate_count : undefined,
-				corporate_buffer_count : undefined,
 				gym_allowed : false,
-				gym_count : undefined,
-				gym_buffer_count : undefined,
 				salon_allowed : false,
-				salon_count : undefined,
-				salon_buffer_count : undefined,
 			},
 		}
 		$scope.model.centers.push({
@@ -46,68 +34,77 @@ angular.module('catalogueApp')
 
 	createProposalService.loadInitialData()
     .success(function (response){
+			console.log(response);
         $scope.cities = response.cities;
+				console.log($scope.cities);
       });
-
-     $scope.get_areas = function(id,index) {
+			//changes for searching societies on basis of area,subarea
+  $scope.get_areas = function(id,index) {
      	var id = id;
-			console.log(index);
-     	// 	`	1aalert(id);
-      createProposalService.getLocations('areas', id,index)
+			console.log($scope.cities);
+			for(var i=0;i<$scope.cities.length;i++){
+				if($scope.cities[i].id == id){
+					$scope.model.centers[index].center.city = $scope.cities[i].city_name;
+				}
+			}
+   createProposalService.getLocations('areas', id,index)
       .success(function (response){
           $scope.areas[index] = response;
         });
     }
-    $scope.get_sub_areas = function(id,index) {
+  $scope.get_sub_areas = function(id,index) {
       var id = id;
-      createProposalService.getLocations('sub_areas', id)
+			for(var i=0;i<$scope.areas[index].length;i++){
+				if($scope.areas[index][i].id == id){
+					$scope.model.centers[index].center.area = $scope.areas[index][i].label;
+				}
+			}
+   createProposalService.getLocations('sub_areas', id)
       .success(function (response){
           $scope.sub_areas[index] = response;
         });
     }
-
 	$scope.removeCenter = function(index){
 		$scope.model.centers.splice(index,1);
 	}
-
-	$scope.checkSpace = function(center, space_name){
-		console.log(center.center.space_mapping[space_name + '_allowed'])
-		if(center.center.space_mapping[space_name + '_allowed']){
-			center.center.space_mapping[space_name + '_count'] = 0;
-			center.center.space_mapping[space_name + '_buffer_count'] = 0;
-			center[space_name + '_inventory'] = {
-				poster_allowed : false,
-				standee_allowed : false,
-				stall_allowed : false,
-				flier_allowed : false,
-				banner_allowed : false,
-			};
-			console.log(center[space_name + '_inventory']);
-		}
-		else{
-			center.center.space_mapping[space_name + '_count'] = undefined;
-			center.center.space_mapping[space_name + '_buffer_count'] = undefined;
-			delete center[space_name + '_inventory']
-		}
+	// code chnaged to send supplier_codes like RS
+	$scope.checkSpace = function(space,center){
+		center.center.supplier_codes.push(space);
+		// if(center.center.space_mapping[space_name + '_allowed']){
+		// 	center.center.space_mapping[space_name + '_count'] = 0;
+		// 	center.center.space_mapping[space_name + '_buffer_count'] = 0;
+		// 	center[space_name + '_inventory'] = {
+		// 		poster_allowed : false,
+		// 		standee_allowed : false,
+		// 		stall_allowed : false,
+		// 		flier_allowed : false,
+		// 		banner_allowed : false,
+		// 	};
+		// 	console.log(center[space_name + '_inventory']);
+		// }else{
+		// 	center.center.space_mapping[space_name + '_count'] = undefined;
+		// 	center.center.space_mapping[space_name + '_buffer_count'] = undefined;
+		// 	delete center[space_name + '_inventory']
+		// }
 	}
 
-	// $scope.
-
 	$scope.submit = function(){
-		alert("hi1!!!!!!!!!");
-		console.log("$scope.model", $scope.model);
+		$scope.model.account_id = $rootScope.account_id;
+		$scope.model.business_id = $rootScope.business_id;
+		$scope.model.parent = null;
 
+		console.log($scope.model);
+		console.log("vidhi inside submit", $scope.model);
 		// call backend to save only if all the latitudes are found
 			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)
 			.success(function(response, status){
+				console.log($scope.model.data);
 				$scope.errormsg = undefined;
 				console.log("Successfully Saved");
 				console.log("response is : ", response);
 				$scope.proposal_id = response;
 				createProposalService.setProposalId($scope.proposal_id);
-				alert("$scope.proposal_id--------" + $scope.proposal_id);
-				$location.path('/' + $scope.proposal_id + '/mapview');
-
+				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){
 				console.log("Error");

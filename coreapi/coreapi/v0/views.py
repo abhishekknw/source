@@ -1,25 +1,53 @@
+from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import get_object_or_404
+from django.apps import apps
+
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer
-from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate
-from v0.serializers import JMN_societySerializer
-from v0.societies import societies
-from django.contrib.contenttypes.models import ContentType
-from django.shortcuts import get_object_or_404
-
-class SaveSocietyAPIView(APIView):
-
-    def get(self, request, format=None):
-        for society in societies:
-            serializer = JMN_societySerializer(data=society)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                return Response(serializer.errors, status=400)
-        return Response(status=200)
+from rest_framework import status
+from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer
+from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType
+import utils as v0_utils
+from constants import model_names
 
 
+class PopulateContentTypeFields(APIView):
+    """
+    This API is written to populate existing content type fields for models who are mapped to
+    supplier type table. example supplier_type_society table.
+    """
+
+    def post(self, request):
+        """
+        Args:
+            request: request params
+
+        Returns: success in case populating content type fields succeeds, error if fails
+        ---
+        parameters:
+        - name: supplier_model_name
+          description: example 'SupplierTypeSociety'. The name of the supplier model which exists as a FK into the model for which you want to populate content types
+
+        """
+
+        supplier_model_name = request.data.get('supplier_model_name')
+        if not supplier_model_name:
+            return Response({'status': False, 'error': 'Please provide supplier model name'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+
+            supplier_model = apps.get_model('v0', supplier_model_name)
+            load_names = [apps.get_model('v0', model) for model in model_names]
+            ContentType = apps.get_model('contenttypes', 'ContentType')
+            content_type = ContentType.objects.get(model=supplier_model_name)
+            for name in load_names:
+                response = v0_utils.do_each_model(name, supplier_model, content_type)
+                if not response.data['status']:
+                    return response
+            return Response({'status': True, 'data': 'success'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 class BannerInventoryAPIView(APIView):
 
@@ -1235,6 +1263,13 @@ class SupplierTypeSocietyAPIListView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request, format=None):
+        """
+        Args:
+            request: request param containg society data
+            format: none
+
+        Returns: The data created by this particular user
+        """
         serializer = SupplierTypeSocietySerializer(data=request.data)
         current_user = request.user
         if serializer.is_valid():

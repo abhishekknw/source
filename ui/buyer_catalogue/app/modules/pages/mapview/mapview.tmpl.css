@@ -32,8 +32,9 @@ body{
     width: 100%;
 }
 .filterPanelHeader{
-    font-weight: 400;
+    font-weight: 500;
     display: block;
+		color: crimson;
 }
 .filterscroll{
 	overflow: hidden;
@@ -56,6 +57,11 @@ body{
 }
 .drop-width{
 	width: 40% !important;
+}
+.box-spacing-radius{
+	margin-bottom: 5px;
+	margin-top: 5px;
+	width: 60%;
 }
 .box-spacing{
 	margin-bottom: 5px;

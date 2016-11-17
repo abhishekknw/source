@@ -42,7 +42,9 @@ INSTALLED_APPS = (
     'corsheaders',
     'rest_jwt',
     'v0',
-    'drf_generators')
+    'drf_generators',
+    'rest_framework_swagger',
+)
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -118,11 +120,12 @@ STATIC_URL = '/static/'
 
 # settings for Django Rest Framework
 
-'''REST_FRAMEWORK = {
-    # other settings...
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
-    'DEFAULT_PERMISSION_CLASSES': [],
-}'''
+# '''REST_FRAMEWORK = {
+#     # other settings...
+#     'DEFAULT_AUTHENTICATION_CLASSES': [],
+#     'DEFAULT_PERMISSION_CLASSES': [],
+# }'''
+
 
 REST_FRAMEWORK = {
      'DEFAULT_PERMISSION_CLASSES': (
@@ -184,3 +187,5 @@ JWT_AUTH = {
 
       'JWT_VERIFY_EXPIRATION': False,
       }
+
+BASE_URL = 'http://localhost:8000/'

@@ -6,46 +6,28 @@ from v0 import views
 urlpatterns = patterns('',
     url(r'^ui/', include('v0.ui.urls')),
     url(r'^android/', include('v0.android.urls')),
-
-
-    url(r'^crawl_societies/$', views.SaveSocietyAPIView.as_view()),
-
     url(r'^bannerinventory/(?P<id>[0-9]+)$', views.BannerInventoryAPIView.as_view()),
     url(r'^bannerinventory/$', views.BannerInventoryAPIListView.as_view()),
-
-    #url(r'^cardisplayinventory/(?P<id>[0-9]+)$', views.CarDisplayInventoryAPIView.as_view()),
-    #url(r'^cardisplayinventory/$', views.CarDisplayInventoryAPIListView.as_view()),
-
     url(r'^communityhallinfo/(?P<id>[0-9]+)$', views.CommunityHallInfoAPIView.as_view()),
     url(r'^communityhallinfo/$', views.CommunityHallInfoAPIListView.as_view()),
-
     url(r'^doortodoorinfo/(?P<id>[0-9]+)$', views.DoorToDoorInfoAPIView.as_view()),
     url(r'^doortodoorinfo/$', views.DoorToDoorInfoAPIListView.as_view()),
-
     url(r'^liftdetails/(?P<id>[0-9]+)$', views.LiftDetailsAPIView.as_view()),
     url(r'^liftdetails/$', views.LiftDetailsAPIListView.as_view()),
-
     url(r'^noticeboarddetails/(?P<id>[0-9]+)$', views.NoticeBoardDetailsAPIView.as_view()),
     url(r'^noticeboarddetails/$', views.NoticeBoardDetailsAPIListView.as_view()),
-
     url(r'^posterinventory/(?P<id>[0-9]+)$', views.PosterInventoryAPIView.as_view()),
     url(r'^posterinventory/$', views.PosterInventoryAPIListView.as_view()),
-
     url(r'^societyflat/(?P<id>[0-9]+)$', views.SocietyFlatAPIView.as_view()),
     url(r'^societyflat/$', views.SocietyFlatAPIListView.as_view()),
-
     url(r'^standeeinventory/(?P<id>[0-9]+)$', views.StandeeInventoryAPIView.as_view()),
     url(r'^standeeinventory/$', views.StandeeInventoryAPIListView.as_view()),
-
     url(r'^swimmingpoolinfo/(?P<id>[0-9]+)$', views.SwimmingPoolInfoAPIView.as_view()),
     url(r'^swimmingpoolinfo/$', views.SwimmingPoolInfoAPIListView.as_view()),
-
     url(r'^wallinventory/(?P<id>[0-9]+)$', views.WallInventoryAPIView.as_view()),
     url(r'^wallinventory/$', views.WallInventoryAPIListView.as_view()),
-
     url(r'^userinquiry/(?P<id>[0-9]+)$', views.UserInquiryAPIView.as_view()),
     url(r'^userinquiry/$', views.UserInquiryAPIListView.as_view()),
-
     url(r'^commonareadetails/(?P<id>[0-9]+)$', views.CommonAreaDetailsAPIView.as_view()),
     url(r'^commonareadetails/$', views.CommonAreaDetailsAPIListView.as_view()),
 
@@ -93,4 +75,6 @@ urlpatterns = patterns('',
 
     url(r'^flat/(?P<id>[0-9]+)$', views.FlatTypeAPIView.as_view()),
     url(r'^flat/$', views.FlatTypeAPIListView.as_view()),
+    url(r'^populate-content-types/$', views.PopulateContentTypeFields.as_view()),
+
 )

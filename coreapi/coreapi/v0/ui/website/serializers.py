@@ -9,6 +9,18 @@ from v0.serializers import SocietyInventoryBookingSerializer, BusinessInfoSerial
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety,\
                     ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion
 
+import v0.models as models
+
+
+class LeadSerializer(ModelSerializer):
+    class Meta:
+        model = models.Lead
+
+
+class FiltersSerializer(ModelSerializer):
+    class Meta:
+        model = models.Filters
+
 
 class ProposalInfoVersionSerializer(ModelSerializer):
 
@@ -79,13 +91,14 @@ class ProposalCenterMappingSerializer(ModelSerializer):
     # using this serializer to save the center object
     class Meta:
         model = ProposalCenterMapping
+        # fields = ('proposal', 'center_name', 'id')
 
 
 class ShortlistedSpacesSerializer(ModelSerializer):
 
     class Meta:
         model = ShortlistedSpaces
-
+        exclude = ('space_mapping', 'buffer_status')
 
 
 class ProposalSocietySerializer(ModelSerializer):
@@ -138,13 +151,11 @@ class ProposalCorporateSerializer(ModelSerializer):
             'name',
             'address1',
             'subarea',
-            'location_type',
             'longitude',
             'latitude',
             'shortlisted',
             'buffer_status',
         )
-
 
 
 class UISocietyInventorySerializer(ModelSerializer):
@@ -209,3 +220,4 @@ class CampaignInventorySerializer(ModelSerializer):
         'inventories'
 
         )
+
