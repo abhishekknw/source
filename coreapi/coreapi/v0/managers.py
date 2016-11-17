@@ -78,6 +78,7 @@ class GetInventoryObjectManager(models.Manager):
                 'adinventory_type': adinventory_type,
                 'duration_type': duration_type
             }
+
             # get or create price mapping object
             price_object, is_created = self.get_or_create(**data)
 
