@@ -2472,33 +2472,33 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
 
             # include only those suppliers that lie within the circle of radius given
             if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
-                supplier_inventory_obj = inventory_summary_objects_mapping[supplier['supplier_id']]
+                supplier_inventory_obj = inventory_summary_objects_mapping.get(supplier['supplier_id'])
                 supplier['shortlisted'] = True
                 supplier['buffer_status'] = False
                 # status is shortlisted initially
                 supplier['status'] = 'S'
+                # do not calculate prices if no inventory summary object exist
+                if supplier_inventory_obj:
+                    if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
+                        supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
+                        supplier['poster_price'] = calculate_price('poster_a4', 'campaign_weekly')
 
-                if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
-                    supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
-                    supplier['poster_price'] = calculate_price('poster_a4', 'campaign_weekly')
+                    if supplier_inventory_obj.standee_allowed:
+                        supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
+                        supplier['standee_price'] = calculate_price('standee_small', 'campaign_weekly')
 
-                if supplier_inventory_obj.standee_allowed:
-                    supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
-                    supplier['standee_price'] = calculate_price('standee_small', 'campaign_weekly')
+                    if supplier_inventory_obj.stall_allowed:
+                        supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
+                        supplier['stall_price'] = calculate_price('stall_small', 'unit_daily')
+                        supplier['car_display_price'] = calculate_price('car_display_standard', 'unit_daily')
 
-                if supplier_inventory_obj.stall_allowed:
-                    supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
-                    supplier['stall_price'] = calculate_price('stall_small', 'unit_daily')
-                    supplier['car_display_price'] = calculate_price('car_display_standard', 'unit_daily')
-
-                if supplier_inventory_obj.flier_allowed:
-                    supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
-                    supplier['filer_price'] = calculate_price('flier_door_to_door', 'unit_daily')
+                    if supplier_inventory_obj.flier_allowed:
+                        supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
+                        supplier['filer_price'] = calculate_price('flier_door_to_door', 'unit_daily')
                 result.append(supplier)
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
-
 
 
 def calculate_price(inv_type, dur_type):

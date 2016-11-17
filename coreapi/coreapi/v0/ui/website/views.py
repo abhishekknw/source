@@ -469,7 +469,6 @@ class GetAccountProposalsAPIView(APIView):
         try:
             account = AccountInfo.objects.get(account_id=account_id)
 
-
             proposals = ProposalInfo.objects.filter(account=account)
             proposal_serializer = ProposalInfoSerializer(proposals, many=True)
         
@@ -1263,6 +1262,7 @@ class FilteredSuppliers(APIView):
             if not response.data['status']:
                 return response
             suppliers = response.data['data']
+
             # response = website_utils.set_supplier_extra_attributes(serializer.data, supplier_type_code, inventory_filters)
             # if not response.data['status']:
             #     return response
