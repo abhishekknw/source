@@ -22,6 +22,7 @@ from openpyxl import Workbook
 from openpyxl.compat import range
 import requests
 from rest_framework.parsers import JSONParser, FormParser
+from rest_framework import permissions
 #from import_export import resources
 
 import openpyxl
@@ -2348,6 +2349,7 @@ class GenericExportData(APIView):
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
     """
     renderer_classes = (website_renderers.XlsxRenderer, )
+    permission_classes = (permissions.IsAuthenticated, )
 
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__

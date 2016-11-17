@@ -2077,7 +2077,7 @@ class ImageMappingAPIView(APIView):
                     return ui_utils.handle_response(class_name, data=serializer.errors)
             # return Response(serializer.data, status=201)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except:
+        except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
     def put(self, request, id):
