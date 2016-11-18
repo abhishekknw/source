@@ -242,8 +242,7 @@
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
         <tbody ng-repeat = "center in center_data" >
-          <tr ng-repeat = "supplier in combined = center.suppliers['RS'].concat(center.suppliers['ES'])">
-            <!-- <tr ng-if="center.suppliers['ES']==null" ng-repeat = "supplier in center.suppliers['RS']"> -->
+          <tr ng-repeat = "supplier in center.suppliers['RS']">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
             <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{supplier.supplier_id}}" target="_blank">{{supplier.name}}</a></td>
@@ -330,7 +329,7 @@
 
       <!-- <div  ng-repeat="society in current_center.societies"></div> -->
         <button class="btn btn-danger active" ng-click="submitProposal()">Submit Final Proposal</button>
-        <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" >Add Societies</button>
+        <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-click="clearSearchData()">Add Suppliers</button>
   </div>
   <!-- End: grid view -->
   <!-- Start: Summary Section -->
@@ -425,7 +424,7 @@
         <br>
           </div>
           <div ng-if="search_status">
-            <label style="margin-left: 20px;margin-right: 20px;">Select Center</label><select class="box-spacin" ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
+            <label style="margin-left: 20px;margin-right: 20px;">Select Center</label><select class="box-spacin" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
               <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
              </select>
           </div>
