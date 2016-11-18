@@ -118,13 +118,11 @@ def get_supplier_id(request, data):
             state_name = ui_constants.state_name
             state_code = ui_constants.state_code
             state_object = v0.models.State.objects.get(state_name=state_name, state_code=state_code)
-            city_object = v0.models.City.objects.get(city_code=data['city_code'], state_code=state_object)
-            area_object = v0.models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
-            subarea_object = v0.models.CitySubArea.objects.get(subarea_code=data['subarea_code'], area_code=area_object)
+            city_object = v0.models.City.objects.get(city_code=data.get('city_code'), state_code=state_object)
+            area_object = v0.models.CityArea.objects.get(area_code=data.get('area_code'), city_code=city_object)
+            subarea_object = v0.models.CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
 
         except ObjectDoesNotExist as e:
-            import pdb
-            pdb.set_trace()
             city_object = v0.models.City.objects.get(id=data['city_id'])
             area_object = v0.models.CityArea.objects.get(id=data['area_id'])
             subarea_object = v0.models.CitySubArea.objects.get(id=data['subarea_id'],
@@ -145,18 +143,22 @@ def get_supplier_id(request, data):
     
 def make_supplier_data(data):
     try:
+        function = make_supplier_data.__name__
 
         try:
-            city = v0.models.City.objects.get(city_name=data['city'])
-            area = v0.models.CityArea.objects.get(label=data['area'])
-            subarea = v0.models.CitySubArea.objects.get(subarea_name=data['sub_area'],
-                                                     area_code=area)
-        except ObjectDoesNotExist:
-            city = v0.models.City.objects.get(id=data['city'])
-            area = v0.models.CityArea.objects.get(id=data['area'])
-            subarea = v0.models.CitySubArea.objects.get(id=data['sub_area'],
-                                                     area_code=area)
+            state_name = ui_constants.state_name
+            state_code = ui_constants.state_code
+            state_object = v0.models.State.objects.get(state_name=state_name, state_code=state_code)
+            city = v0.models.City.objects.get(city_code=data.get('city_code'), state_code=state_object)
+            area = v0.models.CityArea.objects.get(area_code=data.get('area_code'), city_code=city)
+            subarea = v0.models.CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area)
 
+        except ObjectDoesNotExist as e:
+
+            city = v0.models.City.objects.get(id=data['city_id'])
+            area = v0.models.CityArea.objects.get(id=data['area_id'])
+            subarea = v0.models.CitySubArea.objects.get(id=data['subarea_id'],
+                                                     area_code=area)
         current_user = data['current_user']
 
         all_supplier_data = {
@@ -229,13 +231,11 @@ def make_supplier_data(data):
         }
         return Response(data={"status": True, "data": all_supplier_data}, status=status.HTTP_200_OK)
     except KeyError as e:
-        return Response(data={"status": False, "error": "Key error {0} ".format(str(e.message))},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return handle_response(function, exception_object=e)
     except ObjectDoesNotExist as e:
-        return Response(data={"status": False, "error": "Object does not exist {0}".format(str(e.message))},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return handle_response(function, exception_object=e)
     except Exception as e:
-        return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        return handle_response(function, exception_object=e)
 
 
 def save_supplier_data(master_data):
