@@ -1299,7 +1299,7 @@ def create_proposal_id(business_id, account_id):
         # get number of account letters to append
         account_letters = website_constants.account_letters
         # make the proposal id.
-        proposal_id = business_id[-business_letters:].upper() + account_id[-account_letters:].upper() + str(uuid.uuid4())
+        proposal_id = business_id[-business_letters:].upper() + account_id[-account_letters:].upper() + (str(uuid.uuid4())[-website_constants.proposal_id_limit:])
 
         return ui_utils.handle_response(function, data=proposal_id, success=True)
     except Exception as e:
@@ -2478,6 +2478,7 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
                 # status is shortlisted initially
                 supplier['status'] = 'S'
 
+                # do not calculate prices if no inventory summary object exist
                 if supplier_inventory_obj:
                     if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
                         supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
@@ -2499,7 +2500,6 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
-
 
 
 def calculate_price(inv_type, dur_type):

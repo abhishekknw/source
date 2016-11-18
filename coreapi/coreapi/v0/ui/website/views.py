@@ -22,6 +22,7 @@ from openpyxl import Workbook
 from openpyxl.compat import range
 import requests
 from rest_framework.parsers import JSONParser, FormParser
+from rest_framework import permissions
 #from import_export import resources
 
 import openpyxl
@@ -467,7 +468,6 @@ class GetAccountProposalsAPIView(APIView):
 
         try:
             account = AccountInfo.objects.get(account_id=account_id)
-
 
             proposals = ProposalInfo.objects.filter(account=account)
             proposal_serializer = ProposalInfoSerializer(proposals, many=True)
@@ -1262,6 +1262,7 @@ class FilteredSuppliers(APIView):
             if not response.data['status']:
                 return response
             suppliers = response.data['data']
+
             # response = website_utils.set_supplier_extra_attributes(serializer.data, supplier_type_code, inventory_filters)
             # if not response.data['status']:
             #     return response
@@ -2348,6 +2349,7 @@ class GenericExportData(APIView):
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
     """
     renderer_classes = (website_renderers.XlsxRenderer, )
+    permission_classes = (permissions.IsAuthenticated, )
 
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
@@ -2638,7 +2640,7 @@ class CreateInitialProposal(APIView):
                 proposal_data = request.data
 
                 business_id = proposal_data.get('business_id')
-                account_id = proposal_data.get('account_id')
+                account_id = account_id
 
                 # create a unique proposal id
                 response = website_utils.create_proposal_id(business_id, account_id)
@@ -2669,7 +2671,8 @@ class CreateInitialProposal(APIView):
                     return response
 
                 # return the proposal_id of the new proposal created
-                return ui_utils.handle_response(class_name, data=proposal_data['proposal_id'], success=True)
+                proposal_id = proposal_data['proposal_id']
+                return ui_utils.handle_response(class_name, data=proposal_id, success=True)
         except Exception as e:
              return ui_utils.handle_response(class_name, exception_object=e)
 

@@ -1,7 +1,7 @@
 "use strict";
 angular.module('catalogueApp')
     .constant('constants',{
-      base_url : 'http://localhost:8108/',
+      base_url : 'http://localhost:8000/',
       url_base : 'v0/ui/website/',
       AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
       policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
@@ -1119,7 +1119,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                   data: $scope.center_data, //this is your json data string
                   headers: {
                       'Content-type': 'application/json',
-                      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                      'Authorization' : 'JWT ' + $rootScope.globals.currentUser.token
                   }
              }).success(function(data, status, headers, config){
                   // convert it onto Blob object because it's a binary file.
