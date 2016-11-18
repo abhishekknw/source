@@ -432,3 +432,5 @@ metric_sheet_name = 'Offline Pricing'
 # settings to tune in generation of proposal_id
 business_letters = 4
 account_letters = 4
+# send only this much characters in response
+proposal_id_limit = 5

@@ -8,8 +8,10 @@ from rest_framework.views import APIView
 from rest_framework import status
 from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer
 from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType
+
 import utils as v0_utils
 from constants import model_names
+import v0.ui.utils as ui_utils
 
 
 class PopulateContentTypeFields(APIView):
@@ -30,13 +32,13 @@ class PopulateContentTypeFields(APIView):
           description: example 'SupplierTypeSociety'. The name of the supplier model which exists as a FK into the model for which you want to populate content types
 
         """
+        class_name = self.__class__.__name__
 
         supplier_model_name = request.data.get('supplier_model_name')
         if not supplier_model_name:
             return Response({'status': False, 'error': 'Please provide supplier model name'},
                             status=status.HTTP_400_BAD_REQUEST)
         try:
-
             supplier_model = apps.get_model('v0', supplier_model_name)
             load_names = [apps.get_model('v0', model) for model in model_names]
             ContentType = apps.get_model('contenttypes', 'ContentType')
@@ -45,9 +47,10 @@ class PopulateContentTypeFields(APIView):
                 response = v0_utils.do_each_model(name, supplier_model, content_type)
                 if not response.data['status']:
                     return response
-            return Response({'status': True, 'data': 'success'}, status=status.HTTP_200_OK)
+            return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+            return ui_utils.handle_response(class_name, exception_object=e)
+
 
 class BannerInventoryAPIView(APIView):
 
