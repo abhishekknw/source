@@ -7,12 +7,9 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('v0', '0005_auto_20160812_0619'),
+        ('v0', '0046_merge'),
+        ('v0', '0052_auto_20161116_1031'),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='mailboxinfo',
-            name='tower_name',
-        ),
     ]

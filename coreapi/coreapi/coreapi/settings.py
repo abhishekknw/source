@@ -90,11 +90,11 @@ DATABASES = {
     },
 
     'default': {
-        'NAME':'mdtest',
+        'NAME':'machadalo',
          'ENGINE': 'django.db.backends.mysql',
-         'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-         'USER': 'mdtest',
-         'PASSWORD': 'mdtestmachadalo',
+         'HOST': 'localhost',
+         'USER': 'root',
+         'PASSWORD': 'vidhi',
       }
 
     }
