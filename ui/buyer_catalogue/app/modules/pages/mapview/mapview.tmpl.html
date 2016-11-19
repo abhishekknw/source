@@ -328,8 +328,6 @@
     <!--End : adding table for corporates  -->
 
       <!-- <div  ng-repeat="society in current_center.societies"></div> -->
-        <button class="btn btn-danger active" ng-click="submitProposal()">Submit Final Proposal</button>
-        <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-click="clearSearchData()">Add Suppliers</button>
   </div>
   <!-- End: grid view -->
   <!-- Start: Summary Section -->
@@ -397,6 +395,7 @@
           <div>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
           <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
+          <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()">Add Suppliers</button>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
           <button class="btn btn-danger active" ngf-select="upload($file)">Upload</button>
         </div>
@@ -427,6 +426,9 @@
             <label style="margin-left: 20px;margin-right: 20px;">Select Center</label><select class="box-spacin" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
               <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
              </select>
+          </div>
+          <div ng-if="errorMsg">
+            {{errorMsg}}
           </div>
           <div class="modal-body col-md-4 table-responsive" style="width: 550px; height: 550px">
               <table class="table table-bordered" ng-if="search_status">

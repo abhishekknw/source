@@ -1036,8 +1036,14 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       .success(function(response, status){
         console.log("search Data:",response);
         $scope.supplierData = response.data;
-        $scope.search_status = true;
-
+        if($scope.supplierData.length > 0){
+          $scope.search_status = true;
+          $scope.errorMsg = undefined;
+        }
+        else {
+          $scope.errorMsg = "No Results Found";
+          $scope.search_status = false;
+        }
       })
       .error(function(response, status){
           console.log("Error Happened while searching");
@@ -1050,6 +1056,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     $scope.search_status = false;
     $scope.supplier_type_code = null;
     $scope.search = null;
+    $scope.errorMsg = undefined;
     }
     //Start: To add searched societies in given center
           $scope.addMoreSuppliers = function(supplier,id){
@@ -1062,7 +1069,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               mapViewBasicSummary();
               suppliersData();
               gridViewBasicSummary();
-              alert("Society added Successfully");
+              $scope.errorMsg = "Society added Successfully";
             }
             else{
               alert("Selected Center does not have this Supplier Type")
