@@ -446,6 +446,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 // console.log($scope.current_center);
                 console.log("printing current_center", $scope.current_center);
                 $scope.current_center_index = 0;
+                $scope.current_center_id = $scope.current_center.center.id;
                 $scope.old_data = angular.copy($scope.center_data);
                 // $scope.selectSuppliers($scope.center_data[0].suppliers);
                 // $scope.checkSuppliers();
@@ -1031,24 +1032,36 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   $scope.search;
   $scope.search_status = false;
   $scope.supplier_type_code;
+  $scope.center_index = null;
   $scope.searchSuppliers = function(){
-    mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
-      .success(function(response, status){
-        console.log("search Data:",response);
-        $scope.supplierData = response.data;
-        if($scope.supplierData.length > 0){
-          $scope.search_status = true;
-          $scope.errorMsg = undefined;
-        }
-        else {
-          $scope.errorMsg = "No Results Found";
-          $scope.search_status = false;
-        }
-      })
-      .error(function(response, status){
-          console.log("Error Happened while searching");
-      });
-  }
+    $scope.search_status = false;
+    if($scope.supplier_type_code && $scope.search){
+      mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
+        .success(function(response, status){
+            $scope.center_index = null;
+          console.log("search Data:",response);
+          $scope.supplierData = response.data;
+          if($scope.supplierData.length > 0){
+            $scope.search_status = true;
+            $scope.errorMsg = undefined;
+          }
+          else {
+            $scope.errorMsg = "No Results Found, Please enter valid Search Text";
+            $scope.search_status = false;
+          }
+        })
+        .error(function(response, status){
+            console.log("Error Happened while searching");
+        });
+      }
+      else {
+        $scope.errorMsg = "Please Fill all the details";
+        $scope.supplierData = [];
+        $scope.search_status = false;
+        // $scope.supplier_type_code = null;
+        // $scope.search = null;
+      }
+    }
 //End: code added to search & show all suppliers on add societies tab
     //Start: function to clear searched supplier data whenever add suppliers button clicked
     $scope.clearSearchData = function(){
@@ -1057,37 +1070,53 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     $scope.supplier_type_code = null;
     $scope.search = null;
     $scope.errorMsg = undefined;
+    $scope.center_index = null;
     }
     //Start: To add searched societies in given center
           $scope.addMoreSuppliers = function(supplier,id){
-            if($scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code] != undefined){
+            if($scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code] != undefined && $scope.center_index != null){
               supplier.status = 'S';
               $scope.extraSuppliersData[$scope.current_center_index][$scope.supplier_type_code].push(supplier);
               $scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code].push(supplier);
               $scope.supplierData.splice(id,1);
-              $scope.changeCenter();
+              $scope.changeCurrentCenter($scope.center_index);
               mapViewBasicSummary();
               suppliersData();
               gridViewBasicSummary();
               $scope.errorMsg = "Society added Successfully";
+              if($scope.supplierData.length <=0){
+                $scope.search_status = false;
+                $scope.supplier_type_code = null;
+                $scope.search = null;
+              }
+            }
+            else if($scope.center_index == null){
+              $scope.errorMsg = "Please select center first to add new suppliers";
             }
             else{
-              alert("Selected Center does not have this Supplier Type")
+              $scope.errorMsg = "Selected supplier not allowed in this center";
             }
-            console.log($scope.extraSuppliersData);
             // $scope.suppliersList['ES'].push(supplier);
             // $scope.center_data[$scope.current_center_index].suppliers['ES'].push(supplier);
 
           }
     //End: To add searched societies in given center
     //Start: function to select center at add more suplliers
-    $scope.selectCenter = function(center_id){
-      for(var i=0;i<$scope.center_data.length; i++){
-        if($scope.center_data[i].center.id == center_id){
-            // $scope.current_center = $scope.center_data[i]
-            $scope.current_center_index = i;
+    $scope.selectCenter = function(center_index){
+
+      $scope.center_index = center_index;
+      console.log($scope.center_index,center_index);
+      if(center_index != null){
+        for(var i=0;i<$scope.center_data.length; i++){
+          if($scope.center_data[i].center.id == center_index){
+            console.log(i);
+              // $scope.current_center = $scope.center_data[i]
+              // $scope.center_index = i;
+              $scope.current_center_index = i;
+          }
         }
       }
+      // $scope.changeCurrentCenter($scope.current_center_index);
     }
     //End: function to select center at add more suplliers
 });
