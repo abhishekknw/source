@@ -89,19 +89,18 @@ def get_union_inventory_price_per_flat(data, unique_inventory_codes, index):
 
     # assert type(data) is DictType, 'Data variable should be a dict'
     # assert type(inventory_code) is StringType, 'inventory_code should be a String {0}.'.format(inventory_code)
-
+    function = get_union_inventory_price_per_flat.__name__
     try:
-        response = Response(data={'status': True, 'data': ''}, status=status.HTTP_200_OK)
         # iterate over individual codes and calculate for each code and  return
         for code in unique_inventory_codes:
             if data.get('flat_count'):
-                price = data[price_per_flat[code][1]] if data.get(price_per_flat[code][1]) else 0
-                data[price_per_flat[code][0]] = (price) / (data['flat_count'])
-        response.data['data'] = data
-        return response
+                inventory_price = data.get(price_per_flat[code][1], 0)
+                if not inventory_price:
+                    inventory_price = 0.0
+                data[price_per_flat[code][0]] = inventory_price/(float(data['flat_count']))
+        return ui_utils.handle_response(function, data=data, success=True)
     except Exception as e:
-        return Response({'status': False, 'error': '{0} at society index {1}'.format(e.message, index)},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def insert_supplier_sheet(workbook, result):
@@ -1868,7 +1867,19 @@ def make_export_final_response(result, data):
 
             for code, supplier_object_list in center['suppliers'].iteritems():
 
-                for supplier_object in supplier_object_list:
+                # calculate unique inventory codes available in the suppliers_meta dict for this supplier_type
+                if center['suppliers_meta'].get(code):
+                    inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
+                else:
+                    inventory_codes = []
+
+                # get union of inventory_codes. POST will become [PO, ST] etc.
+                response = get_unique_inventory_codes(inventory_codes)
+                if not response.data['status']:
+                    return response
+                unique_inv_codes = response.data['data']
+
+                for index, supplier_object in enumerate(supplier_object_list):
 
                     # obtain the dict containing non-center information
                     response = construct_single_supplier_row(supplier_object, result[code]['data_keys'])
@@ -1879,6 +1890,14 @@ def make_export_final_response(result, data):
 
                     # merge the two dicts
                     response = merge_two_dicts(center_info_dict, supplier_info_dict)
+                    if not response.data['status']:
+                        return response
+
+                    # final object ( dict ). it contains center information as well as suppliers specific information
+                    final_supplier_dict = response.data['data']
+
+                    # add _price_per_flat information to the final_dict received.
+                    response = get_union_inventory_price_per_flat(final_supplier_dict, unique_inv_codes, index)
                     if not response.data['status']:
                         return response
 
