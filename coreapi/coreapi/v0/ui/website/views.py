@@ -1263,12 +1263,17 @@ class FilteredSuppliers(APIView):
                 return response
             suppliers = response.data['data']
 
+            # because some suppliers can be outside the given radius, we need to recalculate list of 
+            # supplier_id's. 
+            final_suppliers_list =  [supplier['supplier_id'] for supplier in suppliers]
+
             # response = website_utils.set_supplier_extra_attributes(serializer.data, supplier_type_code, inventory_filters)
             # if not response.data['status']:
             #     return response
             # serializer.data = response.data['data']
 
             # calculate total aggregate count
+
             suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=final_suppliers_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
