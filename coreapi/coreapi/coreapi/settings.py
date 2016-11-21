@@ -90,11 +90,11 @@ DATABASES = {
     },
 
     'default': {
-         'NAME':'machadalo',
+        'NAME':'machadalo',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': 'localhost',
          'USER': 'root',
-         'PASSWORD': 'yo@123',
+         'PASSWORD': 'vidhi',
       }
 
     }

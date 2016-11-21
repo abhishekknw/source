@@ -2474,6 +2474,7 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
                 supplier['buffer_status'] = False
                 # status is shortlisted initially
                 supplier['status'] = 'S'
+
                 # do not calculate prices if no inventory summary object exist
                 # todo: involves one database hit within calculate_price() function. improve it later if code is slow.
                 if supplier_inventory_obj:
