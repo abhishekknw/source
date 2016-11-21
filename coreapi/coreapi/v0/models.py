@@ -125,6 +125,7 @@ class AdInventoryType(models.Model):
     class Meta:
         db_table = 'ad_inventory_type'
 
+
 class DurationType(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     duration_name = models.CharField(db_column='DURATION_NAME', max_length=20)  # Field name made lowercase.
@@ -132,6 +133,7 @@ class DurationType(models.Model):
 
     class Meta:
         db_table = 'duration_type'
+
 
 class PriceMappingDefault(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -1693,6 +1695,7 @@ class FlatTypeCode(models.Model):
     class Meta:
 
         db_table = 'flat_type_code'
+
 
 class InventorySummary(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
