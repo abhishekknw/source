@@ -1,5 +1,6 @@
-from rest_framework.response import Response
-from rest_framework import status
+from django.core.exceptions import ObjectDoesNotExist
+
+import v0.ui.utils as ui_utils
 
 
 def do_each_model(myModel, supplier_model, content_type):
@@ -9,14 +10,19 @@ def do_each_model(myModel, supplier_model, content_type):
     :param content_type:  the content Type object
     :return: success in case of success, failure otherwise
     """
+    function = do_each_model.__name__
+    supplier_id = ''
     try:
         for row in myModel.objects.all():
+            supplier_id = row.supplier_id
             if row.supplier:
                 supplier_type = supplier_model.objects.get(supplier_id=row.supplier.supplier_id)
                 row.content_type = content_type
                 row.object_id = row.supplier.supplier_id
                 row.content_object = supplier_type
                 row.save()
-        return Response({'status': True, 'data': 'success'}, status=status.HTTP_200_OK)
+        return ui_utils.handle_response(function, data='success', success=True)
+    except ObjectDoesNotExist as e:
+        return ui_utils.handle_response(function, data=supplier_id, exception_object=e)
     except Exception as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        return ui_utils.handle_response(function, exception_object=e)

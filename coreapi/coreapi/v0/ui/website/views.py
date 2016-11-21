@@ -2640,7 +2640,7 @@ class CreateInitialProposal(APIView):
                 proposal_data = request.data
 
                 business_id = proposal_data.get('business_id')
-                account_id = proposal_data.get('account_id')
+                account_id = account_id
 
                 # create a unique proposal id
                 response = website_utils.create_proposal_id(business_id, account_id)
@@ -2671,7 +2671,8 @@ class CreateInitialProposal(APIView):
                     return response
 
                 # return the proposal_id of the new proposal created
-                return ui_utils.handle_response(class_name, data=proposal_data['proposal_id'], success=True)
+                proposal_id = proposal_data['proposal_id']
+                return ui_utils.handle_response(class_name, data=proposal_id, success=True)
         except Exception as e:
              return ui_utils.handle_response(class_name, exception_object=e)
 
