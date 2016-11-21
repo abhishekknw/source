@@ -434,3 +434,7 @@ business_letters = 4
 account_letters = 4
 # send only this much characters in response
 proposal_id_limit = 5
+
+# a list ot tuples where each tuple says the inventory_type, duration, and  column indexes where pricing information of
+#  inventories is stored. These are used to populate price_mapping_default() table.
+current_inventories = [('poster_a4', 'campaign_weekly', 10), ('standee_small', 'campaign_weekly', 21), ('stall_small', 'unit_daily', 26), ('car_display_standard', 'unit_daily', 33), ('flier_door_to_door', 'unit_daily', 44)]

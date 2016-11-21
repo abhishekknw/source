@@ -49,6 +49,7 @@ from coreapi.settings import BASE_URL, BASE_DIR
 from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas
 from constants import keys, decision
 import constants as ui_constants
+from website.utils import save_price_mapping_default
 
 
 class UsersProfilesAPIView(APIView):
@@ -809,11 +810,18 @@ class ImportSummaryData(APIView):
 
                         data['supplier_id'] = response.data['data']
                         data['supplier_type_code'] = 'RS'
+
+                        # save pricing information in price_mapping_default table
+                        response = save_price_mapping_default(data['supplier_id'], data['supplier_type_code'], row)
+                        if not response.data['status']:
+                            return response
+
                         url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
                         url = BASE_URL + url[1:]
                         headers = {
                             'Content-Type': 'application/json'
                         }
+
                         response = requests.post(url, json.dumps(data), headers=headers)
                         if response.status_code != status.HTTP_200_OK:
                             return ui_utils.handle_response(class_name, data=response.json())
