@@ -1492,11 +1492,15 @@ class PosterAPIView(APIView):
         notice_boards = []
         disable = {}
         try:
+            #code added and changed for getting supplier_type_code
+            supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            data = request.data.copy()
+            data['supplier_type_code'] = supplier_type_code
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
             society = SupplierTypeSociety.objects.get(pk=id)
             posters = PosterInventory.objects.filter(supplier=society)
 
-            item = InventorySummary.objects.get_object(request.data.copy(), id)
+            item = InventorySummary.objects.get_object(data, id)
             if not item:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1613,6 +1617,11 @@ class FlierAPIView(APIView):
         response = {}
         fliers = []
         try:
+            #code added and changed for getting supplier_type_code
+            supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            data = request.data.copy()
+            data['supplier_type_code'] = supplier_type_code
+
             society = SupplierTypeSociety.objects.get(pk=id)
             flyers = FlyerInventory.objects.filter(supplier=id)
             response['flat_count'] = society.flat_count
@@ -1621,7 +1630,7 @@ class FlierAPIView(APIView):
             response['flyers_data'] = serializer.data
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all().values()
 
-            item = InventorySummary.objects.get_object(request.data.copy(), id)
+            item = InventorySummary.objects.get_object(data, id)
             if not item:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -1714,11 +1723,15 @@ class StandeeBannerAPIView(APIView):
         # response = {}
         standees = []
 
+        #code added and changed for getting supplier_type_code
+        supplier_type_code = request.query_params.get('supplierTypeCode', None)
+        data = request.data.copy()
+        data['supplier_type_code'] = supplier_type_code
 
         towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
         society = SupplierTypeSociety.objects.get(pk=id)
 
-        item = InventorySummary.objects.get_object(request.data.copy(), id)
+        item = InventorySummary.objects.get_object(data, id)
         if not item:
             return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1759,12 +1772,17 @@ class StallAPIView(APIView):
         response = {}
         stall = []
 
+        #code added and changed for getting supplier_type_code
+        supplier_type_code = request.query_params.get('supplierTypeCode', None)
+        data = request.data.copy()
+        data['supplier_type_code'] = supplier_type_code
+
         society = SupplierTypeSociety.objects.get(pk=id)
         stalls = StallInventory.objects.filter(supplier=id)
 
         #item = InventorySummary.objects.get(supplier=society)
 
-        item = InventorySummary.objects.get_object(request.data.copy(), id)
+        item = InventorySummary.objects.get_object(data, id)
         if not item:
             return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 

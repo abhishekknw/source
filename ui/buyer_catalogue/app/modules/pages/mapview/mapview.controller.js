@@ -172,6 +172,15 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.current_center.suppliers = response.data.suppliers[0].suppliers;
                 // $scope.current_center = response;
                 $scope.center_data[$scope.current_center_index].suppliers = response.data.suppliers[0].suppliers;
+                // to copy extra suppliers searched in add more suppliers
+                // needs to add every time whenever new response come from backend
+                // current_center_keys gets all keys in current_center so that we can copy
+                var current_center_keys = Object.keys($scope.center_data[$scope.current_center_index].suppliers);
+                for (var i = 0; i < current_center_keys.length; i++) {
+                  var code = current_center_keys[i];
+                  $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
+                }
+                console.log(current_center_keys.length);
                 // $scope.centers1[$scope.current_center_index].societies_count = response.supplier_count;
                 // $scope.centers1[$scope.current_center_index].societies_inventory_count = response.supplier_inventory_count;
                 // $scope.centers = $scope.centers1;
@@ -364,14 +373,21 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       RS:[],
       CP:[],
     };
+    //created set of suppliers to collect unique suppliers in multiple centers
+    //this is used to show all suppliers uniquely on gridview
+    //i.e no duplication if the supplier is repeated in multiple centers
     $scope.unique_suppliers = new Set();
+    $scope.extraSuppliersData = [];
     var center_id=0;
+    //function basically adds required keys to handle supplier allowed checkbox
+    //function called from getSpaces after loads the page
     $scope.addSupplierFilters = function(centers){
       angular.forEach(centers, function(center){
 
         center.suppliers_allowed = {};
+        $scope.extraSuppliersData[center_id] = {};
        if(center.suppliers['RS'] != undefined){
-         center.suppliers['ES'] = [];
+         $scope.extraSuppliersData[center_id]['RS'] = [];
          center.suppliers_allowed.society_allowed = true;
          $scope.unique_suppliers.add('RS');
          center.suppliers_allowed['society_show'] = true;
@@ -380,7 +396,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          $scope.supplier_centers_list.RS.push(center_id);
        }
        if(center.suppliers['CP'] != undefined){
-         center.suppliers['ES'] = [];
+         $scope.extraSuppliersData[center_id]['CP'] = [];
         center.suppliers_allowed['corporate_allowed'] =  true;
         $scope.unique_suppliers.add('CP');
         center.suppliers_allowed['corporate_show'] =  true;
@@ -430,6 +446,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 // console.log($scope.current_center);
                 console.log("printing current_center", $scope.current_center);
                 $scope.current_center_index = 0;
+                $scope.current_center_id = $scope.current_center.center.id;
                 $scope.old_data = angular.copy($scope.center_data);
                 // $scope.selectSuppliers($scope.center_data[0].suppliers);
                 // $scope.checkSuppliers();
@@ -830,6 +847,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           for(var index=0;index<$scope.supplier_centers_list[code].length;index++){
             $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code] = responseData[index].$$state.value.data.data.suppliers[code];
             $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers_meta[code] = responseData[index].$$state.value.data.data.suppliers_meta[code];
+            $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code].push.apply($scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code],$scope.extraSuppliersData[index][code]);
           }
         $scope.current_center = $scope.center_data[$scope.current_center_index];
         suppliersData();
@@ -860,7 +878,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                     response.data.center = $scope.current_center.center;
                     $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.suppliers[code];
                     $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.suppliers_meta[code];
+                    $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
                     $scope.current_center = $scope.center_data[$scope.current_center_index];
+                    console.log($scope.extraSuppliersData[$scope.current_center_index][code],$scope.center_data);
 
                     suppliersData();
                     mapViewBasicSummary();
@@ -973,7 +993,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               // $scope.current_center.societies_count = $scope.centers1[$scope.current_center_index].societies_count;
               // $scope.towers = calculatetowers();
               $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
-              suppliersData();
               mapViewBasicSummary();
               mapViewFiltersSummary();
               mapViewImpressions();
@@ -1013,38 +1032,91 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   $scope.search;
   $scope.search_status = false;
   $scope.supplier_type_code;
+  $scope.center_index = null;
   $scope.searchSuppliers = function(){
-    mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
-      .success(function(response, status){
-        console.log("search Data:",response);
-        $scope.supplierData = response.data;
-        $scope.search_status = true;
-
-      })
-      .error(function(response, status){
-          console.log("Error Happened while searching");
-      });
-  }
+    $scope.search_status = false;
+    if($scope.supplier_type_code && $scope.search){
+      mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
+        .success(function(response, status){
+            $scope.center_index = null;
+          console.log("search Data:",response);
+          $scope.supplierData = response.data;
+          if($scope.supplierData.length > 0){
+            $scope.search_status = true;
+            $scope.errorMsg = undefined;
+          }
+          else {
+            $scope.errorMsg = "No Results Found, Please enter valid Search Text";
+            $scope.search_status = false;
+          }
+        })
+        .error(function(response, status){
+            console.log("Error Happened while searching");
+        });
+      }
+      else {
+        $scope.errorMsg = "Please Fill all the details";
+        $scope.supplierData = [];
+        $scope.search_status = false;
+        // $scope.supplier_type_code = null;
+        // $scope.search = null;
+      }
+    }
 //End: code added to search & show all suppliers on add societies tab
+    //Start: function to clear searched supplier data whenever add suppliers button clicked
+    $scope.clearSearchData = function(){
+    $scope.supplierData = [];
+    $scope.search_status = false;
+    $scope.supplier_type_code = null;
+    $scope.search = null;
+    $scope.errorMsg = undefined;
+    $scope.center_index = null;
+    }
     //Start: To add searched societies in given center
-          $scope.suppliersList = {
-            'ES':[],
-          };
           $scope.addMoreSuppliers = function(supplier,id){
-            $scope.suppliersList['ES'].push(supplier);
-            $scope.center_data[$scope.current_center_index].suppliers['ES'].push(supplier);
-            $scope.supplierData.splice(id,1);
-             alert("Society added Successfully");
+            if($scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code] != undefined && $scope.center_index != null){
+              supplier.status = 'S';
+              $scope.extraSuppliersData[$scope.current_center_index][$scope.supplier_type_code].push(supplier);
+              $scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code].push(supplier);
+              $scope.supplierData.splice(id,1);
+              $scope.changeCurrentCenter($scope.center_index);
+              mapViewBasicSummary();
+              suppliersData();
+              gridViewBasicSummary();
+              $scope.errorMsg = "Supplier added Successfully";
+              if($scope.supplierData.length <=0){
+                $scope.search_status = false;
+                $scope.supplier_type_code = null;
+                $scope.search = null;
+              }
+            }
+            else if($scope.center_index == null){
+              $scope.errorMsg = "Please select center first to add new suppliers";
+            }
+            else{
+              $scope.errorMsg = "Selected supplier not allowed in this center";
+            }
+            // $scope.suppliersList['ES'].push(supplier);
+            // $scope.center_data[$scope.current_center_index].suppliers['ES'].push(supplier);
+
           }
     //End: To add searched societies in given center
     //Start: function to select center at add more suplliers
-    $scope.selectCenter = function(center_id){
-      for(var i=0;i<$scope.center_data.length; i++){
-        if($scope.center_data[i].center.id == center_id){
-            // $scope.current_center = $scope.center_data[i]
-            $scope.current_center_index = i;
+    $scope.selectCenter = function(center_index){
+
+      $scope.center_index = center_index;
+      console.log($scope.center_index,center_index);
+      if(center_index != null){
+        for(var i=0;i<$scope.center_data.length; i++){
+          if($scope.center_data[i].center.id == center_index){
+            console.log(i);
+              // $scope.current_center = $scope.center_data[i]
+              // $scope.center_index = i;
+              $scope.current_center_index = i;
+          }
         }
       }
+      // $scope.changeCurrentCenter($scope.current_center_index);
     }
     //End: function to select center at add more suplliers
 });
@@ -1099,17 +1171,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          getShortlistedFilteredSocieties();
            console.log("Submitting $scope.centers :", $scope.centers);
        };
-       var getExtraSocieties = function(){
-         for(var i=0;i<$scope.center_data.length;i++){
-           if($scope.center_data[i].suppliers['RS'] != undefined)
-            $scope.center_data[i].suppliers['RS'].push.apply($scope.center_data[i].suppliers['RS'],$scope.center_data[i].suppliers['ES']);
-            delete $scope.center_data[i].suppliers['ES'];
-         }
-         console.log($scope.center_data);
-       }
      $scope.exportData = function(){
              getShortlistedFilteredSocieties();
-             getExtraSocieties();
              console.log($scope.center_data);
 
              $http({

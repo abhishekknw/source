@@ -11,8 +11,8 @@
     <div class="carousel-inner" >
         <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in CarImages">
           <div class="row">
-            <img src="http://mdimages.s3.amazonaws.com/{{image.image_url}}" width="240px" height="160"/>
-            <img src="http://mdimages.s3.amazonaws.com/{{CarImages[$index+1].image_url}}"  width="240px" height="160" />
+            <img ng-src="http://mdimages.s3.amazonaws.com/{{image.image_url}}" width="240px" height="160"/>
+            <img ng-src="http://mdimages.s3.amazonaws.com/{{CarImages[$index+1].image_url}}"  width="240px" height="160" />
           </div>
           <a class="left carousel-control"  href="#slider-Car" role="button" data-slide="prev">
            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
