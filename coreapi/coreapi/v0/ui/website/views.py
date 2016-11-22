@@ -1228,10 +1228,10 @@ class FilteredSuppliers(APIView):
             
             # if both available, find the intersection. basically it's another way of doing AND query.
             # the following conditions are use case dependent. The checking is done on the basis of 
-            # query length. an empty query lenth means that query didn't contain any thing in it. 
+            # query length. an empty query length means that query didn't contain any thing in it.
             if inventory_type_query.__len__() and specific_filters_query.__len__():
                 final_suppliers_list = specific_filters_suppliers.intersection(inventory_type_query_suppliers)
-            # if only inventory suppliers available, set it. Take the UNION in this case
+            # if only inventory suppliers available, set it. Take the UNION in this case.
             elif inventory_type_query.__len__():
                 final_suppliers_list = inventory_type_query_suppliers
             # if only specific suppliers available, set it. Take the UNION in this case.

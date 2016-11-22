@@ -2458,6 +2458,7 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
         suppliers: a list of supplier dicts
         supplier_ids: a list of supplier id's
         supplier_type_code: CP, RS
+        coordinates: a dict containing radius, lat, long information.
 
     Returns:
 
@@ -2495,7 +2496,8 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
                 supplier['status'] = 'S'
 
                 # do not calculate prices if no inventory summary object exist
-                # todo: involves one database hit within calculate_price() function. improve it later if code is slow.
+                # todo: involves one database hit within handle_inventory_pricing() function.
+                #  improve it later if code is slow.
                 if supplier_inventory_obj:
                     if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
                         supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count

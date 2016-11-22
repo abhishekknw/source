@@ -267,7 +267,8 @@ class SocietyAPIView(APIView):
             serializer = UISocietySerializer(item)
 
             #Start : Code changes to display images
-            images = ImageMapping.objects.filter(supplier=item)
+            # todo : also write code for content_type
+            images = ImageMapping.objects.filter(object_id=id)
             image_serializer = ImageMappingSerializer(images, many=True)
             response['society_images'] = image_serializer.data
             #End : Code changes to display images
