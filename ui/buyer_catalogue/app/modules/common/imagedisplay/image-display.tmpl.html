@@ -16,7 +16,7 @@
 
    <div class="carousel-inner">
        <div class="item" ng-class="{active:!$index}" ng-repeat="image in SocietyImages">
-          <img ng-src="http://mdimages.s3.amazonaws.com/{{image.image_url}}"  width="600" height="400" class="img-responsive"/>
+          <img ng-src="{{image}}"  width="600" height="400" class="img-responsive"/>
        </div>
 
    </div>
