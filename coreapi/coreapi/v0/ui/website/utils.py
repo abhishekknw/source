@@ -89,19 +89,18 @@ def get_union_inventory_price_per_flat(data, unique_inventory_codes, index):
 
     # assert type(data) is DictType, 'Data variable should be a dict'
     # assert type(inventory_code) is StringType, 'inventory_code should be a String {0}.'.format(inventory_code)
-
+    function = get_union_inventory_price_per_flat.__name__
     try:
-        response = Response(data={'status': True, 'data': ''}, status=status.HTTP_200_OK)
         # iterate over individual codes and calculate for each code and  return
         for code in unique_inventory_codes:
             if data.get('flat_count'):
-                price = data[price_per_flat[code][1]] if data.get(price_per_flat[code][1]) else 0
-                data[price_per_flat[code][0]] = (price) / (data['flat_count'])
-        response.data['data'] = data
-        return response
+                inventory_price = data.get(price_per_flat[code][1], 0)
+                if not inventory_price:
+                    inventory_price = 0.0
+                data[price_per_flat[code][0]] = inventory_price/(float(data['flat_count']))
+        return ui_utils.handle_response(function, data=data, success=True)
     except Exception as e:
-        return Response({'status': False, 'error': '{0} at society index {1}'.format(e.message, index)},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def insert_supplier_sheet(workbook, result):
@@ -1868,7 +1867,19 @@ def make_export_final_response(result, data):
 
             for code, supplier_object_list in center['suppliers'].iteritems():
 
-                for supplier_object in supplier_object_list:
+                # calculate unique inventory codes available in the suppliers_meta dict for this supplier_type
+                if center['suppliers_meta'].get(code):
+                    inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
+                else:
+                    inventory_codes = []
+
+                # get union of inventory_codes. POST will become [PO, ST] etc.
+                response = get_unique_inventory_codes(inventory_codes)
+                if not response.data['status']:
+                    return response
+                unique_inv_codes = response.data['data']
+
+                for index, supplier_object in enumerate(supplier_object_list):
 
                     # obtain the dict containing non-center information
                     response = construct_single_supplier_row(supplier_object, result[code]['data_keys'])
@@ -1879,6 +1890,14 @@ def make_export_final_response(result, data):
 
                     # merge the two dicts
                     response = merge_two_dicts(center_info_dict, supplier_info_dict)
+                    if not response.data['status']:
+                        return response
+
+                    # final object ( dict ). it contains center information as well as suppliers specific information
+                    final_supplier_dict = response.data['data']
+
+                    # add _price_per_flat information to the final_dict received.
+                    response = get_union_inventory_price_per_flat(final_supplier_dict, unique_inv_codes, index)
                     if not response.data['status']:
                         return response
 
@@ -2439,6 +2458,7 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
         suppliers: a list of supplier dicts
         supplier_ids: a list of supplier id's
         supplier_type_code: CP, RS
+        coordinates: a dict containing radius, lat, long information.
 
     Returns:
 
@@ -2476,36 +2496,37 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
                 supplier['status'] = 'S'
 
                 # do not calculate prices if no inventory summary object exist
-                # todo: involves one database hit within calculate_price() function. improve it later if code is slow.
+                # todo: involves one database hit within handle_inventory_pricing() function.
+                #  improve it later if code is slow.
                 if supplier_inventory_obj:
                     if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
                         supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
-                        response = calculate_price('poster_a4', 'campaign_weekly', supplier['supplier_id'], supplier_type_code)
+                        response = handle_inventory_pricing('poster_a4', 'campaign_weekly', supplier['supplier_id'], supplier_type_code)
                         if not response.data['status']:
                             return response
                         supplier['poster_price'] = response.data['data']
 
                     if supplier_inventory_obj.standee_allowed:
                         supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
-                        response = calculate_price('standee_small', 'campaign_weekly', supplier['supplier_id'], supplier_type_code)
+                        response = handle_inventory_pricing('standee_small', 'campaign_weekly', supplier['supplier_id'], supplier_type_code)
                         if not response.data['status']:
                             return response
                         supplier['standee_price'] = response.data['data']
 
                     if supplier_inventory_obj.stall_allowed:
                         supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
-                        response = calculate_price('stall_small', 'unit_daily', supplier['supplier_id'], supplier_type_code)
+                        response = handle_inventory_pricing('stall_small', 'unit_daily', supplier['supplier_id'], supplier_type_code)
                         if not response.data['status']:
                             return response
                         supplier['stall_price'] = response.data['data']
-                        response = calculate_price('car_display_standard', 'unit_daily', supplier['supplier_id'], supplier_type_code)
+                        response = handle_inventory_pricing('car_display_standard', 'unit_daily', supplier['supplier_id'], supplier_type_code)
                         if not response.data['status']:
                             return response
                         supplier['car_display_price'] = response.data['data']
 
                     if supplier_inventory_obj.flier_allowed:
                         supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
-                        response = calculate_price('flier_door_to_door', 'unit_daily', supplier['supplier_id'], supplier_type_code)
+                        response = handle_inventory_pricing('flier_door_to_door', 'unit_daily', supplier['supplier_id'], supplier_type_code)
                         if not response.data['status']:
                             return response
                         supplier['flier_price'] = response.data['data']
@@ -2516,27 +2537,32 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def calculate_price(inv_type, dur_type, supplier_id, supplier_type_Code):
+def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code, business_price=0):
     """
     Args:
         inv_type: type of inventory
         dur_type: duration
+        supplier_id: The supplier_id for which price needs to be returned
+        supplier_type_code: The supplier_type_code.
+        business_price: The price if given is set to newly created price_mapping_default object.
 
-    Returns: prince for the inventory, for this inventory type and this duration
+    Returns: price for the inventory, for this inventory type and this duration
     """
-    function = calculate_price.__name__
+    function = handle_inventory_pricing.__name__
     try:
-        response = ui_utils.get_content_type(supplier_type_Code)
+        response = ui_utils.get_content_type(supplier_type_code)
         if not response.data['data']:
             return response
         content_type = response.data['data']
         adinventory_type_dict = ui_utils.adinventory_func()
         duration_type_dict = ui_utils.duration_type_func()
-        price_mapping = PriceMappingDefault.objects.get(adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type], object_id=supplier_id, content_type=content_type )
-        return ui_utils.handle_response(function, data=price_mapping.business_price, success=True)
-    except ObjectDoesNotExist as e:
-        # return zero price if the right object does not exist
-        return ui_utils.handle_response(function, data=0, success=True)
+        price_mapping, created = PriceMappingDefault.objects.get_or_create(adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type], object_id=supplier_id, content_type=content_type )
+        if not created:
+            return ui_utils.handle_response(function, data=price_mapping.business_price, success=True)
+        else:
+            price_mapping.business_price = business_price
+            price_mapping.save()
+            return ui_utils.handle_response(function, data=price_mapping.business_price, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -2622,6 +2648,7 @@ def send_excel_file(file_name):
                 'Access-Control-Expose-Headers': "file_name, Content-Disposition"
             }
             output.close()
+            excel.close()
             # remove the file from the disk
             os.remove(file_name)
 
@@ -2635,4 +2662,33 @@ def send_excel_file(file_name):
 
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def save_price_mapping_default(supplier_id, supplier_type_code, row):
+    """
+    saves data in price_mapping_default  for all kinds of inventories
+    Args:
+        supplier_id:  The supplier_id
+        supplier_type_code:  RS, CP
+        row: a variable representing one row of the sheet.
+
+    Returns: success in case price entry is success.
+
+    """
+    function = save_price_mapping_default.__name__
+    try:
+        with transaction.atomic():
+            # for each predefined inventories. each 'inventory' is actually a tuple. look in constants for more details.
+            for inventory in website_constants.current_inventories:
+                inventory_type = inventory[0]  # at index 0 we have inventory_type
+                inventory_duration = inventory[1]  # at index 1 we have inventory_duration
+                price = int(row[inventory[2]])  # at index 2 we have inventory_pricing index.
+                # todo: one db hit in each loop. improve if code slows down in future
+                response = handle_inventory_pricing(inventory_type, inventory_duration, supplier_id, supplier_type_code, business_price=price)
+                if not response.data['status']:
+                    return response
+            # done. return success.
+            return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return  ui_utils.handle_response(function, exception_object=e)
 
