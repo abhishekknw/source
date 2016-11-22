@@ -2648,6 +2648,7 @@ def send_excel_file(file_name):
                 'Access-Control-Expose-Headers': "file_name, Content-Disposition"
             }
             output.close()
+            excel.close()
             # remove the file from the disk
             os.remove(file_name)
 
@@ -2681,7 +2682,7 @@ def save_price_mapping_default(supplier_id, supplier_type_code, row):
             for inventory in website_constants.current_inventories:
                 inventory_type = inventory[0]  # at index 0 we have inventory_type
                 inventory_duration = inventory[1]  # at index 1 we have inventory_duration
-                price = int(row.get(inventory[2]))  # at index 2 we have inventory_pricing index.
+                price = int(row[inventory[2]])  # at index 2 we have inventory_pricing index.
                 # todo: one db hit in each loop. improve if code slows down in future
                 response = handle_inventory_pricing(inventory_type, inventory_duration, supplier_id, supplier_type_code, business_price=price)
                 if not response.data['status']:
