@@ -2438,7 +2438,6 @@ class ImportSupplierData(APIView):
         """
         class_name = self.__class__.__name__
         try:
-
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
             my_file = request.FILES['file']
@@ -2534,7 +2533,8 @@ class ImportSupplierData(APIView):
 
                 data = result
                 headers={
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
                 }
                 response = requests.post(url, json.dumps(data), headers=headers)
 
@@ -2551,7 +2551,10 @@ class ImportSupplierData(APIView):
             files = {
                 'file': my_file
             }
-            response = requests.post(url, files=files)
+            headers = {
+                'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
+            }
+            response = requests.post(url, files=files, headers=headers)
 
             if response.status_code != status.HTTP_200_OK:
                 return Response({'status': False, 'error in import-metric-data api ': response.text},
