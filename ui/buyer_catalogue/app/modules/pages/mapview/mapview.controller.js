@@ -1077,7 +1077,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               mapViewBasicSummary();
               suppliersData();
               gridViewBasicSummary();
-              $scope.errorMsg = "Supplier added Successfully";
+              $scope.errorMsg = "Supplier Added Successfully";
               if($scope.supplierData.length <=0){
                 $scope.search_status = false;
                 $scope.supplier_type_code = null;

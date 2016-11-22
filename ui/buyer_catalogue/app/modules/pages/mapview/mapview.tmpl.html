@@ -435,6 +435,7 @@
               <table class="table table-bordered" ng-if="search_status">
                 <thead>
                   <tr>
+                    <th class="center-align">#</th>
                     <th class="center-align">Name</th>
                     <th class="center-align">City</th>
                     <th class="center-align">Area</th>
@@ -444,6 +445,7 @@
                 </thead>
                 <tbody>
                   <tr ng-repeat = "supplier in supplierData">
+                    <td>{{$index+1}}</td>
                     <td>{{supplier.name}}</td>
                     <td>{{supplier.city}}</td>
                     <td>{{supplier.area}}</td>
