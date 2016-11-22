@@ -877,7 +877,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                     $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.suppliers_meta[code];
                     $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
                     $scope.current_center = $scope.center_data[$scope.current_center_index];
-                
+
                     suppliersData();
                     mapViewBasicSummary();
                     mapViewFiltersSummary();
@@ -891,6 +891,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 })
                 .error(function(response, status){
                     console.log("Error Happened while filtering");
+                    $scope.checkFilters = false;
                 });
         }
   //End: generic function for fetching all supplier filters

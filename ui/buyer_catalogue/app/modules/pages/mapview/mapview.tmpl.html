@@ -12,7 +12,7 @@
          </select>
       </div>
       <div class="col-md-2">Center Latitude & Longitude: </div>
-      <div class="col-md-2">{{current_center.center.latitude}}/{{current_center.center.longitude}}</div>
+      <div class="col-md-2">{{current_center.center.latitude | limitTo:10 }}/{{current_center.center.longitude | limitTo:10}}</div>
       <div class="col-md-2">Business Name : {{business_name}}</div>
     </div>
     <div class="row">
