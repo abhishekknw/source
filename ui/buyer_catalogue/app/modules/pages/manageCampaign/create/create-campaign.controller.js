@@ -60,14 +60,10 @@ angular.module('machadaloPages')
       pagesService.loadBusinessTypes()
       .success(function (response){
           $scope.busTypes = response;
-          console.log("BusTypes : ");
-          console.log($scope.busTypes);
         });
       $scope.getBusiness = function() {
         pagesService.getBusiness($scope.bsSelect)
         .success(function (response, status) {
-              console.log("model.business :  ")
-              console.log(response);
               $scope.model.business = response.business;
               $scope.model.accounts = response.accounts;
               $rootScope.business_id = response.business.business_id;
@@ -82,14 +78,11 @@ angular.module('machadaloPages')
 
       var business_id_temp = pagesService.getBusinessId();
       if(business_id_temp){
-        console.log("business_id_temp received", business_id_temp);
         $scope.bsSelect = business_id_temp;
         $scope.getBusiness();
       };
 
       $scope.getSubTypes = function() {
-          // debugger;
-            console.log($scope.model.business.business_type_id);
             if($scope.model.business.business_type_id == ''){
                 $scope.sub_types = {};
                 $scope.model.business.sub_type_id = "";
@@ -108,19 +101,16 @@ angular.module('machadaloPages')
                 name: '',     designation: '',    department: '',
                 email: '',    phone: '',      spoc: ''
             });
-            console.log($scope.model.business.contacts);
         };
 
       $scope.remove = function(index) {
         $scope.model.business.contacts.splice(index, 1);
-        console.log($scope.model.business.contacts);
       };
 
     	$scope.getAllBusinesses = function() {
         $scope.bsSelect = undefined;
 	    	pagesService.getAllBusinesses()
 	    	.success(function (response, status) {
-	    		    console.log(response);
 	            $scope.businesses = response;
 	       });
 	    };
@@ -179,7 +169,6 @@ angular.module('machadaloPages')
               return;
         }
         else{
-          console.log("$scope.sel_account_id : ", $scope.sel_account_id);
           pagesService.setProposalAccountId(sel_account_id);
           $location.path('/'+sel_account_id + '/createproposal');
         }
@@ -194,17 +183,11 @@ angular.module('machadaloPages')
       }
 
     	$scope.create = function() {
-        	  console.log($scope.model);
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {
 
-            console.log("\n\nresponse is : ");
-            console.log(response);
             var sub_type_id = $scope.model.business.sub_type_id;
             var type_id = $scope.model.business.business_type_id;
-
-            console.log(sub_type_id, type_id);
-            console.log('response is : ',response);
             // response = JSON.parse(response);
             $scope.model.business = response.business;
             $scope.model.business.sub_type_id = sub_type_id;
@@ -220,12 +203,9 @@ angular.module('machadaloPages')
               pagesService.setBusinessObject($scope.model.business);
             }
         }).error(function(response, status){
-             console.log("response is : ", response);
-             console.log("status is  : " ,status);
              if (typeof response != 'number'){
                $scope.successMsg = undefined;
                $scope.errorMsg = response.message;
-               console.log($scope.errorMsg);
              // $location.path("");
             }
         })

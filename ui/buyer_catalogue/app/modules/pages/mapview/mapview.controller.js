@@ -167,7 +167,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               $scope.current_center.center.center_id = $scope.current_center.center.id;
               mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center.center)
               .success(function(response, status){
-                console.log("change center",response);
                 // Start : Code changes to add response of suppliers
                 $scope.current_center.suppliers = response.data.suppliers[0].suppliers;
                 // $scope.current_center = response;
@@ -180,7 +179,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                   var code = current_center_keys[i];
                   $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
                 }
-                console.log(current_center_keys.length);
                 // $scope.centers1[$scope.current_center_index].societies_count = response.supplier_count;
                 // $scope.centers1[$scope.current_center_index].societies_inventory_count = response.supplier_inventory_count;
                 // $scope.centers = $scope.centers1;
@@ -441,10 +439,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.business_name = response.data.business_name;
                 $scope.center_data = response.data.suppliers;
                 $scope.addSupplierFilters($scope.center_data);
-                console.log("printing center_data", $scope.center_data);
                 $scope.current_center = response.data.suppliers[0];
-                // console.log($scope.current_center);
-                console.log("printing current_center", $scope.current_center);
                 $scope.current_center_index = 0;
                 $scope.current_center_id = $scope.current_center.center.id;
                 $scope.old_data = angular.copy($scope.center_data);
@@ -725,7 +720,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         makeFilters($scope.center_data[i].RS_filters.quality_type,filters.common_filters.quality);
         makeFilters($scope.center_data[i].RS_filters.locality_rating,filters.common_filters.locality);
         makeFilters($scope.center_data[i].RS_filters.quantity_type,filters.common_filters.quantity);
-
+        $scope.checkFilters = true;
         promises.push(mapViewService.getFilterSuppliers(filters));
 
       }
@@ -734,6 +729,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     $q.all(promises).then(function(response){
       data = angular.copy(promises);
       handleSupplierPromise(data,"RS");
+      $scope.checkFilters = false;
     })
   }
     //End : Code added to filter multiple centers on gridview
@@ -802,6 +798,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             makeFilters($scope.center_data[i].CP_filters.quantity_type,filters.common_filters.quantity);
             if($scope.real_estate_allowed == true)
               filters.specific_filters.real_estate_allowed = true;
+            $scope.checkFilters = true;
             promises.push(mapViewService.getFilterSuppliers(filters));
 
           }
@@ -810,6 +807,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         $q.all(promises).then(function(response){
           data = angular.copy(promises);
           handleSupplierPromise(data,"CP");
+          $scope.checkFilters = false;
         })
       }
         //End : Code added to filter multiple centers on gridview
@@ -871,17 +869,15 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 //End: function for adding filters code to provided filter type list
 //start: generic function for fetching all supplier filters
         var filterSupplierData = function (code,supplier_filters){
+          $scope.checkFilters = true;
           mapViewService.getFilterSuppliers(supplier_filters)
                 .success(function(response, status){
-                  // console.log($scope.current_center);
-                  console.log("response of filters",response);
                     response.data.center = $scope.current_center.center;
                     $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.suppliers[code];
                     $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.suppliers_meta[code];
                     $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
                     $scope.current_center = $scope.center_data[$scope.current_center_index];
-                    console.log($scope.extraSuppliersData[$scope.current_center_index][code],$scope.center_data);
-
+                
                     suppliersData();
                     mapViewBasicSummary();
                     mapViewFiltersSummary();
@@ -891,6 +887,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                     gridViewImpressions();
                     $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
                     $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
+                    $scope.checkFilters = false;
                 })
                 .error(function(response, status){
                     console.log("Error Happened while filtering");
@@ -932,11 +929,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 
           mapViewService.getFilterSocieties(get_url_string)
                 .success(function(response, status){
-                  console.log(response);
+                  //console.log(response);
                   response.data.center = $scope.current_center.center;
                     $scope.current_center = response.data;
                     $scope.center_data[$scope.current_center_index] = response.data;
-                    console.log($scope.center_data);
+                    //console.log($scope.center_data);
                     // $scope.current_center.societies_inventory_count = response.societies_inventory_count;
                     // $scope.current_center.societies_count = response.societies_count;
                     // console.log("\n\n$scope.centers : ", $scope.centers);
@@ -956,7 +953,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           // End: for mapview only
           //start: for gridview filters
           else{
-            console.log($scope.center_data);
             for(var i=0; i<$scope.center_data.length; i++){
               var lat = "?lat=" + $scope.center_data[i].center.latitude;
               var lng = "&lng=" + $scope.center_data[i].center.longitude;
@@ -985,9 +981,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 //$scope.society_markers = assignMarkersToMap($scope.current_center.societies);
                 //$scope.impressions = calculateImpressions($scope.centers1[i].societies_inventory_count);
               } //end of for loop
-              console.log($scope.current_center);
               $scope.current_center = $scope.center_data[$scope.current_center_index];
-              console.log($scope.current_center);
               // $scope.current_center.societies = $scope.centers1[$scope.current_center_index].societies;
               // $scope.current_center.societies_inventory_count = $scope.centers1[$scope.current_center_index].societies_inventory_count;
               // $scope.current_center.societies_count = $scope.centers1[$scope.current_center_index].societies_count;
@@ -1039,7 +1033,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
         .success(function(response, status){
             $scope.center_index = null;
-          console.log("search Data:",response);
           $scope.supplierData = response.data;
           if($scope.supplierData.length > 0){
             $scope.search_status = true;
@@ -1105,7 +1098,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     $scope.selectCenter = function(center_index){
 
       $scope.center_index = center_index;
-      console.log($scope.center_index,center_index);
       if(center_index != null){
         for(var i=0;i<$scope.center_data.length; i++){
           if($scope.center_data[i].center.id == center_index){
@@ -1169,12 +1161,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
        //End: setting status of suppliers like shortlisted, removed or buffer
        $scope.submitProposal = function(){
          getShortlistedFilteredSocieties();
-           console.log("Submitting $scope.centers :", $scope.centers);
+           //console.log("Submitting $scope.centers :", $scope.centers);
        };
      $scope.exportData = function(){
              getShortlistedFilteredSocieties();
-             console.log($scope.center_data);
-
+             //console.log($scope.center_data);
              $http({
                   url: constants.base_url + constants.url_base + $scope.proposal_id_temp + '/export-spaces-data/',
                   method: 'POST',
@@ -1190,7 +1181,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                   var blob = new Blob([data], {
                       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                   });
-                  console.log(headers()) ;
                   // fetch the content_type and file name from headers
                   $scope.content_type = headers('content-type');
                   $scope.file_name = headers('file_name');
@@ -1235,8 +1225,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
         data: {file: file, 'username': $scope.username}
     }).then(function (resp) {
-      console.log(resp);
-        console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
+      //console.log(resp);
+        //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
     }, function (resp) {
         console.log('Error status: ' + resp.status);
     });

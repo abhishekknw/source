@@ -51,27 +51,27 @@
          <div ng-if = "current_center.suppliers_allowed.society_allowed" uib-collapse="isCollapsed">
           <span class = "filterPanelHeader ">Inventory Type</span>
           <div class = "nbCheckbox two-col" ng-repeat="inventory in current_center.RS_filters.inventory">
-            <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
+            <input type = "checkbox"  ng-model="inventory.selected" ng-disabled = "checkFilters" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
           </div>
           <hr>
           <span class = "filterPanelHeader ">Society Type</span>
             <div class = "nbCheckbox two-col"  ng-repeat="quality_type in current_center.RS_filters.quality_type">
-                <input type = "checkbox"  ng-model="quality_type.selected" ng-change="societyFilters()">{{ quality_type.name }}&nbsp;
+                <input type = "checkbox"  ng-model="quality_type.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ quality_type.name }}&nbsp;
             </div>
             <hr>
           <span class = "filterPanelHeader ">Society Size</span>
             <div class = "nbCheckbox two-col" ng-repeat="quantity_type in current_center.RS_filters.quantity_type">
-                <input type = "checkbox" ng-model="quantity_type.selected" ng-change="societyFilters()">{{ quantity_type.name }}&nbsp;
+                <input type = "checkbox" ng-model="quantity_type.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ quantity_type.name }}&nbsp;
             </div>
             <hr>
           <span class = "filterPanelHeader ">Society Location Rating</span>
           <div class = "nbCheckbox two-col" ng-repeat="location in current_center.RS_filters.locality_rating">
-            <input type = "checkbox" ng-model="location.selected" ng-change="societyFilters()">{{ location.name }}&nbsp;
+            <input type = "checkbox" ng-model="location.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ location.name }}&nbsp;
           </div>
           <hr>
           <span class = "filterPanelHeader ">Society Flat Type</span>
             <div class = "nbCheckbox two-col" ng-repeat="flat_type in current_center.RS_filters.flat_type">
-                <input type = "checkbox" ng-model="flat_type.selected" ng-change="societyFilters()">{{ flat_type.name }}&nbsp;
+                <input type = "checkbox" ng-model="flat_type.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ flat_type.name }}&nbsp;
             </div>
           </div>
         </div>
@@ -80,34 +80,34 @@
            <span class = "filterPanelHeader"> Corporate Filters</span><br>
           <div ng-if = "current_center.suppliers_allowed.corporate_allowed">
             <div>
-              <input type = "checkbox"  ng-model="real_estate_allowed" ng-click="corporateFilters(real_estate_allowed)">
+              <input type = "checkbox"  ng-model="real_estate_allowed" ng-disabled = "checkFilters" ng-click="corporateFilters(real_estate_allowed)">
               <span style="color:crimson">Real Estate Allowed
               </span>
             </div>
 
            <span class = "filterPanelHeader ">Inventory Type</span>
            <div class = "nbCheckbox two-col" ng-repeat="inventory in current_center.CP_filters.inventory">
-             <input type = "checkbox"  ng-model="inventory.selected" ng-change="corporateFilters()">{{ inventory.name }}&nbsp;
+             <input type = "checkbox"  ng-model="inventory.selected" ng-disabled = "checkFilters" ng-change="corporateFilters()">{{ inventory.name }}&nbsp;
            </div>
            <hr>
            <span class = "filterPanelHeader ">Corporate Type</span>
              <div class = "nbCheckbox two-col"  ng-repeat="quality_type in current_center.CP_filters.quality_type">
-                 <input type = "checkbox"  ng-model="quality_type.selected" ng-change="corporateFilters()">{{ quality_type.name }}&nbsp;
+                 <input type = "checkbox"  ng-model="quality_type.selected" ng-disabled = "checkFilters" ng-change="corporateFilters()">{{ quality_type.name }}&nbsp;
              </div>
              <hr>
            <span class = "filterPanelHeader ">Corporate Size</span>
              <div class = "nbCheckbox two-col" ng-repeat="quantity_type in current_center.CP_filters.quantity_type">
-                 <input type = "checkbox" ng-model="quantity_type.selected" ng-change="corporateFilters()">{{ quantity_type.name }}&nbsp;
+                 <input type = "checkbox" ng-model="quantity_type.selected" ng-disabled = "checkFilters" ng-change="corporateFilters()">{{ quantity_type.name }}&nbsp;
              </div>
              <hr>
            <span class = "filterPanelHeader ">Corporate Location Rating</span>
            <div class = "nbCheckbox two-col" ng-repeat="location in current_center.CP_filters.locality_rating">
-             <input type = "checkbox" ng-model="location.selected" ng-change="corporateFilters()">{{ location.name }}&nbsp;
+             <input type = "checkbox" ng-model="location.selected" ng-disabled = "checkFilters" ng-change="corporateFilters()">{{ location.name }}&nbsp;
            </div>
            <hr>
            <span class = "filterPanelHeader ">Employee Count</span>
            <div class = "nbCheckbox two-col" ng-repeat="range in current_center.CP_filters.employee_count">
-             <input type = "checkbox" ng-model="range.selected" ng-change="corporateFilters()">{{ range.name }}&nbsp;
+             <input type = "checkbox" ng-model="range.selected" ng-disabled = "checkFilters" ng-change="corporateFilters()">{{ range.name }}&nbsp;
            </div>
            <hr>
            </div>
@@ -123,27 +123,27 @@
     <div ng-if = "society_allowed_gridview" uib-collapse="isCollapsed">
      <span class = "filterPanelHeader ">Inventory Type</span>
      <div class = "nbCheckbox two-col" ng-repeat="inventory in gridView_RS_filters.inventory">
-       <input type = "checkbox"  ng-model="inventory.selected" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
+       <input type = "checkbox"  ng-model="inventory.selected" ng-disabled = "checkFilters" ng-change="societyFilter(inventory)">{{ inventory.name }}&nbsp;
      </div>
      <hr>
      <span class = "filterPanelHeader ">Society Type</span>
        <div class = "nbCheckbox two-col"  ng-repeat="quality_type in gridView_RS_filters.quality_type">
-           <input type = "checkbox"  ng-model="quality_type.selected" ng-change="societyFilters()">{{ quality_type.name }}&nbsp;
+           <input type = "checkbox"  ng-model="quality_type.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ quality_type.name }}&nbsp;
        </div>
        <hr>
      <span class = "filterPanelHeader ">Society Size</span>
        <div class = "nbCheckbox two-col" ng-repeat="quantity_type in gridView_RS_filters.quantity_type">
-           <input type = "checkbox" ng-model="quantity_type.selected" ng-change="societyFilters()">{{ quantity_type.name }}&nbsp;
+           <input type = "checkbox" ng-model="quantity_type.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ quantity_type.name }}&nbsp;
        </div>
        <hr>
      <span class = "filterPanelHeader ">Society Location Rating</span>
      <div class = "nbCheckbox two-col" ng-repeat="location in gridView_RS_filters.locality_rating">
-       <input type = "checkbox" ng-model="location.selected" ng-change="societyFilters()">{{ location.name }}&nbsp;
+       <input type = "checkbox" ng-model="location.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ location.name }}&nbsp;
      </div>
      <hr>
      <span class = "filterPanelHeader ">Society Flat Type</span>
        <div class = "nbCheckbox two-col" ng-repeat="flat_type in gridView_RS_filters.flat_type">
-           <input type = "checkbox" ng-model="flat_type.selected" ng-change="societyFilters()">{{ flat_type.name }}&nbsp;
+           <input type = "checkbox" ng-model="flat_type.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ flat_type.name }}&nbsp;
        </div>
      </div>
    </div>
@@ -152,34 +152,34 @@
       <span class = "filterPanelHeader"> Corporate Filters</span><br>
      <div ng-if = "corporate_allowed_gridview">
        <div>
-         <input type = "checkbox"  ng-model="real_estate_allowed" ng-click="corporateFilters(real_estate_allowed)">
+         <input type = "checkbox"  ng-model="real_estate_allowed"  ng-disabled = "checkFilters" ng-click="corporateFilters(real_estate_allowed)">
          <span style="color:crimson">Real Estate Allowed
          </span>
        </div>
 
       <span class = "filterPanelHeader ">Inventory Type</span>
       <div class = "nbCheckbox two-col" ng-repeat="inventory in gridView_CP_filters.inventory">
-        <input type = "checkbox"  ng-model="inventory.selected" ng-change="corporateFilters()">{{ inventory.name }}&nbsp;
+        <input type = "checkbox"  ng-model="inventory.selected" ng-disabled = "checkFilters" ng-change="corporateFilters()">{{ inventory.name }}&nbsp;
       </div>
       <hr>
       <span class = "filterPanelHeader ">Corporate Type</span>
         <div class = "nbCheckbox two-col"  ng-repeat="quality_type in gridView_CP_filters.quality_type">
-            <input type = "checkbox"  ng-model="quality_type.selected" ng-change="corporateFilters()">{{ quality_type.name }}&nbsp;
+            <input type = "checkbox"  ng-model="quality_type.selected" ng-disabled = "checkFilters" ng-change="corporateFilters()">{{ quality_type.name }}&nbsp;
         </div>
         <hr>
       <span class = "filterPanelHeader ">Corporate Size</span>
         <div class = "nbCheckbox two-col" ng-repeat="quantity_type in gridView_CP_filters.quantity_type">
-            <input type = "checkbox" ng-model="quantity_type.selected" ng-change="corporateFilters()">{{ quantity_type.name }}&nbsp;
+            <input type = "checkbox" ng-model="quantity_type.selected" ng-disabled = "checkFilters" ng-change="corporateFilters()">{{ quantity_type.name }}&nbsp;
         </div>
         <hr>
       <span class = "filterPanelHeader ">Corporate Location Rating</span>
       <div class = "nbCheckbox two-col" ng-repeat="location in gridView_CP_filters.locality_rating">
-        <input type = "checkbox" ng-model="location.selected" ng-change="corporateFilters()">{{ location.name }}&nbsp;
+        <input type = "checkbox" ng-model="location.selected" ng-disabled = "checkFilters" ng-change="corporateFilters()">{{ location.name }}&nbsp;
       </div>
       <hr>
       <span class = "filterPanelHeader ">Employee Count</span>
       <div class = "nbCheckbox two-col" ng-repeat="range in gridView_CP_filters.employee_count">
-        <input type = "checkbox" ng-model="range.selected" ng-change="corporateFilters()">{{ range.name }}&nbsp;
+        <input type = "checkbox" ng-model="range.selected" ng-disabled = "checkFilters" ng-change="corporateFilters()">{{ range.name }}&nbsp;
       </div>
       <hr>
       </div>
@@ -206,10 +206,8 @@
                  Locality Rating : {{space.location_type}}<br>
               </div>
         </ui-gmap-window>
-         <!-- <ui-gmap-circle ng-repeat="c in circles track by c.id" center="c.center" stroke="c.stroke" fill="c.fill" radius="c.radius" visible="c.visible" geodesic="c.geodesic" editable="c.editable" draggable="c.draggable" clickable="c.clickable" control="c.control"></ui-gmap-circle> -->
         <ui-gmap-circle center="circle.center" stroke="circle.stroke" radius="circle.radius" clickable="circle.clickable", control="circle.control"></ui-gmap-circle>
         <ui-gmap-markers models="society_markers" coords="'self'" icon="'icon'" events="'events'" options="'options'" doRebuildAll="true" click="onClick">
-        <!-- <ui-gmap-markers models="society_markers1" coords="'self'" icon="'icon'" events="'events'" options="'options'" doRebuildAll="true" click="onClick"> -->
         </ui-gmap-markers>
        <ui-gmap-markers models="center_marker" coords="'self'" icon="'icon'" options="'options'" doRebuildAll="true" click="onClick" events = "'events'">
         </ui-gmap-markers>
@@ -254,9 +252,9 @@
             <td>{{supplier.machadalo_index}}</td>
             <td ng-if="inv_poster">{{supplier.tower_count}}</td>
             <!-- <td ng-if="inv_poster">{{society.poster_price}}</td>-->
-            <td ng-if="inv_standee">{{supplier.standee_count}}</td>
+            <td ng-if="inv_standee">{{supplier.total_standee_count}}</td>
             <!-- <td ng-if="inv_standee">{{society.standee_price}}</td> -->
-            <td ng-if="inv_stall">{{supplier.stall_count}}</td>
+            <td ng-if="inv_stall">{{supplier.total_stall_count}}</td>
             <!-- <td ng-if="inv_stall">{{society.stall_price}}</td> -->
             <td ng-if="inv_flier">{{supplier.flat_count}}</td>
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
