@@ -4,18 +4,18 @@
            <div class="row">
 
 <!-- Start: Carousel added to slide images -->
-             <div class="carousel" id="slider-Stall">
+             <div class="carousel" id="slider-Stall" style="margin-left:40px;">
             <div class="carousel-inner" >
                 <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in StallImages">
                   <div class="row">
-                    <img ng-src="{{image}}"  width="240px" height="160"/>
-                    <img ng-src="{{StallImages[$index+1]}}"  width="240px" height="160" />
+                    <img ng-src="{{image}}"  width="300px" height="180"/>
+                    <img ng-src="{{StallImages[$index+1]}}"  width="300px" height="180" />
                   </div>
-                  <a class="left carousel-control"  href="#slider-Stall" role="button" data-slide="prev">
+                  <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider-Stall" role="button" data-slide="prev">
                    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
                    <span class="sr-only">Previous</span>
                   </a>
-                  <a class="right carousel-control"   href="#slider-Stall" role="button" data-slide="next">
+                  <a class="right carousel-control"   data-toggle="carousel" data-target = "#slider-Stall" role="button" data-slide="next">
                    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
                    <span class="sr-only">Next</span>
                   </a>
@@ -33,7 +33,7 @@
 <div class="hpadding20">
 		<div class="line4"></div>
       <span class="opensans dark size16 bold grey" style="color:#000; font-style:bold">Size & Number</span><br>
-  		<span class="opensans dark size16 bold grey">Total no.of Stall Spaces : {{inventoryDetails.stall_or_cd_campaign}}</span><br><br>
+  		<span class="opensans dark size16 bold grey">Total no.of Stall Spaces : {{inventoryDetails.total_stall_count}}</span><br><br>
 </div>
       <!--1st row-->
 <div class="hpadding20">

@@ -5,19 +5,19 @@
     <div class="col-md-10" style="text-align: center;">
         <div class="row">
 <!-- Start: Carousel added to slide images-->
-          <div class="carousel" id="slider-Poster">
+          <div class="carousel" id="slider-Poster" style="margin-left:40px;">
 
  <div class="carousel-inner" >
      <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in PosterImages">
        <div class="row">
-         <img ng-src="{{image}}"  width="240px" height="160"/>
-         <img ng-src="{{PosterImages[$index+1]}}"  width="240px" height="160" />
+         <img ng-src="{{image}}"  width="300px" height="180"/>
+         <img ng-src="{{PosterImages[$index+1]}}"  width="300px" height="180" />
        </div>
-       <a class="left carousel-control"  href="#slider-Poster" role="button" data-slide="prev">
+       <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider-Poster" role="button" data-slide="prev">
         <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
         <span class="sr-only">Previous</span>
        </a>
-       <a class="right carousel-control"   href="#slider-Poster" role="button" data-slide="next">
+       <a class="right carousel-control" data-toggle="carousel" data-target = "#slider-Poster" role="button" data-slide="next">
         <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
         <span class="sr-only">Next</span>
        </a>
