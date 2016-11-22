@@ -1230,10 +1230,12 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
    }
 
     $scope.upload = function (file) {
-    var uploadUrl = 'http://localhost:8108/v0/ui/website/';
+    var uploadUrl = 'http://localhost:8000/v0/ui/website/';
+    var token = $rootScope.globals.currentUser.token ;
     Upload.upload({
         url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
-        data: {file: file, 'username': $scope.username}
+        data: {file: file, 'username': $scope.username},
+        headers: {'Authorization': 'JWT ' + token},
     }).then(function (resp) {
       console.log(resp);
         console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
