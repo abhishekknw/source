@@ -122,17 +122,16 @@
               <tbody>
                 <tr ng-repeat="proposal in account_proposals">
                   <td>{{proposal.proposal_id}}</td>
-                  <td>{{proposal.created_by}}</td>
+                  <td>Vidhi</td><!-- {{proposal.created_by}} -->
                   <td>{{proposal.created_on | limitTo:10}}</td>
-                  <td>{{proposal.updated_by}}</td>
+                  <td>Vidhi</td><!-- {{proposal.updated_by}} -->
                   <td>{{proposal.updated_on | limitTo:10}}</td>
-                  <td>
-                    <!-- <a data-target="#detailModalProposal" class="btn btn-danger  active" data-toggle="modal">Details</a> -->
+                  <!-- <td>
                     <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">Details</button>
                   </td>
                   <td>
                     <a href="" ng-click="showHistory(proposal.proposal_id)">Show History</a>
-                  </td>
+                  </td> -->
                 </tr>
               </tbody>
             </table>

@@ -17,7 +17,7 @@ angular.module('machadaloPages')
 	var societyDetailsService = {};
 
    societyDetailsService.getSociety = function (id) {
-      var url = url_base + "society/" + id;
+      var url = url_base + "society/" + id ;
       return machadaloHttp.get(url);
    };
 
@@ -54,8 +54,6 @@ angular.module('machadaloPages')
       $rootScope.societyId = null;
     }
    };
-
-
 
    societyDetailsService.getShortlistedSocietyCount = function(campaign_id){
       var url = url_base + "website/campaign/" + campaign_id + "/society/count/";

@@ -39,7 +39,7 @@
 
       <div class="filterPanel ">
        <span class="filterHeader"> Filter your Search </span>
-         <a class="btn btn-xs pull-right" style="border: 1px solid #e1e1e1;color: #707070;" ng-click="clearAllFilters()"> Reset filters</a>
+         <!-- <a class="btn btn-xs pull-right" style="border: 1px solid #e1e1e1;color: #707070;" ng-click="clearAllFilters()"> Reset filters</a> -->
       </div>
       <hr>
        <!--Start: Filter Section on mapview-->
@@ -243,7 +243,7 @@
           <tr ng-repeat = "supplier in center.suppliers['RS']">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
-            <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{supplier.supplier_id}}" target="_blank">{{supplier.name}}</a></td>
+            <td><a ng-href="http://mdbuyercatalog-test.s3-website-ap-southeast-1.amazonaws.com/#/campaign/5/societyDetails/{{supplier.supplier_id}}" target="_blank">{{supplier.name}}</a></td>
             <td>{{supplier.subarea}}</td>
             <td>{{supplier.flat_count}}</td>
             <td>{{supplier.average_rent}}</td>
