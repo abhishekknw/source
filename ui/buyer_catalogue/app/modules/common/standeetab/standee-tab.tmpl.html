@@ -4,19 +4,19 @@
        <div class="col-md-10" style="text-align: center;">
           <div class="row">
 <!--Start: Carousel added to slide images-->
-            <div class="carousel" id="slider-standee">
+            <div class="carousel" id="slider-standee" style="margin-left:40px;">
 
            <div class="carousel-inner" >
                <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in StandeeImages">
                  <div class="row" >
-                   <img ng-src="http://mdimages.s3.amazonaws.com/{{image.image_url}}"  width="240px" height="160"/>
-                   <img ng-src="http://mdimages.s3.amazonaws.com/{{StandeeImages[$index+1].image_url}}"  width="240px" height="160" />
+                   <img ng-src="{{image}}"  width="300px" height="180"/>
+                   <img ng-src="{{StandeeImages[$index+1]}}" width="300px" height="180" />
                  </div>
-                 <a class="left carousel-control"  href="#slider-standee" role="button" data-slide="prev">
+                 <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider-standee" role="button" data-slide="prev">
                   <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
                   <span class="sr-only">Previous</span>
                  </a>
-                 <a class="right carousel-control"   href="#slider-standee" role="button" data-slide="next">
+                 <a class="right carousel-control"  data-toggle="carousel" data-target = "#slider-standee" role="button" data-slide="next">
                   <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
                   <span class="sr-only">Next</span>
                  </a>
@@ -34,7 +34,7 @@
 <div class="hpadding20">
 		<div class="line4"></div>
     <span class="opensans dark size16 bold grey" style="color:#000; font-style:bold">Size & Number</span><br>
-    <span class="opensans dark size16 bold grey">Total Standee Spaces: {{inventoryDetails.standee_campaign}}</span><br><br>
+    <span class="opensans dark size16 bold grey">Total Standee Spaces: {{inventoryDetails.total_standee_count}}</span><br><br>
 </div>
 
 <div class="hpadding20">

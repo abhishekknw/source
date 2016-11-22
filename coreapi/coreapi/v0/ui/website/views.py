@@ -1228,10 +1228,10 @@ class FilteredSuppliers(APIView):
             
             # if both available, find the intersection. basically it's another way of doing AND query.
             # the following conditions are use case dependent. The checking is done on the basis of 
-            # query length. an empty query lenth means that query didn't contain any thing in it. 
+            # query length. an empty query length means that query didn't contain any thing in it.
             if inventory_type_query.__len__() and specific_filters_query.__len__():
                 final_suppliers_list = specific_filters_suppliers.intersection(inventory_type_query_suppliers)
-            # if only inventory suppliers available, set it. Take the UNION in this case
+            # if only inventory suppliers available, set it. Take the UNION in this case.
             elif inventory_type_query.__len__():
                 final_suppliers_list = inventory_type_query_suppliers
             # if only specific suppliers available, set it. Take the UNION in this case.
@@ -1263,12 +1263,17 @@ class FilteredSuppliers(APIView):
                 return response
             suppliers = response.data['data']
 
+            # because some suppliers can be outside the given radius, we need to recalculate list of 
+            # supplier_id's. 
+            final_suppliers_list =  [supplier['supplier_id'] for supplier in suppliers]
+
             # response = website_utils.set_supplier_extra_attributes(serializer.data, supplier_type_code, inventory_filters)
             # if not response.data['status']:
             #     return response
             # serializer.data = response.data['data']
 
             # calculate total aggregate count
+
             suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=final_suppliers_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
@@ -2349,8 +2354,6 @@ class GenericExportData(APIView):
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
     """
     renderer_classes = (website_renderers.XlsxRenderer, )
-    permission_classes = (permissions.IsAuthenticated, )
-
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:

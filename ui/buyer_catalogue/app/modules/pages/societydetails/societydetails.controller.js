@@ -16,21 +16,35 @@ angular.module('machadaloPages',['ui.bootstrap'])
         $rootScope.societyname = response.society_data.society_name;
         $scope.residentCount = estimatedResidents(response.society_data.flat_count);
         $scope.flatcountflier = response.society_data.flat_count;
+        var baseUrl = 'http://mdimages.s3.amazonaws.com/';
         // Start : Code added to seperate images by their image tag names
+        var imageUrl;
         $scope.SocietyImages = [],$scope.FlierImages=[],$scope.PosterImages=[],$scope.StandeeImages=[],$scope.StallImages=[],$scope.CarImages=[];
         for(var i=0;i<$scope.society_images.length;i++){
-          if($scope.society_images[i].name == 'Society')
-            $scope.SocietyImages.push($scope.society_images[i]);
-          if($scope.society_images[i].name == 'Standee Space')
-            $scope.StandeeImages.push($scope.society_images[i]);
-          if($scope.society_images[i].name == 'Stall Space')
-            $scope.StallImages.push($scope.society_images[i]);
-          if($scope.society_images[i].name == 'Fliers')
-            $scope.FlierImages.push($scope.society_images[i]);
-          if($scope.society_images[i].name == 'Car Display')
-            $scope.CarImages.push($scope.society_images[i]);
-          if($scope.society_images[i].name == 'Lift' || $scope.society_images[i].name == 'Notice Board')
-            $scope.PosterImages.push($scope.society_images[i]);
+          if($scope.society_images[i].name == 'Society'){
+            imageUrl = baseUrl + $scope.society_images[i].image_url;
+            $scope.SocietyImages.push(imageUrl);
+          }
+          if($scope.society_images[i].name == 'Standee Space'){
+            imageUrl = baseUrl + $scope.society_images[i].image_url;
+            $scope.StandeeImages.push(imageUrl);
+          }
+          if($scope.society_images[i].name == 'Stall Space'){
+            imageUrl = baseUrl + $scope.society_images[i].image_url;
+            $scope.StallImages.push(imageUrl);
+          }
+          if($scope.society_images[i].name == 'Fliers'){
+            imageUrl = baseUrl + $scope.society_images[i].image_url;
+            $scope.FlierImages.push(imageUrl);
+          }
+          if($scope.society_images[i].name == 'Car Display'){
+            imageUrl = baseUrl + $scope.society_images[i].image_url;
+            $scope.CarImages.push(imageUrl);
+          }
+          if($scope.society_images[i].name == 'Lift' || $scope.society_images[i].name == 'Notice Board'){
+            imageUrl = baseUrl + $scope.society_images[i].image_url;
+            $scope.PosterImages.push(imageUrl);
+          }
       }
       // End : Code added to seperate images by their image tag names
      });

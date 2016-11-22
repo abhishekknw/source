@@ -1,24 +1,21 @@
 <div class="hpadding20">
     <div class="row">
-       <div class="col-md-1" style="margin-top:150px">
-          <button id="prev_btn2" class="prev2"><img src="images/spacer.png" alt=""/></button>
-       </div>
        <div class="col-md-10" style="text-align: center;">
            <div class="row">
 
 <!-- Start: Carousel added to slide images -->
-   <div class="carousel" id="slider-Car">
+   <div class="carousel" id="slider-Car" style="margin-left:40px;">
     <div class="carousel-inner" >
         <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in CarImages">
           <div class="row">
-            <img ng-src="http://mdimages.s3.amazonaws.com/{{image.image_url}}" width="240px" height="160"/>
-            <img ng-src="http://mdimages.s3.amazonaws.com/{{CarImages[$index+1].image_url}}"  width="240px" height="160" />
+            <img ng-src="{{image}}" width="300px" height="180"/>
+            <img ng-src="{{CarImages[$index+1]}}"  width="300px" height="180" />
           </div>
-          <a class="left carousel-control"  href="#slider-Car" role="button" data-slide="prev">
+          <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider-Car" role="button" data-slide="prev">
            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
            <span class="sr-only">Previous</span>
           </a>
-          <a class="right carousel-control"   href="#slider-Car" role="button" data-slide="next">
+          <a class="right carousel-control"   data-toggle="carousel" data-target = "#slider-Car" role="button" data-slide="next">
            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
            <span class="sr-only">Next</span>
           </a>
@@ -32,9 +29,6 @@
 
               <!-- <div style="margin-left:10px" ng-repeat="image in society_images" ng-if="image.name=='Car Display'" class="col-md-4"><img src="http://mdimages.s3.amazonaws.com/{{image.image_url}}" width="180px" height="180px" alt=""/></div> -->
            </div>
-       </div>
-       <div class="col-md-1" style="margin-top:150px">
-             <button id="next_btn2" class="next2"><img src="images/spacer.png" alt=""/></button>
        </div>
     </div><br>
 </div>
