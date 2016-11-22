@@ -10,17 +10,20 @@ angular.module('machadaloPages',['ui.bootstrap'])
      $scope.totalInventoryCount = {};
      societyDetailsService.getSociety($rootScope.societyId)
       .success(function (response) {
+        console.log("vidhi", response);
         $scope.myInterval=300;
         $scope.society_images = response.society_images;
         $scope.society = response.society_data;
-        $rootScope.societyname = response.society_data.society_name;
+        //$rootScope.societyname = response.society_data.society_name;
         $scope.residentCount = estimatedResidents(response.society_data.flat_count);
         $scope.flatcountflier = response.society_data.flat_count;
         // Start : Code added to seperate images by their image tag names
         $scope.SocietyImages = [],$scope.FlierImages=[],$scope.PosterImages=[],$scope.StandeeImages=[],$scope.StallImages=[],$scope.CarImages=[];
         for(var i=0;i<$scope.society_images.length;i++){
-          if($scope.society_images[i].name == 'Society')
-            $scope.SocietyImages.push($scope.society_images[i]);
+          if($scope.society_images[i].name == 'Society'){
+            var imageUrl = 'http://mdimages.s3.amazonaws.com/' + $scope.society_images[i].image_url;
+            $scope.SocietyImages.push(imageUrl);
+        }
           if($scope.society_images[i].name == 'Standee Space')
             $scope.StandeeImages.push($scope.society_images[i]);
           if($scope.society_images[i].name == 'Stall Space')
@@ -32,17 +35,10 @@ angular.module('machadaloPages',['ui.bootstrap'])
           if($scope.society_images[i].name == 'Lift' || $scope.society_images[i].name == 'Notice Board')
             $scope.PosterImages.push($scope.society_images[i]);
       }
+      console.log(imageUrl);
+      console.log($scope.SocietyImages);
       // End : Code added to seperate images by their image tag names
      });
-
-    //  societyDetailsService.get_inventory_summary($rootScope.societyId)
-    //  .success(function (response){
-    //       $scope.inventoryDetails = response;
-    //       $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);
-    //  });
-
-     //$scope.model.supplier_type_code = "RS";
-     //alert($scope.model.supplier_type_code);
 
      societyDetailsService.get_inventory_summary($rootScope.societyId, "RS")
      .success(function (response){
@@ -73,12 +69,8 @@ angular.module('machadaloPages',['ui.bootstrap'])
 
         }).error(function(response,status){
             console.log("error ",response.error);
-            // console.log()
         });
     }
-
-    // Done by me
-    // $scope.index = 1;
 
     $scope.society_ids = {}
     societyDetailsService.getSocietyIds()
@@ -164,7 +156,6 @@ angular.module('machadaloPages',['ui.bootstrap'])
             setTimeout(function() {
                 $("div.alert").remove();
             }, 3000);
-            // $("#alert_placeholder").html('<div> shortlisted</div>')
        });
      }}//End: For adding shortlisted society
    }]);//Controller function ends here
