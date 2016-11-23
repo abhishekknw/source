@@ -730,7 +730,12 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       data = angular.copy(promises);
       handleSupplierPromise(data,"RS");
       $scope.checkFilters = false;
-    })
+    },function (error) {
+    //This will be called if $q.all finds any of the requests erroring.
+      console.log(error);
+      handleErrors();
+      $scope.checkFilters = false;
+  });
   }
     //End : Code added to filter multiple centers on gridview
   else{
@@ -808,7 +813,12 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           data = angular.copy(promises);
           handleSupplierPromise(data,"CP");
           $scope.checkFilters = false;
-        })
+        },function (error) {
+        //This will be called if $q.all finds any of the requests erroring.
+          console.log(error);
+          handleErrors();
+          $scope.checkFilters = false;
+      });
       }
         //End : Code added to filter multiple centers on gridview
     else{
@@ -895,17 +905,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 });
         }
   //End: generic function for fetching all supplier filters
-  //
-  var filterAllCenterSupplierData = function (code,supplier_filters){
-    mapViewService.getFilterSuppliers(supplier_filters)
-          .success(function(response, status){
-          })
-          .error(function(response, status){
-              console.log("Error Happened while filtering");
-          });
-        }
-  //
-
+  //Start : function to handle all errors on mapview and gridview, call this function when error comes in response
+    var handleErrors = function(){
+      alert("Error Occured");
+    }
+  //End : function to handle all errors on mapview and gridview, call this function when error comes in response
             var promises = [];
             $scope.getFilteredSocieties = function(){
             promises = [];
