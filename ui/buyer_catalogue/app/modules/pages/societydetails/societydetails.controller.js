@@ -8,14 +8,15 @@ angular.module('machadaloPages',['ui.bootstrap'])
      $scope.residentCount = {};
      $scope.inventoryDetails = {};
      $scope.totalInventoryCount = {};
-     societyDetailsService.getSociety($rootScope.societyId)
+     $scope.supplier_type_code = "RS";
+     societyDetailsService.getSociety($rootScope.societyId,$scope.supplier_type_code)
       .success(function (response) {
         $scope.myInterval=300;
-        $scope.society_images = response.society_images;
-        $scope.society = response.society_data;
+        $scope.society_images = response.data.supplier_images;
+        $scope.society = response.data.supplier_data;
         //$rootScope.societyname = response.society_data.society_name;
-        $scope.residentCount = estimatedResidents(response.society_data.flat_count);
-        $scope.flatcountflier = response.society_data.flat_count;
+        $scope.residentCount = estimatedResidents(response.data.supplier_data.flat_count);
+        $scope.flatcountflier = response.data.supplier_data.flat_count;
         var baseUrl = 'http://mdimages.s3.amazonaws.com/';
         // Start : Code added to seperate images by their image tag names
         var imageUrl;
@@ -49,7 +50,7 @@ angular.module('machadaloPages',['ui.bootstrap'])
       // End : Code added to seperate images by their image tag names
      });
 
-     societyDetailsService.get_inventory_summary($rootScope.societyId, "RS")
+     societyDetailsService.get_inventory_summary($rootScope.societyId, $scope.supplier_type_code)
      .success(function (response){
        $scope.inventoryDetails = response;
         $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);

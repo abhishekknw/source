@@ -255,6 +255,42 @@ class GenerateSupplierIdAPIView(APIView):
         except Exception as e:
             return Response(data={str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
+class SupplierImageDetails(APIView):
+    """
+    This API gives supplier data and all images for supllier which are used to display on supplier
+    Details page.
+    """
+
+    def get(self, request, id, format=None):
+
+        class_name = self.__class__.__name__
+
+        try:
+            result = {}
+
+            supplier_type_code = request.query_params.get('supplierTypeCode')
+            if not supplier_type_code:
+                return ui_utils.handle_response(class_name, data='No Supplier type code provided')
+
+            content_type_response = ui_utils.get_content_type(supplier_type_code)
+            if not content_type_response.data['status']:
+                return ui_utils.handle_response(class_name, data='No content type found')
+
+            content_type = content_type_response.data['data']
+            supplier_object = ui_utils.get_model(supplier_type_code).objects.get(pk=id)
+            
+            serializer_class = ui_utils.get_serializer(supplier_type_code)
+            serializer = serializer_class(supplier_object)
+            result['supplier_data'] = serializer.data
+
+            images = ImageMapping.objects.filter(object_id=id, content_type=content_type)
+            image_serializer = ImageMappingSerializer(images, many=True)
+            result['supplier_images'] = image_serializer.data
+
+            return ui_utils.handle_response(class_name, data=result, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 class SocietyAPIView(APIView):
     # permission_classes = (permissions.IsAuthenticated, IsOwnerOrManager,)
@@ -268,9 +304,10 @@ class SocietyAPIView(APIView):
 
             #Start : Code changes to display images
             # todo : also write code for content_type
-            images = ImageMapping.objects.filter(object_id=id)
-            image_serializer = ImageMappingSerializer(images, many=True)
-            response['society_images'] = image_serializer.data
+            # below code commented due to generic API SupplierImageDetails created to get all images
+            # images = ImageMapping.objects.filter(object_id=id)
+            # image_serializer = ImageMappingSerializer(images, many=True)
+            # response['society_images'] = image_serializer.data
             #End : Code changes to display images
             # inventory_summary = InventorySummary.objects.get(supplier=item)
             # inventory_serializer = InventorySummarySerializer(inventory_summary)

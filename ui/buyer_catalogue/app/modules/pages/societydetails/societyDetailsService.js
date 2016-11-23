@@ -16,8 +16,8 @@ angular.module('machadaloPages')
   var url_base = "v0/ui/";
 	var societyDetailsService = {};
 
-   societyDetailsService.getSociety = function (id) {
-      var url = url_base + "society/" + id ;
+   societyDetailsService.getSociety = function (id,supplierTypeCode) {
+      var url = url_base + "supplier/" + id + "/image_details/?supplierTypeCode=" + supplierTypeCode;;
       return machadaloHttp.get(url);
    };
 
