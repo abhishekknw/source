@@ -15,6 +15,12 @@
       	// var url = url_base + proposal_id;
     	return machadaloHttp.get(url);
     }
+    currentProposalService.getShortlistedSuppliers = function(proposal_id){
+    	// will receive proposal_id
+        var url = url_base + "proposal/"+ proposal_id + "/shortlisted_suppliers/";
+      	// var url = url_base + proposal_id;
+    	return machadaloHttp.get(url);
+    }
 
     currentProposalService.saveProposal = function(proposal_id, data){
     	// will receive proposal_id

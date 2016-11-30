@@ -374,38 +374,30 @@ def initialize_keys(center_object, supplier_type_code):
     Returns: intializes this dict  with all valid keys and defaults as values
 
     """
+    function = initialize_keys.__name__
     try:
+        if not center_object:
+            # set center key
+            center_object['center'] = {}
+             # set suppliers dict
+            center_object['suppliers'] = {supplier_type_code: []}
 
-        # set societies inventory key
-        # center_object['societies_inventory'] = {}
+            center_object['shortlisted_inventory_details'] = []
+        else:
+            # if center_object does exist, it can happen that it does not contain entry for this 
+            # supplier_type_code 
+            if not center_object['suppliers'].get(supplier_type_code):
+                center_object['suppliers'][supplier_type_code] = []
+            # if center_object does exist, it can happen that shortlisted_inventory_details does not 
+            # exist
+            if not center_object.get('shortlisted_inventory_details'):
+                center_object['shortlisted_inventory_details'] = []
 
-        # set suppliers dict
-        center_object['suppliers'] = {supplier_type_code: []}
-
-        # set center key
-        center_object['center'] = {}
-
-        # set inventory type selected
-        # center_object['suppliers_meta'] = {supplier_type_code: {'inventory_type_selected': []}}
-
-        # set space mapping
-        # center_object['center']['space_mappings'] = {}
-
-        # set societies count
-        # center_object['societies_count'] = 0
-
-        # set for shortlisted_inventory_details
-        center_object['shortlisted_inventory_details'] = []
-
-        # # initialize the keys for total counts and  total price to zero to be filled later when we get prices and counts
-        # for field in website_constants.inventory_fields:
-        #     if field in row.keys(): # add it only if the column is actualy present in the sheet
-        #         center_object['societies_inventory'][field] = 0
-
-        return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
+        return ui_utils.handle_response(function, data=center_object, success=True)
     except Exception as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
-
+        import pdb
+        pdb.set_trace()
+        return ui_utils.handle_response(function, exception_object=e)
 
 def make_societies_inventory(center_object, row):
     """
@@ -519,22 +511,23 @@ def populate_shortlisted_inventory_details(result):
     Returns: success if it's able to create objects in the list else failure
 
     """
+    function = populate_shortlisted_inventory_details.__name__
     try:
         # using a loop instead bulk_create() because bulk_create() will insert duplicates if the api
         # is hit twice by mistake, will ignore the unique values etc. This problem can be only be
         # solved by writing a custom raw SQL query which i think is an overkill right now. when the code gets slow
         # write a RAW query.
-        for center in result:
+        for center_id, center in result.iteritems():
             for shortlisted_inventory_detail in center['shortlisted_inventory_details']:
                 is_created, obj = models.ShortlistedInventoryDetails.objects.get_or_create(**shortlisted_inventory_detail)
 
             # we do not want to send this to other API, so we will rather delete it
             del center['shortlisted_inventory_details']
-
-        return Response({'status': True, 'data': 'success'}, status=status.HTTP_200_OK)
+        return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
-
+        import pdb
+        pdb.set_trace()
+        return ui_utils.handle_response(function, exception_object=e)
 
 def get_center_id_list(ws, index_of_center_id):
     """
@@ -1194,7 +1187,7 @@ def save_final_proposal(proposal_data, unique_supplier_codes):
         for code in unique_supplier_codes:
 
             # get the list of suppliers
-            suppliers = proposal_data['suppliers'][code]
+            suppliers = proposal_data['suppliers'][code] if proposal_data['suppliers'].get(code) else [] 
 
             # get the content type for this supplier
             content_type_response = ui_utils.get_content_type(code)
@@ -1212,9 +1205,13 @@ def save_final_proposal(proposal_data, unique_supplier_codes):
                 return response
             objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']
 
-            if proposal_data.get('suppliers_meta'):
+            # fetch suppliers_meta dict if present 
+            suppliers_meta = proposal_data.get('suppliers_meta')
+            # check if any filters available for this partcular supplier type
+            if suppliers_meta and suppliers_meta.get(code):
+
                 fixed_data['filter_name'] = filter_name
-                inventories_selected = proposal_data['suppliers_meta'][code][filter_name]
+                inventories_selected = suppliers_meta[code][filter_name]
 
                 # save data of inventories selected
                 response = save_filter_data(inventories_selected, fixed_data)
@@ -1242,12 +1239,11 @@ def save_filter_data(inventories_selected, fixed_data):
     """
     function_name = save_filter_data.__name__
     try:
-
         center = fixed_data.get('center')
         proposal = fixed_data.get('proposal')
         code = fixed_data.get('supplier_code')
         content_type = fixed_data.get('content_type')
-        filter_name = fixed_data.get('inventory_type_selected')
+        filter_name = fixed_data.get('inventory_type_sexlected')
 
         #  to count how many filter objects were created
         count = 0
@@ -1257,12 +1253,12 @@ def save_filter_data(inventories_selected, fixed_data):
                 'center': center,
                 'proposal': proposal,
                 'supplier_type': content_type,
-                'supplier_type_code': code
+                'supplier_type_code': code,
+                'filter_name': filter_name,
+                'filter_code': inventory_code,
+                'is_checked': True
             }
             filer_object, is_created = models.Filters.objects.get_or_create(**data)
-            filer_object.filter_name = filter_name
-            filer_object.filter_code = inventory_code
-            filer_object.is_checked = True
             filer_object.save()
 
             if is_created:
@@ -1618,7 +1614,7 @@ def construct_proposal_response(proposal_id):
 
         supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter(
                 proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
-
+        
         # fetch the mapped centers. This centers were saved when CreateInitialproposal was hit.
         center_id_list = [data['center'] for data in supplier_type_codes_list]
 
@@ -1640,8 +1636,75 @@ def construct_proposal_response(proposal_id):
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
 
+def add_inventory_summary_details(supplier_list, inventory_summary_objects_mapping, supplier_type_code, shortlisted=True, status=True):
+    """
+    This function adds detals from inventory summary table for al the suppliers in
+    supplier_list. 
 
-def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers):
+    Args: 
+        supplier_list:  [{supplier_id: 123, ..}, { }, { }  ] type structure in which 
+        each item is a dict containing details of only one supplier. 
+
+        inventory_summary_objects_mapping: { 
+              supplier_id_1: inv_summ_object_1, supplier_id_2: inv_summ_object_2 
+            } type structure in which the right inv_object is put against supplier_id 
+        shortlisted: True. by default we assume suppliers are marked shortlisted = True
+        status : 'S' by default we assume status of each supplier is 'S'. 
+
+    Returns: adds information like price or count from inv_summary table to each supplier
+    dict . 
+    """
+    function = add_inventory_summary_details.__name__
+    try:
+        for supplier in supplier_list:
+            supplier_inventory_obj = inventory_summary_objects_mapping.get(supplier['supplier_id'])
+            supplier['shortlisted'] = shortlisted
+            supplier['buffer_status'] = False
+            # status is shortlisted initially only if the param status is true
+            if status:
+                supplier['status'] = 'S'
+
+            # do not calculate prices if no inventory summary object exist
+            # todo: involves one database hit within handle_inventory_pricing() function.
+            #  improve it later if code is slow.
+            if supplier_inventory_obj:
+                if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
+                    supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
+                    response = handle_inventory_pricing('poster_a4', 'campaign_weekly', supplier['supplier_id'], supplier_type_code)
+                    if not response.data['status']:
+                        return response
+                    supplier['poster_price'] = response.data['data']
+
+                if supplier_inventory_obj.standee_allowed:
+                    supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
+                    response = handle_inventory_pricing('standee_small', 'campaign_weekly', supplier['supplier_id'], supplier_type_code)
+                    if not response.data['status']:
+                        return response
+                    supplier['standee_price'] = response.data['data']
+
+                if supplier_inventory_obj.stall_allowed:
+                    supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
+                    response = handle_inventory_pricing('stall_small', 'unit_daily', supplier['supplier_id'], supplier_type_code)
+                    if not response.data['status']:
+                        return response
+                    supplier['stall_price'] = response.data['data']
+                    response = handle_inventory_pricing('car_display_standard', 'unit_daily', supplier['supplier_id'], supplier_type_code)
+                    if not response.data['status']:
+                        return response
+                    supplier['car_display_price'] = response.data['data']
+
+                if supplier_inventory_obj.flier_allowed:
+                    supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
+                    response = handle_inventory_pricing('flier_door_to_door', 'unit_daily', supplier['supplier_id'], supplier_type_code)
+                    if not response.data['status']:
+                        return response
+                    supplier['flier_price'] = response.data['data']
+        return ui_utils.handle_response(function, data=supplier_list, success=True)    
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, inventory_summary_objects_mapping=None):
     """
 
     Args:
@@ -1651,21 +1714,47 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers):
     Returns: { RS: [], CP: [], GY: [] } a dict containing each type of suppliers in the list
 
     """
-    function_name = add_shortlisted_suppliers.__name__
+    function = add_shortlisted_suppliers.__name__
     try:
         # from the codes, fetch the right supplier model, supplier serializer, and put in the dict against that code
         result = {}
+        
+        supplier_ids = []
+
+        # supplier_id : filter object mappping so that we can add relevant info from 
+        # filter table to each supplier dict  
+        supplier_to_filter_object_mapping = {}
+        
+        # shortlisted_suppliers array can be empty ! 
+        shortlisted_suppliers = shortlisted_suppliers if shortlisted_suppliers else [] 
+
+        for supplier in shortlisted_suppliers:
+            supplier_id = supplier['object_id']
+            supplier_ids.append(supplier_id)
+            supplier_to_filter_object_mapping[supplier_id] =  supplier
+
         for code in supplier_type_code_list:
             supplier_model = ui_utils.get_model(code)
             supplier_serializer = ui_utils.get_serializer(code)
-            suppliers = supplier_model.objects.filter(supplier_id__in=shortlisted_suppliers)
+            suppliers = supplier_model.objects.filter(supplier_id__in=supplier_ids)
             serializer = supplier_serializer(suppliers, many=True)
-            result[code] = serializer.data
 
+            # adding status information to each supplier which is stored in shorlisted_spaces table
+            for supplier in serializer.data: 
+                supplier_id = supplier['supplier_id']
+                supplier['status'] = supplier_to_filter_object_mapping[supplier_id]['status']
+
+            result[code] = serializer.data
+            # proceed only when shortlisted_suppliers is non empty and inv_summ_object_map exist !
+            if shortlisted_suppliers and inventory_summary_objects_mapping:
+                response = add_inventory_summary_details(serializer.data, inventory_summary_objects_mapping, code, False, False)
+                if not response.data['status']:
+                    return response
+                result[code] = serializer.data
         # return the result
-        return ui_utils.handle_response(function_name, data=result, success=True)
+        return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def proposal_shortlisted_spaces(data):
@@ -1675,42 +1764,127 @@ def proposal_shortlisted_spaces(data):
 
     Returns: all shortlisted spaces
     """
-    function_name = proposal_shortlisted_spaces.__name__
+    function = proposal_shortlisted_spaces.__name__
     try:
         proposal_id = data['proposal_id']
 
         # fetch all shortlisted suppliers object id's for this proposal
-        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).select_related(
-            'content_object').values_list('object_id')
+        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).select_related('content_object').values()
+
+        # collect all supplier_id's 
+        supplier_ids = [ supplier['object_id'] for supplier in shortlisted_suppliers ]
+
+        # fetch all inventory_summary objects related to each one of suppliers
+        inventory_summary_objects = models.InventorySummary.objects.filter(object_id__in=supplier_ids)
+
+        # generate a mapping from object_id to inv_summ_object in a dict so that right object can be fetched up
+        inventory_summary_objects_mapping = {inv_sum_object.object_id: inv_sum_object for inv_sum_object in inventory_summary_objects}
+
+        shortlisted_suppliers_centerwise = {}
+         
+        # populate the dict with object_id's now
+        for supplier in shortlisted_suppliers:
+
+            center_id = supplier['center_id']
+            if not shortlisted_suppliers_centerwise.get(center_id):
+               shortlisted_suppliers_centerwise[center_id ] = []
+
+            shortlisted_suppliers_centerwise[center_id].append(supplier) 
 
         # construction of proposal response is isolated
         response = construct_proposal_response(proposal_id)
         if not response.data['status']:
             return response
 
-        # result
-        result = []
-
         # all connected centers data
         centers = response.data['data']
+
+        # collect all center_codes against each center_id
+        center_id_list = [ center['id'] for center in centers ]
+        response = add_filters(proposal_id, center_id_list)
+        if not response.data['status']:
+            return response
+
+        # suppliers meta information  is available against each center_id 
+        filter_data = response.data['data']
+
+        # final result dict
+        result =  {}
 
         # add extra information in each center object
         for center in centers:
             # empty dict to store intermediate result
             center_result = {}
             # add shortlisted suppliers for codes available for this center
-            response = add_shortlisted_suppliers(center['codes'], shortlisted_suppliers)
+            response = add_shortlisted_suppliers(center['codes'], shortlisted_suppliers_centerwise.get(center['id']), inventory_summary_objects_mapping)
             if not response.data['status']:
                 return response
 
             center_result['suppliers'] = response.data['data']
             center_result['center'] = center
 
-            result.append(center_result)
+            # add filter information in suppliers_meta
+            center_result['suppliers_meta'] = filter_data[center['id']]['suppliers_meta']
+            result[center['id']] = center_result
 
-        return ui_utils.handle_response(function_name, data=result, success=True)
+        return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
+        return ui_utils.handle_response(function, exception_object=e)
+
+def add_filters(proposal_id, center_id_list):
+    """
+    The function is used to return all filters relatated to proposa_id, center_id, 
+    and supplier_type_code. 
+    """
+    function = add_filters.__name__
+    try:
+
+        filter_objects = models.Filters.objects.values().filter(proposal_id=proposal_id)
+
+        # the container to hold all filter objects per center 
+        filter_objects_per_center = { }
+
+        for filter_object in filter_objects:
+            center_id = filter_object['center_id'] 
+
+            # if not given space for this center, give it ! 
+            if not filter_objects_per_center.get(center_id):
+                filter_objects_per_center[center_id] = []
+            # collect all filter objects for this center here 
+            filter_objects_per_center[center_id].append(filter_object)
+
+
+        # output result. The structure ouf the result is defined here 
+        result = { center_id: {'suppliers_meta': {} } for center_id in center_id_list }  
+
+        # iterate for valid centers
+        for center_id in center_id_list:
+            
+            filter_objects = filter_objects_per_center[center_id] if filter_objects_per_center.get(center_id) else []
+            
+            # iterate for filter objects for this center 
+            for filter_object in filter_objects:
+
+                 supplier_type_code = filter_object['supplier_type_code']
+                 filter_name = filter_object.get('filter_name') or 'inventory_type_selected'
+                 filter_code = filter_object['filter_code']
+
+                 # give memory 
+                 if not result[center_id]['suppliers_meta'].get(supplier_type_code):
+                    result[center_id]['suppliers_meta'][supplier_type_code] = {}
+                 
+                 if not result[center_id]['suppliers_meta'][supplier_type_code].get(filter_name):
+                         result[center_id]['suppliers_meta'][supplier_type_code][filter_name] = []
+
+                 # append the filter_code 
+                 result[center_id]['suppliers_meta'][supplier_type_code][filter_name].append(filter_code)
+
+        return ui_utils.handle_response(function, data=result, success=True)
+
+    except KeyError as e:
+        return ui_utils.handle_response(function, data='key Error', exception_object=e)    
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def unique_supplier_type_codes(data):
@@ -1744,7 +1918,9 @@ def extra_header_database_keys(supplier_type_codes, data, result):
     try:
         for code in supplier_type_codes:
             for center in data:
-                if center['suppliers_meta'].get(code):
+                # check that suppliers_meta is indeed present. Only then the extra headers
+                # are added.
+                if center.get('suppliers_meta') and center.get('suppliers_meta').get(code):
                     inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
                 else:
                     inventory_codes = []
@@ -1868,7 +2044,7 @@ def make_export_final_response(result, data):
             for code, supplier_object_list in center['suppliers'].iteritems():
 
                 # calculate unique inventory codes available in the suppliers_meta dict for this supplier_type
-                if center['suppliers_meta'].get(code):
+                if center.get('suppliers_meta') and center.get('suppliers_meta').get(code):
                     inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
                 else:
                     inventory_codes = []
@@ -2461,7 +2637,6 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
         coordinates: a dict containing radius, lat, long information.
 
     Returns:
-
     """
     function = set_pricing_temproray.__name__
     # fetch all inventory_summary objects related to each one of suppliers
@@ -2479,59 +2654,21 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
 
     try:
         for supplier in suppliers:
-
             # change the response for societies
             if supplier_type_code == 'RS':
                 for society_key, common_key in website_constants.society_common_keys.iteritems():
                     supplier_key_value = supplier[society_key]
                     del supplier[society_key]
                     supplier[common_key] = supplier_key_value
-
             # include only those suppliers that lie within the circle of radius given
             if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
-                supplier_inventory_obj = inventory_summary_objects_mapping.get(supplier['supplier_id'])
-                supplier['shortlisted'] = True
-                supplier['buffer_status'] = False
-                # status is shortlisted initially
-                supplier['status'] = 'S'
-
-                # do not calculate prices if no inventory summary object exist
-                # todo: involves one database hit within handle_inventory_pricing() function.
-                #  improve it later if code is slow.
-                if supplier_inventory_obj:
-                    if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
-                        supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
-                        response = handle_inventory_pricing('poster_a4', 'campaign_weekly', supplier['supplier_id'], supplier_type_code)
-                        if not response.data['status']:
-                            return response
-                        supplier['poster_price'] = response.data['data']
-
-                    if supplier_inventory_obj.standee_allowed:
-                        supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
-                        response = handle_inventory_pricing('standee_small', 'campaign_weekly', supplier['supplier_id'], supplier_type_code)
-                        if not response.data['status']:
-                            return response
-                        supplier['standee_price'] = response.data['data']
-
-                    if supplier_inventory_obj.stall_allowed:
-                        supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
-                        response = handle_inventory_pricing('stall_small', 'unit_daily', supplier['supplier_id'], supplier_type_code)
-                        if not response.data['status']:
-                            return response
-                        supplier['stall_price'] = response.data['data']
-                        response = handle_inventory_pricing('car_display_standard', 'unit_daily', supplier['supplier_id'], supplier_type_code)
-                        if not response.data['status']:
-                            return response
-                        supplier['car_display_price'] = response.data['data']
-
-                    if supplier_inventory_obj.flier_allowed:
-                        supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
-                        response = handle_inventory_pricing('flier_door_to_door', 'unit_daily', supplier['supplier_id'], supplier_type_code)
-                        if not response.data['status']:
-                            return response
-                        supplier['flier_price'] = response.data['data']
-
                 result.append(supplier)
+
+        response = add_inventory_summary_details(result, inventory_summary_objects_mapping, supplier_type_code, status=True)
+        if not response.data['status']:
+            return response
+        result = response.data['data']
+
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
@@ -2692,3 +2829,19 @@ def save_price_mapping_default(supplier_id, supplier_type_code, row):
     except Exception as e:
         return  ui_utils.handle_response(function, exception_object=e)
 
+def delete_create_final_proposal_data(proposal_id):
+    """"
+    This function deletes all the data related to this proposal_id whenever create-final-proposal api
+    is called because we do not want extra or duplicate data 
+
+    The data that is deleted is from two tables - shortlisted_spaces, filters. 
+    """
+    function = delete_create_final_proposal_data.__name__
+    try:
+        # delete all the shortlisted_spaces rows for this proposal 
+        models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
+        # delete all Filter table rows for this proposal 
+        models.Filters.objects.filter(proposal_id=proposal_id).delete()
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return  ui_utils.handle_response(function, exception_object=e)

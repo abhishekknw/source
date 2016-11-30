@@ -1,7 +1,7 @@
 "use strict";
 angular.module('catalogueApp')
     .constant('constants',{
-      base_url : 'http://localhost:8000/',
+      base_url : 'http://localhost:8108/',
       url_base : 'v0/ui/website/',
       AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
       policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
@@ -390,7 +390,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          $scope.unique_suppliers.add('RS');
          center.suppliers_allowed['society_show'] = true;
          center.RS_filters = angular.copy($scope.RS_filters);
-         center.suppliers_meta = {};
+        //  center.suppliers_meta = {};
          $scope.supplier_centers_list.RS.push(center_id);
        }
        if(center.suppliers['CP'] != undefined){
@@ -399,7 +399,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         $scope.unique_suppliers.add('CP');
         center.suppliers_allowed['corporate_show'] =  true;
          center.CP_filters =  angular.copy($scope.CP_filters);
-         center.suppliers_meta = {};
+        //  center.suppliers_meta = {};
          $scope.supplier_centers_list.CP.push(center_id);
        }
        center_id++;
@@ -854,7 +854,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       var handleSupplierPromise = function(responseData,code){
           for(var index=0;index<$scope.supplier_centers_list[code].length;index++){
             $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code] = responseData[index].$$state.value.data.data.suppliers[code];
-            $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers_meta[code] = responseData[index].$$state.value.data.data.suppliers_meta[code];
+            if($scope.center_data[$scope.supplier_centers_list[code][index]].suppliers_meta){
+              $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers_meta[code] = responseData[index].$$state.value.data.data.suppliers_meta[code];
+            }else {
+              $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers_meta = responseData[index].$$state.value.data.data.suppliers_meta;
+            }
             $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code].push.apply($scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code],$scope.extraSuppliersData[index][code]);
           }
         $scope.current_center = $scope.center_data[$scope.current_center_index];
@@ -884,7 +888,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 .success(function(response, status){
                     response.data.center = $scope.current_center.center;
                     $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.suppliers[code];
-                    $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.suppliers_meta[code];
+                    if($scope.center_data[$scope.current_center_index].suppliers_meta){
+                      $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.suppliers_meta[code];
+                    }else {
+                      $scope.center_data[$scope.current_center_index].suppliers_meta = response.data.suppliers_meta;
+                    }
                     $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
                     $scope.current_center = $scope.center_data[$scope.current_center_index];
 
@@ -1092,7 +1100,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               $scope.errorMsg = "Please select center first to add new suppliers";
             }
             else{
-              $scope.errorMsg = "Selected supplier not allowed in this center";
+              $scope.errorMsg = "Selected supplier not allowedadd in this center";
             }
             // $scope.suppliersList['ES'].push(supplier);
             // $scope.center_data[$scope.current_center_index].suppliers['ES'].push(supplier);
@@ -1120,36 +1128,31 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 //Start: upload and import functionality
 //Start: For sending only shortlisted societies & selected inventory types
      function getShortlistedFilteredSocieties(){
-      //  for(var i=0;i<$scope.center_data.length;i++){
-      //    for(var j=0;j<$scope.center_data[i].societies.length;j++){
-      //      if($scope.center_data[i].societies[j].shortlisted == false){
-      //         $scope.center_data[i].societies.splice(j--,1);
-      //         $scope.center_data[i].societies_count--;
-      //      }
-      //    }
-      //  }
-     //End: For sending only shortlisted society in
      //Start: For sending filtered inventory type
 
          var society_inventory_type_selected = [];
          for(var center = 0; center<$scope.center_data.length; center++){
-           if($scope.center_data[center].suppliers_meta['RS']){
-             $scope.center_data[center].suppliers_meta['RS'].inventory_type_selected = [];
-             for(var filter = 0; filter<$scope.center_data[0].RS_filters.inventory.length; filter++){
-               if($scope.center_data[center].RS_filters.inventory[filter].selected == true){
-                 $scope.center_data[center].suppliers_meta['RS'].inventory_type_selected.push($scope.center_data[center].RS_filters.inventory[filter].code);
+           if($scope.center_data[center].suppliers_meta){
+             if($scope.center_data[center].suppliers_meta['RS']){
+               $scope.center_data[center].suppliers_meta['RS'].inventory_type_selected = [];
+               for(var filter = 0; filter<$scope.center_data[center].RS_filters.inventory.length; filter++){
+                 if($scope.center_data[center].RS_filters.inventory[filter].selected == true){
+                   $scope.center_data[center].suppliers_meta['RS'].inventory_type_selected.push($scope.center_data[center].RS_filters.inventory[filter].code);
+                 }
                }
              }
-           }
-           if($scope.center_data[center].suppliers_meta['CP']){
-             $scope.center_data[center].suppliers_meta['CP'].inventory_type_selected = [];
-             for(var filter = 0; filter<$scope.center_data[0].CP_filters.inventory.length; filter++){
-               if($scope.center_data[center].CP_filters.inventory[filter].selected == true){
-                 $scope.center_data[center].suppliers_meta['CP'].inventory_type_selected.push($scope.center_data[center].RS_filters.inventory[filter].code);
+             if($scope.center_data[center].suppliers_meta['CP']){
+               $scope.center_data[center].suppliers_meta['CP'].inventory_type_selected = [];
+               for(var filter = 0; filter<$scope.center_data[center].CP_filters.inventory.length; filter++){
+                 console.log($scope.center_data[center].CP_filters.inventory[filter]);
+                 if($scope.center_data[center].CP_filters.inventory[filter].selected == true){
+                   $scope.center_data[center].suppliers_meta['CP'].inventory_type_selected.push($scope.center_data[center].CP_filters.inventory[filter].code);
+                 }
                }
              }
            }
          }
+         console.log($scope.center_data);
        }
        //End: For sending filtered inventory type
        //Start: setting status of suppliers like shortlisted, removed or buffer
@@ -1225,7 +1228,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
    }
 
     $scope.upload = function (file) {
-    var uploadUrl = 'http://localhost:8000/v0/ui/website/';
+    var uploadUrl = 'http://localhost:8108/v0/ui/website/';
     var token = $rootScope.globals.currentUser.token ;
     Upload.upload({
         url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',

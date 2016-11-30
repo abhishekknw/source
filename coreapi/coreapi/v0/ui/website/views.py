@@ -2404,6 +2404,29 @@ class GenericExportData(APIView):
             file_name = response.data['data']
             workbook.save(file_name)
 
+            # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
+            # once data is prepared for one sheet, we hit the url. if it creates problems in future, me might change
+            # it.
+                
+            # delete all the shortlisted_spaces rows for this proposal 
+            models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
+            # delete all Filter table rows for this proposal 
+            models.Filters.objects.filter(proposal_id=proposal_id).delete()
+
+            # no hit the url 
+            url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
+            url = BASE_URL + url[1:]
+
+            data = request.data
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
+            }
+            response = requests.post(url, json.dumps(data), headers=headers)
+
+            if response.status_code != status.HTTP_200_OK:
+                return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
+
             return website_utils.send_excel_file(file_name)
 
             # return ui_utils.handle_response(class_name, data=workbook, success=True)
@@ -2446,6 +2469,8 @@ class ImportSupplierData(APIView):
             # fetch all sheets
             all_sheets = wb.get_sheet_names()
 
+            result = {}
+
             # iterate over multiple sheets
             for sheet in all_sheets:
 
@@ -2467,11 +2492,11 @@ class ImportSupplierData(APIView):
 
                 # normalize the center id's or map the actual center id's with indexes starting from zero
                 center_id_to_index_mapping = {}
-                result = []
-                for index, center_id in enumerate(center_id_list):
-                    result.append({})
-                    center_id_to_index_mapping[center_id] = index
 
+                for index, center_id in enumerate(center_id_list):
+                    if not result.get(center_id):
+                        result[center_id] = {}
+                
                 # iterate through all rows and populate result array
                 for index, row in enumerate(ws.iter_rows()):
                     if index == 0:
@@ -2492,20 +2517,23 @@ class ImportSupplierData(APIView):
                         return row_response
                     row = row_response.data['data']
 
-                    # get the center index mapped for this center_id
-                    center_index = center_id_to_index_mapping[int(row['center_id'])]
+                    # # get the center index mapped for this center_id
+                    # center_index = center_id_to_index_mapping[int(row['center_id'])]
 
-                    # get the actual center_object from result list to process further
-                    center_object = result[center_index]
+                    # # get the actual center_object from result list to process further
+                    # center_object = result[center_index]
 
-                    # initialize the center_object  with necessary keys if not already
-                    if not center_object:
-                        response = website_utils.initialize_keys(center_object, supplier_type_code)
-                        if not response.data['status']:
-                            return response
-                        center_object = response.data['data']
+                    center_id = int(row['center_id'])
 
-                    # add 1 society that represents this row to the list of societies this object has already
+                    center_object = result[center_id]
+
+                    # initialize the center_object  with necessary keys if not already                    
+                    response = website_utils.initialize_keys(center_object, supplier_type_code)
+                    if not response.data['status']:
+                        return response
+                    center_object = response.data['data']
+
+                    # add 1 supplier that represents this row to the list of suppliers this object has already
                     response = website_utils.make_suppliers(center_object, row, supplier_type_code)
                     if not response.data['status']:
                         return response
@@ -2518,31 +2546,39 @@ class ImportSupplierData(APIView):
                     center_object = response.data['data']
 
                     # update the center dict in result with modified center_object
-                    result[center_index] = center_object
+                    result[center_id] = center_object
+            
+            
+            # data for this supplier is made. populate the shortlisted_inventory_details table before hiting the urls 
+            response = website_utils.populate_shortlisted_inventory_details(result)
+            if not response.data['status']:
+                return response
 
-                # populate the shortlisted_inventory_details table before hiting the url
-                response = website_utils.populate_shortlisted_inventory_details(result)
-                if not response.data['status']:
-                    return response
+            # delete all the shortlisted_spaces rows for this proposal. we do not delete filter
+            # data while importing 
+            models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
 
-                # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
-                # once data is prepared for one sheet, we hit the url. if it creates problems in future, me might change
-                # it.
-                url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
-                url = BASE_URL + url[1:]
+            # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
+            # once data is prepared for all sheets,  we hit the url. if it creates problems in future, me might change
+            # it.
+            url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
+            url = BASE_URL + url[1:]
 
-                data = result
-                headers={
-                    'Content-Type': 'application/json',
-                    'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-                }
-                response = requests.post(url, json.dumps(data), headers=headers)
+            data = result.values()
 
-                if response.status_code != status.HTTP_200_OK:
-                    return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
+            }
+            response = requests.post(url, json.dumps(data), headers=headers)
+
+            if response.status_code != status.HTTP_200_OK:
+                return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
+            
 
             # hit metric url to save metric data. current m sending the entire file, though only first sheet sending
             # is required.
+
             url = reverse('import-metric-data', kwargs={'proposal_id': proposal_id})
             url = BASE_URL + url[1:]
 
@@ -2704,7 +2740,6 @@ class CreateFinalProposal(APIView):
     information we have all the suppliers shortlisted, all the Filters and all.
 
     """
-
     def post(self, request, proposal_id):
         """
         Args:
@@ -2730,6 +2765,7 @@ class CreateFinalProposal(APIView):
             unique_supplier_codes = response.data['data']
 
             with transaction.atomic():
+               
                 for proposal_data in request.data:
 
                     proposal_data['proposal_id'] = proposal_id

@@ -1857,6 +1857,7 @@ class ShortlistedInventoryDetails(models.Model):
     """
     Model for storing calculated price and count of an inventory for a given supplier.
     A particular inventory type is identified by it's content_type_id.
+    # todo: Fix this table to store adinventory_type_id, type, duration as
     """
     supplier_id = models.CharField(max_length=100, null=True)
     inventory_type = models.ForeignKey(ContentType, null=True)
@@ -1864,6 +1865,7 @@ class ShortlistedInventoryDetails(models.Model):
     inventory_count = models.IntegerField(default=0, null=True)
     factor = models.IntegerField(default=0.0, null=True)
     supplier_type_code = models.CharField(max_length=255, null=True)
+
     class Meta:
         db_table = 'shortlisted_inventory_details'
 
@@ -2011,7 +2013,6 @@ class ProposalInfo(models.Model):
             return self.centers.all()
         except:
             return None
-
     def get_proposal_versions(self):
         return self.proposal_versions.all().order_by('-timestamp')
 

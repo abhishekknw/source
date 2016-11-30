@@ -6,15 +6,9 @@
         <div class="table">
           <div class="row">
           	<div class="col-md-3"><label>Proposal Id:</label></div>
-            <div class="col-md-3">{{proposal.proposal.proposal_id}}</div>
+            <div class="col-md-3">{{proposal.proposal_id}}</div>
             <div class="col-md-3"><label>Name of Proposal:</label></div>
-            <div class="col-md-3">{{proposal.proposal.name}}</div>
-          </div>
-          <div class="row">
-            <div class="col-md-3"><label>Start Date:</label></div>
-            <div class="col-md-3">{{proposal.proposal.tentative_start_date}}</div>
-            <div class="col-md-3"><label>End Date:</label></div>
-            <div class="col-md-3">{{proposal.proposal.tentative_end_date}}</div>
+            <div class="col-md-3">{{proposal.name}}</div>
           </div>
           <div class="row">
             <div class="col-md-5"><label>Center Details:</label></div>
@@ -22,56 +16,112 @@
           <div class="row">
             <div class="table table-align">
               <div class="row">
-              	<div class="col-md-2"><b>Center Name</b></div>
+                <div class="col-md-2 table-align"><b>Serial No</b></div>
+              	<div class="col-md-2 table-align"><b>Center Name</b></div>
                 <div class="col-md-2 table-align"><b>Area</b></div>
-                <div class="col-md-2"><b>Sub-Area</b></div>
-                <div class="col-md-2"><b>Radius</b></div>
+                <div class="col-md-2 table-align"><b>Sub-Area</b></div>
+                <div class="col-md-2 table-align"><b>Radius</b></div>
               </div>
-              <div ng-repeat="center in proposal.centers">
+              <div ng-repeat="center in center_data">
               <div class="row">
+                <div class="col-md-2 table-align">{{$index+1}}</div>
                 <div class="col-md-2 table-align">{{center.center.center_name}}</div>
-                <div class="col-md-2">{{center.center.area}}</div>
-                <div class="col-md-2">{{center.center.subarea}}</div>
-                <div class="col-md-2">{{center.center.radius}}</div>
+                <div class="col-md-2 table-align">{{center.center.area}}</div>
+                <div class="col-md-2 table-align">{{center.center.subarea}}</div>
+                <div class="col-md-2 table-align">{{center.center.radius}}</div>
               </div>
             </div>
             <div>
-              <a href="" ng-click="editInitialProposal(proposal.proposal.proposal_id)">Edit Initial Proposal</a>
+              <a href="" ng-click="editInitialProposal(proposal.proposal_id)">Edit Initial Proposal</a>
             </div>
           </div>
         </div>
       </div>
     </div>
-  <div class="panel panel-default business-panel">
-  <h4 class="panel-heading head">Shortlisted Societies</h4>
-    <div class="table-responsive">
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th class="col-md-2 table-heading">Society</th>
-          <th class="col-md-2 table-heading">Center</th>
-          <th class="col-md-2 table-heading">Poster Count</th>
-          <th class="col-md-2 table-heading">Standee Count</th>
-          <th class="col-md-2 table-heading">Stall Count</th>
-          <th class="col-md-2 table-heading">Flyer Count</th>
-          <!-- <th class="col-md-2 table-heading">Status</th> -->
-        </tr>
-      </thead>
-      <tbody ng-repeat="society in proposal.centers track by $index">
-        	<tr ng-repeat="center1 in society.societies_shortlisted track by $index">
-              <td>{{center1.society_name}}</td>
-              <td>{{society.center.center_name}}</td>
-              <td>{{center1.total_poster_count}}</td>
-              <td>{{center1.total_standee_count}}</td>
-              <td>{{center1.total_stall_count}}</td>
-              <td>{{center1.flier_frequency}}</td>
-              <!-- <td>{{center.shortlisted}}</td> -->
-          	</tr>
-      </tbody>
-     </table>
+  </div>
+</form>
+<!--Start : shortlisted suppliers -->
+<div class = "row">
+  <div class="col-md-2 aligndropdown" style="margin-left:30px;"><label>Select Center To View Supplier Details:</label></div>
+  <div class="col-md-2">
+    <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
+      <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
+     </select>
+  </div>
+</div>
+<div class = "container page-panel" style="margin:0px;" ng-if="current_center_id">
+  <div class = "row">
+  <!-- Start: grid view -->
+  <div class="col-md-4 table-responsive" style="width: 1000px; height: 450px">
+    <div ng-if="current_center_data.filters.society_allowed">
+      <h4 class="panel-heading head" ng-click="isSociety=!isSociety">Society Details</h4>
+      <div uib-collapse="! isSociety">
+      <table class="table table-bordered society">
+        <thead>
+          <tr>
+            <th class="col-md-2 table-heading">#</th>
+            <th class="col-md-2 table-heading">Center</th>
+            <th class="col-md-3 table-heading">Society</th>
+            <th ng-if="current_center_data.societyFilters.inv_poster" class="col-md-0 table-heading">Poster Count</th>
+            <th ng-if="current_center_data.societyFilters.inv_standee" class="col-md-0 table-heading">Standee Count</th>
+            <th ng-if="current_center_data.societyFilters.inv_stall"  class="col-md-0 table-heading">Stall Count</th>
+            <th ng-if="current_center_data.societyFilters.inv_flier" class="col-md-0 table-heading">Flyer Count</th>
+            <th class="col-md-2 table-heading">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          	<tr ng-repeat=" supplier in current_center_data.suppliers['RS']">
+                <td>{{$index+1}}</td>
+                <td>{{current_center_data.center.center_name}}</td>
+                <td>{{supplier.society_name}}</td>
+                <td ng-if="current_center_data.societyFilters.inv_poster">{{supplier.tower_count}}</td>
+                <td ng-if="current_center_data.societyFilters.inv_standee">{{supplier.total_standee_count}}</td>
+                <td ng-if="current_center_data.societyFilters.inv_stall">{{supplier.total_stall_count}}</td>
+                <td ng-if="current_center_data.societyFilters.inv_flier">{{supplier.flat_count}}</td>
+                <td>{{supplier.status}}</td>
+            	</tr>
+        </tbody>
+      </table>
     </div>
   </div>
+      <!--Start : adding table for corporates  -->
+      <div ng-if="current_center_data.filters.corporate_allowed">
+      <h4 class="panel-heading head" ng-click="isCorporate=!isCorporate" >Corporate Details</h4>
+      <div uib-collapse="!isCorporate">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th class="col-md-2 table-heading">#</th>
+            <th class="col-md-2 table-heading">Center</th>
+            <th class="col-md-3 table-heading">Corporate</th>
+            <th ng-if="current_center_data.corporateFilters.inv_poster" class="col-md-0 table-heading">Poster Count</th>
+            <th ng-if="current_center_data.corporateFilters.inv_standee" class="col-md-0 table-heading">Standee Count</th>
+            <th ng-if="current_center_data.corporateFilters.inv_stall" class="col-md-0 table-heading">Stall Count</th>
+            <th ng-if="current_center_data.corporateFilters.inv_flier" class="col-md-0 table-heading">Flyer Count</th>
+            <th class="col-md-2 table-heading">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          	<tr ng-repeat=" supplier in current_center_data.suppliers['CP']">
+                <td>{{$index+1}}</td>
+                <td>{{current_center_data.center.center_name}}</td>
+                <td>{{supplier.name}}</td>
+                <td ng-if="current_center_data.corporateFilters.inv_poster">{{supplier.total_poster_count}}</td>
+                <td ng-if="current_center_data.corporateFilters.inv_standee">{{supplier.total_standee_count}}</td>
+                <td ng-if="current_center_data.corporateFilters.inv_stall">{{supplier.total_stall_count}}</td>
+                <td ng-if="current_center_data.corporateFilters.inv_flier">{{supplier.flier_frequency}}</td>
+                <td>{{supplier.status}}</td>
+            	</tr>
+        </tbody>
+      </table>
+    </div>
+    <!--End : adding table for corporates  -->
+  </div>
+</div>
+  </div><!-- row div ends here-->
+</div><!-- containner div ends here-->
 
+<!--End : sortlisted suppliers ends here     -->
   <div ng-repeat="propCenter in proposal.centers track by $index" ng-show="propCenter.societies_buffered_count>0" class="panel panel-default business-panel">
   <h4 class="panel-heading head">Buffered Societies</h4>
   <div class="table-responsive">
@@ -99,8 +149,7 @@
      </table>
     </div>
    </div>
-  <button class="btn btn-danger" ng-click="edit()">Edit Proposal</button>
-</form>
+
 
 <form name="editProposal" ng-show="showEdit">
   <div ng-if="proposal.centers[0].center.space_mappings.society_allowed">
