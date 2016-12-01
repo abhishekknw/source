@@ -27,6 +27,11 @@
     	var url = url_base + proposal_id + '/currentProposal/' ;
     	return machadaloHttp.post(url, data);
     }
+    currentProposalService.updateProposal = function(proposal_id, data){
+    	// will receive proposal_id
+    	var url = url_base + "proposal/"+ proposal_id + "/shortlisted_suppliers_status/";
+    	return machadaloHttp.put(url,data);
+    }
 
     return currentProposalService;
 

@@ -2913,6 +2913,55 @@ class ProposalViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+    @detail_route(methods=['PUT'])
+    def shortlisted_suppliers_status(self, request, pk=None):
+        """
+        Update shortlisted suppliers based on their status value.
+        Response looks like :
+        {
+           'status': true,
+           'data' : [
+                {
+                   suppliers: { RS: [], CP: [] } ,
+                   center: { ...   codes: [] }
+                }
+           ]
+        }
+
+        Args:
+            request: request
+            pk: pk
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            center_id = request.data['center']['id']
+            proposal = request.data['proposal']
+            fixed_data = {
+                'center': center_id,
+                'proposal': proposal,
+            }
+            unique_supplier_codes = request.data['suppliers'].keys()
+            for code in unique_supplier_codes:
+                # get the right model and content_type
+                response = ui_utils.get_content_type(code)
+                if not response:
+                    return response
+                content_type = response.data.get('data')
+                fixed_data['content_type'] = content_type
+                fixed_data['supplier_code'] = code
+
+                response = website_utils.save_shortlisted_suppliers(request.data['suppliers'][code], fixed_data)
+                if not response.data['status']:
+                    return response
+
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
 
 class InitialProposalAPIView(APIView):
     '''This API creates initial proposal when the user enters the center(address, name etc.) and basic proposal
