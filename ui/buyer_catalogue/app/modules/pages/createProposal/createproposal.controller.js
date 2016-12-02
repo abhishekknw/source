@@ -89,9 +89,9 @@ angular.module('catalogueApp')
 	}
 
 	$scope.submit = function(){
-		$scope.model.account_id = $rootScope.account_id;
-		$scope.model.business_id = $rootScope.business_id;
-		$scope.model.parent = null;
+		$scope.model.account_id = $window.localStorage.account_id;
+		$scope.model.business_id = $window.localStorage.business_id;
+		$scope.model.parent = $window.localStorage.proposal_id;
 
 		console.log($scope.model);
 		console.log("vidhi inside submit", $scope.model);

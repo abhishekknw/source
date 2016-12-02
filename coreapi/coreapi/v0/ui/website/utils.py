@@ -395,8 +395,6 @@ def initialize_keys(center_object, supplier_type_code):
 
         return ui_utils.handle_response(function, data=center_object, success=True)
     except Exception as e:
-        import pdb
-        pdb.set_trace()
         return ui_utils.handle_response(function, exception_object=e)
 
 def make_societies_inventory(center_object, row):
@@ -428,6 +426,7 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
     try:
 
         shortlisted_inventory_list = []
+   
         # check for predefined keys in the row. if available, we have that inventory !
         for inventory in website_constants.is_inventory_available:
             if inventory in row.keys():
@@ -453,7 +452,7 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
                     'inventory_count': row[base_name + '_count'],
                     'type': type,
                     'duration': duration,
-                    'inventory_name': base_name.to_upper(),
+                    'inventory_name': base_name.upper(),
                     'factor': row[base_name + '_price_factor']
                 }
 
@@ -467,7 +466,7 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def make_suppliers(center_object, row, supplier_type_code, proposal_id):
+def make_suppliers(center_object, row, supplier_type_code, proposal_id, center_id):
     """
     Args:
         center_object: a center_object
@@ -486,7 +485,7 @@ def make_suppliers(center_object, row, supplier_type_code, proposal_id):
         supplier = {data_key: row[header] for header, data_key in zip(supplier_header_keys, supplier_data_keys)}
 
         # get the list of shortlisted inventory details
-        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center_object['id'])
+        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center_id)
         if not shortlisted_inventory_list_response.data['status']:
             return shortlisted_inventory_list_response
 
@@ -534,6 +533,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id):
                 duration_list.add(shortlisted_inventory_detail['duration'])
                 inventory_names.add(shortlisted_inventory_detail['inventory_name'])
                 inventory_types.add(shortlisted_inventory_detail['type'])
+
         # fetch all ad_inventory_type objects
         ad_inventory_type_objects = models.AdInventoryType.objects.filter(adinventory_name__in=inventory_names).filter(adinventory_type__in=inventory_types).values()
         # fetch all duration objects
@@ -1653,7 +1653,11 @@ def child_proposals(data):
     try:
         # fetch all children of proposal_id and return.
         parent = data['parent']
+        account_id = data['account_id'] 
         proposal_children = models.ProposalInfo.objects.filter(parent=parent).order_by('-created_on')
+        if account_id:
+            # if account_id exists, further filter the results 
+            proposal_children = proposal_children.filter(account_id=account_id)
         serializer = serializers.ProposalInfoSerializer(proposal_children, many=True)
         return ui_utils.handle_response(function_name, data=serializer.data, success=True)
     except Exception as e:

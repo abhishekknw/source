@@ -468,7 +468,7 @@ class GetAccountProposalsAPIView(APIView):
 
         try:
             account = AccountInfo.objects.get(account_id=account_id)
-
+           
             proposals = ProposalInfo.objects.filter(account=account)
             proposal_serializer = ProposalInfoSerializer(proposals, many=True)
         
@@ -2534,7 +2534,7 @@ class ImportSupplierData(APIView):
                     center_object = response.data['data']
 
                     # add 1 supplier that represents this row to the list of suppliers this object has already
-                    response = website_utils.make_suppliers(center_object, row, supplier_type_code, proposal_id)
+                    response = website_utils.make_suppliers(center_object, row, supplier_type_code, proposal_id, center_id)
                     if not response.data['status']:
                         return response
                     center_object = response.data['data']
@@ -2696,7 +2696,8 @@ class CreateInitialProposal(APIView):
 
                 # query for parent. if available set it. if it's available, then this is an EDIT request.
                 parent = request.data.get('parent')
-
+                parent  = parent if parent != '0' else None
+                proposal_data['parent'] = parent
                 # set parent if available
                 if parent:
                     parent_proposal = ProposalInfo.objects.get(proposal_id=parent)
@@ -2869,8 +2870,11 @@ class ProposalViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
+            account_id = request.query_params.get('account_id')
+            account_id = account_id if account_id!= '0' else None
             data = {
-                'parent': pk if pk != '0' else None
+                'parent': pk if pk != '0' else None,
+                'account_id': account_id
             }
             response = website_utils.child_proposals(data)
             if not response:

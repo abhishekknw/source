@@ -67,7 +67,9 @@ angular.module('machadaloPages')
               $scope.model.business = response.business;
               $scope.model.accounts = response.accounts;
               $rootScope.business_id = response.business.business_id;
+              $window.localStorage.business_id = response.business.business_id;
               $rootScope.business_name = response.business.name;
+              $window.localStorage.business_id = response.business.name;
               $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
               $scope.getSubTypes();
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
@@ -152,9 +154,11 @@ angular.module('machadaloPages')
           // pass account_id of selected account radio button
           $scope.sel_account_id = sel_account_id;
           $rootScope.account_id = sel_account_id;
+          $window.localStorage.account_id = sel_account_id;
           pagesService.getAccountProposal(sel_account_id)
           .success(function(response, status){
-              $scope.account_proposals = response;
+            console.log(response);
+              $scope.account_proposals = response.data;
           })
           .error(function(response, status){
               if(typeof(response) == typeof([]))
@@ -170,18 +174,21 @@ angular.module('machadaloPages')
         }
         else{
           pagesService.setProposalAccountId(sel_account_id);
+          $window.localStorage.proposal_id = 0;
           $location.path('/'+sel_account_id + '/createproposal');
         }
       }
 
       $scope.showProposalDetails = function(proposal_id){
+        $window.localStorage.parentProposal = true;
+        $window.localStorage.proposal_id = proposal_id;
         $location.path('/' + proposal_id + '/showcurrentproposal');
       }
 
-      $scope.showHistory = function(proposalId){
+      $scope.showHistory = function(proposalId){$window.localStorage.proposal_id = proposalId;
+        $window.localStorage.proposal_id = proposalId;
         $location.path('/' + proposalId + '/showproposalhistory');
       }
-
     	$scope.create = function() {
             pagesService.createBusinessCampaign($scope.model)
             .success(function (response, status) {
@@ -210,5 +217,5 @@ angular.module('machadaloPages')
             }
         })
         };
-      //[TODO] implement this
+      // [TODO] implement this
     }]);

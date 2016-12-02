@@ -126,7 +126,9 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
     };
 
     pagesService.getAccountProposal = function(account_id){
-       var url = url_base + account_id + '/getAccountProposals/';
+      //  var url = url_base + account_id + '/getAccountProposals/';
+      //hitting other Api which filters only parent proposals if account_id is provided
+      var url = url_base + "proposal/" + '0'+'/child_proposals/?account_id=' + account_id;
        return machadaloHttp.get(url);
     }
 

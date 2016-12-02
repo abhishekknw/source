@@ -9,7 +9,8 @@
   	var proposalHistory = {};
 
   	proposalHistory.getProposalHistory = function(proposal_id){
-  		var url = url_base + "proposal/" + proposal_id + '/child_proposals/';
+      console.log(proposal_id);
+      var url = url_base + "proposal/" + proposal_id +'/child_proposals/?account_id=' + '0';
   		return machadaloHttp.get(url);
   	}
   	return proposalHistory;

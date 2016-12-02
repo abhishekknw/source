@@ -1,5 +1,8 @@
 <html>
   <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
+  <div ng-if="isParentProposal == 'false'">
+    <button class="btn btn-info active" ng-click="showHistory()">Back to Previous Page</button>
+  </div>
   <div class="page-container">
     <form name="proposalDetails" ng-hide="showEdit">
       <div class="panel panel-default business-panel">
@@ -31,9 +34,9 @@
                 <div class="col-md-2 table-align">{{center.center.radius}}</div>
               </div>
             </div>
-            <!-- <div>
+            <div ng-if="isParentProposal == 'true'">
               <a href="" ng-click="editInitialProposal(proposal.proposal_id)">Edit Initial Proposal</a>
-            </div> -->
+            </div>
           </div>
         </div>
       </div>
