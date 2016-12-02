@@ -2534,7 +2534,7 @@ class ImportSupplierData(APIView):
                     center_object = response.data['data']
 
                     # add 1 supplier that represents this row to the list of suppliers this object has already
-                    response = website_utils.make_suppliers(center_object, row, supplier_type_code)
+                    response = website_utils.make_suppliers(center_object, row, supplier_type_code, proposal_id)
                     if not response.data['status']:
                         return response
                     center_object = response.data['data']
@@ -2547,10 +2547,11 @@ class ImportSupplierData(APIView):
 
                     # update the center dict in result with modified center_object
                     result[center_id] = center_object
-            
-            
+            # delete the data from shortlisted_inventory_pricing_details before adding new data
+            models.ShortlistedInventoryPricingDetails.objects.filter(proposal_id=proposal_id).delete()
+
             # data for this supplier is made. populate the shortlisted_inventory_details table before hiting the urls 
-            response = website_utils.populate_shortlisted_inventory_details(result)
+            response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id)
             if not response.data['status']:
                 return response
 
@@ -2574,7 +2575,6 @@ class ImportSupplierData(APIView):
 
             if response.status_code != status.HTTP_200_OK:
                 return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
-            
 
             # hit metric url to save metric data. current m sending the entire file, though only first sheet sending
             # is required.

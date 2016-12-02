@@ -356,6 +356,7 @@ class StandeeInventory(models.Model):
     class Meta:
         db_table = 'standee_inventory'
 
+
 class SwimmingPoolInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='swimming_pools', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
@@ -1232,7 +1233,6 @@ class AccountInfo(models.Model):
 
 #         db_table = 'account_contact'
 
-
 class ProposalCenterMapping(models.Model):
     """
     for a given proposal, stores lat, long, radius, city, pincode etc.
@@ -1853,21 +1853,23 @@ class SocietyLeads(models.Model):
         db_table = 'society_leads'
 
 
-class ShortlistedInventoryDetails(models.Model):
+class ShortlistedInventoryPricingDetails(models.Model):
     """
     Model for storing calculated price and count of an inventory for a given supplier.
     A particular inventory type is identified by it's content_type_id.
-    # todo: Fix this table to store adinventory_type_id, type, duration as
     """
-    supplier_id = models.CharField(max_length=100, null=True)
-    inventory_type = models.ForeignKey(ContentType, null=True)
+    supplier_id = models.CharField(max_length=100)
     inventory_price = models.FloatField(default=0.0, null=True)
     inventory_count = models.IntegerField(default=0, null=True)
     factor = models.IntegerField(default=0.0, null=True)
     supplier_type_code = models.CharField(max_length=255, null=True)
+    ad_inventory_type = models.ForeignKey('AdInventoryType', null=True)
+    ad_inventory_duration = models.ForeignKey('DurationType', null=True)
+    center = models.ForeignKey('ProposalCenterMapping')
+    proposal = models.ForeignKey('ProposalInfo')
 
     class Meta:
-        db_table = 'shortlisted_inventory_details'
+        db_table = 'shortlisted_inventory_pricing_details'
 
 
 class SupplierTypeBusShelter(BasicSupplierDetails):

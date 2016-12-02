@@ -417,7 +417,7 @@ def make_societies_inventory(center_object, row):
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def make_shortlisted_inventory_list(row, supplier_type_code):
+def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center_id):
     """
     Args:
         row: a single row of sheet.  it's dict
@@ -431,30 +431,31 @@ def make_shortlisted_inventory_list(row, supplier_type_code):
         # check for predefined keys in the row. if available, we have that inventory !
         for inventory in website_constants.is_inventory_available:
             if inventory in row.keys():
-                # create an empty dict to store individual inventory details
-                shortlisted_inventory_details = {}
-
-                # get the content_type for this inventory. when the time comes remove this get call out of loop
-                # to speed up the process.
-                inventory_type = ContentType.objects.get(model=website_constants.inventory_models[inventory]['MODEL'])
 
                 # get the base_name so that we can fetch other fields from row
                 base_name = website_constants.inventory_models[inventory]['BASE_NAME']
 
-                # set the supplier_id
-                shortlisted_inventory_details['supplier_id'] = row['supplier_id']
+                # get inventory_code
+                code = website_constants.inventory_name_to_code[base_name]
 
-                # set the inventory_type
-                shortlisted_inventory_details['inventory_type'] = inventory_type
+                # get type. it's fixed for now
+                type = website_constants.inventory_duration_dict[code]['type_duration'][0]['type']
 
-                # set inventory_business_price
-                shortlisted_inventory_details['inventory_price'] = row[base_name + '_business_price']
+                # get duration. it's fixed for now
+                duration = website_constants.inventory_duration_dict[code]['type_duration'][0]['duration']
 
-                # set inventory_count
-                shortlisted_inventory_details['inventory_count'] = row[base_name + '_count']
-
-                # set supplier_type_code
-                shortlisted_inventory_details['supplier_type_code'] = supplier_type_code
+                shortlisted_inventory_details = {
+                    'proposal_id': proposal_id,
+                    'center_id': center_id,
+                    'supplier_id': row['supplier_id'],
+                    'supplier_type_code': supplier_type_code,
+                    'inventory_price': row[base_name + '_business_price'],
+                    'inventory_count': row[base_name + '_count'],
+                    'type': type,
+                    'duration': duration,
+                    'inventory_name': base_name.to_upper(),
+                    'factor': row[base_name + '_price_factor']
+                }
 
                 # add it to the list
                 shortlisted_inventory_list.append(shortlisted_inventory_details)
@@ -466,7 +467,7 @@ def make_shortlisted_inventory_list(row, supplier_type_code):
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def make_suppliers(center_object, row, supplier_type_code):
+def make_suppliers(center_object, row, supplier_type_code, proposal_id):
     """
     Args:
         center_object: a center_object
@@ -485,7 +486,7 @@ def make_suppliers(center_object, row, supplier_type_code):
         supplier = {data_key: row[header] for header, data_key in zip(supplier_header_keys, supplier_data_keys)}
 
         # get the list of shortlisted inventory details
-        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row, supplier_type_code)
+        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center_object['id'])
         if not shortlisted_inventory_list_response.data['status']:
             return shortlisted_inventory_list_response
 
@@ -503,31 +504,89 @@ def make_suppliers(center_object, row, supplier_type_code):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def populate_shortlisted_inventory_details(result):
+def populate_shortlisted_inventory_pricing_details(result, proposal_id):
     """
     Args:
         result: it's a list containing final data
+        proposal_id: The proposal_id
 
     Returns: success if it's able to create objects in the list else failure
-
     """
-    function = populate_shortlisted_inventory_details.__name__
+    function = populate_shortlisted_inventory_pricing_details.__name__
     try:
-        # using a loop instead bulk_create() because bulk_create() will insert duplicates if the api
-        # is hit twice by mistake, will ignore the unique values etc. This problem can be only be
-        # solved by writing a custom raw SQL query which i think is an overkill right now. when the code gets slow
-        # write a RAW query.
+        # warning : The code uses .bulk_create() to create data at once. .bulk_create() has some caveats
+        # from which you should be aware of. example, it doesn't check for duplicates, it doesn't give pre_save(),
+        # or post_save() signals. all the data in the table against this proposal must be deleted when
+        # creating fresh data otherwise it will create duplicates.
+        center_ids = result.keys()
+        # this creates a mapping like { 1: 'center_object_1', 2: 'center_object_2' } etc
+        center_objects = models.ProposalCenterMapping.objects.in_bulk(center_ids)
+        proposal_object = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+
+        # set to hold all durations
+        duration_list = set()
+        # set to hold inventory names
+        inventory_names = set()
+        # set to hold all inventory_types
+        inventory_types = set()
         for center_id, center in result.iteritems():
             for shortlisted_inventory_detail in center['shortlisted_inventory_details']:
-                is_created, obj = models.ShortlistedInventoryDetails.objects.get_or_create(**shortlisted_inventory_detail)
+                duration_list.add(shortlisted_inventory_detail['duration'])
+                inventory_names.add(shortlisted_inventory_detail['inventory_name'])
+                inventory_types.add(shortlisted_inventory_detail['type'])
+        # fetch all ad_inventory_type objects
+        ad_inventory_type_objects = models.AdInventoryType.objects.filter(adinventory_name__in=inventory_names).filter(adinventory_type__in=inventory_types).values()
+        # fetch all duration objects
+        durations_objects = models.DurationType.objects.filter(duration_name__in=duration_list).values()
+        # create a mapping like {'POSTER':{ 'A3' : ad_inv_object },'STANDEE': {'small':ad_inv_object  } }
+        ad_inventory_type_objects_mapping = {}
+        for ad_inventory_type_object in ad_inventory_type_objects:
+            # example, 'POSTER', 'STANDEE'
+            inv_name = ad_inventory_type_object['adinventory_name']
+            # example, 'A3', 'Small', 'High' etc
+            inv_type = ad_inventory_type_object['adinventory_type']
 
+            if not ad_inventory_type_objects_mapping.get(inv_name):
+                ad_inventory_type_objects_mapping[inv_name] = {}
+            # key with inv_name will always be there at this  line
+            if not ad_inventory_type_objects_mapping[inv_name].get(inv_type):
+                ad_inventory_type_objects_mapping[inv_name][inv_type] = ad_inventory_type_object
+
+        # create a mapping like { 'weekly' : duration_object,  } by this loop
+        duration_mapping = {duration_object['duration_name']: duration_object for duration_object in durations_objects}
+
+        # this object holds the data that is to be added in the shortlisted_inventory_detail table
+        shortlisted_inventory_detail_object = {}
+        # list to store ShortlistedInventoryPricingDetails objects
+        output = []
+        for center_id, center in result.iteritems():
+            # pre fill the dict with items that won't change for this iteration
+            shortlisted_inventory_detail_object['proposal'] = proposal_object
+            shortlisted_inventory_detail_object['center'] = center_objects[center_id]
+
+            for shortlisted_inventory_detail in center['shortlisted_inventory_details']:
+                # copy supplier_id, inventory_price, inventory_count as it is from the current object
+                for key in website_constants.shortlisted_inventory_pricing_keys:
+                    shortlisted_inventory_detail_object[key] = shortlisted_inventory_detail[key]
+                # fetch the inventory_name, type, duration. It will be used to fetch correct ad_inventory_type
+                # objects from the mapping.
+                inventory_name = shortlisted_inventory_detail['inventory_name']
+                ad_inventory_type = shortlisted_inventory_detail['type']
+                duration = shortlisted_inventory_detail['duration']
+                # fetch the right ad_inventory_type object from the mapping created earlier
+                shortlisted_inventory_detail_object['ad_inventory_type'] = ad_inventory_type_objects_mapping[inventory_name][ad_inventory_type]
+                # fetch the right duration type object created earlier
+                shortlisted_inventory_detail_object['ad_inventory_duration'] = duration_mapping[duration]
+                obj = models.ShortlistedInventoryPricingDetails(**shortlisted_inventory_detail_object)
+                output.append(obj)
             # we do not want to send this to other API, so we will rather delete it
             del center['shortlisted_inventory_details']
+        # issue a single insert statements. read the warning above of .bulk_create usage.
+        models.ShortlistedInventoryPricingDetails.bulk_create(output)
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
-        import pdb
-        pdb.set_trace()
         return ui_utils.handle_response(function, exception_object=e)
+
 
 def get_center_id_list(ws, index_of_center_id):
     """
