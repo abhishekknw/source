@@ -31,9 +31,9 @@
                 <div class="col-md-2 table-align">{{center.center.radius}}</div>
               </div>
             </div>
-            <!-- <div>
+            <div>
               <a href="" ng-click="editInitialProposal(proposal.proposal_id)">Edit Initial Proposal</a>
-            </div> -->
+            </div>
           </div>
         </div>
       </div>
@@ -83,7 +83,11 @@
                 <td ng-if="supplier.status == 'B'">Buffer</td>
 
                 <td>
-                  <button class="btn btn-danger active" ng-click="setSupplierStatus(supplier,'R')">Remove</button>
+                  <a ng-href="" ng-if="supplier.status == 'S'" ng-click="setSupplierStatus(supplier,'B')">Buffer</a>
+                  <a ng-href="" ng-if="supplier.status == 'B'" ng-click="setSupplierStatus(supplier,'S')">Shortlist</a>
+                </br>
+                  <a ng-href="" ng-if="supplier.status != 'R'" ng-click="setSupplierStatus(supplier,'R')">Remove</a>
+                  <!-- <button class="btn btn-danger active" ng-click="setSupplierStatus(supplier,'R')">Remove</button> -->
                 </td>
             	</tr>
         </tbody>
@@ -153,7 +157,11 @@
                 <td ng-if="supplier.status == 'B'">Buffer</td>
 
                 <td>
-                  <button class="btn btn-danger active" ng-click="setSupplierStatus(supplier,'R')">Remove</button>
+                  <a ng-href="" ng-if="supplier.status == 'S'" ng-click="setSupplierStatus(supplier,'B')">Buffer</a>
+                  <a ng-href="" ng-if="supplier.status == 'B'" ng-click="setSupplierStatus(supplier,'S')">Shortlist</a>
+                </br>
+                  <a ng-href="" ng-if="supplier.status != 'R'" ng-click="setSupplierStatus(supplier,'R')">Remove</a>
+                  <!-- <button class="btn btn-danger active" ng-click="setSupplierStatus(supplier,'R')">Remove</button> -->
                 </td>
             	</tr>
         </tbody>
