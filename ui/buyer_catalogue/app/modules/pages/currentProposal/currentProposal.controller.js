@@ -23,6 +23,7 @@ angular.module('catalogueApp')
             $scope.showEdit = true;
         },
 
+        // this service get the all shortlisted suppliers for this proposal
         currentProposalService.getShortlistedSuppliers($stateParams.proposal_id)
         .success(function(response, status){
           console.log(response);
@@ -57,6 +58,8 @@ angular.module('catalogueApp')
             }
           });
         }
+        //function checks if center contain s suppliers_meta, if it contains
+        // then it collects it's inventory_type_selected filters
         var getFilters = function(spaces){
           angular.forEach(spaces, function(supplier) {
             if(supplier.suppliers_meta){
@@ -71,6 +74,7 @@ angular.module('catalogueApp')
             }
           });
         }
+        // function used to show available inventory_type_selected filters
         var checkInventories = function(supplier,filters){
           if((filters.indexOf('PO') > -1) || (filters.indexOf('POFL') > -1) || (filters.indexOf('POSLFL') > -1) || (filters.indexOf('POCDFL') > -1)){
             supplier.inv_poster = true;
@@ -85,8 +89,7 @@ angular.module('catalogueApp')
             supplier.inv_flier = true;
           }
         }
-        $scope.current_center_id = null;
-
+        //function used to select one center & also store selected center data to show details
         $scope.selectCenter = function(center_index){
           if(center_index != null){
             for(var i=0;i<$scope.center_id_list.length; i++){
@@ -96,6 +99,24 @@ angular.module('catalogueApp')
             }
           }
         }
+
+      //Start: setting status of suppliers like shortlisted, removed or buffer
+      $scope.setSupplierStatus = function (supplier,value){
+        supplier.status = value;
+      };
+      //End: setting status of suppliers like shortlisted, removed or buffer
+      //Start: function used to update the status of suppliers
+      $scope.updateProposal = function() {
+        $scope.current_center_data.proposal = $stateParams.proposal_id;
+        currentProposalService.updateProposal($stateParams.proposal_id, $scope.current_center_data)
+        .success(function(response, status){
+                $window.location.reload();
+        })
+        .error(function(response, status){
+          console.log("Error Occured");
+        })
+      }
+      //End: function used to update the status of suppliers
     	$scope.submit = function(){
     		currentProposalService.saveProposal($stateParams.proposal_id, $scope.proposal.centers)
     		.success(function(response, status){
