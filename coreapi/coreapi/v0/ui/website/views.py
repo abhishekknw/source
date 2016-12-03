@@ -10,6 +10,7 @@ from django.db.models import Q, Sum
 from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
+from django.conf import settings
 
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
@@ -3294,5 +3295,56 @@ class ImportAreaSubArea(APIView):
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class SendMail(APIView):
+    """
+    API sends mail. The API sends a file called 'sample_mail_file.xlsx' located in files directory.
+
+    """
+    def post(self, request):
+        class_name = self.__class__.__name__
+        try:
+            # file name
+            file_name = 'sample_mail_file.xlsx'
+
+            file_path = BASE_DIR + '/files/sample_mail_file.xlsx'
+            with open(file_path, 'rb') as content_file:
+                my_file = content_file.read()
+
+            # get the predefined template for the body
+            template_body = website_constants.email['body']
+
+            # define a body_mapping.
+            body_mapping = {
+                 'file': file_name
+            }
+            # call the function to perform the magic
+            response = website_utils.process_template(template_body, body_mapping)
+            if not response.data['status']:
+                return response
+
+            # get the modified body
+            modified_body = response.data['data']
+
+            email_data = {
+                'subject': str(request.data['subject']),
+                'to': [str(request.data['to']), ],
+                'body': modified_body
+            }
+            attachment = None
+            if my_file:
+                attachment = {
+                    'file_name': file_name,
+                    'file_data':  my_file,
+                    'mime_type': website_constants.mime['xlsx']
+                }
+            response = website_utils.send_email(email_data, attachment)
+            if not response.data['status']:
+                return response
+            return ui_utils.handle_response(class_name, data='Ok.Mail sent {0}'.format(response.data['data']), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
 
 

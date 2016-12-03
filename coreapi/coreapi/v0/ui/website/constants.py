@@ -449,3 +449,19 @@ current_inventories = [('poster_a4', 'campaign_weekly', 13), ('standee_small', '
 
 # shortlisted_inventory_pricing_keys
 shortlisted_inventory_pricing_keys = ['supplier_id', 'supplier_type_code', 'inventory_price', 'inventory_count', 'factor']
+
+# valid email fields
+valid_email_keys = ['subject', 'body', 'to']
+
+# MIME types
+
+mime = {
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+}
+
+# email subject, body templates
+email = {
+    'subject': 'Test subject',
+    'body': 'This a system generated mail. Please find the file named $file attached',
+    'to': ['yogesh.mhetre@machadalo.com']
+}
