@@ -94,14 +94,10 @@ DATABASES = {
          'ENGINE': 'django.db.backends.mysql',
          'HOST': 'localhost',
          'USER': 'root',
-<<<<<<< Updated upstream
          'PASSWORD': 'root',
          'OPTIONS': {
              "init_command": "SET foreign_key_checks = 0;",
          }
-=======
-         'PASSWORD': 'yo@123',
->>>>>>> Stashed changes
       }
 
     }
@@ -147,7 +143,11 @@ REST_FRAMEWORK = {
 #     'PAGE_SIZE': 5
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 # }
+=======
+# }   
+>>>>>>> Stashed changes
 =======
 # }   
 >>>>>>> Stashed changes
