@@ -5,6 +5,8 @@ import StringIO
 from types import *
 import os
 import uuid
+from smtplib import SMTPException
+from string import Template
 
 from django.db import transaction
 from django.db.models import Q, F
@@ -13,6 +15,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from django.http import Http404
+from django.core.mail import EmailMessage
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -2838,7 +2841,8 @@ def send_excel_file(file_name):
 
         if os.path.exists(file_name):
             excel = open(file_name, "rb")
-            output = StringIO.StringIO(excel.read())
+            file_content = excel.read()
+            output = StringIO.StringIO(file_content)
             out_content = output.getvalue()
             content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             # content_type = 'application/vnd.ms-excel'
@@ -2851,6 +2855,40 @@ def send_excel_file(file_name):
             excel.close()
             # remove the file from the disk
             os.remove(file_name)
+
+            # get the predefined template for the body
+            template_body = website_constants.email['body']
+
+            # define a body_mapping.
+            body_mapping = {
+                 'file': file_name
+            }
+            # call the function to perform the magic
+            response = process_template(template_body, body_mapping)
+            if not response.data['status']:
+                return response
+
+            # get the modified body
+            modified_body = response.data['data']
+
+            # prepare email_data
+            email_data = {
+                'subject': website_constants.email['subject'],
+                'body': modified_body,
+                'to': website_constants.email['to']
+            }
+
+            # prepare the attachment
+            attachment = {
+                'file_name': file_name,
+                'file_data': file_content,
+                'mime_type': content_type
+            }
+
+            # send the mail
+            response = send_email(email_data, attachment)
+            if not response.data['status']:
+                return response
 
             # set content_type and make Response() 
             response = Response(data=out_content, headers=headers, content_type=content_type)
@@ -2892,6 +2930,7 @@ def save_price_mapping_default(supplier_id, supplier_type_code, row):
     except Exception as e:
         return  ui_utils.handle_response(function, exception_object=e)
 
+
 def delete_create_final_proposal_data(proposal_id):
     """"
     This function deletes all the data related to this proposal_id whenever create-final-proposal api
@@ -2908,3 +2947,46 @@ def delete_create_final_proposal_data(proposal_id):
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
         return  ui_utils.handle_response(function, exception_object=e)
+
+
+def send_email(email_data, attachment=None):
+    """
+    Args: dict having 'subject', 'body' and 'to' as keys.
+    Returns: success if mail is sent else failure
+    """
+    function = send_email.__name__
+    try:
+        # check if email_data contains the predefined keys
+        email_keys = email_data.keys()
+        for key in website_constants.valid_email_keys:
+            if key not in email_keys:
+                return ui_utils.handle_response(function, data='key {0} not found in the recieved structure'.format(key))
+        # construct the EmailMessage class
+        email = EmailMessage(email_data['subject'], email_data['body'], to=email_data['to'])
+        # attach attachment if available
+        if attachment:
+            email.attach(attachment['file_name'], attachment['file_data'], attachment['mime_type'])
+        delivered = email.send()
+        return ui_utils.handle_response(function, data=delivered, success=True)
+    except SMTPException as e:
+        return ui_utils.handle_response(function, exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def process_template(target_string, mapping):
+    """
+    Args:
+        target_string: The string  on which templating is to be performed.
+        mapping: a dict having keys as placeholders, and values which will be in place of placeholders.
+
+    Returns: a string with all placeholders replaced by there respective values
+    """
+    function = process_template.__name__
+    try:
+        template_string = Template(target_string)
+        result_string = template_string.substitute(mapping)
+        return ui_utils.handle_response(function, data=result_string, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
