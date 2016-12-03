@@ -1172,6 +1172,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
            //console.log("Submitting $scope.centers :", $scope.centers);
        };
      $scope.exportData = function(){
+            $scope.checkFileExport = true;
              getShortlistedFilteredSocieties();
              //console.log($scope.center_data);
              $http({
@@ -1211,9 +1212,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 
                   // download it immediately
                   saveAs(blob, $scope.file_name);
+                  $scope.checkFileExport = false;
 
              }).error(function(){
                   //Some error log
+                  $scope.checkFileExport = true;
                   alert('Error in exporting the file');
              });
      }

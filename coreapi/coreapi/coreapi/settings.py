@@ -141,19 +141,8 @@ REST_FRAMEWORK = {
 #         ),
 #     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
 #     'PAGE_SIZE': 5
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 # }
-=======
-# }   
->>>>>>> Stashed changes
-=======
-# }   
->>>>>>> Stashed changes
-=======
-# }   
->>>>>>> Stashed changes
+
 
 
 # CORS headers
