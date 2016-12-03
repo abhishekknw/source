@@ -2,8 +2,17 @@
 angular.module('catalogueApp')
     .controller('ProposalHistory', function($scope, $rootScope, $stateParams, $window, $location, proposalHistoryService ,$http) {
     	$scope.proposals = [];
-      var proposalid = $window.localStorage.proposal_id;
-    	proposalHistoryService.getProposalHistory(proposalid)
+      //defining headers for table
+      $scope.proposalHeaders = [
+        {name : 'Proposal_id'},
+        {name : 'Proposal_name'},
+        {name : 'Created By'},
+        {name : 'Created On'},
+        {name : ''}
+      ];
+      // var proposalid = $window.localStorage.proposal_id;
+      $scope.proposalid = $window.localStorage.proposal_id;
+    	proposalHistoryService.getProposalHistory($scope.proposalid)
     	.success(function(response, status){
     		$scope.proposals = response.data;
     		console.log("$scope.proposals : ", response.data);
