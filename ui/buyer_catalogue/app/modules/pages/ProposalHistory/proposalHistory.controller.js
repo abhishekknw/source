@@ -24,4 +24,7 @@ angular.module('catalogueApp')
         $window.localStorage.parentProposal = false;
         $location.path('/' + proposal_id + '/showcurrentproposal');
       }
+      $scope.showHistory = function(){
+        $location.path('/manageCampaign/create');
+      }
 	});
