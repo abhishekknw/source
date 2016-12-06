@@ -94,7 +94,10 @@ DATABASES = {
          'ENGINE': 'django.db.backends.mysql',
          'HOST': 'localhost',
          'USER': 'root',
-         'PASSWORD': 'vidhi',
+         'PASSWORD': 'root',
+         'OPTIONS': {
+             "init_command": "SET foreign_key_checks = 0;",
+         }
       }
 
     }
@@ -120,25 +123,26 @@ STATIC_URL = '/static/'
 
 # settings for Django Rest Framework
 
-# '''REST_FRAMEWORK = {
-#     # other settings...
-#     'DEFAULT_AUTHENTICATION_CLASSES': [],
-#     'DEFAULT_PERMISSION_CLASSES': [],
-# }'''
-
-
 REST_FRAMEWORK = {
-     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-        ),
-     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_jwt.authentication.JSONWebTokenAuthentication',
-        ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5
+    # other settings...
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [],
 }
+
+
+# REST_FRAMEWORK = {
+#      'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.IsAuthenticated',
+#         ),
+#      'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework.authentication.SessionAuthentication',
+#         'rest_framework.authentication.BasicAuthentication',
+#         'rest_jwt.authentication.JSONWebTokenAuthentication',
+#         ),
+#     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+#     'PAGE_SIZE': 5
+# }
+
 
 
 # CORS headers
@@ -188,4 +192,13 @@ JWT_AUTH = {
       'JWT_VERIFY_EXPIRATION': False,
       }
 
-BASE_URL = 'http://localhost:8108/'
+BASE_URL = 'http://localhost:8000/'
+
+# EMAIL SETTINGS
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+DEFAULT_EMAIL_FROM = EMAIL_HOST_USER

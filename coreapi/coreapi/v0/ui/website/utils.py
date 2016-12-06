@@ -5,6 +5,8 @@ import StringIO
 from types import *
 import os
 import uuid
+from smtplib import SMTPException
+from string import Template
 
 from django.db import transaction
 from django.db.models import Q, F
@@ -13,6 +15,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from django.http import Http404
+from django.core.mail import EmailMessage
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -395,8 +398,6 @@ def initialize_keys(center_object, supplier_type_code):
 
         return ui_utils.handle_response(function, data=center_object, success=True)
     except Exception as e:
-        import pdb
-        pdb.set_trace()
         return ui_utils.handle_response(function, exception_object=e)
 
 def make_societies_inventory(center_object, row):
@@ -428,6 +429,7 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
     try:
 
         shortlisted_inventory_list = []
+   
         # check for predefined keys in the row. if available, we have that inventory !
         for inventory in website_constants.is_inventory_available:
             if inventory in row.keys():
@@ -439,10 +441,12 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
                 code = website_constants.inventory_name_to_code[base_name]
 
                 # get type. it's fixed for now
-                type = website_constants.inventory_duration_dict[code]['type_duration'][0]['type']
+                inv_type = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['type']
+                inv_type = website_constants.type_dict[inv_type]
 
                 # get duration. it's fixed for now
-                duration = website_constants.inventory_duration_dict[code]['type_duration'][0]['duration']
+                inv_duration = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['duration']
+                inv_duration = website_constants.duration_dict[inv_duration]
 
                 shortlisted_inventory_details = {
                     'proposal_id': proposal_id,
@@ -451,9 +455,9 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
                     'supplier_type_code': supplier_type_code,
                     'inventory_price': row[base_name + '_business_price'],
                     'inventory_count': row[base_name + '_count'],
-                    'type': type,
-                    'duration': duration,
-                    'inventory_name': base_name.to_upper(),
+                    'type': inv_type,
+                    'duration': inv_duration,
+                    'inventory_name': base_name.upper(),
                     'factor': row[base_name + '_price_factor']
                 }
 
@@ -467,7 +471,7 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def make_suppliers(center_object, row, supplier_type_code, proposal_id):
+def make_suppliers(center_object, row, supplier_type_code, proposal_id, center_id):
     """
     Args:
         center_object: a center_object
@@ -486,7 +490,7 @@ def make_suppliers(center_object, row, supplier_type_code, proposal_id):
         supplier = {data_key: row[header] for header, data_key in zip(supplier_header_keys, supplier_data_keys)}
 
         # get the list of shortlisted inventory details
-        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center_object['id'])
+        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center_id)
         if not shortlisted_inventory_list_response.data['status']:
             return shortlisted_inventory_list_response
 
@@ -529,22 +533,29 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id):
         inventory_names = set()
         # set to hold all inventory_types
         inventory_types = set()
+
         for center_id, center in result.iteritems():
-            for shortlisted_inventory_detail in center['shortlisted_inventory_details']:
+            for index, shortlisted_inventory_detail in enumerate(center['shortlisted_inventory_details']):
                 duration_list.add(shortlisted_inventory_detail['duration'])
                 inventory_names.add(shortlisted_inventory_detail['inventory_name'])
                 inventory_types.add(shortlisted_inventory_detail['type'])
+
         # fetch all ad_inventory_type objects
-        ad_inventory_type_objects = models.AdInventoryType.objects.filter(adinventory_name__in=inventory_names).filter(adinventory_type__in=inventory_types).values()
+        ad_inventory_type_objects = models.AdInventoryType.objects.filter(adinventory_name__in=inventory_names).filter(adinventory_type__in=inventory_types)
         # fetch all duration objects
-        durations_objects = models.DurationType.objects.filter(duration_name__in=duration_list).values()
+        durations_objects = models.DurationType.objects.filter(duration_name__in=duration_list)
+        
+        # return error if atleast one of them is False 
+        if not ad_inventory_type_objects or not durations_objects:
+            return ui_utils.handle_response(function, data='Error in fetching ad_inventory_objects or duration objects')
+
         # create a mapping like {'POSTER':{ 'A3' : ad_inv_object },'STANDEE': {'small':ad_inv_object  } }
         ad_inventory_type_objects_mapping = {}
         for ad_inventory_type_object in ad_inventory_type_objects:
             # example, 'POSTER', 'STANDEE'
-            inv_name = ad_inventory_type_object['adinventory_name']
+            inv_name = ad_inventory_type_object.adinventory_name
             # example, 'A3', 'Small', 'High' etc
-            inv_type = ad_inventory_type_object['adinventory_type']
+            inv_type = ad_inventory_type_object.adinventory_type
 
             if not ad_inventory_type_objects_mapping.get(inv_name):
                 ad_inventory_type_objects_mapping[inv_name] = {}
@@ -553,7 +564,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id):
                 ad_inventory_type_objects_mapping[inv_name][inv_type] = ad_inventory_type_object
 
         # create a mapping like { 'weekly' : duration_object,  } by this loop
-        duration_mapping = {duration_object['duration_name']: duration_object for duration_object in durations_objects}
+        duration_mapping = {duration_object.duration_name : duration_object for duration_object in durations_objects}
 
         # this object holds the data that is to be added in the shortlisted_inventory_detail table
         shortlisted_inventory_detail_object = {}
@@ -564,7 +575,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id):
             shortlisted_inventory_detail_object['proposal'] = proposal_object
             shortlisted_inventory_detail_object['center'] = center_objects[center_id]
 
-            for shortlisted_inventory_detail in center['shortlisted_inventory_details']:
+            for index, shortlisted_inventory_detail in enumerate(center['shortlisted_inventory_details']):
                 # copy supplier_id, inventory_price, inventory_count as it is from the current object
                 for key in website_constants.shortlisted_inventory_pricing_keys:
                     shortlisted_inventory_detail_object[key] = shortlisted_inventory_detail[key]
@@ -582,7 +593,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id):
             # we do not want to send this to other API, so we will rather delete it
             del center['shortlisted_inventory_details']
         # issue a single insert statements. read the warning above of .bulk_create usage.
-        models.ShortlistedInventoryPricingDetails.bulk_create(output)
+        models.ShortlistedInventoryPricingDetails.objects.bulk_create(output)
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
@@ -1653,7 +1664,11 @@ def child_proposals(data):
     try:
         # fetch all children of proposal_id and return.
         parent = data['parent']
+        account_id = data['account_id'] 
         proposal_children = models.ProposalInfo.objects.filter(parent=parent).order_by('-created_on')
+        if account_id:
+            # if account_id exists, further filter the results 
+            proposal_children = proposal_children.filter(account_id=account_id)
         serializer = serializers.ProposalInfoSerializer(proposal_children, many=True)
         return ui_utils.handle_response(function_name, data=serializer.data, success=True)
     except Exception as e:
@@ -2834,7 +2849,8 @@ def send_excel_file(file_name):
 
         if os.path.exists(file_name):
             excel = open(file_name, "rb")
-            output = StringIO.StringIO(excel.read())
+            file_content = excel.read()
+            output = StringIO.StringIO(file_content)
             out_content = output.getvalue()
             content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             # content_type = 'application/vnd.ms-excel'
@@ -2845,8 +2861,43 @@ def send_excel_file(file_name):
             }
             output.close()
             excel.close()
+
             # remove the file from the disk
             os.remove(file_name)
+
+            # get the predefined template for the body
+            template_body = website_constants.email['body']
+
+            # define a body_mapping.
+            body_mapping = {
+                 'file': file_name
+            }
+            # call the function to perform the magic
+            response = process_template(template_body, body_mapping)
+            if not response.data['status']:
+                return response
+
+            # get the modified body
+            modified_body = response.data['data']
+
+            # prepare email_data
+            email_data = {
+                'subject': website_constants.email['subject'],
+                'body': modified_body,
+                'to': website_constants.email['to']
+            }
+
+            # prepare the attachment
+            attachment = {
+                'file_name': file_name,
+                'file_data': file_content,
+                'mime_type': content_type
+            }
+
+            # send the mail
+            response = send_email(email_data, attachment)
+            if not response.data['status']:
+                return response
 
             # set content_type and make Response() 
             response = Response(data=out_content, headers=headers, content_type=content_type)
@@ -2888,6 +2939,7 @@ def save_price_mapping_default(supplier_id, supplier_type_code, row):
     except Exception as e:
         return  ui_utils.handle_response(function, exception_object=e)
 
+
 def delete_create_final_proposal_data(proposal_id):
     """"
     This function deletes all the data related to this proposal_id whenever create-final-proposal api
@@ -2904,3 +2956,46 @@ def delete_create_final_proposal_data(proposal_id):
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
         return  ui_utils.handle_response(function, exception_object=e)
+
+
+def send_email(email_data, attachment=None):
+    """
+    Args: dict having 'subject', 'body' and 'to' as keys.
+    Returns: success if mail is sent else failure
+    """
+    function = send_email.__name__
+    try:
+        # check if email_data contains the predefined keys
+        email_keys = email_data.keys()
+        for key in website_constants.valid_email_keys:
+            if key not in email_keys:
+                return ui_utils.handle_response(function, data='key {0} not found in the recieved structure'.format(key))
+        # construct the EmailMessage class
+        email = EmailMessage(email_data['subject'], email_data['body'], to=email_data['to'])
+        # attach attachment if available
+        if attachment:
+            email.attach(attachment['file_name'], attachment['file_data'], attachment['mime_type'])
+        delivered = email.send()
+        return ui_utils.handle_response(function, data=delivered, success=True)
+    except SMTPException as e:
+        return ui_utils.handle_response(function, exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def process_template(target_string, mapping):
+    """
+    Args:
+        target_string: The string  on which templating is to be performed.
+        mapping: a dict having keys as placeholders, and values which will be in place of placeholders.
+
+    Returns: a string with all placeholders replaced by there respective values
+    """
+    function = process_template.__name__
+    try:
+        template_string = Template(target_string)
+        result_string = template_string.substitute(mapping)
+        return ui_utils.handle_response(function, data=result_string, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+

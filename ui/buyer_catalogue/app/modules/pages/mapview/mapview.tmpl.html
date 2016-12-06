@@ -394,7 +394,7 @@
           <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
           <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
           <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()">Add Suppliers</button>
-          <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()">Save to Excel</button>
+          <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()" ng-disabled = "checkFileExport">Save to Excel</button>
           <button class="btn btn-danger active" ngf-select="upload($file)">Upload</button>
         </div>
         </div>

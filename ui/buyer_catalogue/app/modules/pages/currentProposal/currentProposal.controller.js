@@ -5,6 +5,8 @@ angular.module('catalogueApp')
     	$scope.proposal = {};
         $scope.society = {society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''};
         $scope.societyDetails = [];
+        //getting parent proposal_id used to shopw or not Edit Initial Proposal link
+        $scope.isParentProposal = $window.localStorage.parentProposal;
     	// send proposal_id in service
 
     	currentProposalService.getProposal($stateParams.proposal_id)
@@ -130,7 +132,10 @@ angular.module('catalogueApp')
     		})
     	}
      $scope.editInitialProposal = function(proposalId){
-       $window.localStorage.proposal_id = proposalId;
-       $location.path('/' + proposalId + '/createproposal');
+       $location.path('/' + $window.localStorage.account_id + '/createproposal');
+     }
+     //to go to proposalHistory page
+     $scope.showHistory = function(){
+       $location.path('/' + $stateParams.proposal_id + '/showproposalhistory');
      }
     });

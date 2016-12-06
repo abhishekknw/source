@@ -430,6 +430,40 @@ inventory_duration_dict = {
     'CD': {'name': 'CAR DISPLAY', 'tye_duration':  [{'type': 'car_display_price', 'duration': 'unit_daily'}]}
 }
 
+inventory_type_duration_dict = {
+    'PO': {'name': 'POSTER', 'type_duration': [{'type': 'a4', 'duration': 'campaign_weekly'}]},
+    'ST': {'name': 'STANDEE', 'type_duration': [{'type': 'small', 'duration': 'campaign_weekly'}]},
+    'SL': {'name': 'STALL',   'type_duration':  [{'type': 'small', 'duration': 'unit_daily'}]},
+    'FL': {'name': 'FLIER', 'type_duration': [{'type': 'door_to_door', 'duration': 'unit_daily'}, ]},
+}
+
+# this dict maps keys directly to db values. do not change 
+duration_dict = {
+    'campaign_weekly': 'Campaign Weekly',
+    'campaign_monthly': 'Campaign Monthly',
+    'unit_weekly': 'Unit Weekly',
+    'unit_monthly': 'Unit Monthly',
+    'unit_daily':  'Unit Daily',
+    'two_days': '2 Days'
+}
+# this dict maps keys directly to db values. do not change 
+type_dict = {
+    'a4': 'A4', 
+    'a3': 'A3', 
+    'small': 'Small',
+    'medium': 'Medium',
+    'large': 'Large',
+    'canopy': 'Canopy',
+    'customize': 'Customize',
+    'standard': 'Standard',
+    'premium': 'Premium',
+    'door_to_door': 'Door-to-Door',
+    'mail_box': 'Mailbox',
+    'lobby': 'Lobby'
+}
+
+
+
 # format to be used in datetime
 datetime_format = '%d-%m-%Y %H-%M-%S'
 
@@ -449,3 +483,19 @@ current_inventories = [('poster_a4', 'campaign_weekly', 13), ('standee_small', '
 
 # shortlisted_inventory_pricing_keys
 shortlisted_inventory_pricing_keys = ['supplier_id', 'supplier_type_code', 'inventory_price', 'inventory_count', 'factor']
+
+# valid email fields
+valid_email_keys = ['subject', 'body', 'to']
+
+# MIME types
+
+mime = {
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+}
+
+# email subject, body templates
+email = {
+    'subject': 'Test subject',
+    'body': 'This a system generated mail. Please find the file named $file attached',
+    'to': ['nikhil.singh@machadalo.com']
+}
