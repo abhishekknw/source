@@ -82,6 +82,11 @@ angular
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyFilterCtrl'
         })
+        .state('showSocietyDetails', {
+          url : '/societyDetails/:societyId', 
+          templateUrl: 'modules/pages/supplierDetails/societyDetails/newsocietyDetails.tmpl.html',
+          controller: 'NewSocietyCtrl'
+        })
       .state('login', {
           url : '/login',
           controller: 'LoginCtrl',
