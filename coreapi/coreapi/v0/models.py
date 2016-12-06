@@ -23,6 +23,8 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
 import managers
 
@@ -36,12 +38,24 @@ AD_INVENTORY_CHOICES = (
     ('BANNER', 'Banner'),
 )
 
+
+class BaseUser(AbstractUser):
+    """
+    This is base user class that inherits AbstractBaseUser and adds an additional field.
+    """
+    user_code = models.CharField(max_length=255, default=settings.DEFAULT_USER_CODE)
+
+    class Meta:
+        db_table = 'base_user'
+
+
 class BasicSupplierDetails(models.Model):
     """
     This is an abstract base class for all the suppliers. As we know more common fields, add
     them here in order of relevance and run python manage.py makemigrations. all the models who
     inherit from this class will have those fields automatically.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     supplier_id = models.CharField(max_length=20, primary_key=True)
     supplier_code = models.CharField(max_length=3, null=True)
     name = models.CharField(max_length=70, null=True, blank=True)
@@ -440,6 +454,7 @@ class CommonAreaDetails(models.Model):
 
         db_table = 'common_area_details'
 
+
 class ContactDetails(models.Model):
     id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='contacts', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
@@ -602,7 +617,9 @@ class PosterInventoryMapping(models.Model):
 
     class Meta:
 
+
         db_table = 'poster_inventory_mapping'
+
 
 class RatioDetails(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', max_length=20)  # Field name made lowercase.
@@ -667,6 +684,7 @@ class StallInventory(models.Model):
     class Meta:
 
         db_table = 'stall_inventory'
+
 
 class FlyerInventory(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -752,7 +770,9 @@ class SportsInfra(models.Model):
 
         db_table = 'sports_infra'
 
-class  SupplierTypeSociety(models.Model):
+
+class SupplierTypeSociety(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
     supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
     society_name = models.CharField(db_column='SOCIETY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
@@ -814,7 +834,7 @@ class  SupplierTypeSociety(models.Model):
     past_collections_standee = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STANDEE', null=True)  # Field name made lowercase.
     past_sponsorship_collection_events = models.IntegerField(db_column='PAST_YEAR_SPONSORSHIP_COLLECTION_EVENTS', null=True)  # Field name made lowercase.
     past_total_sponsorship = models.IntegerField(db_column='PAST_YEAR_TOTAL_SPONSORSHIP', null=True)  # Field name made lowercase.
-    created_by = models.ForeignKey(User, related_name='societies', db_column='CREATED_BY', blank=True, null=True, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, related_name='societies', db_column='CREATED_BY', blank=True, null=True, on_delete=models.CASCADE)
     created_on = models.DateTimeField(db_column='CREATED_ON', auto_now_add=True)
     total_ad_spaces = models.IntegerField(db_column='TOTAL_AD_SPACES', null=True)
     tower_count = models.IntegerField(db_column='TOWER_COUNT', blank=True, null=True)  # Field name made lowercase.
@@ -1070,9 +1090,9 @@ class SocietyTower(models.Model):
         db_table = 'society_tower'
         unique_together = (('tower_tag','supplier'),)
 
+
 class BusinessAccountContact(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-
     content_type = models.ForeignKey(ContentType)
     object_id = models.CharField(max_length=20)
     business_account_id = generic.GenericForeignKey('content_type','object_id')
@@ -1090,6 +1110,7 @@ class BusinessAccountContact(models.Model):
 
 class BusinessInfo(models.Model):
     ## changed -> on_delete = models.CASCADE
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     business_id = models.CharField(db_column='BUSINESS_ID',max_length=15, primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True) ## changed -> name
     type_name = models.ForeignKey('BusinessTypes',related_name='type_set',db_column='TYPE', blank=False,null=False, on_delete=models.CASCADE) ## changed -> CharField
@@ -1766,13 +1787,13 @@ class InventorySummary(models.Model):
         db_table = 'inventory_summary'
 
 class UserProfile(models.Model):
-    user = models.ForeignKey(User, unique=True, editable=True, null=False, related_name='user_profile', db_column='user_id', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID,  unique=True, editable=True, null=False, related_name='user_profile', db_column='user_id', on_delete=models.CASCADE)
     is_city_manager = models.BooleanField(db_column='is_city_manager', default=False)
     is_cluster_manager = models.BooleanField(db_column='is_cluster_manager', default=False)
     is_normal_user =  models.BooleanField(db_column='is_normal_user', default=False)
     society_form_access = models.BooleanField(db_column='society_form_access', default=False)
     corporate_form_access = models.BooleanField(db_column='corporate_form_access', default=False)
-    created_by = models.ForeignKey(User, db_column='created_by', null=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_column='created_by', null=True)
 
     def get_user(self):
         return self.user
@@ -1781,14 +1802,14 @@ class UserProfile(models.Model):
         db_table = 'user_profile'
 
 class UserCities(models.Model):
-    user = models.ForeignKey(User, related_name='cities', db_column='user_id', null=False, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID,  related_name='cities', db_column='user_id', null=False, on_delete=models.CASCADE)
     city = models.ForeignKey(City, db_column='city_id', null=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'user_cities'
 
 class UserAreas(models.Model):
-    user = models.ForeignKey(User, related_name='clusters', db_column='user_id', null=False, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, related_name='clusters', db_column='user_id', null=False, on_delete=models.CASCADE)
     area = models.ForeignKey(CityArea, db_column='area_id', on_delete=models.CASCADE)
 
     class Meta:
@@ -1805,6 +1826,7 @@ class CorporateBuilding(models.Model):
 
     class Meta:
         db_table='corporate_building'
+
 
 class CorporateBuildingWing(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -1823,6 +1845,7 @@ class CorporateBuildingWing(models.Model):
 #     class Meta:
 #         db_table='corporate_company'
 
+
 class CorporateCompanyDetails(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     company_id = models.ForeignKey('CorporateParkCompanyList', db_column='COMPANY_ID', related_name='companydetails', blank=True, null=True, on_delete=models.CASCADE)
@@ -1835,12 +1858,14 @@ class CorporateCompanyDetails(models.Model):
     class Meta:
         db_table='corporate_company_details'
 
+
 class CompanyFloor(models.Model):
     company_details_id = models.ForeignKey('CorporateCompanyDetails',db_column='COMPANY_DETAILS_ID',related_name='wingfloor', blank=True, null=True, on_delete=models.CASCADE)
     floor_number = models.IntegerField(db_column='FLOOR_NUMBER', blank=True, null=True)
 
     class Meta:
         db_table='corporate_building_floors'
+
 
 class SocietyLeads(models.Model):
     id = models.CharField(max_length=100,null=False,primary_key=True)
@@ -2100,6 +2125,7 @@ class CampaignLeads(models.Model):
     campaign stores the campaign id.
     lead stores the lead id
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     campaign_id = models.IntegerField(default=0)
     lead_email = models.EmailField(default='')
     comments = models.CharField(max_length=255, null=True)
@@ -2108,11 +2134,11 @@ class CampaignLeads(models.Model):
         db_table = 'campaign_leads'
         unique_together = (('campaign_id', 'lead_email'),)
 
+
 class GenericExportFileName(models.Model):
     """
     This model stores file name generated by GenericExport API.
     """
-    user = models.ForeignKey(User, null=True, blank=True)
     business = models.ForeignKey('BusinessInfo', null=True, blank=True)
     account = models.ForeignKey('AccountInfo', null=True, blank=True)
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
