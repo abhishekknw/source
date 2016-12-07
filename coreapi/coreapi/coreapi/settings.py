@@ -90,14 +90,11 @@ DATABASES = {
     },
 
     'default': {
-        'NAME':'machadalo',
+        'NAME':'testdb',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': 'localhost',
          'USER': 'root',
-         'PASSWORD': 'root',
-         'OPTIONS': {
-             "init_command": "SET foreign_key_checks = 0;",
-         }
+         'PASSWORD': 'vidhi',
       }
 
     }
@@ -192,7 +189,7 @@ JWT_AUTH = {
       'JWT_VERIFY_EXPIRATION': False,
       }
 
-BASE_URL = 'http://localhost:8000/'
+BASE_URL = 'http://localhost:8108/'
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
