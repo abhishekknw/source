@@ -1216,7 +1216,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 
              }).error(function(){
                   //Some error log
-                  $scope.checkFileExport = true;
+                  $scope.checkFileExport = false;
                   alert('Error in exporting the file');
              });
      }
