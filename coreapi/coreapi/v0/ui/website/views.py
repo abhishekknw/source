@@ -48,6 +48,7 @@ from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, propo
                       inventorylist, society_keys, flat_type_dict, index_of_center_id, offline_pricing_data
 from constants import *
 
+
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
@@ -59,6 +60,7 @@ import constants as website_constants
 import renderers as website_renderers
 import v0.ui.constants as ui_constants
 import v0.permissions as v0_permissions
+import v0.utils as v0_utils
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -3342,4 +3344,21 @@ class SendMail(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
+class Business(APIView):
+    """
+    Test api. will be deleted later on.
+    """
+    def get(self, request):
+        class_name = self.__class__.__name__
+        try:
+            master_user = models.BaseUser.objects.get(id=1)
+            model = models.BusinessInfo
+            filter_query = {'business_id': 'EDUSCMOHA'}
+            response = v0_utils.get_user_related(model, master_user)
+            if not response.data['status']:
+                return response
+            serializer  = website_serializers.BusinessInfoSerializer(response.data['data'], many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 

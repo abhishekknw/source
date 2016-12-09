@@ -1,9 +1,7 @@
-from django.db import models
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.contenttypes.models import ContentType
-from django.apps import apps
-
 import ui.constants as ui_constants
+from django.apps import apps
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
 
 
 class GetInventoryObjectManager(models.Manager):
@@ -126,6 +124,7 @@ class GetInventoryObjectManager(models.Manager):
             return content_type
         except Exception as e:
             pass
+
 
 
 

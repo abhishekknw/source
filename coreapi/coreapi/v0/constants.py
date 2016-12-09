@@ -12,3 +12,9 @@ group_codes = {
     'bd_heads': '02',
     'external_bds': '03'
 }
+
+# model_name_to_user_mapping
+model_name_user_mapping = {
+    'AccountInfo': 'business__user__user_code',
+    'ProposalInfo': 'account__business__user__user_code',
+}

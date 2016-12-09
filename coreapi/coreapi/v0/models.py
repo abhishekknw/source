@@ -48,6 +48,18 @@ class BaseUser(AbstractUser):
     class Meta:
         db_table = 'base_user'
 
+
+class CustomPermissions(models.Model):
+    """
+    This is a model which stores extra permissions granted for a particular user
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    extra_permission_code = models.CharField(max_length=255)
+    description = models.CharField(max_length=1000, null=True)
+    class Meta:
+        db_table = 'custom_permissions'
+
+
 class BasicSupplierDetails(models.Model):
     """
     This is an abstract base class for all the suppliers. As we know more common fields, add
