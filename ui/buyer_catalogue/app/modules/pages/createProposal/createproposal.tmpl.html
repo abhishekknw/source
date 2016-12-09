@@ -13,7 +13,7 @@
   			<div class="table">
   				<div class="row">
   					<div class="col-md-3"><label class="spacing">Name of Proposal</label></div>
-  					<div class="col-md-3"><input type="text" ng-model="model.name" class="form-control spacing"></div>
+  					<div class="col-md-3"><input type="text" ng-model="model.name" class="form-control spacing" required></div>
   				</div>
   				<div class="row">
   					<div class="col-md-3"><label class="spacing">Tentative Budget</label></div>
@@ -43,36 +43,48 @@
     			</thead>
     			<tbody ng-repeat="center in model.centers track by $index">
     				<tr>
-    					<td><input type="text" ng-model="center.center.center_name" class="form-control spacing"></td>
-    					<td><input type="text" ng-model="center.center.address" class="form-control spacing"></td>
+    					<td>
+                <input type="text" ng-if="center.isEditProposal" ng-model="center.center.center_name" class="form-control spacing" required>
+                <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.center_name" class="form-control spacing" readonly>
+              </td>
+    					<td><input type="text" ng-if="center.isEditProposal" ng-model="center.center.address" class="form-control spacing" required>
+                  <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.address" class="form-control spacing" readonly>
+              </td>
               <td>
-                <select name="city" class="form-control input-size" ng-change="get_areas(center.city,$index)" ng-model="center.city">
+                <select ng-if="center.isEditProposal" name="city" class="form-control input-size" ng-change="get_areas(center.city,$index)" ng-model="center.city" required>
                   <option value="">Select City</option>
                   <option  ng-repeat="city in cities" value="{{city.id}}" required>{{city.city_name}}</option>
                 </select>
+                <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.city" class="form-control spacing" readonly>
               </td>
               <td>
-                <select name="areas" class="form-control input-size" ng-change="get_sub_areas(center.area,$index)" ng-model="center.area">
+                <select ng-if="center.isEditProposal" name="areas" class="form-control input-size" ng-change="get_sub_areas(center.area,$index)" ng-model="center.area" required>
                   <option value="">Select Area</option>
                   <option  ng-repeat="area in areas[$index]" value="{{area.id}}" required>{{area.label}}</option>
                 </select>
+                <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.area" class="form-control spacing" readonly>
               </td>
               <td>
-                <select name="subareas" class="form-control input-size" ng-change="" ng-model="center.center.subarea">
+                <select ng-if="center.isEditProposal" name="subareas" class="form-control input-size" ng-change="" ng-model="center.center.subarea" required>
                   <option value="">Select SubArea</option>
                   <option  ng-repeat="subarea in sub_areas[$index]" value="{{subarea.subarea_name}}" required>{{subarea.subarea_name}}</option>
                 </select>
+                <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.subarea" class="form-control spacing" readonly>
               </td>
-              <td><input type="text" ng-model="center.center.pincode" class="form-control spacing col-width"></td>
-    					<td><input type="number" ng-model="center.center.radius" class="form-control spacing col-width"></td>
+              <td><input type="text" ng-if="center.isEditProposal" ng-model="center.center.pincode" class="form-control spacing col-width" required>
+                <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.pincode" class="form-control spacing" readonly>
+              </td>
+    					<td><input type="number" name = "radius" ng-model="center.center.radius" class="form-control spacing col-width" required></td>
     					<td>
-                <input type="checkbox"  ng-click="checkSpace('RS',center)">Societies<br>
-                <input type="checkbox"  ng-click="checkSpace('CP',center)">Corporate Parks
+                <div ng-repeat="supplier in center.suppliers">
+                  <input type="checkbox"  ng-model = "supplier.selected" ng-click="checkSpace(supplier,center)">{{supplier.name}}
+                </div>
+                <!-- <input type="checkbox"  ng-click="checkSpace('CP',center)">Corporate Parks -->
               </td>
     					<td><button class="btn btn-danger spacing" ng-click="removeCenter($index)">Remove Center</button></td>
     				</tr>
     			</tbody>
     		</table>
-    		<button class="btn btn-danger spacing" ng-click="submit()">Submit</button>
+    		<button class="btn btn-danger spacing" ng-click="submit()" ng-disabled="proposal.$invalid || centerDetail.$invalid">Submit</button>
     	</div>
     </form>

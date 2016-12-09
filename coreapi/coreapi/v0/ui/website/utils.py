@@ -21,6 +21,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from pygeocoder import Geocoder, GeocoderError
 import openpyxl
+import geocoder
 
 import constants as website_constants
 from constants import price_per_flat, inventorylist
@@ -1039,21 +1040,41 @@ def get_geo_object(address):
     """
 
     Args:
-        address: given an address in string, return it's geo object
-
-    Returns:
+        address: given an address in string, return it's lat, long in a tuple form.
+    Returns: Function tries three variations of the address and returns wherever it finds a valid lat, long.
 
     """
     function_name = get_geo_object.__name__
     try:
-        geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
-        geo_object = geocoder.geocode(address)
-        return ui_utils.handle_response(function_name, data=geo_object, success=True)
+        # geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
+        # geo_object = geocoder.geocode(address)
+        # split the address on comma
+        address_parts = address.split(',')
+        # get the length
+        length = len(address_parts)
+        # define upto what indexes you want to calculate addressess.
+        indexes = [length, length-1, length-2]
+        geo_object = []
+        for index in indexes:
+            # get this address
+            address = ','.join(part for part in address_parts[:index])
+            # try to get geo_object
+            geo_object = geocoder.google(address)
+            if not geo_object.latlng:
+                continue
+            else:
+                break
+        # if found, return lat, long
+        if geo_object:
+            latitude, longitude = geo_object.latlng
+            return ui_utils.handle_response(function_name, data=(latitude, longitude), success=True)
+        else:
+            # return right error.
+            return ui_utils.handle_response(function_name, data='no geo_object found even after three variations of the address')
     except GeocoderError as e:
         return ui_utils.handle_response(function_name, exception_object=e)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
-
 
 def save_suppliers_allowed(center_info, proposal_id, center_id):
     """
@@ -1069,25 +1090,28 @@ def save_suppliers_allowed(center_info, proposal_id, center_id):
     try:
         # fetch all the supplier codes.
         suppliers_codes = center_info['center']['supplier_codes']
+        if not suppliers_codes:
+            return ui_utils.handle_response(function_name, data='No supplier_codes in center_info object for center_id {0}'.format(center_id))
 
-        # for all the codes
-        for code in suppliers_codes:
-            content_type_response = ui_utils.get_content_type(code)
-            if not content_type_response.data['status']:
-                return content_type_response
+        with transaction.atomic():
+            # for all the codes
+            for code in suppliers_codes:
+                content_type_response = ui_utils.get_content_type(code)
+                if not content_type_response.data['status']:
+                    return content_type_response
 
-            content_type = content_type_response.data['data']
+                content_type = content_type_response.data['data']
 
-            # prepare the data
-            data = {
-                'proposal_id': proposal_id,
-                'center_id': center_id,
-                'supplier_content_type': content_type,
-                'supplier_type_code': code
-            }
-            models.ProposalCenterSuppliers.objects.get_or_create(**data)
-        # return success if done
-        return ui_utils.handle_response(function_name, data='success', success=True)
+                # prepare the data
+                data = {
+                    'proposal_id': proposal_id,
+                    'center_id': center_id,
+                    'supplier_content_type': content_type,
+                    'supplier_type_code': code
+                }
+                models.ProposalCenterSuppliers.objects.get_or_create(**data)
+            # return success if done
+            return ui_utils.handle_response(function_name, data='success', success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, exception_object=e)
     except Exception as e:
@@ -1103,7 +1127,7 @@ def calculate_address(center):
     """
     function_name = calculate_address.__name__
     try:
-        address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ' ' + \
+        address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ',' + \
                   center['pincode']
         return ui_utils.handle_response(function_name, data=address, success=True)
 
@@ -1125,46 +1149,44 @@ def save_center_data(proposal_data):
         # get the proposal_id
         proposal_id = proposal_data['proposal_id']
 
-        # for all centers
-        for center_info in proposal_data['centers']:
-            center = center_info['center']
+        with transaction.atomic():
+            # for all centers
+            for center_info in proposal_data['centers']:
+                center = center_info['center']
 
-            # prepare center info
-            center['proposal'] = proposal_id
+                # prepare center info
+                center['proposal'] = proposal_id
 
-            # get address for this center. because address can contain a complicated logic in future, it's in separate
-            # function
-            address_response = calculate_address(center)
-            if not address_response.data['data']:
-                return address_response
-            address = address_response.data['data']
+                # get address for this center. because address can contain a complicated logic in future, it's in separate
+                # function
+                address_response = calculate_address(center)
+                if not address_response.data['data']:
+                    return address_response
+                address = address_response.data['data']
+                # add lat long to center's data based on address calculated
+                geo_response = get_geo_object(address)
+                if not geo_response.data['status']:
+                    return geo_response
+                center['latitude'], center['longitude'] = geo_response.data['data']
 
-            # add lat long to center's data based on address calculated
-            geo_response = get_geo_object(address)
-            if not geo_response.data['status']:
-                return geo_response
-            geo_object = geo_response.data['data']
-            center['latitude'] = geo_object.latitude
-            center['longitude'] = geo_object.longitude
+                if 'id' in center_info:
+                    # means an existing center was updated
+                    center_instance = models.ProposalCenterMapping.objects.get(id=center_info['id'])
+                    center_serializer = serializers.ProposalCenterMappingSerializer(center_instance, data=center)
+                else:
+                    # means we need to create new center
+                    center_serializer = serializers.ProposalCenterMappingSerializer(data=center)
 
-            if 'id' in center_info:
-                # means an existing center was updated
-                center_instance = models.ProposalCenterMapping.objects.get(id=center_info['id'])
-                center_serializer = serializers.ProposalCenterMappingSerializer(center_instance, data=center)
-            else:
-                # means we need to create new center
-                center_serializer = serializers.ProposalCenterMappingSerializer(data=center)
-
-            # save center info
-            if center_serializer.is_valid():
-                center_serializer.save()
-                # now save all the suppliers associated with this center
-                response = save_suppliers_allowed(center_info, proposal_id, center_serializer.data['id'])
-                if not response.data['status']:
-                    return response
-            else:
-                return ui_utils.handle_response(function_name, data=center_serializer.errors)
-        return ui_utils.handle_response(function_name, data='success', success=True)
+                # save center info
+                if center_serializer.is_valid():
+                    center_serializer.save()
+                    # now save all the suppliers associated with this center
+                    response = save_suppliers_allowed(center_info, proposal_id, center_serializer.data['id'])
+                    if not response.data['status']:
+                        return response
+                else:
+                    return ui_utils.handle_response(function_name, data=center_serializer.errors)
+            return ui_utils.handle_response(function_name, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
 
@@ -2469,7 +2491,7 @@ def is_fulltext_index(model_name, column_name, index_type):
         raw_query_set = model_name.objects.raw(
             'show index from {0} where column_name={1} and index_type={2}'.format(table_name, column_name, index_type))
         answer = True if raw_query_set else False
-        return ui_utils.handle_response(function, data=answer, success=True)
+        return ui_utils.handle_response(fclassclassclaunction, data=answer, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -2996,6 +3018,28 @@ def process_template(target_string, mapping):
         template_string = Template(target_string)
         result_string = template_string.substitute(mapping)
         return ui_utils.handle_response(function, data=result_string, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+def proposal_centers(proposal_id):
+    """
+    This function basically collects centers associated with proposal
+
+    Args:
+        contains proposal_id
+    Returns: a dictionary of centers and suppliers in centers
+    """
+    function = proposal_centers.__name__
+    try:
+        data = {}
+        centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id).values()
+        suppliers = models.ProposalCenterSuppliers.objects.filter(proposal_id = proposal_id).values()
+        for center in centers:
+            center['supplier_codes'] = []
+            for supplier in suppliers:
+                if supplier['center_id'] == center['id']:
+                    center['supplier_codes'].append(supplier['supplier_type_code'])
+        return ui_utils.handle_response(function, data=centers, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
