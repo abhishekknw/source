@@ -1163,9 +1163,6 @@ def save_center_data(proposal_data):
                 if not address_response.data['data']:
                     return address_response
                 address = address_response.data['data']
-                import pdb
-                pdb.set_trace()
-
                 # add lat long to center's data based on address calculated
                 geo_response = get_geo_object(address)
                 if not geo_response.data['status']:
