@@ -58,6 +58,7 @@ import serializers as website_serializers
 import constants as website_constants
 import renderers as website_renderers
 import v0.ui.constants as ui_constants
+import v0.permissions as v0_permissions
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -156,6 +157,9 @@ class AccountAPIView(APIView):
 
 
 class NewCampaignAPIView(APIView):
+
+    permission_classes = (v0_permissions.IsMasterUser, )
+
     def post(self, request, format=None):
         """
         creates new campaign
@@ -174,18 +178,23 @@ class NewCampaignAPIView(APIView):
             return Response(data={'status': False, 'error': 'No business data supplied'},
                             status=status.HTTP_400_BAD_REQUEST)
 
+        business_data['type_name'] = business_data['business_type_id']
+        business_data['sub_type'] = business_data['sub_type_id']
+
+        type_name = BusinessTypes.objects.get(id=int(business_data['business_type_id']))
+        sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
+
+        business_data['user'] = current_user.id
+
         with transaction.atomic():
 
             try:
-                if 'business_id' in business_data:
+                business_serializer_data = {}
 
+                if 'business_id' in business_data:
                     business = BusinessInfo.objects.get(pk=business_data['business_id'])
                     serializer = BusinessInfoSerializer(business, data=business_data)
                 else:
-                    # creating business ID
-
-                    type_name = BusinessTypes.objects.get(id=int(business_data['business_type_id']))
-                    sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
                     business_data['business_id'] = self.generate_business_id(business_name=business_data['name'], \
                                                                              sub_type=sub_type, type_name=type_name)
                     if business_data['business_id'] is None:
@@ -193,23 +202,15 @@ class NewCampaignAPIView(APIView):
                         business_data['business_id'] = self.generate_business_id(business_data['name'], \
                                                                                  sub_type=sub_type, type_name=type_name,
                                                                                  lower=True)
-
                     serializer = BusinessInfoSerializer(data=business_data)
 
                 if serializer.is_valid():
-                    try:
-                        # This will not hit database again cache will be used if else is executed
-                        type_name = BusinessTypes.objects.get(id=int(business_data['business_type_id']))
-                        sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
-                        business = serializer.save(type_name=type_name, sub_type=sub_type)
+                     serializer.save()
+                     business_serializer_data = serializer.data
+                     business_serializer_data['business_sub_type'] = sub_type.business_sub_type
+                     business_serializer_data['business_type'] = type_name.business_type
 
-                    except ValueError:
-                        return Response({'message': 'Business Type/SubType Invalid'}, \
-                                        status=status.HTTP_406_NOT_ACCEPTABLE)
-
-                else:
-                    return Response(serializer.errors, status=400)
-
+                business = BusinessInfo.objects.get(pk=business_data['business_id'])
                 content_type_business = ContentType.objects.get_for_model(BusinessInfo)
                 contact_ids = list(business.contacts.all().values_list('id', flat=True))
                 contact_list = []
@@ -238,18 +239,14 @@ class NewCampaignAPIView(APIView):
 
                 # deleting all contacts whose id not received from the frontend
                 BusinessAccountContact.objects.filter(id__in=contact_ids).delete()
-
-                business_serializer = BusinessInfoSerializer(business)
                 contacts_serializer = BusinessAccountContactSerializer(contact_list, many=True)
-
                 response = {
-                    'business': business_serializer.data,
+                    'business': business_serializer_data,
                     'contacts': contacts_serializer.data,
                 }
+                return Response(response, status=200)
             except Exception as e:
                 return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(response, status=200)
 
     def generate_business_id(self, business_name, sub_type, type_name, lower=False):
         business_code = create_code(name=business_name)
@@ -312,8 +309,6 @@ def create_code(name, conflict=False):
     # so append a extra char in front of existing code and remove last char from it
     if conflict:
         code = get_extra_character() + code[:3]
-
-
     return code.upper()
 
 
@@ -2957,7 +2952,6 @@ class ProposalViewSet(viewsets.ViewSet):
                 response = website_utils.save_shortlisted_suppliers(request.data['suppliers'][code], fixed_data)
                 if not response.data['status']:
                     return response
-
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -3300,6 +3294,7 @@ class ImportAreaSubArea(APIView):
 class SendMail(APIView):
     """
     API sends mail. The API sends a file called 'sample_mail_file.xlsx' located in files directory.
+    API  is for testing purpose only.
 
     """
     def post(self, request):

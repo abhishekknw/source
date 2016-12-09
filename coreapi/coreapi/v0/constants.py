@@ -2,3 +2,13 @@ model_names = ['InventorySummary', 'ContactDetails', 'Events', 'FlyerInventory',
                'SocietyTower', 'PriceMappingDefault', 'SocietyInventoryBooking',
                                                       'StallInventory', 'WallInventory','FlatType'
                ]
+
+
+# we have group_name and there respective codes. These codes are designed to respect the heirarchy of various kinds of
+# users we have in our system
+group_codes = {
+    'master_users': '0',
+    'ops_heads': '01',
+    'bd_heads': '02',
+    'external_bds': '03'
+}
