@@ -2819,6 +2819,10 @@ class ProposalViewSet(viewsets.ViewSet):
                 {
                    suppliers: { RS: [], CP: [] } ,
                    center: { ...   codes: [] }
+                   suppliers_meta: {
+                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                     'CP': { 'inventory_type_selected':  ['ST']
+                   }
                 }
            ]
 
@@ -2833,8 +2837,8 @@ class ProposalViewSet(viewsets.ViewSet):
           description:  center_id
         - name: radius
           description: radius
-        - name: supplier_codes
-          description:  array of codes like RS, CP, etc
+        - name: latitude
+        - name: longitude
         """
         class_name = self.__class__.__name__
         try:
