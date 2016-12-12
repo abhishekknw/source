@@ -1163,7 +1163,6 @@ def save_center_data(proposal_data):
                 if not address_response.data['data']:
                     return address_response
                 address = address_response.data['data']
-
                 # add lat long to center's data based on address calculated
                 geo_response = get_geo_object(address)
                 if not geo_response.data['status']:
@@ -2513,7 +2512,7 @@ def is_fulltext_index(model_name, column_name, index_type):
         raw_query_set = model_name.objects.raw(
             'show index from {0} where column_name={1} and index_type={2}'.format(table_name, column_name, index_type))
         answer = True if raw_query_set else False
-        return ui_utils.handle_response(function, data=answer, success=True)
+        return ui_utils.handle_response(fclassclassclaunction, data=answer, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -3040,6 +3039,28 @@ def process_template(target_string, mapping):
         template_string = Template(target_string)
         result_string = template_string.substitute(mapping)
         return ui_utils.handle_response(function, data=result_string, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+def proposal_centers(proposal_id):
+    """
+    This function basically collects centers associated with proposal
+
+    Args:
+        contains proposal_id
+    Returns: a dictionary of centers and suppliers in centers
+    """
+    function = proposal_centers.__name__
+    try:
+        data = {}
+        centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id).values()
+        suppliers = models.ProposalCenterSuppliers.objects.filter(proposal_id = proposal_id).values()
+        for center in centers:
+            center['supplier_codes'] = []
+            for supplier in suppliers:
+                if supplier['center_id'] == center['id']:
+                    center['supplier_codes'].append(supplier['supplier_type_code'])
+        return ui_utils.handle_response(function, data=centers, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 

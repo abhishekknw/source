@@ -11,6 +11,7 @@ angular.module('catalogueApp')
   var count = 0;
   var suppliersData = new Array();
 	$scope.addCenter = function(){
+		// $scope.editProposal = false;
     suppliersData[count] = angular.copy($scope.suppliers);
 		var new_center = {
 			center_name : '',
@@ -33,14 +34,50 @@ angular.module('catalogueApp')
 		$scope.model.centers.push({
 			center : new_center,
       suppliers : suppliersData[count],
+			isEditProposal : true,
 		});
     count++;
 	}
 
-	$scope.addCenter();
+	// $scope.addCenter();
 	$scope.areas = [];
 	$scope.sub_areas = [];
 
+	if($window.localStorage.proposal_id != '0'){
+		createProposalService.getProposal($window.localStorage.proposal_id)
+		.success(function(response, status){
+			$scope.model.name = response.data.proposal.name;
+			$scope.model.tentative_cost = response.data.proposal.tentative_cost;
+			$scope.centers = response.data.centers;
+			for(var i=0; i<$scope.centers.length; i++){
+				$scope.addCenter();
+				$scope.model.centers[i].center = $scope.centers[i];
+				$scope.model.centers[i].center.pincode =  $scope.centers[i].pincode.toString();
+				$scope.model.centers[i].isEditProposal = false;
+				selectSuppliers($scope.model.centers[i].suppliers,$scope.centers[i].supplier_codes);
+			}
+		})
+		.error(function(response, status){
+			console.log("Error Occured");
+			if(typeof(response) == typeof([])){
+				console.log("Error response is :", response);
+			}
+		});
+	}
+	else {
+			$scope.addCenter();
+	}
+
+	var selectSuppliers = function(space,supplier_codes){
+		console.log(supplier_codes);
+		for(var i=0;i<supplier_codes.length;i++){
+			for(var j=0;j<space.length; j++){
+				if(supplier_codes[i] == space[j].code)
+					space[j].selected = true;
+			}
+		}
+		console.log(space);
+	}
 	createProposalService.loadInitialData()
     .success(function (response){
 			console.log(response);
@@ -77,7 +114,7 @@ angular.module('catalogueApp')
 		$scope.model.centers.splice(index,1);
     count--;
 	}
-	// code chnaged to send supplier_codes like RS
+	// code chnaged to send supplier_codes like RS,CP..etc
 	$scope.checkSpace = function(supplier,center){
 		if(supplier.selected == true)
 			center.center.supplier_codes.push(supplier.code);
@@ -86,22 +123,6 @@ angular.module('catalogueApp')
 			if(index > -1)
 				center.center.supplier_codes.splice(index,1);
 		}
-		// if(center.center.space_mapping[space_name + '_allowed']){
-		// 	center.center.space_mapping[space_name + '_count'] = 0;
-		// 	center.center.space_mapping[space_name + '_buffer_count'] = 0;
-		// 	center[space_name + '_inventory'] = {
-		// 		poster_allowed : false,
-		// 		standee_allowed : false,
-		// 		stall_allowed : false,
-		// 		flier_allowed : false,
-		// 		banner_allowed : false,
-		// 	};
-		// 	console.log(center[space_name + '_inventory']);
-		// }else{
-		// 	center.center.space_mapping[space_name + '_count'] = undefined;
-		// 	center.center.space_mapping[space_name + '_buffer_count'] = undefined;
-		// 	delete center[space_name + '_inventory']
-		// }
 	}
   var checkSupplierCode = function() {
     for(var i=0;i<$scope.model.centers.length;i++){
@@ -131,6 +152,7 @@ angular.module('catalogueApp')
 				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){
+				alert("Error Occured");
 				console.log("Error");
 				if(typeof(response) != typeof(12)){
 					console.log("response is ", response);

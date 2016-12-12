@@ -2427,7 +2427,7 @@ class GenericExportData(APIView):
 
             if response.status_code != status.HTTP_200_OK:
                 return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
-
+            
             return website_utils.send_excel_file(file_name)
 
             # return ui_utils.handle_response(class_name, data=workbook, success=True)
@@ -2802,9 +2802,19 @@ class ProposalViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
+            data = {}
             proposal = ProposalInfo.objects.get(proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            #added to send proposal centers data
+            response = website_utils.proposal_centers(pk)
+            if not response:
+                return response
+            
+            data = {
+                'proposal' : serializer.data,
+                'centers' : response.data['data'],
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
