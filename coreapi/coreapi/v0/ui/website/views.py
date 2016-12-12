@@ -133,29 +133,39 @@ class BusinessAPIView(APIView):
 
 
 class AccountAPIListView(APIView):
+
+    permission_classes = (v0_permissions.IsMasterUser, )
+
     def get(self, request, format=None):
+        class_name = self.__class__.__name__
         try:
-            items = AccountInfo.objects.all()
+            items = AccountInfo.objects.filter_user_related_objects(request.user)
             serializer = AccountInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
-        except :
-            return Response(status=404)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class AccountAPIView(APIView):
+
+    permission_classes = (v0_permissions.IsMasterUser, )
+
     def get(self, request, id, format=None):
+
+        class_name = self.__class__.__name__
+
         try:
-            account = AccountInfo.objects.get(pk=id)
-            serializer1 = UIAccountInfoSerializer(account)
+            account = AccountInfo.objects.get_user_related_object(request.user, pk=id)
+            account_serializer = UIAccountInfoSerializer(account)
             business = BusinessInfo.objects.get(pk=account.business_id)
-            serializer2 = BusinessInfoSerializer(business)
+            business_serializer = BusinessInfoSerializer(business)
             '''contacts = AccountContact.objects.filter(account=account)
             serializer3 = AccountContactSerializer(contacts, many=True)'''
 
-            serializer = {'account':serializer1.data, 'business':serializer2.data}
-            return Response(serializer, status=200)
-        except :
-            return Response(status=404)
+            data = {'account': account_serializer.data, 'business': business_serializer.data}
+            return Response(data, status=200)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class NewCampaignAPIView(APIView):
@@ -671,7 +681,7 @@ class CreateProposalAPIView(APIView):
                 society_detail['flat_count'] = item.society.flat_count
                 society_detail['tower_count'] = item.society.tower_count
                 society_detail['inventory'] = []
-                inv_details = InventorySummary.objects.get_object(request.data.copy(), id)
+                inv_details = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(), id)
                 if not inv_details:
                     return Response({'status': False, 'error': 'Inventory object not found for {0} id'.format(id)},
                                     status=status.HTTP_400_BAD_REQUEST)
@@ -866,8 +876,8 @@ class SpacesOnCenterAPIView(APIView):
                 for society in societies_temp:
                     if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         society['society_latitude'], society['society_longitude']):
-                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                    society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                           society['supplier_id'])
                         adinventory_type_dict = ui_utils.adinventory_func()
                         duration_type_dict = ui_utils.duration_type_func()
 
@@ -929,7 +939,7 @@ class SpacesOnCenterAPIView(APIView):
                 for corporate in corporates_temp:
                     if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         corporate['latitude'], corporate['longitude']):
-                        corporate_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),corporate['supplier_id'])
+                        corporate_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(), corporate['supplier_id'])
                         adinventory_type_dict = ui_utils.adinventory_func()
                         duration_type_dict = ui_utils.duration_type_func()
                         if corporate_inventory_obj:
@@ -1043,8 +1053,8 @@ class SpacesOnCenterAPIView(APIView):
             societies_count = 0
             for society in societies_temp:
                 if website_utils.space_on_circle(latitude, longitude, radius, society['society_latitude'], society['society_longitude']):
-                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                       society['supplier_id'])
                     if society_inventory_obj:
                     #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
@@ -1425,8 +1435,8 @@ class FilteredSuppliersAPIView(APIView):
                 supplier['supplier_longitude'] = supplier['society_longitude'] if supplier['society_longitude'] else supplier['longitude']
 
                 if website_utils.space_on_circle(latitude, longitude, radius, supplier['supplier_latitude'],supplier['supplier_longitude']):
-                    supplier_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                 supplier['supplier_id'])
+                    supplier_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                        supplier['supplier_id'])
                     if supplier_inventory_obj:
 
                         supplier['shortlisted'] = True
@@ -1467,8 +1477,8 @@ class FilteredSuppliersAPIView(APIView):
                         del supplier[society_key]
                         supplier[actual_key] = value
 
-            suppliers_inventory_count = InventorySummary.objects.filter_objects({'supplier_type_code': supplier_code},
-                                                                                supplier_ids).aggregate(posters=Sum('total_poster_count'), \
+            suppliers_inventory_count = InventorySummary.objects.get_supplier_type_specific_objects({'supplier_type_code': supplier_code},
+                                                                                                    supplier_ids).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
                                                                                                         fliers=Sum('flier_frequency'))
@@ -1558,8 +1568,8 @@ class FinalProposalAPIView(APIView):
                 for society in societies_temp:
                     if website_utils.space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
                         society['society_latitude'], society['society_longitude']):
-                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                    society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                           society['supplier_id'])
                         #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
                         society['buffer_status'] = False
@@ -1813,8 +1823,8 @@ class CurrentProposalAPIView(APIView):
                 societies_shortlisted_count = 0
 
                 for society in societies_shortlisted_temp:
-                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                       society['supplier_id'])
                     #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                     society['shortlisted'] = True
                     society['buffer_status'] = False
@@ -1854,8 +1864,8 @@ class CurrentProposalAPIView(APIView):
                 societies_buffered = []
                 societies_buffered_count = 0
                 for society in societies_buffered_temp:
-                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                       society['supplier_id'])
 
                     #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                     society['shortlisted'] = True
@@ -2021,8 +2031,8 @@ class ProposalHistoryAPIView(APIView):
                         societies_shortlisted_count = 0
                         # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
                         for society in societies_shortlisted_temp:
-                            society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                        society['supplier_id'])
+                            society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                               society['supplier_id'])
 
                             #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                             society['shortlisted'] = True
@@ -2062,8 +2072,8 @@ class ProposalHistoryAPIView(APIView):
                         societies_buffered = []
                         societies_buffered_count = 0
                         for society in societies_buffered_temp:
-                            society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                        society['supplier_id'])
+                            society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                               society['supplier_id'])
 
                             #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                             society['shortlisted'] = True
@@ -2663,6 +2673,7 @@ class CreateInitialProposal(APIView):
     data is stored hence we have created new classes CreateInitialProposal and CreateFinalProposal API.
     author: nikhil
     """
+    permission_classes = (permissions.IsAuthenticated, v0_permissions.IsMasterUser, )
 
     def post(self, request, account_id):
         """
@@ -2678,6 +2689,7 @@ class CreateInitialProposal(APIView):
         try:
             with transaction.atomic():
                 proposal_data = request.data
+                user = request.user
 
                 business_id = proposal_data.get('business_id')
                 account_id = account_id
@@ -2689,16 +2701,16 @@ class CreateInitialProposal(APIView):
                 proposal_data['proposal_id'] = response.data['data']
 
                 # get the account object. required for creating the proposal
-                account = AccountInfo.objects.get(account_id=account_id)
+                account = AccountInfo.objects.get_user_related_object(user, account_id=account_id)
                 proposal_data['account'] = account.account_id
+                proposal_data['user'] = user.id
 
                 # query for parent. if available set it. if it's available, then this is an EDIT request.
                 parent = request.data.get('parent')
 
                 # set parent if available
                 if parent:
-                    parent_proposal = ProposalInfo.objects.get(proposal_id=parent)
-                    proposal_data['parent'] = parent_proposal.proposal_id
+                    proposal_data['parent'] = ProposalInfo.objects.get_user_related_object(proposal_id=parent).proposal_id
 
                 # call the function that saves basic proposal information
                 response = website_utils.create_basic_proposal(proposal_data)
@@ -2706,7 +2718,7 @@ class CreateInitialProposal(APIView):
                     return response
 
                 # time to save all the centers data
-                response = website_utils.save_center_data(proposal_data)
+                response = website_utils.save_center_data(proposal_data, user)
                 if not response.data['status']:
                     return response
 
@@ -2738,6 +2750,8 @@ class CreateFinalProposal(APIView):
     information we have all the suppliers shortlisted, all the Filters and all.
 
     """
+    permission_classes = ( permissions.IsAuthenticated, v0_permissions.IsMasterUser, )
+
     def post(self, request, proposal_id):
         """
         Args:
@@ -2749,6 +2763,8 @@ class CreateFinalProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            user = request.user
+
             # simple dict to count new objects created each time the API is hit. a valuable information.
 
             # to keep count of new objects created
@@ -2765,9 +2781,8 @@ class CreateFinalProposal(APIView):
             with transaction.atomic():
                
                 for proposal_data in request.data:
-
                     proposal_data['proposal_id'] = proposal_id
-                    response = website_utils.save_final_proposal(proposal_data, unique_supplier_codes)
+                    response = website_utils.save_final_proposal(proposal_data, unique_supplier_codes, user)
                     if not response.data['status']:
                         return response
                     objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']['SHORTLISTED_SUPPLIERS']
@@ -2785,6 +2800,7 @@ class ProposalViewSet(viewsets.ViewSet):
      are related to Proposal domain. so keeping them at one place makes sense.
     """
     parser_classes = (JSONParser, FormParser)
+    permission_classes = (permissions.IsAuthenticated,  v0_permissions.IsMasterUser, )
 
     def retrieve(self, request, pk=None):
         """
@@ -2798,7 +2814,7 @@ class ProposalViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            proposal = ProposalInfo.objects.get(proposal_id=pk)
+            proposal = ProposalInfo.objects.get_user_related_object(request.user, proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -2844,7 +2860,8 @@ class ProposalViewSet(viewsets.ViewSet):
                 'center_id': center_id,
                 'radius': radius,
                 'latitude': latitude,
-                'longitude': longitude
+                'longitude': longitude,
+                'user': request.user
             }
             response = website_utils.suppliers_within_radius(data)
             if not response.data['status']:
@@ -2868,7 +2885,8 @@ class ProposalViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             data = {
-                'parent': pk if pk != '0' else None
+                'parent': pk if pk != '0' else None,
+                'user': request.user
             }
             response = website_utils.child_proposals(data)
             if not response:
@@ -2902,7 +2920,8 @@ class ProposalViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             data = {
-                'proposal_id': pk
+                'proposal_id': pk,
+                'user': request.user
             }
             response = website_utils.proposal_shortlisted_spaces(data)
             if not response.data['status']:
@@ -3352,12 +3371,8 @@ class Business(APIView):
         class_name = self.__class__.__name__
         try:
             master_user = models.BaseUser.objects.get(id=1)
-            model = models.BusinessInfo
-            filter_query = {'business_id': 'EDUSCMOHA'}
-            response = v0_utils.get_user_related(model, master_user)
-            if not response.data['status']:
-                return response
-            serializer  = website_serializers.BusinessInfoSerializer(response.data['data'], many=True)
+            result = AccountInfo.objects.filter_user_related_objects(master_user)
+            serializer = website_serializers.AccountInfoSerializer(result, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
