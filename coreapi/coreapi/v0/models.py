@@ -785,6 +785,7 @@ class SportsInfra(models.Model):
 
 class SupplierTypeSociety(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    objects = managers.GeneralManager()
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
     supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
     society_name = models.CharField(db_column='SOCIETY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
@@ -1108,7 +1109,6 @@ class BusinessAccountContact(models.Model):
     content_type = models.ForeignKey(ContentType)
     object_id = models.CharField(max_length=20)
     business_account_id = generic.GenericForeignKey('content_type','object_id')
-
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
     department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
@@ -1136,6 +1136,7 @@ class BusinessInfo(models.Model):
     reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
     contacts = GenericRelation(BusinessAccountContact)
+    objects = managers.GeneralManager()
 
     def __str__(self):
         return self.name
@@ -1269,6 +1270,7 @@ class AccountInfo(models.Model):
 #         db_table = 'proposal_info'
 
 #         db_table = 'account_contact'
+
 
 class ProposalCenterMapping(models.Model):
     """
@@ -1644,6 +1646,7 @@ class AssignedAudits(models.Model):
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)
     db_table = 'assigned_audits'
 
+
 class Audits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     society_booking = models.ForeignKey(SocietyInventoryBooking, related_name='audits', db_column='SOCIETY_BOOKING_ID', null=True, on_delete=models.CASCADE)
@@ -1814,6 +1817,7 @@ class UserProfile(models.Model):
     society_form_access = models.BooleanField(db_column='society_form_access', default=False)
     corporate_form_access = models.BooleanField(db_column='corporate_form_access', default=False)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_column='created_by', null=True)
+    objects = managers.GeneralManager()
 
     def get_user(self):
         return self.user
@@ -1906,6 +1910,7 @@ class ShortlistedInventoryPricingDetails(models.Model):
     Model for storing calculated price and count of an inventory for a given supplier.
     A particular inventory type is identified by it's content_type_id.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     supplier_id = models.CharField(max_length=100)
     inventory_price = models.FloatField(default=0.0, null=True)
     inventory_count = models.IntegerField(default=0, null=True)
@@ -1915,6 +1920,7 @@ class ShortlistedInventoryPricingDetails(models.Model):
     ad_inventory_duration = models.ForeignKey('DurationType', null=True)
     center = models.ForeignKey('ProposalCenterMapping')
     proposal = models.ForeignKey('ProposalInfo')
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'shortlisted_inventory_pricing_details'
@@ -1938,6 +1944,7 @@ class ProposalMasterCost(models.Model):
     Only one instance of MasterCost exists for one proposal version, proposal
     proposal_version alone does not make any sense. it's always tied to a proposal instance.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     proposal = models.OneToOneField('ProposalInfo', null=True, blank=True)
     agency_cost = models.FloatField(null=True, blank=True)
     basic_cost = models.FloatField(null=True, blank=True)
@@ -1946,6 +1953,7 @@ class ProposalMasterCost(models.Model):
     tax = models.FloatField(null=True, blank=True)
     total_impressions = models.FloatField(null=True, blank=True)
     average_cost_per_impression = models.FloatField(null=True, blank=True)
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'proposal_master_cost_details'
@@ -2088,6 +2096,7 @@ class Filters(models.Model):
     filter_code = models.CharField(max_length=255, null=True, blank=True)
     is_checked = models.BooleanField(default=False)
     supplier_type_code = models.CharField(max_length=255, null=True, blank=True)
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'filters'
@@ -2159,6 +2168,7 @@ class CampaignLeads(models.Model):
     campaign_id = models.IntegerField(default=0)
     lead_email = models.EmailField(default='')
     comments = models.CharField(max_length=255, null=True)
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'campaign_leads'
@@ -2175,7 +2185,7 @@ class GenericExportFileName(models.Model):
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     file_name = models.CharField(max_length=1000, null=True, blank=True)
-
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'generic_export_file_name'
