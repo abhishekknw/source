@@ -1521,7 +1521,7 @@ def handle_single_center(center, result):
 
     Args:
         center: One center data.
-        result : the final result array.
+        result : a dict having an entry against each center_id
 
     Returns:
 
@@ -1572,7 +1572,7 @@ def handle_single_center(center, result):
             # set in the result
             center_data['suppliers'][supplier_type_code] = suppliers_data
 
-        result.append(center_data)
+        result[center['id']] = center_data
         return ui_utils.handle_response(function_name, data=result, success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error occurred', exception_object=e)
@@ -1612,13 +1612,18 @@ def suppliers_within_radius(data):
         center_id = data['center_id']
 
         business_name = models.ProposalInfo.objects.get(proposal_id=proposal_id).account.business.name
+
         master_result = {}
         # set the business_name
         master_result['business_name'] = business_name
         # space to store the suppliers
         master_result['suppliers'] = []
+        # space to store meta data about suppliers
+        master_result['suppliers_meta'] = {}
+        # list to hold center_id's
+        center_id_list = []
 
-        result = []
+        result = {}
         # todo: think of better way of separating this logic. looks ugly right now
         if center_id:
             # the queries will change if center_id is provided because we want to process
@@ -1634,6 +1639,7 @@ def suppliers_within_radius(data):
             serializer.data[0]['longitude'] = data['longitude']
             supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter(
                 center_id=center_id).select_related('center').values('center', 'supplier_type_code')
+            center_id_list = [center_id]
         else:
             supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter(
                 proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
@@ -1661,13 +1667,29 @@ def suppliers_within_radius(data):
         for center in serializer.data:
             center['codes'] = supplier_codes_dict[center['id']]
 
+        # collect suppliers_meta information
+        response = add_filters(proposal_id, center_id_list)
+        if not response.data['status']:
+            return response
+        filters_data = response.data['data']
+
+        # prepare result dict
+        result = {center_id: {} for center_id in center_id_list}
+
         for center in serializer.data:
+            center_id = center['id']
             response = handle_single_center(center, result)
             if not response.data['status']:
                 return response
             result = response.data['data']
+
+            # get filter data per center from previous result
+            filter_data_per_center = filters_data[center_id]
+            # assign it back to right center information
+            result[center_id]['suppliers_meta'] = filter_data_per_center
         
-        master_result['suppliers'] = result
+        master_result['suppliers'] = result.values()
+
         return ui_utils.handle_response(function_name, data=master_result, success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error occurred', exception_object=e)
@@ -1948,7 +1970,6 @@ def add_filters(proposal_id, center_id_list):
                 filter_objects_per_center[center_id] = []
             # collect all filter objects for this center here 
             filter_objects_per_center[center_id].append(filter_object)
-
 
         # output result. The structure ouf the result is defined here 
         result = { center_id: {'suppliers_meta': {} } for center_id in center_id_list }  

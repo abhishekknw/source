@@ -88,7 +88,7 @@
      <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in PosterImages">
        <div class="row">
          <img ng-src="{{image}}"  width="300px" height="180"/>
-         <img ng-src="{{PosterImages[$index+1]}}"  width="300px" height="180" />
+         <img ng-src="{{PosterImages[$index+1]}}"  width="300px" height="180"  ng-if="PosterImages[getSecondIndex(PosterImages,$index+1)]"/>
        </div>
        <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider-Poster" role="button" data-slide="prev">
         <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
@@ -175,7 +175,7 @@
    </div>
    <div class="col-md-4 offset-0"></div>
    <div class="clearfix"></div><br/>
-</div>             
+</div>
 </div>
 <!-- End: Posters tab section -->
 <!-- Start: Standee tab section -->
@@ -189,8 +189,8 @@
               <div class="carousel-inner" >
                <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in StandeeImages">
                  <div class="row" >
-                   <img ng-src="{{image}}"  width="300px" height="180"/>
-                   <img ng-src="{{StandeeImages[$index+1]}}" width="300px" height="180" />
+                     <img ng-src="{{image}}"  width="300px" height="180"/>
+                     <img ng-src="{{StandeeImages[$index+1]}}" width="300px" height="180" ng-if="StandeeImages[getSecondIndex(StandeeImages,$index+1)]"/>
                  </div>
                  <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider-standee" role="button" data-slide="prev">
                   <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
@@ -257,7 +257,7 @@
     </div>
     <div class="col-md-4 offset-0"></div>
     <div class="clearfix"></div><br/>
-</div>         
+</div>
 </div>
 <!-- End: Standee tab section -->
 <!-- Start: Stall tab section -->
@@ -272,7 +272,7 @@
                 <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in StallImages">
                   <div class="row">
                     <img ng-src="{{image}}"  width="300px" height="180"/>
-                    <img ng-src="{{StallImages[$index+1]}}"  width="300px" height="180" />
+                    <img ng-src="{{StallImages[$index+1]}}"  width="300px" height="180" ng-if="StallImages[getSecondIndex(StallImages,$index+1)]"/>
                   </div>
                   <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider-Stall" role="button" data-slide="prev">
                    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
@@ -467,6 +467,7 @@
 </div>
 </div>
 </div><!-- End: Fliers tab section -->
+<paginator-bar></paginator-bar>
   </div><br/>
     </div>
         <div class="col-md-4">

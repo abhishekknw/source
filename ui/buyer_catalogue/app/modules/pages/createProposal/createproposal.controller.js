@@ -46,20 +46,16 @@ angular.module('catalogueApp')
 	if($window.localStorage.proposal_id != '0'){
 		createProposalService.getProposal($window.localStorage.proposal_id)
 		.success(function(response, status){
-			console.log(response);
 			$scope.model.name = response.data.proposal.name;
 			$scope.model.tentative_cost = response.data.proposal.tentative_cost;
 			$scope.centers = response.data.centers;
 			for(var i=0; i<$scope.centers.length; i++){
 				$scope.addCenter();
 				$scope.model.centers[i].center = $scope.centers[i];
+				$scope.model.centers[i].center.pincode =  $scope.centers[i].pincode.toString();
 				$scope.model.centers[i].isEditProposal = false;
 				selectSuppliers($scope.model.centers[i].suppliers,$scope.centers[i].supplier_codes);
-				// $scope.model.centers[i].center.city = $scope.centers[i].city;
-				// $scope.model.centers[i].center.area = $scope.centers[i].area;
-				// $scope.model.centers[i].center.subarea = $scope.centers[i].subarea;
 			}
-			console.log($scope.model);
 		})
 		.error(function(response, status){
 			console.log("Error Occured");
@@ -156,6 +152,7 @@ angular.module('catalogueApp')
 				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){
+				alert("Error Occured");
 				console.log("Error");
 				if(typeof(response) != typeof(12)){
 					console.log("response is ", response);

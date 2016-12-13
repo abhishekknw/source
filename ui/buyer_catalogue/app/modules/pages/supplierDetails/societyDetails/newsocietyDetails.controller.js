@@ -144,7 +144,13 @@ angular.module('catalogueApp')
         }
         $scope.societyIndex = undefined;
     }
-
+    $scope.getSecondIndex = function(Images,index)
+    {
+      if(index-Images.length>=0)
+        return null;
+      else
+        return index;
+    }
      $scope.societyList = function() {
        $location.path("manageCampaign/shortlisted/" + $rootScope.campaignId + "/societies");
      };

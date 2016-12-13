@@ -121,8 +121,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             // $scope.selectSuppliers($scope.current_center.suppliers);
             suppliersData();
             mapViewBasicSummary();
-            // mapViewFiltersSummary();
-            // mapViewImpressions();
+            mapViewFiltersSummary();
+            mapViewImpressions();
             gridViewBasicSummary();
         }
         //Start:reset center to original center
@@ -220,14 +220,17 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     //End: mapview basic summary
     //Start: mapview filter summary required after applying filters
      var mapViewFiltersSummary = function(){
+       console.log($scope.center_data);
        $scope.stall_count = 0, $scope.standee_count = 0;
-       if($scope.current_center.suppliers_meta['RS'] != undefined){
-         $scope.stall_count += $scope.current_center.suppliers_meta['RS'].inventory_count.stalls;
-         $scope.standee_count += $scope.current_center.suppliers_meta['RS'].inventory_count.standees;
-       }
-       if($scope.current_center.suppliers_meta['CP'] != undefined){
-         $scope.stall_count += $scope.current_center.suppliers_meta['CP'].inventory_count.stalls;
-         $scope.standee_count += $scope.current_center.suppliers_meta['CP'].inventory_count.standees;
+       if($scope.current_center.suppliers_meta != undefined){
+         if($scope.current_center.suppliers_meta['RS'] != undefined){
+           $scope.stall_count += $scope.current_center.suppliers_meta['RS'].inventory_count.stalls;
+           $scope.standee_count += $scope.current_center.suppliers_meta['RS'].inventory_count.standees;
+         }
+         if($scope.current_center.suppliers_meta['CP'] != undefined){
+           $scope.stall_count += $scope.current_center.suppliers_meta['CP'].inventory_count.stalls;
+           $scope.standee_count += $scope.current_center.suppliers_meta['CP'].inventory_count.standees;
+         }
        }
      }
     //End: mapview filter summary required after applying filters
@@ -348,6 +351,12 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               {name:'6000-10000', code : {min:'6000',   max:'10000'},  selected:false},
 
             ];
+            $scope.inventory_filters = {
+              inv_poster : 0,
+              inv_standee : 0,
+              inv_stall : 0,
+              inv_flier : 0,
+            };
         //Start: filters for suppliers
             $scope.RS_filters = {
               inventory : $scope.space_inventory_type,
@@ -378,11 +387,12 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     $scope.extraSuppliersData = [];
     var center_id=0;
     //function basically adds required keys to handle supplier allowed checkbox
-    //function called from getSpaces after loads the page
+    //function called from getSpaces after loading the page
     $scope.addSupplierFilters = function(centers){
       angular.forEach(centers, function(center){
 
         center.suppliers_allowed = {};
+        center.filters_meta = {};
         $scope.extraSuppliersData[center_id] = {};
        if(center.suppliers['RS'] != undefined){
          $scope.extraSuppliersData[center_id]['RS'] = [];
@@ -392,6 +402,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          center.RS_filters = angular.copy($scope.RS_filters);
         //  center.suppliers_meta = {};
          $scope.supplier_centers_list.RS.push(center_id);
+         //added to show selected filter on mapview summary
+         center.filters_meta['RS'] = {};
+         center.filters_meta['RS'] = angular.copy($scope.inventory_filters);
        }
        if(center.suppliers['CP'] != undefined){
          $scope.extraSuppliersData[center_id]['CP'] = [];
@@ -600,84 +613,27 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          $scope.showSocieties = function(){
                 $scope.show_societies = !$scope.show_societies
          }
-         var pcount=0,stcount=0,slcount=0,flcount=0;// This count variables are to display count tab in gridView
-         // society filter is called when some checkbox in society filters is changed value is just for inventories , inventories changed will be changed in
-         // $scope.current_center.societies_inventory as well (this is present only if society_allowed is true)
-         // change from inventory_name to inventory_code
-          $scope.societyFilter = function(value){
-            if(value){
-              var inventory_name = value.name.toLowerCase();
-              var inventory_code = value.code;
-              // $scope.current_center.societies_inventory[inventory_name + '_allowed'] = value.selected;
-              if(inventory_code =='PO' || inventory_code =='POFL' || inventory_code =='POSLFL' || inventory_code =='POCDFL'){
-                if($scope.inv_poster == true && value.selected == false ){
-                  --pcount;
-                  if(pcount==0){
-                    $scope.inv_poster = false;}
-                }else{
-                    pcount++;
-                    $scope.inv_poster = true;
-                }
+        var toggleInventoryFilters = function(center,value,code){
+          if(value){
+            center.filters_meta[code] = angular.copy($scope.inventory_filters);
+            var inventory_name = value.name.toLowerCase();
+            var inventory_code = value.code;
+            for(var i=0;i<center.RS_filters.inventory.length;i++){
+              if(center.RS_filters.inventory[i].code.indexOf('PO') > -1 && center.RS_filters.inventory[i].selected == true){
+                center.filters_meta[code].inv_poster++;
               }
-              if(inventory_code == 'ST' || inventory_code == 'STFL' || inventory_code == 'STSLFL' || inventory_code == 'STCDFL' ){
-                if($scope.inv_standee == true && value.selected == false ){
-                  --stcount;
-                  if(stcount==0){
-                    $scope.inv_standee = false;}
-                }else{
-                    stcount++;
-                    $scope.inv_standee = true;
-                }
+              if(center.RS_filters.inventory[i].code.indexOf('ST') > -1 && center.RS_filters.inventory[i].selected == true){
+                center.filters_meta[code].inv_standee++;
               }
-              if(inventory_code == 'SL'|| inventory_code == 'SLFL' || inventory_code == 'STSLFL' || inventory_code == 'POSLFL'){
-                  if($scope.inv_stall == true && value.selected == false ){
-                    --slcount;
-                    if(slcount==0){
-                      $scope.inv_stall = false;}
-                  }else{
-                    slcount++;
-                      $scope.inv_stall = true;
-                  }
+              if(center.RS_filters.inventory[i].code.indexOf('SL') > -1 && center.RS_filters.inventory[i].selected == true){
+                center.filters_meta[code].inv_stall++;
               }
-              if(inventory_code == 'FL' || inventory_code == 'POFL'|| inventory_code == 'STFL' || inventory_code == 'SLFL' || inventory_code == 'POSLFL' || inventory_code == 'STSLFL' || inventory_code == 'POCDFL' || inventory_code == 'STCDFL' || inventory_code == 'CDFL'){
-                  if($scope.inv_flier == true && value.selected == false ){
-                    --flcount;
-                    if(flcount==0){
-                      $scope.inv_flier = false;}
-                  }else{
-                    flcount++;
-                      $scope.inv_flier = true;
-                  }
+              if(center.RS_filters.inventory[i].code.indexOf('FL') > -1 && center.RS_filters.inventory[i].selected == true){
+                center.filters_meta[code].inv_flier++;
               }
-          }
-          $scope.societyFilters();
-              // $scope.getFilteredSocieties();
+            }
         }
-      //Start: remove selected supplier filters
-      // var deselectFilters = function(code){
-      //   if(code == 'RS'){
-      //     console.log($scope.current_center);
-      //     // $scope.current_center.RS_filters = angular.copy($scope.RS_filters);
-      //     $scope.inv_poster=false,$scope.inv_flier=false,$scope.inv_stall=false,$scope.inv_standee=false;
-      //     pcount=0,stcount=0,slcount=0,flcount=0;
-      //   }
-      //   if(code == 'CP'){
-      //     $scope.current_center.CP_filters =  angular.copy($scope.CP_filters);
-      //   }
-      //   mapViewBasicSummary();
-      //   gridViewBasicSummary();
-      // }
-      //End:  remove selected supplier filters
-      // Just deselects all the checkboxes of filter_array passed.Added reset function to deselct all inventoriesclearAllFilters
-
-            // $scope.clearAllFilters = function(){
-            //     reset($scope.space_quality_type);
-            //     reset($scope.space_location);
-            //     reset($scope.space_quality_type);
-            //     reset($scope.space_quantity_type);
-            //     reset($scope.society_flat_type);
-            //     $scope.getFilteredSocieties();
-            // }
+      }
             var reset = function(filter_array){
             var length = filter_array.length;
             for(var i=0;i<length;i++){
@@ -695,8 +651,10 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     var defer = $q.defer();
     if($scope.show_societies){
       for(var i=0;i<$scope.center_data.length;i++){
-        if($scope.center_data[i].suppliers['RS'] != null)
+        if($scope.center_data[i].suppliers['RS'] != null){
           $scope.center_data[i].RS_filters = angular.copy($scope.gridView_RS_filters);
+          toggleInventoryFilters($scope.center_data[i],value,'RS');
+        }
       }
       for(var i=0;i<$scope.center_data.length;i++){
         if($scope.center_data[i].suppliers['RS'] != null){
@@ -740,6 +698,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     //End : Code added to filter multiple centers on gridview
   else{
     $scope.gridView_RS_filters = angular.copy($scope.current_center.RS_filters);
+    toggleInventoryFilters($scope.current_center,value,'RS');
       var filters = {
         'supplier_type_code' : 'RS',
           common_filters : {

@@ -11,7 +11,7 @@ angular.module('catalogueApp')
 
     	currentProposalService.getProposal($stateParams.proposal_id)
     	.success(function(response, status){
-    		$scope.proposal = response.data;
+    		$scope.proposal = response.data.proposal;
     		console.log("inside proposal details : ", $scope.proposal);
     	})
     	.error(function(response, status){
@@ -28,7 +28,6 @@ angular.module('catalogueApp')
         // this service get the all shortlisted suppliers for this proposal
         currentProposalService.getShortlistedSuppliers($stateParams.proposal_id)
         .success(function(response, status){
-          console.log(response);
           $scope.center_data = response.data;
           getAvailableSuppliers($scope.center_data);
           getFilters($scope.center_data);
