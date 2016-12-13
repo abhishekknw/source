@@ -1618,8 +1618,6 @@ def suppliers_within_radius(data):
         master_result['business_name'] = business_name
         # space to store the suppliers
         master_result['suppliers'] = []
-        # space to store meta data about suppliers
-        master_result['suppliers_meta'] = {}
         # list to hold center_id's
         center_id_list = []
 
@@ -1684,7 +1682,7 @@ def suppliers_within_radius(data):
             result = response.data['data']
 
             # get filter data per center from previous result
-            filter_data_per_center = filters_data[center_id]
+            filter_data_per_center = filters_data[center_id]['suppliers_meta']
             # assign it back to right center information
             result[center_id]['suppliers_meta'] = filter_data_per_center
         
