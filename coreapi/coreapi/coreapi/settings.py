@@ -123,25 +123,25 @@ STATIC_URL = '/static/'
 
 # settings for Django Rest Framework
 
-REST_FRAMEWORK = {
-    # other settings...
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
-    'DEFAULT_PERMISSION_CLASSES': [],
-}
-
-
 # REST_FRAMEWORK = {
-#      'DEFAULT_PERMISSION_CLASSES': (
-#         'rest_framework.permissions.IsAuthenticated',
-#         ),
-#      'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'rest_framework.authentication.SessionAuthentication',
-#         'rest_framework.authentication.BasicAuthentication',
-#         'rest_jwt.authentication.JSONWebTokenAuthentication',
-#         ),
-#     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-#     'PAGE_SIZE': 5
+#     # other settings...
+#     'DEFAULT_AUTHENTICATION_CLASSES': [],
+#     'DEFAULT_PERMISSION_CLASSES': [],
 # }
+
+
+REST_FRAMEWORK = {
+     'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+        ),
+     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_jwt.authentication.JSONWebTokenAuthentication',
+        ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 5
+}
 
 
 # CORS headers
@@ -201,3 +201,9 @@ EMAIL_HOST_PASSWORD = ''
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER
+
+# User settings. These fields will be populated for all existing records when u run migration on a model
+# containing an FK to a USER.
+DEFAULT_USER_ID = 1  # make sure a user with this id exists in the db
+DEFAULT_USER_CODE = '0'  # default code for this user is '0'. which means a user with that id has to an admin
+AUTH_USER_MODEL = 'v0.BaseUser'  # refer all references to User model by this name
