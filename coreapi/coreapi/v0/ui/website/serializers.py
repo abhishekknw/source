@@ -66,6 +66,17 @@ class ProposalInfoSerializer(ModelSerializer):
         model = ProposalInfo
 
 
+class GenericExportFileSerializerReadOnly(ModelSerializer):
+    """
+    This is nested serializer. it does not support Write operations as of now. Careful before using it.
+    Currently it is being used to show File data plus proposal data
+    """
+    proposal = ProposalInfoSerializer()
+
+    class Meta:
+        model = models.GenericExportFileName
+
+
 class InventoryTypeSerializer(ModelSerializer):
 
     class Meta:

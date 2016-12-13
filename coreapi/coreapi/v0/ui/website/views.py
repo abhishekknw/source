@@ -2852,9 +2852,9 @@ class ProposalViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            proposals = ProposalInfo.objects.filter(invoice_number__isnull=False).order_by('-created_on')
-            serializer = ProposalInfoSerializer(proposals, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            file_objects = models.GenericExportFileName.objects.select_related('proposal').filter(proposal__invoice_number__isnull=False).order_by('-proposal__created_on')
+            file_serializer = website_serializers.GenericExportFileSerializerReadOnly(file_objects, many=True)
+            return ui_utils.handle_response(class_name, data=file_serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
