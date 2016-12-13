@@ -2054,7 +2054,7 @@ class ProposalInfo(models.Model):
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     proposal_id = models.CharField(max_length=255, primary_key=True)
-    account = models.ForeignKey(AccountInfo, related_name='proposals',on_delete=models.CASCADE)
+    account = models.ForeignKey(AccountInfo, related_name='proposals',on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=50, blank=True, null=True)
     payment_status = models.BooleanField(default=False,)
     updated_on = models.DateTimeField(auto_now=True, auto_now_add=False)
@@ -2067,6 +2067,7 @@ class ProposalInfo(models.Model):
     is_campaign = models.BooleanField(default=False, blank=True)
     parent = models.ForeignKey('ProposalInfo', null=True, blank=True, default=None)
     objects = managers.GeneralManager()
+    invoice_number = models.CharField(max_length=1000, null=True, blank=True)
 
     def get_centers(self):
         try:

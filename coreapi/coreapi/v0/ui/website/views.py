@@ -2820,6 +2820,44 @@ class ProposalViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+    def update(self, request, pk=None):
+        """
+        Args:
+            request: The request body
+            pk: primary key
+
+        Returns: Updated proposal object
+        """
+        class_name = self.__class__.__name__
+        try:
+            # prepare the data to be updated
+            data = request.data.copy()
+            data['proposal_id'] = pk
+
+            proposal = ProposalInfo.objects.get_user_related_object(request.user, proposal_id=pk)
+            serializer = ProposalInfoSerializer(proposal, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @list_route()
+    def invoice_proposals(self, request):
+        """
+        Args:
+            request: request body
+        Returns: All the proposal features  which have invoice_number not null
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposals = ProposalInfo.objects.filter(invoice_number__isnull=False).order_by('-created_on')
+            serializer = ProposalInfoSerializer(proposals, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
     @detail_route(methods=['POST'])
     def get_spaces(self, request, pk=None):
         """
@@ -3355,6 +3393,32 @@ class SendMail(APIView):
                     'file_data':  my_file,
                     'mime_type': website_constants.mime['xlsx']
                 }
+            response = website_utils.send_email(email_data, attachment)
+            if not response.data['status']:
+                return response
+            return ui_utils.handle_response(class_name, data='Ok.Mail sent {0}'.format(response.data['data']), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class Mail(APIView):
+    """
+    API sends mail. The API sends a simple mail to a single person
+    """
+    def post(self, request):
+        class_name = self.__class__.__name__
+        try:
+            # takes these params from request
+            subject = request.data['subject']
+            to = request.data['to']
+            body = request.data['body']
+
+            email_data = {
+                'subject': subject,
+                'to': [to, ],
+                'body': body
+            }
+            attachment = None
             response = website_utils.send_email(email_data, attachment)
             if not response.data['status']:
                 return response
