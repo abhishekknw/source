@@ -181,13 +181,12 @@ angular
             url : '/mapview',
             controller : 'MapCtrl',
             templateUrl : 'modules/pages/mapview/mapview.tmpl.html'
-        });        /*
-        .state('catalogue.home', {
-          url : '/catalogue',
-          templateUrl: 'views/society-home.html',
-          controller: 'SocietyCtrl'
-        })
-        */
+        }) 
+        .state('OpsDashBoard',{
+            url : '/OpsDashBoard',
+            controller : 'OpsDashCtrl',
+            templateUrl : 'modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.html'
+        });       
 })
 .run(['$rootScope', '$window', '$location', 'AuthService',
      function ($rootScope, $window, $location, AuthService) {
