@@ -72,7 +72,8 @@ angular.module('machadaloPages')
               $scope.getSubTypes();
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
               $scope.choice = "selected";
-              pagesService.setBusinessObject($scope.model.business);
+              // pagesService.setBusinessObject($scope.model.business);
+              $window.localStorage.business = JSON.stringify(response.business);
          });
       };
 
