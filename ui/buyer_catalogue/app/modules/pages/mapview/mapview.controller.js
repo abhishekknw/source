@@ -7,6 +7,7 @@ angular.module('catalogueApp')
       policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
       acl : 'public-read',
       signature : "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=",
+      content_type : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     })
     .controller('MapCtrl', function(constants, $scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout) {
 // You have to initailise some value for the map center beforehand
@@ -1015,23 +1016,23 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       }
 
       //End: angular-google-maps is loaded properly only then proces code inside then
-      var makeString = function(filter_array, filter_keyword){
-                var my_string = filter_keyword;
-                var length = filter_array.length;
-                var count = 0;
-                for(var i=0;i<length;i++)
-                    if(filter_array[i].selected){
-                        my_string += filter_array[i].code + " ";
-                        count += 1;
-                    }
-                // Uncomment for better performance but this will also include null values for that filter
-                // What this does is basically dont apply the filter if all values are selected
-                if(count==length)
-                    my_string = filter_keyword;
-                return my_string;
-          }
+    var makeString = function(filter_array, filter_keyword){
+              var my_string = filter_keyword;
+              var length = filter_array.length;
+              var count = 0;
+              for(var i=0;i<length;i++)
+                  if(filter_array[i].selected){
+                      my_string += filter_array[i].code + " ";
+                      count += 1;
+                  }
+              // Uncomment for better performance but this will also include null values for that filter
+              // What this does is basically dont apply the filter if all values are selected
+              if(count==length)
+                  my_string = filter_keyword;
+              return my_string;
+        }
 
-//Start: code added to search & show all suppliers on add societies tab
+  //Start: code added to search & show all suppliers on add societies tab
   $scope.supplier_names = [
     { name: 'Residential',      code:'RS'},
     { name: 'Corporate Parks',  code:'CP'},
@@ -1064,11 +1065,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         $scope.errorMsg = "Please Fill all the details";
         $scope.supplierData = [];
         $scope.search_status = false;
-        // $scope.supplier_type_code = null;
-        // $scope.search = null;
       }
     }
-//End: code added to search & show all suppliers on add societies tab
+    //End: code added to search & show all suppliers on add societies tab
     //Start: function to clear searched supplier data whenever add suppliers button clicked
     $scope.clearSearchData = function(){
     $scope.supplierData = [];
@@ -1079,49 +1078,41 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     $scope.center_index = null;
     }
     //Start: To add searched societies in given center
-          $scope.addMoreSuppliers = function(supplier,id){
-            if($scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code] != undefined && $scope.center_index != null){
-              supplier.status = 'S';
-              $scope.extraSuppliersData[$scope.current_center_index][$scope.supplier_type_code].push(supplier);
-              $scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code].push(supplier);
-              $scope.supplierData.splice(id,1);
-              $scope.changeCurrentCenter($scope.center_index);
-              mapViewBasicSummary();
-              suppliersData();
-              gridViewBasicSummary();
-              $scope.errorMsg = "Supplier Added Successfully";
-              if($scope.supplierData.length <=0){
-                $scope.search_status = false;
-                $scope.supplier_type_code = null;
-                $scope.search = null;
-              }
-            }
-            else if($scope.center_index == null){
-              $scope.errorMsg = "Please select center first to add new suppliers";
-            }
-            else{
-              $scope.errorMsg = "Selected supplier not allowedadd in this center";
-            }
-            // $scope.suppliersList['ES'].push(supplier);
-            // $scope.center_data[$scope.current_center_index].suppliers['ES'].push(supplier);
-
+      $scope.addMoreSuppliers = function(supplier,id){
+        if($scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code] != undefined && $scope.center_index != null){
+          supplier.status = 'S';
+          $scope.extraSuppliersData[$scope.current_center_index][$scope.supplier_type_code].push(supplier);
+          $scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code].push(supplier);
+          $scope.supplierData.splice(id,1);
+          $scope.changeCurrentCenter($scope.center_index);
+          mapViewBasicSummary();
+          suppliersData();
+          gridViewBasicSummary();
+          $scope.errorMsg = "Supplier Added Successfully";
+          if($scope.supplierData.length <=0){
+            $scope.search_status = false;
+            $scope.supplier_type_code = null;
+            $scope.search = null;
           }
+        }
+        else if($scope.center_index == null){
+          $scope.errorMsg = "Please select center first to add new suppliers";
+        }
+        else{
+          $scope.errorMsg = "Selected supplier not allowedadd in this center";
+        }
+      }
     //End: To add searched societies in given center
     //Start: function to select center at add more suplliers
     $scope.selectCenter = function(center_index){
-
       $scope.center_index = center_index;
       if(center_index != null){
         for(var i=0;i<$scope.center_data.length; i++){
           if($scope.center_data[i].center.id == center_index){
-            console.log(i);
-              // $scope.current_center = $scope.center_data[i]
-              // $scope.center_index = i;
               $scope.current_center_index = i;
           }
         }
       }
-      // $scope.changeCurrentCenter($scope.current_center_index);
     }
     //End: function to select center at add more suplliers
 });
@@ -1152,7 +1143,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
              }
            }
          }
-         console.log($scope.center_data);
        }
        //End: For sending filtered inventory type
        //Start: setting status of suppliers like shortlisted, removed or buffer
@@ -1169,78 +1159,80 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
        //End: setting status of suppliers like shortlisted, removed or buffer
        $scope.submitProposal = function(){
          getShortlistedFilteredSocieties();
-           //console.log("Submitting $scope.centers :", $scope.centers);
        };
      $scope.exportData = function(){
-             getShortlistedFilteredSocieties();
-             //console.log($scope.center_data);
-             $http({
-                  url: constants.base_url + constants.url_base + $scope.proposal_id_temp + '/export-spaces-data/',
-                  method: 'POST',
-                  responseType: 'arraybuffer',
-                  data: $scope.center_data, //this is your json data string
-                  headers: {
-                      'Content-type': 'application/json',
-                      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                      'Authorization' : 'JWT ' + $rootScope.globals.currentUser.token
-                  }
-             }).success(function(data, status, headers, config){
-                  // convert it onto Blob object because it's a binary file.
-                  var blob = new Blob([data], {
-                      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                  });
-                  // fetch the content_type and file name from headers
-                  $scope.content_type = headers('content-type');
-                  $scope.file_name = headers('file_name');
-                  // set the file to blob
-                  $scope.file_data = blob
-                  var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
-                  // upload it to S3 Bucket
-                  Upload.upload({
-                      url: uploadUrl,
-                      method : 'POST',
-                      data: {
-                          key: $scope.file_name, // the key to store the file on S3, could be file name or customized
-                          AWSAccessKeyId : constants.AWSAccessKeyId,
-                          acl : constants.acl, // sets the access to the uploaded file in the bucket: private, public-read, ...
-                          policy : constants.policy,
-                          signature : constants.signature, // base64-encoded signature based on policy string (see article below)
-                          "Content-Type": $scope.content_type, // content type of the file (NotEmpty)
-                          file: $scope.file_data }
-                  });
+         getShortlistedFilteredSocieties();
+         $http({
+              url: constants.base_url + constants.url_base + $scope.proposal_id_temp + '/export-spaces-data/',
+              method: 'POST',
+              responseType: 'arraybuffer',
+              data: $scope.center_data, //this is your json data string
+              headers: {
+                  'Content-type': 'application/json',
+                  'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                  'Authorization' : 'JWT ' + $rootScope.globals.currentUser.token
+              }
+         }).success(function(data, status, headers, config){
+              // convert it onto Blob object because it's a binary file.
+              var blob = new Blob([data], {
+                  type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+              });
+              // fetch the content_type and file name from headers
+              // $scope.content_type = headers('content-type');
+              $scope.file_name = headers('file_name');
+              // set the file to blob
+              $scope.file_data = blob
+              var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
+              //upload file to amazon server
+              uploadFileToAmazonServer($scope.file_name,$scope.file_data);
+              // download it immediately
+              saveAs(blob, $scope.file_name);
 
-                  // download it immediately
-                  saveAs(blob, $scope.file_name);
-
-             }).error(function(){
-                  //Some error log
-                  alert('Error in exporting the file');
-             });
+         }).error(function(response){
+              //Some error log
+              console.log(response);
+              alert('Error in exporting the file');
+         });
      }
 
-   $scope.excelFile = [];
-   function makeid(){
-       var text = "";
-       var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-       for( var i=0; i < 10; i++ )
-           text += possible.charAt(Math.floor(Math.random() * possible.length));
-       return text;
+//Start : function to upload files to amazon server, just provide file name and file
+   var uploadFileToAmazonServer = function(file_name,file){
+     console.log($scope.content_type);
+     // upload it to S3 Bucket
+     Upload.upload({
+         url: 'http://mdimages.s3.amazonaws.com/',
+         method : 'POST',
+         data: {
+             key: file_name, // the key to store the file on S3, could be file name or customized
+             AWSAccessKeyId : constants.AWSAccessKeyId,
+             acl : constants.acl, // sets the access to the uploaded file in the bucket: private, public-read, ...
+             policy : constants.policy,
+             signature : constants.signature, // base64-encoded signature based on policy string (see article below)
+             "Content-Type": constants.content_type,// content type of the file (NotEmpty)
+             file: file }
+         }).success(function (response){
+              alert("Upload to Server Successful");
+         }).error(function(response) {
+             alert("Upload to server Unsuccessful");
+         });
    }
-
+//End : function to upload files to amazon server, just provide file name and file
     $scope.upload = function (file) {
-    var uploadUrl = 'http://localhost:8108/v0/ui/website/';
-    var token = $rootScope.globals.currentUser.token ;
-    Upload.upload({
-        url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
-        data: {file: file, 'username': $scope.username},
-        headers: {'Authorization': 'JWT ' + token},
-    }).then(function (resp) {
-      //console.log(resp);
-        //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
-    }, function (resp) {
-        console.log('Error status: ' + resp.status);
-    });
-  };
+      console.log(file);
+      var uploadUrl = 'http://localhost:8108/v0/ui/website/';
+      var token = $rootScope.globals.currentUser.token ;
+      Upload.upload({
+          url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
+          data: {file: file, 'username': $scope.username},
+          headers: {'Authorization': 'JWT ' + token},
+      }).success(function (response) {
+        console.log(response);
+        uploadFileToAmazonServer(response.data,file);
+          //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
+      }).error(function (response) {
+          console.log('Error status: ' + response.status);
+          alert("Data not Imported");
+      });
+    };
     //End: upload and import functionality
-
 });
