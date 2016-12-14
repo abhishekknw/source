@@ -15,7 +15,9 @@
         </thead>
         <tbody>
           <tr ng-repeat="proposal in proposals">
-            <td class="col-md-1">{{proposal.proposal.proposal_id}}</td>
+            <td class="col-md-1" ng-click="showProposalDetails(proposal.proposal.proposal_id)">
+              <a>{{proposal.proposal.proposal_id}}</a>
+            </td>
             <td class="col-md-2">{{proposal.proposal.name}}</td>
             <td class="col-md-2">{{proposal.proposal.created_by}}</td>
             <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>

@@ -59,4 +59,9 @@ angular.module('catalogueApp')
     		console.log("error occured", status);
     	});
     }
+
+    //code added when the user clicks on proposal id the proposal details page will open
+    $scope.showProposalDetails = function(proposal_id){
+      $location.path('/' + proposal_id + '/showcurrentproposal');
+    }
 }]);//Controller function ends here
