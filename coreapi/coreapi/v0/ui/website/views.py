@@ -2436,9 +2436,24 @@ class GenericExportData(APIView):
             if response.status_code != status.HTTP_200_OK:
                 return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
 
-            return website_utils.send_excel_file(file_name)
+            response = website_utils.send_excel_file(file_name)
+            if not response.data['status']:
+                return response
+            file_content = response.data['data']
 
-            # return ui_utils.handle_response(class_name, data=workbook, success=True)
+            content_type = website_constants.mime['xlsx']
+
+            # in order to provide custom headers in response in angular js, we need to set this header
+            # first
+            headers = {
+                'Access-Control-Expose-Headers': "file_name, Content-Disposition"
+            }
+            # set content_type and make Response()
+            response = Response(data=file_content, headers=headers, content_type=content_type)
+            # attach some custom headers
+            response['Content-Disposition'] = 'attachment; filename=%s' % file_name
+            response['file_name'] = file_name
+            return response
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)

@@ -2844,31 +2844,26 @@ def add_metric_sheet(workbook):
 
 def send_excel_file(file_name):
     """
-    This sets the appropriate headers in the response for file of type xlsx.
-    It also converts the file in binary before sending it.
+    converts the file in binary before returning  it. and sends the required mail
     """
     function = send_excel_file.__name__
     try:
-
         if os.path.exists(file_name):
+
             excel = open(file_name, "rb")
             file_content = excel.read()
             output = StringIO.StringIO(file_content)
             out_content = output.getvalue()
-            content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            # content_type = 'application/vnd.ms-excel'
-            # in order to provide custom headers in response in angularjs, we need to set this header
-            # first
-            headers = { 
-                'Access-Control-Expose-Headers': "file_name, Content-Disposition"
-            }
             output.close()
             excel.close()
+
             # remove the file from the disk
             os.remove(file_name)
 
             # get the predefined template for the body
             template_body = website_constants.email['body']
+
+            content_type = website_constants.mime['xlsx']
 
             # define a body_mapping.
             body_mapping = {
@@ -2900,15 +2895,10 @@ def send_excel_file(file_name):
             response = send_email(email_data, attachment)
             if not response.data['status']:
                 return response
-
-            # set content_type and make Response() 
-            response = Response(data=out_content, headers=headers, content_type=content_type)
-            # attach some custom headers 
-            response['Content-Disposition'] = 'attachment; filename=%s' % file_name
-            response['file_name'] = file_name
-            return response
-        # return response
-
+        else:
+            # return response
+            return ui_utils.handle_response(function, data='File does not exist on disk')
+        return ui_utils.handle_response(function, data=out_content, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -2939,7 +2929,7 @@ def save_price_mapping_default(supplier_id, supplier_type_code, row):
             # done. return success.
             return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
-        return  ui_utils.handle_response(function, exception_object=e)
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def delete_create_final_proposal_data(proposal_id):
