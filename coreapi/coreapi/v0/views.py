@@ -1,17 +1,20 @@
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from django.apps import apps
+import django.apps
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.pagination import PageNumberPagination
+from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer
-from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType
-
+from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions
 import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils
+
 
 
 class PopulateContentTypeFields(APIView):
@@ -51,6 +54,30 @@ class PopulateContentTypeFields(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+class SetUserToMasterUser(APIView):
+    """
+    The api sets user_id field to master user if any in the database.
+    Careful before using it because it will update user field of all the rows to master 
+    user which may not be what you want everytime. 
+    """
+    permission_classes = (permissions.IsAuthenticated, )
+    def post(self, request):
+        class_name = self.__class__.__name__
+        try:
+            master_user = BaseUser.objects.get(id=1)
+            # get all models from the app 'v0' 
+            all_models = apps.get_app_config('v0').models
+            # exclude these models 
+            models_to_exclude = [BaseUser, CustomPermissions]
+            # run for each model and update all records 
+            for model in all_models.values():
+                if hasattr(model, 'user') and model not in models_to_exclude:
+                    model.objects.all().update(user=master_user)
+            return ui_utils.handle_response(class_name, data='succesfully updated all users of all modes to master user', success=True)        
+        except ObjectDoesNotExist as e:
+          return ui_utils.handle_response(class_name, exception_object=e)            
+        except Exception as e:
+          return ui_utils.handle_response(class_name, exception_object=e)
 
 class BannerInventoryAPIView(APIView):
 

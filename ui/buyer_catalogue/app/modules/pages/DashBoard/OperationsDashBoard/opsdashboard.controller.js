@@ -34,7 +34,7 @@ angular.module('catalogueApp')
       var email_Data = {
         subject:'Machadalo Mail',
         body:$scope.reason,
-        to:'$scope.currentProposal.user.email',
+        to:$scope.currentProposal.user.email,
       };
       opsDashBoardService.sendMail(email_Data)
       .success(function(response, status){
@@ -44,6 +44,7 @@ angular.module('catalogueApp')
     		console.log("error occured", status);
     	});
 
+      $scope.reason = "";
    }
 
     $scope.updateCampaign = function(proposal){

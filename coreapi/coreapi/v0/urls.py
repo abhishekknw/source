@@ -76,5 +76,7 @@ urlpatterns = patterns('',
     url(r'^flat/(?P<id>[0-9]+)$', views.FlatTypeAPIView.as_view()),
     url(r'^flat/$', views.FlatTypeAPIListView.as_view()),
     url(r'^populate-content-types/$', views.PopulateContentTypeFields.as_view()),
+    url(r'^set-user-to-master-user/$', views.SetUserToMasterUser.as_view()),
+
 
 )
