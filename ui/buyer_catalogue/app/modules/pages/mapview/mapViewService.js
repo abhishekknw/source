@@ -7,9 +7,7 @@
     var mapViewService = {};
 
     mapViewService.getSpaces = function(proposal_id){
-        // done
         var url = url_base + "proposal/"+ proposal_id + "/get_spaces/";
-
         return machadaloHttp.post(url, {});
     };
 

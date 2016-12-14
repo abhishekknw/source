@@ -11,7 +11,7 @@ angular.module('catalogueApp')
 
     	currentProposalService.getProposal($stateParams.proposal_id)
     	.success(function(response, status){
-    		$scope.proposal = response.data.proposal;
+    		$scope.proposal = response.data;
     		console.log("inside proposal details : ", $scope.proposal);
     	})
     	.error(function(response, status){

@@ -1,50 +1,47 @@
-<!-- <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" /> -->
+<link rel="stylesheet" href="modules/pages/currentProposal/currentProposal.tmpl.css" />
+<div><nav-bar></nav-bar></div>
   <div ng-if="isParentProposal == 'false'">
     <button class="btn btn-info active" ng-click="showHistory()">Back to Previous Page</button>
   </div>
-  <div class="page-container">
-    <form name="proposalDetails" ng-hide="showEdit">
-      <div class="panel panel-default business-panel">
-        <div class="table">
+<form name="proposalDetails" ng-hide="showEdit" class = "proposal-panel">
+  <div class = "container">
+      <div class="row">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <Label>Proposal Id:</Label><span>{{proposal.proposal_id}}</span>
+            <Label class = "labels">Name of Proposal:</Label><span>{{proposal.name}}</span>
+            <Label class = "labels">Tentative Cost:</Label><span>{{proposal.tentative_cost}} </span>
+            <a class = "labels" ng-if="isParentProposal == 'true'" href="" ng-click="editInitialProposal(proposal.proposal_id)">Edit Proposal</a>
+          </div >
           <div class="row">
-          	<div class="col-md-3"><label>Proposal Id:</label></div>
-            <div class="col-md-3">{{proposal.proposal_id}}</div>
-            <div class="col-md-3"><label>Name of Proposal:</label></div>
-            <div class="col-md-3">{{proposal.name}}</div>
+            <div class="col-md-10 center-heading"><label>Center Details:</label></div>
           </div>
           <div class="row">
-            <div class="col-md-5"><label>Center Details:</label></div>
+            <div class="col-md-2 table-align"><b>Serial No</b></div>
+            <div class="col-md-2 table-align"><b>Center Name</b></div>
+            <div class="col-md-2 table-align"><b>Area</b></div>
+            <div class="col-md-2 table-align"><b>Sub-Area</b></div>
+            <div class="col-md-2 table-align"><b>Radius</b></div>
           </div>
-          <div class="row">
-            <div class="table table-align">
-              <div class="row">
-                <div class="col-md-2 table-align"><b>Serial No</b></div>
-              	<div class="col-md-2 table-align"><b>Center Name</b></div>
-                <div class="col-md-2 table-align"><b>Area</b></div>
-                <div class="col-md-2 table-align"><b>Sub-Area</b></div>
-                <div class="col-md-2 table-align"><b>Radius</b></div>
-              </div>
-              <div ng-repeat="center in center_data">
-              <div class="row">
-                <div class="col-md-2 table-align">{{$index+1}}</div>
-                <div class="col-md-2 table-align">{{center.center.center_name}}</div>
-                <div class="col-md-2 table-align">{{center.center.area}}</div>
-                <div class="col-md-2 table-align">{{center.center.subarea}}</div>
-                <div class="col-md-2 table-align">{{center.center.radius}}</div>
-              </div>
-            </div>
-            <div ng-if="isParentProposal == 'true'">
-              <a href="" ng-click="editInitialProposal(proposal.proposal_id)">Edit Initial Proposal</a>
+          <div ng-repeat="center in center_data">
+            <div class="row">
+              <div class="col-md-2 table-align">{{$index+1}}</div>
+              <div class="col-md-2 table-align">{{center.center.center_name}}</div>
+              <div class="col-md-2 table-align">{{center.center.area}}</div>
+              <div class="col-md-2 table-align">{{center.center.subarea}}</div>
+              <div class="col-md-2 table-align">{{center.center.radius}}</div>
             </div>
           </div>
+          <!-- <div ng-if="isParentProposal == 'true'">
+            <a href="" ng-click="editInitialProposal(proposal.proposal_id)">Edit Initial Proposal</a>
+          </div> -->
+         </div><!-- panel panel default divs end here-->
         </div>
-      </div>
-    </div>
   </div>
 </form>
 <!--Start : shortlisted suppliers -->
 <div class = "row">
-  <div class="col-md-2 aligndropdown" style="margin-left:30px;"><label>Select Center To View Supplier Details:</label></div>
+  <div class="col-md-2 aligndropdown" style="margin-left:30px;"><label>Select Advertising Location:</label></div>
   <div class="col-md-2">
     <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
       <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
@@ -216,7 +213,7 @@
 </div><!-- containner div ends here-->
 
 <!--End : sortlisted suppliers ends here     -->
-  <div ng-repeat="propCenter in proposal.centers track by $index" ng-show="propCenter.societies_buffered_count>0" class="panel panel-default business-panel">
+  <!-- <div ng-repeat="propCenter in proposal.centers track by $index" ng-show="propCenter.societies_buffered_count>0" class="panel panel-default business-panel">
   <h4 class="panel-heading head">Buffered Societies</h4>
   <div class="table-responsive">
     <table class="table table-bordered">
@@ -242,10 +239,10 @@
       </tbody>
      </table>
     </div>
-   </div>
+   </div> -->
 
 
-<form name="editProposal" ng-show="showEdit">
+<!-- <form name="editProposal" ng-show="showEdit">
   <div ng-if="proposal.centers[0].center.space_mappings.society_allowed">
   <div class="panel panel-default business-panel">
     <div class="table">
@@ -277,19 +274,16 @@
 		    </div>
 		    <div class="row">
 		    	<div class="col-md-2"></div>
-		    	<!-- <div class="col-md-2">{{center2.center.center_name}}</div> -->
 		    	<div class="col-md-2">Posters</div>
 		        <div class="col-md-2">{{center2.societies_inventory_count.posters}}</div>
 		    </div>
 		    <div class="row">
 		    	<div class="col-md-2"></div>
-		    	<!-- <div class="col-md-2">{{center2.center.center_name}}</div> -->
 		    	<div class="col-md-2">Stalls</div>
 		        <div class="col-md-2">{{center2.societies_inventory_count.stalls}}</div>
 		    </div>
 		    <div class="row">
 		    	<div class="col-md-2"></div>
-		    	<!-- <div class="col-md-2">{{center2.center.center_name}}</div> -->
 		    	<div class="col-md-2">Standees</div>
 		        <div class="col-md-2">{{center2.societies_inventory_count.standees}}</div>
 	        </div>
@@ -340,4 +334,4 @@
 			</div>
 		</div>
 		<button class="btn btn-default" ng-click="submit()">Update Proposal</button>
-	</form>
+	</form> -->
