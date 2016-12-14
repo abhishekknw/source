@@ -1688,7 +1688,7 @@ def construct_proposal_response(proposal_id, user):
     """
     function_name = construct_proposal_response.__name__
     try:
-        supplier_type_codes_list = models.ProposalCenterMapping.objects.filter_user_related_objects(user, proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
+        supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user, proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
         # fetch the mapped centers. This centers were saved when CreateInitialProposal was hit.
         center_id_list = [data['center'] for data in supplier_type_codes_list]
 
@@ -1868,7 +1868,7 @@ def proposal_shortlisted_spaces(data):
             shortlisted_suppliers_centerwise[center_id].append(supplier) 
 
         # construction of proposal response is isolated
-        response = construct_proposal_response(proposal_id)
+        response = construct_proposal_response(proposal_id, user)
         if not response.data['status']:
             return response
 

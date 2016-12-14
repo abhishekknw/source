@@ -3028,6 +3028,8 @@ class ProposalViewSet(viewsets.ViewSet):
         try:
             center_id = request.data['center']['id']
             proposal = request.data['proposal']
+            user = request.user
+            
             fixed_data = {
                 'center': center_id,
                 'proposal': proposal,
@@ -3042,7 +3044,7 @@ class ProposalViewSet(viewsets.ViewSet):
                 fixed_data['content_type'] = content_type
                 fixed_data['supplier_code'] = code
 
-                response = website_utils.save_shortlisted_suppliers(request.data['suppliers'][code], fixed_data)
+                response = website_utils.save_shortlisted_suppliers(request.data['suppliers'][code], fixed_data, user)
                 if not response.data['status']:
                     return response
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
