@@ -2186,6 +2186,7 @@ class GenericExportFileName(models.Model):
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     file_name = models.CharField(max_length=1000, null=True, blank=True)
+    is_exported = models.BooleanField(default=True)
     objects = managers.GeneralManager()
 
     class Meta:
