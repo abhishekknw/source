@@ -19,7 +19,7 @@
   					<div class="col-md-3"><label class="spacing">Tentative Budget</label></div>
   					<div class="col-md-3"><input type="number" ng-model="model.tentative_cost" class="form-control spacing"></div>
   				</div>
-          <button class="btn btn-danger spacing pull-left" ng-click="addCenter()">Add Center</button>
+          <button class="btn btn-danger spacing pull-left addButton" ng-click="addCenter()">Add Center</button>
   			</div>
   		</div>
   	</form>
@@ -29,19 +29,8 @@
     		<table class="table table-bordered">
     			<thead>
     				<tr>
-    					<!-- <th>S.No.</th> -->
-    					<!-- <th class="alignment">Advertising Location</th>
-    					<th class="alignment">Address</th>
-              <th class="alignment">City</th>
-    					<th class="alignment">Area</th>
-              <th class="alignment">Sub Area</th>
-              <th class="alignment">Pincode</th>
-    					<th class="alignment">Radius</th>
-    					<th class="alignment">Space Type</th>
-    					<th class="alignment">Action</th> -->
               <th class="alignment" ng-repeat="header in proposalheaders"><b>{{header.header}}</b></div> 
     				</tr>
-            <!-- <div class="col-md-2 table-align" ng-repeat="header in centerheaders"><b>{{header.header}}</b></div> -->
     			</thead>
     			<tbody ng-repeat="center in model.centers track by $index">
     				<tr>
