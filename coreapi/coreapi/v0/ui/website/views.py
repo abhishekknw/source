@@ -2488,6 +2488,7 @@ class ImportSupplierData(APIView):
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
             my_file = request.FILES['file']
+
             wb = openpyxl.load_workbook(my_file)
 
             # fetch all sheets
@@ -2617,10 +2618,15 @@ class ImportSupplierData(APIView):
             response = requests.post(url, files=files, headers=headers)
 
             if response.status_code != status.HTTP_200_OK:
-                return Response({'status': False, 'error in import-metric-data api ': response.text},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status': False, 'error in import-metric-data api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response({'status': True, 'data': 'successfully imported'}, status=status.HTTP_200_OK)
+            # prepare a new name for this file and save it in the required table
+            response = website_utils.get_file_name(request.user, proposal_id, is_exported=False)
+            if not response.data['status']:
+                return response
+            file_name = response.data['data']
+
+            return Response({'status': True, 'data': file_name}, status=status.HTTP_200_OK)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -2870,7 +2876,7 @@ class ProposalViewSet(viewsets.ViewSet):
         try:
             # can't use distinct() to return only unique proposal_id's because .distinct('proposal') is not supported
             # for MySql
-            file_objects = models.GenericExportFileName.objects.select_related('proposal', 'user').filter(proposal__invoice_number__isnull=False).order_by('-proposal__created_on')
+            file_objects = models.GenericExportFileName.objects.select_related('proposal', 'user').filter(proposal__invoice_number__isnull=False, is_exported=False).order_by('-proposal__created_on')
 
             # we need to make a unique list where proposal_id do not repeat.
             seen = set()

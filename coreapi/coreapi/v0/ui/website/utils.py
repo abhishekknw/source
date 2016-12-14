@@ -2781,11 +2781,12 @@ def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def get_file_name(user, proposal_id):
+def get_file_name(user, proposal_id, is_exported=True):
     """
     Args:
         user: The user name
         proposal_id: proposal_id
+        is_exported: determines weather this file was exported or imported.
 
     Returns: a string that wil be used as file name.
 
@@ -2811,7 +2812,8 @@ def get_file_name(user, proposal_id):
             'account': account,
             'proposal': proposal,
             'date': now_time,
-            'file_name': file_name
+            'file_name': file_name,
+            'is_exported': is_exported
         }
         models.GenericExportFileName.objects.get_or_create(**data)
         return ui_utils.handle_response(function, data=file_name, success=True)
