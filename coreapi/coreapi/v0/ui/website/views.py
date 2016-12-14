@@ -2558,7 +2558,7 @@ class ImportSupplierData(APIView):
                     center_object = response.data['data']
 
                     # add 1 supplier that represents this row to the list of suppliers this object has already
-                    response = website_utils.make_suppliers(center_object, row, supplier_type_code, proposal_id)
+                    response = website_utils.make_suppliers(center_object, row, supplier_type_code, proposal_id, center_id)
                     if not response.data['status']:
                         return response
                     center_object = response.data['data']

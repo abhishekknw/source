@@ -430,7 +430,6 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
 
     """
     try:
-
         shortlisted_inventory_list = []
         # check for predefined keys in the row. if available, we have that inventory !
         for inventory in website_constants.is_inventory_available:
@@ -471,7 +470,7 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def make_suppliers(center_object, row, supplier_type_code, proposal_id):
+def make_suppliers(center_object, row, supplier_type_code, proposal_id, center_id):
     """
     Args:
         center_object: a center_object
@@ -490,7 +489,7 @@ def make_suppliers(center_object, row, supplier_type_code, proposal_id):
         supplier = {data_key: row[header] for header, data_key in zip(supplier_header_keys, supplier_data_keys)}
 
         # get the list of shortlisted inventory details
-        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center_object['id'])
+        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center_id)
         if not shortlisted_inventory_list_response.data['status']:
             return shortlisted_inventory_list_response
 
@@ -586,7 +585,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id):
             # we do not want to send this to other API, so we will rather delete it
             del center['shortlisted_inventory_details']
         # issue a single insert statements. read the warning above of .bulk_create usage.
-        models.ShortlistedInventoryPricingDetails.bulk_create(output)
+        models.ShortlistedInventoryPricingDetails.objects.bulk_create(output)
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
