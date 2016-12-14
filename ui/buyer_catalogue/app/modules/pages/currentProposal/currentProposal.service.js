@@ -33,6 +33,11 @@
     	return machadaloHttp.put(url,data);
     }
 
+    currentProposalService.saveInvoiceDetails = function(proposal_id, data){
+        var url = url_base + "proposal/"+ proposal_id + "/";
+      return machadaloHttp.put(url, data);
+    }
+
     return currentProposalService;
 
  }]);
