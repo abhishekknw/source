@@ -2362,6 +2362,7 @@ class GenericExportData(APIView):
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
     """
     renderer_classes = (website_renderers.XlsxRenderer, )
+
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:
@@ -2795,9 +2796,9 @@ class CreateFinalProposal(APIView):
 
 class ProposalViewSet(viewsets.ViewSet):
     """
-     A ViewSet handling various operations related to ProposalModel.
-     This viewset was made instead of creating separate ApiView's because all the api's in this viewset
-     are related to Proposal domain. so keeping them at one place makes sense.
+    A ViewSet handling various operations related to ProposalModel.
+    This viewset was made instead of creating separate ApiView's because all the api's in this viewset
+    are related to Proposal domain. so keeping them at one place makes sense.
     """
     parser_classes = (JSONParser, FormParser)
     permission_classes = (permissions.IsAuthenticated,  v0_permissions.IsMasterUser, )
@@ -2852,8 +2853,20 @@ class ProposalViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            file_objects = models.GenericExportFileName.objects.select_related('proposal').filter(proposal__invoice_number__isnull=False).order_by('-proposal__created_on')
-            file_serializer = website_serializers.GenericExportFileSerializerReadOnly(file_objects, many=True)
+            # can't use distinct() to return only unique proposal_id's because .distinct('proposal') is not supported
+            # for MySql
+            file_objects = models.GenericExportFileName.objects.select_related('proposal', 'user').filter(proposal__invoice_number__isnull=False).order_by('-proposal__created_on')
+
+            # we need to make a unique list where proposal_id do not repeat.
+            seen = set()
+            final_file_objects = []
+            for file_object in file_objects:
+                proposal_id = file_object.proposal_id
+                if proposal_id not in seen:
+                    seen.add(proposal_id)
+                    final_file_objects.append(file_object)
+
+            file_serializer = website_serializers.GenericExportFileSerializerReadOnly(final_file_objects, many=True)
             return ui_utils.handle_response(class_name, data=file_serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -3014,7 +3027,6 @@ class ProposalViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
-
 
 
 class InitialProposalAPIView(APIView):

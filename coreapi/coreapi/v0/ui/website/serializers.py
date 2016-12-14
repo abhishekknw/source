@@ -7,7 +7,7 @@ from v0.serializers import SocietyInventoryBookingSerializer, BusinessInfoSerial
 
 
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety,\
-                    ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion
+                    ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, BaseUser
 
 import v0.models as models
 
@@ -66,12 +66,20 @@ class ProposalInfoSerializer(ModelSerializer):
         model = ProposalInfo
 
 
+class BaseUserSerializer(ModelSerializer):
+
+    class Meta:
+        model = BaseUser
+        fields = ('first_name', 'last_name', 'email', 'user_code')
+
+
 class GenericExportFileSerializerReadOnly(ModelSerializer):
     """
     This is nested serializer. it does not support Write operations as of now. Careful before using it.
     Currently it is being used to show File data plus proposal data
     """
     proposal = ProposalInfoSerializer()
+    user = BaseUserSerializer()
 
     class Meta:
         model = models.GenericExportFileName
