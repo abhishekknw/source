@@ -1,6 +1,6 @@
-<div ng-if="errormsg"><h3>{{errormsg}}</h3></div>
-
 <link rel="stylesheet" href="modules/pages/createProposal/createproposal.tmpl.css" />
+<div><nav-bar></nav-bar></div>
+<div ng-if="errormsg"><h3>{{errormsg}}</h3></div>
   <div class="page-container">
   	<div>
     	<span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span><br>
@@ -30,7 +30,7 @@
     			<thead>
     				<tr>
     					<!-- <th>S.No.</th> -->
-    					<th class="alignment">Advertising Location</th>
+    					<!-- <th class="alignment">Advertising Location</th>
     					<th class="alignment">Address</th>
               <th class="alignment">City</th>
     					<th class="alignment">Area</th>
@@ -38,8 +38,10 @@
               <th class="alignment">Pincode</th>
     					<th class="alignment">Radius</th>
     					<th class="alignment">Space Type</th>
-    					<th class="alignment">Action</th>
+    					<th class="alignment">Action</th> -->
+              <th class="alignment" ng-repeat="header in proposalheaders"><b>{{header.header}}</b></div> 
     				</tr>
+            <!-- <div class="col-md-2 table-align" ng-repeat="header in centerheaders"><b>{{header.header}}</b></div> -->
     			</thead>
     			<tbody ng-repeat="center in model.centers track by $index">
     				<tr>
@@ -88,3 +90,5 @@
     		<button class="btn btn-danger spacing" ng-click="submit()" ng-disabled="proposal.$invalid || centerDetail.$invalid">Submit</button>
     	</div>
     </form>
+
+<div><footer-bar></footer-bar></div>

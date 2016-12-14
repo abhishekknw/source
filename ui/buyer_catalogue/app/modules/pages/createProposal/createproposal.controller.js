@@ -8,6 +8,17 @@ angular.module('catalogueApp')
 		{name:"Societies", code:"RS", selected:"false"},
 		{name:"Corporate Parks", code:"CP", selected:"false"},
 	];
+	$scope.proposalheaders = [
+        {header : 'Advertising Location'},
+        {header : 'Address'},
+        {header : 'City'},
+        {header : 'Area'},
+        {header : 'SubArea'},
+        {header : 'Pincode'},
+        {header : 'Radius'},
+        {header : 'Space Type'},
+        {header : 'Action'}
+      ];
   var count = 0;
   var suppliersData = new Array();
 	$scope.addCenter = function(){
