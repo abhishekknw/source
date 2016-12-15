@@ -44,13 +44,11 @@ INSTALLED_APPS = (
     'v0',
     'drf_generators',
     'rest_framework_swagger',
-    'debug_toolbar',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -92,11 +90,11 @@ DATABASES = {
     },
 
     'default': {
-        'NAME':'machadalo',
+        'NAME':'machadalo_permissions',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': 'localhost',
          'USER': 'root',
-         'PASSWORD': 'root',
+         'PASSWORD': 'yo@123',
       }
 
     }
@@ -191,13 +189,13 @@ JWT_AUTH = {
       'JWT_VERIFY_EXPIRATION': False,
       }
 
-BASE_URL = 'http://localhost:8000/'
+BASE_URL = 'http://localhost:8108/'
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST_USER = 'yogesh.mhetre@machadalo.com'
+EMAIL_HOST_PASSWORD = 'mtechcse@2014'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER
