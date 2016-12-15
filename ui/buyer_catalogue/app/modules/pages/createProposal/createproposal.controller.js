@@ -89,6 +89,7 @@ angular.module('catalogueApp')
 	}
 
 	$scope.submit = function(){
+		$scope.checkProposal = true;
 		$scope.model.account_id = $rootScope.account_id;
 		$scope.model.business_id = $rootScope.business_id;
 		$scope.model.parent = null;
@@ -103,16 +104,19 @@ angular.module('catalogueApp')
 				console.log("Successfully Saved");
 				console.log("response is : ", response);
 				$scope.proposal_id = response;
+				$scope.checkProposal = false;
 				createProposalService.setProposalId($scope.proposal_id);
 				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){
+				$scope.checkProposal = false;
 				console.log("Error");
+				alert("Error Occured");
 				if(typeof(response) != typeof(12)){
 					console.log("response is ", response);
 					$scope.errormsg = response.message;
-					$scope.model.centers = new Array();
-					$scope.addCenter();
+					// $scope.model.centers = new Array();
+					// $scope.addCenter();
 				}
 			});
 	}
