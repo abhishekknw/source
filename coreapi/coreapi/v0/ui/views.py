@@ -433,7 +433,9 @@ class SocietyAPIFilterSubAreaView(APIView):
 
 
 class SocietyAPIListView(APIView):
+
     def get(self, request, format=None):
+        class_name = self.__class__.__name__
         try:
             user = request.user
             search_txt = request.query_params.get('search', None)
@@ -445,18 +447,24 @@ class SocietyAPIListView(APIView):
                 elif user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
                     items = SupplierTypeSociety.objects.filter(Q(society_city__in=[item.city.city_name for item in user.cities.all()]) | Q(created_by=user.id))
             
-        #Changes in code to show images for society list                    
+        #Changes in code to show images for society list                  
             items = ui_utils.get_supplier_image(items,'Society')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             #serializer = SocietyListSerializer(result_page, many=True)
-            return paginator.get_paginated_response(result_page)
+            paginator_response = paginator.get_paginated_response(result_page)
+            data = {
+              'count': len(items),
+              'societies': paginator_response.data
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
 
 
 class CorporateAPIListView(APIView):
     def get(self, request, format=None):
+        class_name = self.__class__.__name__
         try:
             user = request.user
             search_txt = request.query_params.get('search', None)
@@ -474,7 +482,13 @@ class CorporateAPIListView(APIView):
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             #serializer = UICorporateSerializer(result_page, many=True)
-            return paginator.get_paginated_response(result_page)
+
+            paginator_response = paginator.get_paginated_response(result_page)
+            data = {
+              'count': len(items),
+              'corporates': paginator_response.data
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except SupplierTypeCorporate.DoesNotExist:
             return Response(status=404)
         except Exception as e:
@@ -504,6 +518,7 @@ class SalonAPIListView(APIView):
 
 class GymAPIListView(APIView):
     def get(self, request, format=None):
+        class_name = self.__class__.__name__
         try:
             user = request.user
             search_txt = request.query_params.get('search', None)
@@ -519,7 +534,12 @@ class GymAPIListView(APIView):
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             # serializer = UIGymSerializer(result_page, many=True)
-            return paginator.get_paginated_response(result_page)
+            paginator_response = paginator.get_paginated_response(result_page)
+            data = {
+              'count': len(items),
+              'gyms': paginator_response.data
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except SupplierTypeGym.DoesNotExist:
             return Response(status=404)
 
@@ -2758,7 +2778,13 @@ class BusShelter(APIView):
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             # serializer = SupplierTypeBusShelterSerializer(result_page, many=True)
-            return paginator.get_paginated_response(result_page)
+
+            paginator_response = paginator.get_paginated_response(result_page)
+            data = {
+              'count': len(items),
+              'busshelters': paginator_response.data
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except SupplierTypeBusShelter.DoesNotExist as e:
             return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:

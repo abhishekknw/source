@@ -12,7 +12,7 @@
               <div><span >{{errorMsg.message}}</span></div>
               <label for="existing">Select existing Business </label>
               <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
-          </div>
+            </div>
           <div class="col-md-4">
             <span class = "" ng-show ="choice == 'existing'">
                 <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">

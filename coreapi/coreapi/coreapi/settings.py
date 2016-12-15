@@ -44,11 +44,13 @@ INSTALLED_APPS = (
     'v0',
     'drf_generators',
     'rest_framework_swagger',
+    'debug_toolbar',
 )
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -95,9 +97,6 @@ DATABASES = {
          'HOST': 'localhost',
          'USER': 'root',
          'PASSWORD': 'root',
-         'OPTIONS': {
-             "init_command": "SET foreign_key_checks = 0;",
-         }
       }
 
     }
@@ -128,6 +127,7 @@ STATIC_URL = '/static/'
 #     'DEFAULT_AUTHENTICATION_CLASSES': [],
 #     'DEFAULT_PERMISSION_CLASSES': [],
 # }
+
 
 
 REST_FRAMEWORK = {
@@ -207,3 +207,12 @@ DEFAULT_EMAIL_FROM = EMAIL_HOST_USER
 DEFAULT_USER_ID = 1  # make sure a user with this id exists in the db
 DEFAULT_USER_CODE = '0'  # default code for this user is '0'. which means a user with that id has to an admin
 AUTH_USER_MODEL = 'v0.BaseUser'  # refer all references to User model by this name
+
+# This is default datetime which populates on existing rows of the tables when migrated. it acts as a NULL
+# datetime because when the Model instance is saved, this value is checked. if found, that means it was NULL
+# and hence the
+import datetime
+from django.utils import timezone
+date_string = '2016-12-1'
+format = '%Y-%m-%d'
+DEFAULT_DATE = timezone.make_aware(datetime.datetime.strptime(date_string, format), timezone.get_default_timezone())

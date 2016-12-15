@@ -1,0 +1,11 @@
+.tab-content4 > .tab-pane,
+.pill-content > .pill-pane {
+  display: none;
+}
+.tab-content4 > .active,
+.pill-content > .active {
+  display: block;
+}
+.carousel-control.left, .carousel-control.right {
+    background-image: none
+}

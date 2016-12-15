@@ -476,7 +476,7 @@ class GetAccountProposalsAPIView(APIView):
 
         try:
             account = AccountInfo.objects.get(account_id=account_id)
-
+           
             proposals = ProposalInfo.objects.filter(account=account)
             proposal_serializer = ProposalInfoSerializer(proposals, many=True)
         
@@ -2436,6 +2436,7 @@ class GenericExportData(APIView):
             if response.status_code != status.HTTP_200_OK:
                 return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
 
+
             response = website_utils.send_excel_file(file_name)
             if not response.data['status']:
                 return response
@@ -2729,7 +2730,8 @@ class CreateInitialProposal(APIView):
 
                 # query for parent. if available set it. if it's available, then this is an EDIT request.
                 parent = request.data.get('parent')
-
+                parent  = parent if parent != '0' else None
+                proposal_data['parent'] = parent
                 # set parent if available
                 if parent:
                     proposal_data['parent'] = ProposalInfo.objects.get_user_related_object(proposal_id=parent).proposal_id
@@ -2836,9 +2838,19 @@ class ProposalViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
+
             proposal = ProposalInfo.objects.get_user_related_object(request.user, proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            #added to send proposal centers data
+            response = website_utils.proposal_centers(pk)
+            if not response:
+                return response
+            
+            data = {
+                'proposal' : serializer.data,
+                'centers' : response.data['data'],
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -2903,6 +2915,10 @@ class ProposalViewSet(viewsets.ViewSet):
                 {
                    suppliers: { RS: [], CP: [] } ,
                    center: { ...   codes: [] }
+                   suppliers_meta: {
+                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                     'CP': { 'inventory_type_selected':  ['ST']
+                   }
                 }
            ]
 
@@ -2917,8 +2933,8 @@ class ProposalViewSet(viewsets.ViewSet):
           description:  center_id
         - name: radius
           description: radius
-        - name: supplier_codes
-          description:  array of codes like RS, CP, etc
+        - name: latitude
+        - name: longitude
         """
         class_name = self.__class__.__name__
         try:
@@ -2956,6 +2972,8 @@ class ProposalViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
+            account_id = request.query_params.get('account_id')
+            account_id = account_id if account_id!= '0' else None
             data = {
                 'parent': pk if pk != '0' else None,
                 'user': request.user

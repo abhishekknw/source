@@ -1,0 +1,479 @@
+<link rel="stylesheet" href="modules/pages/supplierDetails/societyDetails/newsocietyDetail.tmpl.css" />
+<!-- Start: Image display and society name section -->
+  <div class="container pagecontainer offset-0">
+  <!--Main Header Slider-->
+    <div class="col-md-8 cpdd01">
+    <div  id="jssor_1" style="position: relative; margin: 0 auto; top: 10px; left: 0px; width: 600px; height: 400px; overflow: hidden;">
+      <div class="carousel" id="slider" >
+         <div class="carousel-inner">
+             <div class="item" ng-class="{active:!$index}" ng-repeat="image in SocietyImages">
+                <img ng-src="{{image}}"  width="600" height="400" class="img-responsive"/>
+             </div>
+         </div>
+        <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider" role="button" data-slide="prev">
+           <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+           <span class="sr-only">Previous</span>
+        </a>
+       <a class="right carousel-control" data-toggle = "carousel" data-target = "#slider" role="button" data-slide="next">
+         <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+         <span class="sr-only">Next</span>
+       </a>
+      </div>
+<!--End: Carousel added to slide images-->
+    </div>
+    </div>
+    <div class="col-md-4 detailsright offset-0">
+    	 <div class="padding20">
+    			<h4 class="lh1"><p>{{society.society_name}}</p></h4>
+    					<p style="color:#c0c0c0;"><img src="images/icon-location.png"> {{society.society_address1}}&nbsp;, {{society.society_address2}} {{society.society_city}}<br>
+              </p>
+    	 </div>
+    				<div class="line3"></div>
+    				<div class="col-md-6 bordertype1 padding15">
+    					<span class="opensans size24 bold grey2">{{society.society_locality}}</span><br/>
+    					Locality Rating
+    				</div>
+    				<div class="col-md-6 bordertype1 padding15">
+    					<span class="opensans size24 bold grey2">{{society.society_type_quality}} </span><br/>
+    					Society Rating
+    				</div>
+            <div class="col-md-6 bordertype1 padding15">
+    					<span class="opensans size24 bold grey2">{{society.machadalo_index}}</span><br/>
+    					Machadalo Index
+    				</div>
+    				<div class="col-md-6 bordertype1 padding15">
+    					<span class="opensans size24 bold grey2">{{totalInventoryCount.totalAddSpaces}}</span><br/>
+    					Total Adspaces
+    				</div>
+    				<div class="clearfix"></div><br>
+    				  <div class="hpadding20  opensans">
+                <!-- <button  style="width: 346px;height: 56px;font-size: 25px;color:gray;background-color: white;" class="btn btn-primary" ng-disabled="disable" ng-click = "shortlistThis(society.supplier_id)" ><span style="color:skyblue;" class="glyphicon glyphicon-plus"></span> Shortlist</button> -->
+                <a class="add2fav margtop5" ng-click = "shortlistThis(society.supplier_id)">Shortlist</a>
+                <div id="alert_placeholder" ></div>
+    					  <a class="booknow margtop20 btnmarg">Total Shortlisted &nbsp;&nbsp;<span class="badge">{{societies_count}}</span></a><br><br>
+                 <paginator-bar></paginator-bar>
+    				  </div>
+    			</div>
+</div>
+<!-- End: Image display and society name section -->
+<!-- Start: Inventory Details section -->
+
+<div class = "container mt25 offset-0">
+    <div class = "col-md-8 pagecontainer2 offset-0">
+        <div class = "cstyle10"></div>
+            <ul class = "nav nav-tabs" id="myTab">
+              <li class="active"><a data-toggle="tab" data-target="#info"><span><img src="icons/info.png"></img>&nbsp;</span><span class="hidetext">Info</span>&nbsp;</a></li>
+              <li  class=""><a data-toggle="tab" data-target="#posters"></span><span><img src="icons/poster.png"></img>&nbsp;</span><span class="hidetext">Poster</span>&nbsp;</a></li>
+              <li class=""><a data-toggle="tab" data-target="#standees"></span><span><img src="icons/stand.png"></img>&nbsp;</span><span class="hidetext">Standee</span>&nbsp;</a></li>
+              <li class=""><a data-toggle="tab" data-target="#stalls"></span><span><img src="icons/stall.png"></img>&nbsp;</span><span class="hidetext">Stall</span>&nbsp;</a></li>
+              <li  class=""><a data-toggle="tab" data-target="#cardisplays"></span><span><img src="icons/car.png"></img>&nbsp;</span><span class="hidetext">Car Display</span>&nbsp;</a></li>
+              <li class=""><a data-toggle="tab" data-target="#flier"></span><span><img src="icons/flier.png"></img>&nbsp;</span><span class="hidetext">Fliers</span>&nbsp;</a></li>
+            </ul>
+        <div class="tab-content4" style="font-face:boldFont">
+           <div id="info" class="tab-pane fade active in">
+             <societyinfo-tab><societyinfo-tab>
+           </div>
+           <!-- Start: Posters tab section -->
+           <div id="posters" class="tab-pane fade">
+  <!-- <div class="hpadding20"> -->
+  <div class="row">
+
+<!--<div id="pager">-->
+    <div class="col-md-10" style="text-align: center;">
+        <div class="row">
+<!-- Start: Carousel added to slide images-->
+          <div class="carousel" id="slider-Poster" style="margin-left:40px;">
+
+ <div class="carousel-inner" >
+     <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in PosterImages">
+       <div class="row">
+         <img ng-src="{{image}}"  width="300px" height="180"/>
+         <img ng-src="{{PosterImages[$index+1]}}"  width="300px" height="180"  ng-if="PosterImages[getSecondIndex(PosterImages,$index+1)]"/>
+       </div>
+       <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider-Poster" role="button" data-slide="prev">
+        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+        <span class="sr-only">Previous</span>
+       </a>
+       <a class="right carousel-control" data-toggle="carousel" data-target = "#slider-Poster" role="button" data-slide="next">
+        <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+        <span class="sr-only">Next</span>
+       </a>
+     </div>
+ </div>
+</div>
+<!--End: Carousel added to slide images-->
+    </div>
+   </div><br>
+</div>
+<div class="hpadding20">
+   <div class="line4"></div>
+     <span class="opensans dark size16 bold" style="color:#000; font-style:bold">Size & Number</span><br>
+     <span class="opensans dark size16 bold grey">Total no.of Posters Ad Spaces : {{totalInventoryCount.totalPoster}}</span><br><br>
+</div>
+
+<div class="hpadding20">
+   <div class="col-md-4 offset-0">
+     <div class="sctext left margtop15" style="color:#0fa491">{{inventoryDetails.nb_count}}<br>
+        <center><label style="font-size:15px; color:#c0c0c0">Notice board spaces</label></center></div>
+        <div class="clearfix"></div>
+   </div>
+   <div class="col-md-4 offset-0">
+      <div class="sctext left margtop15" style="color:#0fa491">
+      <span ng-if="inventoryDetails.nb_A4_allowed">A4</span>
+      <span ng-if="inventoryDetails.nb_A3_allowed">,A3</span> <br>
+        <center><label style="font-size:15px; color:#c0c0c0">Poster size</label></center>
+      </div>
+      <div class="clearfix"></div>
+   </div>
+   <div class="col-md-4 offset-0">
+      <div class="sctext left margtop15" style="color:#0fa491">Pin Insertion<br>
+        <center><label style="font-size:15px; color:#c0c0c0">Type of notice board</label></center>
+      </div>
+      <div class="clearfix"></div>
+   </div>
+   <div class="clearfix"></div><br/>
+</div>
+
+<div class="hpadding20">
+   <div class="col-md-4 offset-0">
+      <div class="sctext left margtop15 " style="color:#0fa491">{{inventoryDetails.lift_count}}<br>
+        <center><label style="font-size:15px; color:#c0c0c0">Lift spaces</label></center>
+      </div>
+      <div class="clearfix"></div>
+   </div>
+   <div class="col-md-4 offset-0">
+      <div class="sctext left margtop15" style="color:#0fa491">A4<br>
+        <center><label style="font-size:15px; color:#c0c0c0">Poster size</label></center>
+      </div>
+      <div class="clearfix"></div>
+   </div>
+   <div class="col-md-4 offset-0">
+      <div class="sctext left margtop15" style="color:#0fa491">5<br>
+         <center><label style="font-size:15px; color:#c0c0c0">Lift Capacity</label></center>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+    <div class="clearfix"></div><br/>
+</div>
+
+<div class="hpadding20">
+   <div class="line4"></div>
+     <span class="opensans dark size16 bold grey" style="color:#000; font-style:bold">Booking Information</span><br><br>
+</div>
+<div class="hpadding20">
+   <div class="col-md-4 offset-0">
+     <div class="sctext left margtop15" style="color:#0fa491">Minimum Weekly<br>
+       <center><label style="font-size:15px; color:#c0c0c0">Display Duration</label></center>
+     </div>
+     <div class="clearfix"></div>
+   </div>
+   <div class="col-md-4 offset-0">
+      <div class="sctext left margtop15" style="color:#0fa491">{{society.tower_count}}<br>
+        <center><label style="font-size:15px; color:#c0c0c0">Minimum Booking</label></center>
+      </div>
+      <div class="clearfix"></div>
+   </div>
+   <div class="col-md-4 offset-0"></div>
+   <div class="clearfix"></div><br/>
+</div>
+</div>
+<!-- End: Posters tab section -->
+<!-- Start: Standee tab section -->
+<div id="standees" class="tab-pane fade">
+    <div class="hpadding20">
+    <div class="row">
+       <div class="col-md-10" style="text-align: center;">
+          <div class="row">
+          <!--Start: Carousel added to slide images-->
+            <div class="carousel" id="slider-standee" style="margin-left:40px;">
+              <div class="carousel-inner" >
+               <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in StandeeImages">
+                 <div class="row" >
+                     <img ng-src="{{image}}"  width="300px" height="180"/>
+                     <img ng-src="{{StandeeImages[$index+1]}}" width="300px" height="180" ng-if="StandeeImages[getSecondIndex(StandeeImages,$index+1)]"/>
+                 </div>
+                 <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider-standee" role="button" data-slide="prev">
+                  <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                  <span class="sr-only">Previous</span>
+                 </a>
+                 <a class="right carousel-control"  data-toggle="carousel" data-target = "#slider-standee" role="button" data-slide="next">
+                  <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                  <span class="sr-only">Next</span>
+                 </a>
+               </div>
+             </div>
+            </div>
+          <!--End: Carousel added to slide images-->
+          </div>
+       </div>
+
+    </div><br>
+</div>
+<div class="hpadding20">
+    <div class="line4"></div>
+    <span class="opensans dark size16 bold grey" style="color:#000; font-style:bold">Size & Number</span><br>
+    <span class="opensans dark size16 bold grey">Total Standee Spaces: {{inventoryDetails.total_standee_count}}</span><br><br>
+</div>
+<div class="hpadding20">
+   <div class="col-md-4 offset-0">
+      <div class="sctext left margtop15" style="color:#0fa491">5<br>
+        <center><label style="font-size:15px; color:#c0c0c0">Lobby Spaces</label></center>
+      </div>
+        <div class="clearfix"></div>
+   </div>
+   <div class="col-md-4 offset-0">
+      <div class="sctext left margtop15 " style="color:#0fa491">
+        <span ng-if="inventoryDetails.standee_small">Small</span>
+        <span ng-if="inventoryDetails.standee_medium">, Medium</span><br>
+          <center><label style="font-size:15px; color:#c0c0c0">Standees size</label></center>
+      </div>
+      <div class="clearfix"></div>
+   </div>
+   <div class="col-md-4 offset-0">
+       <div class="sctext left margtop15 " style="color:#0fa491">Near Lift<br>
+          <center><label style="font-size:15px; color:#c0c0c0">Standee Area</label></center>
+       </div>
+       <div class="clearfix"></div>
+   </div>
+   <div class="clearfix"></div><br/>
+</div>
+
+<div class="hpadding20">
+    <div class="line4"></div>
+    <span class="opensans dark size16 bold grey" style="color:#000; font-style:bold">Booking Information</span><br><br>
+</div>
+<div class="hpadding20">
+    <div class="col-md-4 offset-0">
+        <div class="sctext left margtop15 " style="color:#0fa491">Minimum Weekly<br>
+           <center><label style="font-size:15px; color:#c0c0c0">Display Duration</label></center>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="col-md-4 offset-0">
+        <div class="sctext left margtop15" style="color:#0fa491">{{society.tower_count}}<br>
+            <center><label style="font-size:15px; color:#c0c0c0">Minimum Booking</label></center>
+        </div>
+            <div class="clearfix"></div>
+    </div>
+    <div class="col-md-4 offset-0"></div>
+    <div class="clearfix"></div><br/>
+</div>
+</div>
+<!-- End: Standee tab section -->
+<!-- Start: Stall tab section -->
+<div id="stalls" class="tab-pane fade">
+  <div class="hpadding20">
+    <div class="row">
+       <div class="col-md-10" style="text-align: center;">
+           <div class="row">
+          <!-- Start: Carousel added to slide images -->
+             <div class="carousel" id="slider-Stall" style="margin-left:40px;">
+            <div class="carousel-inner" >
+                <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in StallImages">
+                  <div class="row">
+                    <img ng-src="{{image}}"  width="300px" height="180"/>
+                    <img ng-src="{{StallImages[$index+1]}}"  width="300px" height="180" ng-if="StallImages[getSecondIndex(StallImages,$index+1)]"/>
+                  </div>
+                  <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider-Stall" role="button" data-slide="prev">
+                   <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                   <span class="sr-only">Previous</span>
+                  </a>
+                  <a class="right carousel-control"   data-toggle="carousel" data-target = "#slider-Stall" role="button" data-slide="next">
+                   <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                   <span class="sr-only">Next</span>
+                  </a>
+                </div>
+            </div>
+         </div>
+      <!-- End: Carousel added to slide images -->
+           </div>
+      </div>
+    </div><br>
+</div>
+
+<div class="hpadding20">
+    <div class="line4"></div>
+      <span class="opensans dark size16 bold grey" style="color:#000; font-style:bold">Size & Number</span><br>
+      <span class="opensans dark size16 bold grey">Total no.of Stall Spaces : {{inventoryDetails.total_stall_count}}</span><br><br>
+</div>
+      <!--1st row-->
+<div class="hpadding20">
+    <div class="col-md-4 offset-0">
+        <div class="sctext left margtop15 grey">Type of Stalls<br>
+             <center><label style="font-size:15px; color:#c0c0c0"></label></center>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="col-md-4 offset-0">
+        <div class="sctext left margtop15 grey">Display Day Freebies<br>
+            <center><label style="font-size:15px; color:#c0c0c0"></label></center>
+        </div>
+        <div class="clearfix"></div>
+   </div>
+   <div class="col-md-4 offset-0">
+      <div class="sctext left margtop15 grey">Pre-Campaign Freebies<br>
+         <center><label style="font-size:15px; color:#c0c0c0"></label></center>
+      </div>
+      <div class="clearfix"></div>
+   </div>
+   <div class="clearfix"></div><br/>
+</div>
+<!--2nd row-->
+<div class="hpadding20">
+    <div class="col-md-4 offset-0">
+        <div class="sctext left margtop15" style="color:#0fa491">Canopy/Small Stall<br>
+            <label style="font-size:15px; color:#c0c0c0">36sqft</label></center>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="col-md-4 offset-0">
+        <div class="sctext left margtop15" style="color:#0fa491">2 Standee<br>
+            <label style="font-size:15px; color:#c0c0c0"></label>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="col-md-4 offset-0">
+       <div class="sctext left margtop15 " style="color:#0fa491">1 Poster allowed in each Tower for 2 days prior to the booking date<br>
+          <center><label style="font-size:15px; color:#c0c0c0"></label></center>
+       </div>
+       <div class="clearfix"></div>
+    </div>
+    <div class="clearfix"></div><br/>
+</div>
+<!--Booking Information-->
+<div class="hpadding20">
+    <div class="line4"></div>
+    <span class="opensans dark size16 bold grey" style="color:#000; font-style:bold">Booking Information</span><br><br>
+</div>
+
+<div class="hpadding20">
+    <div class="col-md-4 offset-0">
+       <div class="sctext left margtop15 " style="color:#0fa491">Common Area
+       <!-- {{stall.stall_location}} -->
+       <br>
+       <center><label style="font-size:15px; color:#c0c0c0"> Location</label></center>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+    <div class="col-md-4 offset-0">
+       <div class="sctext left margtop15" style="color:#0fa491">One Day<br>
+          <center><label style="font-size:15px; color:#c0c0c0">Display Duration</label></center>
+      </div>
+       <div class="clearfix"></div>
+    </div>
+    <div class="col-md-4 offset-0">
+       <div class="sctext left margtop15" style="color:#0fa491">One Day<br>
+          <center><label style="font-size:15px; color:#c0c0c0">Minimum Booking Period</label></center>
+      </div>
+       <div class="clearfix"></div>
+    </div>
+    <div class="col-md-4 offset-0"></div>
+    <div class="clearfix"></div><br/>
+</div>
+<!--Time Slots Information-->
+<div class="hpadding20">
+    <div class="line4"></div>
+    <span class="opensans dark size16 bold grey" style="color:#000; font-style:bold">Time Slots</span><br><br>
+</div>
+<div class="hpadding20">
+     <div class="col-md-4 offset-0">
+         <div class="sctext left margtop15" style="color:#0fa491">10:00am - 7:00pm<br>
+             <label class="left" style="font-size:15px; color:#c0c0c0">First Time Slot</label>
+         </div>
+         <div class="clearfix"></div>
+    </div>
+    <div class="col-md-4 offset-0">
+        <div class="sctext left margtop15" style="color:#0fa491">1:00pm - 9:00pm<br>
+            <label class="left" style="font-size:15px; color:#c0c0c0">Second Time Slot</label>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="col-md-4 offset-0"></div>
+    <div class="clearfix"></div><br/>
+</div>
+</div><!-- End: Stall tab ends here -->
+<!-- Start: Cardisplay tab section -->
+<div id="cardisplays" class="tab-pane fade">
+    <car-tab><car-tab>
+</div>
+<!-- End: Cardisplay tab section -->
+<!-- Start: Fliers tab section -->
+<div id="flier" class="tab-pane fade">
+    <!-- <fliers-tab><fliers-tab> -->
+  <div class="hpadding20">
+ <div class="row">
+  <div class="col-md-10" style="text-align: center;">
+   <div class="row">
+
+<!-- Start: Carousel added to slide images -->
+    <div class="carousel" id="slider-Flier" style="margin-left:40px;">
+    <div class="carousel-inner" >
+    <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in FlierImages">
+      <div class="row">
+        <img ng-src="{{image}}" width="300px" height="180"/>
+        <img ng-src="{{FlierImages[$index+1]}}"  width="300px" height="180" />
+      </div>
+      <a class="left carousel-control" data-toggle="carousel" data-target = "#slider-Flier" role="button" data-slide="prev">
+       <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+       <span class="sr-only">Previous</span>
+      </a>
+      <a class="right carousel-control"   data-toggle="carousel" data-target = "#slider-Flier" role="button" data-slide="next">
+       <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+       <span class="sr-only">Next</span>
+      </a>
+    </div>
+</div>
+</div>
+<!-- End: Carousel added to slide images -->
+   </div>
+  </div>
+ </div><br>
+</div>
+<div ng-if="inventoryDetails.d2d_allowed">
+ <div class="hpadding20">
+  <div class="line4"></div>
+    <span class="opensans dark size16 bold grey" style="color:#000; font-style:bold">Door to Door Flier Distribution</span><br>
+    <span class="opensans dark size16 bold grey">Frequency of flier distribution :{{inventoryDetails.flier_frequency}}/Month</span><br><br>
+  </div>
+<!--1st row-->
+<div class="hpadding20" style="text-align:center">
+  <div class="col-md-4 offset-0">
+    <div class="sctext left margtop15" style="color:#0fa491"><span>{{flatcountflier}}</span><br>
+      <center><label style="font-size:15px; color:#c0c0c0">Total no.of Flats</label></center>
+    </div>
+    <div class="clearfix"></div>
+  </div>
+  <div class="col-md-4 offset-0"></div>
+  <div class="col-md-4 offset-0"></div>
+  <div class="clearfix"></div><br/>
+</div>
+</div>
+<div ng-if="inventoryDetails.mailbox_allowed">
+<div class="hpadding20">
+  <div class="line4"></div>
+    <span class="opensans dark size16 bold grey" style="color:#000; font-style:bold">Mailbox Flier Distribution</span><br>
+    <span class="opensans dark size16 bold grey">Frequency of flier distribution : {{inventoryDetails.flier_frequency}}/Month</span><br><br>
+</div>
+<div class="hpadding20" style="text-align:center">
+  <div class="col-md-4 offset-0">
+    <div class="sctext left margtop15" style="color:#0fa491"><span>{{flatcountflier}}</span><br>
+      <center><label style="font-size:15px; color:#c0c0c0">Total No.of mailbox</label></center>
+    </div>
+    <div class="clearfix"></div>
+  </div>
+  <div class="col-md-4 offset-0"></div>
+  <div class="col-md-4 offset-0"></div>
+  <div class="clearfix"></div><br/>
+</div>
+</div>
+</div><!-- End: Fliers tab section -->
+<paginator-bar></paginator-bar>
+  </div><br/>
+    </div>
+        <div class="col-md-4">
+          <!-- <paginator-bar></paginator-bar>  -->
+        </div>
+</div>
+<div></div>
+
+<!-- End: Inventory Details section -->
