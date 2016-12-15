@@ -99,11 +99,11 @@ body{
 	margin-left: 28px;
 }
 .headcol {
-            position:absolute;
-            width:5em;
-            left:0;
-            top:auto;
-            border-right: 0px none black;
-            border-top-width:3px; /*only relevant for first row*/
-            margin-top:-3px; /*compensate for top border*/
-        }
+  position:absolute;
+  width:5em;
+  left:0;
+  top:auto;
+  border-right: 0px none black;
+  border-top-width:3px; /*only relevant for first row*/
+  margin-top:-3px; /*compensate for top border*/
+}

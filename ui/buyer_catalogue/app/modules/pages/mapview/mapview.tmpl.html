@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="modules/pages/mapview/mapview.tmpl.css"/>
+<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <script src="https://rawgithub.com/eligrey/FileSaver.js/master/FileSaver.js" type="text/javascript"></script>
 <!-- <div><nav-bar></nav-bar></div> -->
 <!-- Start: Center and Radius Detail Section -->
@@ -189,6 +190,9 @@
 </div>
 </div>
 </div>
+<!--Start: code added for adding loading image  -->
+<div ng-loading="center_data"></div>
+<!--End: code added for adding loading image  -->
 
 <!-- Map Starts here -->
 <div class="col-md-3 map-width" ng-if="!show_societies">

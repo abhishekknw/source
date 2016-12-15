@@ -159,12 +159,14 @@ angular.module('catalogueApp')
 				console.log("Successfully Saved");
 				console.log("response is : ", response);
 				$scope.proposal_id = response;
+				$scope.checkProposal = false;
 				createProposalService.setProposalId($scope.proposal_id);
 				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){
 				alert("Error Occured");
 				console.log("Error");
+				alert("Error Occured");
 				if(typeof(response) != typeof(12)){
 					console.log("response is ", response);
 					$scope.errormsg = response.message;
