@@ -1,78 +1,66 @@
-<html>
-  <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
-  <div class="page-container">
-    <form name="proposalDetails" ng-hide="showEdit">
-      <div class="panel panel-default business-panel">
-        <div class="table">
+<link rel="stylesheet" href="modules/pages/currentProposal/currentProposal.tmpl.css" />
+<div><nav-bar></nav-bar></div>
+  <div ng-if="isParentProposal == 'false'">
+    <button class="btn btn-info active" ng-click="showHistory()">Back to Previous Page</button>
+  </div>
+<form name="proposalDetails" ng-hide="showEdit" class = "proposal-panel">
+  <div class = "container">
+      <div class="row">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <Label>Proposal Id:</Label><span>{{proposal.proposal_id}}</span>
+            <Label class = "labels">Name of Proposal:</Label><span>{{proposal.name}}</span>
+            <Label class = "labels">Tentative Cost:</Label><span>{{proposal.tentative_cost}} </span>
+            <a class = "labels" ng-if="isParentProposal == 'true'" href="" ng-click="editInitialProposal(proposal.proposal_id)"><b>Edit Proposal</b></a>
+            <a class = "labels" data-target="#invoiceModal" data-toggle="modal"><b>Enter Invoice Details</b></a>
+          </div >
           <div class="row">
-          	<div class="col-md-3"><label>Proposal Id:</label></div>
-            <div class="col-md-3">{{proposal.proposal_id}}</div>
-            <div class="col-md-3"><label>Name of Proposal:</label></div>
-            <div class="col-md-3">{{proposal.name}}</div>
+            <div class="col-md-10 center-heading"><label>Center Details:</label></div>
           </div>
           <div class="row">
-            <div class="col-md-5"><label>Center Details:</label></div>
+            <div class="col-md-2 table-align" ng-repeat="header in centerheaders"><b>{{header.header}}</b></div>
           </div>
-          <div class="row">
-            <div class="table table-align">
-              <div class="row">
-                <div class="col-md-2 table-align"><b>Serial No</b></div>
-              	<div class="col-md-2 table-align"><b>Center Name</b></div>
-                <div class="col-md-2 table-align"><b>Area</b></div>
-                <div class="col-md-2 table-align"><b>Sub-Area</b></div>
-                <div class="col-md-2 table-align"><b>Radius</b></div>
-              </div>
-              <div ng-repeat="center in center_data">
-              <div class="row">
-                <div class="col-md-2 table-align">{{$index+1}}</div>
-                <div class="col-md-2 table-align">{{center.center.center_name}}</div>
-                <div class="col-md-2 table-align">{{center.center.area}}</div>
-                <div class="col-md-2 table-align">{{center.center.subarea}}</div>
-                <div class="col-md-2 table-align">{{center.center.radius}}</div>
-              </div>
+          <div ng-repeat="center in center_data">
+            <div class="row">
+              <div class="col-md-2 table-align">{{$index+1}}</div>
+              <div class="col-md-2 table-align">{{center.center.center_name}}</div>
+              <div class="col-md-2 table-align">{{center.center.area}}</div>
+              <div class="col-md-2 table-align">{{center.center.subarea}}</div>
+              <div class="col-md-2 table-align">{{center.center.radius}}</div>
             </div>
-            <!-- <div>
-              <a href="" ng-click="editInitialProposal(proposal.proposal_id)">Edit Initial Proposal</a>
-            </div> -->
           </div>
-        </div>
+         </div>
       </div>
-    </div>
   </div>
 </form>
-<!--Start : shortlisted suppliers -->
-<div class = "row">
-  <div class="col-md-2 aligndropdown" style="margin-left:30px;"><label>Select Center To View Supplier Details:</label></div>
-  <div class="col-md-2">
-    <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
-      <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
-     </select>
-  </div>
+<div class="col-md-3" style="margin-left:83px;"><label>Select Advertising Location:</label>
+  <select ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
+    <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
+  </select>
 </div>
-<div class = "container page-panel" style="margin:0px;" ng-if="current_center_id">
+<!-- Start: Display supplier details for selected center-->
+<div class = "container page-panel"  ng-if="current_center_id">
   <div class = "row">
-  <!-- Start: supplier details view -->
-  <div class="col-md-4 table-responsive" style="width: 1000px; height: 450px">
     <div ng-if="current_center_data.filters.society_allowed">
-      <h4 class="panel-heading head" ng-click="isSociety=!isSociety">Society Details</h4>
-      <div uib-collapse="! isSociety">
-      <table class="table table-bordered society">
-        <thead>
-          <tr>
-            <!-- <th class="col-md-2 table-heading">#</th> -->
-            <th class="col-md-2 table-heading">Center</th>
-            <th class="col-md-3 table-heading">Society</th>
-            <th ng-if="current_center_data.societyFilters.inv_poster" class="col-md-0 table-heading">Poster Count</th>
-            <th ng-if="current_center_data.societyFilters.inv_standee" class="col-md-0 table-heading">Standee Count</th>
-            <th ng-if="current_center_data.societyFilters.inv_stall"  class="col-md-0 table-heading">Stall Count</th>
-            <th ng-if="current_center_data.societyFilters.inv_flier" class="col-md-0 table-heading">Flyer Count</th>
-            <th class = "col-md-4">Status</th>
-            <th class = "col-md-4">Action</th>
-          </tr>
-        </thead>
-        <tbody ng-repeat=" supplier in current_center_data.suppliers['RS']">
-          	<tr ng-if="supplier.status != 'R'">
-                <!-- <td>{{$index+1}}</td> -->
+      <div class = "col-md-12"><label class = "society-heading" ng-click="isSociety=!isSociety">Society Details</label></div>
+      <div class="col-md-4 table-responsive" style="width: 1245px; height: 450px">
+       <h5 class="panel-heading head" ng-click="isSociety=!isSociety"><b>Shortlisted Society Details</b></h5>
+        <div uib-collapse="! isSociety">
+          <table class="table table-bordered society">
+            <thead>
+              <tr>
+               <th class="col-md-2 table-heading">Center</th>
+               <th class="col-md-3 table-heading">Society</th>
+               <th ng-if="current_center_data.societyFilters.inv_poster" class="col-md-0 table-heading">Poster Count</th>
+               <th ng-if="current_center_data.societyFilters.inv_standee" class="col-md-0 table-heading">Standee Count</th>
+               <th ng-if="current_center_data.societyFilters.inv_stall"  class="col-md-0 table-heading">Stall Count</th>
+               <th ng-if="current_center_data.societyFilters.inv_flier" class="col-md-0 table-heading">Flyer Count</th>
+               <th class = "col-md-4">Status</th>
+               <th class = "col-md-4">Action</th>
+              </tr>
+            </thead>
+            <tbody ng-repeat=" supplier in current_center_data.suppliers['RS']">
+              <tr ng-if="supplier.status != 'R'">
                 <td>{{current_center_data.center.center_name}}</td>
                 <td>{{supplier.society_name}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_poster">{{supplier.tower_count}}</td>
@@ -81,262 +69,90 @@
                 <td ng-if="current_center_data.societyFilters.inv_flier">{{supplier.flat_count}}</td>
                 <td ng-if="supplier.status == 'S'">Shortlisted</td>
                 <td ng-if="supplier.status == 'B'">Buffer</td>
-
                 <td>
                   <a ng-href="" ng-if="supplier.status == 'S'" ng-click="setSupplierStatus(supplier,'B')">Buffer</a>
                   <a ng-href="" ng-if="supplier.status == 'B'" ng-click="setSupplierStatus(supplier,'S')">Shortlist</a>
-                </br>
                   <a ng-href="" ng-if="supplier.status != 'R'" ng-click="setSupplierStatus(supplier,'R')">Remove</a>
-                  <!-- <button class="btn btn-danger active" ng-click="setSupplierStatus(supplier,'R')">Remove</button> -->
                 </td>
-            	</tr>
-        </tbody>
-      </table>
-    </div>
-    <div uib-collapse="! isSociety">
-      <h4 class="panel-heading head" ng-click="isSociety=!isSociety">Details of Removed Societies</h4>
-    <table class="table table-bordered society">
-      <thead>
-        <tr>
-          <!-- <th class="col-md-2 table-heading">#</th> -->
-          <th class="col-md-2 table-heading">Center</th>
-          <th class="col-md-3 table-heading">Society</th>
-          <th ng-if="current_center_data.societyFilters.inv_poster" class="col-md-0 table-heading">Poster Count</th>
-          <th ng-if="current_center_data.societyFilters.inv_standee" class="col-md-0 table-heading">Standee Count</th>
-          <th ng-if="current_center_data.societyFilters.inv_stall"  class="col-md-0 table-heading">Stall Count</th>
-          <th ng-if="current_center_data.societyFilters.inv_flier" class="col-md-0 table-heading">Flyer Count</th>
-          <th class = "col-md-4">Action</th>
-        </tr>
-      </thead>
-
-      <tbody ng-repeat=" supplier in current_center_data.suppliers['RS']">
-          <tr ng-if="supplier.status == 'R'">
-              <!-- <td>{{$index+1}}</td> -->
-              <td>{{current_center_data.center.center_name}}</td>
-              <td>{{supplier.society_name}}</td>
-              <td ng-if="current_center_data.societyFilters.inv_poster">{{supplier.tower_count}}</td>
-              <td ng-if="current_center_data.societyFilters.inv_standee">{{supplier.total_standee_count}}</td>
-              <td ng-if="current_center_data.societyFilters.inv_stall">{{supplier.total_stall_count}}</td>
-              <td ng-if="current_center_data.societyFilters.inv_flier">{{supplier.flat_count}}</td>
-              <td>
+              </tr>
+            </tbody>
+          </table>
+        </div><!-- uib collapse div ends here-->
+        <h5 class="panel-heading head" ng-click="isSociety=!isSociety"><b>Details of Removed Societies</b></h5>
+        <div uib-collapse="! isSociety">
+          <table class="table table-bordered society">
+           <thead>
+             <tr>
+               <th class="col-md-2 table-heading">Center</th>
+               <th class="col-md-3 table-heading">Society</th>
+               <th ng-if="current_center_data.societyFilters.inv_poster" class="col-md-0 table-heading">Poster Count</th>
+               <th ng-if="current_center_data.societyFilters.inv_standee" class="col-md-0 table-heading">Standee Count</th>
+               <th ng-if="current_center_data.societyFilters.inv_stall"  class="col-md-0 table-heading">Stall Count</th>
+               <th ng-if="current_center_data.societyFilters.inv_flier" class="col-md-0 table-heading">Flyer Count</th>
+               <th class = "col-md-4">Action</th>
+             </tr>
+           </thead>
+           <tbody ng-repeat=" supplier in current_center_data.suppliers['RS']">
+             <tr ng-if="supplier.status == 'R'">
+               <td>{{current_center_data.center.center_name}}</td>
+               <td>{{supplier.society_name}}</td>
+               <td ng-if="current_center_data.societyFilters.inv_poster">{{supplier.tower_count}}</td>
+               <td ng-if="current_center_data.societyFilters.inv_standee">{{supplier.total_standee_count}}</td>
+               <td ng-if="current_center_data.societyFilters.inv_stall">{{supplier.total_stall_count}}</td>
+               <td ng-if="current_center_data.societyFilters.inv_flier">{{supplier.flat_count}}</td>
+               <td>
                 <button class="btn btn-danger active" ng-click="setSupplierStatus(supplier,'S')">Shortlist</button>
-              </td>
-            </tr>
-      </tbody>
-    </table>
-  </div>
-  </div>
-      <!--Start : adding table for corporates  -->
-      <div ng-if="current_center_data.filters.corporate_allowed">
-      <h4 class="panel-heading head" ng-click="isCorporate=!isCorporate" >Corporate Details</h4>
-      <div uib-collapse="!isCorporate">
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <!-- <th class="col-md-2 table-heading">#</th> -->
-            <th class="col-md-2 table-heading">Center</th>
-            <th class="col-md-3 table-heading">Corporate</th>
-            <th ng-if="current_center_data.corporateFilters.inv_poster" class="col-md-0 table-heading">Poster Count</th>
-            <th ng-if="current_center_data.corporateFilters.inv_standee" class="col-md-0 table-heading">Standee Count</th>
-            <th ng-if="current_center_data.corporateFilters.inv_stall" class="col-md-0 table-heading">Stall Count</th>
-            <th ng-if="current_center_data.corporateFilters.inv_flier" class="col-md-0 table-heading">Flyer Count</th>
-            <th class = "col-md-4">Status</th>
-            <th class = "col-md-4">Action</th>
-          </tr>
-        </thead>
-        <tbody ng-repeat=" supplier in current_center_data.suppliers['CP']">
-          	<tr ng-if="supplier.status != 'R'">
-                <!-- <td>{{$index+1}}</td> -->
-                <td>{{current_center_data.center.center_name}}</td>
-                <td>{{supplier.name}}</td>
-                <td ng-if="current_center_data.corporateFilters.inv_poster">{{supplier.total_poster_count}}</td>
-                <td ng-if="current_center_data.corporateFilters.inv_standee">{{supplier.total_standee_count}}</td>
-                <td ng-if="current_center_data.corporateFilters.inv_stall">{{supplier.total_stall_count}}</td>
-                <td ng-if="current_center_data.corporateFilters.inv_flier">{{supplier.flier_frequency}}</td>
-                <td ng-if="supplier.status == 'S'">Shortlisted</td>
-                <td ng-if="supplier.status == 'B'">Buffer</td>
-
-                <td>
-                  <a ng-href="" ng-if="supplier.status == 'S'" ng-click="setSupplierStatus(supplier,'B')">Buffer</a>
-                  <a ng-href="" ng-if="supplier.status == 'B'" ng-click="setSupplierStatus(supplier,'S')">Shortlist</a>
-                </br>
-                  <a ng-href="" ng-if="supplier.status != 'R'" ng-click="setSupplierStatus(supplier,'R')">Remove</a>
-                  <!-- <button class="btn btn-danger active" ng-click="setSupplierStatus(supplier,'R')">Remove</button> -->
-                </td>
-            	</tr>
-        </tbody>
-      </table>
+               </td>
+             </tr>
+           </tbody>
+          </table>
+          </div>
+      </div>
     </div>
-    <div uib-collapse="!isCorporate">
-      <h4 class="panel-heading head" ng-click="isCorporate=!isCorporate" >Details of Removed Corporates</h4>
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <!-- <th class="col-md-2 table-heading">#</th> -->
-          <th class="col-md-2 table-heading">Center</th>
-          <th class="col-md-3 table-heading">Corporate</th>
-          <th ng-if="current_center_data.corporateFilters.inv_poster" class="col-md-0 table-heading">Poster Count</th>
-          <th ng-if="current_center_data.corporateFilters.inv_standee" class="col-md-0 table-heading">Standee Count</th>
-          <th ng-if="current_center_data.corporateFilters.inv_stall" class="col-md-0 table-heading">Stall Count</th>
-          <th ng-if="current_center_data.corporateFilters.inv_flier" class="col-md-0 table-heading">Flyer Count</th>
-          <th class = "col-md-4">Action</th>
-        </tr>
-      </thead>
-      <tbody ng-repeat=" supplier in current_center_data.suppliers['CP']">
-          <tr ng-if="supplier.status == 'R'">
-              <!-- <td>{{$index+1}}</td> -->
-              <td>{{current_center_data.center.center_name}}</td>
-              <td>{{supplier.name}}</td>
-              <td ng-if="current_center_data.corporateFilters.inv_poster">{{supplier.total_poster_count}}</td>
-              <td ng-if="current_center_data.corporateFilters.inv_standee">{{supplier.total_standee_count}}</td>
-              <td ng-if="current_center_data.corporateFilters.inv_stall">{{supplier.total_stall_count}}</td>
-              <td ng-if="current_center_data.corporateFilters.inv_flier">{{supplier.flier_frequency}}</td>
-              <td>
-                <button class="btn btn-danger active" ng-click="setSupplierStatus(supplier,'S')">Shortlist</button>
-              </td>
-            </tr>
-      </tbody>
-    </table>
-    </div>
-
-    <!--End : adding table for corporates  -->
   </div>
-<!--Start: removed suppliers details  -->
-
-
-<!--End: removed suppliers details  -->
-
-
 </div>
-  </div><!-- row div ends here-->
-  <button class="btn btn-default" ng-click="updateProposal()">Update Details</button>
+<!-- End: Display supplier details for selected center-->
+<div class = "col-md-12">
+  <button class="btn btn-danger update-button" ng-click="updateProposal()">Update Details</button>
+</div>
 
-</div><!-- containner div ends here-->
-
-<!--End : sortlisted suppliers ends here     -->
-  <div ng-repeat="propCenter in proposal.centers track by $index" ng-show="propCenter.societies_buffered_count>0" class="panel panel-default business-panel">
-  <h4 class="panel-heading head">Buffered Societies</h4>
-  <div class="table-responsive">
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th class="col-md-2 table-heading">Society</th>
-          <th class="col-md-2 table-heading">Center</th>
-          <th class="col-md-2 table-heading">Poster Count</th>
-          <th class="col-md-2 table-heading">Standee Count</th>
-          <th class="col-md-2 table-heading">Stall Count</th>
-          <th class="col-md-2 table-heading">Flyer Count</th>
-        </tr>
-      </thead>
-      <tbody ng-repeat="society in proposal.centers track by $index">
-        	<tr ng-repeat="center in society.societies_buffered track by $index">
-              <td>{{center.society_name}}</td>
-              <td>{{center.center}}</td>
-              <td>0</td>
-              <td>{{center.total_standee_count}}</td>
-              <td>{{center.total_stall_count}}</td>
-              <td>{{center.flier_frequency}}</td>
-          	</tr>
-      </tbody>
-     </table>
+<!--Start: Code for Invoice Modal Window -->
+<div id="invoiceModal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Invoice Details</h4>
+        <hr/>
+        <div class = "modal-body" style = "height: 300px;">
+          <div class = "row form-group">
+            <span class="col-md-3"><label>Invoice Number</label></span>
+            <span class="col-md-3">
+              <input type = "text" name="invoicenumber" id="invoicenumber" class = "form-control">
+            </span>
+          </div>
+          <div class="row form-group">
+            <span class="col-md-3"><label>Start Date:</label></span>
+            <span class="col-md-3">
+              <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+            </span>
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+            </span>
+            <span class="col-md-3"><label>End Date:</label></span>
+            <span class="col-md-3">
+              <input type="text" ng-model="model.tentative.end_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup2" min-date="key.start_date" datepicker-options="dateOptions" close-text="Close" />
+            </span>
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default" ng-click="popup2 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+            </span>
+          </div>
+          <button class="btn btn-danger active notify" ng-click="saveInvoiceDetails()">Save</button>
+        </div>
+      </div>
     </div>
-   </div>
-
-
-<form name="editProposal" ng-show="showEdit">
-  <div ng-if="proposal.centers[0].center.space_mappings.society_allowed">
-  <div class="panel panel-default business-panel">
-    <div class="table">
-      <div class="row">
-      	<div class="col-md-3"><label>Proposal Id:</label></div>
-        <div class="col-md-3">{{proposal.proposal.proposal_id}}</div>
-       	</div>
-       	<div class="row">
-	        <div class="col-md-3"><label>Shortlisted Societies:</label></div>
-	        <div class="col-md-3">{{proposal.centers[0].societies_shortlisted_count}}</div>
-	        <div class="col-md-3"><label>Buffered Societies:</label></div>
-	        <div class="col-md-3">{{proposal.centers[0].societies_buffered_count}}</div>
-       	</div>
-       	<div class="row">
-       		<div class="col-md-3"><label>Inventory Details:</label></div>
-       	</div>
-       	<div class="row">
-        <div class="table table-align">
-        <div class="row">
-        	<div class="col-md-2"><b>Center Name</b></div>
-	      	<div class="col-md-2"><b>Inventory Name</b></div>
-	        <div class="col-md-2 table-align"><b>Count</b></div>
-	    </div>
-      	<div ng-repeat="center2 in proposal.centers">
-      		<div class="row">
-      			<div class="col-md-2">{{center2.center.center_name}}</div>
-      			<div class="col-md-2">Flyers</div>
-		        <div class="col-md-2">{{center2.societies_inventory_count.fliers}}</div>
-		    </div>
-		    <div class="row">
-		    	<div class="col-md-2"></div>
-		    	<!-- <div class="col-md-2">{{center2.center.center_name}}</div> -->
-		    	<div class="col-md-2">Posters</div>
-		        <div class="col-md-2">{{center2.societies_inventory_count.posters}}</div>
-		    </div>
-		    <div class="row">
-		    	<div class="col-md-2"></div>
-		    	<!-- <div class="col-md-2">{{center2.center.center_name}}</div> -->
-		    	<div class="col-md-2">Stalls</div>
-		        <div class="col-md-2">{{center2.societies_inventory_count.stalls}}</div>
-		    </div>
-		    <div class="row">
-		    	<div class="col-md-2"></div>
-		    	<!-- <div class="col-md-2">{{center2.center.center_name}}</div> -->
-		    	<div class="col-md-2">Standees</div>
-		        <div class="col-md-2">{{center2.societies_inventory_count.standees}}</div>
-	        </div>
-    	  	</div>
-		</div>
-	  </div>
-	</div>
   </div>
-  </div>
+</div>
+<!--End: Code for Invoice Modal Window -->
 
-		<div class="panel panel-default business-panel">
-		  <h4 class="panel-heading head">Societies List</h4>
-		    <div class="table-responsive">
-		    <table class="table table-bordered">
-		      <thead>
-		        <tr>
-		          <th class="col-md-2 table-heading">Society Name</th>
-				  <th class="col-md-2 table-heading">Society Address</th>
-				  <th class="col-md-2 table-heading">Sub Area</th>
-				  <th class="col-md-2 table-heading">Action</th>
-				</tr>
-			   </thead>
-			   <tbody ng-repeat="society in proposal.centers track by $index">
-        			<tr ng-repeat="center in society.societies_shortlisted track by $index">
-              			<td>{{center.society_name}}</td>
-              			<td>{{center.society_address1}}</td>
-              			<td>{{center.society_subarea}}</td>
-              			<td><button class="btn btn-info" ng-if="center.shortlisted" ng-click="center.shortlisted = !center.shortlisted">Remove</button><br>
-			   	  		<button class="btn btn-info" ng-if="!center.shortlisted" ng-click="center.shortlisted = !center.shortlisted">Shortlist</button><br>
-			   	  		<span ng-if="center.shortlisted">
-		    				<input type="checkbox" ng-model="center.buffer_status"> Buffer
-		    			</span></td>
-		    		</tr>
-		    		<tr ng-repeat="center in society.societies_buffered track by $index">
-		    			<td>{{center.society_name}}</td>
-		    			<td>{{center.society_address1}}</td>
-              			<td>{{center.society_subarea}}</td>
-              			<td>
-              				<button class="btn btn-info" ng-if="center.shortlisted" ng-click="center.shortlisted = !center.shortlisted">Remove</button><br>
-						    <button class="btn btn-info" ng-if="!center.shortlisted" ng-click="center.shortlisted = !center.shortlisted">Shortlist</button><br>
-						    <span ng-if="center.shortlisted">
-						    	<input type="checkbox" ng-model="center.buffer_status"> Buffer
-						    </span><br>
-              			</td>
-		    		</tr>
-			   </tbody>
-			  </table>
-			</div>
-		</div>
-		<button class="btn btn-default" ng-click="submit()">Update Proposal</button>
-	</form>
-</html>
+<div><footer-bar></footer-bar></div>

@@ -2,8 +2,17 @@
 angular.module('catalogueApp')
     .controller('ProposalHistory', function($scope, $rootScope, $stateParams, $window, $location, proposalHistoryService ,$http) {
     	$scope.proposals = [];
-      var proposalidtest = 'LPkKDMxa';//Hard coded for intial development need to be made dynamic
-    	proposalHistoryService.getProposalHistory(proposalidtest)
+      //defining headers for table
+      $scope.proposalHeaders = [
+        {name : 'Proposal_id'},
+        {name : 'Proposal_name'},
+        {name : 'Created By'},
+        {name : 'Created On'},
+        {name : ''}
+      ];
+      // var proposalid = $window.localStorage.proposal_id;
+      $scope.proposalid = $window.localStorage.proposal_id;
+    	proposalHistoryService.getProposalHistory($scope.proposalid)
     	.success(function(response, status){
     		$scope.proposals = response.data;
     		console.log("$scope.proposals : ", response.data);
@@ -11,4 +20,11 @@ angular.module('catalogueApp')
     	.error(function(response, status){
     		console.log("error occured");
     	});
+      $scope.showDetails = function(proposal_id){
+        $window.localStorage.parentProposal = false;
+        $location.path('/' + proposal_id + '/showcurrentproposal');
+      }
+      $scope.showHistory = function(){
+        $location.path('/manageCampaign/create');
+      }
 	});

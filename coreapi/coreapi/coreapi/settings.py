@@ -97,9 +97,6 @@ DATABASES = {
          'HOST': 'localhost',
          'USER': 'root',
          'PASSWORD': 'root',
-         'OPTIONS': {
-             "init_command": "SET foreign_key_checks = 0;",
-         }
       }
 
     }
@@ -130,6 +127,7 @@ STATIC_URL = '/static/'
 #     'DEFAULT_AUTHENTICATION_CLASSES': [],
 #     'DEFAULT_PERMISSION_CLASSES': [],
 # }
+
 
 
 REST_FRAMEWORK = {

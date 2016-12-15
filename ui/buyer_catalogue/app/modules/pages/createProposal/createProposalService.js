@@ -35,5 +35,12 @@
   		return machadaloHttp.post(url,data);
   	}
 
+    createProposalService.getProposal = function(proposal_id){
+    	// will receive proposal_id
+        var url = url_base + "proposal/"+ proposal_id + "/";
+      	// var url = url_base + proposal_id;
+    	return machadaloHttp.get(url);
+    }
+
   	return createProposalService;
   }]);
