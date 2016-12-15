@@ -90,7 +90,7 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class CustomPermissions(models.Model):
+class CustomPermissions(BaseModel):
     """
     This is a model which stores extra permissions granted for a particular user
     """
@@ -102,7 +102,7 @@ class CustomPermissions(models.Model):
         db_table = 'custom_permissions'
 
 
-class BasicSupplierDetails(models.Model):
+class BasicSupplierDetails(BaseModel):
     """
     This is an abstract base class for all the suppliers. As we know more common fields, add
     them here in order of relevance and run python manage.py makemigrations. all the models who
@@ -203,7 +203,7 @@ class DurationType(models.Model):
         db_table = 'duration_type'
 
 
-class PriceMappingDefault(models.Model):
+class PriceMappingDefault(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True, on_delete=models.CASCADE)
     #adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
@@ -1146,7 +1146,7 @@ class SocietyTower(models.Model):
         unique_together = (('tower_tag','supplier'),)
 
 
-class BusinessAccountContact(models.Model):
+class BusinessAccountContact(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
     content_type = models.ForeignKey(ContentType)
     object_id = models.CharField(max_length=20)
@@ -1163,7 +1163,7 @@ class BusinessAccountContact(models.Model):
         db_table = 'business_account_contact'
 
 
-class BusinessInfo(models.Model):
+class BusinessInfo(BaseModel):
     ## changed -> on_delete = models.CASCADE
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     business_id = models.CharField(db_column='BUSINESS_ID',max_length=15, primary_key=True)
@@ -1195,7 +1195,7 @@ class BusinessInfo(models.Model):
     class Meta:
         db_table = 'business_info'
 
-class BusinessTypes(models.Model):
+class BusinessTypes(BaseModel):
     id              = models.AutoField(db_column='ID', primary_key=True)
     business_type   = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
     business_type_code = models.CharField(db_column='TYPE_CODE',unique=True, max_length=4, blank=True, null=True)
@@ -1210,7 +1210,7 @@ class BusinessTypes(models.Model):
         #db_table = 'BUSINESS_TYPES'
         db_table = 'business_types'
 
-class BusinessSubTypes(models.Model):
+class BusinessSubTypes(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
     business_type = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE',
                                       null=True, on_delete=models.CASCADE)  ## changed -> business
@@ -1227,7 +1227,7 @@ class BusinessSubTypes(models.Model):
         db_table = 'business_subtypes'
 
 
-class AccountInfo(models.Model):
+class AccountInfo(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     account_id  = models.CharField(db_column='ACCOUNT_ID', max_length=15, primary_key=True)
     business    = models.ForeignKey(BusinessInfo, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
@@ -1313,8 +1313,7 @@ class AccountInfo(models.Model):
 
 #         db_table = 'account_contact'
 
-
-class ProposalCenterMapping(models.Model):
+class ProposalCenterMapping(BaseModel):
     """
     for a given proposal, stores lat, long, radius, city, pincode etc.
     """
@@ -1781,7 +1780,7 @@ class FlatTypeCode(models.Model):
         db_table = 'flat_type_code'
 
 
-class InventorySummary(models.Model):
+class InventorySummary(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     supplier = models.ForeignKey(SupplierTypeSociety, related_name='inventoy_summary', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE, unique=True)
@@ -1947,7 +1946,7 @@ class SocietyLeads(models.Model):
         db_table = 'society_leads'
 
 
-class ShortlistedInventoryPricingDetails(models.Model):
+class ShortlistedInventoryPricingDetails(BaseModel):
     """
     Model for storing calculated price and count of an inventory for a given supplier.
     A particular inventory type is identified by it's content_type_id.
@@ -1979,7 +1978,7 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
         db_table = 'supplier_bus_shelter'
 
 
-class ProposalMasterCost(models.Model):
+class ProposalMasterCost(BaseModel):
     """
     A table to store revenue related costs. currently it's content will be populated by a sheet. only fixed fields
     and relations are covered up.
@@ -2001,7 +2000,7 @@ class ProposalMasterCost(models.Model):
         db_table = 'proposal_master_cost_details'
 
 
-class AbstractGeneralCost(models.Model):
+class AbstractGeneralCost(BaseModel):
     """
     This class is an abstract class for all types of cost's. Any type of cost example, PrintingCost, LogisticCost,
     SpaceBookingCost etc are inherited from this basic cost table. A proposal version can only have one PrintingCost,
@@ -2071,7 +2070,7 @@ class DataSciencesCost(AbstractGeneralCost):
         db_table = 'data_sciences_cost'
 
 
-class ProposalMetrics(models.Model):
+class ProposalMetrics(BaseModel):
     """
     Different types of  spaces/suppliers will have different metrics. a metrics is list of predefined headers.
     one supplier can have many metrices. hence this model is used to store data for a given supplier that
@@ -2124,7 +2123,7 @@ class ProposalInfo(BaseModel):
         db_table = 'proposal_info'
 
 
-class Filters(models.Model):
+class Filters(BaseModel):
     """
     Stores all kinds of filters and there respective codes. Filters are used when you filter all the suppliers
     on the basis of what inventories you would like to have in there, etc. because different suppliers can have
@@ -2145,7 +2144,7 @@ class Filters(models.Model):
         db_table = 'filters'
 
 
-class ShortlistedSpaces(models.Model):
+class ShortlistedSpaces(BaseModel):
     """
     This model stores all the shortlisted spaces. One Supplier or space can be under different campaigns.
     in one campaign it's status can be removed while in the other it's buffered. Hence this model is made
@@ -2167,7 +2166,7 @@ class ShortlistedSpaces(models.Model):
         db_table = 'shortlisted_spaces'
 
 
-class ProposalCenterSuppliers(models.Model):
+class ProposalCenterSuppliers(BaseModel):
     """
     which suppliers are allowed in a given center under a proposal ?
     used when CreateInitialProposal is called. each center can have different suppliers allowed.
@@ -2184,7 +2183,7 @@ class ProposalCenterSuppliers(models.Model):
         db_table = 'proposal_center_suppliers'
 
 
-class Lead(models.Model):
+class Lead(BaseModel):
     """
     A model to store the leads data. This user is different django from auth_user. it's a 'lead'.
     """
@@ -2201,7 +2200,7 @@ class Lead(models.Model):
         db_table = 'lead'
 
 
-class CampaignLeads(models.Model):
+class CampaignLeads(BaseModel):
     """
     a campaign can have multiple leads. a lead can go in multiple campaigns.
     campaign stores the campaign id.
