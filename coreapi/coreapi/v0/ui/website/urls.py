@@ -51,6 +51,8 @@ urlpatterns = [
     url(r'^supplier-search/$', views.SupplierSearch.as_view()),
     url(r'^import-area-subarea/$', views.ImportAreaSubArea.as_view()),
     url(r'^send-mail/$', views.SendMail.as_view()),
+    url(r'^business-data/$', views.Business.as_view()),
+    url(r'^mail/$', views.Mail.as_view()),
 
 ]
 

@@ -23,6 +23,8 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
 import managers
 
@@ -36,12 +38,35 @@ AD_INVENTORY_CHOICES = (
     ('BANNER', 'Banner'),
 )
 
+
+class BaseUser(AbstractUser):
+    """
+    This is base user class that inherits AbstractBaseUser and adds an additional field.
+    """
+    user_code = models.CharField(max_length=255, default=settings.DEFAULT_USER_CODE)
+
+    class Meta:
+        db_table = 'base_user'
+
+
+class CustomPermissions(models.Model):
+    """
+    This is a model which stores extra permissions granted for a particular user
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    extra_permission_code = models.CharField(max_length=255)
+    description = models.CharField(max_length=1000, null=True)
+    class Meta:
+        db_table = 'custom_permissions'
+
+
 class BasicSupplierDetails(models.Model):
     """
     This is an abstract base class for all the suppliers. As we know more common fields, add
     them here in order of relevance and run python manage.py makemigrations. all the models who
     inherit from this class will have those fields automatically.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     supplier_id = models.CharField(max_length=20, primary_key=True)
     supplier_code = models.CharField(max_length=3, null=True)
     name = models.CharField(max_length=70, null=True, blank=True)
@@ -61,6 +86,7 @@ class BasicSupplierDetails(models.Model):
     bank_name = models.CharField(max_length=250, blank=True, null=True)
     ifsc_code = models.CharField(max_length=30, blank=True, null=True)
     account_number = models.CharField(max_length=250, blank=True, null=True)
+    objects = managers.GeneralManager()
 
     class Meta:
         abstract = True
@@ -76,7 +102,7 @@ class ImageMapping(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'image_mapping'
@@ -146,7 +172,7 @@ class PriceMappingDefault(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
     class Meta:
         db_table = 'price_mapping_default'
 
@@ -296,7 +322,7 @@ class PosterInventory(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     class Meta:
 
@@ -327,7 +353,7 @@ class FlatType(models.Model):
     content_type = models.ForeignKey(ContentType,default=None, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'flat_type'
@@ -345,7 +371,7 @@ class StandeeInventory(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     def get_tower_name1(self):
         try:
@@ -407,7 +433,7 @@ class WallInventory(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     class Meta:
 
@@ -440,6 +466,7 @@ class CommonAreaDetails(models.Model):
 
         db_table = 'common_area_details'
 
+
 class ContactDetails(models.Model):
     id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='contacts', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
@@ -457,7 +484,7 @@ class ContactDetails(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     class Meta:
 
@@ -517,7 +544,7 @@ class Events(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     class Meta:
 
@@ -602,7 +629,9 @@ class PosterInventoryMapping(models.Model):
 
     class Meta:
 
+
         db_table = 'poster_inventory_mapping'
+
 
 class RatioDetails(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', max_length=20)  # Field name made lowercase.
@@ -662,11 +691,12 @@ class StallInventory(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     class Meta:
 
         db_table = 'stall_inventory'
+
 
 class FlyerInventory(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -679,7 +709,7 @@ class FlyerInventory(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     class Meta:
 
@@ -752,7 +782,10 @@ class SportsInfra(models.Model):
 
         db_table = 'sports_infra'
 
-class  SupplierTypeSociety(models.Model):
+
+class SupplierTypeSociety(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    objects = managers.GeneralManager()
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
     supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
     society_name = models.CharField(db_column='SOCIETY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
@@ -814,7 +847,7 @@ class  SupplierTypeSociety(models.Model):
     past_collections_standee = models.IntegerField(db_column='PAST_YEAR_COLLECTIONS_STANDEE', null=True)  # Field name made lowercase.
     past_sponsorship_collection_events = models.IntegerField(db_column='PAST_YEAR_SPONSORSHIP_COLLECTION_EVENTS', null=True)  # Field name made lowercase.
     past_total_sponsorship = models.IntegerField(db_column='PAST_YEAR_TOTAL_SPONSORSHIP', null=True)  # Field name made lowercase.
-    created_by = models.ForeignKey(User, related_name='societies', db_column='CREATED_BY', blank=True, null=True, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, related_name='societies', db_column='CREATED_BY', blank=True, null=True, on_delete=models.CASCADE)
     created_on = models.DateTimeField(db_column='CREATED_ON', auto_now_add=True)
     total_ad_spaces = models.IntegerField(db_column='TOTAL_AD_SPACES', null=True)
     tower_count = models.IntegerField(db_column='TOWER_COUNT', blank=True, null=True)  # Field name made lowercase.
@@ -1036,7 +1069,7 @@ class SocietyTower(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     def get_notice_board_list(self):
         return self.notice_boards.all()
@@ -1070,13 +1103,12 @@ class SocietyTower(models.Model):
         db_table = 'society_tower'
         unique_together = (('tower_tag','supplier'),)
 
+
 class BusinessAccountContact(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-
     content_type = models.ForeignKey(ContentType)
     object_id = models.CharField(max_length=20)
     business_account_id = generic.GenericForeignKey('content_type','object_id')
-
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
     department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
@@ -1088,8 +1120,10 @@ class BusinessAccountContact(models.Model):
     class Meta:
         db_table = 'business_account_contact'
 
+
 class BusinessInfo(models.Model):
     ## changed -> on_delete = models.CASCADE
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     business_id = models.CharField(db_column='BUSINESS_ID',max_length=15, primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True) ## changed -> name
     type_name = models.ForeignKey('BusinessTypes',related_name='type_set',db_column='TYPE', blank=False,null=False, on_delete=models.CASCADE) ## changed -> CharField
@@ -1102,6 +1136,7 @@ class BusinessInfo(models.Model):
     reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
     comments = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
     contacts = GenericRelation(BusinessAccountContact)
+    objects = managers.GeneralManager()
 
     def __str__(self):
         return self.name
@@ -1149,7 +1184,9 @@ class BusinessSubTypes(models.Model):
     class Meta:
         db_table = 'business_subtypes'
 
+
 class AccountInfo(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     account_id  = models.CharField(db_column='ACCOUNT_ID', max_length=15, primary_key=True)
     business    = models.ForeignKey(BusinessInfo, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
     name        = models.CharField(db_column='NAME', max_length=50, blank=True)
@@ -1161,6 +1198,7 @@ class AccountInfo(models.Model):
     reference_email = models.CharField(db_column='REFERENCE_EMAIL', max_length=50, blank=True)
     comments    = models.TextField(db_column='COMMENTS',  max_length=100, blank=True)
     contacts = GenericRelation(BusinessAccountContact)
+    objects = managers.GeneralManager()
 
     def __str__(self):
         return self.name
@@ -1233,10 +1271,12 @@ class AccountInfo(models.Model):
 
 #         db_table = 'account_contact'
 
+
 class ProposalCenterMapping(models.Model):
     """
     for a given proposal, stores lat, long, radius, city, pincode etc.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     proposal    = models.ForeignKey('ProposalInfo', db_index=True, related_name='centers', on_delete=models.CASCADE)
     center_name = models.CharField(max_length=50)
     address     = models.CharField(max_length=150,null=True, blank=True)
@@ -1247,6 +1287,7 @@ class ProposalCenterMapping(models.Model):
     area        = models.CharField(max_length=35)
     city        = models.CharField(max_length=35)
     pincode     = models.IntegerField()
+    objects = managers.GeneralManager()
 
     def get_space_mappings(self):
         return SpaceMapping.objects.get(center=self)
@@ -1525,7 +1566,7 @@ class SocietyInventoryBooking(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     def get_type(self):
         try:
@@ -1604,6 +1645,7 @@ class AssignedAudits(models.Model):
     audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)
     db_table = 'assigned_audits'
+
 
 class Audits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -1699,6 +1741,7 @@ class FlatTypeCode(models.Model):
 
 class InventorySummary(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     supplier = models.ForeignKey(SupplierTypeSociety, related_name='inventoy_summary', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE, unique=True)
     poster_allowed_nb = models.BooleanField(db_column='POSTER_ALLOWED_NB', default=False)
     poster_allowed_lift = models.BooleanField(db_column='POSTER_ALLOWED_LIFT', default=False)
@@ -1759,20 +1802,22 @@ class InventorySummary(models.Model):
     content_type = models.ForeignKey(ContentType,default=None, null=True)
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-    objects = managers.GetInventoryObjectManager()
+    objects = managers.GeneralManager()
 
     class Meta:
 
         db_table = 'inventory_summary'
 
+
 class UserProfile(models.Model):
-    user = models.ForeignKey(User, unique=True, editable=True, null=False, related_name='user_profile', db_column='user_id', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID,  unique=True, editable=True, null=False, related_name='user_profile', db_column='user_id', on_delete=models.CASCADE)
     is_city_manager = models.BooleanField(db_column='is_city_manager', default=False)
     is_cluster_manager = models.BooleanField(db_column='is_cluster_manager', default=False)
     is_normal_user =  models.BooleanField(db_column='is_normal_user', default=False)
     society_form_access = models.BooleanField(db_column='society_form_access', default=False)
     corporate_form_access = models.BooleanField(db_column='corporate_form_access', default=False)
-    created_by = models.ForeignKey(User, db_column='created_by', null=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_column='created_by', null=True)
+    objects = managers.GeneralManager()
 
     def get_user(self):
         return self.user
@@ -1780,19 +1825,22 @@ class UserProfile(models.Model):
     class Meta:
         db_table = 'user_profile'
 
+
 class UserCities(models.Model):
-    user = models.ForeignKey(User, related_name='cities', db_column='user_id', null=False, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID,  related_name='cities', db_column='user_id', null=False, on_delete=models.CASCADE)
     city = models.ForeignKey(City, db_column='city_id', null=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'user_cities'
 
+
 class UserAreas(models.Model):
-    user = models.ForeignKey(User, related_name='clusters', db_column='user_id', null=False, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, related_name='clusters', db_column='user_id', null=False, on_delete=models.CASCADE)
     area = models.ForeignKey(CityArea, db_column='area_id', on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'user_areas'
+
 
 class CorporateBuilding(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -1805,6 +1853,7 @@ class CorporateBuilding(models.Model):
 
     class Meta:
         db_table='corporate_building'
+
 
 class CorporateBuildingWing(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -1823,6 +1872,7 @@ class CorporateBuildingWing(models.Model):
 #     class Meta:
 #         db_table='corporate_company'
 
+
 class CorporateCompanyDetails(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     company_id = models.ForeignKey('CorporateParkCompanyList', db_column='COMPANY_ID', related_name='companydetails', blank=True, null=True, on_delete=models.CASCADE)
@@ -1835,12 +1885,14 @@ class CorporateCompanyDetails(models.Model):
     class Meta:
         db_table='corporate_company_details'
 
+
 class CompanyFloor(models.Model):
     company_details_id = models.ForeignKey('CorporateCompanyDetails',db_column='COMPANY_DETAILS_ID',related_name='wingfloor', blank=True, null=True, on_delete=models.CASCADE)
     floor_number = models.IntegerField(db_column='FLOOR_NUMBER', blank=True, null=True)
 
     class Meta:
         db_table='corporate_building_floors'
+
 
 class SocietyLeads(models.Model):
     id = models.CharField(max_length=100,null=False,primary_key=True)
@@ -1858,6 +1910,7 @@ class ShortlistedInventoryPricingDetails(models.Model):
     Model for storing calculated price and count of an inventory for a given supplier.
     A particular inventory type is identified by it's content_type_id.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     supplier_id = models.CharField(max_length=100)
     inventory_price = models.FloatField(default=0.0, null=True)
     inventory_count = models.IntegerField(default=0, null=True)
@@ -1867,6 +1920,7 @@ class ShortlistedInventoryPricingDetails(models.Model):
     ad_inventory_duration = models.ForeignKey('DurationType', null=True)
     center = models.ForeignKey('ProposalCenterMapping')
     proposal = models.ForeignKey('ProposalInfo')
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'shortlisted_inventory_pricing_details'
@@ -1890,6 +1944,7 @@ class ProposalMasterCost(models.Model):
     Only one instance of MasterCost exists for one proposal version, proposal
     proposal_version alone does not make any sense. it's always tied to a proposal instance.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     proposal = models.OneToOneField('ProposalInfo', null=True, blank=True)
     agency_cost = models.FloatField(null=True, blank=True)
     basic_cost = models.FloatField(null=True, blank=True)
@@ -1898,6 +1953,7 @@ class ProposalMasterCost(models.Model):
     tax = models.FloatField(null=True, blank=True)
     total_impressions = models.FloatField(null=True, blank=True)
     average_cost_per_impression = models.FloatField(null=True, blank=True)
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'proposal_master_cost_details'
@@ -1996,8 +2052,9 @@ class ProposalInfo(models.Model):
     parent stores the information that from what proposal_id, the current proposal_id was created.
     is_campaign determines weather this proposal is a campaign or not.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     proposal_id = models.CharField(max_length=255, primary_key=True)
-    account = models.ForeignKey(AccountInfo, related_name='proposals',on_delete=models.CASCADE)
+    account = models.ForeignKey(AccountInfo, related_name='proposals',on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=50, blank=True, null=True)
     payment_status = models.BooleanField(default=False,)
     updated_on = models.DateTimeField(auto_now=True, auto_now_add=False)
@@ -2009,6 +2066,8 @@ class ProposalInfo(models.Model):
     tentative_end_date = models.DateTimeField(null=True)
     is_campaign = models.BooleanField(default=False, blank=True)
     parent = models.ForeignKey('ProposalInfo', null=True, blank=True, default=None)
+    objects = managers.GeneralManager()
+    invoice_number = models.CharField(max_length=1000, null=True, blank=True)
 
     def get_centers(self):
         try:
@@ -2030,6 +2089,7 @@ class Filters(models.Model):
     different types of filters, we have content_type field for capturing that. These filters are predefined in constants
     and are populated from there.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     center = models.ForeignKey(ProposalCenterMapping, null=True, blank=True)
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
     supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
@@ -2037,6 +2097,7 @@ class Filters(models.Model):
     filter_code = models.CharField(max_length=255, null=True, blank=True)
     is_checked = models.BooleanField(default=False)
     supplier_type_code = models.CharField(max_length=255, null=True, blank=True)
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'filters'
@@ -2048,6 +2109,7 @@ class ShortlistedSpaces(models.Model):
     in one campaign it's status can be removed while in the other it's buffered. Hence this model is made
     for mapping such relations.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     space_mapping = models.ForeignKey(SpaceMapping, db_index=True, related_name='spaces', on_delete=models.CASCADE, null=True, blank=True)
     center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
@@ -2057,6 +2119,7 @@ class ShortlistedSpaces(models.Model):
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     buffer_status = models.BooleanField(default=False)
     status = models.CharField(max_length=10, null=True, blank=True)
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'shortlisted_spaces'
@@ -2068,10 +2131,12 @@ class ProposalCenterSuppliers(models.Model):
     used when CreateInitialProposal is called. each center can have different suppliers allowed.
     each supplier is identified by a content_type and a unique code predefined for it.
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
     center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
     supplier_content_type = models.ForeignKey(ContentType, null=True, blank=True)
     supplier_type_code = models.CharField(max_length=255, null=True, blank=True)
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'proposal_center_suppliers'
@@ -2100,25 +2165,29 @@ class CampaignLeads(models.Model):
     campaign stores the campaign id.
     lead stores the lead id
     """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     campaign_id = models.IntegerField(default=0)
     lead_email = models.EmailField(default='')
     comments = models.CharField(max_length=255, null=True)
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'campaign_leads'
         unique_together = (('campaign_id', 'lead_email'),)
 
+
 class GenericExportFileName(models.Model):
     """
     This model stores file name generated by GenericExport API.
     """
-    user = models.ForeignKey(User, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     business = models.ForeignKey('BusinessInfo', null=True, blank=True)
     account = models.ForeignKey('AccountInfo', null=True, blank=True)
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     file_name = models.CharField(max_length=1000, null=True, blank=True)
-
+    is_exported = models.BooleanField(default=True)
+    objects = managers.GeneralManager()
 
     class Meta:
         db_table = 'generic_export_file_name'

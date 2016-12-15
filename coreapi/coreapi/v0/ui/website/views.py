@@ -48,6 +48,7 @@ from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, propo
                       inventorylist, society_keys, flat_type_dict, index_of_center_id, offline_pricing_data
 from constants import *
 
+
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
@@ -58,6 +59,8 @@ import serializers as website_serializers
 import constants as website_constants
 import renderers as website_renderers
 import v0.ui.constants as ui_constants
+import v0.permissions as v0_permissions
+import v0.utils as v0_utils
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -130,32 +133,45 @@ class BusinessAPIView(APIView):
 
 
 class AccountAPIListView(APIView):
+
+    permission_classes = (v0_permissions.IsMasterUser, )
+
     def get(self, request, format=None):
+        class_name = self.__class__.__name__
         try:
-            items = AccountInfo.objects.all()
+            items = AccountInfo.objects.filter_user_related_objects(request.user)
             serializer = AccountInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
-        except :
-            return Response(status=404)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class AccountAPIView(APIView):
+
+    permission_classes = (v0_permissions.IsMasterUser, )
+
     def get(self, request, id, format=None):
+
+        class_name = self.__class__.__name__
+
         try:
-            account = AccountInfo.objects.get(pk=id)
-            serializer1 = UIAccountInfoSerializer(account)
+            account = AccountInfo.objects.get_user_related_object(request.user, pk=id)
+            account_serializer = UIAccountInfoSerializer(account)
             business = BusinessInfo.objects.get(pk=account.business_id)
-            serializer2 = BusinessInfoSerializer(business)
+            business_serializer = BusinessInfoSerializer(business)
             '''contacts = AccountContact.objects.filter(account=account)
             serializer3 = AccountContactSerializer(contacts, many=True)'''
 
-            serializer = {'account':serializer1.data, 'business':serializer2.data}
-            return Response(serializer, status=200)
-        except :
-            return Response(status=404)
+            data = {'account': account_serializer.data, 'business': business_serializer.data}
+            return Response(data, status=200)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class NewCampaignAPIView(APIView):
+
+    permission_classes = (v0_permissions.IsMasterUser, )
+
     def post(self, request, format=None):
         """
         creates new campaign
@@ -174,18 +190,23 @@ class NewCampaignAPIView(APIView):
             return Response(data={'status': False, 'error': 'No business data supplied'},
                             status=status.HTTP_400_BAD_REQUEST)
 
+        business_data['type_name'] = business_data['business_type_id']
+        business_data['sub_type'] = business_data['sub_type_id']
+
+        type_name = BusinessTypes.objects.get(id=int(business_data['business_type_id']))
+        sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
+
+        business_data['user'] = current_user.id
+
         with transaction.atomic():
 
             try:
-                if 'business_id' in business_data:
+                business_serializer_data = {}
 
+                if 'business_id' in business_data:
                     business = BusinessInfo.objects.get(pk=business_data['business_id'])
                     serializer = BusinessInfoSerializer(business, data=business_data)
                 else:
-                    # creating business ID
-
-                    type_name = BusinessTypes.objects.get(id=int(business_data['business_type_id']))
-                    sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
                     business_data['business_id'] = self.generate_business_id(business_name=business_data['name'], \
                                                                              sub_type=sub_type, type_name=type_name)
                     if business_data['business_id'] is None:
@@ -193,23 +214,15 @@ class NewCampaignAPIView(APIView):
                         business_data['business_id'] = self.generate_business_id(business_data['name'], \
                                                                                  sub_type=sub_type, type_name=type_name,
                                                                                  lower=True)
-
                     serializer = BusinessInfoSerializer(data=business_data)
 
                 if serializer.is_valid():
-                    try:
-                        # This will not hit database again cache will be used if else is executed
-                        type_name = BusinessTypes.objects.get(id=int(business_data['business_type_id']))
-                        sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
-                        business = serializer.save(type_name=type_name, sub_type=sub_type)
+                     serializer.save()
+                     business_serializer_data = serializer.data
+                     business_serializer_data['business_sub_type'] = sub_type.business_sub_type
+                     business_serializer_data['business_type'] = type_name.business_type
 
-                    except ValueError:
-                        return Response({'message': 'Business Type/SubType Invalid'}, \
-                                        status=status.HTTP_406_NOT_ACCEPTABLE)
-
-                else:
-                    return Response(serializer.errors, status=400)
-
+                business = BusinessInfo.objects.get(pk=business_data['business_id'])
                 content_type_business = ContentType.objects.get_for_model(BusinessInfo)
                 contact_ids = list(business.contacts.all().values_list('id', flat=True))
                 contact_list = []
@@ -238,18 +251,14 @@ class NewCampaignAPIView(APIView):
 
                 # deleting all contacts whose id not received from the frontend
                 BusinessAccountContact.objects.filter(id__in=contact_ids).delete()
-
-                business_serializer = BusinessInfoSerializer(business)
                 contacts_serializer = BusinessAccountContactSerializer(contact_list, many=True)
-
                 response = {
-                    'business': business_serializer.data,
+                    'business': business_serializer_data,
                     'contacts': contacts_serializer.data,
                 }
+                return Response(response, status=200)
             except Exception as e:
                 return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(response, status=200)
 
     def generate_business_id(self, business_name, sub_type, type_name, lower=False):
         business_code = create_code(name=business_name)
@@ -312,8 +321,6 @@ def create_code(name, conflict=False):
     # so append a extra char in front of existing code and remove last char from it
     if conflict:
         code = get_extra_character() + code[:3]
-
-
     return code.upper()
 
 
@@ -674,7 +681,7 @@ class CreateProposalAPIView(APIView):
                 society_detail['flat_count'] = item.society.flat_count
                 society_detail['tower_count'] = item.society.tower_count
                 society_detail['inventory'] = []
-                inv_details = InventorySummary.objects.get_object(request.data.copy(), id)
+                inv_details = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(), id)
                 if not inv_details:
                     return Response({'status': False, 'error': 'Inventory object not found for {0} id'.format(id)},
                                     status=status.HTTP_400_BAD_REQUEST)
@@ -869,8 +876,8 @@ class SpacesOnCenterAPIView(APIView):
                 for society in societies_temp:
                     if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         society['society_latitude'], society['society_longitude']):
-                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                    society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                           society['supplier_id'])
                         adinventory_type_dict = ui_utils.adinventory_func()
                         duration_type_dict = ui_utils.duration_type_func()
 
@@ -932,7 +939,7 @@ class SpacesOnCenterAPIView(APIView):
                 for corporate in corporates_temp:
                     if website_utils.space_on_circle(proposal_center.latitude, proposal_center.longitude, proposal_center.radius, \
                         corporate['latitude'], corporate['longitude']):
-                        corporate_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),corporate['supplier_id'])
+                        corporate_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(), corporate['supplier_id'])
                         adinventory_type_dict = ui_utils.adinventory_func()
                         duration_type_dict = ui_utils.duration_type_func()
                         if corporate_inventory_obj:
@@ -1046,8 +1053,8 @@ class SpacesOnCenterAPIView(APIView):
             societies_count = 0
             for society in societies_temp:
                 if website_utils.space_on_circle(latitude, longitude, radius, society['society_latitude'], society['society_longitude']):
-                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                       society['supplier_id'])
                     if society_inventory_obj:
                     #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
@@ -1428,8 +1435,8 @@ class FilteredSuppliersAPIView(APIView):
                 supplier['supplier_longitude'] = supplier['society_longitude'] if supplier['society_longitude'] else supplier['longitude']
 
                 if website_utils.space_on_circle(latitude, longitude, radius, supplier['supplier_latitude'],supplier['supplier_longitude']):
-                    supplier_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                 supplier['supplier_id'])
+                    supplier_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                        supplier['supplier_id'])
                     if supplier_inventory_obj:
 
                         supplier['shortlisted'] = True
@@ -1470,8 +1477,8 @@ class FilteredSuppliersAPIView(APIView):
                         del supplier[society_key]
                         supplier[actual_key] = value
 
-            suppliers_inventory_count = InventorySummary.objects.filter_objects({'supplier_type_code': supplier_code},
-                                                                                supplier_ids).aggregate(posters=Sum('total_poster_count'), \
+            suppliers_inventory_count = InventorySummary.objects.get_supplier_type_specific_objects({'supplier_type_code': supplier_code},
+                                                                                                    supplier_ids).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
                                                                                                         fliers=Sum('flier_frequency'))
@@ -1561,8 +1568,8 @@ class FinalProposalAPIView(APIView):
                 for society in societies_temp:
                     if website_utils.space_on_circle(center_object.latitude, center_object.longitude, center_object.radius, \
                         society['society_latitude'], society['society_longitude']):
-                        society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                    society['supplier_id'])
+                        society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                           society['supplier_id'])
                         #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                         society['shortlisted'] = True
                         society['buffer_status'] = False
@@ -1816,8 +1823,8 @@ class CurrentProposalAPIView(APIView):
                 societies_shortlisted_count = 0
 
                 for society in societies_shortlisted_temp:
-                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                       society['supplier_id'])
                     #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                     society['shortlisted'] = True
                     society['buffer_status'] = False
@@ -1857,8 +1864,8 @@ class CurrentProposalAPIView(APIView):
                 societies_buffered = []
                 societies_buffered_count = 0
                 for society in societies_buffered_temp:
-                    society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                society['supplier_id'])
+                    society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                       society['supplier_id'])
 
                     #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                     society['shortlisted'] = True
@@ -2024,8 +2031,8 @@ class ProposalHistoryAPIView(APIView):
                         societies_shortlisted_count = 0
                         # societies_shortlisted_serializer = ProposalSocietySerializer(societies_shortlisted, many=True)
                         for society in societies_shortlisted_temp:
-                            society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                        society['supplier_id'])
+                            society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                               society['supplier_id'])
 
                             #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                             society['shortlisted'] = True
@@ -2065,8 +2072,8 @@ class ProposalHistoryAPIView(APIView):
                         societies_buffered = []
                         societies_buffered_count = 0
                         for society in societies_buffered_temp:
-                            society_inventory_obj = InventorySummary.objects.get_object(request.data.copy(),
-                                                                                        society['supplier_id'])
+                            society_inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(request.data.copy(),
+                                                                                                               society['supplier_id'])
 
                             #society_inventory_obj = InventorySummary.objects.get(supplier_id=society['supplier_id'])
                             society['shortlisted'] = True
@@ -2355,6 +2362,7 @@ class GenericExportData(APIView):
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
     """
     renderer_classes = (website_renderers.XlsxRenderer, )
+
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:
@@ -2427,10 +2435,26 @@ class GenericExportData(APIView):
 
             if response.status_code != status.HTTP_200_OK:
                 return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
-            
-            return website_utils.send_excel_file(file_name)
 
-            # return ui_utils.handle_response(class_name, data=workbook, success=True)
+
+            response = website_utils.send_excel_file(file_name)
+            if not response.data['status']:
+                return response
+            file_content = response.data['data']
+
+            content_type = website_constants.mime['xlsx']
+
+            # in order to provide custom headers in response in angular js, we need to set this header
+            # first
+            headers = {
+                'Access-Control-Expose-Headers': "file_name, Content-Disposition"
+            }
+            # set content_type and make Response()
+            response = Response(data=file_content, headers=headers, content_type=content_type)
+            # attach some custom headers
+            response['Content-Disposition'] = 'attachment; filename=%s' % file_name
+            response['file_name'] = file_name
+            return response
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -2465,6 +2489,7 @@ class ImportSupplierData(APIView):
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
             my_file = request.FILES['file']
+
             wb = openpyxl.load_workbook(my_file)
 
             # fetch all sheets
@@ -2594,10 +2619,15 @@ class ImportSupplierData(APIView):
             response = requests.post(url, files=files, headers=headers)
 
             if response.status_code != status.HTTP_200_OK:
-                return Response({'status': False, 'error in import-metric-data api ': response.text},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status': False, 'error in import-metric-data api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response({'status': True, 'data': 'successfully imported'}, status=status.HTTP_200_OK)
+            # prepare a new name for this file and save it in the required table
+            response = website_utils.get_file_name(request.user, proposal_id, is_exported=False)
+            if not response.data['status']:
+                return response
+            file_name = response.data['data']
+
+            return Response({'status': True, 'data': file_name}, status=status.HTTP_200_OK)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -2666,6 +2696,7 @@ class CreateInitialProposal(APIView):
     data is stored hence we have created new classes CreateInitialProposal and CreateFinalProposal API.
     author: nikhil
     """
+    permission_classes = (permissions.IsAuthenticated, v0_permissions.IsMasterUser, )
 
     def post(self, request, account_id):
         """
@@ -2681,6 +2712,7 @@ class CreateInitialProposal(APIView):
         try:
             with transaction.atomic():
                 proposal_data = request.data
+                user = request.user
 
                 business_id = proposal_data.get('business_id')
                 account_id = account_id
@@ -2692,8 +2724,9 @@ class CreateInitialProposal(APIView):
                 proposal_data['proposal_id'] = response.data['data']
 
                 # get the account object. required for creating the proposal
-                account = AccountInfo.objects.get(account_id=account_id)
+                account = AccountInfo.objects.get_user_related_object(user, account_id=account_id)
                 proposal_data['account'] = account.account_id
+                proposal_data['user'] = user.id
 
                 # query for parent. if available set it. if it's available, then this is an EDIT request.
                 parent = request.data.get('parent')
@@ -2701,8 +2734,7 @@ class CreateInitialProposal(APIView):
                 proposal_data['parent'] = parent
                 # set parent if available
                 if parent:
-                    parent_proposal = ProposalInfo.objects.get(proposal_id=parent)
-                    proposal_data['parent'] = parent_proposal.proposal_id
+                    proposal_data['parent'] = ProposalInfo.objects.get_user_related_object(proposal_id=parent).proposal_id
 
                 # call the function that saves basic proposal information
                 response = website_utils.create_basic_proposal(proposal_data)
@@ -2710,7 +2742,7 @@ class CreateInitialProposal(APIView):
                     return response
 
                 # time to save all the centers data
-                response = website_utils.save_center_data(proposal_data)
+                response = website_utils.save_center_data(proposal_data, user)
                 if not response.data['status']:
                     return response
 
@@ -2742,6 +2774,8 @@ class CreateFinalProposal(APIView):
     information we have all the suppliers shortlisted, all the Filters and all.
 
     """
+    permission_classes = ( permissions.IsAuthenticated, v0_permissions.IsMasterUser, )
+
     def post(self, request, proposal_id):
         """
         Args:
@@ -2753,6 +2787,8 @@ class CreateFinalProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            user = request.user
+
             # simple dict to count new objects created each time the API is hit. a valuable information.
 
             # to keep count of new objects created
@@ -2769,9 +2805,8 @@ class CreateFinalProposal(APIView):
             with transaction.atomic():
                
                 for proposal_data in request.data:
-
                     proposal_data['proposal_id'] = proposal_id
-                    response = website_utils.save_final_proposal(proposal_data, unique_supplier_codes)
+                    response = website_utils.save_final_proposal(proposal_data, unique_supplier_codes, user)
                     if not response.data['status']:
                         return response
                     objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']['SHORTLISTED_SUPPLIERS']
@@ -2784,11 +2819,12 @@ class CreateFinalProposal(APIView):
 
 class ProposalViewSet(viewsets.ViewSet):
     """
-     A ViewSet handling various operations related to ProposalModel.
-     This viewset was made instead of creating separate ApiView's because all the api's in this viewset
-     are related to Proposal domain. so keeping them at one place makes sense.
+    A ViewSet handling various operations related to ProposalModel.
+    This viewset was made instead of creating separate ApiView's because all the api's in this viewset
+    are related to Proposal domain. so keeping them at one place makes sense.
     """
     parser_classes = (JSONParser, FormParser)
+    permission_classes = (permissions.IsAuthenticated,  v0_permissions.IsMasterUser, )
 
     def retrieve(self, request, pk=None):
         """
@@ -2802,8 +2838,8 @@ class ProposalViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            data = {}
-            proposal = ProposalInfo.objects.get(proposal_id=pk)
+
+            proposal = ProposalInfo.objects.get_user_related_object(request.user, proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
             #added to send proposal centers data
             response = website_utils.proposal_centers(pk)
@@ -2815,6 +2851,56 @@ class ProposalViewSet(viewsets.ViewSet):
                 'centers' : response.data['data'],
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def update(self, request, pk=None):
+        """
+        Args:
+            request: The request body
+            pk: primary key
+
+        Returns: Updated proposal object
+        """
+        class_name = self.__class__.__name__
+        try:
+            # prepare the data to be updated
+            data = request.data.copy()
+            data['proposal_id'] = pk
+
+            proposal = ProposalInfo.objects.get_user_related_object(request.user, proposal_id=pk)
+            serializer = ProposalInfoSerializer(proposal, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @list_route()
+    def invoice_proposals(self, request):
+        """
+        Args:
+            request: request body
+        Returns: All the proposal features  which have invoice_number not null
+        """
+        class_name = self.__class__.__name__
+        try:
+            # can't use distinct() to return only unique proposal_id's because .distinct('proposal') is not supported
+            # for MySql
+            file_objects = models.GenericExportFileName.objects.select_related('proposal', 'user').filter(proposal__invoice_number__isnull=False, is_exported=False).order_by('-proposal__created_on')
+
+            # we need to make a unique list where proposal_id do not repeat.
+            seen = set()
+            final_file_objects = []
+            for file_object in file_objects:
+                proposal_id = file_object.proposal_id
+                if proposal_id not in seen:
+                    seen.add(proposal_id)
+                    final_file_objects.append(file_object)
+
+            file_serializer = website_serializers.GenericExportFileSerializerReadOnly(final_file_objects, many=True)
+            return ui_utils.handle_response(class_name, data=file_serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -2862,7 +2948,8 @@ class ProposalViewSet(viewsets.ViewSet):
                 'center_id': center_id,
                 'radius': radius,
                 'latitude': latitude,
-                'longitude': longitude
+                'longitude': longitude,
+                'user': request.user
             }
             response = website_utils.suppliers_within_radius(data)
             if not response.data['status']:
@@ -2889,7 +2976,7 @@ class ProposalViewSet(viewsets.ViewSet):
             account_id = account_id if account_id!= '0' else None
             data = {
                 'parent': pk if pk != '0' else None,
-                'account_id': account_id
+                'user': request.user
             }
             response = website_utils.child_proposals(data)
             if not response:
@@ -2923,7 +3010,8 @@ class ProposalViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             data = {
-                'proposal_id': pk
+                'proposal_id': pk,
+                'user': request.user
             }
             response = website_utils.proposal_shortlisted_spaces(data)
             if not response.data['status']:
@@ -2958,6 +3046,8 @@ class ProposalViewSet(viewsets.ViewSet):
         try:
             center_id = request.data['center']['id']
             proposal = request.data['proposal']
+            user = request.user
+            
             fixed_data = {
                 'center': center_id,
                 'proposal': proposal,
@@ -2972,14 +3062,12 @@ class ProposalViewSet(viewsets.ViewSet):
                 fixed_data['content_type'] = content_type
                 fixed_data['supplier_code'] = code
 
-                response = website_utils.save_shortlisted_suppliers(request.data['suppliers'][code], fixed_data)
+                response = website_utils.save_shortlisted_suppliers(request.data['suppliers'][code], fixed_data, user)
                 if not response.data['status']:
                     return response
-
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
-
 
 
 class InitialProposalAPIView(APIView):
@@ -3318,6 +3406,7 @@ class ImportAreaSubArea(APIView):
 class SendMail(APIView):
     """
     API sends mail. The API sends a file called 'sample_mail_file.xlsx' located in files directory.
+    API  is for testing purpose only.
 
     """
     def post(self, request):
@@ -3365,4 +3454,43 @@ class SendMail(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
+class Mail(APIView):
+    """
+    API sends mail. The API sends a simple mail to a single person
+    """
+    def post(self, request):
+        class_name = self.__class__.__name__
+        try:
+            # takes these params from request
+            subject = request.data['subject']
+            to = request.data['to']
+            body = request.data['body']
+
+            email_data = {
+                'subject': subject,
+                'to': [to, ],
+                'body': body
+            }
+            attachment = None
+            response = website_utils.send_email(email_data, attachment)
+            if not response.data['status']:
+                return response
+            return ui_utils.handle_response(class_name, data='Ok.Mail sent {0}'.format(response.data['data']), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class Business(APIView):
+    """
+    Test api. will be deleted later on.
+    """
+    def get(self, request):
+        class_name = self.__class__.__name__
+        try:
+            master_user = models.BaseUser.objects.get(id=1)
+            result = AccountInfo.objects.filter_user_related_objects(master_user)
+            serializer = website_serializers.AccountInfoSerializer(result, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 

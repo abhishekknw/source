@@ -30,6 +30,7 @@ class UserProfileSerializer(ModelSerializer):
     #    'user1'
     # )
 
+
 class ImageMappingSerializer(ModelSerializer):
     class Meta:
         model = ImageMapping
@@ -293,20 +294,19 @@ class CampaignSocietyMappingSerializer(ModelSerializer):
 class BusinessSubTypesSerializer(ModelSerializer):
     class Meta:
         model = BusinessSubTypes
-        depth = 2
 
 
 class BusinessTypesSerializer(ModelSerializer):
     class Meta:
         model = BusinessTypes
 
-
-class BusinessInfoSerializer(ModelSerializer):
-    # sub_type = BusinessSubTypesSerializer()
-    # type = BusinessTypesSerializer()
-    class Meta:
-        model = BusinessInfo
-        depth = 2
+#
+# class BusinessInfoSerializer(ModelSerializer):
+#     # sub_type = BusinessSubTypesSerializer()
+#     # type = BusinessTypesSerializer()
+#     class Meta:
+#         model = BusinessInfo
+#         depth = 2
 
         # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
         # 'reference_phone', 'reference_email', 'comments')
@@ -316,10 +316,11 @@ class BusinessAccountContactSerializer(ModelSerializer):
     class Meta:
         model = BusinessAccountContact
 
-
-class BusinessTypesSerializer(ModelSerializer):
-    class Meta:
-        model = BusinessTypes
+#
+# class BusinessTypesSerializer(ModelSerializer):
+#     class Meta:
+#         model = BusinessTypes
+#
 
 
 class BusinessInfoSerializer(ModelSerializer):
@@ -327,15 +328,13 @@ class BusinessInfoSerializer(ModelSerializer):
     # type = BusinessTypesSerializer()
     class Meta:
         model = BusinessInfo
-        depth = 2
-
         # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
         # 'reference_phone', 'reference_email', 'comments')
 
 
-class BusinessAccountContactSerializer(ModelSerializer):
-    class Meta:
-        model = BusinessAccountContact
+# class BusinessAccountContactSerializer(ModelSerializer):
+#     class Meta:
+#         model = BusinessAccountContact
 
 
 class AccountInfoSerializer(ModelSerializer):

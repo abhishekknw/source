@@ -142,9 +142,9 @@ def get_supplier_id(request, data):
 
     
 def make_supplier_data(data):
+    function = make_supplier_data.__name__
     try:
-        function = make_supplier_data.__name__
-
+        current_user = data['current_user']
         try:
             state_name = ui_constants.state_name
             state_code = ui_constants.state_code
@@ -152,14 +152,10 @@ def make_supplier_data(data):
             city = v0.models.City.objects.get(city_code=data.get('city_code'), state_code=state_object)
             area = v0.models.CityArea.objects.get(area_code=data.get('area_code'), city_code=city)
             subarea = v0.models.CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area)
-
         except ObjectDoesNotExist as e:
-
             city = v0.models.City.objects.get(id=data['city_id'])
             area = v0.models.CityArea.objects.get(id=data['area_id'])
-            subarea = v0.models.CitySubArea.objects.get(id=data['subarea_id'],
-                                                     area_code=area)
-        current_user = data['current_user']
+            subarea = v0.models.CitySubArea.objects.get(id=data['subarea_id'], area_code=area)
 
         all_supplier_data = {
 

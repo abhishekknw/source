@@ -3,6 +3,7 @@ angular.module('catalogueApp')
     ['$scope', '$rootScope', '$window', '$location','opsDashBoardService',
     function ($scope, $rootScope, $window, $location, opsDashBoardService) {
     	$scope.proposals = [];
+      $scope.reason;
     	$scope.headings = [
         {header : 'Proposal Id'},
         {header : 'Proposal Name'},
@@ -14,29 +15,11 @@ angular.module('catalogueApp')
         {header : 'Download Proposal'}
       ];
 
-$scope.proposals = [
-{
-	 "proposal_id": "YPrVkSqG",
-     "name": "vidhi2",
-     "payment_status": false,
-     "updated_on": "2016-12-13T07:47:25.164747Z",
-     "updated_by": "Admin",
-     "created_on": "2016-07-29T12:09:09.064000Z",
-     "created_by": "Admin",
-     "tentative_cost": 85858,
-     "tentative_start_date": null,
-     "tentative_end_date": null,
-     "is_campaign": false,
-     "invoice_number": "456INVOICE",
-     "user": 1,
-     "account": "VIDHJHBH",
-     "parent": null
-    }
-];
     opsDashBoardService.getProposalDetails()
     	.success(function(response, status){
-    		// $scope.proposals = response.data;
-    		// console.log("$scope.proposals : ", response.data);
+        console.log(response);
+    		$scope.proposals = response.data;
+    		console.log("$scope.proposals : ", response.data);
     	})
     	.error(function(response, status){
     		console.log("error occured", status);
@@ -47,7 +30,38 @@ $scope.proposals = [
       }
 
     $scope.sendNotification = function(){
-      alert('hello BD team has been notified');
+      console.log($scope.currentProposal);
+      var email_Data = {
+        subject:'Machadalo Mail',
+        body:$scope.reason,
+        to:$scope.currentProposal.user.email,
+      };
+      opsDashBoardService.sendMail(email_Data)
+      .success(function(response, status){
+        alert('hello BD team has been notified');
+    	})
+    	.error(function(response, status){
+    		console.log("error occured", status);
+    	});
+
+      $scope.reason = "";
    }
+
+    $scope.updateCampaign = function(proposal){
+      if(proposal.proposal.is_campaign == false){
+        $scope.currentProposal = proposal;
+      }
+      opsDashBoardService.updateProposalDetails(proposal.proposal.proposal_id,proposal.proposal)
+      .success(function(response, status){
+        console.log("Successful",response);
+    	})
+    	.error(function(response, status){
+    		console.log("error occured", status);
+    	});
+    }
+
+    //code added when the user clicks on proposal id the proposal details page will open
+    $scope.showProposalDetails = function(proposal_id){
+      $location.path('/' + proposal_id + '/showcurrentproposal');
+    }
 }]);//Controller function ends here
-    

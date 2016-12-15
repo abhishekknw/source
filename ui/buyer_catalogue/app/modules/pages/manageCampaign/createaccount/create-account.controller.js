@@ -80,7 +80,6 @@ angular.module('machadaloPages')
         name: '',     designation: '',    department: '',
         email: '',    phone: '',      spoc: ''
       });
-        console.log($scope.model.account.contacts);
 
 
       };
@@ -88,7 +87,6 @@ angular.module('machadaloPages')
 
        $scope.remove = function(index) {
         $scope.model.account.contacts.splice(index, 1);
-        console.log($scope.model.account.contacts);
       };
 
 
@@ -113,7 +111,6 @@ angular.module('machadaloPages')
     	$scope.getAccount = function() {
     		pagesService.getAccount($scope.selectAcc)
 	    	.success(function (response, status) {
-	    		    console.log(response);
 	            $scope.model.account = response.account;
               $scope.model.business = response.business;
               $scope.model.business.contacts = response.business.contacts;
@@ -128,9 +125,9 @@ angular.module('machadaloPages')
         $scope.getAccount();
       }
       else{
-        $scope.model.business = pagesService.getBusinessObject();
+        // $scope.model.business = pagesService.getBusinessObject();
+        $scope.model.business = JSON.parse($window.localStorage.business);
         $scope.model.account.business_id = $scope.model.business.business_id;
-        console.log('business is : ', $scope.model.business);
       }
 
       $scope.readMore = function() {
@@ -172,7 +169,6 @@ angular.module('machadaloPages')
       //Code for Automatically select createAccount from business account details
       $scope.setAccount == false;
       $scope.setCreate_Account = function(){
-        console.log("hello");
         if($scope.setAccount == true){
         $scope.model.account.name = $scope.model.business.contacts[0].name;;
         $scope.model.account.email = $scope.model.business.email;
@@ -220,14 +216,10 @@ angular.module('machadaloPages')
 
 
     	$scope.create = function() {
-            console.log("create called");
-            console.log("$scope.model is :");
-        	  console.log($scope.model.account);
             pagesService.createAccountCampaign($scope.model)
             .success(function (response, status) {
 
               console.log("\n\nresponse is : ");
-              console.log(response);
 
               var business_id = $scope.model.account.business_id
 
@@ -250,8 +242,6 @@ angular.module('machadaloPages')
              // $scope.successMsg = undefined;
              // $scope.errorMsg = response.message ;
              // console.log(status);
-             console.log("response is : ", response);
-             console.log("Status is : ", status);
              if (typeof response != 'number'){
                $scope.successMsg = undefined;
                $scope.errorMsg = response.message;

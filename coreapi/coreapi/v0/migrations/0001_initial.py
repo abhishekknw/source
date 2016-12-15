@@ -3,17 +3,45 @@ from __future__ import unicode_literals
 
 from django.db import models, migrations
 import django.db.models.deletion
+import django.contrib.auth.models
+import django.utils.timezone
 from django.conf import settings
+import django.core.validators
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ('contenttypes', '0002_remove_content_type_name'),
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('auth', '0006_require_contenttypes_0002'),
     ]
 
     operations = [
+        migrations.CreateModel(
+            name='BaseUser',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('password', models.CharField(max_length=128, verbose_name='password')),
+                ('last_login', models.DateTimeField(null=True, verbose_name='last login', blank=True)),
+                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
+                ('username', models.CharField(error_messages={'unique': 'A user with that username already exists.'}, max_length=30, validators=[django.core.validators.RegexValidator('^[\\w.@+-]+$', 'Enter a valid username. This value may contain only letters, numbers and @/./+/-/_ characters.', 'invalid')], help_text='Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.', unique=True, verbose_name='username')),
+                ('first_name', models.CharField(max_length=30, verbose_name='first name', blank=True)),
+                ('last_name', models.CharField(max_length=30, verbose_name='last name', blank=True)),
+                ('email', models.EmailField(max_length=254, verbose_name='email address', blank=True)),
+                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
+                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
+                ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
+                ('user_code', models.CharField(default=b'0', max_length=255)),
+                ('groups', models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Group', blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', verbose_name='groups')),
+                ('user_permissions', models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Permission', blank=True, help_text='Specific permissions for this user.', verbose_name='user permissions')),
+            ],
+            options={
+                'db_table': 'base_user',
+            },
+            managers=[
+                (b'objects', django.contrib.auth.models.UserManager()),
+            ],
+        ),
         migrations.CreateModel(
             name='AccountInfo',
             fields=[
@@ -28,7 +56,7 @@ class Migration(migrations.Migration):
                 ('comments', models.TextField(max_length=100, db_column='COMMENTS', blank=True)),
             ],
             options={
-                'db_table': 'ACCOUNT_INFO',
+                'db_table': 'account_info',
             },
         ),
         migrations.CreateModel(
@@ -103,8 +131,6 @@ class Migration(migrations.Migration):
                 ('banner_location', models.CharField(max_length=50, db_column='BANNER_DISPLAY_LOCATION', blank=True)),
                 ('banner_size', models.CharField(max_length=10, db_column='BANNER_SIZE', blank=True)),
                 ('inventory_status', models.CharField(max_length=15, db_column='INVENTORY_STATUS', blank=True)),
-                ('photograph_1', models.CharField(max_length=45, db_column='PHOTOGRAPH_1', blank=True)),
-                ('photograph_2', models.CharField(max_length=45, db_column='PHOTOGRAPH_2', blank=True)),
             ],
             options={
                 'db_table': 'banner_inventory',
@@ -123,15 +149,16 @@ class Migration(migrations.Migration):
                 ('spoc', models.BooleanField(default=False, db_column='SPOC')),
                 ('comments', models.TextField(max_length=100, db_column='COMMENTS', blank=True)),
                 ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
+                ('user', models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'db_table': 'BUSINESS_ACCOUNT_CONTACT',
+                'db_table': 'business_account_contact',
             },
         ),
         migrations.CreateModel(
             name='BusinessInfo',
             fields=[
-                ('business_id', models.CharField(max_length=15, serialize=False, primary_key=True)),
+                ('business_id', models.CharField(max_length=15, serialize=False, primary_key=True, db_column='BUSINESS_ID')),
                 ('name', models.CharField(max_length=50, db_column='NAME', blank=True)),
                 ('phone', models.CharField(max_length=10, db_column='PHONE', blank=True)),
                 ('email', models.CharField(max_length=50, db_column='EMAILID', blank=True)),
@@ -142,7 +169,7 @@ class Migration(migrations.Migration):
                 ('comments', models.TextField(max_length=100, db_column='COMMENTS', blank=True)),
             ],
             options={
-                'db_table': 'BUSINESS_INFO',
+                'db_table': 'business_info',
             },
         ),
         migrations.CreateModel(
@@ -150,10 +177,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
                 ('business_sub_type', models.CharField(max_length=100, db_column='SUBTYPE', blank=True)),
-                ('business_sub_type_code', models.CharField(max_length=3, db_column='SUBTYPE_CODE')),
+                ('business_sub_type_code', models.CharField(max_length=3, null=True, db_column='SUBTYPE_CODE', blank=True)),
             ],
             options={
-                'db_table': 'BUSINESS_SUBTYPES',
+                'db_table': 'business_subtypes',
             },
         ),
         migrations.CreateModel(
@@ -161,10 +188,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
                 ('business_type', models.CharField(max_length=100, db_column='BUSINESS_TYPE', blank=True)),
-                ('business_type_code', models.CharField(unique=True, max_length=4, db_column='TYPE_CODE')),
+                ('business_type_code', models.CharField(max_length=4, unique=True, null=True, db_column='TYPE_CODE', blank=True)),
             ],
             options={
-                'db_table': 'BUSINESS_TYPES',
+                'db_table': 'business_types',
             },
         ),
         migrations.CreateModel(
@@ -182,45 +209,16 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='CampaignBookingInfo',
+            name='CampaignLeads',
             fields=[
-                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
-                ('booking_id', models.IntegerField(null=True, db_column='BOOKING_ID')),
-                ('booking_amount', models.FloatField(null=True, db_column='BOOKING_AMOUNT')),
-                ('payment_mode', models.CharField(max_length=20, db_column='PAYMENT_MODE', blank=True)),
-                ('payment_no', models.CharField(max_length=20, db_column='PAYMENT_NO', blank=True)),
-                ('date_received', models.DateField(null=True, db_column='DATE_RECEIVED')),
-                ('campaign', models.ForeignKey(related_name='bookings', db_column='CAMPAIGN_ID', to='v0.Campaign', null=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('campaign_id', models.IntegerField(default=0)),
+                ('lead_email', models.EmailField(default='', max_length=254)),
+                ('comments', models.CharField(max_length=255, null=True)),
+                ('user', models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'db_table': 'campaign_booking_info',
-            },
-        ),
-        migrations.CreateModel(
-            name='CampaignInventoryPrice',
-            fields=[
-                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
-                ('master_factor', models.IntegerField(null=True, db_column='MASTER_FACTOR')),
-                ('business_price', models.IntegerField(null=True, db_column='BUSINESS_PRICE')),
-                ('campaign', models.ForeignKey(related_name='campaign', db_column='CAMPAIGN_ID', to='v0.Campaign', null=True)),
-            ],
-            options={
-                'db_table': 'campaign_inventory_price',
-            },
-        ),
-        migrations.CreateModel(
-            name='CampaignOtherCost',
-            fields=[
-                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
-                ('content_dev_cost', models.IntegerField(null=True, db_column='CONTENT_DEV_COST')),
-                ('pm_cost', models.IntegerField(null=True, db_column='PROJECT_MGMT_COST')),
-                ('data_analytics', models.IntegerField(null=True, db_column='DATA_ANALYTICS')),
-                ('printing_cost', models.IntegerField(null=True, db_column='PRINTING_COST')),
-                ('digital_camp_cost', models.IntegerField(null=True, db_column='DIGITAL_CAMP_COST')),
-                ('campaign', models.ForeignKey(related_name='campaign_cost', db_column='CAMPAIGN_ID', to='v0.Campaign', null=True)),
-            ],
-            options={
-                'db_table': 'campaign_other_cost',
+                'db_table': 'campaign_leads',
             },
         ),
         migrations.CreateModel(
@@ -354,6 +352,16 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='CompanyFloor',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('floor_number', models.IntegerField(null=True, db_column='FLOOR_NUMBER', blank=True)),
+            ],
+            options={
+                'db_table': 'corporate_building_floors',
+            },
+        ),
+        migrations.CreateModel(
             name='ContactDetails',
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='CONTACT_ID')),
@@ -368,6 +376,8 @@ class Migration(migrations.Migration):
                 ('email', models.CharField(max_length=50, null=True, db_column='CONTACT_EMAILID', blank=True)),
                 ('spoc', models.CharField(max_length=5, null=True, db_column='SPOC', blank=True)),
                 ('contact_authority', models.CharField(max_length=5, null=True, db_column='CONTACT_AUTHORITY', blank=True)),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
             ],
             options={
                 'db_table': 'contact_details',
@@ -393,14 +403,58 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='CorporateBuilding',
+            fields=[
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('building_name', models.CharField(max_length=50, null=True, db_column='BUILDING_NAME', blank=True)),
+                ('number_of_wings', models.IntegerField(null=True, db_column='NUMBER_OF_WINGS', blank=True)),
+            ],
+            options={
+                'db_table': 'corporate_building',
+            },
+        ),
+        migrations.CreateModel(
+            name='CorporateBuildingWing',
+            fields=[
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('wing_name', models.CharField(max_length=50, null=True, db_column='WING_NAME', blank=True)),
+                ('number_of_floors', models.IntegerField(null=True, db_column='NUMBER_OF_FLOORS', blank=True)),
+                ('building_id', models.ForeignKey(related_name='buildingwing', db_column='BUILDING_ID', blank=True, to='v0.CorporateBuilding', null=True)),
+            ],
+            options={
+                'db_table': 'corporate_building_wing',
+            },
+        ),
+        migrations.CreateModel(
+            name='CorporateCompanyDetails',
+            fields=[
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('building_name', models.CharField(max_length=20, null=True, db_column='BUILDING_NAME', blank=True)),
+                ('wing_name', models.CharField(max_length=20, null=True, db_column='WING_NAME', blank=True)),
+            ],
+            options={
+                'db_table': 'corporate_company_details',
+            },
+        ),
+        migrations.CreateModel(
             name='CorporateParkCompanyList',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('name', models.CharField(max_length='50', db_column='NAME')),
-                ('largest_employers', models.BooleanField(default=False, db_column='LARGEST_EMPLOYERS')),
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('name', models.CharField(max_length='50', null=True, db_column='COMPANY_NAME', blank=True)),
             ],
             options={
                 'db_table': 'corporateparkcompanylist',
+            },
+        ),
+        migrations.CreateModel(
+            name='DataSciencesCost',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('total_cost', models.FloatField(null=True, blank=True)),
+                ('comment', models.CharField(max_length=1000, null=True, blank=True)),
+            ],
+            options={
+                'db_table': 'data_sciences_cost',
             },
         ),
         migrations.CreateModel(
@@ -449,9 +503,35 @@ class Migration(migrations.Migration):
                 ('poster_spaces_count', models.IntegerField(null=True, db_column='POSTER_SPACES_COUNT', blank=True)),
                 ('standee_spaces_count', models.IntegerField(null=True, db_column='STANDEE_SPACES_COUNT', blank=True)),
                 ('event_status', models.CharField(max_length=10, null=True, db_column='EVENT_STATUS', blank=True)),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
             ],
             options={
                 'db_table': 'events',
+            },
+        ),
+        migrations.CreateModel(
+            name='EventStaffingCost',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('total_cost', models.FloatField(null=True, blank=True)),
+                ('comment', models.CharField(max_length=1000, null=True, blank=True)),
+            ],
+            options={
+                'db_table': 'event_staffing_cost',
+            },
+        ),
+        migrations.CreateModel(
+            name='Filters',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('filter_name', models.CharField(max_length=255, null=True, blank=True)),
+                ('filter_code', models.CharField(max_length=255, null=True, blank=True)),
+                ('is_checked', models.BooleanField(default=False)),
+                ('supplier_type_code', models.CharField(max_length=255, null=True, blank=True)),
+            ],
+            options={
+                'db_table': 'filters',
             },
         ),
         migrations.CreateModel(
@@ -465,6 +545,8 @@ class Migration(migrations.Migration):
                 ('size_builtup_area', models.FloatField(null=True, db_column='SIZE_BUILTUP_AREA', blank=True)),
                 ('flat_rent', models.IntegerField(null=True, db_column='FLAT_RENT', blank=True)),
                 ('average_rent_per_sqft', models.FloatField(null=True, db_column='AVERAGE_RENT_PER_SQFT', blank=True)),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(default=None, to='contenttypes.ContentType', null=True)),
             ],
             options={
                 'db_table': 'flat_type',
@@ -498,6 +580,46 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='FlyerInventory',
+            fields=[
+                ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
+                ('adinventory_id', models.CharField(unique=True, max_length=22, db_column='ADINVENTORY_ID')),
+                ('flat_count', models.IntegerField(null=True, db_column='FLAT_COUNT', blank=True)),
+                ('mailbox_allowed', models.BooleanField(default=False, db_column='MAILBOX_ALLOWED')),
+                ('d2d_allowed', models.BooleanField(default=False, db_column='D2D_ALLOWED')),
+                ('lobbytolobby_allowed', models.BooleanField(default=False, db_column='LOBBYTOLOBBY_ALLOWED')),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
+            ],
+            options={
+                'db_table': 'flyer_inventory',
+            },
+        ),
+        migrations.CreateModel(
+            name='GenericExportFileName',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('date', models.DateTimeField(auto_now_add=True)),
+                ('file_name', models.CharField(max_length=1000, null=True, blank=True)),
+                ('account', models.ForeignKey(blank=True, to='v0.AccountInfo', null=True)),
+                ('business', models.ForeignKey(blank=True, to='v0.BusinessInfo', null=True)),
+            ],
+            options={
+                'db_table': 'generic_export_file_name',
+            },
+        ),
+        migrations.CreateModel(
+            name='IdeationDesignCost',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('total_cost', models.FloatField(null=True, blank=True)),
+                ('comment', models.CharField(max_length=1000, null=True, blank=True)),
+            ],
+            options={
+                'db_table': 'ideation_design_cost',
+            },
+        ),
+        migrations.CreateModel(
             name='ImageMapping',
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
@@ -506,6 +628,8 @@ class Migration(migrations.Migration):
                 ('image_url', models.CharField(max_length=100, db_column='IMAGE_URL')),
                 ('comments', models.CharField(max_length=100, null=True, db_column='COMMENTS', blank=True)),
                 ('name', models.CharField(max_length=50, null=True, db_column='NAME', blank=True)),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
             ],
             options={
                 'db_table': 'image_mapping',
@@ -600,6 +724,8 @@ class Migration(migrations.Migration):
                 ('poster_count_per_tower', models.IntegerField(null=True, db_column='POSTER_COUNT_PER_TOWER')),
                 ('poster_count_per_nb', models.IntegerField(null=True, db_column='POSTER_COUNT_PER_NB')),
                 ('standee_count_per_tower', models.IntegerField(null=True, db_column='STANDEE_COUNT_PER_TOWER')),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(default=None, to='contenttypes.ContentType', null=True)),
             ],
             options={
                 'db_table': 'inventory_summary',
@@ -622,59 +748,43 @@ class Migration(migrations.Migration):
                 ('banner_type', models.CharField(max_length=10, null=True, blank=True)),
             ],
             options={
-                'db_table': 'INVENTORY TYPE',
+                'db_table': 'inventory_type',
             },
         ),
         migrations.CreateModel(
-            name='JMN_society',
+            name='InventoryTypeVersion',
             fields=[
-                ('soc_id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
-                ('name', models.CharField(max_length=100, null=True, db_column='society_name', blank=True)),
-                ('flats', models.CharField(max_length=15, null=True, db_column='flats', blank=True)),
-                ('population', models.CharField(max_length=10, null=True, db_column='population', blank=True)),
-                ('type', models.CharField(max_length=20, null=True, db_column='type', blank=True)),
-                ('incomeGroup', models.CharField(max_length=15, null=True, db_column='incomeGroup', blank=True)),
-                ('address', models.CharField(max_length=200, null=True, db_column='address', blank=True)),
-                ('city', models.CharField(max_length=20, null=True, db_column='city', blank=True)),
-                ('noticeBoard1', models.CharField(max_length=10, null=True, db_column='noticeBoard1', blank=True)),
-                ('noticeBoard1LastDt', models.CharField(max_length=25, null=True, db_column='noticeBoard1LastDt', blank=True)),
-                ('noticeBoard1Count', models.CharField(max_length=10, null=True, db_column='noticeBoard1Count', blank=True)),
-                ('noticeBoard1Duration', models.CharField(max_length=10, null=True, db_column='noticeBoard1Duration', blank=True)),
-                ('kiosk', models.CharField(max_length=10, null=True, db_column='kiosk', blank=True)),
-                ('kioskLastDt', models.CharField(max_length=25, null=True, db_column='kioskLastDt', blank=True)),
-                ('carDisplay', models.CharField(max_length=10, null=True, db_column='carDisplay', blank=True)),
-                ('carDisplayLastDt', models.CharField(max_length=25, null=True, db_column='carDisplayLastDt', blank=True)),
-                ('festivalStall', models.CharField(max_length=10, null=True, db_column='festivalStall', blank=True)),
-                ('festivalStallLastDt', models.CharField(max_length=25, null=True, db_column='festivalStallLastDt', blank=True)),
-                ('flyer', models.CharField(max_length=10, null=True, db_column='flyer', blank=True)),
-                ('flyerDistributionMode', models.CharField(max_length=20, null=True, db_column='flyerDistributionMode', blank=True)),
-                ('flyerLastDt', models.CharField(max_length=25, null=True, db_column='flyerLastDt', blank=True)),
-                ('billJacketLastDt', models.CharField(max_length=25, null=True, db_column='billJacketLastDt', blank=True)),
-                ('mainGate', models.CharField(max_length=10, null=True, db_column='mainGate', blank=True)),
-                ('mainGateLastDt', models.CharField(max_length=20, null=True, db_column='mainGateLastDt', blank=True)),
-                ('guardCharge', models.CharField(max_length=10, null=True, db_column='guardCharge', blank=True)),
-                ('lat', models.CharField(max_length=15, null=True, db_column='latitude', blank=True)),
-                ('lon', models.CharField(max_length=15, null=True, db_column='longitude', blank=True)),
-                ('region', models.CharField(max_length=70, null=True, db_column='region', blank=True)),
-                ('active', models.CharField(max_length=5, null=True, db_column='active', blank=True)),
-                ('lastDt', models.CharField(max_length=25, null=True, db_column='lastDt', blank=True)),
-                ('photo', models.CharField(max_length=100, null=True, db_column='photo', blank=True)),
-                ('contact1Name', models.CharField(max_length=30, null=True, db_column='contact1Name', blank=True)),
-                ('contact1Designation', models.CharField(max_length=15, null=True, db_column='contact1Designation', blank=True)),
-                ('contact1Email', models.CharField(max_length=50, null=True, db_column='contact1Email', blank=True)),
-                ('contact1Mobile', models.CharField(max_length=15, null=True, db_column='contact1Mobile', blank=True)),
-                ('contact2Name', models.CharField(max_length=30, null=True, db_column='contact2Name', blank=True)),
-                ('contact2Designation', models.CharField(max_length=15, null=True, db_column='contact2Designation', blank=True)),
-                ('contact2Email', models.CharField(max_length=50, null=True, db_column='contact2Email', blank=True)),
-                ('contact2Mobile', models.CharField(max_length=15, null=True, db_column='contact2Mobile', blank=True)),
-                ('referredBy', models.CharField(max_length=20, null=True, db_column='referredBy', blank=True)),
-                ('referredByEmail', models.CharField(max_length=40, null=True, db_column='referredByEmail', blank=True)),
-                ('notPermitted', models.CharField(max_length=30, null=True, db_column='notPermitted', blank=True)),
-                ('paymentMode', models.CharField(max_length=20, null=True, db_column='paymentMode', blank=True)),
-                ('paymentDetail', models.CharField(max_length=20, null=True, db_column='paymentDetail', blank=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('supplier_code', models.CharField(max_length=4, db_index=True)),
+                ('poster_allowed', models.BooleanField(default=False)),
+                ('poster_type', models.CharField(max_length=10, null=True, blank=True)),
+                ('standee_allowed', models.BooleanField(default=False)),
+                ('standee_type', models.CharField(max_length=10, null=True, blank=True)),
+                ('flier_allowed', models.BooleanField(default=False)),
+                ('flier_type', models.CharField(max_length=20, null=True, blank=True)),
+                ('stall_allowed', models.BooleanField(default=False)),
+                ('stall_type', models.CharField(max_length=10, null=True, blank=True)),
+                ('banner_allowed', models.BooleanField(default=False)),
+                ('banner_type', models.CharField(max_length=10, null=True, blank=True)),
             ],
             options={
-                'db_table': 'jmn_society',
+                'db_table': 'inventory_type_version',
+            },
+        ),
+        migrations.CreateModel(
+            name='Lead',
+            fields=[
+                ('email', models.EmailField(max_length=254, serialize=False, primary_key=True)),
+                ('name', models.CharField(max_length=255, null=True, blank=True)),
+                ('gender', models.CharField(max_length=255, null=True, blank=True)),
+                ('age', models.FloatField(null=True, blank=True)),
+                ('phone', models.IntegerField(null=True, blank=True)),
+                ('address', models.CharField(max_length=255, null=True, blank=True)),
+                ('lead_type', models.CharField(max_length=255, null=True, blank=True)),
+                ('lead_status', models.CharField(max_length=255, null=True, blank=True)),
+            ],
+            options={
+                'db_table': 'lead',
             },
         ),
         migrations.CreateModel(
@@ -696,6 +806,17 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'lift_details',
+            },
+        ),
+        migrations.CreateModel(
+            name='LogisticOperationsCost',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('total_cost', models.FloatField(null=True, blank=True)),
+                ('comment', models.CharField(max_length=1000, null=True, blank=True)),
+            ],
+            options={
+                'db_table': 'logistic_operations_cost',
             },
         ),
         migrations.CreateModel(
@@ -729,8 +850,6 @@ class Migration(migrations.Migration):
                 ('notice_board_lit', models.CharField(max_length=5, null=True, db_column='NOTICE_BOARD_LIT', blank=True)),
                 ('notice_board_size_length', models.FloatField(default=0.0, null=True, db_column='NOTICE_BOARD_SIZE_LENGTH', blank=True)),
                 ('notice_board_size_breadth', models.FloatField(default=0.0, null=True, db_column='NOTICE_BOARD_SIZE_BREADTH', blank=True)),
-                ('photograph_1', models.CharField(max_length=45, null=True, db_column='PHOTOGRAPH_1', blank=True)),
-                ('photograph_2', models.CharField(max_length=45, null=True, db_column='PHOTOGRAPH_2', blank=True)),
                 ('adinventory_id', models.CharField(max_length=22, null=True, db_column='ADINVENTORY_ID', blank=True)),
             ],
             options={
@@ -786,6 +905,8 @@ class Migration(migrations.Migration):
                 ('inventory_status', models.CharField(max_length=20, null=True, db_column='INVENTORY_STATUS', blank=True)),
                 ('poster_count_per_notice_board', models.IntegerField(null=True, db_column='POSTER_COUNT_PER_NOTICE_BOARD', blank=True)),
                 ('inventory_type_id', models.CharField(max_length=255, null=True, db_column='INVENTORY_TYPE_ID', blank=True)),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
             ],
             options={
                 'db_table': 'poster_inventory',
@@ -823,13 +944,26 @@ class Migration(migrations.Migration):
             name='PriceMappingDefault',
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
-                ('society_price', models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')),
-                ('business_price', models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')),
+                ('supplier_price', models.IntegerField(null=True, db_column='SUGGESTED_SOCIETY_PRICE', blank=True)),
+                ('business_price', models.IntegerField(null=True, db_column='ACTUAL_SOCIETY_PRICE', blank=True)),
+                ('object_id', models.CharField(max_length=12, null=True)),
                 ('adinventory_type', models.ForeignKey(db_column='ADINVENTORY_TYPE_ID', blank=True, to='v0.AdInventoryType', null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
                 ('duration_type', models.ForeignKey(db_column='DURATION_ID', blank=True, to='v0.DurationType', null=True)),
             ],
             options={
                 'db_table': 'price_mapping_default',
+            },
+        ),
+        migrations.CreateModel(
+            name='PrintingCost',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('total_cost', models.FloatField(null=True, blank=True)),
+                ('comment', models.CharField(max_length=1000, null=True, blank=True)),
+            ],
+            options={
+                'db_table': 'printing_cost',
             },
         ),
         migrations.CreateModel(
@@ -838,24 +972,53 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('center_name', models.CharField(max_length=50)),
                 ('address', models.CharField(max_length=150, null=True, blank=True)),
-                ('latitude', models.FloatField()),
-                ('longitude', models.FloatField()),
-                ('radius', models.FloatField()),
+                ('latitude', models.FloatField(default=0.0)),
+                ('longitude', models.FloatField(default=0.0)),
+                ('radius', models.FloatField(default=0.0)),
                 ('subarea', models.CharField(max_length=35)),
                 ('area', models.CharField(max_length=35)),
                 ('city', models.CharField(max_length=35)),
                 ('pincode', models.IntegerField()),
             ],
             options={
-                'db_table': 'PROPOSAL CENTER MAPPING',
+                'db_table': 'proposal_center_mapping',
+            },
+        ),
+        migrations.CreateModel(
+            name='ProposalCenterMappingVersion',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('center_name', models.CharField(max_length=50)),
+                ('address', models.CharField(max_length=150, null=True, blank=True)),
+                ('latitude', models.FloatField()),
+                ('longitude', models.FloatField()),
+                ('radius', models.FloatField()),
+                ('subarea', models.CharField(default='', max_length=35)),
+                ('area', models.CharField(default='', max_length=35)),
+                ('city', models.CharField(default='', max_length=35)),
+                ('pincode', models.IntegerField(default=0)),
+            ],
+            options={
+                'db_table': 'proposal_center_mapping_version',
+            },
+        ),
+        migrations.CreateModel(
+            name='ProposalCenterSuppliers',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('supplier_type_code', models.CharField(max_length=255, null=True, blank=True)),
+                ('center', models.ForeignKey(blank=True, to='v0.ProposalCenterMapping', null=True)),
+            ],
+            options={
+                'db_table': 'proposal_center_suppliers',
             },
         ),
         migrations.CreateModel(
             name='ProposalInfo',
             fields=[
-                ('proposal_id', models.CharField(max_length=15, serialize=False, primary_key=True, db_column='PROPOSAL ID')),
-                ('name', models.CharField(max_length=50, db_column='NAME', blank=True)),
-                ('payment_status', models.BooleanField(default=False, db_column='PAYMENT STATUS')),
+                ('proposal_id', models.CharField(max_length=255, serialize=False, primary_key=True)),
+                ('name', models.CharField(max_length=50, null=True, blank=True)),
+                ('payment_status', models.BooleanField(default=False)),
                 ('updated_on', models.DateTimeField(auto_now=True)),
                 ('updated_by', models.CharField(default='Admin', max_length=50)),
                 ('created_on', models.DateTimeField(auto_now_add=True)),
@@ -863,10 +1026,60 @@ class Migration(migrations.Migration):
                 ('tentative_cost', models.IntegerField(default=5000)),
                 ('tentative_start_date', models.DateTimeField(null=True)),
                 ('tentative_end_date', models.DateTimeField(null=True)),
-                ('account', models.ForeignKey(related_name='proposals', db_column='ACCOUNT', to='v0.AccountInfo')),
+                ('is_campaign', models.BooleanField(default=False)),
+                ('account', models.ForeignKey(related_name='proposals', to='v0.AccountInfo')),
+                ('parent', models.ForeignKey(default=None, blank=True, to='v0.ProposalInfo', null=True)),
             ],
             options={
-                'db_table': 'PROPOSAL_INFO',
+                'db_table': 'proposal_info',
+            },
+        ),
+        migrations.CreateModel(
+            name='ProposalInfoVersion',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(max_length=50, db_column='NAME', blank=True)),
+                ('payment_status', models.BooleanField(default=False, db_column='PAYMENT STATUS')),
+                ('created_on', models.DateTimeField()),
+                ('created_by', models.CharField(default='Admin', max_length=50)),
+                ('tentative_cost', models.IntegerField(default=5000)),
+                ('tentative_start_date', models.DateTimeField(null=True)),
+                ('tentative_end_date', models.DateTimeField(null=True)),
+                ('timestamp', models.DateTimeField(auto_now=True)),
+                ('proposal', models.ForeignKey(related_name='proposal_versions', db_column='PROPOSAL', to='v0.ProposalInfo')),
+            ],
+            options={
+                'db_table': 'proposal_info_version',
+            },
+        ),
+        migrations.CreateModel(
+            name='ProposalMasterCost',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('agency_cost', models.FloatField(null=True, blank=True)),
+                ('basic_cost', models.FloatField(null=True, blank=True)),
+                ('discount', models.FloatField(null=True, blank=True)),
+                ('total_cost', models.FloatField(null=True, blank=True)),
+                ('tax', models.FloatField(null=True, blank=True)),
+                ('total_impressions', models.FloatField(null=True, blank=True)),
+                ('average_cost_per_impression', models.FloatField(null=True, blank=True)),
+                ('proposal', models.OneToOneField(null=True, blank=True, to='v0.ProposalInfo')),
+            ],
+            options={
+                'db_table': 'proposal_master_cost_details',
+            },
+        ),
+        migrations.CreateModel(
+            name='ProposalMetrics',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('metric_name', models.CharField(max_length=255, null=True, blank=True)),
+                ('value', models.FloatField(null=True, blank=True)),
+                ('proposal_master_cost', models.ForeignKey(blank=True, to='v0.ProposalMasterCost', null=True)),
+                ('supplier_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
+            ],
+            options={
+                'db_table': 'proposal_metrics',
             },
         ),
         migrations.CreateModel(
@@ -887,16 +1100,50 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='ShortlistedInventoryPricingDetails',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('supplier_id', models.CharField(max_length=100)),
+                ('inventory_price', models.FloatField(default=0.0, null=True)),
+                ('inventory_count', models.IntegerField(default=0, null=True)),
+                ('factor', models.IntegerField(default=0.0, null=True)),
+                ('supplier_type_code', models.CharField(max_length=255, null=True)),
+                ('ad_inventory_duration', models.ForeignKey(to='v0.DurationType', null=True)),
+                ('ad_inventory_type', models.ForeignKey(to='v0.AdInventoryType', null=True)),
+                ('center', models.ForeignKey(to='v0.ProposalCenterMapping')),
+                ('proposal', models.ForeignKey(to='v0.ProposalInfo')),
+            ],
+            options={
+                'db_table': 'shortlisted_inventory_pricing_details',
+            },
+        ),
+        migrations.CreateModel(
             name='ShortlistedSpaces',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('supplier_code', models.CharField(max_length=4, null=True, blank=True)),
+                ('object_id', models.CharField(max_length=12)),
+                ('buffer_status', models.BooleanField(default=False)),
+                ('status', models.CharField(max_length=10, null=True, blank=True)),
+                ('center', models.ForeignKey(blank=True, to='v0.ProposalCenterMapping', null=True)),
+                ('content_type', models.ForeignKey(related_name='spaces', to='contenttypes.ContentType')),
+                ('proposal', models.ForeignKey(blank=True, to='v0.ProposalInfo', null=True)),
+            ],
+            options={
+                'db_table': 'shortlisted_spaces',
+            },
+        ),
+        migrations.CreateModel(
+            name='ShortlistedSpacesVersion',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('supplier_code', models.CharField(max_length=4)),
                 ('object_id', models.CharField(max_length=12)),
                 ('buffer_status', models.BooleanField(default=False)),
-                ('content_type', models.ForeignKey(related_name='spaces', to='contenttypes.ContentType')),
+                ('content_type', models.ForeignKey(related_name='spaces_version', to='contenttypes.ContentType')),
             ],
             options={
-                'db_table': 'SHORTLISTED SPACES',
+                'db_table': 'shortlisted_spaces_version',
             },
         ),
         migrations.CreateModel(
@@ -938,8 +1185,10 @@ class Migration(migrations.Migration):
                 ('start_date', models.DateField(null=True, db_column='START_DATE')),
                 ('end_date', models.DateField(null=True, db_column='END_DATE')),
                 ('audit_date', models.DateField(null=True, db_column='AUDIT_DATE')),
+                ('object_id', models.CharField(max_length=12, null=True)),
                 ('adinventory_type', models.ForeignKey(db_column='ADINVENTORY_TYPE', to='v0.CampaignTypeMapping', null=True)),
                 ('campaign', models.ForeignKey(related_name='inventory_bookings', db_column='CAMPAIGN_ID', to='v0.Campaign', null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
             ],
             options={
                 'db_table': 'society_inventory_booking',
@@ -994,9 +1243,24 @@ class Migration(migrations.Migration):
                 ('flat_type_count', models.IntegerField(default=0, db_column='FLAT_TYPE_COUNT')),
                 ('standee_count', models.IntegerField(default=0, db_column='STANDEE_COUNT')),
                 ('average_rent_per_sqft', models.IntegerField(null=True, db_column='AVERAGE_RENT_PER_SQFT', blank=True)),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
             ],
             options={
                 'db_table': 'society_tower',
+            },
+        ),
+        migrations.CreateModel(
+            name='SpaceBookingCost',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('total_cost', models.FloatField(null=True, blank=True)),
+                ('comment', models.CharField(max_length=1000, null=True, blank=True)),
+                ('proposal_master_cost', models.ForeignKey(blank=True, to='v0.ProposalMasterCost', null=True)),
+                ('supplier_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
+            ],
+            options={
+                'db_table': 'space_booking_cost',
             },
         ),
         migrations.CreateModel(
@@ -1012,14 +1276,37 @@ class Migration(migrations.Migration):
                 ('gym_allowed', models.BooleanField(default=False)),
                 ('gym_count', models.IntegerField(default=0)),
                 ('gym_buffer_count', models.IntegerField(default=0)),
-                ('saloon_allowed', models.BooleanField(default=False)),
-                ('saloon_count', models.IntegerField(default=0)),
-                ('saloon_buffer_count', models.IntegerField(default=0)),
+                ('salon_allowed', models.BooleanField(default=False)),
+                ('salon_count', models.IntegerField(default=0)),
+                ('salon_buffer_count', models.IntegerField(default=0)),
                 ('center', models.OneToOneField(related_name='space_mappings', to='v0.ProposalCenterMapping')),
                 ('proposal', models.ForeignKey(related_name='space_mapping', to='v0.ProposalInfo')),
             ],
             options={
-                'db_table': 'SPACE MAPPING',
+                'db_table': 'space_mapping',
+            },
+        ),
+        migrations.CreateModel(
+            name='SpaceMappingVersion',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('society_allowed', models.BooleanField(default=False)),
+                ('society_count', models.IntegerField(default=0)),
+                ('society_buffer_count', models.IntegerField(default=0)),
+                ('corporate_allowed', models.BooleanField(default=False)),
+                ('corporate_count', models.IntegerField(default=0)),
+                ('corporate_buffer_count', models.IntegerField(default=0)),
+                ('gym_allowed', models.BooleanField(default=False)),
+                ('gym_count', models.IntegerField(default=0)),
+                ('gym_buffer_count', models.IntegerField(default=0)),
+                ('salon_allowed', models.BooleanField(default=False)),
+                ('salon_count', models.IntegerField(default=0)),
+                ('salon_buffer_count', models.IntegerField(default=0)),
+                ('center_version', models.OneToOneField(related_name='space_mappings_version', to='v0.ProposalCenterMappingVersion')),
+                ('proposal_version', models.ForeignKey(related_name='space_mapping_version', to='v0.ProposalInfoVersion')),
+            ],
+            options={
+                'db_table': 'space_mapping_version',
             },
         ),
         migrations.CreateModel(
@@ -1042,8 +1329,6 @@ class Migration(migrations.Migration):
                 ('play_areas_count', models.IntegerField(null=True, db_column='PLAY_AREAS_COUNT', blank=True)),
                 ('play_area_size', models.IntegerField(null=True, db_column='PLAY_AREA_SIZE', blank=True)),
                 ('sports_type', models.CharField(max_length=20, null=True, db_column='SPORTS_TYPE', blank=True)),
-                ('photograph_1', models.CharField(max_length=45, null=True, db_column='PHOTOGRAPH_1', blank=True)),
-                ('photograph_2', models.CharField(max_length=45, null=True, db_column='PHOTOGRAPH_2', blank=True)),
             ],
             options={
                 'db_table': 'sports_infra',
@@ -1071,6 +1356,8 @@ class Migration(migrations.Migration):
                 ('furniture_details', models.CharField(max_length=50, null=True, db_column='STALL_FURNITURE_DETAILS', blank=True)),
                 ('stall_size', models.CharField(max_length=20, null=True, db_column='STALL_SIZE', blank=True)),
                 ('stall_timing', models.CharField(max_length=20, null=True, db_column='STALL_TIMINGS', blank=True)),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
             ],
             options={
                 'db_table': 'stall_inventory',
@@ -1087,6 +1374,8 @@ class Migration(migrations.Migration):
                 ('type', models.CharField(max_length=10, null=True, db_column='STANDEE_TYPE', blank=True)),
                 ('standee_size', models.CharField(max_length=10, null=True, db_column='STANDEE_SIZE', blank=True)),
                 ('standee_sides', models.CharField(max_length=10, null=True, db_column='STANDEE_SIDES', blank=True)),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
                 ('tower', models.ForeignKey(related_name='standees', db_column='TOWER_ID', blank=True, to='v0.SocietyTower', null=True)),
             ],
             options={
@@ -1149,6 +1438,36 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='SupplierTypeBusShelter',
+            fields=[
+                ('supplier_id', models.CharField(max_length=20, serialize=False, primary_key=True)),
+                ('supplier_code', models.CharField(max_length=3, null=True)),
+                ('name', models.CharField(max_length=70, null=True, blank=True)),
+                ('address1', models.CharField(max_length=250, null=True, blank=True)),
+                ('address2', models.CharField(max_length=250, null=True, blank=True)),
+                ('area', models.CharField(max_length=255, null=True, blank=True)),
+                ('subarea', models.CharField(max_length=30, null=True, blank=True)),
+                ('city', models.CharField(max_length=250, null=True, blank=True)),
+                ('state', models.CharField(max_length=250, null=True, blank=True)),
+                ('zipcode', models.IntegerField(null=True, blank=True)),
+                ('latitude', models.FloatField(default=0.0, null=True, blank=True)),
+                ('longitude', models.FloatField(default=0.0, null=True, blank=True)),
+                ('locality_rating', models.CharField(max_length=50, null=True, blank=True)),
+                ('quality_rating', models.CharField(max_length=50, null=True, blank=True)),
+                ('machadalo_index', models.CharField(max_length=30, null=True, blank=True)),
+                ('bank_account_name', models.CharField(max_length=250, null=True, blank=True)),
+                ('bank_name', models.CharField(max_length=250, null=True, blank=True)),
+                ('ifsc_code', models.CharField(max_length=30, null=True, blank=True)),
+                ('account_number', models.CharField(max_length=250, null=True, blank=True)),
+                ('lit_status', models.CharField(max_length=255, null=True, blank=True)),
+                ('halt_buses_count', models.IntegerField(null=True, blank=True)),
+                ('user', models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'db_table': 'supplier_bus_shelter',
+            },
+        ),
+        migrations.CreateModel(
             name='SupplierTypeCode',
             fields=[
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
@@ -1162,29 +1481,164 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='SupplierTypeCorporate',
             fields=[
-                ('supplier_id', models.CharField(max_length=20, serialize=False, primary_key=True, db_column='SUPPLIER_ID')),
-                ('supplier_code', models.CharField(max_length=3, null=True, db_column='SUPPLIER_CODE')),
-                ('name', models.CharField(max_length=70, null=True, db_column='CORPORATE_NAME', blank=True)),
-                ('address1', models.CharField(max_length=250, null=True, db_column='CORPORATE_ADDRESS1', blank=True)),
-                ('address2', models.CharField(max_length=250, null=True, db_column='CORPORATE_ADDRESS2', blank=True)),
-                ('zip', models.IntegerField(null=True, db_column='CORPORATE_ZIP', blank=True)),
-                ('city', models.CharField(max_length=250, null=True, db_column='CORPORATE_CITY', blank=True)),
-                ('state', models.CharField(max_length=250, null=True, db_column='CORPORATE_STATE', blank=True)),
-                ('longitude', models.FloatField(default=0.0, null=True, db_index=True, db_column='CORPORATE_LONGITUDE', blank=True)),
-                ('locality', models.CharField(max_length=30, null=True, db_column='CORPORATE_LOCALITY', blank=True)),
-                ('latitude', models.FloatField(default=0.0, null=True, db_index=True, db_column='CORPORATE_LATITUDE', blank=True)),
-                ('location_type', models.CharField(max_length=50, null=True, db_column='CORPORATE_LOCATION_TYPE', blank=True)),
-                ('type', models.CharField(max_length=25, db_column='CORPORATE_TYPE')),
-                ('industry_segment', models.CharField(max_length=30, null=True, db_column='CORPORATE_INDUSTRY_SEGMENT', blank=True)),
-                ('age', models.PositiveSmallIntegerField(null=True, db_column='CORPORATE_AGE', blank=True)),
-                ('building_count', models.IntegerField(null=True, db_column='CORPORATE_BUILDING_COUNT', blank=True)),
-                ('floorperbuilding_count', models.IntegerField(null=True, db_column='CORPORATE_FLOORPERBUILDING_COUNT', blank=True)),
-                ('totalcompanies_count', models.IntegerField(null=True, db_column='CORPORATE_TOTALCOMPANIES_COUNT', blank=True)),
-                ('totalemployees_count', models.IntegerField(null=True, db_column='CORPORATE_TOTALEMPLOYEES_COUNT', blank=True)),
-                ('isrealestateallowed', models.BooleanField(default=False, db_column='CORPORATE_ISREALESTATEALLOWED')),
+                ('supplier_id', models.CharField(max_length=20, serialize=False, primary_key=True)),
+                ('supplier_code', models.CharField(max_length=3, null=True)),
+                ('name', models.CharField(max_length=70, null=True, blank=True)),
+                ('address1', models.CharField(max_length=250, null=True, blank=True)),
+                ('address2', models.CharField(max_length=250, null=True, blank=True)),
+                ('area', models.CharField(max_length=255, null=True, blank=True)),
+                ('subarea', models.CharField(max_length=30, null=True, blank=True)),
+                ('city', models.CharField(max_length=250, null=True, blank=True)),
+                ('state', models.CharField(max_length=250, null=True, blank=True)),
+                ('zipcode', models.IntegerField(null=True, blank=True)),
+                ('latitude', models.FloatField(default=0.0, null=True, blank=True)),
+                ('longitude', models.FloatField(default=0.0, null=True, blank=True)),
+                ('locality_rating', models.CharField(max_length=50, null=True, blank=True)),
+                ('quality_rating', models.CharField(max_length=50, null=True, blank=True)),
+                ('machadalo_index', models.CharField(max_length=30, null=True, blank=True)),
+                ('bank_account_name', models.CharField(max_length=250, null=True, blank=True)),
+                ('bank_name', models.CharField(max_length=250, null=True, blank=True)),
+                ('ifsc_code', models.CharField(max_length=30, null=True, blank=True)),
+                ('account_number', models.CharField(max_length=250, null=True, blank=True)),
+                ('corporate_type', models.CharField(max_length=25, null=True, blank=True)),
+                ('industry_segment', models.CharField(max_length=30, null=True, blank=True)),
+                ('possession_year', models.CharField(max_length=5, null=True, blank=True)),
+                ('building_count', models.IntegerField(null=True, blank=True)),
+                ('floorperbuilding_count', models.IntegerField(null=True, blank=True)),
+                ('totalcompanies_count', models.IntegerField(null=True, blank=True)),
+                ('totalemployees_count', models.IntegerField(null=True, blank=True)),
+                ('isrealestateallowed', models.BooleanField(default=False)),
+                ('total_area', models.FloatField(default=0.0, null=True, blank=True)),
+                ('quantity_rating', models.CharField(max_length=50, null=True, blank=True)),
+                ('luxurycars_count', models.IntegerField(null=True, blank=True)),
+                ('standardcars_count', models.IntegerField(null=True, blank=True)),
+                ('totallift_count', models.IntegerField(null=True, blank=True)),
+                ('parkingspaces_count', models.IntegerField(null=True, blank=True)),
+                ('entryexit_count', models.IntegerField(null=True, blank=True)),
+                ('openspaces_count', models.IntegerField(null=True, blank=True)),
+                ('constructionspaces_count', models.IntegerField(null=True, blank=True)),
+                ('constructedspace', models.FloatField(default=0.0, null=True, blank=True)),
+                ('parkingspace', models.FloatField(default=0.0, null=True, blank=True)),
+                ('openspace', models.FloatField(default=0.0, null=True, blank=True)),
+                ('averagerent', models.FloatField(default=0.0, null=True, blank=True)),
+                ('user', models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'db_table': 'supplier_corporate',
+            },
+        ),
+        migrations.CreateModel(
+            name='SupplierTypeGym',
+            fields=[
+                ('supplier_id', models.CharField(max_length=20, serialize=False, primary_key=True)),
+                ('supplier_code', models.CharField(max_length=3, null=True)),
+                ('name', models.CharField(max_length=70, null=True, blank=True)),
+                ('address1', models.CharField(max_length=250, null=True, blank=True)),
+                ('address2', models.CharField(max_length=250, null=True, blank=True)),
+                ('area', models.CharField(max_length=255, null=True, blank=True)),
+                ('subarea', models.CharField(max_length=30, null=True, blank=True)),
+                ('city', models.CharField(max_length=250, null=True, blank=True)),
+                ('state', models.CharField(max_length=250, null=True, blank=True)),
+                ('zipcode', models.IntegerField(null=True, blank=True)),
+                ('latitude', models.FloatField(default=0.0, null=True, blank=True)),
+                ('longitude', models.FloatField(default=0.0, null=True, blank=True)),
+                ('locality_rating', models.CharField(max_length=50, null=True, blank=True)),
+                ('quality_rating', models.CharField(max_length=50, null=True, blank=True)),
+                ('machadalo_index', models.CharField(max_length=30, null=True, blank=True)),
+                ('bank_account_name', models.CharField(max_length=250, null=True, blank=True)),
+                ('bank_name', models.CharField(max_length=250, null=True, blank=True)),
+                ('ifsc_code', models.CharField(max_length=30, null=True, blank=True)),
+                ('account_number', models.CharField(max_length=250, null=True, blank=True)),
+                ('gym_type', models.CharField(max_length=30, null=True, blank=True)),
+                ('category', models.CharField(max_length=30, null=True, blank=True)),
+                ('gym_type_chain', models.CharField(max_length=30, null=True, blank=True)),
+                ('chain_origin', models.CharField(max_length=30, null=True, blank=True)),
+                ('totalmembership_perannum', models.IntegerField(null=True, blank=True)),
+                ('footfall_day', models.IntegerField(null=True, blank=True)),
+                ('footfall_weekend', models.IntegerField(null=True, blank=True)),
+                ('advertising_media', models.CharField(max_length=30, null=True, blank=True)),
+                ('dietchart_price', models.IntegerField(null=True, blank=True)),
+                ('stall_price_day', models.IntegerField(null=True, blank=True)),
+                ('stall_price_two_day', models.IntegerField(null=True, blank=True)),
+                ('standee_price_week', models.IntegerField(null=True, blank=True)),
+                ('standee_price_two_week', models.IntegerField(null=True, blank=True)),
+                ('standee_price_month', models.IntegerField(null=True, blank=True)),
+                ('standee_places', models.IntegerField(null=True, blank=True)),
+                ('standee_location', models.CharField(max_length=30, null=True, blank=True)),
+                ('banner_price_week', models.IntegerField(null=True, blank=True)),
+                ('banner_price_month', models.IntegerField(null=True, blank=True)),
+                ('banner_places', models.IntegerField(null=True, blank=True)),
+                ('banner_location', models.CharField(max_length=30, null=True, blank=True)),
+                ('flyer_price_month', models.IntegerField(null=True, blank=True)),
+                ('flyer_distribution', models.CharField(max_length=30, null=True, blank=True)),
+                ('poster_price_week', models.IntegerField(null=True, blank=True)),
+                ('poster_price_month', models.IntegerField(null=True, blank=True)),
+                ('poster_places', models.IntegerField(null=True, blank=True)),
+                ('mirrorstrip_count', models.IntegerField(null=True, blank=True)),
+                ('mirrorstrip_price_week', models.IntegerField(null=True, blank=True)),
+                ('mirrorstrip_price_month', models.IntegerField(null=True, blank=True)),
+                ('locker_count', models.IntegerField(null=True, blank=True)),
+                ('locker_price_week', models.IntegerField(null=True, blank=True)),
+                ('locker_price_month', models.IntegerField(null=True, blank=True)),
+                ('wall_price_month', models.IntegerField(null=True, blank=True)),
+                ('wall_price_three_month', models.IntegerField(null=True, blank=True)),
+                ('user', models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'db_table': 'supplier_gym',
+            },
+        ),
+        migrations.CreateModel(
+            name='SupplierTypeSalon',
+            fields=[
+                ('supplier_id', models.CharField(max_length=20, serialize=False, primary_key=True)),
+                ('supplier_code', models.CharField(max_length=3, null=True)),
+                ('name', models.CharField(max_length=70, null=True, blank=True)),
+                ('address1', models.CharField(max_length=250, null=True, blank=True)),
+                ('address2', models.CharField(max_length=250, null=True, blank=True)),
+                ('area', models.CharField(max_length=255, null=True, blank=True)),
+                ('subarea', models.CharField(max_length=30, null=True, blank=True)),
+                ('city', models.CharField(max_length=250, null=True, blank=True)),
+                ('state', models.CharField(max_length=250, null=True, blank=True)),
+                ('zipcode', models.IntegerField(null=True, blank=True)),
+                ('latitude', models.FloatField(default=0.0, null=True, blank=True)),
+                ('longitude', models.FloatField(default=0.0, null=True, blank=True)),
+                ('locality_rating', models.CharField(max_length=50, null=True, blank=True)),
+                ('quality_rating', models.CharField(max_length=50, null=True, blank=True)),
+                ('machadalo_index', models.CharField(max_length=30, null=True, blank=True)),
+                ('bank_account_name', models.CharField(max_length=250, null=True, blank=True)),
+                ('bank_name', models.CharField(max_length=250, null=True, blank=True)),
+                ('ifsc_code', models.CharField(max_length=30, null=True, blank=True)),
+                ('account_number', models.CharField(max_length=250, null=True, blank=True)),
+                ('salon_type', models.CharField(max_length=30, null=True, db_column='SALON_TYPE', blank=True)),
+                ('category', models.CharField(max_length=30, null=True, db_column='CATEGORY', blank=True)),
+                ('salon_type_chain', models.CharField(max_length=30, null=True, db_column='SALON_TYPE_CHAIN', blank=True)),
+                ('footfall_day', models.IntegerField(null=True, db_column='FOOTFALL_DAY', blank=True)),
+                ('footfall_week', models.IntegerField(null=True, db_column='FOOTFALL_WEEK', blank=True)),
+                ('footfall_weekend', models.IntegerField(null=True, db_column='FOOTFALL_WEEKEND', blank=True)),
+                ('isspaavailable', models.BooleanField(default=False, db_column='ISSPAAVAILABLE')),
+                ('advertising_media', models.CharField(max_length=30, null=True, db_column='AD_MEDIA', blank=True)),
+                ('shop_size', models.CharField(max_length=30, null=True, db_column='SHOP_SIZE', blank=True)),
+                ('floor_size', models.CharField(max_length=30, null=True, db_column='FLOOR_SIZE', blank=True)),
+                ('standee_price_week', models.IntegerField(null=True, db_column='ST_PRICE_WEEK', blank=True)),
+                ('standee_price_weekend', models.IntegerField(null=True, db_column='ST_PRICE_WEEKEND', blank=True)),
+                ('standee_places', models.IntegerField(null=True, db_column='ST_PLACES', blank=True)),
+                ('standee_location', models.IntegerField(null=True, db_column='ST_LOCATION', blank=True)),
+                ('banner_price_week', models.IntegerField(null=True, db_column='BA_PRICE_WEEK', blank=True)),
+                ('banner_price_weekend', models.IntegerField(null=True, db_column='BA_PRICE_WEEKEND', blank=True)),
+                ('banner_places', models.IntegerField(null=True, db_column='BA_PLACES', blank=True)),
+                ('banner_location', models.IntegerField(null=True, db_column='BA_LOCATION', blank=True)),
+                ('flyer_price_week', models.IntegerField(null=True, db_column='FL_PRICE_WEEK', blank=True)),
+                ('flyer_distribution', models.IntegerField(null=True, db_column='FL_DISTRIBUTION', blank=True)),
+                ('poster_price_week', models.IntegerField(null=True, db_column='PO_PRICE_WEEK', blank=True)),
+                ('poster_price_weekend', models.IntegerField(null=True, db_column='PO_PRICE_WEEKEND', blank=True)),
+                ('poster_places', models.IntegerField(null=True, db_column='PO_PLACES', blank=True)),
+                ('mirrorstrip_price_week', models.IntegerField(null=True, db_column='MS_PRICE_WEEK', blank=True)),
+                ('mirrorstrip_price_month', models.IntegerField(null=True, db_column='MS_PRICE_MONTH', blank=True)),
+                ('user', models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'db_table': 'supplier_salon',
             },
         ),
         migrations.CreateModel(
@@ -1277,6 +1731,7 @@ class Migration(migrations.Migration):
                 ('car_display_allowed', models.BooleanField(default=False, db_column='CAR_DISPLAY_ALLOWED')),
                 ('banner_allowed', models.BooleanField(default=False, db_column='BANNER_ALLOWED')),
                 ('created_by', models.ForeignKey(related_name='societies', db_column='CREATED_BY', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('user', models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'db_table': 'supplier_society',
@@ -1318,7 +1773,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('area', models.ForeignKey(to='v0.CityArea', db_column='area_id')),
-                ('user', models.ForeignKey(related_name='clusters', db_column='user_id', to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(related_name='clusters', db_column='user_id', default=1, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'db_table': 'user_areas',
@@ -1329,7 +1784,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('city', models.ForeignKey(db_column='city_id', to='v0.City', null=True)),
-                ('user', models.ForeignKey(related_name='cities', db_column='user_id', to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(related_name='cities', db_column='user_id', default=1, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'db_table': 'user_cities',
@@ -1359,7 +1814,7 @@ class Migration(migrations.Migration):
                 ('society_form_access', models.BooleanField(default=False, db_column='society_form_access')),
                 ('corporate_form_access', models.BooleanField(default=False, db_column='corporate_form_access')),
                 ('created_by', models.ForeignKey(db_column='created_by', to=settings.AUTH_USER_MODEL, null=True)),
-                ('user', models.ForeignKey(related_name='user_profile', db_column='user_id', to=settings.AUTH_USER_MODEL, unique=True)),
+                ('user', models.ForeignKey(related_name='user_profile', db_column='user_id', default=1, to=settings.AUTH_USER_MODEL, unique=True)),
             ],
             options={
                 'db_table': 'user_profile',
@@ -1385,6 +1840,8 @@ class Migration(migrations.Migration):
                 ('wall_paint_allowed', models.CharField(max_length=5, null=True, db_column='WALL_PAINT_ALLOWED', blank=True)),
                 ('wall_frame_status', models.CharField(max_length=5, null=True, db_column='WALL_FRAME_STATUS', blank=True)),
                 ('wall_inventory_status', models.CharField(max_length=15, null=True, db_column='WALL_INVENTORY_STATUS', blank=True)),
+                ('object_id', models.CharField(max_length=12, null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
                 ('supplier', models.ForeignKey(related_name='walls', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True)),
             ],
             options={
@@ -1432,18 +1889,43 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='flats', db_column='TOWER_ID', blank=True, to='v0.SocietyTower', null=True),
         ),
         migrations.AddField(
+            model_name='shortlistedspacesversion',
+            name='space_mapping_version',
+            field=models.ForeignKey(related_name='spaces_version', to='v0.SpaceMappingVersion'),
+        ),
+        migrations.AddField(
             model_name='shortlistedspaces',
             name='space_mapping',
-            field=models.ForeignKey(related_name='spaces', to='v0.SpaceMapping'),
+            field=models.ForeignKey(related_name='spaces', blank=True, to='v0.SpaceMapping', null=True),
         ),
         migrations.AlterUniqueTogether(
             name='ratiodetails',
             unique_together=set([('supplier_id', 'machadalo_index')]),
         ),
         migrations.AddField(
+            model_name='proposalcentersuppliers',
+            name='proposal',
+            field=models.ForeignKey(blank=True, to='v0.ProposalInfo', null=True),
+        ),
+        migrations.AddField(
+            model_name='proposalcentersuppliers',
+            name='supplier_content_type',
+            field=models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True),
+        ),
+        migrations.AddField(
+            model_name='proposalcentermappingversion',
+            name='proposal_version',
+            field=models.ForeignKey(related_name='centers_version', to='v0.ProposalInfoVersion'),
+        ),
+        migrations.AddField(
             model_name='proposalcentermapping',
             name='proposal',
             field=models.ForeignKey(related_name='centers', to='v0.ProposalInfo'),
+        ),
+        migrations.AddField(
+            model_name='printingcost',
+            name='proposal_master_cost',
+            field=models.ForeignKey(blank=True, to='v0.ProposalMasterCost', null=True),
         ),
         migrations.AddField(
             model_name='pricemappingdefault',
@@ -1476,9 +1958,19 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='mail_boxes', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
         ),
         migrations.AddField(
+            model_name='logisticoperationscost',
+            name='proposal_master_cost',
+            field=models.ForeignKey(blank=True, to='v0.ProposalMasterCost', null=True),
+        ),
+        migrations.AddField(
             model_name='liftdetails',
             name='tower',
             field=models.ForeignKey(related_name='lifts', db_column='TOWER_ID', blank=True, to='v0.SocietyTower', null=True),
+        ),
+        migrations.AddField(
+            model_name='inventorytypeversion',
+            name='space_mapping_version',
+            field=models.ForeignKey(related_name='inventory_types_version', to='v0.SpaceMappingVersion'),
         ),
         migrations.AddField(
             model_name='inventorytype',
@@ -1496,6 +1988,21 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='images', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
         ),
         migrations.AddField(
+            model_name='ideationdesigncost',
+            name='proposal_master_cost',
+            field=models.ForeignKey(blank=True, to='v0.ProposalMasterCost', null=True),
+        ),
+        migrations.AddField(
+            model_name='genericexportfilename',
+            name='proposal',
+            field=models.ForeignKey(blank=True, to='v0.ProposalInfo', null=True),
+        ),
+        migrations.AddField(
+            model_name='flyerinventory',
+            name='supplier',
+            field=models.ForeignKey(related_name='flyers', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
+        ),
+        migrations.AddField(
             model_name='flierthroughlobbyinfo',
             name='supplier',
             field=models.ForeignKey(related_name='flier_lobby', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
@@ -1504,6 +2011,26 @@ class Migration(migrations.Migration):
             model_name='flattype',
             name='society',
             field=models.ForeignKey(related_name='flatTypes', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
+        ),
+        migrations.AddField(
+            model_name='filters',
+            name='center',
+            field=models.ForeignKey(blank=True, to='v0.ProposalCenterMapping', null=True),
+        ),
+        migrations.AddField(
+            model_name='filters',
+            name='proposal',
+            field=models.ForeignKey(blank=True, to='v0.ProposalInfo', null=True),
+        ),
+        migrations.AddField(
+            model_name='filters',
+            name='supplier_type',
+            field=models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True),
+        ),
+        migrations.AddField(
+            model_name='eventstaffingcost',
+            name='proposal_master_cost',
+            field=models.ForeignKey(blank=True, to='v0.ProposalMasterCost', null=True),
         ),
         migrations.AddField(
             model_name='events',
@@ -1516,14 +2043,34 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='door_to_doors', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
         ),
         migrations.AddField(
+            model_name='datasciencescost',
+            name='proposal_master_cost',
+            field=models.ForeignKey(blank=True, to='v0.ProposalMasterCost', null=True),
+        ),
+        migrations.AddField(
             model_name='corporateparkcompanylist',
             name='supplier_id',
-            field=models.ForeignKey(to='v0.SupplierTypeCorporate', db_column='SUPPLIER_ID'),
+            field=models.ForeignKey(related_name='corporatecompany', db_column='CORPORATEPARK_ID', blank=True, to='v0.SupplierTypeCorporate', null=True),
+        ),
+        migrations.AddField(
+            model_name='corporatecompanydetails',
+            name='company_id',
+            field=models.ForeignKey(related_name='companydetails', db_column='COMPANY_ID', blank=True, to='v0.CorporateParkCompanyList', null=True),
+        ),
+        migrations.AddField(
+            model_name='corporatebuilding',
+            name='corporatepark_id',
+            field=models.ForeignKey(related_name='corporatebuilding', db_column='CORPORATE_ID', blank=True, to='v0.SupplierTypeCorporate', null=True),
         ),
         migrations.AddField(
             model_name='contactdetails',
             name='supplier',
             field=models.ForeignKey(related_name='contacts', db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', null=True),
+        ),
+        migrations.AddField(
+            model_name='companyfloor',
+            name='company_details_id',
+            field=models.ForeignKey(related_name='wingfloor', db_column='COMPANY_DETAILS_ID', blank=True, to='v0.CorporateCompanyDetails', null=True),
         ),
         migrations.AddField(
             model_name='communityhallinfo',
@@ -1546,11 +2093,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='campaigns', db_column='SUPPLIER_ID', to='v0.SupplierTypeSociety', null=True),
         ),
         migrations.AddField(
-            model_name='campaigninventoryprice',
-            name='supplier',
-            field=models.ForeignKey(related_name='inventoryprice', null=True, db_column='SUPPLIER_ID', blank=True, to='v0.SupplierTypeSociety', unique=True),
-        ),
-        migrations.AddField(
             model_name='businesssubtypes',
             name='business_type',
             field=models.ForeignKey(related_name='business_subtypes', db_column='BUSINESS_TYPE', to='v0.BusinessTypes', null=True),
@@ -1564,6 +2106,11 @@ class Migration(migrations.Migration):
             model_name='businessinfo',
             name='type_name',
             field=models.ForeignKey(related_name='type_set', db_column='TYPE', to='v0.BusinessTypes'),
+        ),
+        migrations.AddField(
+            model_name='businessinfo',
+            name='user',
+            field=models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
             model_name='bannerinventory',
@@ -1599,6 +2146,10 @@ class Migration(migrations.Migration):
             unique_together=set([('tower', 'flat_type')]),
         ),
         migrations.AlterUniqueTogether(
+            name='proposalcentermappingversion',
+            unique_together=set([('proposal_version', 'center_name')]),
+        ),
+        migrations.AlterUniqueTogether(
             name='proposalcentermapping',
             unique_together=set([('proposal', 'center_name')]),
         ),
@@ -1609,5 +2160,13 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='cityarea',
             unique_together=set([('area_code', 'city_code')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='city',
+            unique_together=set([('state_code', 'city_code')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='campaignleads',
+            unique_together=set([('campaign_id', 'lead_email')]),
         ),
     ]

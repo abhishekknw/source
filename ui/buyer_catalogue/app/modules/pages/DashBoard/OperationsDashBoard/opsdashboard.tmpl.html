@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="modules/pages/dashBoard/OperationsDashBoard/opsdashboard.tmpl.css"/>
+<link rel="stylesheet" href="modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 <h3 style = "margin-left: 460px; margin-top: 60px;">Machadalo Operations Dashboard</h3>
 <div class="container">
@@ -15,23 +15,25 @@
         </thead>
         <tbody>
           <tr ng-repeat="proposal in proposals">
-            <td class="col-md-1">{{proposal.proposal_id}}</td>
-            <td class="col-md-2">{{proposal.name}}</td>
-            <td class="col-md-2">{{proposal.created_by}}</td>
-            <td class="col-md-2">{{proposal.invoice_number}}</td>
-            <td class="col-md-2">{{proposal.tentative_start_date}}</td>
-            <td class="col-md-2">{{proposal.tentative_end_date}}</td>
+            <td class="col-md-1" ng-click="showProposalDetails(proposal.proposal.proposal_id)">
+              <a>{{proposal.proposal.proposal_id}}</a>
+            </td>
+            <td class="col-md-2">{{proposal.proposal.name}}</td>
+            <td class="col-md-2">{{proposal.proposal.created_by}}</td>
+            <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
+            <td class="col-md-2">{{proposal.proposal.tentative_start_date}}</td>
+            <td class="col-md-2">{{proposal.proposal.tentative_end_date}}</td>
             <!-- <td class="col-md-2">{{proposal.invoice_number}}</td> -->
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.radio" value="Yes">Yes</label>
+                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="true" ng-click="updateCampaign(proposal)">Yes</label>
               </div>
               <div class="radio">
-                     <label><input type="radio"  ng-model="proposal.radio" value="No" data-target="#detailModal" data-toggle="modal">No</label>
+                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="false" ng-click="updateCampaign(proposal)" data-target="#detailModal" data-toggle="modal">No</label>
               </div>
             </td>
             <td class="col-md-2">
-              <button class="btn btn-danger active" ng-click="downloadProposal(proposal.proposal_id)">Download</button>
+              <a href="http://mdimages.s3.amazonaws.com/{{proposal.file_name}}" Download> Download </a>
             </td>
           </tr>
         </tbody>
@@ -49,10 +51,11 @@
         <hr/>
         <div class = "modal-body" style = "height: 300px;">
         <label>Please enter the reason in below box why this proposal can't be converted to campaign</label>
-          <textarea name="reason" id="reason" class="form-control" ng-model="proposal.reason"></textarea>
-          <button class="btn btn-danger active notify" ng-click="sendNotification(proposal.reason)">Notify</button>
+          <textarea name="reason" id="reason" class="form-control" ng-model="reason"></textarea>
+          <button class="btn btn-danger active notify" ng-click="sendNotification()">Notify</button>
         </div>
       </div>
     </div>
   </div>
 </div>
+
