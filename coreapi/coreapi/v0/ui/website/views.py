@@ -2976,7 +2976,8 @@ class ProposalViewSet(viewsets.ViewSet):
             account_id = account_id if account_id!= '0' else None
             data = {
                 'parent': pk if pk != '0' else None,
-                'user': request.user
+                'user': request.user,
+                'account_id': account_id
             }
             response = website_utils.child_proposals(data)
             if not response:

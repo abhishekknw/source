@@ -1054,7 +1054,7 @@ def get_geo_object(address):
         length = len(address_parts)
         # define upto what indexes you want to calculate addressess.
         indexes = [length, length-1, length-2]
-        geo_object = []
+        geo_object = None
         for index in indexes:
             # get this address
             address = ','.join(part for part in address_parts[:index])
@@ -1097,7 +1097,7 @@ def save_suppliers_allowed(center_info, proposal_id, center_id, user):
             content_type_response = ui_utils.get_content_type(code)
             if not content_type_response.data['status']:
                 return content_type_response
-                content_type = content_type_response.data['data']
+            content_type = content_type_response.data['data']
 
             # prepare the data
             data = {
@@ -1167,9 +1167,7 @@ def save_center_data(proposal_data, user):
                 geo_response = get_geo_object(address)
                 if not geo_response.data['status']:
                     return geo_response
-                geo_object = geo_response.data['data']
-                center['latitude'] = geo_object.latitude
-                center['longitude'] = geo_object.longitude
+                center['latitude'], center['longitude'] = geo_response.data['data']
                 center['user'] = user.id
 
                 if 'id' in center_info:
@@ -1630,6 +1628,7 @@ def suppliers_within_radius(data):
         }
 
         result = {}
+        center_id_list = []
         # todo: think of better way of separating this logic. looks ugly right now
         if center_id:
             # the queries will change if center_id is provided because we want to process
@@ -1716,7 +1715,11 @@ def child_proposals(data):
         # fetch all children of proposal_id and return.
         parent = data['parent']
         user = data['user']
-        proposal_children = models.ProposalInfo.objects.filter_user_related_objects(user, parent=parent).order_by('-created_on')
+        account_id = data['account_id']
+        proposal_children = models.ProposalInfo.objects.filter_user_related_objects(user)
+        if account_id:
+            proposal_children = proposal_children.filter(account_id=account_id)
+        proposal_children = proposal_children.filter(parent=parent).order_by('-created_on')
         serializer = serializers.ProposalInfoSerializer(proposal_children, many=True)
         return ui_utils.handle_response(function_name, data=serializer.data, success=True)
     except Exception as e:
