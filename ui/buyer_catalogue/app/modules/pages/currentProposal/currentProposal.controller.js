@@ -6,6 +6,8 @@ angular.module('catalogueApp')
       $scope.society = {society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''};
       $scope.societyDetails = [];
       $scope.isParentProposal = $window.localStorage.parentProposal;// send proposal_id in service
+      $scope.campaign_start_date;
+      $scope.campaign_end_date;
 
       $scope.centerheaders = [
         {header : 'Serial No'},
@@ -73,7 +75,7 @@ angular.module('catalogueApp')
             console.log("Error response is :", response);
           }
         });
-        
+
       // function added to show suppliers selected in centers and to show filters
       var getAvailableSuppliers = function(spaces){
         $scope.center_id_list = Object.keys($scope.center_data);
@@ -165,7 +167,9 @@ angular.module('catalogueApp')
      }
 
      $scope.saveInvoiceDetails = function(){
-      currentProposalService.saveInvoiceDetails($stateParams.proposal_id)
+       $scope.proposal.tentative_start_date = $scope.campaign_start_date;
+       $scope.proposal.tentative_end_date = $scope.campaign_end_date;
+      currentProposalService.saveInvoiceDetails($stateParams.proposal_id,$scope.proposal)
         .success(function(response, status){
                 console.log("success");
         })
