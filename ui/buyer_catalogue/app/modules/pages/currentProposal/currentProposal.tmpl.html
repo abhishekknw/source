@@ -128,20 +128,21 @@
           <div class = "row form-group">
             <span class="col-md-3"><label>Invoice Number</label></span>
             <span class="col-md-3">
-              <input type = "text" name="invoicenumber" id="invoicenumber" class = "form-control">
+              <input type = "text" name="invoicenumber" id="invoicenumber" class = "form-control" ng-model="proposal.invoice_number">
             </span>
           </div>
           <div class="row form-group">
             <span class="col-md-3"><label>Start Date:</label></span>
             <span class="col-md-3">
-              <input type="text" ng-model="model.tentative.start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" />
+              <input type="text" ng-model="campaign_start_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
             </span>
             <span class="input-group-btn">
               <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
             </span>
+          </br>
             <span class="col-md-3"><label>End Date:</label></span>
             <span class="col-md-3">
-              <input type="text" ng-model="model.tentative.end_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup2" min-date="key.start_date" datepicker-options="dateOptions" close-text="Close" />
+              <input type="text" ng-model="campaign_end_date" class="form-control" uib-datepicker-popup="{{format}}" is-open="popup2" min-date="key.start_date" datepicker-options="dateOptions" close-text="Close" ng-model-options="{timezone:'UTC'}" />
             </span>
             <span class="input-group-btn">
               <button type="button" class="btn btn-default" ng-click="popup2 = true"><i class="glyphicon glyphicon-calendar"></i></button>
