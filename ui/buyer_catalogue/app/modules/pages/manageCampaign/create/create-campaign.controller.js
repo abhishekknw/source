@@ -75,7 +75,7 @@ angular.module('machadaloPages')
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
               $scope.choice = "selected";
               // pagesService.setBusinessObject($scope.model.business);
-              $window.localStorage.business = JSON.stringify(response.business);
+              $window.localStorage.business = JSON.stringify($scope.model.business);
          });
       };
 
@@ -137,12 +137,15 @@ angular.module('machadaloPages')
       };
 
       $scope.newBusiness = function() {
-              $scope.choice = "new";
-              $scope.bsSelect = undefined;
               $scope.contact = angular.copy(contactCopy);
               $scope.form.$setPristine();
               $scope.model.business = {};
+              $scope.model.accounts = {};
               $scope.model.business.contacts = [$scope.contact];
+              $scope.account_proposals = null;
+              $scope.sel_account_id = null;
+              $scope.choice = "new";
+              $scope.bsSelect = undefined;
       };
 
       $scope.addNewAccount = function() {
@@ -158,7 +161,6 @@ angular.module('machadaloPages')
           $window.localStorage.account_id = sel_account_id;
           pagesService.getAccountProposal(sel_account_id)
           .success(function(response, status){
-            console.log(response);
               $scope.account_proposals = response.data;
           })
           .error(function(response, status){
@@ -209,6 +211,7 @@ angular.module('machadaloPages')
             if (status == '200'){
               $scope.choice = "selected";
               pagesService.setBusinessObject($scope.model.business);
+              $window.localStorage.business = JSON.stringify($scope.model.business);
             }
         }).error(function(response, status){
              if (typeof response != 'number'){
