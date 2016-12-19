@@ -67,10 +67,16 @@ class ProposalInfoSerializer(ModelSerializer):
 
 
 class BaseUserSerializer(ModelSerializer):
+    """
+    You can only write a password. Not allowed to read it. Hence password is in extra_kwargs dict.
+    """
 
     class Meta:
         model = BaseUser
-        fields = ('first_name', 'last_name', 'email', 'user_code', 'username')
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'password')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
 
 class GenericExportFileSerializerReadOnly(ModelSerializer):
@@ -83,6 +89,7 @@ class GenericExportFileSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.GenericExportFileName
+
 
 
 class InventoryTypeSerializer(ModelSerializer):
