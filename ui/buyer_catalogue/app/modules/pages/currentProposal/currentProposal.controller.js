@@ -5,7 +5,6 @@ angular.module('catalogueApp')
     	$scope.proposal = {};
       $scope.society = {society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''};
       $scope.societyDetails = [];
-      //getting parent proposal_id used to show or not Edit Initial Proposal link
       $scope.isParentProposal = $window.localStorage.parentProposal;// send proposal_id in service
 
       $scope.centerheaders = [
@@ -48,8 +47,7 @@ angular.module('catalogueApp')
 
     	currentProposalService.getProposal($stateParams.proposal_id)
     	.success(function(response, status){
-    		$scope.proposal = response.data;
-    		console.log("inside proposal details : ", $scope.proposal);
+    		$scope.proposal = response.data.proposal;
     	})
     	.error(function(response, status){
     		console.log("Error Occured");
