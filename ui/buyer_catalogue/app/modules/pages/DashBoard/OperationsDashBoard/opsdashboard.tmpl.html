@@ -21,8 +21,8 @@
             <td class="col-md-2">{{proposal.proposal.name}}</td>
             <td class="col-md-2">{{proposal.proposal.created_by}}</td>
             <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
-            <td class="col-md-2">{{proposal.proposal.tentative_start_date}}</td>
-            <td class="col-md-2">{{proposal.proposal.tentative_end_date}}</td>
+            <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
+            <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
             <!-- <td class="col-md-2">{{proposal.invoice_number}}</td> -->
             <td class="col-md-2">
               <div class="radio">
@@ -58,4 +58,3 @@
     </div>
   </div>
 </div>
-
