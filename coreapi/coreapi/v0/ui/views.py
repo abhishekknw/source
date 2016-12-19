@@ -21,6 +21,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import viewsets
 from rest_framework import permissions
 from v0.permissions import IsOwnerOrManager
 from rest_framework import filters
@@ -46,10 +47,113 @@ from v0.ui.serializers import SocietyListSerializer
 # project imports
 import utils as ui_utils
 from coreapi.settings import BASE_URL, BASE_DIR
-from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas
+from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas, BaseUser
 from constants import keys, decision
 import constants as ui_constants
 from website.utils import save_price_mapping_default
+from website.serializers import BaseUserSerializer
+
+
+class UserViewSet(viewsets.ViewSet):
+    """
+    A View set for handling all the user related logic
+    """
+
+    def retrieve(self, request, pk=None):
+        """
+        The API is only used to fetch one User object by user id.
+        Args:
+            request: The request body
+            pk: The pk of User table
+
+        Returns: a User object
+        """
+        class_name = self.__class__.__name__
+        try:
+            user = BaseUser.objects.get(pk=pk)
+            serializer = BaseUserSerializer(user)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def update(self, request, pk=None):
+        """
+        API used to update one single user
+        Args:
+            request: A request body
+            pk: pk value
+
+        Returns: updated one object
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            user = BaseUser.objects.get(pk=pk)
+            serializer = BaseUserSerializer(user, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def create(self, request):
+        """
+        Create one single user
+        Args:
+            request:  Request body
+
+        Returns: created user
+        """
+        class_name = self.__class__.__name__
+        try:
+            serializer = BaseUserSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def list(self, request):
+        """
+        list all users in the system
+        Args:
+            request: The request body
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            users = BaseUser.objects.all()
+            serializer = BaseUserSerializer(users, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def destroy(self, request, pk=None):
+        """
+        Deletes a single user
+        Args:
+            request: The Request body
+            pk: pk value
+
+        Returns: pk of object which got deleted
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            BaseUser.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=pk, success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class UsersProfilesAPIView(APIView):
@@ -72,7 +176,6 @@ class UsersProfilesAPIView(APIView):
                 users.append(u.user)
             for u in UserProfile.objects.filter(created_by=user).select_related('user'):
                 users.append(u.user)
-
         else:
             users = User.objects.all()
         serializer = UserSerializer(users, many = True)

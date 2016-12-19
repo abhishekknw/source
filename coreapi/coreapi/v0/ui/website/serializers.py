@@ -70,7 +70,7 @@ class BaseUserSerializer(ModelSerializer):
 
     class Meta:
         model = BaseUser
-        fields = ('first_name', 'last_name', 'email', 'user_code')
+        fields = ('first_name', 'last_name', 'email', 'user_code', 'username')
 
 
 class GenericExportFileSerializerReadOnly(ModelSerializer):
