@@ -16,17 +16,34 @@ def do_each_model(myModel, supplier_model, content_type):
     function = do_each_model.__name__
     supplier_id = ''
     try:
+        fields = myModel._meta.get_all_field_names() 
+        field_name = None
+
+        for field in fields:
+            if field in ['supplier_id', 'society_id']:
+                field_name = field
+                break
+
+        if not field_name:
+            return ui_utils.handle_response(function, data='The model {0} does not have supplier_id field name'.format(myModel))        
+
         for row in myModel.objects.all():
-            supplier_id = row.supplier_id
-            if row.supplier:
-                supplier_type = supplier_model.objects.get(supplier_id=row.supplier.supplier_id)
-                row.content_type = content_type
-                row.object_id = row.supplier.supplier_id
-                row.content_object = supplier_type
-                row.save()
+            supplier_id = getattr(row, field_name)
+            try:
+                if supplier_id:
+                    supplier_type = supplier_model.objects.get(supplier_id=row.supplier.supplier_id)   
+                    row.content_type = content_type
+                    row.object_id = row.supplier.supplier_id
+                    row.content_object = supplier_type
+                    row.save()
+            except ObjectDoesNotExist as e:
+                try:
+                    q = {field_name: supplier_id}
+                    myModel.objects.filter(**q).delete()
+                    continue
+                except Exception as e:
+                    return ui_utils.handle_response(function, exception_object=e)
         return ui_utils.handle_response(function, data='success', success=True)
-    except ObjectDoesNotExist as e:
-        return ui_utils.handle_response(function, data=supplier_id, exception_object=e)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 

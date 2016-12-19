@@ -8,20 +8,20 @@
       <div class="row">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <Label>Proposal Id:</Label><span>{{proposal.proposal_id}}</span>
-            <Label class = "labels">Name of Proposal:</Label><span>{{proposal.name}}</span>
-            <Label class = "labels">Tentative Cost:</Label><span>{{proposal.tentative_cost}} </span>
+            <Label>Proposal Id:</Label><span class = "proposal-details">{{proposal.proposal_id}}</span>
+            <Label class = "labels">Name of Proposal:</Label><span class = "proposal-details">{{proposal.name}}</span>
+            <Label class = "labels">Tentative Cost:</Label><span class = "proposal-details">{{proposal.tentative_cost}} </span>
             <a class = "labels" ng-if="isParentProposal == 'true'" href="" ng-click="editInitialProposal(proposal.proposal_id)"><b>Edit Proposal</b></a>
             <a class = "labels" data-target="#invoiceModal" data-toggle="modal"><b>Enter Invoice Details</b></a>
           </div >
           <div class="row">
             <div class="col-md-10 center-heading"><label>Center Details:</label></div>
           </div>
-          <div class="row">
+          <div class = "row center-details">
             <div class="col-md-2 table-align" ng-repeat="header in centerheaders"><b>{{header.header}}</b></div>
           </div>
           <div ng-repeat="center in center_data">
-            <div class="row">
+            <div class = "row center-details">
               <div class="col-md-2 table-align">{{$index+1}}</div>
               <div class="col-md-2 table-align">{{center.center.center_name}}</div>
               <div class="col-md-2 table-align">{{center.center.area}}</div>
