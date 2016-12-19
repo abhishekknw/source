@@ -69,7 +69,52 @@ class ProposalInfoSerializer(ModelSerializer):
 class BaseUserSerializer(ModelSerializer):
     """
     You can only write a password. Not allowed to read it. Hence password is in extra_kwargs dict.
+    when creating a BaseUser instance we want password to be saved by .set_password() method, hence overwritten to
+    do that.
+    When updating the BaseUser, we never update the password. There is a separate api for updating password.
     """
+
+    def create(self, validated_data):
+        """
+        Args:
+            validated_data: the data that is used to be create the user.
+
+        Returns: sets the password of the user when it's created.
+
+        """
+        # get the password
+        password = validated_data['password']
+        # delete it from the validated_data because we do not want to save it as raw password
+        del validated_data['password']
+        user = self.Meta.model.objects.create(**validated_data)
+        # save password this way
+        user.set_password(password)
+        # hit save
+        user.save()
+        # return
+        return user
+
+    def update(self, instance, validated_data):
+        """
+        Args:
+            instance: The instance to be updated
+            validated_data: a dict having data to be updated
+        Returns: an updated instance
+        """
+        # need to check weather the old password matches the password already in the database
+        password = validated_data['password']
+        is_old_password_valid = instance.check_password(password)
+        if not is_old_password_valid:
+            # raise exception if password is not valid
+            raise Exception('The password we have for this user does not match the password you provided')
+        # we do not want to save password when we update the instance hence delete it.
+        del validated_data['password']
+        # save remaining attributes
+        for key, value in validated_data.iteritems():
+            setattr(instance, key, value)
+        instance.save()
+        # return the updated instance
+        return instance
 
     class Meta:
         model = BaseUser

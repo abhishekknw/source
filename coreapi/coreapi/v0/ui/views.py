@@ -13,11 +13,13 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
+from django.contrib.auth import authenticate, login
 
 
 # third party imports
 import requests
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import detail_route,list_route
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -64,7 +66,7 @@ class UserViewSet(viewsets.ViewSet):
         The API is only used to fetch one User object by user id.
         Args:
             request: The request body
-            pk: The pk of User table
+            pk: The pk of BaseUser table
 
         Returns: a User object
         """
@@ -80,7 +82,8 @@ class UserViewSet(viewsets.ViewSet):
 
     def update(self, request, pk=None):
         """
-        API used to update one single user
+        API used to update one single user. The API does not update a password for a user, though you have to
+        provide password in the request body. There is a separate api for updating password of the user.
         Args:
             request: A request body
             pk: pk value
@@ -150,6 +153,33 @@ class UserViewSet(viewsets.ViewSet):
         try:
             BaseUser.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data=pk, success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['POST'])
+    def change_password(self, request, pk=None):
+        """
+        This API must be used only to change password of the user.
+        Args:
+            request: Request method
+            pk: pk value
+        Returns: changes the password of the BaseUser instance and returns a success message
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            user = BaseUser.objects.get(pk=pk)
+            old_password = request.data['old_password']
+            new_password = request.data['new_password']
+            is_old_password_valid = user.check_password(old_password)
+            if is_old_password_valid:
+                user.set_password(new_password)
+                user.save()
+            else:
+                return ui_utils.handle_response(class_name, data='Your old_password does not match the password we have in our database')
+            return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:

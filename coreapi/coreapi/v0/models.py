@@ -47,15 +47,6 @@ class BaseUser(AbstractUser):
     """
     user_code = models.CharField(max_length=255, default=settings.DEFAULT_USER_CODE)
 
-    def save(self, *args, **kwargs):
-        """
-        saves password using .set_password()
-        """
-        password = self.password
-        if password:
-            self.set_password(raw_password=password)
-        super(BaseUser, self).save(*args, **kwargs)
-
     class Meta:
         db_table = 'base_user'
 
