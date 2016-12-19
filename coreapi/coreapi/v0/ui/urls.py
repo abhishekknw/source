@@ -1,4 +1,7 @@
 from django.conf.urls import include, url
+
+from rest_framework.routers import DefaultRouter
+
 from v0.ui import views
 # from v0.ui.website import views as web_views
 urlpatterns = [
@@ -71,3 +74,9 @@ urlpatterns = [
     url(r'^supplier/(?P<id>[A-Z_a-z0-9]+)/image_details/$', views.SupplierImageDetails.as_view()),
 
 ]
+
+# include the user view set
+router = DefaultRouter()
+router.include_format_suffixes = False
+router.register(r'^user', views.UserViewSet, base_name='user')
+urlpatterns += router.urls

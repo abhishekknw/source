@@ -1,7 +1,5 @@
 model_names = ['InventorySummary', 'ContactDetails', 'Events', 'FlyerInventory', 'ImageMapping', 'PosterInventory',
-               'SocietyTower', 'PriceMappingDefault', 'SocietyInventoryBooking',
-                                                      'StallInventory', 'WallInventory','FlatType'
-               ]
+               'SocietyTower', 'PriceMappingDefault', 'SocietyInventoryBooking', 'StallInventory', 'WallInventory','FlatType' ]
 
 
 # we have group_name and there respective codes. These codes are designed to respect the heirarchy of various kinds of

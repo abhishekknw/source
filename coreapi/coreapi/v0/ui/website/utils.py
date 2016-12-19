@@ -1933,7 +1933,7 @@ def proposal_shortlisted_spaces(data):
         filter_data = response.data['data']
 
         # final result dict
-        result =  {}
+        result = {}
 
         # add extra information in each center object
         for center in centers:
@@ -2479,11 +2479,13 @@ def handle_specific_filters(specific_filters, supplier_type_code):
 
         # do if else check on supplier type code to include things particular to that supplier. Things which
         # cannot be mapped to a particular supplier and vary from supplier to supplier
+
         if supplier_type_code == 'RS':
             if specific_filters.get('flat_type'):
                 flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
-                supplier_ids = models.FlatType.objects.filter(flat_type__in=flat_type_values).values_list('society__supplier_id')
-                specific_filters_query &= Q(supplier_id__in=supplier_ids)
+                supplier_ids = models.FlatType.objects.select_related('society').filter(flat_type__in=flat_type_values).values_list('society__supplier_id')
+                if supplier_ids:
+                    specific_filters_query &= Q(supplier_id__in=supplier_ids)
 
         if supplier_type_code == 'CP':
             # well, we can receive a multiple dicts for employee counts. each describing min and max employee counts.
