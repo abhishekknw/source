@@ -1,9 +1,7 @@
 <link rel="stylesheet" href="modules/pages/currentProposal/currentProposal.tmpl.css" />
 <div><nav-bar></nav-bar></div>
-  <div ng-if="isParentProposal == 'false'">
-    <button class="btn btn-info active" ng-click="showHistory()">Back to Previous Page</button>
-  </div>
 <form name="proposalDetails" ng-hide="showEdit" class = "proposal-panel">
+  <back-Button></back-Button>
   <div class = "container">
       <div class="row">
         <div class="panel panel-default">

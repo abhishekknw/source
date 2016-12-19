@@ -1,7 +1,7 @@
 "use strict";
 angular.module('catalogueApp')
     .constant('constants',{
-      base_url : 'http://localhost:8000/',
+      base_url : 'http://localhost:8108/',
       url_base : 'v0/ui/website/',
       AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
       policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
@@ -1187,9 +1187,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               uploadFileToAmazonServer($scope.file_name,$scope.file_data);
               // download it immediately
               saveAs(blob, $scope.file_name);
+              $scope.checkFileExport = false;
 
          }).error(function(response){
               //Some error log
+              $scope.checkFileExport = false;
               console.log(response);
               alert('Error in exporting the file');
          });
@@ -1218,7 +1220,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
    }
 //End : function to upload files to amazon server, just provide file name and file
     $scope.upload = function (file) {
-      console.log(file);
       var uploadUrl = 'http://localhost:8108/v0/ui/website/';
       var token = $rootScope.globals.currentUser.token ;
       Upload.upload({
