@@ -2734,7 +2734,7 @@ class CreateInitialProposal(APIView):
                 proposal_data['parent'] = parent
                 # set parent if available
                 if parent:
-                    proposal_data['parent'] = ProposalInfo.objects.get_user_related_object(proposal_id=parent).proposal_id
+                    proposal_data['parent'] = ProposalInfo.objects.get_user_related_object(user, proposal_id=parent).proposal_id
 
                 # call the function that saves basic proposal information
                 response = website_utils.create_basic_proposal(proposal_data)

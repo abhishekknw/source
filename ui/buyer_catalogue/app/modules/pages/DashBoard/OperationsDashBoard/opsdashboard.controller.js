@@ -17,7 +17,6 @@ angular.module('catalogueApp')
 
     opsDashBoardService.getProposalDetails()
     	.success(function(response, status){
-        console.log(response);
     		$scope.proposals = response.data;
     		console.log("$scope.proposals : ", response.data);
     	})
@@ -30,7 +29,6 @@ angular.module('catalogueApp')
       }
 
     $scope.sendNotification = function(){
-      console.log($scope.currentProposal);
       var email_Data = {
         subject:'Machadalo Mail',
         body:$scope.reason,
