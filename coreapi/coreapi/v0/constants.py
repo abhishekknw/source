@@ -8,7 +8,8 @@ group_codes = {
     'master_users': '0',
     'ops_heads': '01',
     'bd_heads': '02',
-    'external_bds': '03'
+    'external_bds': '03',
+    'general_bd_user': '020'
 }
 
 # model_name_to_user_mapping
