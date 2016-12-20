@@ -80,13 +80,23 @@ class GetBusinessTypesAPIView(APIView):
 
 
 class BusinessAPIListView(APIView):
-    def get(self, request, format=None):
+    permission_classes = (v0_permissions.IsGeneralBdUser, )
+
+    def get(self, request):
+        """
+        Fetches al businesses belonging to a particular group to which a user belongs.
+        Args:
+            request: The Request object
+
+        Returns: All businesses.
+        """
+        class_name = self.__class__.__name__
         try:
-            items = BusinessInfo.objects.all()
+            items = BusinessInfo.objects.filter_user_related_objects(request.user)
             serializer = BusinessInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
-        except :
-            return Response(status=404)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
     #the delete api is not being used
     def delete(self, request, id, format=None):
@@ -113,28 +123,29 @@ class GetBusinessSubTypesAPIView(APIView):
 
 class BusinessAPIView(APIView):
     """
-    Fetches one buisiness data
+    Fetches one buissiness data
     """
+    permission_classes = (v0_permissions.IsGeneralBdUser, )
 
-    def get(self, request, id, format=None):
+    def get(self, request, id):
+        class_name = self.__class__.__name__
         try:
-            item = BusinessInfo.objects.get(pk=id)
+            item = BusinessInfo.objects.get_user_related_object(request.user, pk=id)
             business_serializer = UIBusinessInfoSerializer(item)
-            accounts = AccountInfo.objects.filter(business=item)
+            accounts = AccountInfo.objects.filter_user_related_objects(request.user, business=item)
             accounts_serializer = UIAccountInfoSerializer(accounts, many=True)
             response = {
                 'business': business_serializer.data,
                 'accounts': accounts_serializer.data
             }
             return Response(response, status=200)
-        except BusinessInfo.DoesNotExist:
-            return Response(data={'status': False, 'error': "No Buisness data found"},
-                            status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class AccountAPIListView(APIView):
 
-    permission_classes = (v0_permissions.IsMasterUser, )
+    permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def get(self, request, format=None):
         class_name = self.__class__.__name__
@@ -148,7 +159,7 @@ class AccountAPIListView(APIView):
 
 class AccountAPIView(APIView):
 
-    permission_classes = (v0_permissions.IsMasterUser, )
+    permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def get(self, request, id, format=None):
 
@@ -170,9 +181,10 @@ class AccountAPIView(APIView):
 
 class NewCampaignAPIView(APIView):
 
-    permission_classes = (v0_permissions.IsMasterUser, )
+    permission_classes = (v0_permissions.IsGeneralBdUser,)
 
-    def post(self, request, format=None):
+    def post(self, request):
+        class_name = self.__class__.__name__
         """
         creates new campaign
         ---
@@ -197,10 +209,9 @@ class NewCampaignAPIView(APIView):
         sub_type = BusinessSubTypes.objects.get(id=int(business_data['sub_type_id']))
 
         business_data['user'] = current_user.id
+        try:
+            with transaction.atomic():
 
-        with transaction.atomic():
-
-            try:
                 business_serializer_data = {}
 
                 if 'business_id' in business_data:
@@ -222,7 +233,7 @@ class NewCampaignAPIView(APIView):
                      business_serializer_data['business_sub_type'] = sub_type.business_sub_type
                      business_serializer_data['business_type'] = type_name.business_type
 
-                business = BusinessInfo.objects.get(pk=business_data['business_id'])
+                business = BusinessInfo.objects.get_user_related_object(current_user, pk=business_data['business_id'])
                 content_type_business = ContentType.objects.get_for_model(BusinessInfo)
                 contact_ids = list(business.contacts.all().values_list('id', flat=True))
                 contact_list = []
@@ -231,6 +242,7 @@ class NewCampaignAPIView(APIView):
 
                     contact['object_id'] = business.business_id
                     contact['content_type'] = content_type_business.id
+                    contact['user'] = current_user.id
 
                     if 'id' in contact:
                         item = BusinessAccountContact.objects.get(pk=contact['id'])
@@ -243,11 +255,11 @@ class NewCampaignAPIView(APIView):
                             contact['spoc'] = 'false'
                         contact_serializer = BusinessAccountContactSerializer(data=contact)
 
-                    contact_serializer.is_valid(raise_exception=True)
-
-                    contact = contact_serializer.save()
-                    # contact object is returned on saving serializer so appending that inside list to send back to the page
-                    contact_list.append(contact)
+                    if contact_serializer.is_valid():
+                        contact = contact_serializer.save()
+                        contact_list.append(contact)
+                    else:
+                        return ui_utils.handle_response(class_name, data=contact_serializer.errors)
 
                 # deleting all contacts whose id not received from the frontend
                 BusinessAccountContact.objects.filter(id__in=contact_ids).delete()
@@ -257,7 +269,7 @@ class NewCampaignAPIView(APIView):
                     'contacts': contacts_serializer.data,
                 }
                 return Response(response, status=200)
-            except Exception as e:
+        except Exception as e:
                 return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
     def generate_business_id(self, business_name, sub_type, type_name, lower=False):
@@ -328,38 +340,27 @@ def get_extra_character(size=1):
     return ''.join(random.choice(string.ascii_uppercase ) for _ in range(size))
 
 
-
 class CreateCampaignAPIView(APIView):
-
-    def post(self, request, format=None):
+    """
+    API creates Account for a business
+    """
+    def post(self, request):
+        class_name = self.__class__.__name__
+        try:
             response = {}
             current_user = request.user
-            errro = {}
 
-            # checking if the data received contains name of the account
-            try :
-                account_data = request.data['account']
-                account_name = account_data['name']
-            except KeyError :
-                return Response({'message' : 'Appropriate data not provided'} , \
-                        status = status.HTTP_406_NOT_ACCEPTABLE)
+            account_data = request.data['account']
 
             with transaction.atomic():
 
-                try:
-                    business_id = account_data['business_id']
-                except KeyError:
-                    return Response({'message' : 'Imporper Business Type Id'}, status = status.HTTP_406_NOT_ACCEPTABLE)
-
-
+                business_id = account_data['business_id']
                 # checking a valid business
-                try:
-                    business = BusinessInfo.objects.get(business_id=business_id)
-                except BusinessInfo.DoesNotExist:
-                    return Response({'message' : 'Business Does Not Exist'}, status = status.HTTP_406_NOT_ACCEPTABLE)
+
+                business = BusinessInfo.objects.get_user_related_object(current_user, business_id=business_id)
 
                 if 'account_id' in account_data:
-                    account = AccountInfo.objects.get(pk=account_data['account_id'])
+                    account = AccountInfo.objects.get_user_related_object(current_user, pk=account_data['account_id'])
                     serializer = AccountInfoSerializer(account,data=account_data)
                 else:
                     account_data['account_id']= self.generate_account_id(account_name=account_data['name'],business_id=business_id)
@@ -369,7 +370,7 @@ class CreateCampaignAPIView(APIView):
                     serializer = AccountInfoSerializer(data=account_data)
 
                 if serializer.is_valid():
-                    account = serializer.save(business=business)
+                    account = serializer.save(business=business, user=current_user)
                 else:
                     return Response(serializer.errors, status=400)
 
@@ -382,6 +383,7 @@ class CreateCampaignAPIView(APIView):
                 for contact in account_data['contacts']:
                     contact['object_id'] = account.account_id
                     contact['content_type'] = content_type_account.id
+                    contact['user'] = current_user.id
 
                     if 'id' in contact:
                         item = BusinessAccountContact.objects.get(pk=contact['id'])
@@ -401,44 +403,13 @@ class CreateCampaignAPIView(APIView):
                         return Response(contact_serializer.errors, status=400)
 
                 BusinessAccountContact.objects.filter(id__in=contact_ids).delete()
-
-                # if 'campaign_type' in request.data or 'supplier_type' in request.data:
-                #     campaign_data = {'booking_status':'Shortlisted'}
-                #     if 'tentative' in request.data:
-                #         for key in request.data['tentative']:
-                #             campaign_data[key] = request.data['tentative'][key]
-
-                #     campaign_serializer = CampaignSerializer(data=campaign_data)
-
-                #     campaign_serializer.is_valid(raise_exception=True)
-                #     campaign_serializer.save(account=account)
-
-                #     campaign = Campaign.objects.get(pk=campaign_serializer.data['id'])
-
-                #     if 'campaign_type' in request.data:
-                #         for key, value in request.data['campaign_type'].iteritems():
-                #             campaign_type_map = CampaignTypeMapping(campaign=campaign, type=key, sub_type=value)
-
-                #             campaign_type_map.save()
-
-                #     if 'supplier_type' in request.data:
-                #         for key, value in request.data['supplier_type'].iteritems():
-                #             supplier_type_map = CampaignSupplierTypes(campaign=campaign, supplier_type=key, count=value)
-                #             supplier_type_map.save()
-                #             response['campaign'] = campaign_serializer.data
-
-                #     # redirecting to societylist page if the campaign info received
-                #     return  Response(campaign_serializer.data, status=201)
-
-
-                # sending accounts and related contacts fields to allow updating
-                # account = AccountInfo.objects.get(id=account_id)
                 account_serializer = AccountInfoSerializer(account)
-                # contacts = account.contacts.all()
                 contacts_serializer = BusinessAccountContactSerializer(contact_list, many=True)
                 response['account'] = account_serializer.data
                 response['contacts'] = contacts_serializer.data
             return Response(response, status=200)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
     def generate_account_id(self, account_name, business_id, lower=False):
@@ -1225,7 +1196,7 @@ class FilteredSuppliers(APIView):
                 return response
             specific_filters_query = response.data['data']
             # if indeed there was something in the query
-           
+
             if specific_filters_query.__len__():
                 specific_filters_suppliers = list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id'))
 
@@ -2363,6 +2334,8 @@ class GenericExportData(APIView):
     """
     renderer_classes = (website_renderers.XlsxRenderer, )
 
+    permission_classes = (v0_permissions.IsGeneralBdUser, )
+
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:
@@ -2417,10 +2390,12 @@ class GenericExportData(APIView):
             # once data is prepared for one sheet, we hit the url. if it creates problems in future, me might change
             # it.
                 
-            # delete all the shortlisted_spaces rows for this proposal 
-            models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
-            # delete all Filter table rows for this proposal 
-            models.Filters.objects.filter(proposal_id=proposal_id).delete()
+            # delete all the shortlisted_spaces rows for this proposal. delete only those objects which are
+            # created by this user only.
+            models.ShortlistedSpaces.objects.filter(user=request.user, proposal_id=proposal_id).delete()
+            # delete all Filter table rows for this proposal. delete only those objects which are created by
+            # this user only.
+            models.Filters.objects.filter(user=request.user, proposal_id=proposal_id).delete()
 
             # no hit the url 
             url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
@@ -2435,7 +2410,6 @@ class GenericExportData(APIView):
 
             if response.status_code != status.HTTP_200_OK:
                 return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
-
 
             response = website_utils.send_excel_file(file_name)
             if not response.data['status']:
@@ -2574,16 +2548,16 @@ class ImportSupplierData(APIView):
                     # update the center dict in result with modified center_object
                     result[center_id] = center_object
             # delete the data from shortlisted_inventory_pricing_details before adding new data
-            models.ShortlistedInventoryPricingDetails.objects.filter(proposal_id=proposal_id).delete()
+            models.ShortlistedInventoryPricingDetails.objects.filter(user=request.user, proposal_id=proposal_id).delete()
 
             # data for this supplier is made. populate the shortlisted_inventory_details table before hiting the urls 
-            response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id)
+            response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
             if not response.data['status']:
                 return response
 
             # delete all the shortlisted_spaces rows for this proposal. we do not delete filter
             # data while importing 
-            models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
+            models.ShortlistedSpaces.objects.filter(user=request.user, proposal_id=proposal_id).delete()
 
             # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
             # once data is prepared for all sheets,  we hit the url. if it creates problems in future, me might change
@@ -2696,7 +2670,7 @@ class CreateInitialProposal(APIView):
     data is stored hence we have created new classes CreateInitialProposal and CreateFinalProposal API.
     author: nikhil
     """
-    permission_classes = (permissions.IsAuthenticated, v0_permissions.IsMasterUser, )
+    permission_classes = (v0_permissions.IsGeneralBdUser,)
 
     def post(self, request, account_id):
         """
@@ -2774,7 +2748,7 @@ class CreateFinalProposal(APIView):
     information we have all the suppliers shortlisted, all the Filters and all.
 
     """
-    permission_classes = ( permissions.IsAuthenticated, v0_permissions.IsMasterUser, )
+    permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def post(self, request, proposal_id):
         """
@@ -2824,7 +2798,7 @@ class ProposalViewSet(viewsets.ViewSet):
     are related to Proposal domain. so keeping them at one place makes sense.
     """
     parser_classes = (JSONParser, FormParser)
-    permission_classes = (permissions.IsAuthenticated,  v0_permissions.IsMasterUser, )
+    permission_classes = (v0_permissions.IsGeneralBdUser,)
 
     def retrieve(self, request, pk=None):
         """
@@ -2877,7 +2851,31 @@ class ProposalViewSet(viewsets.ViewSet):
             pk: primary key of proposal
 
         Returns: Fetches all centers associated with this proposal. in each center object we have 'codes' array
-        which contains which suppliers are allowed. 
+        which contains which suppliers are allowed. Response is like this
+        {
+            "status": true,
+            "data": [
+                {
+                  "id": 44,
+                  "created_at": "2016-12-01T00:00:00Z",
+                  "updated_at": "2016-12-01T00:00:00Z",
+                  "center_name": "powai",
+                  "address": "powai",
+                  "latitude": 19.1153798,
+                  "longitude": 72.9091436,
+                  "radius": 1,
+                  "subarea": "Hiranandani Gardens",
+                  "area": "Powai",
+                  "city": "Mumbai",
+                  "pincode": 400076,
+                  "user": 1,
+                  "proposal": "BVIDBHBH157a5",
+                  "codes": [
+                    "RS"
+                  ]
+                }
+              ]
+        }
         """
         class_name = self.__class__.__name__
         try:
