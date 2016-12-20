@@ -2841,16 +2841,7 @@ class ProposalViewSet(viewsets.ViewSet):
 
             proposal = ProposalInfo.objects.get_user_related_object(request.user, proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
-            #added to send proposal centers data
-            response = website_utils.proposal_centers(pk)
-            if not response:
-                return response
-            
-            data = {
-                'proposal' : serializer.data,
-                'centers' : response.data['data'],
-            }
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -2874,6 +2865,26 @@ class ProposalViewSet(viewsets.ViewSet):
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['GET'])
+    def proposal_centers(self, request, pk=None):
+        """
+        Fetches all centers associated with this proposal
+        Args:
+            request: request parameter
+            pk: primary key of proposal
+
+        Returns: Fetches all centers associated with this proposal. in each center object we have 'codes' array
+        which contains which suppliers are allowed. 
+        """
+        class_name = self.__class__.__name__
+        try:
+            response = website_utils.construct_proposal_response(pk, request.user)
+            if not response.data['status']:
+                return response
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 

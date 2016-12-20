@@ -1730,6 +1730,7 @@ def construct_proposal_response(proposal_id, user):
     """
     Args:
         proposal_id: proposal_id for which response structure is built
+        user: The request.user object
     appends a list called codes in each center object.
 
     Returns: constructs the data in required form to be sent back to API response
