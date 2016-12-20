@@ -1148,6 +1148,7 @@ class SocietyTower(models.Model):
 
 class BusinessAccountContact(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     content_type = models.ForeignKey(ContentType)
     object_id = models.CharField(max_length=20)
     business_account_id = generic.GenericForeignKey('content_type','object_id')
@@ -1164,7 +1165,6 @@ class BusinessAccountContact(BaseModel):
 
 
 class BusinessInfo(BaseModel):
-    ## changed -> on_delete = models.CASCADE
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     business_id = models.CharField(db_column='BUSINESS_ID',max_length=15, primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True) ## changed -> name

@@ -128,7 +128,7 @@ class UserViewSet(viewsets.ViewSet):
         Args:
             request: The request body
 
-        Returns:
+        Returns: list all users
 
         """
         class_name = self.__class__.__name__

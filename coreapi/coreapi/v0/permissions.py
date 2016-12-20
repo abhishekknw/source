@@ -62,3 +62,14 @@ class IsExternalBd(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
         return v0_utils.get_group_permission(user, 'external_bds')
+
+
+class IsGeneralBdUser(permissions.BasePermission):
+    """
+    checks if the incoming user is a general BD user
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        return v0_utils.get_group_permission(user, 'general_bd_user')
+

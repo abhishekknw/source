@@ -509,7 +509,7 @@ def make_suppliers(center_object, row, supplier_type_code, proposal_id, center_i
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def populate_shortlisted_inventory_pricing_details(result, proposal_id):
+def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
     """
     Args:
         result: it's a list containing final data
@@ -526,7 +526,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id):
         center_ids = result.keys()
         # this creates a mapping like { 1: 'center_object_1', 2: 'center_object_2' } etc
         center_objects = models.ProposalCenterMapping.objects.in_bulk(center_ids)
-        proposal_object = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+        proposal_object = models.ProposalInfo.objects.get_user_related_object(user, proposal_id=proposal_id)
 
         # set to hold all durations
         duration_list = set()
@@ -548,7 +548,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id):
         
         # return error if atleast one of them is False 
         if not ad_inventory_type_objects or not durations_objects:
-            return ui_utils.handle_response(function, data='Error in fetching ad_inventory_objects or duration objects')
+            return ui_utils.handle_response(function, data='No ad_inventory_objects or duration objects.', success=True)
 
         # create a mapping like {'POSTER':{ 'A3' : ad_inv_object },'STANDEE': {'small':ad_inv_object  } }
         ad_inventory_type_objects_mapping = {}
@@ -575,6 +575,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id):
             # pre fill the dict with items that won't change for this iteration
             shortlisted_inventory_detail_object['proposal'] = proposal_object
             shortlisted_inventory_detail_object['center'] = center_objects[center_id]
+            shortlisted_inventory_detail_object['user'] = user
 
             for index, shortlisted_inventory_detail in enumerate(center['shortlisted_inventory_details']):
                 # copy supplier_id, inventory_price, inventory_count as it is from the current object
@@ -1262,10 +1263,10 @@ def save_final_proposal(proposal_data, unique_supplier_codes, user):
         center_id = proposal_data['center']['id']
 
         # get the proposal object
-        proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+        proposal = models.ProposalInfo.objects.get_user_related_object(user, proposal_id=proposal_id)
 
         # get the center object
-        center = models.ProposalCenterMapping.objects.get(id=center_id)
+        center = models.ProposalCenterMapping.objects.get_user_related_object(user, id=center_id)
 
         fixed_data = {
             'center': center,
@@ -1339,7 +1340,7 @@ def save_filter_data(inventories_selected, fixed_data, user):
         proposal = fixed_data.get('proposal')
         code = fixed_data.get('supplier_code')
         content_type = fixed_data.get('content_type')
-        filter_name = fixed_data.get('inventory_type_sexlected')
+        filter_name = fixed_data.get('inventory_type_selected')
 
         #  to count how many filter objects were created
         count = 0
@@ -1456,7 +1457,7 @@ def build_query(min_max_data, supplier_type_code):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def get_suppliers(query, supplier_type_code, coordinates, user):
+def get_suppliers(query, supplier_type_code, coordinates):
     """
     Args:
         query: The Q object
@@ -1475,7 +1476,7 @@ def get_suppliers(query, supplier_type_code, coordinates, user):
 
         # get the suppliers data within that radius
         supplier_model = ui_utils.get_model(supplier_type_code)
-        supplier_objects = supplier_model.objects.filter_user_related_objects(user).filter(query)
+        supplier_objects = supplier_model.objects.filter(query)
 
         # need to set shortlisted=True for every supplier
         serializer = ui_utils.get_serializer(supplier_type_code)(supplier_objects, many=True)
@@ -1524,7 +1525,7 @@ def get_filters(data):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def handle_single_center(center, result, user):
+def handle_single_center(center, result):
     """
     Args:
         center: One center data.
@@ -1536,7 +1537,6 @@ def handle_single_center(center, result, user):
     function_name = handle_single_center.__name__
     try:
         center_data = {}
-
         center_data['center'] = center
 
         radius = float(center['radius'])
@@ -1571,7 +1571,7 @@ def handle_single_center(center, result, user):
             }
 
             # get the suppliers data
-            response = get_suppliers(query, supplier_type_code, coordinates, user)
+            response = get_suppliers(query, supplier_type_code, coordinates)
             if not response.data['status']:
                 return response
             suppliers_data = response.data['data']
@@ -1684,7 +1684,7 @@ def suppliers_within_radius(data):
         result = {center_id: {} for center_id in center_id_list}
 
         for center in serializer.data:
-            response = handle_single_center(center, result, user)
+            response = handle_single_center(center, result)
             if not response.data['status']:
                 return response
             result = response.data['data']
@@ -1730,6 +1730,7 @@ def construct_proposal_response(proposal_id, user):
     """
     Args:
         proposal_id: proposal_id for which response structure is built
+        user: The request.user object
     appends a list called codes in each center object.
 
     Returns: constructs the data in required form to be sent back to API response
