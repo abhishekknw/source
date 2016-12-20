@@ -36,3 +36,6 @@
 .btn-space{
 	margin-bottom: 10px;
 }
+.modal-open {
+  overflow-y: scroll;
+}
