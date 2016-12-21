@@ -64,8 +64,6 @@ import v0.utils as v0_utils
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
-
-
 class GetBusinessTypesAPIView(APIView):
     """
     fetches all types of businesses.
@@ -121,7 +119,7 @@ class GetBusinessSubTypesAPIView(APIView):
             return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class BusinessAPIView(APIView):
+class BusinessAccounts(APIView):
     """
     Fetches one buissiness data
     """
@@ -143,7 +141,7 @@ class BusinessAPIView(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
-class AccountAPIListView(APIView):
+class Accounts(APIView):
 
     permission_classes = (v0_permissions.IsGeneralBdUser, )
 
@@ -179,7 +177,7 @@ class AccountAPIView(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
-class NewCampaignAPIView(APIView):
+class BusinessContacts(APIView):
 
     permission_classes = (v0_permissions.IsGeneralBdUser,)
 
@@ -343,7 +341,7 @@ def get_extra_character(size=1):
     return ''.join(random.choice(string.ascii_uppercase ) for _ in range(size))
 
 
-class CreateCampaignAPIView(APIView):
+class AccountContacts(APIView):
     """
     API creates Account for a business
     """
@@ -578,9 +576,6 @@ class ShortlistSocietyCountAPIView(APIView):
             return Response({'count': societies_count}, status=200)
         except Campaign.DoesNotExist:
             return Response({'error':'No such campaign id exists'},status=406)
-
-
-
 
 class ShortlistSocietyAPIView(APIView):
 

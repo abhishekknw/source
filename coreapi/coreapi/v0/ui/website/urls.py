@@ -7,11 +7,11 @@ from v0.ui.website import views
 urlpatterns = [
 
     url(r'^businesses/$', views.BusinessAPIListView.as_view(), name='get-all-business-info'),
-    url(r'^business/(?P<id>[A-Z_a-z0-9]+)$', views.BusinessAPIView.as_view(), name='get-one-business-data'),
-    url(r'^accounts/$', views.AccountAPIListView.as_view()),
+    url(r'^business/(?P<id>[A-Z_a-z0-9]+)$', views.BusinessAccounts.as_view(), name='get-one-business-data'),
+    url(r'^accounts/$', views.Accounts.as_view()),
     url(r'^account/(?P<id>[A-Z_a-z0-9]+)$', views.AccountAPIView.as_view()),
-    url(r'^newCampaign/$', views.NewCampaignAPIView.as_view()),
-    url(r'^newAccountCampaign/$', views.CreateCampaignAPIView.as_view()),
+    url(r'^newCampaign/$', views.BusinessContacts.as_view()),
+    url(r'^newAccountCampaign/$', views.AccountContacts.as_view()),
 
     url(r'^(?P<account_id>[A-Z_a-z0-9]+)/getAccountProposals/$', views.GetAccountProposalsAPIView.as_view(), name='get-account-proposals'),
 

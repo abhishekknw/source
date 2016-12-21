@@ -998,6 +998,7 @@ def delete_proposal_cost_data(proposal_id):
     Deletes the tables data associated with proposal cost each time the api is hit because we don't want
     duplicates.
     """
+    function = delete_proposal_cost_data.__name__
     try:
         proposal_master_cost_object = get_object_or_404(models.ProposalMasterCost, proposal__proposal_id=proposal_id)
         models.ProposalMetrics.objects.filter(proposal_master_cost=proposal_master_cost_object).delete()
@@ -1008,12 +1009,12 @@ def delete_proposal_cost_data(proposal_id):
         models.IdeationDesignCost.objects.filter(proposal_master_cost=proposal_master_cost_object).delete()
         models.LogisticOperationsCost.objects.filter(proposal_master_cost=proposal_master_cost_object).delete()
         proposal_master_cost_object.delete()
-        return ui_utils.handle_response(delete_proposal_cost_data.__name__, data='success', success=True)
+        return ui_utils.handle_response(function, data='success', success=True)
     except Http404:
         # first time call of this function will not fetch object, but must be a success return.
-        return ui_utils.handle_response(delete_proposal_cost_data.__name__, data='', success=True)
+        return ui_utils.handle_response(function, data='', success=True)
     except Exception as e:
-        return ui_utils.handle_response(delete_proposal_cost_data.__name__, exception_object=e)
+        return ui_utils.handle_response(function, exception_object=e)
 
 
 def create_basic_proposal(data):
@@ -1091,8 +1092,8 @@ def save_suppliers_allowed(center_info, proposal_id, center_id, user):
     function_name = save_suppliers_allowed.__name__
 
     try:
-        # fetch all the supplier codes.
-        suppliers_codes = center_info['center']['supplier_codes']
+        # fetch all the supplier codes. 'supplier_codes' 
+        suppliers_codes = center_info['center']['codes']
         # for all the codes
         for code in suppliers_codes:
             content_type_response = ui_utils.get_content_type(code)
@@ -1156,7 +1157,6 @@ def save_center_data(proposal_data, user):
 
                 # prepare center info
                 center['proposal'] = proposal_id
-
                 # get address for this center. because address can contain a complicated logic in future, it's in separate
                 # function
                 address_response = calculate_address(center)

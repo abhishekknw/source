@@ -76,7 +76,7 @@ This file contains test cases for website app.
 #
 # class BusinessAPIViewTestCase(APITestCase):
 #     """
-#     Test cases for BusinessAPIView. The view is used to fetch one business data on supplying
+#     Test cases for BusinessAccounts. The view is used to fetch one business data on supplying
 #     right business id
 #     author: Nikhil
 #     """
