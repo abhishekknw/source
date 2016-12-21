@@ -89,7 +89,7 @@
               </thead>
               <tbody>
                 <tr ng-repeat="account in model.accounts track by $index">
-                  <td><input type="radio" id="sel_account_id" name="sel_account_id" value="{{account.account_id}}" ng-model="sel_account_id" ng-click = "getProposals(sel_account_id)"></td>
+                  <td><input type="radio" id="sel_account_id" name="sel_account_id" value="{{account.account_id}}" ng-checked="sel_account_id" ng-model="sel_account_id" ng-click = "getProposals(sel_account_id,$index)"></td>
                   <td>{{account.name}}</td>
                   <td>{{account.business.type_name.business_type}}</td>
                   <td>{{account.comments}}</td>

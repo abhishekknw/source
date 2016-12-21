@@ -45,3 +45,6 @@
 .table-align{
 	margin-left: 20px;
 }
+.modal-open {
+  overflow-y: scroll;
+}

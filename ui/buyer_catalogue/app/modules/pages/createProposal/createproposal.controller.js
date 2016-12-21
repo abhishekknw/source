@@ -54,8 +54,8 @@ angular.module('catalogueApp')
 	$scope.areas = [];
 	$scope.sub_areas = [];
 
-	if($window.localStorage.proposal_id != '0'){
-		createProposalService.getProposal($window.localStorage.proposal_id)
+	if($window.sessionStorage.proposal_id != '0'){
+		createProposalService.getProposal($window.sessionStorage.proposal_id)
 		.success(function(response, status){
 			$scope.model.name = response.data.proposal.name;
 			$scope.model.tentative_cost = response.data.proposal.tentative_cost;
@@ -147,9 +147,9 @@ angular.module('catalogueApp')
 	$scope.submit = function(){
     var status = checkSupplierCode();
     if(status >= 0){
-		$scope.model.account_id = $window.localStorage.account_id;
-		$scope.model.business_id = $window.localStorage.business_id;
-		$scope.model.parent = $window.localStorage.proposal_id;
+		$scope.model.account_id = $window.sessionStorage.account_id;
+		$scope.model.business_id = $window.sessionStorage.business_id;
+		$scope.model.parent = $window.sessionStorage.proposal_id;
 		console.log("vidhi inside submit", $scope.model);
 		// call backend to save only if all the latitudes are found
 			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)
