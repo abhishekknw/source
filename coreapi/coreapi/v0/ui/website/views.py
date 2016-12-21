@@ -263,9 +263,12 @@ class NewCampaignAPIView(APIView):
 
                 # deleting all contacts whose id not received from the frontend
                 BusinessAccountContact.objects.filter(id__in=contact_ids).delete()
+
                 contacts_serializer = BusinessAccountContactSerializer(contact_list, many=True)
+                business_serializer = UIBusinessInfoSerializer(business)
+
                 response = {
-                    'business': business_serializer_data,
+                    'business': business_serializer.data,
                     'contacts': contacts_serializer.data,
                 }
                 return Response(response, status=200)
