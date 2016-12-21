@@ -10,8 +10,8 @@ angular.module('catalogueApp')
         {name : 'Created On'},
         {name : ''}
       ];
-      // var proposalid = $window.localStorage.proposal_id;
-      $scope.proposalid = $window.localStorage.proposal_id;
+      // var proposalid = $window.sessionStorage.proposal_id;
+      $scope.proposalid = $window.sessionStorage.proposal_id;
     	proposalHistoryService.getProposalHistory($scope.proposalid)
     	.success(function(response, status){
     		$scope.proposals = response.data;
@@ -21,7 +21,7 @@ angular.module('catalogueApp')
     		console.log("error occured");
     	});
       $scope.showDetails = function(proposal_id){
-        $window.localStorage.parentProposal = false;
+        $window.sessionStorage.parentProposal = false;
         $location.path('/' + proposal_id + '/showcurrentproposal');
       }
       $scope.showHistory = function(){

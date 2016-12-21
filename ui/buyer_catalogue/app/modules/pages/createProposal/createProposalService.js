@@ -41,6 +41,12 @@
       	// var url = url_base + proposal_id;
     	return machadaloHttp.get(url);
     }
-
+    //for getting proposal centers
+    createProposalService.getProposalCenters = function(proposal_id){
+    	// will receive proposal_id
+        var url = url_base + "proposal/"+ proposal_id + "/proposal_centers/";
+      	// var url = url_base + proposal_id;
+    	return machadaloHttp.get(url);
+    }
   	return createProposalService;
   }]);

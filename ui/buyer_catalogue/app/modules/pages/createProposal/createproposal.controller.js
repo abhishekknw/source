@@ -34,13 +34,7 @@ angular.module('catalogueApp')
 			area  : '',
 			city : '',
 			pincode : '',
-			supplier_codes :[],
-			space_mapping : {
-				society_allowed : false,
-				corporate_allowed : false,
-				gym_allowed : false,
-				salon_allowed : false,
-			},
+			codes :[],
 		}
 		$scope.model.centers.push({
 			center : new_center,
@@ -57,16 +51,8 @@ angular.module('catalogueApp')
 	if($window.sessionStorage.proposal_id != '0'){
 		createProposalService.getProposal($window.sessionStorage.proposal_id)
 		.success(function(response, status){
-			$scope.model.name = response.data.proposal.name;
-			$scope.model.tentative_cost = response.data.proposal.tentative_cost;
-			$scope.centers = response.data.centers;
-			for(var i=0; i<$scope.centers.length; i++){
-				$scope.addCenter();
-				$scope.model.centers[i].center = $scope.centers[i];
-				$scope.model.centers[i].center.pincode =  $scope.centers[i].pincode.toString();
-				$scope.model.centers[i].isEditProposal = false;
-				selectSuppliers($scope.model.centers[i].suppliers,$scope.centers[i].supplier_codes);
-			}
+			$scope.model.name = response.data.name;
+			$scope.model.tentative_cost = response.data.tentative_cost;
 		})
 		.error(function(response, status){
 			console.log("Error Occured");
@@ -74,31 +60,43 @@ angular.module('catalogueApp')
 				console.log("Error response is :", response);
 			}
 		});
+
+		//for centers if proposal is editable
+		createProposalService.getProposalCenters($window.sessionStorage.proposal_id)
+		.success(function(response, status){
+			$scope.centers = response.data;
+			for(var i=0; i<$scope.centers.length; i++){
+				$scope.addCenter();
+				$scope.model.centers[i].center = $scope.centers[i];
+				$scope.model.centers[i].center.pincode =  $scope.centers[i].pincode.toString();
+				$scope.model.centers[i].isEditProposal = false;
+				$scope.model.centers[i].center.codes = $scope.centers[i].codes;
+				selectSuppliers($scope.model.centers[i].suppliers,$scope.centers[i].codes);
+			}
+		}).error(function(response, status){
+			console.log("Error Occured");
+			alert("Error Occured");
+		});
 	}
 	else {
 			$scope.addCenter();
 	}
 
-	var selectSuppliers = function(space,supplier_codes){
-		console.log(supplier_codes);
-		for(var i=0;i<supplier_codes.length;i++){
+	var selectSuppliers = function(space,codes){
+		for(var i=0;i<codes.length;i++){
 			for(var j=0;j<space.length; j++){
-				if(supplier_codes[i] == space[j].code)
+				if(codes[i] == space[j].code)
 					space[j].selected = true;
 			}
 		}
-		console.log(space);
 	}
 	createProposalService.loadInitialData()
     .success(function (response){
-			console.log(response);
         $scope.cities = response.cities;
-				console.log($scope.cities);
       });
 			//changes for searching societies on basis of area,subarea
   $scope.get_areas = function(id,index) {
      	var id = id;
-			console.log($scope.cities);
 			for(var i=0;i<$scope.cities.length;i++){
 				if($scope.cities[i].id == id){
 					$scope.model.centers[index].center.city = $scope.cities[i].city_name;
@@ -125,20 +123,19 @@ angular.module('catalogueApp')
 		$scope.model.centers.splice(index,1);
     count--;
 	}
-	// code chnaged to send supplier_codes like RS,CP..etc
+	// code chnaged to send codes like RS,CP..etc
 	$scope.checkSpace = function(supplier,center){
 		if(supplier.selected == true)
-			center.center.supplier_codes.push(supplier.code);
+			center.center.codes.push(supplier.code);
 		else {
-			var index = center.center.supplier_codes.indexOf(supplier.code);
+			var index = center.center.codes.indexOf(supplier.code);
 			if(index > -1)
-				center.center.supplier_codes.splice(index,1);
+				center.center.codes.splice(index,1);
 		}
 	}
   var checkSupplierCode = function() {
     for(var i=0;i<$scope.model.centers.length;i++){
-      if($scope.model.centers[i].center.supplier_codes.length <=0){
-        console.log($scope.model.centers[i].center.supplier_codes.length);
+      if($scope.model.centers[i].center.codes.length <=0){
                 return -1;
               }
     }
@@ -154,7 +151,6 @@ angular.module('catalogueApp')
 		// call backend to save only if all the latitudes are found
 			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)
 			.success(function(response, status){
-				console.log($scope.model.data);
 				$scope.errormsg = undefined;
 				console.log("Successfully Saved");
 				console.log("response is : ", response);
@@ -166,7 +162,6 @@ angular.module('catalogueApp')
 			.error(function(response,status){
 				alert("Error Occured");
 				console.log("Error");
-				alert("Error Occured");
 				if(typeof(response) != typeof(12)){
 					console.log("response is ", response);
 					$scope.errormsg = response.message;

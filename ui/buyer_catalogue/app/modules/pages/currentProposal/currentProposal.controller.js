@@ -5,7 +5,7 @@ angular.module('catalogueApp')
     	$scope.proposal = {};
       $scope.society = {society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''};
       $scope.societyDetails = [];
-      $scope.isParentProposal = $window.localStorage.parentProposal;// send proposal_id in service
+      $scope.isParentProposal = $window.sessionStorage.parentProposal;// send proposal_id in service
       $scope.campaign_start_date;
       $scope.campaign_end_date;
 
@@ -160,7 +160,7 @@ angular.module('catalogueApp')
     		})
     	}
      $scope.editInitialProposal = function(proposalId){
-       $location.path('/' + $window.localStorage.account_id + '/createproposal');
+       $location.path('/' + $window.sessionStorage.account_id + '/createproposal');
      }
      $scope.showHistory = function(){
        $location.path('/' + $stateParams.proposal_id + '/showproposalhistory');
