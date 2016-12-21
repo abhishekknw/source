@@ -49,7 +49,7 @@ angular.module('catalogueApp')
 
     	currentProposalService.getProposal($stateParams.proposal_id)
     	.success(function(response, status){
-    		$scope.proposal = response.data.proposal;
+    		$scope.proposal = response.data;
     	})
     	.error(function(response, status){
     		console.log("Error Occured");

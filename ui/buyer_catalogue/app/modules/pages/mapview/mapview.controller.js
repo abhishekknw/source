@@ -1,7 +1,7 @@
 "use strict";
 angular.module('catalogueApp')
     .constant('constants',{
-      base_url : 'http://localhost:8000/',
+      base_url : 'http://localhost:8108/',
       url_base : 'v0/ui/website/',
       AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
       policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
@@ -460,6 +460,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
               console.log(response);
+              $scope.loadIcon = response;
                 $scope.business_name = response.data.business_name;
                 $scope.center_data = response.data.suppliers;
                 $scope.addSupplierFilters($scope.center_data);
@@ -1221,7 +1222,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 //End : function to upload files to amazon server, just provide file name and file
     $scope.upload = function (file) {
       console.log(file);
-      var uploadUrl = 'http://localhost:8000/v0/ui/website/';
+      var uploadUrl = 'http://localhost:8108/v0/ui/website/';
       var token = $rootScope.globals.currentUser.token ;
       Upload.upload({
           url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
