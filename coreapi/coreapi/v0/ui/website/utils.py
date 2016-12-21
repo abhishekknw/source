@@ -2485,8 +2485,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
             if specific_filters.get('flat_type'):
                 flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
                 supplier_ids = models.FlatType.objects.select_related('society').filter(flat_type__in=flat_type_values).values_list('society__supplier_id')
-                if supplier_ids:
-                    specific_filters_query &= Q(supplier_id__in=supplier_ids)
+                specific_filters_query &= Q(supplier_id__in=supplier_ids)
 
         if supplier_type_code == 'CP':
             # well, we can receive a multiple dicts for employee counts. each describing min and max employee counts.
@@ -2819,13 +2818,13 @@ def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code
         content_type = response.data['data']
         adinventory_type_dict = ui_utils.adinventory_func()
         duration_type_dict = ui_utils.duration_type_func()
-        price_mapping, created = PriceMappingDefault.objects.get_or_create(adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type], object_id=supplier_id, content_type=content_type )
-        if not created:
-            return ui_utils.handle_response(function, data=price_mapping.business_price, success=True)
-        else:
-            price_mapping.business_price = business_price
-            price_mapping.save()
-            return ui_utils.handle_response(function, data=price_mapping.business_price, success=True)
+        price_mapping = get_object_or_404(PriceMappingDefault,adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type], object_id=supplier_id, content_type=content_type)
+        price_mapping.business_price = business_price
+        price_mapping.save()
+        return ui_utils.handle_response(function, data=price_mapping.business_price, success=True)
+    except Http404 as e:
+        # if price_mapping_default object is not found, return 0 as price
+        return ui_utils.handle_response(function, data=0, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
