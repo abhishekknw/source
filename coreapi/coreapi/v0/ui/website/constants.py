@@ -499,3 +499,6 @@ email = {
     'body': 'This a system generated mail. Please find the file named $file attached',
     'to': ['nikhil.singh@machadalo.com']
 }
+
+# status of suppliers which are in get_spaces(), not in
+status = 'X'
