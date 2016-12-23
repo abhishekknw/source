@@ -505,3 +505,10 @@ filter_type = {
     'RS' : ['inventory_type_selected','quality_type','quantity_type','locality_rating','flat_type'],
     'CP' : ['inventory_type_selected','quality_type','quantity_type','locality_rating','employee_count'],
 }
+#to store employee_count
+employee_count_codes = {
+    0    : 'SM',
+    1000 : 'MD',
+    3000 : 'LA',
+    6000 : 'VL',
+}

@@ -1347,6 +1347,10 @@ def save_filter_data(suppliers_meta, fixed_data, user):
         for filter_name in website_constants.filter_type[code]:
             if suppliers_meta[code][filter_name].__len__():
                 for inventory_code in suppliers_meta[code][filter_name]:
+                    #TO store employee_count by codes so easy to fetch
+                    if filter_name == 'employee_count':
+                        key = int(inventory_code['min'])
+                        inventory_code = website_constants.employee_count_codes[key]
                     data = {
                         'center': center,
                         'proposal': proposal,
