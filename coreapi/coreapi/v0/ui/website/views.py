@@ -2766,7 +2766,6 @@ class CreateFinalProposal(APIView):
             # to keep count of new objects created
             objects_created = {
                 'SHORTLISTED_SUPPLIERS': 0,
-                'FILTER_OBJECTS': 0
             }
             # get the supplier type codes available in the request
             response = website_utils.unique_supplier_type_codes(request.data)
@@ -2782,7 +2781,6 @@ class CreateFinalProposal(APIView):
                     if not response.data['status']:
                         return response
                     objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']['SHORTLISTED_SUPPLIERS']
-                    objects_created['FILTER_OBJECTS'] += response.data['data']['FILTER_OBJECTS']
 
                 return ui_utils.handle_response(class_name, data=objects_created, success=True)
         except Exception as e:

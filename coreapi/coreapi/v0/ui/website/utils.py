@@ -16,6 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django.core.mail import EmailMessage
+from django.utils import timezone
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -1276,10 +1277,9 @@ def save_final_proposal(proposal_data, unique_supplier_codes, user):
         # to keep count of new objects created
         objects_created = {
             'SHORTLISTED_SUPPLIERS': 0,
-            'FILTER_OBJECTS': 0
         }
-
-        filter_name = 'inventory_type_selected'
+        # list to store all filter objects
+        filter_data = []
 
         for code in unique_supplier_codes:
 
@@ -1306,16 +1306,17 @@ def save_final_proposal(proposal_data, unique_supplier_codes, user):
             suppliers_meta = proposal_data.get('suppliers_meta')
             # check if any filters available for this partcular supplier type
             if suppliers_meta and suppliers_meta.get(code):
-
-                fixed_data['filter_name'] = filter_name
-                inventories_selected = suppliers_meta[code][filter_name]
-
-                # save data of inventories selected
-                response = save_filter_data(inventories_selected, fixed_data, user)
+                response = save_filter_data(suppliers_meta, fixed_data, user)
                 if not response.data['status']:
                     return response
-                objects_created['FILTER_OBJECTS'] += response.data['data']
 
+                filter_data.extend(response.data['data'])
+               
+        # delete previous and save new selected filters and update date
+        models.Filters.objects.filter(user=user,proposal_id=proposal_id).delete()
+        models.Filters.objects.bulk_create(filter_data)
+        now_time = timezone.now()
+        models.Filters.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
         return ui_utils.handle_response(function_name, data=objects_created, success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error', exception_object=e)
@@ -1325,7 +1326,7 @@ def save_final_proposal(proposal_data, unique_supplier_codes, user):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def save_filter_data(inventories_selected, fixed_data, user):
+def save_filter_data(suppliers_meta, fixed_data, user):
     """
     Args:
         inventories_selected: the list of inventories which are selected
@@ -1340,29 +1341,26 @@ def save_filter_data(inventories_selected, fixed_data, user):
         proposal = fixed_data.get('proposal')
         code = fixed_data.get('supplier_code')
         content_type = fixed_data.get('content_type')
-        filter_name = fixed_data.get('inventory_type_selected')
 
-        #  to count how many filter objects were created
-        count = 0
+        # craeting filter objects for each filter value selected
+        selected_filters_list = []
+        for filter_name in website_constants.filter_type[code]:
+            if suppliers_meta[code][filter_name].__len__():
+                for inventory_code in suppliers_meta[code][filter_name]:
+                    data = {
+                        'center': center,
+                        'proposal': proposal,
+                        'supplier_type': content_type,
+                        'supplier_type_code': code,
+                        'filter_name': filter_name,
+                        'filter_code': inventory_code,
+                        'is_checked': True,
+                        'user': user
+                    }
+                    filter_object = models.Filters(**data)
+                    selected_filters_list.append(filter_object) 
 
-        for inventory_code in inventories_selected:
-            data = {
-                'center': center,
-                'proposal': proposal,
-                'supplier_type': content_type,
-                'supplier_type_code': code,
-                'filter_name': filter_name,
-                'filter_code': inventory_code,
-                'is_checked': True,
-                'user': user
-            }
-            filer_object, is_created = models.Filters.objects.get_or_create(**data)
-            filer_object.save()
-
-            if is_created:
-                count += 1
-
-        return ui_utils.handle_response(function_name, data=count, success=True)
+        return ui_utils.handle_response(function_name, data=selected_filters_list, success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error', exception_object=e)
     except ObjectDoesNotExist as e:

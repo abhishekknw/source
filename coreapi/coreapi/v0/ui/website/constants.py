@@ -499,3 +499,9 @@ email = {
     'body': 'This a system generated mail. Please find the file named $file attached',
     'to': ['nikhil.singh@machadalo.com']
 }
+
+#filter types
+filter_type = {
+    'RS' : ['inventory_type_selected','quality_type','quantity_type','locality_rating','flat_type'],
+    'CP' : ['inventory_type_selected','quality_type','quantity_type','locality_rating','employee_count'],
+}
