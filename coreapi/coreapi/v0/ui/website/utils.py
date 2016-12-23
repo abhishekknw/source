@@ -1652,7 +1652,7 @@ def suppliers_within_radius(data):
             proposal_center_objects = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user, proposal_id=proposal_id)
             supplier_type_codes_list = proposal_center_objects.select_related('center').values('center', 'supplier_type_code')
 
-            # fetch the mapped centers. This centers were saved when CreateInitialproposal was hit.
+            # fetch the mapped centers. This centers    were saved when CreateInitialproposal was hit.
             center_id_list = [data['center'] for data in supplier_type_codes_list]
 
             # query the center objects
@@ -1843,10 +1843,10 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
     try:
         # from the codes, fetch the right supplier model, supplier serializer, and put in the dict against that code
         result = {}
-        
+
         supplier_ids = []
 
-        # supplier_id : filter object mappping so that we can add relevant info from 
+        # supplier_id : filter object mapping so that we can add relevant info from
         # filter table to each supplier dict  
         supplier_to_filter_object_mapping = {}
         
@@ -1856,7 +1856,7 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
         for supplier in shortlisted_suppliers:
             supplier_id = supplier['object_id']
             supplier_ids.append(supplier_id)
-            supplier_to_filter_object_mapping[supplier_id] =  supplier
+            supplier_to_filter_object_mapping[supplier_id] = supplier
 
         for code in supplier_type_code_list:
             supplier_model = ui_utils.get_model(code)
@@ -1957,6 +1957,7 @@ def proposal_shortlisted_spaces(data):
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
 
 def add_filters(proposal_id, center_id_list):
     """
@@ -3066,3 +3067,44 @@ def proposal_centers(proposal_id):
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
+
+def add_shortlisted_suppliers_get_spaces(proposal_id, user, data):
+    """
+    Args:
+        proposal_id: The proposal_id for which we need to add ShortlistedSpaces
+        data:  The data is the response of get_spaces() api.
+    Returns: add's status field in each of the suppliers . The status field comes form ShortlistedSpaces.
+    All those suppliers which are not in ShortlistedSpaces and present in data  have a special status called 'X'.
+    This is required from front end side as the suppliers marked with 'X' are shown with a different colour there.
+    """
+    function = add_shortlisted_suppliers_get_spaces.__name__
+    try:
+        # pick out only object_id, center_id, and status from this table
+        shortlisted_spaces = models.ShortlistedSpaces.objects.filter(user=user,proposal_id=proposal_id).values('object_id', 'center_id', 'status')
+        result = {}
+        # make a mapping like this center_id --> object_id --> status value so that status of a supplier can be fetched
+        # by knowing center_id and object_id.
+        for shortlisted_space in shortlisted_spaces:
+
+            center_id = shortlisted_space['center_id']
+            object_id = shortlisted_space['object_id']
+            space_status = shortlisted_space['status']
+
+            if not result.get(center_id):
+                result[center_id] = {}
+            if not result[center_id].get(object_id):
+                result[center_id][object_id] = space_status
+
+        # replace the status of each supplier under each center to status already saved.
+        for supplier_dict in data['suppliers']:
+            for code in supplier_dict['center']['codes']:
+                center_id = supplier_dict['center']['id']
+                for supplier in supplier_dict['suppliers'][code]:
+                    supplier_id = supplier['supplier_id']
+                    if result.get(center_id) and result[center_id].get(supplier_id):
+                        supplier['status'] = result[center_id][supplier_id]
+                    else:
+                        supplier['status'] = website_constants.status
+        return ui_utils.handle_response(function, data=data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)

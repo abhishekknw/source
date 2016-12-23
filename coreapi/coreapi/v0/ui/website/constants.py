@@ -512,3 +512,5 @@ employee_count_codes = {
     3000 : 'LA',
     6000 : 'VL',
 }
+# status of suppliers which are in get_spaces(), not in
+status = 'X'

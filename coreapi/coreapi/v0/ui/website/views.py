@@ -24,7 +24,7 @@ from openpyxl.compat import range
 import requests
 from rest_framework.parsers import JSONParser, FormParser
 from rest_framework import permissions
-#from import_export import resources
+# from import_export import resources
 
 import openpyxl
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
@@ -2676,7 +2676,6 @@ class CreateInitialProposal(APIView):
             request: request param
             proposal_id:  proposal_id for which data is to be saved
 
-
         Returns: success or failure depending an initial proposal is created or not.
 
         """
@@ -2702,7 +2701,7 @@ class CreateInitialProposal(APIView):
 
                 # query for parent. if available set it. if it's available, then this is an EDIT request.
                 parent = request.data.get('parent')
-                parent  = parent if parent != '0' else None
+                parent = parent if parent != '0' else None
                 proposal_data['parent'] = parent
                 # set parent if available
                 if parent:
@@ -2916,16 +2915,22 @@ class ProposalViewSet(viewsets.ViewSet):
         response looks like :
         {
            'status': true,
-           'data' : [
-                {
-                   suppliers: { RS: [], CP: [] } ,
-                   center: { ...   codes: [] }
-                   suppliers_meta: {
-                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
-                                     'CP': { 'inventory_type_selected':  ['ST']
-                   }
-                }
-           ]
+           'data' : {
+              "business_name": '',
+              "suppliers":
+                    [
+                        {
+                           suppliers: { RS: [], CP: [] } ,
+                           center: { ...   codes: [] }
+                           suppliers_meta: {
+                                             'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                             'CP': { 'inventory_type_selected':  ['ST']
+                            }
+                        }
+                        ,
+                        { }
+                    ]
+              }
 
         }
         Args:
@@ -2957,6 +2962,10 @@ class ProposalViewSet(viewsets.ViewSet):
                 'user': request.user
             }
             response = website_utils.suppliers_within_radius(data)
+            if not response.data['status']:
+                return response
+
+            response = website_utils.add_shortlisted_suppliers_get_spaces(pk, request.user, response.data['data'])
             if not response.data['status']:
                 return response
 
