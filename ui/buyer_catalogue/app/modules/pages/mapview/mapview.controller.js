@@ -459,8 +459,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           $scope.proposal_id_temp = $stateParams.proposal_id;
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
-              console.log(response);
-              $scope.loadIcon = response;
                 $scope.business_name = response.data.business_name;
                 $scope.center_data = response.data.suppliers;
                 $scope.addSupplierFilters($scope.center_data);
@@ -468,6 +466,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.current_center_index = 0;
                 $scope.current_center_id = $scope.current_center.center.id;
                 $scope.old_data = angular.copy($scope.center_data);
+
+                //loading icon
+                $scope.loadIcon = response;
                 //Start: code added if proposal is already created or exported, and user wants to edit that proposal
                 if($scope.current_center.suppliers_meta != null){
                   checkExportedFilters($scope.current_center);
@@ -1115,10 +1116,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       }
     }
     //End: function to select center at add more suplliers
-});
 //Start: upload and import functionality
 //Start: For sending only shortlisted societies & selected inventory types
-     function getShortlistedFilteredSocieties(){
+     function saveSelectedFilters(){
      //Start: For sending filtered inventory type
 
          var society_inventory_type_selected = [];
@@ -1126,25 +1126,34 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
            if($scope.center_data[center].suppliers_meta){
              if($scope.center_data[center].suppliers_meta['RS']){
                $scope.center_data[center].suppliers_meta['RS'].inventory_type_selected = [];
-               for(var filter = 0; filter<$scope.center_data[center].RS_filters.inventory.length; filter++){
-                 if($scope.center_data[center].RS_filters.inventory[filter].selected == true){
-                   $scope.center_data[center].suppliers_meta['RS'].inventory_type_selected.push($scope.center_data[center].RS_filters.inventory[filter].code);
-                 }
-               }
+               $scope.center_data[center].suppliers_meta['RS'].quality_type = [];
+               $scope.center_data[center].suppliers_meta['RS'].quantity_type = [];
+               $scope.center_data[center].suppliers_meta['RS'].flat_type = [];
+               $scope.center_data[center].suppliers_meta['RS'].locality_rating = [];
+               makeFilters($scope.center_data[center].RS_filters.inventory,$scope.center_data[center].suppliers_meta['RS'].inventory_type_selected);
+               makeFilters($scope.center_data[center].RS_filters.quality_type,$scope.center_data[center].suppliers_meta['RS'].quality_type);
+               makeFilters($scope.center_data[center].RS_filters.quantity_type,$scope.center_data[center].suppliers_meta['RS'].quantity_type);
+               makeFilters($scope.center_data[center].RS_filters.flat_type,$scope.center_data[center].suppliers_meta['RS'].flat_type);
+               makeFilters($scope.center_data[center].RS_filters.locality_rating,$scope.center_data[center].suppliers_meta['RS'].locality_rating);
              }
              if($scope.center_data[center].suppliers_meta['CP']){
                $scope.center_data[center].suppliers_meta['CP'].inventory_type_selected = [];
-               for(var filter = 0; filter<$scope.center_data[center].CP_filters.inventory.length; filter++){
-                 console.log($scope.center_data[center].CP_filters.inventory[filter]);
-                 if($scope.center_data[center].CP_filters.inventory[filter].selected == true){
-                   $scope.center_data[center].suppliers_meta['CP'].inventory_type_selected.push($scope.center_data[center].CP_filters.inventory[filter].code);
-                 }
-               }
+               $scope.center_data[center].suppliers_meta['CP'].quality_type = [];
+               $scope.center_data[center].suppliers_meta['CP'].quantity_type = [];
+               $scope.center_data[center].suppliers_meta['CP'].employee_count = [];
+               $scope.center_data[center].suppliers_meta['CP'].locality_rating = [];
+
+               makeFilters($scope.center_data[center].CP_filters.inventory,$scope.center_data[center].suppliers_meta['CP'].inventory_type_selected);
+               makeFilters($scope.center_data[center].CP_filters.quality_type,$scope.center_data[center].suppliers_meta['CP'].quality_type);
+               makeFilters($scope.center_data[center].CP_filters.quantity_type,$scope.center_data[center].suppliers_meta['CP'].quantity_type);
+               makeFilters($scope.center_data[center].CP_filters.employee_count,$scope.center_data[center].suppliers_meta['CP'].employee_count);
+               makeFilters($scope.center_data[center].CP_filters.locality_rating,$scope.center_data[center].suppliers_meta['CP'].locality_rating);
              }
            }
          }
        }
        //End: For sending filtered inventory type
+
        //Start: setting status of suppliers like shortlisted, removed or buffer
        $scope.setSupplierStatus = function (supplier,value){
           if(supplier.buffer_status == false && value == 'B')
@@ -1158,11 +1167,12 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
        };
        //End: setting status of suppliers like shortlisted, removed or buffer
        $scope.submitProposal = function(){
-         getShortlistedFilteredSocieties();
+         saveSelectedFilters();
        };
      $scope.exportData = function(){
          $scope.checkFileExport = true;
-         getShortlistedFilteredSocieties();
+         saveSelectedFilters();
+         console.log($scope.center_data);
          $http({
               url: constants.base_url + constants.url_base + $scope.proposal_id_temp + '/export-spaces-data/',
               method: 'POST',
@@ -1238,4 +1248,5 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       });
     };
     //End: upload and import functionality
+  });
 });
