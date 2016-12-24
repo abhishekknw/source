@@ -1465,7 +1465,6 @@ def get_suppliers(query, supplier_type_code, coordinates):
         query: The Q object
         supplier_type_code : 'RS', 'CP'
         coordinates: a dict having radius, latitude, longitude as keys
-        user: User instance
 
     Returns: all the suppliers.
 
@@ -1491,6 +1490,11 @@ def get_suppliers(query, supplier_type_code, coordinates):
                     value = supplier[society_key]
                     del supplier[society_key]
                     supplier[actual_key] = value
+
+            if not coordinates:
+                result.append(supplier)
+                continue
+
             if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
                 supplier['shortlisted'] = True
                 # set status= 'S' as suppliers are shortlisted initially.
@@ -3078,32 +3082,139 @@ def add_shortlisted_suppliers_get_spaces(proposal_id, user, data):
     """
     function = add_shortlisted_suppliers_get_spaces.__name__
     try:
-        # pick out only object_id, center_id, and status from this table
-        shortlisted_spaces = models.ShortlistedSpaces.objects.filter(user=user,proposal_id=proposal_id).values('object_id', 'center_id', 'status')
-        result = {}
-        # make a mapping like this center_id --> object_id --> status value so that status of a supplier can be fetched
-        # by knowing center_id and object_id.
-        for shortlisted_space in shortlisted_spaces:
-
-            center_id = shortlisted_space['center_id']
-            object_id = shortlisted_space['object_id']
-            space_status = shortlisted_space['status']
-
-            if not result.get(center_id):
-                result[center_id] = {}
-            if not result[center_id].get(object_id):
-                result[center_id][object_id] = space_status
+        # get all suppliers from ShortlistedSpaces for this proposal_id and user
+        response = get_shortlisted_suppliers(proposal_id, user)
+        if not response.data['status']:
+            return response
+        result = response.data['data']
 
         # replace the status of each supplier under each center to status already saved.
+        # Here the union takes place between two supplier sets. one from response of get_spaces() and one from response
+        # from ShortlistedSpaces, because we need to send those suppliers which were saved last time.
         for supplier_dict in data['suppliers']:
             for code in supplier_dict['center']['codes']:
                 center_id = supplier_dict['center']['id']
-                for supplier in supplier_dict['suppliers'][code]:
-                    supplier_id = supplier['supplier_id']
-                    if result.get(center_id) and result[center_id].get(supplier_id):
-                        supplier['status'] = result[center_id][supplier_id]
-                    else:
-                        supplier['status'] = website_constants.status
+
+                if result.get(center_id) and result[center_id].get(code):
+                    response = union_suppliers(supplier_dict['suppliers'][code], result[center_id][code])
+                    if not response.data['status']:
+                        return response
+                    # set it to union of two sets.
+                    supplier_dict['suppliers'][code] = response.data['data'].values()
+
         return ui_utils.handle_response(function, data=data, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def union_suppliers(first_supplier_list, second_supplier_list):
+    """
+
+    Args:
+        first_supplier_list: first supplier list of dicts
+        second_supplier_list: second supplier list of dicts
+
+    Returns: Union of two. sets status for all those suppliers which are in first_list  but not in second set to 'X'.
+
+    """
+    function = union_suppliers.__name__
+    try:
+
+        first_supplier_list_ids = set([supplier['supplier_id'] for supplier in first_supplier_list])
+        second_supplier_list_ids = set([supplier['supplier_id'] for supplier in second_supplier_list])
+
+        first_supplier_mapping = {supplier['supplier_id']: supplier for supplier in first_supplier_list}
+        second_supplier_mapping = {supplier['supplier_id']: supplier for supplier in second_supplier_list}
+
+        total_supplier_ids = first_supplier_list_ids.union(second_supplier_list_ids)
+        suppliers_not_in_second_set = first_supplier_list_ids.difference(second_supplier_list_ids)
+
+        result = {}
+        for supplier_id in total_supplier_ids:
+            if first_supplier_mapping.get(supplier_id):
+                result[supplier_id] = first_supplier_mapping[supplier_id]
+            if second_supplier_mapping.get(supplier_id):
+                result[supplier_id] = second_supplier_mapping[supplier_id]
+
+            if supplier_id in suppliers_not_in_second_set:
+                result[supplier_id]['status'] = website_constants.status
+
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_shortlisted_suppliers(proposal_id, user):
+    """
+    Args:
+        proposal_id: The proposal_id
+        user: The User instance.
+
+    Returns: a dict having shortlisted suppliers against each code and each center
+    {
+    "45":  {
+              "RS" : [ {}, {}, {} ],
+              "CP": [ {}]
+             },
+    "44" : {
+              "RS" : [ {} ]
+            }
+    }
+    """
+    function = get_shortlisted_suppliers.__name__
+    try:
+        # fetch the right shortlisted space instances
+        shortlisted_spaces = models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).values()
+
+        # to store supplier id against each supplier_type_code
+        shortlisted_spaces_content_type_wise = {}
+        # to store supplier objects against each center and each supplier_type_code.
+        shortlisted_suppliers_center_content_type_wise = {}
+        # to store unique supplier_type_codes
+        supplier_type_codes = set()
+
+        # collect all supplier_ids against each supplier_type_code.
+        for item in shortlisted_spaces:
+            supplier_id = item['object_id']
+            supplier_type_code = item['supplier_code']
+            supplier_type_codes.add(supplier_type_code)
+
+            if not shortlisted_spaces_content_type_wise.get(supplier_type_code):
+                shortlisted_spaces_content_type_wise[supplier_type_code] = set()
+
+            shortlisted_spaces_content_type_wise[supplier_type_code].add(supplier_id)
+
+        #  get actual supplier objects for each supplier_id.
+        for code in supplier_type_codes:
+
+            supplier_ids = shortlisted_spaces_content_type_wise[code]
+            query = Q(**{'supplier_id__in': supplier_ids})
+            response = get_suppliers(query, code, {})
+            if not response.data['status']:
+                return response
+            supplier_objects = {supplier_object['supplier_id']: supplier_object for supplier_object in response.data['data']}
+            shortlisted_spaces_content_type_wise[code] = supplier_objects
+
+        # store each supplier object for each center and  each supplier_type_code.
+        for item in shortlisted_spaces:
+            supplier_id = item['object_id']
+            center_id = item['center_id']
+            supplier_type_code = item['supplier_code']
+            status = item['status']
+
+            if not shortlisted_suppliers_center_content_type_wise.get(center_id):
+                shortlisted_suppliers_center_content_type_wise[center_id] = {}
+
+            if not shortlisted_suppliers_center_content_type_wise[center_id].get(supplier_type_code):
+                shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code] = []
+
+            supplier_object = shortlisted_spaces_content_type_wise[supplier_type_code][supplier_id]
+            supplier_object['status'] = status
+            shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code].append(supplier_object)
+
+        return ui_utils.handle_response(function, data=shortlisted_suppliers_center_content_type_wise, success=True)
+    except KeyError as e:
+        return ui_utils.handle_response(function, data='key error', exception_object=e)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+

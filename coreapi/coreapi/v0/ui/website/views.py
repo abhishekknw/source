@@ -1117,10 +1117,8 @@ class FilteredSuppliers(APIView):
         The request looks like :
         {
           'supplier_type_code': 'CP',
-          'common_filters': { 'latitude': 12, 'longitude': 11, 'radius': 2, 'quality': [ 'UH', 'H' ],
-           'quantity': ['VL'],
-           },
-           'inventory_filters': ['PO', 'ST'],
+          'common_filters': { 'latitude': 12, 'longitude': 11, 'radius': 2, 'quality': [ 'UH', 'H' ],'quantity': ['VL'] },
+          'inventory_filters': ['PO', 'ST'],
           'specific_filters': { 'real_estate_allowed': True, 'employees_count': {min: 10, max: 100},}
         }
         and the response looks like.:
@@ -1228,13 +1226,13 @@ class FilteredSuppliers(APIView):
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
             serializer = supplier_serializer(suppliers, many=True)
 
-            # to incllude only those suppliers that lie within radius, we need to send coordinates
+            # to include only those suppliers that lie within radius, we need to send coordinates
             coordinates = {
                 'radius': common_filters['radius'],
                 'latitude': common_filters['latitude'],
                 'longitude': common_filters['longitude']
             }
-            # the following function sets the pricing as before and it's temproaray.
+            # the following function sets the pricing as before and it's temprorary.
             response = website_utils.set_pricing_temproray(serializer.data, final_suppliers_list, supplier_type_code, coordinates)
             if not response.data['status']:
                 return response
@@ -1242,12 +1240,7 @@ class FilteredSuppliers(APIView):
 
             # because some suppliers can be outside the given radius, we need to recalculate list of 
             # supplier_id's. 
-            final_suppliers_list =  [supplier['supplier_id'] for supplier in suppliers]
-
-            # response = website_utils.set_supplier_extra_attributes(serializer.data, supplier_type_code, inventory_filters)
-            # if not response.data['status']:
-            #     return response
-            # serializer.data = response.data['data']
+            final_suppliers_list = [supplier['supplier_id'] for supplier in suppliers]
 
             # calculate total aggregate count
 
