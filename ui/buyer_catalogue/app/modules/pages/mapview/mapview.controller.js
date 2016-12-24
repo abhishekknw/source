@@ -67,6 +67,23 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             });
                 return center_marker;
         }
+      function getIcon(supplier){
+        var color;
+        if(supplier.status == 'X')
+          color = "Blue";
+        if(supplier.status == 'S')
+          color = "Green";
+        if(supplier.status == 'R')
+          color = "Red";
+        if(supplier.status == 'B')
+          color = "Brown";
+           var icon = {
+          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          strokeColor: color,
+          scale: 3
+        };
+        return icon;
+      }
       function assignMarkersToMap(spaces) {
           // assigns spaces(society, corporate) markers on the map
           // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
@@ -74,24 +91,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           angular.forEach(spaces, function(suppliers) {
             for (var i=0; i <suppliers.length; i++) {
               // console.log(suppliers[i]);
-              var color;
-              if(suppliers[i].status == 'X')
-                color = "Blue";
-              if(suppliers[i].status == 'S')
-                color = "Green";
-              if(suppliers[i].status == 'R')
-                color = "Red";
-              if(suppliers[i].status == 'B')
-                color = "Brown";
                 markers.push({
                     latitude: suppliers[i].latitude,
                     longitude: suppliers[i].longitude,
                     id: suppliers[i].supplier_id,
-                    icon: {
-                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                        strokeColor: color,
-                        scale: 3
-                    },
+                    icon: getIcon(suppliers[i]),
                     options : {draggable : false},
                     title : {
                         name : suppliers[i].name,
