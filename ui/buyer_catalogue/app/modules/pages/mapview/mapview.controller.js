@@ -73,11 +73,25 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           var markers = [];
           angular.forEach(spaces, function(suppliers) {
             for (var i=0; i <suppliers.length; i++) {
+              // console.log(suppliers[i]);
+              var color;
+              if(suppliers[i].status == 'X')
+                color = "Blue";
+              if(suppliers[i].status == 'S')
+                color = "Green";
+              if(suppliers[i].status == 'R')
+                color = "Red";
+              if(suppliers[i].status == 'B')
+                color = "Brown";
                 markers.push({
                     latitude: suppliers[i].latitude,
                     longitude: suppliers[i].longitude,
                     id: suppliers[i].supplier_id,
-                    icon: "img/homeicon1.ico",
+                    icon: {
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        strokeColor: color,
+                        scale: 3
+                    },
                     options : {draggable : false},
                     title : {
                         name : suppliers[i].name,
@@ -703,6 +717,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         if($scope.center_data[i].suppliers['RS'] != null){
           var filters = {
             'supplier_type_code' : 'RS',
+            proposal_id : $scope.proposal_id_temp,
+            center_id : $scope.center_data[i].center.id,
             common_filters : {
             latitude : $scope.center_data[i].center.latitude,
             longitude : $scope.center_data[i].center.longitude,
@@ -744,6 +760,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     toggleInventoryFilters($scope.current_center,value,'RS');
       var filters = {
         'supplier_type_code' : 'RS',
+        proposal_id : $scope.proposal_id_temp,
+        center_id : $scope.current_center.center.id,
           common_filters : {
           latitude : $scope.current_center.center.latitude,
           longitude : $scope.current_center.center.longitude,
@@ -762,9 +780,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
       makeFilters($scope.current_center.RS_filters.locality_rating,filters.common_filters.locality);
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
-
       filterSupplierData(filters.supplier_type_code,filters);
       }
+        console.log(filters);
   }
   //End: code for society filters
   //Start: code for corporate filters
@@ -784,6 +802,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             if($scope.center_data[i].suppliers['CP'] != null){
               var filters = {
                 'supplier_type_code' : 'CP',
+                proposal_id : $scope.proposal_id_temp,
+                center_id : $scope.center_data[i].center.id,
                 common_filters : {
                 latitude : $scope.center_data[i].center.latitude,
                 longitude : $scope.center_data[i].center.longitude,
@@ -827,6 +847,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       $scope.gridView_CP_filters = angular.copy($scope.current_center.CP_filters);
         var filters = {
           'supplier_type_code' : 'CP',
+          proposal_id : $scope.proposal_id_temp,
+          center_id : $scope.current_center.center.id,
             common_filters : {
             latitude : $scope.current_center.center.latitude,
             longitude : $scope.current_center.center.longitude,
