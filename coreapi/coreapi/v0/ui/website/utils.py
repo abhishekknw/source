@@ -1628,9 +1628,6 @@ def suppliers_within_radius(data):
             # space to store the suppliers
             'suppliers': []
         }
-
-        result = {}
-        center_id_list = []
         # todo: think of better way of separating this logic. looks ugly right now
         if center_id:
             # the queries will change if center_id is provided because we want to process
@@ -1648,6 +1645,8 @@ def suppliers_within_radius(data):
             proposal_center_objects = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user, center_id=center_id)
             supplier_type_codes_list = proposal_center_objects.select_related('center').values('center', 'supplier_type_code')
 
+            # define center_id_list to be used later
+            center_id_list = [center_id]
         else:
             proposal_center_objects = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user, proposal_id=proposal_id)
             supplier_type_codes_list = proposal_center_objects.select_related('center').values('center', 'supplier_type_code')
