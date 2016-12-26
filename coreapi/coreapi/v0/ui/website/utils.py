@@ -1498,7 +1498,7 @@ def get_suppliers(query, supplier_type_code, coordinates):
             if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
                 supplier['shortlisted'] = True
                 # set status= 'S' as suppliers are shortlisted initially.
-                supplier['status'] = 'S'
+                supplier['status'] = website_constants.status
                 result.append(supplier)
         return ui_utils.handle_response(function_name, data=result, success=True)
 
@@ -3120,11 +3120,26 @@ def union_suppliers(first_supplier_list, second_supplier_list):
     function = union_suppliers.__name__
     try:
 
-        first_supplier_list_ids = set([supplier['supplier_id'] for supplier in first_supplier_list])
-        second_supplier_list_ids = set([supplier['supplier_id'] for supplier in second_supplier_list])
+        first_supplier_list_ids = set()
+        second_supplier_list_ids = set()
+        first_supplier_mapping = {}
+        second_supplier_mapping = {}
 
-        first_supplier_mapping = {supplier['supplier_id']: supplier for supplier in first_supplier_list}
-        second_supplier_mapping = {supplier['supplier_id']: supplier for supplier in second_supplier_list}
+        if not second_supplier_list and not first_supplier_list:
+            return ui_utils.handle_response(function, data={}, success=True)
+
+        if second_supplier_list:
+            for supplier in second_supplier_list:
+                supplier_id = supplier['supplier_id']
+                second_supplier_list_ids.add(supplier_id)
+                second_supplier_mapping[supplier_id] = supplier
+
+        if first_supplier_list:
+            for supplier in first_supplier_list:
+                supplier_id = supplier['supplier_id']
+                first_supplier_list_ids.add(supplier_id)
+                first_supplier_mapping[supplier_id] = supplier
+                supplier['status'] = website_constants.status
 
         total_supplier_ids = first_supplier_list_ids.union(second_supplier_list_ids)
         suppliers_not_in_second_set = first_supplier_list_ids.difference(second_supplier_list_ids)
