@@ -1274,5 +1274,16 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       });
     };
     //End: upload and import functionality
+    //Start:save suppliers and filters to save the current state
+    $scope.saveData = function(){
+       saveSelectedFilters();
+      mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
+        .success(function(response, status){
+          alert("Saved Successfully");
+        }).error(function(response, status){
+          alert("Error Occured");
+      });//
+    }
+    //End:save suppliers and filters to save the current state
   });
 });
