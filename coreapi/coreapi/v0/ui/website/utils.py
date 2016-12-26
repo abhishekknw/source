@@ -1471,6 +1471,8 @@ def get_suppliers(query, supplier_type_code, coordinates):
     """
     function_name = get_suppliers.__name__
     try:
+        import pdb
+        pdb.set_trace()
         radius = coordinates.get('radius', 0)
         latitude = coordinates.get('latitude', 0)
         longitude = coordinates.get('longitude', 0)
@@ -1879,6 +1881,13 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
                 if not response.data['status']:
                     return response
                 result[code] = serializer.data
+            #convert society_keys to common supplier keys to access easily at frontEnd
+            if code == 'RS':
+                response = change_society_keys_to_common(result[code])
+                if not response.data['status']:
+                    return response
+                result[code] = response.data['data']
+
         # return the result
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
@@ -1895,11 +1904,16 @@ def proposal_shortlisted_spaces(data):
     function = proposal_shortlisted_spaces.__name__
     try:
         user = data['user']
-
         proposal_id = data['proposal_id']
 
         # fetch all shortlisted suppliers object id's for this proposal
         shortlisted_suppliers = models.ShortlistedSpaces.objects.filter_user_related_objects(user, proposal_id=proposal_id).select_related('content_object').values()
+
+        response = change_society_keys_to_common(shortlisted_suppliers)
+        if not response.data['status']:
+            return response
+
+        shortlisted_suppliers = response.data['data']
 
         # collect all supplier_id's 
         supplier_ids = [ supplier['object_id'] for supplier in shortlisted_suppliers ]
@@ -3217,4 +3231,26 @@ def get_shortlisted_suppliers(proposal_id, user):
         return ui_utils.handle_response(function, data='key error', exception_object=e)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+def change_society_keys_to_common(suppliers):
+    """
+    Args:
+        list of all suppliers
+    Returns:
+        return list of suppliers by changing some keys in supplier object
+    """
+    function = change_society_keys_to_common.__name__
+    try:
+        for supplier in suppliers:
+            # replace all society specific keys with common supplier keys
+            for society_key, actual_key in website_constants.society_common_keys.iteritems():
+                if society_key in supplier.keys():
+                    value = supplier[society_key]
+                    del supplier[society_key]
+                    supplier[actual_key] = value
+
+        return ui_utils.handle_response(function, data=suppliers, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
 
