@@ -1199,7 +1199,7 @@ class FilteredSuppliers(APIView):
             if specific_filters_query.__len__():
                 specific_filters_suppliers = list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id'))
 
-            # pull only the ID's, not the tuples !
+            # pull only the ID's, not the tuples !  
             inventory_type_query_suppliers = set([supplier_tuple[0] for supplier_tuple in inventory_type_query_suppliers])
             specific_filters_suppliers = set([supplier_tuple[0] for supplier_tuple in specific_filters_suppliers])
             master_suppliers_list = set([supplier_tuple[0] for supplier_tuple in master_suppliers_list])
@@ -1256,11 +1256,11 @@ class FilteredSuppliers(APIView):
                 response = website_utils.get_shortlisted_suppliers(proposal_id, request.user)
                 if not response.data['status']:
                     return response
-                shortlisted_suppliers = response.data['data'][supplier_type_code]
+                shortlisted_suppliers = response.data['data'].get(supplier_type_code)
                 response = website_utils.union_suppliers(suppliers, shortlisted_suppliers)
                 if not response.data['status']:
                     return response
-                suppliers = response.data['data']
+                suppliers = response.data['data'].values()
 
             # construct the response and return
             result['suppliers'] = {}
