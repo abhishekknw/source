@@ -55,5 +55,13 @@
       return machadaloHttp.post(url, societyfile);
     }
 
+    //To get saved proposal data
+    mapViewService.getShortlistedSuppliers = function(proposal_id){
+    	// will receive proposal_id
+        var url = url_base + "proposal/"+ proposal_id + "/shortlisted_suppliers/";
+      	// var url = url_base + proposal_id;
+    	return machadaloHttp.get(url);
+    }
+
     return mapViewService;
 }]);

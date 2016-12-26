@@ -88,6 +88,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           // assigns spaces(society, corporate) markers on the map
           // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
           var markers = [];
+          console.log(spaces);
           angular.forEach(spaces, function(suppliers) {
             for (var i=0; i <suppliers.length; i++) {
               // console.log(suppliers[i]);
@@ -474,7 +475,69 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     // }
       //End: reset all filters
 // This service gets all the spaces according to center specification like society_allowed
+          //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
           $scope.proposal_id_temp = $stateParams.proposal_id;
+          if($window.sessionStorage.isSavedProposal){
+            mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
+              .success(function(response, status){
+                console.log(response);
+                // $scope.center_data = response.data;
+                //TO convert dict to array as response coming in dict form and very difficult to use
+                $scope.center_data = $.map(response.data, function(value, index){
+                  return [value];
+                });
+                console.log($scope.center_data);
+                $scope.addSupplierFilters($scope.center_data);
+                $scope.current_center = $scope.center_data[0];
+                $scope.current_center_index = 0;
+                $scope.current_center_id = $scope.current_center.center.id;
+                $scope.old_data = angular.copy($scope.center_data);
+
+
+                mapViewBasicSummary();
+                suppliersData();
+                gridViewBasicSummary();
+
+                for(var i=0;i<$scope.center_data.length; i++)
+                  $scope.initial_center_changed.push(false);
+                $scope.current_center_id = $scope.current_center.center.id
+                $scope.map = { zoom: 13, bounds: {},
+                  center: {
+                    latitude: $scope.current_center.center.latitude,
+                    longitude: $scope.current_center.center.longitude,
+                 }
+                };
+                $scope.circle = {
+                    id : 1,
+                    center : {
+                        latitude : $scope.current_center.center.latitude,
+                        longitude : $scope.current_center.center.longitude,
+                    },
+                    radius : $scope.current_center.center.radius * 1000,
+                    stroke : {
+                        color : '#08B21F',
+                        weight : 2,
+                        opacity : 1,
+                    },
+                    fill : {
+                        color : '#87cefa',
+                        opacity : 0.5,
+                    },
+                    clickable : false,
+                    control : {},
+                };
+                console.log($scope.current_center.suppliers);
+                  $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+                  $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
+                //loading icon
+                $scope.loadIcon1 = response;
+            })
+              .error(function(response, status){
+                alert("Error Occured");
+              });
+          }
+          //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
+          else{
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
                 $scope.business_name = response.data.business_name;
@@ -486,7 +549,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.old_data = angular.copy($scope.center_data);
 
                 //loading icon
-                $scope.loadIcon = response;
+                $scope.loadIcon2 = response;
                 //Start: code added if proposal is already created or exported, and user wants to edit that proposal
                 if($scope.current_center.suppliers_meta != null){
                   checkExportedFilters($scope.current_center);
@@ -539,6 +602,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.get_spaces_error = response.message;
                 console.log("Error response : ",response);
             });
+          }
         });
           $scope.windowCoords = {}; // at windowCoords the window will show up
           $scope.space = {}

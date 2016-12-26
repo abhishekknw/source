@@ -160,7 +160,8 @@ angular.module('catalogueApp')
     		})
     	}
      $scope.editInitialProposal = function(proposalId){
-       $location.path('/' + $window.sessionStorage.account_id + '/createproposal');
+       $window.sessionStorage.isSavedProposal = true;
+       $location.path('/' + proposalId + '/mapview');
      }
      $scope.showHistory = function(){
        $location.path('/' + $stateParams.proposal_id + '/showproposalhistory');
