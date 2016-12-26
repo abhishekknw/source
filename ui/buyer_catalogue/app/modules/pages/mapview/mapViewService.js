@@ -40,8 +40,8 @@
         return machadaloHttp.get(url);
     }
 
-    mapViewService.createFinalProposal = function(proposal_id, centers_data){
-        var url = url_base + proposal_id + '/createFinalProposal/';
+    mapViewService.saveData = function(proposal_id, centers_data){
+        var url = url_base + proposal_id + '/create-final-proposal/';
         return machadaloHttp.post(url, centers_data);
     }
 
@@ -54,5 +54,6 @@
       var url = url_base + proposal_id + '/import-society-data/';
       return machadaloHttp.post(url, societyfile);
     }
+
     return mapViewService;
 }]);
