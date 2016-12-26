@@ -1120,6 +1120,8 @@ class FilteredSuppliers(APIView):
           'common_filters': { 'latitude': 12, 'longitude': 11, 'radius': 2, 'quality': [ 'UH', 'H' ],'quantity': ['VL'] },
           'inventory_filters': ['PO', 'ST'],
           'specific_filters': { 'real_estate_allowed': True, 'employees_count': {min: 10, max: 100},}
+          'center_id': '23',
+          'proposal_id': 'abc'
         }
         and the response looks like.:
         {
@@ -1153,6 +1155,7 @@ class FilteredSuppliers(APIView):
             common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model
             inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
             specific_filters = request.data.get('specific_filters')  # maps to specific supplier table
+            proposal_id = request.data.get('proposal_id')
 
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
@@ -1247,8 +1250,17 @@ class FilteredSuppliers(APIView):
             suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=final_suppliers_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
                                                                                                         standees=Sum('total_standee_count'),
                                                                                                         stalls=Sum('total_stall_count'),
-
                                                                                                         fliers=Sum('flier_frequency'))
+            # adding earlier saved shortlisted suppliers in the results.
+            if proposal_id:
+                response = website_utils.get_shortlisted_suppliers(proposal_id, request.user)
+                if not response.data['status']:
+                    return response
+                shortlisted_suppliers = response.data['data'][supplier_type_code]
+                response = website_utils.union_suppliers(suppliers, shortlisted_suppliers)
+                if not response.data['status']:
+                    return response
+                suppliers = response.data['data']
 
             # construct the response and return
             result['suppliers'] = {}
