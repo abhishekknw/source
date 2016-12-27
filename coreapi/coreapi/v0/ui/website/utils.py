@@ -1211,6 +1211,8 @@ def save_shortlisted_suppliers(suppliers, fixed_data, user):
         code = fixed_data.get('supplier_code')
         content_type = fixed_data.get('content_type')
 
+        shortlisted_suppliers = []
+
         count = 0
         for supplier in suppliers:
 
@@ -1221,15 +1223,12 @@ def save_shortlisted_suppliers(suppliers, fixed_data, user):
                 'center': center,
                 'proposal': proposal,
                 'supplier_code': code,
-                'user': user
+                'user': user,
+                'status': supplier['status']
             }
-            shortlisted_space, is_created = models.ShortlistedSpaces.objects.get_or_create(
-                **data)  # todo: to be changed if better solution found
-            shortlisted_space.status = supplier['status']
-            shortlisted_space.save()
-            if is_created:
-                count += 1
-        return ui_utils.handle_response(function_name, data=count, success=True)
+            shortlisted_suppliers.append(models.ShortlistedSpaces(**data))
+
+        return ui_utils.handle_response(function_name, data=shortlisted_suppliers, success=True)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
 
@@ -1264,22 +1263,20 @@ def save_final_proposal(proposal_data, unique_supplier_codes, user):
         center_id = proposal_data['center']['id']
 
         # get the proposal object
-        proposal = models.ProposalInfo.objects.get_user_related_object(user, proposal_id=proposal_id)
+        proposal = models.ProposalInfo.objects.get(user=user, proposal_id=proposal_id)
 
         # get the center object
-        center = models.ProposalCenterMapping.objects.get_user_related_object(user, id=center_id)
+        center = models.ProposalCenterMapping.objects.get(user=user, id=center_id)
 
         fixed_data = {
             'center': center,
             'proposal': proposal,
         }
 
-        # to keep count of new objects created
-        objects_created = {
-            'SHORTLISTED_SUPPLIERS': 0,
-        }
         # list to store all filter objects
         filter_data = []
+
+        total_shortlisted_suppliers_list = []
 
         for code in unique_supplier_codes:
 
@@ -1300,7 +1297,7 @@ def save_final_proposal(proposal_data, unique_supplier_codes, user):
             response = save_shortlisted_suppliers(suppliers, fixed_data, user)
             if not response.data['status']:
                 return response
-            objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']
+            total_shortlisted_suppliers_list.extend(response.data['data'])
 
             # fetch suppliers_meta dict if present 
             suppliers_meta = proposal_data.get('suppliers_meta')
@@ -1311,13 +1308,20 @@ def save_final_proposal(proposal_data, unique_supplier_codes, user):
                     return response
 
                 filter_data.extend(response.data['data'])
-               
+
+        now_time = timezone.now()
+
+        # delete previous  shortlisted suppliers and save new
+        models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).delete()
+        models.ShortlistedSpaces.objects.bulk_create(total_shortlisted_suppliers_list)
+        models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
+
         # delete previous and save new selected filters and update date
         models.Filters.objects.filter(user=user,proposal_id=proposal_id).delete()
         models.Filters.objects.bulk_create(filter_data)
-        now_time = timezone.now()
         models.Filters.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
-        return ui_utils.handle_response(function_name, data=objects_created, success=True)
+
+        return ui_utils.handle_response(function_name, data='success', success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error', exception_object=e)
     except ObjectDoesNotExist as e:
