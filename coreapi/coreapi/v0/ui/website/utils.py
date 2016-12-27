@@ -1881,7 +1881,7 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
                 result[code] = serializer.data
             #convert society_keys to common supplier keys to access easily at frontEnd
             if code == 'RS':
-                response = change_society_keys_to_common(result[code])
+                response = change_society_specific_keys(result[code])
                 if not response.data['status']:
                     return response
                 result[code] = response.data['data']
@@ -1907,7 +1907,7 @@ def proposal_shortlisted_spaces(data):
         # fetch all shortlisted suppliers object id's for this proposal
         shortlisted_suppliers = models.ShortlistedSpaces.objects.filter_user_related_objects(user, proposal_id=proposal_id).select_related('content_object').values()
 
-        response = change_society_keys_to_common(shortlisted_suppliers)
+        response = change_society_specific_keys(shortlisted_suppliers)
         if not response.data['status']:
             return response
 
@@ -1997,29 +1997,29 @@ def add_filters(proposal_id, center_id_list):
             filter_objects_per_center[center_id].append(filter_object)
 
         # output result. The structure ouf the result is defined here 
-        result = { center_id: {'suppliers_meta': {} } for center_id in center_id_list }  
+        result = { center_id: {'suppliers_meta': {} } for center_id in center_id_list }
 
         # iterate for valid centers
         for center_id in center_id_list:
-            
+
             filter_objects = filter_objects_per_center[center_id] if filter_objects_per_center.get(center_id) else []
-            
+
             # iterate for filter objects for this center 
             for filter_object in filter_objects:
 
-                 supplier_type_code = filter_object['supplier_type_code']
-                 filter_name = filter_object.get('filter_name') or 'inventory_type_selected'
-                 filter_code = filter_object['filter_code']
+                supplier_type_code = filter_object['supplier_type_code']
+                filter_name = filter_object.get('filter_name') or 'inventory_type_selected'
+                filter_code = filter_object['filter_code']
 
-                 # give memory 
-                 if not result[center_id]['suppliers_meta'].get(supplier_type_code):
+                # give memory
+                if not result[center_id]['suppliers_meta'].get(supplier_type_code):
                     result[center_id]['suppliers_meta'][supplier_type_code] = {}
-                 
-                 if not result[center_id]['suppliers_meta'][supplier_type_code].get(filter_name):
-                         result[center_id]['suppliers_meta'][supplier_type_code][filter_name] = []
 
-                 # append the filter_code 
-                 result[center_id]['suppliers_meta'][supplier_type_code][filter_name].append(filter_code)
+                if not result[center_id]['suppliers_meta'][supplier_type_code].get(filter_name):
+                    result[center_id]['suppliers_meta'][supplier_type_code][filter_name] = []
+
+                # append the filter_code
+                result[center_id]['suppliers_meta'][supplier_type_code][filter_name].append(filter_code)
 
         return ui_utils.handle_response(function, data=result, success=True)
 
@@ -3245,14 +3245,15 @@ def get_shortlisted_suppliers(proposal_id, user):
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
-def change_society_keys_to_common(suppliers):
+
+def change_society_specific_keys(suppliers):
     """
     Args:
         list of all suppliers
     Returns:
         return list of suppliers by changing some keys in supplier object
     """
-    function = change_society_keys_to_common.__name__
+    function = change_society_specific_keys.__name__
     try:
         for supplier in suppliers:
             # replace all society specific keys with common supplier keys
