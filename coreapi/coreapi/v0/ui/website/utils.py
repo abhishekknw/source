@@ -1471,8 +1471,6 @@ def get_suppliers(query, supplier_type_code, coordinates):
     """
     function_name = get_suppliers.__name__
     try:
-        import pdb
-        pdb.set_trace()
         radius = coordinates.get('radius', 0)
         latitude = coordinates.get('latitude', 0)
         longitude = coordinates.get('longitude', 0)

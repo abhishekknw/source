@@ -76,7 +76,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         if(supplier.status == 'R')
           color = "Red";
         if(supplier.status == 'B')
-          color = "Brown";
+          color = "Black";
            var icon = {
           path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
           strokeColor: color,
@@ -477,7 +477,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 // This service gets all the spaces according to center specification like society_allowed
           //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
           $scope.proposal_id_temp = $stateParams.proposal_id;
-          if($window.sessionStorage.isSavedProposal){
+          if($window.sessionStorage.isSavedProposal == true){
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
               .success(function(response, status){
                 console.log(response);
@@ -493,6 +493,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.current_center_id = $scope.current_center.center.id;
                 $scope.old_data = angular.copy($scope.center_data);
 
+                // if($scope.current_center.suppliers_meta != null){
+                //   checkExportedFilters($scope.current_center);
+                // }
 
                 mapViewBasicSummary();
                 suppliersData();
@@ -540,9 +543,10 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           else{
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
+              console.log(response);
                 $scope.business_name = response.data.business_name;
                 $scope.center_data = response.data.suppliers;
-                $scope.addSupplierFilters($scope.center_data);
+
                 $scope.current_center = response.data.suppliers[0];
                 $scope.current_center_index = 0;
                 $scope.current_center_id = $scope.current_center.center.id;
@@ -552,10 +556,10 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.loadIcon2 = response;
                 //Start: code added if proposal is already created or exported, and user wants to edit that proposal
                 if($scope.current_center.suppliers_meta != null){
-                  checkExportedFilters($scope.current_center);
+                  checkSavedFilters();
                 }
                 //End: code added if proposal is already created or exported and user wants to edit that proposal
-
+                  $scope.addSupplierFilters($scope.center_data);
 
                 mapViewBasicSummary();
                 suppliersData();
@@ -642,6 +646,30 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             $scope.corporate_allowed_gridview = true;
           }
     }
+    // Start : check saved filter
+    var checkSavedFilters = function (){
+      for(var i=0; i<$scope.center_data.length;i++){
+          if($scope.center_data[i].suppliers_meta['RS'] != null){
+            var filter_types = Object.keys($scope.center_data[i].suppliers_meta['RS']);
+            console.log(filter_types);
+            for(var j=0;j<filter_types.length;j++){
+              if(filter_types[j]=='inventory_type_selected'){
+                selectFilters($scope.center_data[i].suppliers_meta['RS'][filter_types[j]],$scope.RS_filters['inventory']);
+              }else
+                selectFilters($scope.center_data[i].suppliers_meta['RS'][filter_types[j]],$scope.RS_filters[filter_types[j]]);
+            }
+          }
+      }
+    }
+    var selectFilters = function(saved_filter_type,current_filter_type){
+      for(var i=0;i<saved_filter_type.length;i++){
+        for(var j=0;j<current_filter_type.length;j++){
+          if(saved_filter_type[i]==current_filter_type[j].code)
+            current_filter_type[j].selected=true;
+        }
+      }
+    }
+    // End : check saved filter
     var checkExportedFilters = function(current_center){
       if(current_center.suppliers_meta['RS'] != null){
         if(current_center.suppliers_meta['RS'].inventory_type_selected != null){

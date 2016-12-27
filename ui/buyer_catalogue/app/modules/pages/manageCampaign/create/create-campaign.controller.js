@@ -221,6 +221,7 @@ angular.module('machadaloPages')
         else{
           pagesService.setProposalAccountId(sel_account_id);
           $window.sessionStorage.proposal_id = 0;
+          $window.sessionStorage.isSavedProposal = false;
           $location.path('/'+sel_account_id + '/createproposal');
         }
       }
