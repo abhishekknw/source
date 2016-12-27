@@ -1156,6 +1156,7 @@ class FilteredSuppliers(APIView):
             inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
             specific_filters = request.data.get('specific_filters')  # maps to specific supplier table
             proposal_id = request.data.get('proposal_id')
+            center_id = request.data.get('center_id')
 
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
@@ -1252,15 +1253,17 @@ class FilteredSuppliers(APIView):
                                                                                                         stalls=Sum('total_stall_count'),
                                                                                                         fliers=Sum('flier_frequency'))
             # adding earlier saved shortlisted suppliers in the results.
-            if proposal_id:
+            if proposal_id and center_id:
                 response = website_utils.get_shortlisted_suppliers(proposal_id, request.user)
                 if not response.data['status']:
                     return response
-                shortlisted_suppliers = response.data['data'].get(supplier_type_code)
-                response = website_utils.union_suppliers(suppliers, shortlisted_suppliers)
-                if not response.data['status']:
-                    return response
-                suppliers = response.data['data'].values()
+                shortlisted_supplier_result = response.data['data']
+                if shortlisted_supplier_result.get(center_id):
+                    shortlisted_suppliers = shortlisted_supplier_result[center_id].get(supplier_type_code)
+                    response = website_utils.union_suppliers(suppliers, shortlisted_suppliers)
+                    if not response.data['status']:
+                        return response
+                    suppliers = response.data['data'].values()
 
             # construct the response and return
             result['suppliers'] = {}
