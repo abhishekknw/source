@@ -2804,7 +2804,7 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
 
     try:
         
-        response = change_society_specific_keys(suppliers)
+        response = manipulate_object_key_values(suppliers, supplier_type_code=supplier_type_code)
         if not response.data['status']:
             return response
         suppliers = response.data['data']
