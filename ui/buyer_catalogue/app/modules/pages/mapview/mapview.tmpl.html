@@ -468,7 +468,14 @@
                     <td>{{supplier.city}}</td>
                     <td>{{supplier.area}}</td>
                     <td>{{supplier.subarea}}</td>
-                    <td><button class="btn btn-danger active" ng-click="addMoreSuppliers(supplier,$index)">Add</button></td>
+                    <td>
+                      <div class="radio">
+                             <label><input type="radio" ng-model="supplier.status" value="S" ng-click="addMoreSuppliers(supplier,$index)">Shortlist</label>
+                      </div>
+                      <div class="radio">
+                             <label><input type="radio" ng-model="supplier.status" value="B" ng-click="addMoreSuppliers(supplier,$index)">Buffer</label>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>

@@ -88,7 +88,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           // assigns spaces(society, corporate) markers on the map
           // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
           var markers = [];
-          console.log(spaces);
           angular.forEach(spaces, function(suppliers) {
             for (var i=0; i <suppliers.length; i++) {
               // console.log(suppliers[i]);
@@ -1139,15 +1138,20 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     $scope.search = null;
     $scope.errorMsg = undefined;
     $scope.center_index = null;
+
+    $scope.createSupplierList();
     }
     //Start: To add searched societies in given center
       $scope.addMoreSuppliers = function(supplier,id){
-        if($scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code] != undefined && $scope.center_index != null){
+        if($scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code] != undefined && $scope.center_index != null && checkDuplicateSupplier(supplier)){
+          console.log("geloo");
           supplier.status = 'S';
           $scope.extraSuppliersData[$scope.current_center_index][$scope.supplier_type_code].push(supplier);
           $scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code].push(supplier);
           $scope.supplierData.splice(id,1);
           $scope.changeCurrentCenter($scope.center_index);
+          var center = $scope.center_data[$scope.current_center_index];
+          $scope.updateSupplierStatus(supplier,center,$scope.supplier_type_code);
           mapViewBasicSummary();
           suppliersData();
           gridViewBasicSummary();
@@ -1337,5 +1341,37 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       });
     }
     // End: function to update status of supplier and save in db
+    //Start:create dict of supplier_ids
+    $scope.createSupplierList = function(){
+      $scope.supplier_id_list = [];
+
+      for(var i=0;i<$scope.center_data.length;i++){
+        $scope.supplier_id_list[i] = {};
+
+        var supplier_keys = Object.keys($scope.center_data[i].suppliers);
+        angular.forEach(supplier_keys,function(key){
+          $scope.supplier_id_list[i][key] = {};
+          for(var j=0;j<$scope.center_data[i].suppliers[key].length; j++){
+            $scope.supplier_id_list[i][key][$scope.center_data[i].suppliers[key][j].supplier_id] = j;
+          }
+        });
+      }
+      console.log($scope.supplier_id_list);
+    }
+    //Start: check duplicate suppliers if adding more suppliers
+    var checkDuplicateSupplier = function(supplier){
+        if($scope.supplier_id_list[$scope.current_center_index][$scope.supplier_type_code][supplier.supplier_id] !=null){
+          var index = $scope.supplier_id_list[$scope.current_center_index][$scope.supplier_type_code][supplier.supplier_id]
+          var center = $scope.center_data[$scope.current_center_index];
+          console.log(center);
+          $scope.updateSupplierStatus(supplier,center,$scope.supplier_type_code);
+          center.suppliers[$scope.supplier_type_code][index].status = supplier.status;
+          alert("Supplier already Exist and You changed Supplier status");
+          return false;
+        }
+        else{
+          return true;
+        }
+    }
   });
 });
