@@ -2767,10 +2767,6 @@ class CreateFinalProposal(APIView):
 
             # simple dict to count new objects created each time the API is hit. a valuable information.
 
-            # to keep count of new objects created
-            objects_created = {
-                'SHORTLISTED_SUPPLIERS': 0,
-            }
             # get the supplier type codes available in the request
             response = website_utils.unique_supplier_type_codes(request.data)
             if not response.data['status']:
@@ -2784,9 +2780,8 @@ class CreateFinalProposal(APIView):
                     response = website_utils.save_final_proposal(proposal_data, unique_supplier_codes, user)
                     if not response.data['status']:
                         return response
-                    objects_created['SHORTLISTED_SUPPLIERS'] += response.data['data']['SHORTLISTED_SUPPLIERS']
 
-                return ui_utils.handle_response(class_name, data=objects_created, success=True)
+                return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
