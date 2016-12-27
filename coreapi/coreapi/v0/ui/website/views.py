@@ -3349,16 +3349,13 @@ class SupplierSearch(APIView):
             suppliers = model.objects.filter(search_query)
             serializer_class = ui_utils.get_serializer(supplier_type_code)
             serializer = serializer_class(suppliers, many=True)
-            
-            for supplier in serializer.data:
-                supplier['shortlisted'] = True
-                if supplier_type_code == 'RS':
-                    for society_key, common_key in website_constants.society_common_keys.iteritems():
-                        supplier_key_value = supplier[society_key]
-                        del supplier[society_key]
-                        supplier[common_key] = supplier_key_value
 
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            response = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code,  **{'status': website_constants.status})
+            if not response.data['status']:
+                return response
+            suppliers = response.data['data']
+
+            return ui_utils.handle_response(class_name, data=suppliers, success=True)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, exception_object=e)
         except Exception as e:

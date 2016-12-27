@@ -1887,12 +1887,11 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
                 if not response.data['status']:
                     return response
                 result[code] = serializer.data
-            #convert society_keys to common supplier keys to access easily at frontEnd
-            if code == 'RS':
-                response = change_society_specific_keys(result[code])
-                if not response.data['status']:
-                    return response
-                result[code] = response.data['data']
+            # convert society_keys to common supplier keys to access easily at frontEnd
+            response = manipulate_object_key_values(result[code], supplier_type_code=code)
+            if not response.data['status']:
+                return response
+            result[code] = response.data['data']
 
         # return the result
         return ui_utils.handle_response(function, data=result, success=True)
@@ -1915,14 +1914,14 @@ def proposal_shortlisted_spaces(data):
         # fetch all shortlisted suppliers object id's for this proposal
         shortlisted_suppliers = models.ShortlistedSpaces.objects.filter_user_related_objects(user, proposal_id=proposal_id).select_related('content_object').values()
 
-        response = change_society_specific_keys(shortlisted_suppliers)
+        response = manipulate_object_key_values(shortlisted_suppliers)
         if not response.data['status']:
             return response
 
         shortlisted_suppliers = response.data['data']
 
         # collect all supplier_id's 
-        supplier_ids = [ supplier['object_id'] for supplier in shortlisted_suppliers ]
+        supplier_ids = [supplier['object_id'] for supplier in shortlisted_suppliers ]
 
         # fetch all inventory_summary objects related to each one of suppliers
         inventory_summary_objects = models.InventorySummary.objects.filter_user_related_objects(user, object_id__in=supplier_ids)
@@ -3254,22 +3253,31 @@ def get_shortlisted_suppliers(proposal_id, user):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def change_society_specific_keys(suppliers):
+def manipulate_object_key_values(suppliers, supplier_type_code=website_constants.society, **kwargs):
     """
     Args:
-        list of all suppliers
+        suppliers: list of all suppliers
+        supplier_type_code: by default 'RS'.
+        kwargs: key,value pairs meant to set in each supplier.
     Returns:
         return list of suppliers by changing some keys in supplier object
     """
-    function = change_society_specific_keys.__name__
+    function = manipulate_object_key_values.__name__
     try:
         for supplier in suppliers:
+
             # replace all society specific keys with common supplier keys
-            for society_key, actual_key in website_constants.society_common_keys.iteritems():
-                if society_key in supplier.keys():
-                    value = supplier[society_key]
-                    del supplier[society_key]
-                    supplier[actual_key] = value
+            if supplier_type_code == website_constants.society:
+                for society_key, actual_key in website_constants.society_common_keys.iteritems():
+                    if society_key in supplier.keys():
+                        value = supplier[society_key]
+                        del supplier[society_key]
+                        supplier[actual_key] = value
+
+            if kwargs:
+                # set extra key, value sent in kwargs
+                for key, item in kwargs.iteritems():
+                    supplier[key] = item
 
         return ui_utils.handle_response(function, data=suppliers, success=True)
     except Exception as e:

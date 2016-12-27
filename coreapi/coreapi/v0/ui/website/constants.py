@@ -514,3 +514,11 @@ employee_count_codes = {
 }
 # status of suppliers which are in get_spaces(), not in
 status = 'X'
+shortlisted = 'S'
+removed = 'R'
+buffer = 'B'
+
+# to identify unique supplier types
+society = 'RS'
+corporate = 'CP'
+
