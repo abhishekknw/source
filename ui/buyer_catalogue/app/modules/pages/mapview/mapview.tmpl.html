@@ -269,7 +269,7 @@
               <div class="radio">
                      <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,'RS')">Buffer</label>
               </div>
-              <div class="radio">
+              <div class="radio" ng-if="supplier.status != 'X'">
                      <label><input type="radio" ng-model="supplier.status" value="R" ng-click="updateSupplierStatus(supplier,center,'RS')">Remove</label>
               </div>
             </td>
