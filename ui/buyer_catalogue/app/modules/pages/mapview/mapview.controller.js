@@ -124,9 +124,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             $scope.circle.center.latitude = $scope.current_center.center.latitude;
             $scope.circle.center.longitude = $scope.current_center.center.longitude;
             $scope.circle.radius = $scope.current_center.center.radius * 1000;
-            if($scope.current_center.suppliers_meta != null){
-              checkExportedFilters($scope.current_center);
-            }
             // set_centers();
             // deselect_all_society_filters();
             // show the societies only if selected in this center
@@ -481,8 +478,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           if($window.sessionStorage.isSavedProposal == 'true'){
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
               .success(function(response, status){
-                console.log(response);
-                // $scope.center_data = response.data;
                 //TO convert dict to array as response coming in dict form and very difficult to use
                 $scope.center_data = $.map(response.data, function(value, index){
                   return [value];
@@ -496,12 +491,15 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 if(flag == true){
                   checkSavedFilters();
                 }
+
                 $scope.addSupplierFilters($scope.center_data);
+
+                console.log($scope.center_data);
                 $scope.current_center = $scope.center_data[0];
                 $scope.current_center_index = 0;
                 $scope.current_center_id = $scope.current_center.center.id;
                 $scope.old_data = angular.copy($scope.center_data);
-
+                toggleInventoryFilters($scope.current_center,'true','RS');
                 mapViewBasicSummary();
                 suppliersData();
                 gridViewBasicSummary();
@@ -570,14 +568,15 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                   checkSavedFilters();
                 }
                 //End: code added if proposal is already created or exported and user wants to edit that proposal
-                  $scope.addSupplierFilters($scope.center_data);
+                $scope.addSupplierFilters($scope.center_data);
 
                 mapViewBasicSummary();
                 suppliersData();
                 gridViewBasicSummary();
                 // gridView_Summary();
-                for(var i=0;i<$scope.center_data.length; i++)
+                for(var i=0;i<$scope.center_data.length; i++){
                   $scope.initial_center_changed.push(false);
+                }
                 $scope.current_center_id = $scope.current_center.center.id
                 $scope.map = { zoom: 13, bounds: {},
                   center: {
@@ -604,15 +603,10 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                     clickable : false,
                     control : {},
                 };
-  // initial center is to allow user to reset the latitude and longitude to the saved address of the center in the database
-                //  set_centers();
-                  // if($scope.current_center.center.space_mappings.society_allowed){
-                      // $scope.society_allowed = true;
-                      // set_space_inventory($scope.current_center.societies_inventory, $scope.space_inventory_type);
-                      $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
-                  // }
-                  $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
-                })
+                // initial center is to allow user to reset the latitude and longitude to the saved address of the center in the database
+                $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+                $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
+              })
             .error(function(response, status){
                 $scope.get_spaces_error = response.message;
                 console.log("Error response : ",response);
@@ -681,51 +675,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       }
     }
     // End : check saved filter
-    var checkExportedFilters = function(current_center){
-      if(current_center.suppliers_meta['RS'] != null){
-        if(current_center.suppliers_meta['RS'].inventory_type_selected != null){
-          for(var i=0; i<current_center.suppliers_meta['RS'].inventory_type_selected.length; i++){
-            for(var j=0; j<current_center.RS_filters.inventory.length;j++){
-              if(current_center.suppliers_meta['RS'].inventory_type_selected[i] == current_center.RS_filters.inventory[j].code){
-                current_center.RS_filters.inventory[j].selected = true;
-                // $scope.gridView_RS_filters.inventory[j].selected = true;
-              }
-            }
-          }
-        }
-        $scope.societyFilters('true');
-      }
-      if(current_center.suppliers_meta['CP'] != null){
-        if(current_center.suppliers_meta['CP'].inventory_type_selected != null){
-          for(var i=0; i<current_center.suppliers_meta['CP'].inventory_type_selected.length; i++){
-            for(var j=0; j<current_center.CP_filters.inventory.length;j++){
-              if(current_center.suppliers_meta['CP'].inventory_type_selected[i] == current_center.CP_filters.inventory[j].code){
-                current_center.CP_filters.inventory[j].selected = true;
-                // $scope.gridView_CP_filters.inventory[j].selected = true;
-              }
-            }
-          }
-        }
-        $scope.corporateFilters();
-      }
-    }
-
-    // $scope.society_allowed = false, $scope.corporate_allowed = false;
-    // $scope.selectSuppliers = function(suppliers){
-    //     if(suppliers['RS'] != undefined){
-    //       $scope.society = true;
-    //     }
-    //     else{
-    //       $scope.society = false;
-    //     }
-    //     if(suppliers['CP'] != undefined){
-    //       $scope.corporate =true;
-    //     }
-    //     else {
-    //       $scope.corporate = false;
-    //     }
-    // }
-
     $scope.spaceSupplier = function(code,supplier){
     // this function handles selecting/deselecting society space i.e. society_allowed = true/false
     // code changed after changes done for adding two centers on gridView
@@ -751,54 +700,31 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         }
         $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
       }
-// End: supplier filters select deselecting functionality
-    // function to show gridView_Summary on gridView page
-      //    $scope.total_societies, $scope.total_standees, $scope.total_stalls;
-      //    $scope.total_posters, $scope.total_flats;
-      //    function gridView_Summary(){
-      //       $scope.total_societies = 0,$scope.total_standees = 0,$scope.total_stalls = 0;
-      //       $scope.total_posters = 0,$scope.total_flats = 0;
-      //       var merge_societies = [];
-      //       for(var i=0;i<$scope.centers1.length;i++){
-      //         $scope.total_societies+= $scope.centers1[i].societies_count;
-      //         $scope.total_standees+= $scope.centers1[i].societies_inventory_count.standees;
-      //         $scope.total_stalls+= $scope.centers1[i].societies_inventory_count.stalls;
-      //         merge_societies = merge_societies.concat($scope.centers1[i].societies);
-      //       }
-      //       for(var i=0; i<merge_societies.length; i++){
-      //         $scope.total_posters +=merge_societies[i].tower_count;
-      //         $scope.total_flats +=merge_societies[i].flat_count;
-      //       }
-      //       // impressions for gridView
-      //       $scope.total_posterImpressions = $scope.total_flats*4*7*2;
-      //       $scope.total_flierImpressions = $scope.total_flats*4*1;
-      //       $scope.total_standeeImpressions = $scope.total_flats*4*7*2;
-      //       $scope.total_stallImpressions = $scope.total_flats*4*2;
-      //    }
-      // // This function is for showing societies on the map view
-         $scope.showSocieties = function(){
-                $scope.show_societies = !$scope.show_societies
-         }
-        var toggleInventoryFilters = function(center,value,code){
-          if(value){
-            center.filters_meta[code] = angular.copy($scope.inventory_filters);
-            for(var i=0;i<center.RS_filters.inventory.length;i++){
-              if(center.RS_filters.inventory[i].code.indexOf('PO') > -1 && center.RS_filters.inventory[i].selected == true){
-                center.filters_meta[code].inv_poster++;
-              }
-              if(center.RS_filters.inventory[i].code.indexOf('ST') > -1 && center.RS_filters.inventory[i].selected == true){
-                center.filters_meta[code].inv_standee++;
-              }
-              if(center.RS_filters.inventory[i].code.indexOf('SL') > -1 && center.RS_filters.inventory[i].selected == true){
-                center.filters_meta[code].inv_stall++;
-              }
-              if(center.RS_filters.inventory[i].code.indexOf('FL') > -1 && center.RS_filters.inventory[i].selected == true){
-                center.filters_meta[code].inv_flier++;
-              }
+     // This function is for showing societies on the map view
+       $scope.showSocieties = function(){
+              $scope.show_societies = !$scope.show_societies
+       }
+      var toggleInventoryFilters = function(center,value,code){
+        console.log(center);
+        if(value){
+          center.filters_meta[code] = angular.copy($scope.inventory_filters);
+          for(var i=0;i<center.RS_filters.inventory.length;i++){
+            if(center.RS_filters.inventory[i].code.indexOf('PO') > -1 && center.RS_filters.inventory[i].selected == true){
+              center.filters_meta[code].inv_poster++;
             }
-        }
+            if(center.RS_filters.inventory[i].code.indexOf('ST') > -1 && center.RS_filters.inventory[i].selected == true){
+              center.filters_meta[code].inv_standee++;
+            }
+            if(center.RS_filters.inventory[i].code.indexOf('SL') > -1 && center.RS_filters.inventory[i].selected == true){
+              center.filters_meta[code].inv_stall++;
+            }
+            if(center.RS_filters.inventory[i].code.indexOf('FL') > -1 && center.RS_filters.inventory[i].selected == true){
+              center.filters_meta[code].inv_flier++;
+            }
+          }
       }
-            var reset = function(filter_array){
+    }
+          var reset = function(filter_array){
             var length = filter_array.length;
             for(var i=0;i<length;i++){
               if(filter_array[i].selected == true){
