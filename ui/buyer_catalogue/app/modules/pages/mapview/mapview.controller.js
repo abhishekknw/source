@@ -482,6 +482,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.center_data = $.map(response.data, function(value, index){
                   return [value];
                 });
+                $scope.current_center = $scope.center_data[0];
+                $scope.addSupplierFilters($scope.center_data);
                 var flag;
                 for(var i=0;i<$scope.center_data.length;i++){
                   if($scope.center_data[i].suppliers_meta != null){
@@ -491,11 +493,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 if(flag == true){
                   checkSavedFilters();
                 }
-
-                $scope.addSupplierFilters($scope.center_data);
-
-                console.log($scope.center_data);
-                $scope.current_center = $scope.center_data[0];
                 $scope.current_center_index = 0;
                 $scope.current_center_id = $scope.current_center.center.id;
                 $scope.old_data = angular.copy($scope.center_data);
@@ -546,7 +543,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           else{
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
-              console.log(response);
                 $scope.business_name = response.data.business_name;
                 $scope.center_data = response.data.suppliers;
 
@@ -653,17 +649,27 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     }
     // Start : check saved filter
     var checkSavedFilters = function (){
-      for(var i=0; i<$scope.center_data.length;i++){
-          if($scope.center_data[i].suppliers_meta['RS'] != null){
-            var filter_types = Object.keys($scope.center_data[i].suppliers_meta['RS']);
-            for(var j=0;j<filter_types.length;j++){
-              if(filter_types[j]=='inventory_type_selected'){
-                selectFilters($scope.center_data[i].suppliers_meta['RS'][filter_types[j]],$scope.RS_filters['inventory']);
-              }else
-                selectFilters($scope.center_data[i].suppliers_meta['RS'][filter_types[j]],$scope.RS_filters[filter_types[j]]);
-            }
+        if($scope.current_center.suppliers_meta['RS'] != null){
+          var filter_types = Object.keys($scope.current_center.suppliers_meta['RS']);
+          for(var j=0;j<filter_types.length;j++){
+            if(filter_types[j]=='inventory_type_selected'){
+              selectFilters($scope.current_center.suppliers_meta['RS'][filter_types[j]],$scope.current_center.RS_filters['inventory']);
+            }else
+              selectFilters($scope.current_center.suppliers_meta['RS'][filter_types[j]],$scope.current_center.RS_filters[filter_types[j]]);
           }
-      }
+          $scope.societyFilters();
+        }
+        if($scope.current_center.suppliers_meta['CP'] != null){
+          var filter_types = Object.keys($scope.current_center.suppliers_meta['CP']);
+          for(var j=0;j<filter_types.length;j++){
+            if(filter_types[j]=='inventory_type_selected'){
+              selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.CP_filters['inventory']);
+            }else
+              selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.CP_filters[filter_types[j]]);
+          }
+          $scope.corporateFilters();
+        }
+
     }
     var selectFilters = function(saved_filter_type,current_filter_type){
       console.log("hi");
@@ -808,6 +814,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           flat_type : [],
         },
       };
+      console.log($scope.current_center);
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
       makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
       makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
@@ -1294,7 +1301,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           data: {file: file, 'username': $scope.username},
           headers: {'Authorization': 'JWT ' + token},
       }).success(function (response) {
-        console.log(response);
         uploadFileToAmazonServer(response.data,file);
           //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
       }).error(function (response) {
@@ -1314,5 +1320,22 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       });//
     }
     //End:save suppliers and filters to save the current state
+    // Start: function to update status of supplier and save in db
+    $scope.updateSupplierStatus = function(supplier,center,code){
+      var data = {
+        'center_id':center.center.id,
+        'supplier_id':supplier.supplier_id,
+        'status':supplier.status,
+        'supplier_type_code':code,
+      };
+      console.log(center,data);
+      mapViewService.updateSupplierStatus($scope.proposal_id_temp,data)
+        .success(function(response, status){
+          alert("Saved Successfully");
+        }).error(function(response, status){
+          alert("Error Occured");
+      });
+    }
+    // End: function to update status of supplier and save in db
   });
 });

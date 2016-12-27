@@ -1785,7 +1785,7 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
               supplier_id_1: inv_summ_object_1, supplier_id_2: inv_summ_object_2 
             } type structure in which the right inv_object is put against supplier_id 
         shortlisted: True. by default we assume suppliers are marked shortlisted = True
-        status : 'S' by default we assume status of each supplier is 'S'. 
+        status : 'X' by default we assume status of each supplier is 'X'. 
 
     Returns: adds information like price or count from inv_summary table to each supplier
     dict . 
@@ -1796,9 +1796,9 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
             supplier_inventory_obj = inventory_summary_objects_mapping.get(supplier['supplier_id'])
             supplier['shortlisted'] = shortlisted
             supplier['buffer_status'] = False
-            # status is shortlisted initially only if the param status is true
+            # status is set to a constant initially only if the param status is true
             if status:
-                supplier['status'] = 'S'
+                supplier['status'] = website_constants.status
 
             # do not calculate prices if no inventory summary object exist
             # todo: involves one database hit within handle_inventory_pricing() function.
@@ -2803,13 +2803,13 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
     result = []
 
     try:
+        
+        response = change_society_specific_keys(suppliers)
+        if not response.data['status']:
+            return response
+        suppliers = response.data['data']
+
         for supplier in suppliers:
-            # change the response for societies
-            if supplier_type_code == 'RS':
-                for society_key, common_key in website_constants.society_common_keys.iteritems():
-                    supplier_key_value = supplier[society_key]
-                    del supplier[society_key]
-                    supplier[common_key] = supplier_key_value
             # include only those suppliers that lie within the circle of radius given
             if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
                 result.append(supplier)

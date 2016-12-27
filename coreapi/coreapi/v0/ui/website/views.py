@@ -2798,14 +2798,23 @@ class CreateFinalProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            supplier_type_code = request.data['supplier_type_code']
+
+            content_type_response = ui_utils.get_content_type(supplier_type_code)
+            if not content_type_response.data['status']:
+                return content_type_response
+            content_type = content_type_response.data['data']
+
             data = {
                 'user': request.user,
                 'center_id': request.data['center_id'],
                 'proposal_id': proposal_id,
-                'object_id': request.data['supplier_id']
+                'object_id': request.data['supplier_id'],
+                'content_type': content_type,
+                'supplier_code': supplier_type_code
             }
             status = request.data['status']
-            obj = models.ShortlistedSpaces.objects.get(**data)
+            obj, is_created = models.ShortlistedSpaces.objects.get_or_create(**data)
             obj.status = status
             obj.save()
             return ui_utils.handle_response(class_name, data='success', success=True)
