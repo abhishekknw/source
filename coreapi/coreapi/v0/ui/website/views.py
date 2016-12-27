@@ -2790,6 +2790,30 @@ class CreateFinalProposal(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+    def put(self, request, proposal_id):
+        """
+        Args:
+            request: The request object
+            proposal_id: The proposal id
+
+        Returns: updates ShortlistedSpaces table with new data
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = {
+                'user': request.user,
+                'center_id': request.data['center_id'],
+                'proposal_id': proposal_id,
+                'object_id': request.data['supplier_id']
+            }
+            status = request.data['status']
+            obj = models.ShortlistedSpaces.objects.get(**data)
+            obj.status = status
+            obj.save()
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
 
 class ProposalViewSet(viewsets.ViewSet):
     """
