@@ -546,7 +546,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           else{
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
-              console.log(response);
                 $scope.business_name = response.data.business_name;
                 $scope.center_data = response.data.suppliers;
 
@@ -1294,7 +1293,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           data: {file: file, 'username': $scope.username},
           headers: {'Authorization': 'JWT ' + token},
       }).success(function (response) {
-        console.log(response);
         uploadFileToAmazonServer(response.data,file);
           //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
       }).error(function (response) {
@@ -1314,5 +1312,21 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       });//
     }
     //End:save suppliers and filters to save the current state
+    // Start: function to update status of supplier and save in db
+    $scope.updateSupplierStatus = function(supplier,center){
+      var data = {
+        'center_id':center.center.id,
+        'supplier_id':supplier.supplier_id,
+        'status':supplier.status,
+      };
+      console.log(center,data);
+      mapViewService.updateSupplierStatus($scope.proposal_id_temp,data)
+        .success(function(response, status){
+          alert("Saved Successfully");
+        }).error(function(response, status){
+          alert("Error Occured");
+      });
+    }
+    // End: function to update status of supplier and save in db
   });
 });

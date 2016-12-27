@@ -63,5 +63,10 @@
     	return machadaloHttp.get(url);
     }
 
+    mapViewService.updateSupplierStatus = function(proposal_id, data){
+        var url = url_base + proposal_id + '/create-final-proposal/';
+        return machadaloHttp.put(url, data);
+    }
+
     return mapViewService;
 }]);
