@@ -1216,6 +1216,10 @@ def save_shortlisted_suppliers(suppliers, fixed_data, user):
         count = 0
         for supplier in suppliers:
 
+            # we are not saving those suppliers with status as 'X'
+            if supplier['status'] == website_constants.status:
+                continue
+
             # make the data to be saved in ShortListedSpaces
             data = {
                 'content_type': content_type,
