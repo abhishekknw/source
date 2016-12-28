@@ -1237,7 +1237,7 @@ def save_shortlisted_suppliers(suppliers, fixed_data, user):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def save_final_proposal(proposal_data, unique_supplier_codes, user):
+def fetch_final_proposal_data(proposal_data, unique_supplier_codes, user):
     """
     The request is in form:
         [
@@ -1257,7 +1257,7 @@ def save_final_proposal(proposal_data, unique_supplier_codes, user):
     Returns: collects all suppliers in societies array and inserts them into the db
 
     """
-    function_name = save_final_proposal.__name__
+    function_name = fetch_final_proposal_data.__name__
     try:
 
         # get the proposal_id
