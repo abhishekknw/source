@@ -486,6 +486,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 mapViewBasicSummary();
                 suppliersData();
                 gridViewBasicSummary();
+                gridViewFilterSummary();
 
 
                 for(var i=0;i<$scope.center_data.length; i++)
@@ -1139,9 +1140,10 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           }
         }
         else if($scope.center_index == null){
+          supplier.status = null;
           $scope.errorMsg = "Please select center first to add new suppliers";
         }
-        else{
+        else if($scope.center_index == null){
           $scope.errorMsg = "Selected supplier not allowedadd in this center";
         }
       }
@@ -1344,6 +1346,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           $scope.updateSupplierStatus(supplier,center,$scope.supplier_type_code);
           center.suppliers[$scope.supplier_type_code][index].status = supplier.status;
           alert("Supplier already Exist and You changed Supplier status");
+          $scope.errorMsg = null;
           return false;
         }
         else{
