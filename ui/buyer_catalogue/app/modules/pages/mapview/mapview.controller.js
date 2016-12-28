@@ -225,7 +225,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     //End: mapview basic summary
     //Start: mapview filter summary required after applying filters
      var mapViewFiltersSummary = function(){
-       console.log($scope.center_data);
        $scope.stall_count = 0, $scope.standee_count = 0;
        if($scope.current_center.suppliers_meta != null){
          if($scope.current_center.suppliers_meta['RS'] != undefined){
@@ -459,11 +458,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 // This service gets all the spaces according to center specification like society_allowed
           //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
           $scope.proposal_id_temp = $stateParams.proposal_id;
-          console.log($window.sessionStorage.isSavedProposal);
           if($window.sessionStorage.isSavedProposal == 'true'){
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
               .success(function(response, status){
-                console.log(response);
                 //TO convert dict to array as response coming in dict form and very difficult to use
                 $scope.center_data = $.map(response.data, function(value, index){
                   return [value];
@@ -517,7 +514,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                     clickable : false,
                     control : {},
                 };
-                console.log($scope.current_center.suppliers);
                   $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
                   $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                 //loading icon
@@ -660,7 +656,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 
     }
     var selectFilters = function(saved_filter_type,current_filter_type){
-      console.log("hi");
       for(var i=0;i<saved_filter_type.length;i++){
         for(var j=0;j<current_filter_type.length;j++){
           if(saved_filter_type[i]==current_filter_type[j].code)
@@ -699,7 +694,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               $scope.show_societies = !$scope.show_societies
        }
       var toggleInventoryFilters = function(center,value,code){
-        console.log(center);
         if(value){
           center.filters_meta[code] = angular.copy($scope.inventory_filters);
           for(var i=0;i<center.RS_filters.inventory.length;i++){
@@ -776,7 +770,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       $scope.checkFilters = false;
     },function (error) {
     //This will be called if $q.all finds any of the requests erroring.
-      console.log(error);
       handleErrors();
       $scope.checkFilters = false;
   });
@@ -802,7 +795,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           flat_type : [],
         },
       };
-      console.log($scope.current_center);
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
       makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
       makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
@@ -810,7 +802,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
       filterSupplierData(filters.supplier_type_code,filters);
       }
-        console.log(filters);
   }
   //End: code for society filters
   //Start: code for corporate filters
@@ -865,7 +856,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           $scope.checkFilters = false;
         },function (error) {
         //This will be called if $q.all finds any of the requests erroring.
-          console.log(error);
           handleErrors();
           $scope.checkFilters = false;
       });
@@ -1121,9 +1111,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     //Start: To add searched societies in given center
       $scope.addMoreSuppliers = function(supplier,id){
         if($scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code] != undefined && $scope.center_index != null && checkDuplicateSupplier(supplier)){
-          console.log("geloo");
           supplier.status = 'S';
-          $scope.extraSuppliersData[$scope.current_center_index][$scope.supplier_type_code].push(supplier);
+          // $scope.extraSuppliersData[$scope.current_center_index][$scope.supplier_type_code].push(supplier);
           $scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code].push(supplier);
           $scope.supplierData.splice(id,1);
           $scope.changeCurrentCenter($scope.center_index);
@@ -1195,7 +1184,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
              }
            }
          }
-         console.log($scope.center_data);
        }
        //End: For sending filtered inventory type
 
@@ -1217,7 +1205,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
      $scope.exportData = function(){
          $scope.checkFileExport = true;
          saveSelectedFilters();
-         console.log($scope.center_data);
          $http({
               url: constants.base_url + constants.url_base + $scope.proposal_id_temp + '/export-spaces-data/',
               method: 'POST',
@@ -1248,14 +1235,12 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
          }).error(function(response){
               //Some error log
               $scope.checkFileExport = false;
-              console.log(response);
               alert('Error in exporting the file');
          });
      }
 
 //Start : function to upload files to amazon server, just provide file name and file
    var uploadFileToAmazonServer = function(file_name,file){
-     console.log($scope.content_type);
      // upload it to S3 Bucket
      Upload.upload({
          url: 'http://mdimages.s3.amazonaws.com/',
@@ -1276,7 +1261,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
    }
 //End : function to upload files to amazon server, just provide file name and file
     $scope.upload = function (file) {
-      console.log(file);
       var uploadUrl = 'http://localhost:8108/v0/ui/website/';
       var token = $rootScope.globals.currentUser.token ;
       Upload.upload({
@@ -1311,7 +1295,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         'status':supplier.status,
         'supplier_type_code':code,
       };
-      console.log(center,data);
       mapViewService.updateSupplierStatus($scope.proposal_id_temp,data)
         .success(function(response, status){
           alert("Saved Successfully");
@@ -1335,14 +1318,12 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           }
         });
       }
-      console.log($scope.supplier_id_list);
     }
     //Start: check duplicate suppliers if adding more suppliers
     var checkDuplicateSupplier = function(supplier){
         if($scope.supplier_id_list[$scope.current_center_index][$scope.supplier_type_code][supplier.supplier_id] !=null){
           var index = $scope.supplier_id_list[$scope.current_center_index][$scope.supplier_type_code][supplier.supplier_id]
           var center = $scope.center_data[$scope.current_center_index];
-          console.log(center);
           $scope.updateSupplierStatus(supplier,center,$scope.supplier_type_code);
           center.suppliers[$scope.supplier_type_code][index].status = supplier.status;
           alert("Supplier already Exist and You changed Supplier status");
