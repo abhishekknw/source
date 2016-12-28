@@ -123,21 +123,16 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             $scope.circle.center.latitude = $scope.current_center.center.latitude;
             $scope.circle.center.longitude = $scope.current_center.center.longitude;
             $scope.circle.radius = $scope.current_center.center.radius * 1000;
-            // set_centers();
-            // deselect_all_society_filters();
-            // show the societies only if selected in this center
-            // if($scope.current_center.center.space_mappings.society_allowed){
-                $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
 
-            // }else{
-            //     $scope.society_markers = [];
-            //     deselect_space_inventory($scope.space_inventory_type);
-            // }
-            //ADDNEW -->  do the same for corporate and gym and salonS
-            // do the same for corporate and gym and salons
-            // reassing the center_marker acc. to the selected center
+            if($scope.current_center.suppliers_meta != null){
+              checkSavedFilters();
+              toggleInventoryFilters($scope.current_center,'true','RS');
+              mapViewBasicSummary();
+              suppliersData();
+              gridViewBasicSummary();
+            }
+            $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
             $scope.center_marker =assignCenterMarkerToMap($scope.current_center.center);
-            // $scope.selectSuppliers($scope.current_center.suppliers);
             suppliersData();
             mapViewBasicSummary();
             mapViewFiltersSummary();
@@ -176,12 +171,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               $scope.circle.center.latitude = $scope.current_center.center.latitude;
               $scope.circle.center.longitude = $scope.current_center.center.longitude;
               $scope.circle.radius = $scope.current_center.center.radius * 1000;
-              // saves bandwidth
-              // ADDNEW --> add new spaces variables as well
-              // delete $scope.current_center.society_inventory;
-              // delete $scope.current_center.societies;
-              // delete $scope.current_center.corporate_inventory;
-              // delete $scope.current_center.corporates;
+
               // this service will return above deleted variables if checked in the filter
               $scope.current_center.center.center_id = $scope.current_center.center.id;
               mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center.center)
@@ -198,9 +188,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                   var code = current_center_keys[i];
                   $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
                 }
-                // $scope.centers1[$scope.current_center_index].societies_count = response.supplier_count;
-                // $scope.centers1[$scope.current_center_index].societies_inventory_count = response.supplier_inventory_count;
-                // $scope.centers = $scope.centers1;
                 // End : Code changes to add response of suppliers
                   // gridView_Summary();
                   $scope.center_data[$scope.current_center_index] = $scope.current_center;
@@ -212,7 +199,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                   // $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
                   if($scope.current_center.suppliers != undefined){
                       $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
-                      // $scope.society_markers1 = assignMarkersToMap($scope.area_societies);
                   }else
                       $scope.society_markers = [];
               })
@@ -477,6 +463,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
           if($window.sessionStorage.isSavedProposal == 'true'){
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
               .success(function(response, status){
+                console.log(response);
                 //TO convert dict to array as response coming in dict form and very difficult to use
                 $scope.center_data = $.map(response.data, function(value, index){
                   return [value];
@@ -499,6 +486,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 mapViewBasicSummary();
                 suppliersData();
                 gridViewBasicSummary();
+
 
                 for(var i=0;i<$scope.center_data.length; i++)
                   $scope.initial_center_changed.push(false);
@@ -1049,19 +1037,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               for(var i=0; i<length; i++){
                 response[i].data.data.center = $scope.center_data[i].center;
                 $scope.center_data[i] = response[i].data.data;
-                // $scope.centers1[i].societies = promises[i].$$state.value.data.suppliers;
-                // $scope.centers1[i].societies_inventory_count = promises[i].$$state.value.data.supplier_inventory_count;
-                // $scope.centers1[i].societies_count = promises[i].$$state.value.data.supplier_count;
-                // $scope.centers[i] = $scope.centers1[i];
-                // calculateQualityType($scope.centers1[i].societies);
-                //$scope.society_markers = assignMarkersToMap($scope.current_center.societies);
-                //$scope.impressions = calculateImpressions($scope.centers1[i].societies_inventory_count);
+
               } //end of for loop
               $scope.current_center = $scope.center_data[$scope.current_center_index];
-              // $scope.current_center.societies = $scope.centers1[$scope.current_center_index].societies;
-              // $scope.current_center.societies_inventory_count = $scope.centers1[$scope.current_center_index].societies_inventory_count;
-              // $scope.current_center.societies_count = $scope.centers1[$scope.current_center_index].societies_count;
-              // $scope.towers = calculatetowers();
               $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
               mapViewBasicSummary();
               mapViewFiltersSummary();
@@ -1070,9 +1048,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               gridViewBasicSummary();
               gridViewFilterSummary();
               gridViewImpressions();
-              // $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
-
-              }) // end of q
+            }) // end of q
           }
           //End: for gridview filters
       }
@@ -1217,6 +1193,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
              }
            }
          }
+         console.log($scope.center_data);
        }
        //End: For sending filtered inventory type
 
