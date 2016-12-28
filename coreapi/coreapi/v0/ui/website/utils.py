@@ -1313,19 +1313,7 @@ def save_final_proposal(proposal_data, unique_supplier_codes, user):
 
                 filter_data.extend(response.data['data'])
 
-        now_time = timezone.now()
-
-        # delete previous  shortlisted suppliers and save new
-        models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).delete()
-        models.ShortlistedSpaces.objects.bulk_create(total_shortlisted_suppliers_list)
-        models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
-
-        # delete previous and save new selected filters and update date
-        models.Filters.objects.filter(user=user,proposal_id=proposal_id).delete()
-        models.Filters.objects.bulk_create(filter_data)
-        models.Filters.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
-
-        return ui_utils.handle_response(function_name, data='success', success=True)
+        return ui_utils.handle_response(function_name, data=(total_shortlisted_suppliers_list, filter_data), success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error', exception_object=e)
     except ObjectDoesNotExist as e:

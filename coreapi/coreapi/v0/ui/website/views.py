@@ -11,6 +11,7 @@ from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
+from django.utils import timezone
 
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
@@ -2768,8 +2769,6 @@ class CreateFinalProposal(APIView):
         try:
             user = request.user
 
-            # simple dict to count new objects created each time the API is hit. a valuable information.
-
             # get the supplier type codes available in the request
             response = website_utils.unique_supplier_type_codes(request.data)
             if not response.data['status']:
@@ -2777,13 +2776,30 @@ class CreateFinalProposal(APIView):
             unique_supplier_codes = response.data['data']
 
             with transaction.atomic():
-               
+
+                total_shortlisted_suppliers_list = []               
+                filter_data = [] 
+
                 for proposal_data in request.data:
                     proposal_data['proposal_id'] = proposal_id
                     response = website_utils.save_final_proposal(proposal_data, unique_supplier_codes, user)
                     if not response.data['status']:
                         return response
+                    result = response.data['data']
+                    total_shortlisted_suppliers_list.extend(result[0])
+                    filter_data.extend(result[1])
 
+                now_time = timezone.now()
+
+                # delete previous  shortlisted suppliers and save new
+                models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).delete()
+                models.ShortlistedSpaces.objects.bulk_create(total_shortlisted_suppliers_list)
+                models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
+
+                # delete previous and save new selected filters and update date
+                models.Filters.objects.filter(user=user,proposal_id=proposal_id).delete()
+                models.Filters.objects.bulk_create(filter_data)
+                models.Filters.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
                 return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
