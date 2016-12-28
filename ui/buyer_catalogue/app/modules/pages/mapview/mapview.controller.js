@@ -905,7 +905,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             }else {
               $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers_meta = responseData[index].$$state.value.data.data.suppliers_meta;
             }
-            $scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code].push.apply($scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code],$scope.extraSuppliersData[index][code]);
+            //$scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code].push.apply($scope.center_data[$scope.supplier_centers_list[code][index]].suppliers[code],$scope.extraSuppliersData[index][code]);
           }
         $scope.current_center = $scope.center_data[$scope.current_center_index];
         suppliersData();
@@ -965,105 +965,105 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     }
   //End : function to handle all errors on mapview and gridview, call this function when error comes in response
             var promises = [];
-            $scope.getFilteredSocieties = function(){
-            promises = [];
-            var defer = $q.defer();
-            // start: for mapview only
-            if(!$scope.show_societies){
-            // for(var i=0; i<$scope.centers1.length; i++){
-              var lat = "?lat=" + $scope.current_center.center.latitude ;
-              var lng = "&lng=" + $scope.current_center.center.longitude;
-              var radius = "&r=" + $scope.current_center.center.radius;
-              var get_url_string = lat + lng + radius;
-              get_url_string += makeString($scope.space_inventory_type, "&inv=");
-              get_url_string += makeString($scope.space_location, "&loc=");
-              get_url_string += makeString($scope.space_quality_type, "&qlt=");
-              get_url_string += makeString($scope.space_quantity_type, "&qnt=");
-              get_url_string += makeString($scope.society_flat_type, "&flt=");
-
-              // promises.push(mapViewService.getFilterSocieties(get_url_string));
-          // } //end of for loop
-
-          // promises handled
-
-          mapViewService.getFilterSocieties(get_url_string)
-                .success(function(response, status){
-                  //console.log(response);
-                  response.data.center = $scope.current_center.center;
-                    $scope.current_center = response.data;
-                    $scope.center_data[$scope.current_center_index] = response.data;
-                    //console.log($scope.center_data);
-                    // $scope.current_center.societies_inventory_count = response.societies_inventory_count;
-                    // $scope.current_center.societies_count = response.societies_count;
-                    // console.log("\n\n$scope.centers : ", $scope.centers);
-                    $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
-                    mapViewBasicSummary();
-                    mapViewFiltersSummary();
-                    mapViewImpressions();
-                    suppliersData();
-                    gridViewBasicSummary();
-                    gridViewFilterSummary();
-                    gridViewImpressions();
-                })
-                .error(function(response, status){
-                    console.log("Error Happened while filtering");
-                });// end of q
-              }
-          // End: for mapview only
-          //start: for gridview filters
-          else{
-            for(var i=0; i<$scope.center_data.length; i++){
-              var lat = "?lat=" + $scope.center_data[i].center.latitude;
-              var lng = "&lng=" + $scope.center_data[i].center.longitude;
-              var radius = "&r=" + $scope.center_data[i].center.radius;
-              var get_url_string = lat + lng + radius;
-              get_url_string += makeString($scope.space_inventory_type, "&inv=");
-              get_url_string += makeString($scope.space_location, "&loc=");
-              get_url_string += makeString($scope.space_quality_type, "&qlt=");
-              get_url_string += makeString($scope.space_quantity_type, "&qnt=");
-              get_url_string += makeString($scope.society_flat_type, "&flt=");
-
-              promises.push(mapViewService.getFilterSocieties(get_url_string));
-            } //end of for loop
-
-              // promises handled
-            $q.all(promises).then(function(response){
-              var length = $scope.center_data.length;
-              for(var i=0; i<length; i++){
-                response[i].data.data.center = $scope.center_data[i].center;
-                $scope.center_data[i] = response[i].data.data;
-
-              } //end of for loop
-              $scope.current_center = $scope.center_data[$scope.current_center_index];
-              $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
-              mapViewBasicSummary();
-              mapViewFiltersSummary();
-              mapViewImpressions();
-              suppliersData();
-              gridViewBasicSummary();
-              gridViewFilterSummary();
-              gridViewImpressions();
-            }) // end of q
-          }
-          //End: for gridview filters
-      }
+      //       $scope.getFilteredSocieties = function(){
+      //       promises = [];
+      //       var defer = $q.defer();
+      //       // start: for mapview only
+      //       if(!$scope.show_societies){
+      //       // for(var i=0; i<$scope.centers1.length; i++){
+      //         var lat = "?lat=" + $scope.current_center.center.latitude ;
+      //         var lng = "&lng=" + $scope.current_center.center.longitude;
+      //         var radius = "&r=" + $scope.current_center.center.radius;
+      //         var get_url_string = lat + lng + radius;
+      //         get_url_string += makeString($scope.space_inventory_type, "&inv=");
+      //         get_url_string += makeString($scope.space_location, "&loc=");
+      //         get_url_string += makeString($scope.space_quality_type, "&qlt=");
+      //         get_url_string += makeString($scope.space_quantity_type, "&qnt=");
+      //         get_url_string += makeString($scope.society_flat_type, "&flt=");
+      //
+      //         // promises.push(mapViewService.getFilterSocieties(get_url_string));
+      //     // } //end of for loop
+      //
+      //     // promises handled
+      //
+      //     mapViewService.getFilterSocieties(get_url_string)
+      //           .success(function(response, status){
+      //             //console.log(response);
+      //             response.data.center = $scope.current_center.center;
+      //               $scope.current_center = response.data;
+      //               $scope.center_data[$scope.current_center_index] = response.data;
+      //               //console.log($scope.center_data);
+      //               // $scope.current_center.societies_inventory_count = response.societies_inventory_count;
+      //               // $scope.current_center.societies_count = response.societies_count;
+      //               // console.log("\n\n$scope.centers : ", $scope.centers);
+      //               $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+      //               mapViewBasicSummary();
+      //               mapViewFiltersSummary();
+      //               mapViewImpressions();
+      //               suppliersData();
+      //               gridViewBasicSummary();
+      //               gridViewFilterSummary();
+      //               gridViewImpressions();
+      //           })
+      //           .error(function(response, status){
+      //               console.log("Error Happened while filtering");
+      //           });// end of q
+      //         }
+      //     // End: for mapview only
+      //     //start: for gridview filters
+      //     else{
+      //       for(var i=0; i<$scope.center_data.length; i++){
+      //         var lat = "?lat=" + $scope.center_data[i].center.latitude;
+      //         var lng = "&lng=" + $scope.center_data[i].center.longitude;
+      //         var radius = "&r=" + $scope.center_data[i].center.radius;
+      //         var get_url_string = lat + lng + radius;
+      //         get_url_string += makeString($scope.space_inventory_type, "&inv=");
+      //         get_url_string += makeString($scope.space_location, "&loc=");
+      //         get_url_string += makeString($scope.space_quality_type, "&qlt=");
+      //         get_url_string += makeString($scope.space_quantity_type, "&qnt=");
+      //         get_url_string += makeString($scope.society_flat_type, "&flt=");
+      //
+      //         promises.push(mapViewService.getFilterSocieties(get_url_string));
+      //       } //end of for loop
+      //
+      //         // promises handled
+      //       $q.all(promises).then(function(response){
+      //         var length = $scope.center_data.length;
+      //         for(var i=0; i<length; i++){
+      //           response[i].data.data.center = $scope.center_data[i].center;
+      //           $scope.center_data[i] = response[i].data.data;
+      //
+      //         } //end of for loop
+      //         $scope.current_center = $scope.center_data[$scope.current_center_index];
+      //         $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+      //         mapViewBasicSummary();
+      //         mapViewFiltersSummary();
+      //         mapViewImpressions();
+      //         suppliersData();
+      //         gridViewBasicSummary();
+      //         gridViewFilterSummary();
+      //         gridViewImpressions();
+      //       }) // end of q
+      //     }
+      //     //End: for gridview filters
+      // }
 
       //End: angular-google-maps is loaded properly only then proces code inside then
-    var makeString = function(filter_array, filter_keyword){
-              var my_string = filter_keyword;
-              var length = filter_array.length;
-              var count = 0;
-              for(var i=0;i<length;i++)
-                  if(filter_array[i].selected){
-                      my_string += filter_array[i].code + " ";
-                      count += 1;
-                  }
-              // Uncomment for better performance but this will also include null values for that filter
-              // What this does is basically dont apply the filter if all values are selected
-              if(count==length)
-                  my_string = filter_keyword;
-              return my_string;
-        }
+    // var makeString = function(filter_array, filter_keyword){
+    //           var my_string = filter_keyword;
+    //           var length = filter_array.length;
+    //           var count = 0;
+    //           for(var i=0;i<length;i++)
+    //               if(filter_array[i].selected){
+    //                   my_string += filter_array[i].code + " ";
+    //                   count += 1;
+    //               }
+    //           // Uncomment for better performance but this will also include null values for that filter
+    //           // What this does is basically dont apply the filter if all values are selected
+    //           if(count==length)
+    //               my_string = filter_keyword;
+    //           return my_string;
+    //     }
 
   //Start: code added to search & show all suppliers on add societies tab
   $scope.supplier_names = [
@@ -1115,11 +1115,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     //Start: To add searched societies in given center
       $scope.addMoreSuppliers = function(supplier,id){
         if($scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code] != undefined && $scope.center_index != null && checkDuplicateSupplier(supplier)){
-          supplier.status = 'S';
+          // supplier.status = 'S';
           // $scope.extraSuppliersData[$scope.current_center_index][$scope.supplier_type_code].push(supplier);
           $scope.center_data[$scope.current_center_index].suppliers[$scope.supplier_type_code].push(supplier);
           $scope.supplierData.splice(id,1);
-          $scope.changeCurrentCenter($scope.center_index);
+          // $scope.changeCurrentCenter($scope.center_index);
           var center = $scope.center_data[$scope.current_center_index];
           $scope.updateSupplierStatus(supplier,center,$scope.supplier_type_code);
           mapViewBasicSummary();
@@ -1326,12 +1326,13 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     //Start: check duplicate suppliers if adding more suppliers
     var checkDuplicateSupplier = function(supplier){
         if($scope.supplier_id_list[$scope.current_center_index][$scope.supplier_type_code][supplier.supplier_id] !=null){
-          var index = $scope.supplier_id_list[$scope.current_center_index][$scope.supplier_type_code][supplier.supplier_id]
-          var center = $scope.center_data[$scope.current_center_index];
-          $scope.updateSupplierStatus(supplier,center,$scope.supplier_type_code);
-          center.suppliers[$scope.supplier_type_code][index].status = supplier.status;
-          alert("Supplier already Exist and You changed Supplier status");
-          $scope.errorMsg = null;
+          // var index = $scope.supplier_id_list[$scope.current_center_index][$scope.supplier_type_code][supplier.supplier_id]
+          // var center = $scope.center_data[$scope.current_center_index];
+          // $scope.updateSupplierStatus(supplier,center,$scope.supplier_type_code);
+          // center.suppliers[$scope.supplier_type_code][index].status = supplier.status;
+          // alert("Supplier already Exist and You changed Supplier status");
+          supplier.status = null;
+          $scope.errorMsg = "Supplier already Exist";
           return false;
         }
         else{
