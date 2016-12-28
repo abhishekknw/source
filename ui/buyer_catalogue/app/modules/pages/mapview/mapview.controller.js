@@ -124,7 +124,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             $scope.circle.center.longitude = $scope.current_center.center.longitude;
             $scope.circle.radius = $scope.current_center.center.radius * 1000;
 
-            if($scope.current_center.suppliers_meta != null){
+            if($scope.current_center != null){
               checkSavedFilters();
               toggleInventoryFilters($scope.current_center,'true','RS');
               mapViewBasicSummary();
@@ -641,8 +641,10 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             }else
               selectFilters($scope.current_center.suppliers_meta['RS'][filter_types[j]],$scope.current_center.RS_filters[filter_types[j]]);
           }
-          $scope.societyFilters();
         }
+        if($scope.current_center.suppliers_meta['RS'] != null || $scope.current_center.suppliers['RS'] != null){
+            $scope.societyFilters();
+          }
         if($scope.current_center.suppliers_meta['CP'] != null){
           var filter_types = Object.keys($scope.current_center.suppliers_meta['CP']);
           for(var j=0;j<filter_types.length;j++){
@@ -651,6 +653,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             }else
               selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.CP_filters[filter_types[j]]);
           }
+        }
+        if($scope.current_center.suppliers_meta['CP'] != null || $scope.current_center.suppliers['CP'] != null){
           $scope.corporateFilters();
         }
 
