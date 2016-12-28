@@ -2777,12 +2777,13 @@ class CreateFinalProposal(APIView):
 
             with transaction.atomic():
 
+                # containers to store shortlisted suppliers and filter information
                 total_shortlisted_suppliers_list = []               
                 filter_data = [] 
 
                 for proposal_data in request.data:
                     proposal_data['proposal_id'] = proposal_id
-                    response = website_utils.save_final_proposal(proposal_data, unique_supplier_codes, user)
+                    response = website_utils.fetch_final_proposal_data(proposal_data, unique_supplier_codes, user)
                     if not response.data['status']:
                         return response
                     result = response.data['data']
@@ -2800,6 +2801,7 @@ class CreateFinalProposal(APIView):
                 models.Filters.objects.filter(user=user,proposal_id=proposal_id).delete()
                 models.Filters.objects.bulk_create(filter_data)
                 models.Filters.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
+
                 return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
