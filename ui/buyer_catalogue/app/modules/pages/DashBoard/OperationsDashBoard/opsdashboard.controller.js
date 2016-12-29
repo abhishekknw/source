@@ -18,6 +18,7 @@ angular.module('catalogueApp')
     opsDashBoardService.getProposalDetails()
     	.success(function(response, status){
     		$scope.proposals = response.data;
+        $scope.loading = response;
     		console.log("$scope.proposals : ", response.data);
     	})
     	.error(function(response, status){

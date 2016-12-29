@@ -93,6 +93,7 @@ angular.module('catalogueApp')
 	createProposalService.loadInitialData()
     .success(function (response){
         $scope.cities = response.cities;
+				$scope.loading = response;
       });
 			//changes for searching societies on basis of area,subarea
   $scope.get_areas = function(id,index) {

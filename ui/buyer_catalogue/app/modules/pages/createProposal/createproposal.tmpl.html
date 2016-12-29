@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="modules/pages/createProposal/createproposal.tmpl.css" />
+<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 <div ng-if="errormsg"><h3>{{errormsg}}</h3></div>
   <div class="page-container">
@@ -7,6 +8,7 @@
     	<span style="color:blue;margin-left:28%;font-size:18px;">{{successMsg}}</span>
   	</div>
     <back-Button></back-Button>
+    <div ng-loading="loading"></div> <!--For displaying loading icon-->
   	<form name="proposal">
   		<div class="panel panel-default business-panel">
         <h3 class="panel-heading alignment">Initial Requirement Gathering</h3>

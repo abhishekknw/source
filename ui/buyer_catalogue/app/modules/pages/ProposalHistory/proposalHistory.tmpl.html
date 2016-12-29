@@ -1,26 +1,11 @@
 <link rel="stylesheet" href="modules/pages/ProposalHistory/proposalHistory.tmpl.css" />
+<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 	<div class="page-container">
 	<form name="historyDetails">
 	</br></br></br>
-		<!-- <h3 class="panel-heading alignment">List of Proposals</h3> -->
-  		<!-- <div ng-repeat="proposals in proposals track by $index">
-  			<div class="panel panel-default business-panel">
-      		<div class="panel-heading"><h3>Saved At:  {{proposals.created_on|limitTo:10}}</h3>
-      			<div class="table">
-      				<div class="row">
-          			 <div class="col-md-3"><label>Proposal Id:</label>{{proposals.proposal_id}}</div>
-          			 <div class="col-md-3"><label>Name:</label>{{proposals.name}}</div> -->
-					 <!-- <div class="col-md-3"><label>Start Date:</label>{{proposals.tentative_start_date}}</div>
-					 <div class="col-md-3"><label>End Date:</label>{{proposals.tentative_end_date}}</div> -->
-					 <!-- <button class="btn btn-danger active" ng-click="showDetails(proposals.proposal_id)">More Details</button> -->
-					 <!-- <div class="col-md-3"><label>Cost:</label>{{proposals.tentative_cost}}</div> -->
-          		   <!-- </div>
-          		</div>
-	      	</div>
-	  		</div>
-		</div> -->
 		<back-Button></back-Button>
+		<div ng-loading="loading"></div> <!--For displaying loading icon-->
 		<div class="container">
 		  <div class="row">
 		      <div class="panel panel-default">

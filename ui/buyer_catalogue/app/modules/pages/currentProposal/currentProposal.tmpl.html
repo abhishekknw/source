@@ -1,7 +1,9 @@
 <link rel="stylesheet" href="modules/pages/currentProposal/currentProposal.tmpl.css" />
+<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 <form name="proposalDetails" ng-hide="showEdit" class = "proposal-panel">
   <back-Button></back-Button>
+  <div ng-loading="loading"></div> <!--For displaying loading icon-->
   <div class = "container">
       <div class="row">
         <div class="panel panel-default">
