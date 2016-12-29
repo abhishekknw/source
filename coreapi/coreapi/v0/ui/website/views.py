@@ -3444,7 +3444,7 @@ class ProposalVersion(APIView):
         """
         Args:
             request: The request object
-            proposal_id: The proposal_id. ( This is proposal_id for which new version is to be created )
+            proposal_id: The proposal_id. ( This is proposal_id for which new version is to be created if is_proposal_version_created is True
 
         Returns: success if everything succeeds.
 
@@ -3467,8 +3467,7 @@ class ProposalVersion(APIView):
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
             business = models.BusinessInfo.objects.get(business_id=account.business.business_id)
-
-            is_proposal_version_created = False
+            is_proposal_version_created = request.data.get('is_proposal_version_created')
 
             # call create Final Proposal first
             response = website_utils.setup_generic_export(request.data, request.user, proposal_id)
