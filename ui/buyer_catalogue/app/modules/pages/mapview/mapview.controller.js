@@ -124,7 +124,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             $scope.circle.center.longitude = $scope.current_center.center.longitude;
             $scope.circle.radius = $scope.current_center.center.radius * 1000;
 
-            if($scope.current_center != null){
+            if($scope.current_center.suppliers_meta != null){
               checkSavedFilters();
               toggleInventoryFilters($scope.current_center,'true','RS');
               mapViewBasicSummary();
@@ -539,14 +539,14 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                 $scope.loadIcon2 = response;
                 //Start: code added if proposal is already created or exported, and user wants to edit that proposal
                 var flag;
-                for(var i=0;i<$scope.center_data.length;i++){
-                  if($scope.center_data[i].suppliers_meta != null){
-                    flag = true;
-                  }
-                }
-                if(flag == true){
-                  checkSavedFilters();
-                }
+                // for(var i=0;i<$scope.center_data.length;i++){
+                //   if($scope.center_data[i].suppliers_meta != null){
+                //     flag = true;
+                //   }
+                // }
+                // if(flag == true){
+                //   checkSavedFilters();
+                // }
                 //End: code added if proposal is already created or exported and user wants to edit that proposal
                 $scope.addSupplierFilters($scope.center_data);
 
@@ -633,6 +633,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
     }
     // Start : check saved filter
     var checkSavedFilters = function (){
+      console.log($scope.current_center);
         if($scope.current_center.suppliers_meta['RS'] != null){
           var filter_types = Object.keys($scope.current_center.suppliers_meta['RS']);
           for(var j=0;j<filter_types.length;j++){
