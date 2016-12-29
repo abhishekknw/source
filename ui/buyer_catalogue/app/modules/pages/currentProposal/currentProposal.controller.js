@@ -68,6 +68,7 @@ angular.module('catalogueApp')
           $scope.center_data = response.data;
           getAvailableSuppliers($scope.center_data);
           getFilters($scope.center_data);
+          $scope.loading = response;
       })
         .error(function(response, status){
           console.log("Error Occured");
