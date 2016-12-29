@@ -23,6 +23,7 @@ from rest_framework import status
 from pygeocoder import Geocoder, GeocoderError
 import openpyxl
 import geocoder
+from openpyxl import Workbook
 
 import constants as website_constants
 from constants import price_per_flat, inventorylist
@@ -1338,12 +1339,12 @@ def save_filter_data(suppliers_meta, fixed_data, user):
         code = fixed_data.get('supplier_code')
         content_type = fixed_data.get('content_type')
 
-        # craeting filter objects for each filter value selected
+        # creating filter objects for each filter value selected
         selected_filters_list = []
         for filter_name in website_constants.filter_type[code]:
-            if suppliers_meta[code][filter_name].__len__():
+            if filter_name in suppliers_meta[code].keys():
                 for inventory_code in suppliers_meta[code][filter_name]:
-                    #TO store employee_count by codes so easy to fetch
+                    # TO store employee_count by codes so easy to fetch
                     if filter_name == 'employee_count':
                         key = int(inventory_code['min'])
                         inventory_code = website_constants.employee_count_codes[key]
@@ -1358,8 +1359,7 @@ def save_filter_data(suppliers_meta, fixed_data, user):
                         'user': user
                     }
                     filter_object = models.Filters(**data)
-                    selected_filters_list.append(filter_object) 
-
+                    selected_filters_list.append(filter_object)
         return ui_utils.handle_response(function_name, data=selected_filters_list, success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error', exception_object=e)
@@ -2919,45 +2919,8 @@ def send_excel_file(file_name):
             out_content = output.getvalue()
             output.close()
             excel.close()
-
-            # remove the file from the disk
             os.remove(file_name)
 
-            # get the predefined template for the body
-            template_body = website_constants.email['body']
-
-            content_type = website_constants.mime['xlsx']
-
-            # define a body_mapping.
-            body_mapping = {
-                 'file': file_name
-            }
-            # call the function to perform the magic
-            response = process_template(template_body, body_mapping)
-            if not response.data['status']:
-                return response
-
-            # get the modified body
-            modified_body = response.data['data']
-
-            # prepare email_data
-            email_data = {
-                'subject': website_constants.email['subject'],
-                'body': modified_body,
-                'to': website_constants.email['to']
-            }
-
-            # prepare the attachment
-            attachment = {
-                'file_name': file_name,
-                'file_data': file_content,
-                'mime_type': content_type
-            }
-
-            # send the mail
-            response = send_email(email_data, attachment)
-            if not response.data['status']:
-                return response
         else:
             # return response
             return ui_utils.handle_response(function, data='File does not exist on disk')
@@ -3271,4 +3234,127 @@ def manipulate_object_key_values(suppliers, supplier_type_code=website_constants
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
+
+def setup_generic_export(data, user, proposal_id):
+    """
+    data: Request.data
+    user: User instance
+    proposal_id: The proposal id
+
+    Returns the sheet.
+    """
+    function = setup_generic_export.__name__
+    try:
+        workbook = Workbook()
+
+        # get the supplier type codes available in the request
+        response = unique_supplier_type_codes(data)
+        if not response.data['status']:
+            return response
+        unique_supplier_codes = response.data['data']
+
+        result = {}
+
+        # initialize the result = {} dict which will be used in inserting into sheet
+        response = initialize_export_final_response(unique_supplier_codes, result)
+        if not response.data['status']:
+            return response
+        result = response.data['data']
+
+        # collect all the extra header and database keys for all the supplier type codes and all inv codes in them
+        response = extra_header_database_keys(unique_supplier_codes, data, result)
+        if not response.data['status']:
+            return response
+        result = response.data['data']
+
+        # make the call to generate data in the result
+        response = make_export_final_response(result, data)
+        if not response.data['status']:
+            return response
+        result = response.data['data']
+
+        # print result
+        response = insert_supplier_sheet(workbook, result)
+        if not response.data['status']:
+            return response
+        workbook = response.data['data']
+
+        # make a file name for this file
+        response = get_file_name(user, proposal_id)
+        if not response.data['status']:
+            return response
+        file_name = response.data['data']
+        workbook.save(file_name)
+
+        response = send_excel_file(file_name)
+        if not response.data['status']:
+            return response
+        file_content = response.data['data']
+        content_type = website_constants.mime['xlsx']
+
+        # in order to provide custom headers in response in angular js, we need to set this header
+        # first
+        headers = {
+            'Access-Control-Expose-Headers': "file_name, Content-Disposition"
+        }
+        data = {
+            'file': file_content,
+            'name': file_name
+        }
+        response = ui_utils.handle_response(function, data=data, headers=headers, content_type=content_type,  success=True)
+        # attach some custom headers
+        response['Content-Disposition'] = 'attachment; filename=%s' % file_name
+        return response
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def setup_create_final_proposal_post(data, user, proposal_id):
+    """
+    Args:
+        data: Request data
+        user: User instance
+        proposal_id: Proposal_id
+
+    Returns: Success in case success returns.
+    """
+    function = setup_create_final_proposal_post.__name__
+    try:
+
+        # get the supplier type codes available in the request
+        response = unique_supplier_type_codes(data)
+        if not response.data['status']:
+            return response
+        unique_supplier_codes = response.data['data']
+
+        with transaction.atomic():
+
+            # containers to store shortlisted suppliers and filter information
+            total_shortlisted_suppliers_list = []
+            filter_data = []
+
+            for proposal_data in data:
+                proposal_data['proposal_id'] = proposal_id
+                response = fetch_final_proposal_data(proposal_data, unique_supplier_codes, user)
+                if not response.data['status']:
+                    return response
+                result = response.data['data']
+                total_shortlisted_suppliers_list.extend(result[0])
+                filter_data.extend(result[1])
+
+            now_time = timezone.now()
+
+            # delete previous  shortlisted suppliers and save new
+            models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).delete()
+            models.ShortlistedSpaces.objects.bulk_create(total_shortlisted_suppliers_list)
+            models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time,updated_at=now_time)
+
+            # delete previous and save new selected filters and update date
+            models.Filters.objects.filter(user=user, proposal_id=proposal_id).delete()
+            models.Filters.objects.bulk_create(filter_data)
+            models.Filters.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
+
+            return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
 

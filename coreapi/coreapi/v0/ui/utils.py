@@ -24,13 +24,15 @@ import v0.serializers
 import constants as ui_constants
 
 
-def handle_response(object_name, data='some error occurred', exception_object=None, success=False):
+def handle_response(object_name, data='some error occurred', headers=None, content_type=None, exception_object=None, success=False):
     """
     Args:
         success: determines wether to send success or failure messages
         object_name: The function or class where the error occurrs
         data: The user error which you want to display to user's on screens
         exception_object: The exception object caught. an instance of Exception, KeyError etc.
+        headers: the dict of headers
+        content_type: The content_type.
 
         This method can later be used to log the errors.
 
@@ -44,9 +46,9 @@ def handle_response(object_name, data='some error occurred', exception_object=No
             'system_error': get_system_error(exception_object),
             'culprit_module': object_name
         }
-        return Response({'status': False, 'data': data}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({'status': True, 'data': data}, status=status.HTTP_200_OK)
+        return Response({'status': True, 'data': data}, headers=headers, content_type=content_type,  status=status.HTTP_200_OK)
 
 
 def get_system_error(exception_object):

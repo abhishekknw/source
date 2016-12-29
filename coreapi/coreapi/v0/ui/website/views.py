@@ -44,12 +44,6 @@ from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMapp
         ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,\
         ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
 
-
-from constants import supplier_keys, contact_keys, STD_CODE, COUNTRY_CODE, proposal_header_keys, sample_data, export_keys, center_keys,\
-                      inventorylist, society_keys, flat_type_dict, index_of_center_id, offline_pricing_data
-from constants import *
-
-
 from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
@@ -1095,7 +1089,6 @@ class SpacesOnCenterAPIView(APIView):
             # response['corporates_count'] = corporates_count
             # response['corporates_inventory'] = corporates_inventory
 
-
         if space_mappings['gym_allowed']:
             # ADDNEW --> write code for gym
             pass
@@ -1250,9 +1243,10 @@ class FilteredSuppliers(APIView):
             # calculate total aggregate count
 
             suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=final_suppliers_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
-                                                                                                        standees=Sum('total_standee_count'),
-                                                                                                        stalls=Sum('total_stall_count'),
-                                                                                                        fliers=Sum('flier_frequency'))
+                                                                                                    standees=Sum('total_standee_count'),
+                                                                                                    stalls=Sum('total_stall_count'),
+                                                                                                    fliers=Sum('flier_frequency'))
+
             # adding earlier saved shortlisted suppliers in the results.
             if proposal_id and center_id:
                 response = website_utils.get_shortlisted_suppliers(proposal_id, request.user)
@@ -2338,105 +2332,14 @@ class GenericExportData(APIView):
         1. extension of Headers and DATA keys. This is because one or more inventory type selected map to more HEADER
         and hence more DATA keys
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
-    """
+        """
     renderer_classes = (website_renderers.XlsxRenderer, )
-
     permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:
-            workbook = Workbook()
-
-            # ws = wb.active
-            # ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
-            # iterating through centers in request.data array
-
-            data = request.data
-
-            # get the supplier type codes available in the request
-            response = website_utils.unique_supplier_type_codes(data)
-            if not response.data['status']:
-                return response
-            unique_supplier_codes = response.data['data']
-
-            result = {}
-
-            # initialize the result = {} dict which will be used in inserting into sheet
-            response = website_utils.initialize_export_final_response(unique_supplier_codes, result)
-            if not response.data['status']:
-                return response
-            result = response.data['data']
-
-            # collect all the extra header and database keys for all the supplier type codes and all inv codes in them
-            response = website_utils.extra_header_database_keys(unique_supplier_codes, data, result)
-            if not response.data['status']:
-                return response
-            result = response.data['data']
-
-            # make the call to generate data in the result
-            response = website_utils.make_export_final_response(result, data)
-            if not response.data['status']:
-                return response
-            result = response.data['data']
-
-            # print result
-            response = website_utils.insert_supplier_sheet(workbook, result)
-            if not response.data['status']:
-                return response
-            workbook = response.data['data']
-
-            # make a file name for this file
-            response = website_utils.get_file_name(request.user, proposal_id)
-            if not response.data['status']:
-                return response
-            file_name = response.data['data']
-            workbook.save(file_name)
-
-            # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
-            # once data is prepared for one sheet, we hit the url. if it creates problems in future, me might change
-            # it.
-                
-            # delete all the shortlisted_spaces rows for this proposal. delete only those objects which are
-            # created by this user only.
-            models.ShortlistedSpaces.objects.filter(user=request.user, proposal_id=proposal_id).delete()
-            # delete all Filter table rows for this proposal. delete only those objects which are created by
-            # this user only.
-            models.Filters.objects.filter(user=request.user, proposal_id=proposal_id).delete()
-
-            # no hit the url 
-            url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
-            url = BASE_URL + url[1:]
-
-            data = request.data
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-            }
-            response = requests.post(url, json.dumps(data), headers=headers)
-
-            if response.status_code != status.HTTP_200_OK:
-                return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
-
-            response = website_utils.send_excel_file(file_name)
-            if not response.data['status']:
-                return response
-            file_content = response.data['data']
-
-            content_type = website_constants.mime['xlsx']
-
-            # in order to provide custom headers in response in angular js, we need to set this header
-            # first
-            headers = {
-                'Access-Control-Expose-Headers': "file_name, Content-Disposition"
-            }
-            # set content_type and make Response()
-            response = Response(data=file_content, headers=headers, content_type=content_type)
-            # attach some custom headers
-            response['Content-Disposition'] = 'attachment; filename=%s' % file_name
-            response['file_name'] = file_name
-            return response
-
+            return website_utils.setup_generic_export(request.data, request.user, proposal_id)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -2767,42 +2670,7 @@ class CreateFinalProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            user = request.user
-
-            # get the supplier type codes available in the request
-            response = website_utils.unique_supplier_type_codes(request.data)
-            if not response.data['status']:
-                return response
-            unique_supplier_codes = response.data['data']
-
-            with transaction.atomic():
-
-                # containers to store shortlisted suppliers and filter information
-                total_shortlisted_suppliers_list = []               
-                filter_data = [] 
-
-                for proposal_data in request.data:
-                    proposal_data['proposal_id'] = proposal_id
-                    response = website_utils.fetch_final_proposal_data(proposal_data, unique_supplier_codes, user)
-                    if not response.data['status']:
-                        return response
-                    result = response.data['data']
-                    total_shortlisted_suppliers_list.extend(result[0])
-                    filter_data.extend(result[1])
-
-                now_time = timezone.now()
-
-                # delete previous  shortlisted suppliers and save new
-                models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).delete()
-                models.ShortlistedSpaces.objects.bulk_create(total_shortlisted_suppliers_list)
-                models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
-
-                # delete previous and save new selected filters and update date
-                models.Filters.objects.filter(user=user,proposal_id=proposal_id).delete()
-                models.Filters.objects.bulk_create(filter_data)
-                models.Filters.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
-
-                return ui_utils.handle_response(class_name, data='success', success=True)
+            return website_utils.setup_create_final_proposal_post(request.data, request.user, proposal_id)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -3557,6 +3425,134 @@ class Business(APIView):
             result = AccountInfo.objects.filter_user_related_objects(master_user)
             serializer = website_serializers.AccountInfoSerializer(result, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ProposalVersion(APIView):
+    """
+    The API does following tasks:
+    1. creates a new proposal_id and saves all the proposal info in it if user comes from edit proposal.
+    2. set's parent to proposal_id received if user comes from edit proposal
+    3. saves shortlisted suppliers against the new proposal_id if user comes from edit proposal
+    4. saves filter data against the new proposal_id if user comes from edit proposal
+    5. sends mail to logged in user
+    6. sends mail to BD head.
+    7. Generates excel sheet and send's it as attachment in the mail to BD head.
+    """
+    def post(self, request, proposal_id):
+        """
+        Args:
+            request: The request object
+            proposal_id: The proposal_id. ( This is proposal_id for which new version is to be created )
+
+        Returns: success if everything succeeds.
+
+        The request is in form:
+        [
+             {
+                  center : { id : 1 , center_name: c1, ...   } ,
+                  suppliers: { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} }
+                  suppliers_meta: {
+                                     'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
+                                     'CP': { 'inventory_type_selected':  ['ST']
+                  }
+             }
+        ]
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            user = request.user
+            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
+            business = models.BusinessInfo.objects.get(business_id=account.business.business_id)
+
+            is_proposal_version_created = False
+
+            # call create Final Proposal first
+            response = website_utils.setup_generic_export(request.data, request.user, proposal_id)
+            if not response.data['status']:
+                return response
+
+            file_name = response.data['data']['name']
+            my_file = response.data['data']['file']
+
+            response = website_utils.setup_create_final_proposal_post(request.data, request.user, proposal_id)
+            if not response.data['status']:
+                return response
+
+            if is_proposal_version_created:
+                # create a unique proposal id
+                response = website_utils.create_proposal_id(business.business_id, account.account_id)
+                if not response.data['status']:
+                    return response
+                new_proposal_id = response.data['data']
+
+                # create new ProposalInfo object for this new proposal_id
+                proposal.pk = new_proposal_id
+                proposal.save()
+
+                # change the parent and save again
+                proposal.parent = proposal
+                proposal.save()
+
+                # create New copy of shortlisted suppliers
+                shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id)
+                for supplier in shortlisted_suppliers:
+                    supplier.pk = None
+                    supplier.proposal = proposal
+                    supplier.save()
+
+                # create New copy of Filters
+                filters_objects = models.Filters.objects.filter(user=user, proposal_id=proposal_id)
+                for filter_object in filters_objects:
+                    filter_object.pk = None
+                    filter_object.proposal = proposal
+                    filter_object.save()
+
+                # change the proposal_id variable here
+                proposal_id = new_proposal_id
+
+            # send mail to logged in user without attachment
+            email_data = {
+             'subject': website_constants.subjects['agency'],
+             'body': website_constants.bodys['agency'],
+             'to': [user.email]
+            }
+            response = website_utils.send_email(email_data)
+            if not response.data['status']:
+                return response
+
+            bd_body = {
+                'user_name': request.user.first_name,
+                'business': business.name,
+                'account': account.name,
+                'proposal_id': proposal_id,
+                'file_name': file_name
+            }
+
+            response = website_utils.process_template(website_constants.bodys['bd_head'], bd_body)
+            if not response.data['status']:
+                return response
+            bd_body = response.data['data']
+
+            # send mail to Bd Head with attachment
+            email_data = {
+                'subject': website_constants.subjects['bd_head'],
+                'body': bd_body,
+                'to': [website_constants.emails['bd_head']]
+            }
+            attachment = {
+                'file_data': my_file,
+                'file_name': file_name,
+                'mime_type': website_constants.mime['xlsx']
+            }
+            response = website_utils.send_email(email_data, attachment=attachment)
+            if not response.data['status']:
+                return response
+
+            return ui_utils.handle_response(class_name, data='done', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
