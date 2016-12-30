@@ -3467,19 +3467,8 @@ class ProposalVersion(APIView):
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
             business = models.BusinessInfo.objects.get(business_id=account.business.business_id)
-            is_proposal_version_created = request.data.get('is_proposal_version_created')
-
-            # call create Final Proposal first
-            response = website_utils.setup_generic_export(request.data, request.user, proposal_id)
-            if not response.data['status']:
-                return response
-
-            file_name = response.data['data']['name']
-            my_file = response.data['data']['file']
-
-            response = website_utils.setup_create_final_proposal_post(request.data, request.user, proposal_id)
-            if not response.data['status']:
-                return response
+            is_proposal_version_created = request.data['is_proposal_version_created']
+            data = request.data['centers']
 
             if is_proposal_version_created:
                 # create a unique proposal id
@@ -3495,30 +3484,28 @@ class ProposalVersion(APIView):
                 # change the parent and save again
                 proposal.parent = proposal
                 proposal.save()
-
-                # create New copy of shortlisted suppliers
-                shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id)
-                for supplier in shortlisted_suppliers:
-                    supplier.pk = None
-                    supplier.proposal = proposal
-                    supplier.save()
-
-                # create New copy of Filters
-                filters_objects = models.Filters.objects.filter(user=user, proposal_id=proposal_id)
-                for filter_object in filters_objects:
-                    filter_object.pk = None
-                    filter_object.proposal = proposal
-                    filter_object.save()
-
                 # change the proposal_id variable here
                 proposal_id = new_proposal_id
+
+            response = website_utils.setup_create_final_proposal_post(data, request.user, proposal_id)
+            if not response.data['status']:
+                return response
+
+            # call create Final Proposal first
+            response = website_utils.setup_generic_export(data, request.user, proposal_id)
+            if not response.data['status']:
+                return response
+
+            file_name = response.data['data']['name']
+            my_file = response.data['data']['file']
 
             # send mail to logged in user without attachment
             email_data = {
              'subject': website_constants.subjects['agency'],
              'body': website_constants.bodys['agency'],
              'to': [user.email]
-            }
+             }
+
             response = website_utils.send_email(email_data)
             if not response.data['status']:
                 return response
@@ -3542,16 +3529,20 @@ class ProposalVersion(APIView):
                 'body': bd_body,
                 'to': [website_constants.emails['bd_head']]
             }
+
             attachment = {
                 'file_data': my_file,
                 'file_name': file_name,
                 'mime_type': website_constants.mime['xlsx']
             }
+            # in order to provide custom headers in response in angular js, we need to set this header
+            # first
+
             response = website_utils.send_email(email_data, attachment=attachment)
             if not response.data['status']:
                 return response
 
-            return ui_utils.handle_response(class_name, data='done', success=True)
+            return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
