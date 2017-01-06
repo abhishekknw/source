@@ -90,11 +90,11 @@ DATABASES = {
     },
 
     'default': {
-        'NAME':'machadalo_permissions',
+        'NAME':'machadalo',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': 'localhost',
          'USER': 'root',
-         'PASSWORD': 'yo@123',
+         'PASSWORD': 'root',
       }
 
     }
@@ -189,13 +189,13 @@ JWT_AUTH = {
       'JWT_VERIFY_EXPIRATION': False,
       }
 
-BASE_URL = 'http://localhost:8108/'
+BASE_URL = 'http://localhost:8000/'
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'yogesh.mhetre@machadalo.com'
-EMAIL_HOST_PASSWORD = 'mtechcse@2014'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER
@@ -214,3 +214,8 @@ from django.utils import timezone
 date_string = '2016-12-1'
 format = '%Y-%m-%d'
 DEFAULT_DATE = timezone.make_aware(datetime.datetime.strptime(date_string, format), timezone.get_default_timezone())
+
+# AWS settings.
+AWS_ACCESS_KEY_ID = 'AKIAIIGRT3EJEDSRVSFQ'
+AWS_SECRET_ACCESS_KEY = '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'
+BUCKET_NAME = 'mdimages-test'
