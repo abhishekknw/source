@@ -67,35 +67,39 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
             });
                 return center_marker;
         }
-      function getIcon(supplier){
-        var color;
+      // TO show different colors for suppliers based on status
+      $scope.status_color;
+      function getIcon(supplier,key){
         if(supplier.status == 'X')
-          color = "Blue";
+          $scope.status_color = "0000FF";//blue color for new suppliers
         if(supplier.status == 'S')
-          color = "Green";
+          $scope.status_color = "00FF00";//green color for shortlisted suppliers
         if(supplier.status == 'R')
-          color = "Red";
+          $scope.status_color = "FF0000";//red color for removed suppliers
         if(supplier.status == 'B')
-          color = "Black";
-           var icon = {
-          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          strokeColor: color,
-          scale: 3
-        };
+          $scope.status_color = "A52A2A";//black color for buffered suppliers
+        var icon;
+        icon = icons[key] + $scope.status_color +'/000000/FF0000/';
         return icon;
       }
+      var icons = {
+        // http://www.googlemapsmarkers.com/v1/LABEL/FILL COLOR/LABEL COLOR/STROKE COLOR/
+        'RS':'http://www.googlemapsmarkers.com/v1/'+'S/',
+        'CP':'http://www.googlemapsmarkers.com/v1/'+'C/',
+      };
       function assignMarkersToMap(spaces) {
           // assigns spaces(society, corporate) markers on the map
           // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
           var markers = [];
-          angular.forEach(spaces, function(suppliers) {
+          var icon;
+          angular.forEach(spaces, function(suppliers,key){
+
             for (var i=0; i <suppliers.length; i++) {
-              // console.log(suppliers[i]);
                 markers.push({
                     latitude: suppliers[i].latitude,
                     longitude: suppliers[i].longitude,
                     id: suppliers[i].supplier_id,
-                    icon: getIcon(suppliers[i]),
+                    icon:getIcon(suppliers[i],key),
                     options : {draggable : false},
                     title : {
                         name : suppliers[i].name,
@@ -105,7 +109,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
                     },
                 });
             };
-
           });
           return markers;
       };
@@ -1209,32 +1212,39 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
        };
      $scope.exportData = function(){
          $scope.checkFileExport = true;
+         var parent_proposal_id = $window.sessionStorage.parent_proposal_id;
          saveSelectedFilters();
+         var proposal_data = {
+           centers:$scope.center_data,
+           is_proposal_version_created:$window.sessionStorage.isSavedProposal,
+         };
+         //console.log(data);
          $http({
-              url: constants.base_url + constants.url_base + $scope.proposal_id_temp + '/export-spaces-data/',
+              url: constants.base_url + constants.url_base + parent_proposal_id + '/proposal-version/',
               method: 'POST',
-              responseType: 'arraybuffer',
-              data: $scope.center_data, //this is your json data string
+              //responseType: 'arraybuffer',
+              data: proposal_data, //this is your json data string
               headers: {
                   'Content-type': 'application/json',
-                  'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                  // 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                   'Authorization' : 'JWT ' + $rootScope.globals.currentUser.token
               }
-         }).success(function(data, status, headers, config){
+         }).success(function(response){
+           console.log(response);
               // convert it onto Blob object because it's a binary file.
-              var blob = new Blob([data], {
-                  type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-              });
+              // var blob = new Blob([data], {
+              //     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+              // });
               // fetch the content_type and file name from headers
               // $scope.content_type = headers('content-type');
-              $scope.file_name = headers('file_name');
+              // $scope.file_name = headers('file_name');
               // set the file to blob
-              $scope.file_data = blob
-              var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
+              // $scope.file_data = blob
+              // var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
               //upload file to amazon server
-              uploadFileToAmazonServer($scope.file_name,$scope.file_data);
+              //uploadFileToAmazonServer($scope.file_name,$scope.file_data);
               // download it immediately
-              saveAs(blob, $scope.file_name);
+              //saveAs(blob, $scope.file_name);
               $scope.checkFileExport = false;
 
          }).error(function(response){

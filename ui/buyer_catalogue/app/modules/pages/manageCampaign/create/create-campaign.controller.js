@@ -228,12 +228,12 @@ angular.module('machadaloPages')
 
       $scope.showProposalDetails = function(proposal_id){
         $window.sessionStorage.parentProposal = true;
-        $window.sessionStorage.proposal_id = proposal_id;
+        $window.sessionStorage.parent_proposal_id = proposal_id;
         $location.path('/' + proposal_id + '/showcurrentproposal');
       }
 
-      $scope.showHistory = function(proposalId){$window.sessionStorage.proposal_id = proposalId;
-        $window.sessionStorage.proposal_id = proposalId;
+      $scope.showHistory = function(proposalId){
+        $window.sessionStorage.parent_proposal_id = proposalId;
         $location.path('/' + proposalId + '/showproposalhistory');
       }
     	$scope.create = function() {

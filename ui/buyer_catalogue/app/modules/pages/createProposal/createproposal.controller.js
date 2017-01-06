@@ -153,11 +153,11 @@ angular.module('catalogueApp')
 			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)
 			.success(function(response, status){
 				$scope.errormsg = undefined;
-				console.log("Successfully Saved");
-				console.log("response is : ", response);
 				$scope.proposal_id = response;
 				$scope.checkProposal = false;
 				createProposalService.setProposalId($scope.proposal_id);
+        $window.sessionStorage.isSavedProposal = false;
+        $window.sessionStorage.parent_proposal_id = response.data;
 				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){

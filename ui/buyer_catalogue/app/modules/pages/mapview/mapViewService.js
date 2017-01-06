@@ -46,7 +46,7 @@
     }
 
     mapViewService.exportProposalData = function(proposal_id, centers_data){
-        var url = url_base + proposal_id + '/export-spaces-data/';
+        var url = url_base + proposal_id + '/proposal-version/';
         return machadaloHttp.post(url, centers_data);
     }
 
