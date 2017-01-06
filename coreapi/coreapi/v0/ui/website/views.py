@@ -2394,7 +2394,7 @@ class ImportSupplierData(APIView):
                 ws = wb.get_sheet_by_name(sheet)
 
                 # fetch all the center id's
-                center_id_list_response = website_utils.get_center_id_list(ws, index_of_center_id)
+                center_id_list_response = website_utils.get_center_id_list(ws, website_constants.index_of_center_id)
 
                 if not center_id_list_response.data['status']:
                     return center_id_list_response
