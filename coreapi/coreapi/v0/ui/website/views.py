@@ -3,6 +3,7 @@ import math, random, string, operator
 import csv
 import json
 import datetime
+import os
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
@@ -3470,6 +3471,7 @@ class ProposalVersion(APIView):
             is_proposal_version_created = request.data['is_proposal_version_created']
             data = request.data['centers']
 
+            # if this variable is true, we will have to create a new proposal version.
             if is_proposal_version_created:
                 # create a unique proposal id
                 response = website_utils.create_proposal_id(business.business_id, account.account_id)
@@ -3523,7 +3525,6 @@ class ProposalVersion(APIView):
                 return response
             bd_body = response.data['data']
 
-            # send mail to Bd Head with attachment
             email_data = {
                 'subject': website_constants.subjects['bd_head'],
                 'body': bd_body,
@@ -3535,13 +3536,19 @@ class ProposalVersion(APIView):
                 'file_name': file_name,
                 'mime_type': website_constants.mime['xlsx']
             }
-            # in order to provide custom headers in response in angular js, we need to set this header
-            # first
 
+            # send mail to Bd Head with attachment
             response = website_utils.send_email(email_data, attachment=attachment)
             if not response.data['status']:
                 return response
 
+            # upload this shit to amazon
+            response = website_utils.upload_to_amazon(file_name)
+            if not response.data['status']:
+                return response
+
+            # remove the file name
+            os.remove(file_name)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)

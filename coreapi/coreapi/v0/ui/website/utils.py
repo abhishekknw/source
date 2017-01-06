@@ -17,6 +17,7 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django.core.mail import EmailMessage
 from django.utils import timezone
+from django.conf import settings
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -24,6 +25,9 @@ from pygeocoder import Geocoder, GeocoderError
 import openpyxl
 import geocoder
 from openpyxl import Workbook
+import boto
+import boto.s3
+from boto.s3.key import Key
 
 import constants as website_constants
 from constants import price_per_flat, inventorylist
@@ -2919,8 +2923,6 @@ def send_excel_file(file_name):
             out_content = output.getvalue()
             output.close()
             excel.close()
-            os.remove(file_name)
-
         else:
             # return response
             return ui_utils.handle_response(function, data='File does not exist on disk')
@@ -3357,4 +3359,30 @@ def setup_create_final_proposal_post(data, user, proposal_id):
             return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def upload_to_amazon(file_name):
+    """
+    Args:
+        file_name: The file name
+    Returns: success in case file is uploaded, failure otherwise error
+    """
+    function = upload_to_amazon.__name__
+    try:
+        if not os.path.exists(file_name):
+            return ui_utils.handle_response(function, data='The file path {0} does not exists'.format(file_name))
+
+        bucket_name = settings.BUCKET_NAME
+        conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+        bucket = conn.get_bucket(bucket_name)
+
+        k = Key(bucket)
+        k.key = file_name
+        k.set_contents_from_filename(file_name)
+        k.make_public()
+
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
 
