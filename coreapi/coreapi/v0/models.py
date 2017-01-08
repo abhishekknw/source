@@ -2244,8 +2244,9 @@ class CampaignAssignment(BaseModel):
     """
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_by')
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_to')
-    campaign_id = models.ForeignKey(ProposalInfo, null=True, blank=True)
-
+    campaign = models.ForeignKey(ProposalInfo, null=True, blank=True)
+    class Meta:
+        db_table = 'campaign_assignment'
 
 # class ShortlistedInventoryDetails(BaseModel):
 #     """
