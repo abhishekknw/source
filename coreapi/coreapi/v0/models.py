@@ -352,6 +352,7 @@ class NoticeBoardDetails(BaseModel):
     class Meta:
         db_table = 'notice_board_details'
 
+
 class PosterInventory(BaseModel):
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', primary_key=True, max_length=25)  # Field name made lowercase.
     tower_name = models.CharField(db_column='TOWER_NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
@@ -1209,6 +1210,7 @@ class BusinessTypes(BaseModel):
     class Meta:
         #db_table = 'BUSINESS_TYPES'
         db_table = 'business_types'
+
 
 class BusinessSubTypes(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -2161,6 +2163,8 @@ class ShortlistedSpaces(BaseModel):
     buffer_status = models.BooleanField(default=False)
     status = models.CharField(max_length=10, null=True, blank=True)
     objects = managers.GeneralManager()
+    campaign_status = models.CharField(max_length=10, default='', null=True, blank=True)
+    phase = models.CharField(max_length=10, default='',  null=True, blank=True)
 
     class Meta:
         db_table = 'shortlisted_spaces'
@@ -2232,6 +2236,50 @@ class GenericExportFileName(BaseModel):
 
     class Meta:
         db_table = 'generic_export_file_name'
+
+
+class CampaignAssignment(BaseModel):
+    """
+    The model to store a particular campaign being assigned to a user
+    """
+    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_by')
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_to')
+    campaign_id = models.ForeignKey(ProposalInfo, null=True, blank=True)
+
+
+# class ShortlistedInventoryDetails(BaseModel):
+#     """
+#     This table stores information about Release Date, Audit Date, and Campaign Dates associated with each inventory_id
+#     under each campaign. All inventories within this table are booked.Campaign is nothing but Proposal_id with is_campaign = True
+#     """
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+#     inventory_content_type = models.ForeignKey(ContentType, null=True, blank=True)
+#     inventory_id = models.CharField(max_length=255, null=True, blank=True)
+#     campaign_id = models.ForeignKey(ProposalInfo, null=True, blank=True)
+#     release_date = models.DateTimeField(default=timezone.now())
+#     closure_date = models.DateTimeField(default=timezone.now())
+#     factor = models.IntegerField(default=0.0, null=True)
+#     center = models.ForeignKey('ProposalCenterMapping')
+#     ad_inventory_type = models.ForeignKey('AdInventoryType', null=True)
+#     ad_inventory_duration = models.ForeignKey('DurationType', null=True)
+#     inventory_price = models.FloatField(default=0.0, null=True)
+#     shortlisted_spaces = models.ForeignKey(ShortlistedSpaces, null=True, blank=True)
+#     objects = managers.GeneralManager()
+#
+#
+# class AuditDate(BaseModel):
+#     """
+#     A particular inventory can have multiple audit dates
+#     """
+#     shortlisted_inventory = models.ForeignKey(ShortlistedInventoryDetails, null=True, blank=True)
+#     audit_date = models.DateTimeField(default=timezone.now())
+#     audited_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+
+
+
+
+
+
 
 
 
