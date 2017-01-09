@@ -292,3 +292,13 @@ class CampaignInventorySerializer(ModelSerializer):
 
         )
 
+
+class CampaignAssignmentSerializerReadOnly(ModelSerializer):
+
+    assigned_by = BaseUserSerializer()
+    assigned_to = BaseUserSerializer()
+    campaign = ProposalInfoSerializer()
+
+    class Meta:
+        model = models.CampaignAssignment
+
