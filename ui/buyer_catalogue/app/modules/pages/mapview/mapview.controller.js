@@ -71,7 +71,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       $scope.status_color;
       function getIcon(supplier,key){
         if(supplier.status == 'X')
-          $scope.status_color = "0000FF";//blue color for new suppliers
+          $scope.status_color = "FFC433";//blue color for new suppliersFCFF33
         if(supplier.status == 'S')
           $scope.status_color = "00FF00";//green color for shortlisted suppliers
         if(supplier.status == 'R')
@@ -79,7 +79,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
         if(supplier.status == 'B')
           $scope.status_color = "A52A2A";//black color for buffered suppliers
         var icon;
-        icon = icons[key] + $scope.status_color +'/000000/FF0000/';
+        icon = icons[key] + $scope.status_color +'/000000/000000/';
         return icon;
       }
       var icons = {

@@ -28,7 +28,7 @@
             <!-- <td class="col-md-2">{{proposal.invoice_number}}</td> -->
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="true" ng-click="updateCampaign(proposal)">Yes</label>
+                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="true" ng-click="updateCampaign(proposal)" data-target = "#assignModal" data-toggle = "modal">Yes</label>
               </div>
               <div class="radio">
                      <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="false" ng-click="updateCampaign(proposal)" data-target="#detailModal" data-toggle="modal">No</label>
@@ -60,3 +60,23 @@
     </div>
   </div>
 </div>
+<!-- Start: Code for assgining campaign -->
+<div id="assignModal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Assign Campaign to Operations Manager</h4>
+        <hr/>
+        <div class = "modal-body">
+        <label>Assign to:</label>
+          <select ng-model= "userData.selecteduser">
+            <option ng-repeat = "name in userData.names" value = "{{name.name}}">{{name.name}}</option>
+          </select>
+          <button class="btn btn-danger active notify" ng-click="saveAssignment()">Assign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End: Code for assgining campaign -->

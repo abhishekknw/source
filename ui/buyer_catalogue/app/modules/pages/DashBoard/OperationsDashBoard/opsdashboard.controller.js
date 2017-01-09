@@ -14,6 +14,15 @@ angular.module('catalogueApp')
         {header : 'Campaign'},
         {header : 'Download Proposal'}
       ];
+      $scope.userData = {
+        selecteduser: null,
+        names: [
+        {name : 'Ankit'},
+        {name : 'Amit'},
+        {name : 'njnjnj'}
+        ]
+      };
+
 
     opsDashBoardService.getProposalDetails()
     	.success(function(response, status){
@@ -24,10 +33,6 @@ angular.module('catalogueApp')
     	.error(function(response, status){
     		console.log("error occured", status);
     	});
-
-    $scope.downloadProposal = function(proposal_id){
-        alert('vidhi');
-      }
 
     $scope.sendNotification = function(){
       var email_Data = {
@@ -62,5 +67,9 @@ angular.module('catalogueApp')
     //code added when the user clicks on proposal id the proposal details page will open
     $scope.showProposalDetails = function(proposal_id){
       $location.path('/' + proposal_id + '/showcurrentproposal');
+    }
+
+    $scope.saveAssignment = function(proposal){
+      alert("vidhi");
     }
 }]);//Controller function ends here
