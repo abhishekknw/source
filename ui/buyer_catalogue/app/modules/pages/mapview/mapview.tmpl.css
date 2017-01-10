@@ -56,12 +56,12 @@ body{
 	align-self: center;
 }
 .drop-width{
-	width: 40% !important;
+	width: 22% !important;
 }
 .box-spacing-radius{
 	margin-bottom: 5px;
 	margin-top: 5px;
-	width: 60%;
+	width: 20%;
 }
 .box-spacing{
 	margin-bottom: 5px;
@@ -76,7 +76,7 @@ body{
 	text-align: center;
 }
 .space{
-	margin-top: 10px !important;
+	margin-top: 46px !important;
 }
 .summarypanel{
 	margin-left: 21% !important
@@ -157,4 +157,9 @@ body{
   .modal-fullscreen .modal-dialog {
      width: 1170px;
   }
+}
+
+.center-button {
+	margin-top: 5px;
+	margin-bottom: 5px;
 }
