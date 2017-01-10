@@ -14,6 +14,16 @@ angular.module('catalogueApp')
         {header : 'Campaign'},
         {header : 'Download Proposal'}
       ];
+
+      $scope.campaignHeadings = [
+        {header : 'Campaign Id'},
+        {header : 'Campaign Name'},
+        {header : 'Assgined To '},
+        {header : 'Assigned Date'},
+        {header : 'Start Date'},
+        {header : 'End Date'},
+        {header : 'View Release Details'}
+      ];
       $scope.userData = {
         selecteduser: null,
         names: [
