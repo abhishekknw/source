@@ -3553,3 +3553,119 @@ class ProposalVersion(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+
+class AssignCampaign(APIView):
+    """
+    This API assigns a campaign to a user by a user
+    """
+    def post(self, request):
+        """
+        Args:
+            request: The request object
+            campaign_id: Assigns campaign_id to a user by a user.
+        Returns: Success in case campaign is successfully assigned to the user.
+        """
+        class_name = self.__class__.__name__
+        try:
+            assigned_by = request.user
+
+            campaign_id = request.data['campaign_id']
+
+            if assigned_by.is_anonymous():
+                return ui_utils.handle_response(class_name, data='A campaign cannot be assigned by an Anonymous user')
+
+            if not request.data['to']:
+                return ui_utils.handle_response(class_name, data='You must provide a user to which this campaign will be assigned')
+
+            # fetch BaseUser object.
+            assigned_to = models.BaseUser.objects.get(id=request.data['to'])
+
+            # fetch ProposalInfo object.
+            proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
+
+            # check weather it's a campaign or not ?
+            if not proposal.is_campaign or not proposal.invoice_number:
+                return ui_utils.handle_response(class_name, data='This proposal is not a campaign')
+
+            # todo: check for dates also. you should not assign a past campaign to any user. left for later
+
+            # create the object
+            models.CampaignAssignment.objects.get_or_create(assigned_by=assigned_by, assigned_to=assigned_to, campaign=proposal)
+
+            return ui_utils.handle_response(class_name, data='success', success=True)
+
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def get(self, request):
+        """
+        Args:
+            request: Request object
+
+        Returns: AssignedCampaign objects.
+        {
+          "status": true,
+          "data": [
+            {
+              "id": 1,
+              "assigned_by": {
+                "id": 1,
+                "first_name": "Nikhil",
+                "last_name": "Kumar",
+              },
+              "assigned_to": {
+                "id": 9,
+                "first_name": "kamlesh",
+                "last_name": "sabziwale"
+              },
+              "campaign": {
+                "proposal_id": "zUkqLPYR",
+                "created_at": "2016-12-01T00:00:00Z",
+                "updated_at": "2016-12-15T10:18:04.514008Z",
+              },
+            }
+          ]
+        }
+        Handles three cases :
+        Fetches campaigns assigned by a user only
+        Fetches campaigns assigned to a particular user only
+        Fetches campaigns assigned by a user to a particular user.
+        """
+        class_name = self.__class__.__name__
+
+        try:
+            assigned_by = request.user
+
+            if assigned_by.is_anonymous():
+                return ui_utils.handle_response(class_name, data='Anonymous users can\'t have any campaigns assigned')
+
+            query = {}
+            # this field determined weather to include 'assigned_by' in query or not
+            is_assigned_by = int(request.query_params['is_assigned_by'])
+
+            # to field  must be present  if is_assigned_by is False.
+            if not is_assigned_by:
+                # 'to' must be present. There should be something to query !
+                to = request.query_params['to']
+            else:
+                # if is_assigned_by is False, try to get to, but assigned_by field must be set to request.user
+                to = request.query_params.get('to')
+                query['assigned_by'] = request.user
+
+            # if you found to field, fetch the object from BaseUser table.
+            if to:
+                query['assigned_to'] = models.BaseUser.objects.get(id=to)
+
+            assigned_objects = models.CampaignAssignment.objects.filter(**query)
+            serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+        except KeyError as e:
+            return ui_utils.handle_response(class_name, data='key Error', exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+

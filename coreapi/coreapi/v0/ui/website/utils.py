@@ -1225,6 +1225,10 @@ def save_shortlisted_suppliers(suppliers, fixed_data, user):
             if supplier['status'] == website_constants.status:
                 continue
 
+            # make entry for campaign_status and phase for each supplier here itself.
+            campaign_status = supplier['campaign_status'] if supplier.get('campaign_status') else supplier['status']
+            phase = supplier['phase'] if supplier.get('phase') else ''
+
             # make the data to be saved in ShortListedSpaces
             data = {
                 'content_type': content_type,
@@ -1233,10 +1237,11 @@ def save_shortlisted_suppliers(suppliers, fixed_data, user):
                 'proposal': proposal,
                 'supplier_code': code,
                 'user': user,
-                'status': supplier['status']
+                'status': supplier['status'],
+                'campaign_status': campaign_status,
+                'phase': phase
             }
             shortlisted_suppliers.append(models.ShortlistedSpaces(**data))
-
         return ui_utils.handle_response(function_name, data=shortlisted_suppliers, success=True)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)

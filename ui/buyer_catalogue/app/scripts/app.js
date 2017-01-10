@@ -33,7 +33,6 @@ angular
     // ''
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
-     // $routeProvider.otherwise('/');
       $stateProvider
       .state('society', {
           url : '/society',
@@ -41,7 +40,7 @@ angular
           templateUrl: 'modules/pages/base/base.tmpl.html'
         })
         .state('campaign', {
-          url : '/campaign/:campaignId', //:societyId/
+          url : '/campaign/:campaignId', 
           templateUrl: 'index.html',
           controller: ''
         })
@@ -50,7 +49,6 @@ angular
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyListCtrl'
         })
-        // .state('campaign.mapView',{
           .state('MapView',{
            url : '/:proposal_id/mapview',
            templateUrl : 'modules/pages/mapview/mapview.tmpl.html',
@@ -60,7 +58,6 @@ angular
           url : '/:account_id/createproposal',
           templateUrl : 'modules/pages/createProposal/createproposal.tmpl.html',
           controller : 'ProposalCtrl'
-          // controller : ''
         })
         .state('showProposalHistory',{
           url : '/:proposal_id/showproposalhistory',
@@ -78,7 +75,7 @@ angular
           controller: 'SocietyCtrl'
         })
         .state('campaign.societyList.filter', {
-          url : '/societyList/:filter', //:societyId/for filter
+          url : '/societyList/:filter',
           templateUrl: 'modules/pages/societylist/societylist.tmpl.html',
           controller: 'SocietyFilterCtrl'
         })
@@ -107,11 +104,6 @@ angular
             controller: 'CreateAccountCtrl',
             templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html'
         })
-        // .state('manageCampaign.proposal', {
-        //     url : '/proposal',
-        //     controller: 'CreateProposalCtrl',
-        //     templateUrl: 'modules/pages/manageCampaign/createproposal/create-proposal.tmpl.html'
-        //   })
       .state('manageCampaign.shortlisted', {
           url : '/shortlisted',
           controller: 'ShortlistedCampaignCtrl',
@@ -182,7 +174,12 @@ angular
             controller : 'MapCtrl',
             templateUrl : 'modules/pages/mapview/mapview.tmpl.html'
         })
-       .state('OpsDashBoard',{
+      .state('releasePlan',{
+           url : '/releasePlan',
+           controller : 'ReleaseCampaignCtrl',
+           templateUrl : 'modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.html'
+       })
+      .state('OpsDashBoard',{
            url : '/OpsDashBoard',
            controller : 'OpsDashCtrl',
            templateUrl : 'modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.html'
