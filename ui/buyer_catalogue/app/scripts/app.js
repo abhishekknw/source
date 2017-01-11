@@ -183,6 +183,11 @@ angular
            url : '/OpsDashBoard',
            controller : 'OpsDashCtrl',
            templateUrl : 'modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.html'
+       })
+      .state('manageUsers',{
+           url : '/manageUser',
+           controller : 'userCtrl',
+           templateUrl : 'modules/pages/manageUsers/user.tmpl.html'
        });
 })
 .run(['$rootScope', '$window', '$location', 'AuthService',
