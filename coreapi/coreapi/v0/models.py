@@ -29,6 +29,7 @@ from django.conf import settings
 from django.utils import timezone
 
 import managers
+import v0.ui.website.constants as website_constants
 
 
 AD_INVENTORY_CHOICES = (
@@ -88,6 +89,16 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+# class BaseInventory(BaseModel):
+#     """
+#     A BaseInventory model for all inventories. The fields here are common for all inventories.
+#     """
+#     status = models.CharField(max_length=10, default=website_constants.inventory_status)
+#
+#     class Meta:
+#         abstract = True
 
 
 class CustomPermissions(BaseModel):
@@ -371,6 +382,7 @@ class PosterInventory(BaseModel):
 
         db_table = 'poster_inventory'
 
+
 class SocietyFlat(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     flat_tag = models.CharField(db_column='FLAT_TAG',max_length=20, blank=True, null=True)  # Field name made lowercase.
@@ -400,6 +412,7 @@ class FlatType(BaseModel):
 
     class Meta:
         db_table = 'flat_type'
+
 
 class StandeeInventory(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -1954,16 +1967,18 @@ class ShortlistedInventoryPricingDetails(BaseModel):
     A particular inventory type is identified by it's content_type_id.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    supplier_id = models.CharField(max_length=100)
+    inventory_content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    inventory_id = models.CharField(max_length=255, null=True, blank=True)
     inventory_price = models.FloatField(default=0.0, null=True)
     inventory_count = models.IntegerField(default=0, null=True)
     factor = models.IntegerField(default=0.0, null=True)
-    supplier_type_code = models.CharField(max_length=255, null=True)
     ad_inventory_type = models.ForeignKey('AdInventoryType', null=True)
     ad_inventory_duration = models.ForeignKey('DurationType', null=True)
-    center = models.ForeignKey('ProposalCenterMapping')
-    proposal = models.ForeignKey('ProposalInfo')
+    release_date = models.DateTimeField(default=timezone.now)
+    closure_date = models.DateTimeField(default=timezone.now)
+    shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True)
     objects = managers.GeneralManager()
+    inventory_object = generic.GenericForeignKey('inventory_content_type', 'inventory_id')
 
     class Meta:
         db_table = 'shortlisted_inventory_pricing_details'
@@ -2267,14 +2282,19 @@ class CampaignAssignment(BaseModel):
 #     shortlisted_spaces = models.ForeignKey(ShortlistedSpaces, null=True, blank=True)
 #     objects = managers.GeneralManager()
 #
-#
-# class AuditDate(BaseModel):
-#     """
-#     A particular inventory can have multiple audit dates
-#     """
-#     shortlisted_inventory = models.ForeignKey(ShortlistedInventoryDetails, null=True, blank=True)
-#     audit_date = models.DateTimeField(default=timezone.now())
-#     audited_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+
+
+class AuditDate(BaseModel):
+    """
+    A particular inventory can have multiple audit dates
+    """
+    shortlisted_inventory = models.ForeignKey(ShortlistedInventoryPricingDetails, null=True, blank=True)
+    audit_date = models.DateTimeField(default=timezone.now)
+    audited_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+
+    class Meta:
+        db_table = 'audit_date'
+
 
 
 

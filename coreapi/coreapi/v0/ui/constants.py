@@ -33,8 +33,16 @@ tower_count_attribute_mapping = {
     'GY': 'none',
     'SA': 'none'
 }
-string_suppliers = {'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate',
-                    'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon', 'BS': 'SupplierTypeBusShelter',}
+
+# codes to model names
+codes_to_model_names = {'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate',
+                    'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon', 'BS': 'SupplierTypeBusShelter', 'STALL': 'StallInventory'
+                        }
+# model to codes
+model_to_codes = {
+    'SupplierTypeSociety': 'RS', 'SupplierTypeCorporate': 'CP', 'SupplierTypeGym': 'GY', 'SupplierTypeSalon': 'SA', 'SupplierTypeBusShelter': 'BS',
+    'StallInventory': 'SL'
+}
 
 # default state and state codes. used to fetch state object in various import api's.
 state_name = 'Maharashtra'

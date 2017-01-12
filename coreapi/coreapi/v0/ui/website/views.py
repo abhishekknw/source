@@ -2135,10 +2135,10 @@ class ImportSocietyData(APIView):
                         continue
                     else:
 
-                        if len(row) != len(supplier_keys):
+                        if len(row) != len(website_constants.supplier_keys):
                             return ui_utils.handle_response(class_name, data='length of row {0} and length of supplier_keys do not match {1}'.format(len(row), len(supplier_keys)))
 
-                        for index, key in enumerate(supplier_keys):
+                        for index, key in enumerate(website_constants.supplier_keys):
                             if row[index] == '':
                                 data[key] = None
                             else:
@@ -2371,6 +2371,7 @@ class ImportSupplierData(APIView):
         """
         class_name = self.__class__.__name__
         try:
+
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
             my_file = request.FILES['file']
@@ -2458,17 +2459,6 @@ class ImportSupplierData(APIView):
 
                     # update the center dict in result with modified center_object
                     result[center_id] = center_object
-            # delete the data from shortlisted_inventory_pricing_details before adding new data
-            models.ShortlistedInventoryPricingDetails.objects.filter(user=request.user, proposal_id=proposal_id).delete()
-
-            # data for this supplier is made. populate the shortlisted_inventory_details table before hiting the urls 
-            response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
-            if not response.data['status']:
-                return response
-
-            # delete all the shortlisted_spaces rows for this proposal. we do not delete filter
-            # data while importing 
-            models.ShortlistedSpaces.objects.filter(user=request.user, proposal_id=proposal_id).delete()
 
             # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
             # once data is prepared for all sheets,  we hit the url. if it creates problems in future, me might change
@@ -2481,11 +2471,16 @@ class ImportSupplierData(APIView):
             headers={
                 'Content-Type': 'application/json',
                 'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-            }
+             }
             response = requests.post(url, json.dumps(data), headers=headers)
 
             if response.status_code != status.HTTP_200_OK:
                 return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
+
+            # data for this supplier is made. populate the shortlisted_inventory_details table before hiting the urls
+            response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
+            if not response.data['status']:
+                return response
 
             # hit metric url to save metric data. current m sending the entire file, though only first sheet sending
             # is required.
@@ -3468,7 +3463,9 @@ class ProposalVersion(APIView):
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
             business = models.BusinessInfo.objects.get(business_id=account.business.business_id)
-            is_proposal_version_created = request.data['is_proposal_version_created']
+
+            # if you don't provide this value, No proposal version is created.
+            is_proposal_version_created = request.data['is_proposal_version_created'] if request.data.get('is_proposal_version_created') else False
             data = request.data['centers']
 
             # if this variable is true, we will have to create a new proposal version.
@@ -3669,3 +3666,32 @@ class AssignCampaign(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
+class CampaignInventory(APIView):
+    """
+
+    """
+    def get(self, request, campaign_id):
+        """
+        The API fetches campaign data + SS  + SID
+        Args:
+            request: request data
+            campaign_id: The proposal_id which has been converted into campaign.
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
+
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
+
+            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
+            if not response.data['status']:
+                return response
+
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
