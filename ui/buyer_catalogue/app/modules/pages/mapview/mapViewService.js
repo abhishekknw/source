@@ -5,6 +5,7 @@
 
     var url_base = 'v0/ui/website/';
     var mapViewService = {};
+    var url_base_societyDetails ='v0/ui/';
 
     mapViewService.getSpaces = function(proposal_id){
         var url = url_base + "proposal/"+ proposal_id + "/get_spaces/";
@@ -67,6 +68,60 @@
         var url = url_base + proposal_id + '/create-final-proposal/';
         return machadaloHttp.put(url, data);
     }
+
+    //Start: code added for societydetails
+    mapViewService.getSociety = function (id,supplierTypeCode) {
+      console.log(id);
+       var url = url_base_societyDetails + "supplier/" + id + "/image_details/?supplierTypeCode=" + supplierTypeCode;;
+       return machadaloHttp.get(url);
+    };
+
+   //  mapViewService.get_inventory_summary = function(id){
+   //   var url = url_base + "society/" + id + "/inventory_summary/";
+   //   return machadaloHttp.get(url);
+   //  };
+
+    mapViewService.get_inventory_summary = function(id, supplierTypeCode){
+      var url = url_base_societyDetails + "society/" + id + "/inventory_summary/?supplierTypeCode=" + supplierTypeCode;
+      return machadaloHttp.get(url);
+    };
+
+    mapViewService.getSocietyList = function(data) {
+      var url = url_base_societyDetails + "society/filterList/";
+      return machadaloHttp.post(url, data);
+    };
+
+    mapViewService.getSocietyIds = function(){
+       var url = url_base_societyDetails + "society/societyIds/";
+       return machadaloHttp.get(url)
+    }
+
+    mapViewService.processParam = function(){
+     if($stateParams.campaignId){
+       $rootScope.campaignId = $stateParams.campaignId;
+     }else {
+       $rootScope.campaignId = null;
+      }
+
+      if($stateParams.societyId){
+       $rootScope.societyId = $stateParams.societyId;
+     }else {
+       $rootScope.societyId = null;
+     }
+    };
+
+    mapViewService.getShortlistedSocietyCount = function(campaign_id){
+       var url = url_base_societyDetails + "website/campaign/" + campaign_id + "/society/count/";
+       return machadaloHttp.get(url)
+    }
+
+    //for adding shortlisted societies
+    mapViewService.addShortlistedSociety = function(campaign_id, society_id){
+      var url = url_base_societyDetails + "website/campaign/society/shortlist/";
+      var data = {campaign_id, society_id};
+      return machadaloHttp.post(url, data);
+    }
+    //End: code added for societydetails
 
     return mapViewService;
 }]);

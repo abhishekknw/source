@@ -56,12 +56,12 @@ body{
 	align-self: center;
 }
 .drop-width{
-	width: 40% !important;
+	width: 22% !important;
 }
 .box-spacing-radius{
 	margin-bottom: 5px;
 	margin-top: 5px;
-	width: 60%;
+	width: 20%;
 }
 .box-spacing{
 	margin-bottom: 5px;
@@ -76,7 +76,7 @@ body{
 	text-align: center;
 }
 .space{
-	margin-top: 10px !important;
+	margin-top: 46px !important;
 }
 .summarypanel{
 	margin-left: 21% !important
@@ -106,4 +106,60 @@ body{
   border-right: 0px none black;
   border-top-width:3px; /*only relevant for first row*/
   margin-top:-3px; /*compensate for top border*/
+}
+.tab-content4 > .tab-pane,
+.pill-content > .pill-pane {
+  display: none;
+}
+.tab-content4 > .active,
+.pill-content > .active {
+  display: block;
+}
+.carousel-control.left, .carousel-control.right {
+    background-image: none
+}
+.modal-fullscreen {
+  background: transparent;
+}
+.modal-fullscreen .modal-content {
+  background: transparent;
+  border: 0;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+.modal-backdrop.modal-backdrop-fullscreen {
+  background: #ffffff;
+}
+.modal-backdrop.modal-backdrop-fullscreen.in {
+  opacity: .97;
+  filter: alpha(opacity=97);
+}
+
+/* .modal-fullscreen size: we use Bootstrap media query breakpoints */
+
+.modal-fullscreen .modal-dialog {
+  margin: 0;
+  margin-right: auto;
+  margin-left: auto;
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .modal-fullscreen .modal-dialog {
+    width: 750px;
+  }
+}
+@media (min-width: 992px) {
+  .modal-fullscreen .modal-dialog {
+    width: 970px;
+  }
+}
+@media (min-width: 1200px) {
+  .modal-fullscreen .modal-dialog {
+     width: 1170px;
+  }
+}
+
+.center-button {
+	margin-top: 5px;
+	margin-bottom: 5px;
 }

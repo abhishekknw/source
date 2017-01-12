@@ -19,7 +19,7 @@ angular.module('machadaloPages')
         $scope.clear = function() {
         $scope.dt = null;
       };
-
+console.log($rootScope.globals.currentUser);
       $scope.maxDate = new Date(2020, 5, 22);
       $scope.today = new Date();
       $scope.popup1 = false;

@@ -52,26 +52,6 @@ angular.module('machadaloPages')
       var contactCopy = angular.copy($scope.contact);
       $scope.model.account.contacts = [$scope.contact];
 
-      // pagesService.getAllBusinesses()
-      //   .success(function (response, status) {
-      //         console.log("Get All Business response : ");
-      //         console.log(response);
-      //         $scope.businesses = response;
-      //    });
-
-      // pagesService.loadBusinessTypes()
-      // .success(function (response){
-      //     $scope.busTypes = response;
-      //   });
-
-        // $scope.getSubTypes = function() {
-        //   var id = $scope.model.business.type;
-        //   pagesService.getSubTypes(id)
-        //   .success(function (response){
-        //       $scope.sub_types = response;
-        //     });
-        // }
-
 
       $scope.addNew = function() {
         // object def is directly added to avoid different array elements pointing to same object
@@ -98,15 +78,6 @@ angular.module('machadaloPages')
 
         }
       }
-
-    	// $scope.getAllAccounts = function() {
-     //    $scope.selectAcc = undefined;
-	    // 	pagesService.getAllAccounts()
-	    // 	.success(function (response, status) {
-	    // 		    console.log(response);
-	    //         $scope.accounts = response;
-	    //    });
-	    // };
 
     	$scope.getAccount = function() {
     		pagesService.getAccount($scope.selectAcc)
@@ -156,16 +127,6 @@ angular.module('machadaloPages')
               $scope.model.account.contacts = [$scope.contact];
       };
 
-
-      // $scope.resetValues = function(){
-      //           $scope.model.campaign_type = undefined;
-      //           $scope.model.tentative = undefined;
-      //           $scope.supplier_type = undefined;
-      //           $scope.campaign_type1 = undefined;
-      //           $scope.supplier_type1 = undefined;
-
-      // }
-
       //Code for Automatically select createAccount from business account details
       $scope.setAccount == false;
       $scope.setCreate_Account = function(){
@@ -177,9 +138,7 @@ angular.module('machadaloPages')
         $scope.model.account.reference_name= $scope.model.business.reference_name;
         $scope.model.account.reference_phone = $scope.model.business.reference_phone;
         $scope.model.account.reference_email= $scope.model.business.reference_email;
-
         $scope.setAccount == true;
-
       }else{
         $scope.model.account.name = "";
         $scope.model.account.email = "";
@@ -188,7 +147,6 @@ angular.module('machadaloPages')
         $scope.model.account.reference_name= "";
         $scope.model.account.reference_phone = "";
         $scope.model.account.reference_email= "";
-
         $scope.setAccount == false;
       }
     };
