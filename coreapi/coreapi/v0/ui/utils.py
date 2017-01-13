@@ -24,7 +24,7 @@ import v0.serializers
 import constants as ui_constants
 
 
-def handle_response(object_name, data='some error occurred', headers=None, content_type=None, exception_object=None, success=False):
+def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False):
     """
     Args:
         success: determines wether to send success or failure messages
@@ -598,6 +598,55 @@ def get_content_type(supplier_type_code):
         return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
+def get_content_types(codes):
+    """
+    Args:
+        codes: a list of codes
+
+    Returns: a list of content_types mapped against each code
+
+    """
+    function = get_content_types.__name__
+    try:
+        response = get_models(codes)
+        if not response.data['status']:
+            return response
+
+        model_classes = response.data['data'].values()
+        ContentType = apps.get_model('contenttypes', 'ContentType')
+        content_types = ContentType.objects.get_for_models(*model_classes)
+        final_content_types = {}
+
+        for model_class, content_type in content_types.iteritems():
+            model_code = ui_constants.model_to_codes[model_class.__name__]
+            final_content_types[model_code] = content_type
+        return handle_response(function, data=final_content_types, success=True)
+    except Exception as e:
+        return handle_response(function, exception_object=e)
+
+
+def get_models(codes):
+    """
+    Args:
+        codes: a list of codes.
+
+    Returns: a dict of codes against models.
+
+    """
+    function = get_models.__name__
+    try:
+        model_names = [ui_constants.codes_to_model_names[code] for code in codes]
+        all_models = apps.get_models()
+        model_classes = {}
+        for model in all_models:
+            if model.__name__ in model_names:
+                code = ui_constants.model_to_codes[model.__name__]
+                model_classes[code] = model
+        return handle_response(function, data=model_classes, success=True)
+    except Exception as e:
+        return handle_response(function, exception_object=e)
+
+
 def get_model(supplier_type_code):
     """
     Args:
@@ -607,7 +656,7 @@ def get_model(supplier_type_code):
 
     """
     try:
-        suppliers = ui_constants.string_suppliers
+        suppliers = ui_constants.codes_to_model_names
         load_model = apps.get_model('v0', suppliers[supplier_type_code])
         return load_model
     except Exception as e:

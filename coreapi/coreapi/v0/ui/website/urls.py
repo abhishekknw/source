@@ -55,6 +55,8 @@ urlpatterns = [
     url(r'^mail/$', views.Mail.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/proposal-version/$', views.ProposalVersion.as_view()),
     url(r'^assign-campaign/$', views.AssignCampaign.as_view()),
+    url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/campaign-inventories/$', views.CampaignInventory.as_view()),
+
 ]
 
 router = DefaultRouter()

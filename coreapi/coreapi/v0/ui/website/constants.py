@@ -518,6 +518,12 @@ shortlisted = 'S'
 removed = 'R'
 buffer = 'B'
 
+# name of inventories as in db
+poster = 'POSTER'
+standee = 'STANDEE'
+stall = 'STALL'
+
+
 # to identify unique supplier types
 society = 'RS'
 corporate = 'CP'
@@ -538,5 +544,21 @@ bodys = {
 
 # default emails
 emails = {
-    'bd_head': 'vidhi@machadalo.com'
+    'bd_head': 'nikhil.singh@machadalo.com'
 }
+
+# default status of each inventory is defined here. The reason i didn't chose a boolean value is because may be in
+# future there can be more than two status of an inventory. who knows  ?
+inventory_status = 'F'  # F stands for free or available.
+inventory_booked_status = 'B'
+
+
+# shortlisted inventory details keys
+shortlisted_inventory_detail_keys = ['inventory_price', 'inventory_count', 'factor', 'ad_inventory_type', 'ad_inventory_duration']
+
+# model names as store in ContentType table. update here if you change the model names.
+society_model_name = 'suppliertypesociety'
+
+# stall_type default
+default_stall_type = 'Small'
+default_stall_duration_type = 'Unit Daily'
