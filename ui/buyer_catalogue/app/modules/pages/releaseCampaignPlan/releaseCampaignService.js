@@ -8,7 +8,7 @@
 
 
     releaseCampaignService.getCampaignReleaseDetails = function(proposal_id){
-         var url = url_base + "proposal/"+ proposal_id + "/";
+         var url = url_base + proposal_id + "/campaign-inventories/";
     	return machadaloHttp.get(url);
     }
 

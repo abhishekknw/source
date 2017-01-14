@@ -2,6 +2,7 @@
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
+</br></br></br><back-Button></back-Button>
 <h3 style = "margin-left: 460px; margin-top: 60px;">Machadalo Operations Dashboard</h3>
 <div class="container">
   <div class="row">
@@ -54,16 +55,14 @@
         </thead>
         <tbody>
           <tr ng-repeat="proposal in proposals">
-            <td class="col-md-1" ng-click="showProposalDetails(proposal.proposal.proposal_id)">
-              <a>{{proposal.proposal.proposal_id}}</a>
-            </td>
+            <td class="col-md-1">{{proposal.proposal.proposal_id}}</td>
             <td class="col-md-2">{{proposal.proposal.name}}</td>
             <td class="col-md-2">{{proposal.proposal.created_by}}</td>
             <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
             <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
             <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
             <td class="col-md-2">
-              <a href="#" Download> Details </a>
+              <a ng-click="getDetails(proposal.proposal.proposal_id)" Download> Details </a>
             </td>
           </tr>
         </tbody>

@@ -1,8 +1,9 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService) {
- 	
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams) {
+console.log($stateParams.proposal_id);
+  $scope.campaign_id = $stateParams.proposal_id;
  	$scope.headings = [
         {header : 'Supplier Name'},
         {header : 'Area'},
@@ -13,7 +14,7 @@ angular.module('catalogueApp')
         {header : 'Closure Date'},
         {header : 'Comments'},
         {header : 'Phase'}
-      ]; 
+      ];
 
     $scope.clear = function() {
         $scope.dt = null;
@@ -23,6 +24,7 @@ angular.module('catalogueApp')
       $scope.today = new Date();
       $scope.popup1 = false;
       $scope.popup2 = false;
+      $scope.popup3 = false;
       $scope.error = false;
 
       $scope.setDate = function(year, month, day) {
@@ -41,13 +43,14 @@ angular.module('catalogueApp')
       alert("vidhi");
     };
 
-    releaseCampaignService.getCampaignReleaseDetails()
+    releaseCampaignService.getCampaignReleaseDetails($scope.campaign_id)
     	.success(function(response, status){
+        console.log(response);
     		$scope.releaseDetails = response.data;
             $scope.loading = response;
     	})
     	.error(function(response, status){
     		console.log("error occured", status);
     	});
- 
+
 }]);//Controller function ends here

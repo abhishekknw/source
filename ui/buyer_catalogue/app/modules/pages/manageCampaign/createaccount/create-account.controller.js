@@ -97,7 +97,7 @@ angular.module('machadaloPages')
       }
       else{
         // $scope.model.business = pagesService.getBusinessObject();
-        $scope.model.business = JSON.parse($window.sessionStorage.business);
+        $scope.model.business = JSON.parse($window.localStorage.business);
         $scope.model.account.business_id = $scope.model.business.business_id;
       }
 
