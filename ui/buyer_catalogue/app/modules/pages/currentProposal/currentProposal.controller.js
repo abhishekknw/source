@@ -5,7 +5,7 @@ angular.module('catalogueApp')
     	$scope.proposal = {};
       $scope.society = {society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''};
       $scope.societyDetails = [];
-      $scope.isParentProposal = $window.sessionStorage.parentProposal;// send proposal_id in service
+      $scope.isParentProposal = $window.localStorage.parentProposal;// send proposal_id in service
       $scope.campaign_start_date;
       $scope.campaign_end_date;
 
@@ -65,6 +65,7 @@ angular.module('catalogueApp')
         // this service get the all shortlisted suppliers for this proposal
       currentProposalService.getShortlistedSuppliers($stateParams.proposal_id)
         .success(function(response, status){
+          console.log(response);
           $scope.center_data = response.data;
           getAvailableSuppliers($scope.center_data);
           getFilters($scope.center_data);
@@ -161,7 +162,7 @@ angular.module('catalogueApp')
     		})
     	}
      $scope.editInitialProposal = function(proposalId){
-       $window.sessionStorage.isSavedProposal = true;
+       $window.localStorage.isSavedProposal = true;
        $location.path('/' + proposalId + '/mapview');
      }
      $scope.showHistory = function(){

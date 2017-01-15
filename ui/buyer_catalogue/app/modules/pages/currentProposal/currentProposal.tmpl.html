@@ -62,7 +62,7 @@
             <tbody ng-repeat=" supplier in current_center_data.suppliers['RS']">
               <tr ng-if="supplier.status != 'R'">
                 <td>{{current_center_data.center.center_name}}</td>
-                <td>{{supplier.society_name}}</td>
+                <td>{{supplier.name}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_poster">{{supplier.tower_count}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_standee">{{supplier.total_standee_count}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_stall">{{supplier.total_stall_count}}</td>

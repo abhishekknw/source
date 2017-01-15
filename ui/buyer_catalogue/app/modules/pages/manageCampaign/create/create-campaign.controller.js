@@ -59,16 +59,16 @@ console.log($rootScope.globals.currentUser);
 
       // Start: for persisting values after refresh or back from other pages
       $scope.getStoredData = function(){
-        if($window.sessionStorage.business != null){
-          $scope.model.business = JSON.parse($window.sessionStorage.business);
-          if($window.sessionStorage.accounts != null){
-            $scope.model.accounts = JSON.parse($window.sessionStorage.accounts);
-            if($window.sessionStorage.sel_account_index >= 0){
-              $scope.sel_account_id = $scope.model.accounts[$window.sessionStorage.sel_account_index].account_id;
+        if($window.localStorage.business != null){
+          $scope.model.business = JSON.parse($window.localStorage.business);
+          if($window.localStorage.accounts != null){
+            $scope.model.accounts = JSON.parse($window.localStorage.accounts);
+            if($window.localStorage.sel_account_index >= 0){
+              $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
             }
           }
-          if($window.sessionStorage.account_proposals != null)
-            $scope.account_proposals = JSON.parse($window.sessionStorage.account_proposals);
+          if($window.localStorage.account_proposals != null)
+            $scope.account_proposals = JSON.parse($window.localStorage.account_proposals);
           $scope.choice = "selected";
         }else {
           $scope.model.business = null;
@@ -89,24 +89,24 @@ console.log($rootScope.globals.currentUser);
               $scope.model.business = response.business;
               $scope.model.accounts = response.accounts;
               $rootScope.business_id = response.business.business_id;
-              $window.sessionStorage.business_id = response.business.business_id;
+              $window.localStorage.business_id = response.business.business_id;
               $rootScope.business_name = response.business.name;
-              $window.sessionStorage.business_id = response.business.name;
+              $window.localStorage.business_id = response.business.name;
               $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
               $scope.getSubTypes();
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
               $scope.choice = "selected";
               // pagesService.setBusinessObject($scope.model.business);
               //Start: added to persit data after refresh
-              $window.sessionStorage.business = JSON.stringify($scope.model.business);
+              $window.localStorage.business = JSON.stringify($scope.model.business);
               if($scope.model.accounts.length != 0){
-                $window.sessionStorage.accounts = JSON.stringify($scope.model.accounts);
+                $window.localStorage.accounts = JSON.stringify($scope.model.accounts);
               }else{
-                $window.sessionStorage.accounts = null;
+                $window.localStorage.accounts = null;
               }
-              $window.sessionStorage.account_proposals = null;
+              $window.localStorage.account_proposals = null;
               $scope.account_proposals = null;
-              $window.sessionStorage.sel_account_index = -1;
+              $window.localStorage.sel_account_index = -1;
               $scope.sel_account_id = null;
               $scope.error = false;
               //End: added to persit data after refresh
@@ -145,8 +145,8 @@ console.log($rootScope.globals.currentUser);
       };
 
     	$scope.getAllBusinesses = function() {
-        $window.sessionStorage.account_proposals = null;
-        $window.sessionStorage.sel_account_index = null;
+        $window.localStorage.account_proposals = null;
+        $window.localStorage.sel_account_index = null;
         $scope.bsSelect = undefined;
 	    	pagesService.getAllBusinesses()
 	    	.success(function (response, status) {
@@ -196,15 +196,15 @@ console.log($rootScope.globals.currentUser);
           // $rootScope.account_id = sel_account_id;
 
           //start : added to persist data after refresh
-          $window.sessionStorage.sel_account_index = index;
-          $window.sessionStorage.account_id = sel_account_id;
+          $window.localStorage.sel_account_index = index;
+          $window.localStorage.account_id = sel_account_id;
 
           //start : added to persist data after refresh
 
           pagesService.getAccountProposal(sel_account_id)
           .success(function(response, status){
               $scope.account_proposals = response.data;
-              $window.sessionStorage.account_proposals = JSON.stringify($scope.account_proposals);
+              $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
           })
           .error(function(response, status){
               if(typeof(response) == typeof([]))
@@ -220,20 +220,20 @@ console.log($rootScope.globals.currentUser);
         }
         else{
           pagesService.setProposalAccountId(sel_account_id);
-          $window.sessionStorage.proposal_id = 0;
-          $window.sessionStorage.isSavedProposal = false;
+          $window.localStorage.proposal_id = 0;
+          $window.localStorage.isSavedProposal = false;
           $location.path('/'+sel_account_id + '/createproposal');
         }
       }
 
       $scope.showProposalDetails = function(proposal_id){
-        $window.sessionStorage.parentProposal = true;
-        $window.sessionStorage.parent_proposal_id = proposal_id;
+        $window.localStorage.parentProposal = true;
+        $window.localStorage.parent_proposal_id = proposal_id;
         $location.path('/' + proposal_id + '/showcurrentproposal');
       }
 
       $scope.showHistory = function(proposalId){
-        $window.sessionStorage.parent_proposal_id = proposalId;
+        $window.localStorage.parent_proposal_id = proposalId;
         $location.path('/' + proposalId + '/showproposalhistory');
       }
     	$scope.create = function() {
@@ -254,7 +254,7 @@ console.log($rootScope.globals.currentUser);
             if (status == '200'){
               $scope.choice = "selected";
               pagesService.setBusinessObject($scope.model.business);
-              $window.sessionStorage.business = JSON.stringify($scope.model.business);
+              $window.localStorage.business = JSON.stringify($scope.model.business);
             }
         }).error(function(response, status){
              if (typeof response != 'number'){

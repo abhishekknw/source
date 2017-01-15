@@ -37,7 +37,7 @@ inventorylist = {
     },
     'SL': {
         'HEADER': ['Stall Count', 'Stall Price', 'Stall Duration', 'Stall Price Factor', 'Stall Business Price'],
-        'DATA': ['stall_count', 'stall_price', 'stall_duration', 'stall_price_factor', 'stall_business_price']
+        'DATA': ['total_stall_count', 'stall_price', 'stall_duration', 'stall_price_factor', 'stall_business_price']
     },
     'CD': {
         'HEADER': ['Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor', 'Car Business Price' ],

@@ -40,7 +40,7 @@ angular
           templateUrl: 'modules/pages/base/base.tmpl.html'
         })
         .state('campaign', {
-          url : '/campaign/:campaignId', 
+          url : '/campaign/:campaignId',
           templateUrl: 'index.html',
           controller: ''
         })
@@ -80,7 +80,7 @@ angular
           controller: 'SocietyFilterCtrl'
         })
         .state('showSocietyDetails', {
-          url : '/societyDetails/:societyId', 
+          url : '/societyDetails/:societyId',
           templateUrl: 'modules/pages/supplierDetails/societyDetails/newsocietyDetails.tmpl.html',
           controller: 'NewSocietyCtrl'
         })
@@ -175,7 +175,7 @@ angular
             templateUrl : 'modules/pages/mapview/mapview.tmpl.html'
         })
       .state('releasePlan',{
-           url : '/releasePlan',
+           url : '/:proposal_id/releasePlan',
            controller : 'ReleaseCampaignCtrl',
            templateUrl : 'modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.html'
        })

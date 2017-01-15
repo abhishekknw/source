@@ -461,7 +461,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 // This service gets all the spaces according to center specification like society_allowed
           //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
           $scope.proposal_id_temp = $stateParams.proposal_id;
-          if($window.sessionStorage.isSavedProposal == 'true'){
+          if($window.localStorage.isSavedProposal == 'true'){
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
               .success(function(response, status){
                 //TO convert dict to array as response coming in dict form and very difficult to use
@@ -1212,11 +1212,12 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
        };
      $scope.exportData = function(){
          $scope.checkFileExport = true;
-         var parent_proposal_id = $window.sessionStorage.parent_proposal_id;
+         console.log($window.localStorage.isSavedProposal);
+         var parent_proposal_id = $window.localStorage.parent_proposal_id;
          saveSelectedFilters();
          var proposal_data = {
            centers:$scope.center_data,
-           is_proposal_version_created:$window.sessionStorage.isSavedProposal,
+           is_proposal_version_created:$window.localStorage.isSavedProposal,
          };
          //console.log(data);
          $http({
