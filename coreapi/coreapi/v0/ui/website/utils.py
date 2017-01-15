@@ -19,6 +19,7 @@ from django.http import Http404
 from django.core.mail import EmailMessage
 from django.utils import timezone
 from django.conf import settings
+from django.db.models import Count
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -574,9 +575,6 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
         # list to store ShortlistedInventoryPricingDetails objects
         output = []
 
-        supplier_ids = []
-        supplier_type_codes = set()
-
         for center_id, center in result.iteritems():
 
             for index, shortlisted_inventory_detail in enumerate(center['shortlisted_inventory_details']):
@@ -604,7 +602,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
             # we do not want to send this to other API, so we will rather delete it
             # del center['shortlisted_inventory_details']
 
-        response = map_inventory_ids(proposal_id, output)
+        response = make_inventory_assignments(proposal_id, output)
         if not response.data['status']:
             return response
 
@@ -3545,287 +3543,6 @@ def get_objects_per_content_type(objects):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def map_inventory_ids(campaign_id, shortlisted_inventory_details_objects):
-    """
-
-    maps free inventory ids of a given inventory
-    Args:
-        campaign_id:
-        shortlisted_inventory_details_objects:  list of dicts.
-
-    Returns: success in case mapping is successful, else error.
-    """
-    # warning : The code uses .bulk_create() to create data at once. .bulk_create() has some caveats
-    # from which you should be aware of. example, it doesn't check for duplicates, it doesn't give pre_save(),
-    # or post_save() signals. all the data in the table against this proposal must be deleted when
-    # creating fresh data otherwise it will create duplicates,
-
-    function = map_inventory_ids.__name__
-    try:
-        inventory_names = set()
-        supplier_type_codes = set()
-        supplier_ids = set()
-
-        proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
-
-        if not proposal.tentative_start_date or not proposal.tentative_end_date:
-            return ui_utils.handle_response(function, data='The proposal must have start and end dates. Cannot make assignments')
-
-        # we need unique inventory names and supplier_type_codes. unique inventory names because we want to collect each
-        # all suppliers belonging to one inventory at one place. This will help in assigning inventory_ids
-        # to those suppliers  we need set of supplier type codes so that we can fetch all content types once.
-        for inventory in shortlisted_inventory_details_objects:
-            inventory_names.add(inventory['inventory_name'])
-            supplier_type_codes.add(inventory['supplier_type_code'])
-            supplier_ids.add(inventory['supplier_id'])
-
-        # fetch all supplier_type_codes at one place
-        response = ui_utils.get_content_types(supplier_type_codes)
-        if not response.data['status']:
-            return response
-        content_types = response.data['data']
-
-        # we should be able to query right dict object by supplying supplier_id, content_type, and inventory_name.
-        # this is required to assign fields such as factor, and price from this dict to final object
-        shortlisted_inventory_details_map = {}
-        suppliers_per_inventory_map = {}
-
-        for inventory in shortlisted_inventory_details_objects:
-            inventory_name = inventory['inventory_name']
-            supplier_type_code = inventory['supplier_type_code']
-            supplier_id = inventory['supplier_id']
-            content_type = content_types[supplier_type_code]
-            shortlisted_inventory_details_map[supplier_id, content_type, inventory_name] = inventory
-
-            if not suppliers_per_inventory_map.get(inventory_name):
-                suppliers_per_inventory_map[inventory_name] = []
-
-            suppliers_per_inventory_map[inventory_name].append((content_type, supplier_id))
-
-        # this has to be an atomic transaction
-        with transaction.atomic():
-            output = []
-            # process each inventory one by one and assign the ids.
-            for inventory_name in inventory_names:
-
-                # handling stall first as it's easy and only 1 stall per supplier is allowed.
-                if inventory_name == website_constants.stall:
-
-                    suppliers_for_inventory = suppliers_per_inventory_map[inventory_name]
-
-                    response = prepare_stall_assignment(proposal, suppliers_for_inventory)
-                    if not response.data['status']:
-                        return response
-
-                    output.extend(response.data['data'])
-
-            # issue a single insert statements. be aware of disadvantages of .bulk_create usage.
-            models.ShortlistedInventoryPricingDetails.objects.bulk_create(output)
-            return ui_utils.handle_response(function, data='success', success=True)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
-
-
-def prepare_stall_assignment(proposal, valid_stall_suppliers_tuple_list):
-    """
-    Prepares the data in right format to be sent to actual function which makes the assignment
-    Args:
-        proposal: The proposal object
-        valid_stall_suppliers_tuple_list: Not all suppliers have stall requirements. This is a list which contains a tuples of
-        content_ype, supplier_id which are valid suppliers in which stall shall be put
-    Returns: List of assigned SID objects.
-    """
-
-    function = prepare_stall_assignment.__name__
-    try:
-
-        shortlisted_spaces = models.ShortlistedSpaces.objects.filter(proposal=proposal)
-
-        # make shortlisted_spaces mapping of (content_type, object_id) ----> ss object
-        shortlisted_spaces_mapping = {}
-        for ss in shortlisted_spaces:
-            shortlisted_spaces_mapping[ss.content_type, ss.object_id] = ss
-
-        content_types = [stall_tuple[0] for stall_tuple in valid_stall_suppliers_tuple_list]
-        valid_stall_suppliers = [stall_tuple[1] for stall_tuple in valid_stall_suppliers_tuple_list]
-
-        # fetch all stall objects
-        stall_objects = models.StallInventory.objects.filter(object_id__in=valid_stall_suppliers, content_type__in=content_types)
-
-        # stall mapping from (content_type, object_id) to individual stall ids.
-        stall_suppliers_to_adinventory_id_mapping = {}
-        for stall in stall_objects:
-
-            # prefetch these values
-            content_type = stall.content_type
-            object_id = stall.object_id
-            inventory_id = stall.adinventory_id
-
-            if (content_type, object_id) not in stall_suppliers_to_adinventory_id_mapping.keys():
-                stall_suppliers_to_adinventory_id_mapping[content_type, object_id] = []
-
-            # add to mapping dict individual values
-            stall_suppliers_to_adinventory_id_mapping[content_type, object_id].append(inventory_id)
-
-        assigned_stall_mapping = {}
-        # already assigned STALL objects to some proposal.
-        already_assigned_stall_objects = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(ad_inventory_type__adinventory_name=website_constants.stall).values('inventory_id', 'release_date', 'closure_date', 'shortlisted_spaces__object_id', 'shortlisted_spaces__content_type', 'shortlisted_spaces__proposal_id')
-
-        # we receive content type ids. but we want objects. hence storing in set to avoid multiple calls to
-        # ContentType table.
-        content_type_set = set( stall['shortlisted_spaces__content_type'] for stall in already_assigned_stall_objects)
-        content_type_objects = ContentType.objects.in_bulk(content_type_set)
-
-        # this container stores inventory id against each proposal, content_type, supplier_id. in case of stall
-        # this will  be a one to one mapping. because each supplier has only one stall previously assigned.
-        already_assigned_suppliers_current_proposal = {}
-
-        for stall_object in already_assigned_stall_objects:
-
-            inventory_id = stall_object['inventory_id']
-            release_date = stall_object['release_date']
-            closure_date = stall_object['closure_date']
-            proposal_id = stall_object['shortlisted_spaces__proposal_id']
-            supplier_content_type = stall_object['shortlisted_spaces__content_type']
-            content_type_set.add(supplier_content_type)
-            supplier_id = stall_object['shortlisted_spaces__object_id']
-
-            if supplier_content_type and supplier_id and inventory_id:
-                # fetch the actual content type object  object
-                supplier_content_type = content_type_objects[supplier_content_type]
-
-                stall_tuple = (supplier_content_type, supplier_id, inventory_id)
-                if stall_tuple not in assigned_stall_mapping.keys():
-                    assigned_stall_mapping[supplier_content_type, supplier_id, inventory_id] = []
-
-                # collect all the content_type, supplier_id combo which have already been assigned to the current
-                # proposal wise
-                already_assigned_suppliers_current_proposal[proposal_id, supplier_content_type, supplier_id] = inventory_id
-
-                # add a tuple of R.D and C.D against each stall
-                assigned_stall_mapping[supplier_content_type, supplier_id, inventory_id].append((release_date, closure_date, proposal_id))
-
-        # sort all dates for each tuple by release date
-        for assigned_stall, date_list in assigned_stall_mapping.iteritems():
-            assigned_stall_mapping[assigned_stall] = sorted(date_list, key=itemgetter(0))
-
-        # get inventory_content_type.
-        response = ui_utils.get_content_type(website_constants.stall)
-        if not response.data['status']:
-            return response
-        inventory_content_type = response.data['data']
-
-        inventory_general_data = {
-            'release_date': proposal.tentative_start_date,
-            'closure_date': proposal.tentative_end_date,
-            'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.stall, adinventory_type=website_constants.default_stall_type),
-            'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_stall_duration_type),
-            'inventory_content_type':  inventory_content_type
-        }
-        # call the function which will do the assignment based on time gaps strategy.
-        response = stall_assignment(proposal.proposal_id, inventory_general_data, shortlisted_spaces_mapping, valid_stall_suppliers_tuple_list, stall_suppliers_to_adinventory_id_mapping, assigned_stall_mapping, already_assigned_suppliers_current_proposal)
-        if not response.data['status']:
-            return response
-
-        return ui_utils.handle_response(function, data=response.data['data'], success=True)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
-
-
-def stall_assignment(proposal_id, inventory_general_data, shortlisted_space_mapping, valid_suppliers_list, suppliers_to_inventory_id_mapping, assigned_stall_to_time_mapping, already_assigned_suppliers_current_proposal):
-    """
-    The actual function that does this assignments of stalls.
-    Args:
-        inventory_general_data: The general inventory info like release_date, content_type etc
-        shortlisted_space_mapping: { (45, s1) -> ss1 , (45, s2) --> ss2 , .. } from ss table
-        valid_suppliers_list: [ (45, s1), .. ] list of suppliers in which actually we have to put stall
-        suppliers_to_inventory_id_mapping:  {  (45, s1) ---> inv_id_1, (45, s1) ---> inv_id_2 } from stall table
-        assigned_stall_to_time_mapping:  { (45, s1, inv_id_1 ) ---> [ (3,10), (10, 20) ..]  from SID table and ss table
-    Returns:
-    """
-    function = stall_assignment.__name__
-    try:
-
-        proposal_release_date = inventory_general_data['release_date']
-        proposal_closure_date = inventory_general_data['closure_date']
-        inventory_content_type = inventory_general_data['inventory_content_type']
-        ad_inventory_type = inventory_general_data['ad_inventory_type']
-        ad_inventory_duration = inventory_general_data['ad_inventory_duration']
-
-        shortlisted_suppliers_tuple = shortlisted_space_mapping.keys()
-
-        # prefetch these keys for faster run time.
-        keys_supplier_to_inventory_id_mapping = suppliers_to_inventory_id_mapping.keys()
-        keys_assigned_to_time_mapping = assigned_stall_to_time_mapping.keys()
-        keys_already_assigned_suppliers_current_proposal = already_assigned_suppliers_current_proposal.keys()
-
-        shortlisted_inventory_bucket = []
-
-        # we need to assign a stall to each of the supplier mentioned in this list
-        for supplier_tuple in shortlisted_suppliers_tuple:
-            if supplier_tuple not in valid_suppliers_list:
-                # this means  user didn't shortlisted it to  have stall in it
-                continue
-            if supplier_tuple not in keys_supplier_to_inventory_id_mapping:
-                # this supplier tuple does not had any STALL mapped.
-                continue
-
-            # if this tuple is found in this list, this means an inventory has already been assigned to this
-            # supplier, under same proposal before. no need to continue
-            if (proposal_id, supplier_tuple[0], supplier_tuple[1]) in keys_already_assigned_suppliers_current_proposal:
-                continue
-
-            # got through each inventory_id in list one by one and assign one of the valid ids.
-            for inventory_id in suppliers_to_inventory_id_mapping[supplier_tuple]:
-                # make a tuple having inventory_id in it
-                supplier_inventory_tuple = (supplier_tuple[0], supplier_tuple[1], inventory_id)
-
-                if supplier_inventory_tuple not in keys_assigned_to_time_mapping:
-                    # This means this  inv_id has not been assigned yet, assign this inventory_id damm straight and
-                    #  terminate for this supplier
-
-                    data = {
-                        'inventory_id': inventory_id,
-                        'release_date': proposal_release_date,
-                        'closure_date': proposal_closure_date,
-                        'shortlisted_spaces': shortlisted_space_mapping[supplier_tuple],
-                        'inventory_content_type': inventory_content_type,
-                        'ad_inventory_type': ad_inventory_type,
-                        'ad_inventory_duration': ad_inventory_duration
-                    }
-                    shortlisted_inventory_bucket.append(models.ShortlistedInventoryPricingDetails(**data))
-                    break
-
-                else:
-                    # if the id has been assigned, we need to find suitable time gap for this proposal to fit in
-                    # time gaps is found between stall assigned time intervals.
-                    assigned_time_list = assigned_stall_to_time_mapping[supplier_inventory_tuple]
-                    # check if this proposal fits in any time gaps.
-                    response = can_inventory_be_assigned(proposal_release_date, proposal_closure_date, assigned_time_list)
-                    if not response.data['status']:
-                        return response
-                    verdict = response.data['data']
-                    # if yes, assign this id to this proposal and we are done for this supplier.
-                    # if no, you would want to try out next inventory_id under this supplier
-                    if verdict:
-                        data = {
-                            'inventory_id': inventory_id,
-                            'release_date': proposal_release_date,
-                            'closure_date': proposal_closure_date,
-                            'shortlisted_spaces': shortlisted_space_mapping[supplier_tuple],
-                            'inventory_content_type': inventory_content_type,
-                            'ad_inventory_type': ad_inventory_type,
-                            'ad_inventory_duration': ad_inventory_duration
-                        }
-                        shortlisted_inventory_bucket.append(models.ShortlistedInventoryPricingDetails(**data))
-                        break
-
-        # return the calculated bucket
-        return ui_utils.handle_response(function, data=shortlisted_inventory_bucket, success=True)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
-
-
 def can_inventory_be_assigned(proposal_release_date, proposal_closure_date, dates):
     """
     returns True or False depending on weather the inventory is assigned or not
@@ -3863,7 +3580,7 @@ def can_inventory_be_assigned(proposal_release_date, proposal_closure_date, date
             # the left edge of time gap will be equal to right date of the time gap in next iteration
             x = date_tuple[1]
 
-        if proposal_release_date > x :
+        if proposal_release_date > x:
             return ui_utils.handle_response(function, data=True, success=True)
 
         return ui_utils.handle_response(function, data=False, success=True)
@@ -3871,4 +3588,332 @@ def can_inventory_be_assigned(proposal_release_date, proposal_closure_date, date
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
+
+def get_shortlisted_supplier_mapping(proposal_id):
+    """
+    maps (content_type, supplier_id) --> ss object
+    Args:
+        proposal_id:
+
+    Returns: a mapping  !
+
+    """
+    function = get_shortlisted_supplier_mapping.__name__
+    try:
+        shortlisted_spaces = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id)
+
+        # make shortlisted_spaces mapping of (content_type, object_id) ----> ss object
+        shortlisted_spaces_mapping = {}
+        for ss in shortlisted_spaces:
+            shortlisted_spaces_mapping[ss.content_type, ss.object_id] = ss
+
+        return ui_utils.handle_response(function, data=shortlisted_spaces_mapping, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_shortlisted_inventory_mapping(proposal_id):
+    """
+    maps inventory_content_type ---->  inventory_ids for this proposal
+    Args:
+        proposal_id:
+    Returns:
+
+    """
+    function = get_shortlisted_inventory_mapping.__name__
+    try:
+        shortlisted_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
+        inventory_map = {}
+
+        for inventory in shortlisted_inventories:
+            content_type = inventory['inventory_content_type']
+            inventory_id = inventory['inventory_id']
+            if not inventory_map.get(content_type):
+                inventory_map[content_type] = []
+            inventory_map[content_type].append(inventory_id)
+
+        return ui_utils.handle_response(function, data=inventory_map, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def prepare_bucket(inventory_name, master_sorted_list_inventories):
+    """
+    Prepares the bucket for this inventory
+    Args:
+        inventory_name: Inventory name
+        master_sorted_list_inventories: a list of inventory ids sorted by their assigned proposal count
+    Returns:
+
+    """
+    function = prepare_bucket.__name__
+    try:
+        bucket = {}
+
+        # we receive content type ids. but we want objects. hence storing in set to avoid multiple calls to
+        # ContentType table.
+
+        if inventory_name == website_constants.stall:
+
+            # get inventory_content_type.
+            response = ui_utils.get_content_type(website_constants.stall)
+            if not response.data['status']:
+                return response
+            inventory_content_type = response.data['data']
+
+            # basic bucket structure
+            inventory_general_data = {
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.stall,adinventory_type=website_constants.default_stall_type),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_stall_duration_type),
+                'inventory_content_type': inventory_content_type,
+            }
+
+            # fetch all inventory objects
+            inventories = models.StallInventory.objects.all()
+
+            # fetch only the ids here.
+            inventory_ids = [inv.adinventory_id for inv in inventories]
+
+            # create a mapping from inv_id to inv object. can't use in_bulk() because ad inventory_id is not PK.
+            inventory_id_to_object_map = {inventory.adinventory_id: inventory for inventory in inventories}
+
+            # get the sorted list
+            response = sort_inventory_ids_on_proposal_count(master_sorted_list_inventories, inventory_ids)
+            if not response.data['status']:
+                return response
+
+            # sorted inventory ids.
+            sorted_inventory_ids = response.data['data']
+
+            for inv_id in sorted_inventory_ids:
+                # get the inv object
+                inv = inventory_id_to_object_map[inv_id]
+                bucket_key = (inv.content_type, inv.object_id, inventory_name)
+                if bucket_key not in bucket.keys():
+                    # define a bucket structure. There is single bucket per supplier for stall.
+                    stall_bucket = {
+                        'bucket_name': website_constants.stall,
+                        'assignment_frequency': website_constants.default_stall_assignment_frequency,
+                        'inventory_ids': []
+                    }
+                    bucket[bucket_key] = []
+                    bucket[bucket_key].append(stall_bucket)
+                bucket[bucket_key][0]['inventory_ids'].append(inv.adinventory_id)
+
+            return ui_utils.handle_response(function, data=(bucket, inventory_general_data), success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def sort_inventory_ids_on_proposal_count(master_inventory_ids, inventory_ids):
+    """
+    This function changes the sequence of inventories in 'inventory_ids' on basis of proposal count
+    Args:
+        master_inventory_ids: The sorted list
+        inventory_ids:  The sequence of inventory ids.
+
+    Returns: sorted inv_ids based on proposal_count.
+    """
+    function = sort_inventory_ids_on_proposal_count.__name__
+    try:
+        result = []
+        for inv_id in master_inventory_ids:
+            # if inv_id not in inventory_ids, you should continue.
+            if inv_id not in inventory_ids:
+                continue
+
+            # append the  inv_id to result
+            result.append(inv_id)
+
+        # now see those inv_ids which have not been assigned to any proposal. They should sit at front of the proposal.
+        for inv_id in inventory_ids:
+            if inv_id not in result:
+                result.insert(0, inv_id)
+
+        return ui_utils.handle_response(function, data=result, success=True)
+    except Exception  as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+def get_valid_suppliers(inventory_content_type):
+    """
+
+    Args:
+        inventory_content_type: The content_type object  of the inventory
+
+    Returns: a list of content_type, supplier_id for which this inventory is allowed.
+
+    """
+    function = get_valid_suppliers.__name__
+    try:
+
+        model_name = inventory_content_type.model
+        model_class = apps.get_model(settings.APP_NAME, model_name)
+        all_objects = model_class.objects.all()
+        valid_suppliers = set()
+
+        for inv_object in all_objects:
+            content_type = inv_object.content_type
+            supplier_object = inv_object.object_id
+            valid_suppliers.add((content_type, supplier_object))
+
+        return ui_utils.handle_response(function, data=valid_suppliers, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def assign_inventories(bucket_list_per_supplier_per_inventory, shortlisted_supplier, already_shortlisted_inventories, inventory_general_data):
+    """
+
+    Args:
+        bucket_list_per_supplier_per_inventory: The bucket list for this supplier. Inventories are assigned from this bucket
+        shortlisted_supplier: The map of shortlisted object for this proposal
+        already_shortlisted_inventories:The list of already shortlisted inventories for this proposal if any.
+        inventory_general_data: dict of general data for inv like it's content_type etc.
+
+    Returns: collect objects and returns.
+
+    Assign a particular number of inventories from each bucket to the proposal. This number is dependent on type of
+    inventory in question. for standees, it's the length of the bucket. for stall, it's 1. for poster it's 1.
+    This number defines how many inventories from that bucket can be assigned to the proposal at a time.
+    """
+    function = assign_inventories.__name__
+    try:
+        final_objects = []
+        for bucket in bucket_list_per_supplier_per_inventory:
+
+            frequency = bucket['assignment_frequency']
+            count = 0
+
+            for inventory_id in bucket['inventory_ids']:
+                # this inventory_id can be assigned to this proposal only if it has not been assigned before
+                if already_shortlisted_inventories and inventory_id in already_shortlisted_inventories:
+                    return ui_utils.handle_response(function, data=[], success=True)
+
+                # we are only allowed to assign 'frequency' number of inventory_ids per bucket to this proposal
+                if count < frequency:
+
+                    data = {
+                        'inventory_id': inventory_id,
+                        'inventory_content_type': inventory_general_data['inventory_content_type'],
+                        'ad_inventory_type': inventory_general_data['ad_inventory_type'],
+                        'ad_inventory_duration': inventory_general_data['ad_inventory_duration'],
+                        'shortlisted_spaces': shortlisted_supplier
+                    }
+                    final_objects.append(models.ShortlistedInventoryPricingDetails(**data))
+                    count +=1
+
+        return ui_utils.handle_response(function, data=final_objects, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def make_inventory_assignments(proposal_id, sheet_data):
+    """
+
+    Args:
+        proposal_id:
+        sheet_data: The data we collect when the sheet is imported. determines what suppliers are there in each of the
+        inventory_type.
+
+    Returns: assigns the inventories to suppliers in sheet.
+    """
+    function = make_inventory_assignments.__name__
+    try:
+        inventory_names = set()
+        supplier_type_codes = set()
+        supplier_ids = set()
+
+        # we need unique inventory names and supplier_type_codes. unique inventory names because we want to collect each
+        # all suppliers belonging to one inventory at one place. This will help in assigning inventory_ids
+        # to those suppliers  we need set of supplier type codes so that we can fetch all content types once.
+        for inventory in sheet_data:
+            inventory_names.add(inventory['inventory_name'])
+            supplier_type_codes.add(inventory['supplier_type_code'])
+            supplier_ids.add(inventory['supplier_id'])
+
+        # fetch all supplier_type_codes at one place
+        response = ui_utils.get_content_types(supplier_type_codes)
+        if not response.data['status']:
+            return response
+        content_types = response.data['data']
+
+        # we should be able to query right dict object by supplying supplier_id, content_type, and inventory_name.
+        # this is required to assign fields such as factor, and price from this dict to final object
+        suppliers_per_inventory_map = {}
+
+        for inventory in sheet_data:
+            inventory_name = inventory['inventory_name']
+            supplier_type_code = inventory['supplier_type_code']
+            supplier_id = inventory['supplier_id']
+            content_type = content_types[supplier_type_code]
+
+            if not suppliers_per_inventory_map.get(inventory_name):
+                suppliers_per_inventory_map[inventory_name] = []
+
+            suppliers_per_inventory_map[inventory_name].append((content_type, supplier_id))
+
+        # this has to be an atomic transaction
+        with transaction.atomic():
+            output = []
+            response = get_shortlisted_supplier_mapping(proposal_id)
+            if not response.data['status']:
+                return response
+            # this is a mapping of content_type, supplier_id --> ss object. Useful when SID object is created.
+            shortlisted_suppliers_mapping = response.data['data']
+
+            response = get_shortlisted_inventory_mapping(proposal_id)
+            if not response.data['status']:
+                return response
+            # this is a list of content_type --> inventory_id mapping of those inventories which already have been
+            # assigned to this proposal before. This is used in order to check not to assign the same inventory again
+            # to that proposal
+            already_shortlisted_inventory_mapping = response.data['data']
+
+            sorted_shortlisted_inv_pricing_objects = models.ShortlistedInventoryPricingDetails.objects.values('inventory_id','inventory_content_type_id').annotate(pcount=Count('shortlisted_spaces__proposal_id')).order_by('pcount')
+            master_sorted_list_inventories = [inventory['inventory_id'] for inventory in sorted_shortlisted_inv_pricing_objects]
+
+            # process each inventory one by one and assign the ids.
+            for inventory_name in inventory_names:
+
+                # get inventory_content_type.
+                response = ui_utils.get_content_type(inventory_name)
+                if not response.data['status']:
+                    return response
+                inventory_content_type = response.data['data']
+
+                # prepare the bucket for this stall.
+                response = prepare_bucket(inventory_name, master_sorted_list_inventories)
+                if not response.data['status']:
+                    return response
+
+                # this is a mapping (content_type, supplier_id) --> [ { } , { } ] where each { } is a bucket.
+                # A bucket contains inventory_ids which you want to assign to a proposal. Only a fixed number of
+                # inventory can be assigned to a proposal. bucket also stores extra info like ad_inv_id, duration
+                # object etc.
+                bucket_list_per_supplier_per_inventory, inventory_general_data = response.data['data']
+
+                # this is mapping of content_type, supplier_id --> [ id1, id2 ] which is inventory_id from master
+                # inventory table. These are the suppliers for this this inventory is allowed.
+                response = get_valid_suppliers(inventory_content_type)
+                if not response.data['status']:
+                    return response
+                valid_suppliers = response.data['data']
+
+                # if the supplier has that inventory mapped and it's also been in the sheet list, we try to assign
+                # the inventory to that supplier.
+                for supplier_tuple in suppliers_per_inventory_map[inventory_name]:
+                    if supplier_tuple in valid_suppliers:
+                        response = assign_inventories(bucket_list_per_supplier_per_inventory[supplier_tuple[0], supplier_tuple[1], inventory_name], shortlisted_suppliers_mapping[supplier_tuple], already_shortlisted_inventory_mapping.get(inventory_content_type), inventory_general_data)
+                        if not response.data['status']:
+                            return response
+                        if response.data['data']:
+                            output.extend(response.data['data'])
+
+            # issue a single insert statements. be aware of disadvantages of .bulk_create usage.
+            models.ShortlistedInventoryPricingDetails.objects.bulk_create(output)
+            return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
 

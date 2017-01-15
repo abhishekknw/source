@@ -2472,12 +2472,13 @@ class ImportSupplierData(APIView):
                 'Content-Type': 'application/json',
                 'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
              }
+
             response = requests.post(url, json.dumps(data), headers=headers)
 
             if response.status_code != status.HTTP_200_OK:
                 return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
 
-            # data for this supplier is made. populate the shortlisted_inventory_details table before hiting the urls
+            # data for this supplier is made. populate the shortlisted_inventory_details table before hitting the urls
             response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
             if not response.data['status']:
                 return response
