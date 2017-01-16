@@ -310,8 +310,8 @@ sheet_names_to_codes = {
 # supplier models so keys names must match with db column names.
 
 export_supplier_database_keys = {
-    'RS': [ 'id', 'proposal', 'center_name', 'supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ],
-    'CP': [ 'id', 'proposal', 'center_name',  'supplier_id', 'name', 'subarea']
+    'RS': ['id', 'proposal', 'center_name', 'supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ],
+    'CP': ['id', 'proposal', 'center_name',  'supplier_id', 'name', 'subarea']
 }
 
 # these HEADER keys are specific to the supplier. the sequence and count of HEADER keys must match with sequence
@@ -463,7 +463,6 @@ type_dict = {
 }
 
 
-
 # format to be used in datetime
 datetime_format = '%d-%m-%Y %H-%M-%S'
 
@@ -502,8 +501,8 @@ email = {
 
 # filter types
 filter_type = {
-    'RS' : ['inventory_type_selected','quality_type','quantity_type','locality_rating','flat_type'],
-    'CP' : ['inventory_type_selected','quality_type','quantity_type','locality_rating','employee_count'],
+    'RS': ['inventory_type_selected','quality_type','quantity_type','locality_rating','flat_type'],
+    'CP': ['inventory_type_selected','quality_type','quantity_type','locality_rating','employee_count'],
 }
 #to store employee_count
 employee_count_codes = {
