@@ -1974,8 +1974,8 @@ class ShortlistedInventoryPricingDetails(BaseModel):
     factor = models.IntegerField(default=0.0, null=True)
     ad_inventory_type = models.ForeignKey('AdInventoryType', null=True)
     ad_inventory_duration = models.ForeignKey('DurationType', null=True)
-    release_date = models.DateTimeField()
-    closure_date = models.DateTimeField()
+    release_date = models.DateTimeField(null=True, blank=True)
+    closure_date = models.DateTimeField(null=True, blank=True)
     shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True)
     objects = managers.GeneralManager()
     inventory_object = generic.GenericForeignKey('inventory_content_type', 'inventory_id')
@@ -2289,7 +2289,7 @@ class AuditDate(BaseModel):
     A particular inventory can have multiple audit dates
     """
     shortlisted_inventory = models.ForeignKey(ShortlistedInventoryPricingDetails, null=True, blank=True)
-    audit_date = models.DateTimeField()
+    audit_date = models.DateTimeField(null=True, blank=True)
     audited_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
 
     class Meta:
