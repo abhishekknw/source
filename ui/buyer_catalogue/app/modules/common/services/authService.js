@@ -50,6 +50,9 @@ angular.module('Authentication')
 
         authService.Logout = function () {
           $window.localStorage.clear();
+          console.log($rootScope);
+          $rootScope.user='';
+            $rootScope.role=0;
            authService.ClearCredentials();
            if ($location.path() != "/login") $rootScope.globals.requestedPath = $location.path();
            $location.path('/login');
