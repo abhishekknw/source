@@ -587,15 +587,16 @@ def get_content_type(supplier_type_code):
     Returns: The right content type object for the given supplier_type_code
 
     """
+    function = get_content_type.__name__
     try:
         if not supplier_type_code:
             return Response({'status': False, 'error': 'No supplier type code provided'}, status=status.HTTP_400_BAD_REQUEST)
         ContentType = apps.get_model('contenttypes', 'ContentType')
         load_model = get_model(supplier_type_code)
         content_type = ContentType.objects.get_for_model(load_model)
-        return Response({'status': True, 'data': content_type}, status=status.HTTP_200_OK)
+        return handle_response(function, data=content_type, success=True)
     except Exception as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        return handle_response(function, exception_object=e)
 
 
 def get_content_types(codes):

@@ -3877,6 +3877,9 @@ def make_inventory_assignments(proposal_id, sheet_data):
             # process each inventory one by one and assign the ids.
             for inventory_name in inventory_names:
 
+                if inventory_name in website_constants.inv_not_implemented:
+                    continue
+
                 # get inventory_content_type.
                 response = ui_utils.get_content_type(inventory_name)
                 if not response.data['status']:

@@ -564,3 +564,6 @@ default_stall_type = 'Small'
 default_stall_duration_type = 'Unit Daily'
 default_stall_allocation_interval = 1
 default_stall_assignment_frequency = 1
+
+# temp list of inventories not implemented yet. delete it after implemantation. 
+inv_not_implemented = ['POSTER', 'FLIER',  'CAR_DISPLAY']
