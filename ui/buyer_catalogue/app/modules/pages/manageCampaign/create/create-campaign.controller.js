@@ -117,6 +117,7 @@ console.log($rootScope.globals.currentUser);
               $window.localStorage.sel_account_index = -1;
               $scope.sel_account_id = null;
               $scope.error = false;
+              $scope.successMsg = null;
               //End: added to persit data after refresh
          });
       };

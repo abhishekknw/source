@@ -81,7 +81,6 @@ angular.module('catalogueApp')
     }
 
     $scope.saveAssignment = function(proposal){
-      alert("vidhi");
     }
     $scope.getDetails = function(proposal_id){
       $location.path('/' + proposal_id + '/releasePlan');

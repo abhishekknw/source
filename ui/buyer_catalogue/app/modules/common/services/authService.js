@@ -49,6 +49,7 @@ angular.module('Authentication')
         }
 
         authService.Logout = function () {
+          $window.localStorage.clear();
            authService.ClearCredentials();
            if ($location.path() != "/login") $rootScope.globals.requestedPath = $location.path();
            $location.path('/login');
@@ -119,5 +120,3 @@ angular.module('Authentication')
 
         return authService;
     }])
-
-
