@@ -19,17 +19,21 @@
               <a>{{proposal.proposal.proposal_id}}</a>
             </td>
             <td class="col-md-2">{{proposal.proposal.name}}</td>
+            <td class="col-md-2">{{proposal.proposal.account}}</td>
             <td class="col-md-2">{{proposal.proposal.created_by}}</td>
             <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
             <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
             <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="true" ng-click="updateCampaign(proposal)" data-target = "#assignModal" data-toggle = "modal">Yes</label>
+                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="true" ng-click="updateCampaign(proposal)" data-target = "#assignModal" data-toggle = "modal">Accept</label>
               </div>
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="false" ng-click="updateCampaign(proposal)" data-target="#detailModal" data-toggle="modal">No</label>
+                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="false" ng-click="updateCampaign(proposal)" data-target="#detailModal" data-toggle="modal">Decline</label>
               </div>
+              <!-- <div class="radio">
+                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="" ng-click="updateCampaign(proposal)" data-target="#detailModal" data-toggle="modal">OnHold</label>
+              </div> -->
             </td>
             <td class="col-md-2">
               <a href="http://mdimages.s3.amazonaws.com/{{proposal.file_name}}" Download> Download </a>

@@ -7,11 +7,12 @@ angular.module('catalogueApp')
     	$scope.headings = [
         {header : 'Proposal Id'},
         {header : 'Proposal Name'},
-        {header : 'Created By'},
+        {header : 'Proposal For'},
+        {header : 'Proposal Created By'},
         {header : 'Invoice Number'},
         {header : 'Start Date'},
         {header : 'End Date'},
-        {header : 'Campaign'},
+        {header : 'Create Campaign'},
         {header : 'Download Proposal'}
       ];
 
@@ -80,7 +81,6 @@ angular.module('catalogueApp')
     }
 
     $scope.saveAssignment = function(proposal){
-      alert("vidhi");
     }
     $scope.getDetails = function(proposal_id){
       $location.path('/' + proposal_id + '/releasePlan');

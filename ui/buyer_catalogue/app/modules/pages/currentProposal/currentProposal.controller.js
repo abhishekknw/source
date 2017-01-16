@@ -149,6 +149,23 @@ angular.module('catalogueApp')
           console.log("Error Occured");
         })
       }
+      //Start:code to change and save status of supplier
+      $scope.updateSupplierStatus = function(supplier,center,code){
+        console.log(center);
+        var data = {
+          'center_id':center.center.id,
+          'supplier_id':supplier.supplier_id,
+          'status':supplier.status,
+          'supplier_type_code':code,
+        };
+        currentProposalService.updateSupplierStatus($stateParams.proposal_id,data)
+          .success(function(response, status){
+            alert("Saved Successfully");
+          }).error(function(response, status){
+            alert("Error Occured");
+        });
+      }
+      //End:code to change and save status of supplier
     	$scope.submit = function(){
     		currentProposalService.saveProposal($stateParams.proposal_id, $scope.proposal.centers)
     		.success(function(response, status){
@@ -170,15 +187,19 @@ angular.module('catalogueApp')
      }
 
      $scope.saveInvoiceDetails = function(){
-       $scope.proposal.tentative_start_date = $scope.campaign_start_date;
-       $scope.proposal.tentative_end_date = $scope.campaign_end_date;
-      currentProposalService.saveInvoiceDetails($stateParams.proposal_id,$scope.proposal)
-        .success(function(response, status){
-                console.log("success");
-        })
-        .error(function(response, status){
-          console.log("Error Occured");
-        })
+       if($window.confirm("Do You really want to confirm Invoice Details")) {
+         $scope.proposal.tentative_start_date = $scope.campaign_start_date;
+         $scope.proposal.tentative_end_date = $scope.campaign_end_date;
+        currentProposalService.saveInvoiceDetails($stateParams.proposal_id,$scope.proposal)
+          .success(function(response, status){
+            alert("Successful");
+                  console.log("success");
+          })
+          .error(function(response, status){
+            console.log("Error Occured");
+          })
+        }
+
      }
 
     });//Controller ends here

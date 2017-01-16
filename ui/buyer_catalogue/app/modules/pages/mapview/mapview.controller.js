@@ -1232,6 +1232,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
               }
          }).success(function(response){
            console.log(response);
+           alert("Successful");
               // convert it onto Blob object because it's a binary file.
               // var blob = new Blob([data], {
               //     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

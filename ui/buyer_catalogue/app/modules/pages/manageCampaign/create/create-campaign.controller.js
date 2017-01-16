@@ -1,7 +1,15 @@
 angular.module('machadaloPages')
+.constant('constants',{
+  base_url : 'http://localhost:8108/',
+  url_base : 'v0/ui/website/',
+  AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
+  policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
+  acl : 'public-read',
+  signature : "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=",
+  content_type : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+})
 .controller('CreateCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'pagesService',
-    function ($scope, $rootScope, $window, $location, pagesService) {
+    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload) {
       $scope.account_proposals = [];
       $scope.model = {};
       $scope.model.business = {};
@@ -109,6 +117,7 @@ console.log($rootScope.globals.currentUser);
               $window.localStorage.sel_account_index = -1;
               $scope.sel_account_id = null;
               $scope.error = false;
+              $scope.successMsg = null;
               //End: added to persit data after refresh
          });
       };
@@ -264,5 +273,43 @@ console.log($rootScope.globals.currentUser);
             }
         })
         };
+        //Start: To upload file when upload button is clicked
+        $scope.upload = function (file,proposal_id) {
+          var uploadUrl = 'http://localhost:8108/v0/ui/website/';
+          var token = $rootScope.globals.currentUser.token ;
+          Upload.upload({
+              url: uploadUrl + proposal_id + '/import-supplier-data/',
+              data: {file: file, 'username': $scope.username},
+              headers: {'Authorization': 'JWT ' + token},
+          }).success(function (response) {
+            uploadFileToAmazonServer(response.data,file);
+              //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
+          }).error(function (response) {
+              console.log('Error status: ' + response.status);
+              alert("Data not Imported");
+          });
+        };
+        //End: To upload file when upload button is clicked
+        //Start : function to upload files to amazon server, just provide file name and file
+           var uploadFileToAmazonServer = function(file_name,file){
+             // upload it to S3 Bucket
+             Upload.upload({
+                 url: 'http://mdimages.s3.amazonaws.com/',
+                 method : 'POST',
+                 data: {
+                     key: file_name, // the key to store the file on S3, could be file name or customized
+                     AWSAccessKeyId : constants.AWSAccessKeyId,
+                     acl : constants.acl, // sets the access to the uploaded file in the bucket: private, public-read, ...
+                     policy : constants.policy,
+                     signature : constants.signature, // base64-encoded signature based on policy string (see article below)
+                     "Content-Type": constants.content_type,// content type of the file (NotEmpty)
+                     file: file }
+                 }).success(function (response){
+                      alert("Upload to Server Successful");
+                 }).error(function(response) {
+                     alert("Upload to server Unsuccessful");
+                 });
+           }
+        //End : function to upload files to amazon server, just provide file name and file
       // [TODO] implement this
-    }]);
+    });
