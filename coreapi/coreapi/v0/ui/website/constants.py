@@ -567,3 +567,14 @@ default_stall_assignment_frequency = 1
 
 # temp list of inventories not implemented yet. delete it after implemantation. 
 inv_not_implemented = ['POSTER', 'FLIER',  'CAR_DISPLAY']
+
+# standee name
+standee_name = 'STANDEE'
+default_standee_type = 'Medium'
+default_standee_duration_type = 'Unit Weekly'
+default_standee_assignment_frequency = 1
+
+# class names
+stall_class_name = 'StallInventory'
+standee_class_name = 'StandeeInventory'
+
