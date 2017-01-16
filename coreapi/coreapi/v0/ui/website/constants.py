@@ -564,3 +564,13 @@ default_stall_type = 'Small'
 default_stall_duration_type = 'Unit Daily'
 default_stall_allocation_interval = 1
 default_stall_assignment_frequency = 1
+
+# standee name
+standee_name = 'STANDEE'
+default_standee_type = 'Medium'
+default_standee_duration_type = 'Unit Weekly'
+default_standee_assignment_frequency = 1
+
+# class names
+stall_class_name = 'StallInventory'
+standee_class_name = 'StandeeInventory'
