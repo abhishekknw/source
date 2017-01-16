@@ -12,7 +12,8 @@ angular.module('catalogueApp')
       ];
       // var proposalid = $window.localStorage.proposal_id;
       $scope.proposalid = $window.localStorage.proposal_id;
-    	proposalHistoryService.getProposalHistory($scope.proposalid)
+      $stateParams.proposal_id;
+    	proposalHistoryService.getProposalHistory($stateParams.proposal_id)
     	.success(function(response, status){
     		$scope.proposals = response.data;
         $scope.loading = response;
