@@ -3581,9 +3581,9 @@ class AssignCampaign(APIView):
             # fetch ProposalInfo object.
             proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
 
-            # check weather it's a campaign or not ?
-            if not proposal.is_campaign or not proposal.invoice_number:
-                return ui_utils.handle_response(class_name, data='This proposal is not a campaign')
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
 
             # todo: check for dates also. you should not assign a past campaign to any user. left for later
 

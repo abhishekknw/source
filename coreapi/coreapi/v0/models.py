@@ -2122,7 +2122,7 @@ class ProposalInfo(BaseModel):
     tentative_cost = models.IntegerField(default=5000)
     tentative_start_date = models.DateTimeField(null=True)
     tentative_end_date = models.DateTimeField(null=True)
-    is_campaign = models.BooleanField(default=False, blank=True)
+    campaign_state = models.CharField(max_length=10, null=True, blank=True)
     parent = models.ForeignKey('ProposalInfo', null=True, blank=True, default=None)
     objects = managers.GeneralManager()
     invoice_number = models.CharField(max_length=1000, null=True, blank=True)

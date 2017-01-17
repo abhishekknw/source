@@ -3427,8 +3427,14 @@ def is_campaign(proposal):
         if not proposal.invoice_number:
             return ui_utils.handle_response(function, data='This proposal is not a campaign because it does not have any invoice number')
 
-        if not proposal.is_campaign:
+        if proposal.campaign_status == website_constants.proposal_not_converted_to_campaign:
             return ui_utils.handle_response(function, data='This proposal is not a campaign yet because it has not been approved by ops HEAD')
+
+        if proposal.campaign_status == website_constants.proposal_on_hold:
+            return ui_utils.handle_response(function, data='This proposal is not a campaign yet because it is on hold')
+
+        if proposal.campaign_status != website_constants.proposal_converted_to_campaign:
+            return ui_utils.handle_response(function, data='This proposal is not a campaign yet because of unknown reasons.')
 
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:

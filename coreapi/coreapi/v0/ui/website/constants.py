@@ -577,3 +577,7 @@ default_standee_assignment_frequency = 1
 stall_class_name = 'StallInventory'
 standee_class_name = 'StandeeInventory'
 
+# different states of a proposal being converted to campaign
+proposal_converted_to_campaign = 'PTC'
+proposal_not_converted_to_campaign = 'PNC'
+proposal_on_hold = 'POH'
