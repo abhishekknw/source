@@ -13,7 +13,7 @@ angular.module('machadaloPages')
 
       //start:code added to show or hide details based on user permissions
       $scope.user_code = $window.localStorage.user_code;
-      if($scope.user_code == '03')
+      if($scope.user_code == 'agency')
         $scope.hideData = true;
       //End:code added to show or hide details based on user permissions
       $scope.account_proposals = [];

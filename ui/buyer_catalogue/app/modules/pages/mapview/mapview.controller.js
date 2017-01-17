@@ -46,7 +46,7 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 
 //code added to show or hide some details based on user permissions
 $scope.user_code = $window.localStorage.user_code;
-if($scope.user_code == '03')
+if($scope.user_code == 'agency')
   $scope.hideData = true;
 
 // after angular-google-maps is loaded properly only then proces code inside then

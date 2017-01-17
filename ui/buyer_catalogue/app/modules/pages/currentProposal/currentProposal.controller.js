@@ -11,7 +11,7 @@ angular.module('catalogueApp')
       //code added to show or not details based on permissions
       $scope.user_code = $window.localStorage.user_code;
       console.log($scope.user_code);
-      if($scope.user_code == '03')
+      if($scope.user_code == 'agency')
         $scope.hideData = true;
       $scope.centerheaders = [
         {header : 'Serial No'},

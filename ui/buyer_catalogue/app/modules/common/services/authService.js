@@ -11,11 +11,15 @@ angular.module('Authentication')
         var storagePermissions = 'machadalo-permissions';
         var apiHost = APIBaseUrl;
         var permissions = {};
+        var user_codes = {
+          '0' : 'root',
+          '03': 'agency',
+        };
 
         authService.Login = function (username, password, callback) {
             $http.post(apiHost + 'api-token-auth/', { username: username, password: password })
                 .success(function (response) {
-                  $window.localStorage.user_code = response.user_code;
+                  $window.localStorage.user_code = user_codes[response.user_code];
                    if (response.token) {
                       authService.SetCredentials(response);
                       response.logged_in = true;
