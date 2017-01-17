@@ -555,8 +555,6 @@ def save_price_data(price_object, posprice):
             price_object.supplier_price = posprice
             price_object.save()
     except Exception as e:
-        import pdb
-        pdb.set_trace()
         raise Exception("Error occurred in saving PMD {0}".format(e.message))
 
 

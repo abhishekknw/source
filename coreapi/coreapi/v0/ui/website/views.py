@@ -2189,18 +2189,10 @@ class ImportSocietyData(APIView):
             source_file.close()
             return Response(data="success", status=status.HTTP_200_OK)
         except ObjectDoesNotExist as e:
-            import pdb
-            pdb.set_trace()
-
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
         except KeyError as e:
-            import pdb
-            pdb.set_trace()
-
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
         except Exception as e:
-            import pdb
-            pdb.set_trace()
 
             return ui_utils.handle_response(class_name, exception_object=e)
 

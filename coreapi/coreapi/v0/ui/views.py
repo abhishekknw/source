@@ -1001,7 +1001,6 @@ class ImportSummaryData(APIView):
                         data['supplier_id'] = response.data['data']
                         data['supplier_type_code'] = 'RS'
 
-
                         # save pricing information in price_mapping_default table
                         response = save_price_mapping_default(data['supplier_id'], data['supplier_type_code'], row)
                         if not response.data['status']:
@@ -1010,9 +1009,9 @@ class ImportSummaryData(APIView):
                         url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
                         url = BASE_URL + url[1:]
                         headers = {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
                         }
-
                         response = requests.post(url, json.dumps(data), headers=headers)
                         if response.status_code != status.HTTP_200_OK:
                             return ui_utils.handle_response(class_name, data=response.json())
@@ -1137,6 +1136,7 @@ class InventorySummaryAPIView(APIView):
             stall_campaign = 0
             flier_campaign = 0
             total_campaign = 0
+
             with transaction.atomic():
                 if request.data.get('poster_allowed_nb'):
                     if request.data.get('nb_count'):
@@ -1245,47 +1245,47 @@ class InventorySummaryAPIView(APIView):
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['poster_a3'],
                                                            duration_type_dict['campaign_weekly']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, posPrice)
+                            # ui_utils.save_price_data(price, posPrice)
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['poster_a3'],
                                                            duration_type_dict['unit_weekly']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, posPrice / towercount)
+                            # ui_utils.save_price_data(price, posPrice / towercount)
 
                         if request.data.get('nb_A4_allowed'):
                             price = PriceMappingDefault.objects.get_price_mapping_object( ui_utils.make_dict_manager(adinventory_dict['poster_a3'], duration_type_dict['campaign_weekly']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, posPrice)
+                            # ui_utils.save_price_data(price, posPrice)
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['poster_a4'],
                                                            duration_type_dict['unit_weekly']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, posPrice / towercount)
+                            # ui_utils.save_price_data(price, posPrice / towercount)
 
                 if request.data.get('poster_price_week_lift'):
                     posPrice = int(request.data.get('poster_price_week_lift'))
                     if request.data.get('poster_allowed_lift'):
                         price = PriceMappingDefault.objects.get_price_mapping_object(
                             ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],duration_type_dict['campaign_weekly']), id, supplier_type_code)
-                        ui_utils.save_price_data(price, posPrice)
+                        # ui_utils.save_price_data(price, posPrice)
 
                         price = PriceMappingDefault.objects.get_price_mapping_object(
-                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],
-                                                       duration_type_dict['unit_weekly']), id, supplier_type_code)
+                         ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],duration_type_dict['unit_weekly']), id, supplier_type_code)
 
-                        ui_utils.save_price_data(price, posPrice / towercount)
+                        # ui_utils.save_price_data(price, posPrice / towercount)
 
                         price = PriceMappingDefault.objects.get_price_mapping_object(
                             ui_utils.make_dict_manager(adinventory_dict['poster_lift_a4'],
                                                        duration_type_dict['campaign_weekly']), id, supplier_type_code)
 
-                        ui_utils.save_price_data(price, posPrice)
+
+                        # ui_utils.save_price_data(price, posPrice)
 
                         price = PriceMappingDefault.objects.get_price_mapping_object(
                             ui_utils.make_dict_manager(adinventory_dict['poster_lift_a4'],
                                                        duration_type_dict['unit_weekly']), id, supplier_type_code)
 
-                        ui_utils.save_price_data(price, posPrice / towercount)
+                        # ui_utils.save_price_data(price, posPrice / towercount)
 
                 if request.data.get('standee_price_week'):
                     stanPrice = int(request.data.get('standee_price_week'))
@@ -1295,41 +1295,42 @@ class InventorySummaryAPIView(APIView):
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['standee_small'],duration_type_dict['campaign_weekly']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, stanPrice)
+                            # ui_utils.save_price_data(price, stanPrice)
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['standee_small'], duration_type_dict['unit_weekly']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, stanPrice / towercount)
+                            # ui_utils.save_price_data(price, stanPrice / towercount)
 
                         if request.data.get('standee_medium'):
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['standee_medium'], duration_type_dict['campaign_weekly']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, stanPrice)
+                            # ui_utils.save_price_data(price, stanPrice)
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['standee_medium'],
                                                            duration_type_dict['unit_weekly']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, stanPrice / towercount)
+                            # ui_utils.save_price_data(price, stanPrice / towercount)
 
                 if request.data.get('stall_allowed'):
                     if request.data.get('stall_small'):
                         if request.data.get('stall_price_day_small'):
+
                             stallPrice = int(request.data.get('stall_price_day_small'))
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['stall_small'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, stallPrice)
+                            # ui_utils.save_price_data(price, stallPrice)
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['stall_canopy'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, stallPrice)
+                            # ui_utils.save_price_data(price, stallPrice)
 
                     if request.data.get('stall_large'):
                         if request.data.get('stall_price_day_large'):
@@ -1339,7 +1340,7 @@ class InventorySummaryAPIView(APIView):
                                 ui_utils.make_dict_manager(adinventory_dict['stall_large'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, stallPrice)
+                            # ui_utils.save_price_data(price, stallPrice)
 
                 if request.data.get('car_display_allowed'):
                     if request.data.get('cd_standard'):
@@ -1350,7 +1351,7 @@ class InventorySummaryAPIView(APIView):
                                 ui_utils.make_dict_manager(adinventory_dict['car_display_standard'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, cdPrice)
+                            # ui_utils.save_price_data(price, cdPrice)
 
                     if request.data.get('cd_premium'):
                         if request.data.get('cd_price_day_premium'):
@@ -1360,7 +1361,7 @@ class InventorySummaryAPIView(APIView):
                                 ui_utils.make_dict_manager(adinventory_dict['car_display_premium'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, cdPrice)
+                            # ui_utils.save_price_data(price, cdPrice)
 
                 if request.data.get('flier_price_day'):
                     flierPrice = int(request.data.get('flier_price_day'))
@@ -1369,14 +1370,14 @@ class InventorySummaryAPIView(APIView):
                             ui_utils.make_dict_manager(adinventory_dict['flier_mailbox'],
                                                        duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                        ui_utils.save_price_data(price, flierPrice)
+                        # ui_utils.save_price_data(price, flierPrice)
 
                     if request.data.get('d2d_allowed'):
                         price = PriceMappingDefault.objects.get_price_mapping_object(
                             ui_utils.make_dict_manager(adinventory_dict['flier_door_to_door'],
                                                        duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                        ui_utils.save_price_data(price, flierPrice)
+                        # ui_utils.save_price_data(price, flierPrice)
 
                     if request.data.get('flier_lobby_allowed'):
                         try:
@@ -1384,10 +1385,10 @@ class InventorySummaryAPIView(APIView):
                                 ui_utils.make_dict_manager(adinventory_dict['flier_lobby'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            ui_utils.save_price_data(price, flierPrice)
+                            # ui_utils.save_price_data(price, flierPrice)
 
                         except KeyError as e:
-                            pass
+                            raise KeyError(e.message)
 
                 serializer = InventorySummarySerializer(inventory_object, data=data)
 
