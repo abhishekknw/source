@@ -2864,6 +2864,8 @@ def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code
         adinventory_type_dict = ui_utils.adinventory_func()
         duration_type_dict = ui_utils.duration_type_func()
         price_mappings = PriceMappingDefault.objects.filter(adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type], object_id=supplier_id, content_type=content_type)
+        if not price_mapping:
+            return ui_utils.handle_response(function, data=0, success=True)
         price_mapping = price_mappings[0]
         price_mapping.business_price = business_price
         price_mapping.save()

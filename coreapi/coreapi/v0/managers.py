@@ -79,6 +79,8 @@ class GeneralManager(models.Manager):
 
             # get or create price mapping object
             price_object = self.filter(**data)
+            if not price_object:
+                return None
             return price_object[0]
 
         except ObjectDoesNotExist as e:
