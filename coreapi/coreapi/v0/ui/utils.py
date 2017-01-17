@@ -544,18 +544,20 @@ def make_dict_manager(adinvenory_type, duration_type):
     return {'adinventory_type' : adinvenory_type, 'duration_type': duration_type}
 
 
-def save_price_data(price_object, posprice, buisiness_price):
+def save_price_data(price_object, posprice):
     """
     :param posprice, buisiness_price are data to be saved.
     :return: saves the PriceMappingDefault  object
 
     """
     try:
-        price_object.business_price = buisiness_price
-        price_object.supplier_price = posprice
-        price_object.save()
+        if price_object:
+            price_object.supplier_price = posprice
+            price_object.save()
     except Exception as e:
-        pass
+        import pdb
+        pdb.set_trace()
+        raise Exception("Error occurred in saving PMD {0}".format(e.message))
 
 
 def get_tower_count(supplier_object, supplier_type_code):
@@ -574,7 +576,6 @@ def get_tower_count(supplier_object, supplier_type_code):
         if attr != 'none':
             count = getattr(supplier_object, attr)
         return Response(data={'status': True, 'data': count}, status=status.HTTP_200_OK)
-
     except Exception as e:
         return Response(data={'status': False, 'error': 'Error in fetching tower count'}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -64,6 +64,7 @@ class GeneralManager(models.Manager):
 
         """
         try:
+
             adinventory_type = data['adinventory_type']
             duration_type = data['duration_type']
 
@@ -77,18 +78,13 @@ class GeneralManager(models.Manager):
             }
 
             # get or create price mapping object
-            price_object, is_created = self.get_or_create(**data)
-
-            # if object is created, set the business_price = 0
-            if is_created:
-                price_object.business_price = 0
-                price_object.supplier_price = 0
+            price_object = self.get(**data)
             return price_object
 
         except ObjectDoesNotExist as e:
-            return None
+            raise ObjectDoesNotExist("PMD object does not exist")
         except Exception as e:
-            return None
+            raise Exception("Some exception occurred {0}".format(e.message))
 
     def get_or_create_objects(self, data, id, supplier_type_code):
         """

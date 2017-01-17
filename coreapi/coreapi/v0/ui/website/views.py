@@ -2135,22 +2135,20 @@ class ImportSocietyData(APIView):
                         continue
                     else:
 
-                        if len(row) != len(supplier_keys):
+                        if len(row) != len(website_constants.supplier_keys):
                             return ui_utils.handle_response(class_name, data='length of row {0} and length of supplier_keys do not match {1}'.format(len(row), len(supplier_keys)))
 
-                        for index, key in enumerate(supplier_keys):
+                        for index, key in enumerate(website_constants.supplier_keys):
                             if row[index] == '':
                                 data[key] = None
                             else:
                                 data[key] = row[index]
-
                         state_name = ui_constants.state_name
                         state_code = ui_constants.state_code
                         state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
                         city_object = models.City.objects.get(city_code=data['city_code'], state_code=state_object)
                         area_object = models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
                         subarea_object = models.CitySubArea.objects.get(subarea_code=data['subarea_code'],area_code=area_object)
-
                         # make the data needed to make supplier_id
                         supplier_id_data = {
                             'city_code': data['city_code'],
@@ -2169,9 +2167,15 @@ class ImportSocietyData(APIView):
 
                         (society_object, value) = SupplierTypeSociety.objects.get_or_create(supplier_id=data['supplier_id'])
                         data['society_location_type'] = subarea_object.locality_rating
-                        data['society_state'] = 'Maharashtra'
+                        #data['society_state'] = 'Maharashtra'Uttar Pradesh
+                        data['society_state'] = 'Uttar Pradesh'
                         society_object.__dict__.update(data)
                         society_object.save()
+
+                        # make entry into PMD here.
+                        response = ui_utils.set_default_pricing(data['supplier_id'], data['supplier_type'])
+                        if not response.data['status']:
+                            return response
 
                         towercount = SocietyTower.objects.filter(supplier=society_object).count()
 
@@ -2185,10 +2189,19 @@ class ImportSocietyData(APIView):
             source_file.close()
             return Response(data="success", status=status.HTTP_200_OK)
         except ObjectDoesNotExist as e:
+            import pdb
+            pdb.set_trace()
+
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
         except KeyError as e:
+            import pdb
+            pdb.set_trace()
+
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
         except Exception as e:
+            import pdb
+            pdb.set_trace()
+
             return ui_utils.handle_response(class_name, exception_object=e)
 
 

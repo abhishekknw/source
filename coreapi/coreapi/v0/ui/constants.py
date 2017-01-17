@@ -37,5 +37,5 @@ string_suppliers = {'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate',
                     'GY': 'SupplierTypeGym', 'SA': 'SupplierTypeSalon', 'BS': 'SupplierTypeBusShelter',}
 
 # default state and state codes. used to fetch state object in various import api's.
-state_name = 'Maharashtra'
-state_code = 'MH'
+state_name = 'Uttar Pradesh'
+state_code = 'UP'
