@@ -113,7 +113,7 @@ class GeneralManager(models.Manager):
     def get_content_type(self, supplier_type_code):
         try:
             ContentType = apps.get_model('contenttypes', 'ContentType')
-            suppliers = ui_constants.string_suppliers
+            suppliers = ui_constants.codes_to_model_names
             load_model = apps.get_model('v0', suppliers[supplier_type_code])
             content_type = ContentType.objects.get_for_model(load_model)
             return content_type

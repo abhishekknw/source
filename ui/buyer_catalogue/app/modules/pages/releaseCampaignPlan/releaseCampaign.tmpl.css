@@ -1,0 +1,46 @@
+body{
+	background: #f2f2f2;
+	font-family: Source Sans Pro;
+	color: #707070;
+}
+
+.notify{
+	margin-top: 15px;
+}
+
+/*body{
+	background: #f2f2f2;
+	font-family: Source Sans Pro;
+	color: #707070;
+}
+*/
+.proposal-panel{
+	margin-top: 70px;
+}
+
+.labels{
+	margin-left: 55px;
+}
+
+.center-heading{
+	text-align: center;
+	margin-bottom: 10px;
+}
+
+.society-heading{
+	margin-top: 14px;
+	margin-left: -9px;
+}
+
+.update-button{
+	margin-top: 20px;
+	margin-left: 82px;
+}
+
+.center-details{
+	margin-left: 0px;
+}
+
+.proposal-details{
+	margin-left: 10px;
+}

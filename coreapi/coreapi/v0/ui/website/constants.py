@@ -37,7 +37,7 @@ inventorylist = {
     },
     'SL': {
         'HEADER': ['Stall Count', 'Stall Price', 'Stall Duration', 'Stall Price Factor', 'Stall Business Price'],
-        'DATA': ['stall_count', 'stall_price', 'stall_duration', 'stall_price_factor', 'stall_business_price']
+        'DATA': ['total_stall_count', 'stall_price', 'stall_duration', 'stall_price_factor', 'stall_business_price']
     },
     'CD': {
         'HEADER': ['Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor', 'Car Business Price' ],
@@ -310,8 +310,8 @@ sheet_names_to_codes = {
 # supplier models so keys names must match with db column names.
 
 export_supplier_database_keys = {
-    'RS': [ 'id', 'proposal', 'center_name', 'supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ],
-    'CP': [ 'id', 'proposal', 'center_name',  'supplier_id', 'name', 'subarea']
+    'RS': ['id', 'proposal', 'center_name', 'supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ],
+    'CP': ['id', 'proposal', 'center_name',  'supplier_id', 'name', 'subarea']
 }
 
 # these HEADER keys are specific to the supplier. the sequence and count of HEADER keys must match with sequence
@@ -463,7 +463,6 @@ type_dict = {
 }
 
 
-
 # format to be used in datetime
 datetime_format = '%d-%m-%Y %H-%M-%S'
 
@@ -502,8 +501,8 @@ email = {
 
 # filter types
 filter_type = {
-    'RS' : ['inventory_type_selected','quality_type','quantity_type','locality_rating','flat_type'],
-    'CP' : ['inventory_type_selected','quality_type','quantity_type','locality_rating','employee_count'],
+    'RS': ['inventory_type_selected','quality_type','quantity_type','locality_rating','flat_type'],
+    'CP': ['inventory_type_selected','quality_type','quantity_type','locality_rating','employee_count'],
 }
 #to store employee_count
 employee_count_codes = {
@@ -517,6 +516,12 @@ status = 'X'
 shortlisted = 'S'
 removed = 'R'
 buffer = 'B'
+
+# name of inventories as in db
+poster = 'POSTER'
+standee = 'STANDEE'
+stall = 'STALL'
+
 
 # to identify unique supplier types
 society = 'RS'
@@ -538,5 +543,37 @@ bodys = {
 
 # default emails
 emails = {
-    'bd_head': 'vidhi@machadalo.com'
+    'bd_head': 'nikhil.singh@machadalo.com'
 }
+
+# default status of each inventory is defined here. The reason i didn't chose a boolean value is because may be in
+# future there can be more than two status of an inventory. who knows  ?
+inventory_status = 'F'  # F stands for free or available.
+inventory_booked_status = 'B'
+
+
+# shortlisted inventory details keys
+shortlisted_inventory_detail_keys = ['inventory_price', 'inventory_count', 'factor', 'ad_inventory_type', 'ad_inventory_duration']
+
+# model names as store in ContentType table. update here if you change the model names.
+society_model_name = 'suppliertypesociety'
+
+# stall_settings
+default_stall_type = 'Small'
+default_stall_duration_type = 'Unit Daily'
+default_stall_allocation_interval = 1
+default_stall_assignment_frequency = 1
+
+# temp list of inventories not implemented yet. delete it after implemantation. 
+inv_not_implemented = ['POSTER', 'FLIER',  'CAR_DISPLAY']
+
+# standee name
+standee_name = 'STANDEE'
+default_standee_type = 'Medium'
+default_standee_duration_type = 'Unit Weekly'
+default_standee_assignment_frequency = 1
+
+# class names
+stall_class_name = 'StallInventory'
+standee_class_name = 'StandeeInventory'
+

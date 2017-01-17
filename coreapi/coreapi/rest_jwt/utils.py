@@ -118,4 +118,5 @@ def myjwt_response_payload_handler(token, user=None, request=None):
         'username': getattr(user, 'username', None),
         'name': user.get_full_name(),
         'email': getattr(user, 'email', None),
+        'user_code':getattr(user, 'user_code', None)
     }

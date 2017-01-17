@@ -48,8 +48,8 @@ angular.module('catalogueApp')
 	$scope.areas = [];
 	$scope.sub_areas = [];
 
-	if($window.sessionStorage.proposal_id != '0'){
-		createProposalService.getProposal($window.sessionStorage.proposal_id)
+	if($window.localStorage.proposal_id != '0'){
+		createProposalService.getProposal($window.localStorage.proposal_id)
 		.success(function(response, status){
 			$scope.model.name = response.data.name;
 			$scope.model.tentative_cost = response.data.tentative_cost;
@@ -62,7 +62,7 @@ angular.module('catalogueApp')
 		});
 
 		//for centers if proposal is editable
-		createProposalService.getProposalCenters($window.sessionStorage.proposal_id)
+		createProposalService.getProposalCenters($window.localStorage.proposal_id)
 		.success(function(response, status){
 			$scope.centers = response.data;
 			for(var i=0; i<$scope.centers.length; i++){
@@ -145,19 +145,20 @@ angular.module('catalogueApp')
 	$scope.submit = function(){
     var status = checkSupplierCode();
     if(status >= 0){
-		$scope.model.account_id = $window.sessionStorage.account_id;
-		$scope.model.business_id = $window.sessionStorage.business_id;
-		$scope.model.parent = $window.sessionStorage.proposal_id;
+		$scope.model.account_id = $window.localStorage.account_id;
+		$scope.model.business_id = $window.localStorage.business_id;
+		$scope.model.parent = $window.localStorage.proposal_id;
 		console.log("vidhi inside submit", $scope.model);
 		// call backend to save only if all the latitudes are found
 			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)
 			.success(function(response, status){
+				console.log(response);
 				$scope.errormsg = undefined;
-				$scope.proposal_id = response;
+				$scope.proposal_id = response.data;
 				$scope.checkProposal = false;
 				createProposalService.setProposalId($scope.proposal_id);
-        $window.sessionStorage.isSavedProposal = false;
-        $window.sessionStorage.parent_proposal_id = response.data;
+        $window.localStorage.isSavedProposal = false;
+        $window.localStorage.parent_proposal_id = $scope.proposal_id;
 				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){

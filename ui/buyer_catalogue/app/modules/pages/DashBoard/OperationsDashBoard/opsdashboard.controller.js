@@ -4,16 +4,41 @@ angular.module('catalogueApp')
     function ($scope, $rootScope, $window, $location, opsDashBoardService) {
     	$scope.proposals = [];
       $scope.reason;
+      //Start: code added to show or hide details based on user permissions
+      $scope.user_code = $window.localStorage.user_code;
+      if($scope.user_code == 'agency')
+        $scope.hideData = true;
+      //End: code added to show or hide details based on user permissions
     	$scope.headings = [
         {header : 'Proposal Id'},
         {header : 'Proposal Name'},
-        {header : 'Created By'},
+        {header : 'Proposal For'},
+        {header : 'Proposal Created By'},
         {header : 'Invoice Number'},
         {header : 'Start Date'},
         {header : 'End Date'},
-        {header : 'Campaign'},
+        {header : 'Create Campaign'},
         {header : 'Download Proposal'}
       ];
+
+      $scope.campaignHeadings = [
+        {header : 'Campaign Id'},
+        {header : 'Campaign Name'},
+        {header : 'Assgined To '},
+        {header : 'Assigned Date'},
+        {header : 'Start Date'},
+        {header : 'End Date'},
+        {header : 'View Release Details'}
+      ];
+      $scope.userData = {
+        selecteduser: null,
+        names: [
+        {name : 'Ankit'},
+        {name : 'Amit'},
+        {name : 'njnjnj'}
+        ]
+      };
+
 
     opsDashBoardService.getProposalDetails()
     	.success(function(response, status){
@@ -24,10 +49,6 @@ angular.module('catalogueApp')
     	.error(function(response, status){
     		console.log("error occured", status);
     	});
-
-    $scope.downloadProposal = function(proposal_id){
-        alert('vidhi');
-      }
 
     $scope.sendNotification = function(){
       var email_Data = {
@@ -62,5 +83,11 @@ angular.module('catalogueApp')
     //code added when the user clicks on proposal id the proposal details page will open
     $scope.showProposalDetails = function(proposal_id){
       $location.path('/' + proposal_id + '/showcurrentproposal');
+    }
+
+    $scope.saveAssignment = function(proposal){
+    }
+    $scope.getDetails = function(proposal_id){
+      $location.path('/' + proposal_id + '/releasePlan');
     }
 }]);//Controller function ends here

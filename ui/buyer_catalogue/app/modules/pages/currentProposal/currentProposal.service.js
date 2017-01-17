@@ -38,6 +38,11 @@
       return machadaloHttp.put(url, data);
     }
 
+    currentProposalService.updateSupplierStatus = function(proposal_id, data){
+        var url = url_base + proposal_id + '/create-final-proposal/';
+        return machadaloHttp.put(url, data);
+    }
+
     return currentProposalService;
 
  }]);
