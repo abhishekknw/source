@@ -17,7 +17,7 @@ keys = [
 decision = {
 
     "YES": "yes",
-    "NO": "no"
+    "NO": "No"
 }
 
 # add new supplier type and corresponding class here

@@ -980,7 +980,7 @@ class ImportSummaryData(APIView):
                                 data[key] = None
                             elif row[index].lower() == decision["YES"]:
                                 data[key] = True
-                            elif row[index].lower() == decision["NO"]:
+                            elif row[index] == decision["NO"]:
                                 data[key] = False
                             else:
                                 data[key] = row[index]
@@ -1014,7 +1014,8 @@ class ImportSummaryData(APIView):
                         }
                         response = requests.post(url, json.dumps(data), headers=headers)
                         if response.status_code != status.HTTP_200_OK:
-                            return ui_utils.handle_response(class_name, data=response.json())
+                            error_list.append(str(data['supplier_id']) + ' ' +  str(response.json()))
+                            continue
 
             source_file.close()
             return ui_utils.handle_response(class_name, data=error_list, success=True)
@@ -1119,6 +1120,7 @@ class InventorySummaryAPIView(APIView):
 
             if not response.data['status']:
                 return response
+
             data = response.data['data']['request_data']
             supplier_object = response.data['data']['supplier_object']
             inventory_object = response.data['data']['inventory_object']

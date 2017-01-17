@@ -78,8 +78,8 @@ class GeneralManager(models.Manager):
             }
 
             # get or create price mapping object
-            price_object = self.get(**data)
-            return price_object
+            price_object = self.filter(**data)
+            return price_object[0]
 
         except ObjectDoesNotExist as e:
             raise ObjectDoesNotExist("PMD object does not exist")
