@@ -1299,10 +1299,10 @@ def fetch_final_proposal_data(proposal_data, unique_supplier_codes, user):
         center_id = proposal_data['center']['id']
 
         # get the proposal object
-        proposal = models.ProposalInfo.objects.get(user=user, proposal_id=proposal_id)
+        proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
 
         # get the center object
-        center = models.ProposalCenterMapping.objects.get(user=user, id=center_id)
+        center = models.ProposalCenterMapping.objects.get(id=center_id)
 
         fixed_data = {
             'center': center,
@@ -3783,8 +3783,9 @@ def get_inventory_general_data(inventory_name, inventory_content_type):
 
 def get_tower_id(inventory_object):
     """
-    returns tower_id of this object. The reason this is a function  because stalls don't have any towers.
-    neither do the gyms and saloons. Hence they all have a concept of Zero tower.
+    returns tower_id of this object. The reason this is a function  because stall inventory for a society  is not
+    associated with any tower.
+    neither do the gyms and saloons have concept of towers.  Hence they all have a concept of Zero tower.
     Args:
         inventory_object:
 
@@ -3857,7 +3858,7 @@ def sort_inventory_ids_on_proposal_count(master_inventory_ids, inventory_ids):
             # append the  inv_id to result
             result.append(inv_id)
 
-        # now see those inv_ids which have not been assigned to any proposal. They should sit at front of the proposal.
+        # now see those inv_ids which have not been assigned to any proposal. They should sit at front of the result
         for inv_id in inventory_ids:
             if inv_id not in result:
                 result.insert(0, inv_id)

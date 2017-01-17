@@ -20,7 +20,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import viewsets
-from rest_framework.decorators import detail_route,list_route
+from rest_framework.decorators import detail_route, list_route
 from openpyxl import Workbook
 from openpyxl.compat import range
 import requests
@@ -74,7 +74,7 @@ class GetBusinessTypesAPIView(APIView):
 
 
 class BusinessAPIListView(APIView):
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def get(self, request):
         """
@@ -119,7 +119,7 @@ class BusinessAccounts(APIView):
     """
     Fetches one buissiness data
     """
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def get(self, request, id):
         class_name = self.__class__.__name__
@@ -139,7 +139,7 @@ class BusinessAccounts(APIView):
 
 class Accounts(APIView):
 
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def get(self, request, format=None):
         class_name = self.__class__.__name__
@@ -153,7 +153,7 @@ class Accounts(APIView):
 
 class AccountAPIView(APIView):
 
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def get(self, request, id, format=None):
 
@@ -175,7 +175,7 @@ class AccountAPIView(APIView):
 
 class BusinessContacts(APIView):
 
-    permission_classes = (v0_permissions.IsGeneralBdUser,)
+    # permission_classes = (v0_permissions.IsGeneralBdUser,)
 
     def post(self, request):
         class_name = self.__class__.__name__
@@ -2335,7 +2335,7 @@ class GenericExportData(APIView):
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
         """
     renderer_classes = (website_renderers.XlsxRenderer, )
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
@@ -2577,7 +2577,7 @@ class CreateInitialProposal(APIView):
     data is stored hence we have created new classes CreateInitialProposal and CreateFinalProposal API.
     author: nikhil
     """
-    permission_classes = (v0_permissions.IsGeneralBdUser,)
+    # permission_classes = (v0_permissions.IsGeneralBdUser,)
 
     def post(self, request, account_id):
         """
@@ -2654,7 +2654,7 @@ class CreateFinalProposal(APIView):
     information we have all the suppliers shortlisted, all the Filters and all.
 
     """
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def post(self, request, proposal_id):
         """
@@ -2712,7 +2712,7 @@ class ProposalViewSet(viewsets.ViewSet):
     are related to Proposal domain. so keeping them at one place makes sense.
     """
     parser_classes = (JSONParser, FormParser)
-    permission_classes = (v0_permissions.IsGeneralBdUser,)
+    # permission_classes = (v0_permissions.IsGeneralBdUser,)
 
     def retrieve(self, request, pk=None):
         """
