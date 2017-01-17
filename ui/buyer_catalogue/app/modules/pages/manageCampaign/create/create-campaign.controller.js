@@ -10,6 +10,12 @@ angular.module('machadaloPages')
 })
 .controller('CreateCampaignCtrl',
     function ($scope, $rootScope, $window, $location, pagesService, constants, Upload) {
+
+      //start:code added to show or hide details based on user permissions
+      $scope.user_code = $window.localStorage.user_code;
+      if($scope.user_code == '03')
+        $scope.hideData = true;
+      //End:code added to show or hide details based on user permissions
       $scope.account_proposals = [];
       $scope.model = {};
       $scope.model.business = {};
@@ -27,7 +33,6 @@ angular.module('machadaloPages')
         $scope.clear = function() {
         $scope.dt = null;
       };
-console.log($rootScope.globals.currentUser);
       $scope.maxDate = new Date(2020, 5, 22);
       $scope.today = new Date();
       $scope.popup1 = false;

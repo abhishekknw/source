@@ -9,7 +9,7 @@
           <a class="header-nav-bar-a aligntop" data-toggle="dropdown" class="dropdown-toggle" href="index.html"><img src="img/man.png"/>&nbsp;<b>{{globals.currentUser.username}}</b><b class="lightcaret mt-2"></b>
           </a>
         <ul class="dropdown-menu posright-0">
-          <li><a href="/#/manageUser">Manage User</a></li>
+          <li ng-show="showData"><a href="/#/manageUser">Manage User</a></li>
           <li><a href="/#/logout">Logout</a></li>
         </ul>
         </li>

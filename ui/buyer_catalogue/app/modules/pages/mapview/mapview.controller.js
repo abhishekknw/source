@@ -44,6 +44,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   $scope.society_markers = []; // markers on the map
   $scope.circle = {};
 
+//code added to show or hide some details based on user permissions
+$scope.user_code = $window.localStorage.user_code;
+if($scope.user_code == '03')
+  $scope.hideData = true;
+
 // after angular-google-maps is loaded properly only then proces code inside then
   uiGmapGoogleMapApi.then(function(maps) {
       function assignCenterMarkerToMap(center){

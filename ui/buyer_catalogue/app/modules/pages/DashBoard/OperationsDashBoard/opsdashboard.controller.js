@@ -4,6 +4,11 @@ angular.module('catalogueApp')
     function ($scope, $rootScope, $window, $location, opsDashBoardService) {
     	$scope.proposals = [];
       $scope.reason;
+      //Start: code added to show or hide details based on user permissions
+      $scope.user_code = $window.localStorage.user_code;
+      if($scope.user_code == '03')
+        $scope.hideData = true;
+      //End: code added to show or hide details based on user permissions
     	$scope.headings = [
         {header : 'Proposal Id'},
         {header : 'Proposal Name'},

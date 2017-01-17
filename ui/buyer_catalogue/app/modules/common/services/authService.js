@@ -15,6 +15,7 @@ angular.module('Authentication')
         authService.Login = function (username, password, callback) {
             $http.post(apiHost + 'api-token-auth/', { username: username, password: password })
                 .success(function (response) {
+                  $window.localStorage.user_code = response.user_code;
                    if (response.token) {
                       authService.SetCredentials(response);
                       response.logged_in = true;

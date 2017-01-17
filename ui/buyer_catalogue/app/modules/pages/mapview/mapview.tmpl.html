@@ -393,7 +393,7 @@
           <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()">Add Suppliers</button>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()" ng-disabled = "checkFileExport">Request Proposal</button>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "saveData()" >Save</button>
-          <button class="btn btn-danger active" ngf-select="upload($file)">Upload</button>
+          <button ng-hide="hideData" class="btn btn-danger active" ngf-select="upload($file)">Upload</button>
         </div>
         </div>
     </div><!-- row div ends here-->

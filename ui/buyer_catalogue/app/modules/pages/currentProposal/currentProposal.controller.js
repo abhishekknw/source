@@ -8,7 +8,11 @@ angular.module('catalogueApp')
       $scope.isParentProposal = $window.localStorage.parentProposal;// send proposal_id in service
       $scope.campaign_start_date;
       $scope.campaign_end_date;
-
+      //code added to show or not details based on permissions
+      $scope.user_code = $window.localStorage.user_code;
+      console.log($scope.user_code);
+      if($scope.user_code == '03')
+        $scope.hideData = true;
       $scope.centerheaders = [
         {header : 'Serial No'},
         {header : 'Center Name'},
