@@ -1,0 +1,79 @@
+<link rel="stylesheet" href="modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.css"/>
+<div><nav-bar></nav-bar></div>
+</br></br></br><back-Button></back-Button>
+<h3 style = "margin-left: 460px; margin-top: 70px;">Campaign Release and Audit Plan</h3>
+  <div class = "container">
+      <div class="row">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <Label>Campaign Id:</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
+            <Label class = "labels">Campaign Name:</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
+            <Label class = "labels">BD Owner:</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
+          </div >
+         </div>
+      </div>
+  </div>
+<div class="container">
+  <div class="row">
+    <div class=" table-responsive panel panel-default">
+      <table class="table table-fixed table-bordered" style="text-align: center;">
+        <thead>
+          <tr>
+            <th ng-repeat="header in headings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
+          </tr>
+        </thead>
+        <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
+          <tr ng-repeat="filter in supplier.shortlisted_inventories">
+            <td class="col-md-1">{{supplier.name}}</td>
+            <td class="col-md-2">{{supplier.area}}</td>
+            <td class="col-md-2">{{supplier.subarea}}</td>
+            <td class="col-md-2">{{filter.inventory_type.adinventory_name}}</td>
+            <td class="col-md-2">
+              <input type="text" ng-model="filter.release_date" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
+              <!-- <span class="input-group-btn"> -->
+                <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+              <!-- </span> -->
+            </td>
+            <td class="col-md-2">
+              <input type="text" ng-model="filter.audit_date" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup2" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
+              <!-- <span class="input-group-btn"> -->
+                <button type="button" class="btn btn-default" ng-click="popup2 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+              <!-- </span> -->
+            </td>
+            <td class="col-md-2">
+              <input type="text" ng-model="filter.closure_date" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup3" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
+              <!-- <span class="input-group-btn"> -->
+                <button type="button" class="btn btn-default" ng-click="popup3 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+              <!-- </span> -->
+            </td>
+            <td class="col-md-2"><textarea name="comments" class="form-control"></textarea></td>
+            <td class="col-md-2">
+              <input type="text" class="form-control spacing">
+            </td>
+          </tr>
+          <!-- <tr>
+            <td class="col-md-1">Powai Palazzio</td>
+            <td class="col-md-2">Powai</td>
+            <td class="col-md-2">Hiranandani Gardens</td>
+            <td class="col-md-2">Poster</td>
+            <td class="col-md-2">
+              <input type="text" ng-model="campaign_start_date" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
+            </td>
+            <td class="col-md-2">
+              <input type="text" class="form-control spacing">
+            </td>
+            <td class="col-md-2">
+              <input type="text" class="form-control spacing">
+            </td>
+            <td class="col-md-2"><textarea name="comments" class="form-control"></textarea></td>
+            <td class="col-md-2">
+              <input type="text" class="form-control spacing">
+            </td>
+          </tr> -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <button class="btn btn-danger active notify" ng-click="saveDetails()">Update</button>
+</div>
+<div><footer-bar></footer-bar></div>

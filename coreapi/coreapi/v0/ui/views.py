@@ -1671,7 +1671,6 @@ class TowerAPIView(APIView):
             nb_tag = tower['tower_tag'] + "00N" + str(i)
             nb = NoticeBoardDetails(notice_board_tag=nb_tag, tower_id=int(tower['tower_id']))
             nb.save()
-
             i += 1
 
     def save_standee_locations(self, c1, c2, tower, society):
@@ -1683,14 +1682,13 @@ class TowerAPIView(APIView):
             i += 1
 
 
-
 class PosterAPIView(APIView):
     def get(self, request, id, format=None):
         lifts = []
         notice_boards = []
         disable = {}
         try:
-            #code added and changed for getting supplier_type_code
+            # code added and changed for getting supplier_type_code
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
@@ -1702,12 +1700,12 @@ class PosterAPIView(APIView):
             if not item:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-            #item = InventorySummary.objects.get(supplier=society)
+            # item = InventorySummary.objects.get(supplier=society)
 
             for tower in towers:
                 lifts.extend(tower.lifts.all())
                 notice_boards.extend(tower.notice_boards.all())
+
             if len(lifts) > 0:
                 lifts_available = True
             else:

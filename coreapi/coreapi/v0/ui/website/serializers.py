@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from v0.models import BusinessInfo, BusinessAccountContact, Campaign, CampaignTypeMapping, CampaignSocietyMapping, SocietyInventoryBooking, AccountInfo
 from v0.ui.serializers import UISocietySerializer
-from v0.serializers import SocietyInventoryBookingSerializer, BusinessInfoSerializer, BusinessTypesSerializer, BusinessAccountContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, AccountInfoSerializer
+from v0.serializers import SocietyInventoryBookingSerializer, BusinessInfoSerializer, BusinessTypesSerializer, BusinessAccountContactSerializer, CampaignSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, AccountInfoSerializer, DurationTypeSerializer
 
 
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety,\
@@ -292,3 +292,36 @@ class CampaignInventorySerializer(ModelSerializer):
 
         )
 
+
+class CampaignAssignmentSerializerReadOnly(ModelSerializer):
+
+    assigned_by = BaseUserSerializer()
+    assigned_to = BaseUserSerializer()
+    campaign = ProposalInfoSerializer()
+
+    class Meta:
+        model = models.CampaignAssignment
+
+
+class AuditDateSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.AuditDate
+
+
+class ShortlistedInventoryPricingSerializerReadOnly(ModelSerializer):
+
+    audit_dates = AuditDateSerializer(many=True, source='auditdate_set')
+    inventory_type = AdInventoryTypeSerializer(source='ad_inventory_type')
+    inventory_duration = DurationTypeSerializer(source='ad_inventory_duration')
+
+    class Meta:
+        model = models.ShortlistedInventoryPricingDetails
+
+
+class ShortlistedSpacesSerializerReadOnly(ModelSerializer):
+
+    shortlisted_inventories = ShortlistedInventoryPricingSerializerReadOnly(many=True, read_only=True, source='shortlistedinventorypricingdetails_set')
+
+    class Meta:
+        model = models.ShortlistedSpaces

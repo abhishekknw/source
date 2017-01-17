@@ -11,10 +11,15 @@ angular.module('Authentication')
         var storagePermissions = 'machadalo-permissions';
         var apiHost = APIBaseUrl;
         var permissions = {};
+        var user_codes = {
+          '0' : 'root',
+          '03': 'agency',
+        };
 
         authService.Login = function (username, password, callback) {
             $http.post(apiHost + 'api-token-auth/', { username: username, password: password })
                 .success(function (response) {
+                  $window.localStorage.user_code = user_codes[response.user_code];
                    if (response.token) {
                       authService.SetCredentials(response);
                       response.logged_in = true;
@@ -25,17 +30,6 @@ angular.module('Authentication')
                       callback(response);
                    }
                 })
-                
-                /*.error(function (response) {
-                response = { username: "khushboo", token: "JhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ…", user_id: 1, name: "", email: "" };
-                console.log(response);
-                console.log("done");
-                if (response.token) {
-                    authService.SetCredentials(response);
-                    response.logged_in = true;
-                    callback(response);
-                 }
-               */
                 .error(function (response) {
                   if (!response)
                     response = {};
@@ -60,10 +54,12 @@ angular.module('Authentication')
         }
 
         authService.Logout = function () {
+          $window.localStorage.clear();
+          $rootScope.user='';
+            $rootScope.role=0;
            authService.ClearCredentials();
            if ($location.path() != "/login") $rootScope.globals.requestedPath = $location.path();
            $location.path('/login');
-           console.log("Logout");
         }
 
         authService.isAuthenticated = function () {
@@ -131,5 +127,3 @@ angular.module('Authentication')
 
         return authService;
     }])
-
-

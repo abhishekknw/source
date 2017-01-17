@@ -5,15 +5,19 @@
   <back-Button></back-Button>
   <div ng-loading="loading"></div> <!--For displaying loading icon-->
   <div class = "container">
+    <div class="page-header">
+      <h3 style="color:#337ab7;">Summary</h3>
+    </div>
       <div class="row">
         <div class="panel panel-default">
           <div class="panel-heading">
             <Label>Proposal Id:</Label><span class = "proposal-details">{{proposal.proposal_id}}</span>
             <Label class = "labels">Name of Proposal:</Label><span class = "proposal-details">{{proposal.name}}</span>
             <Label class = "labels">Tentative Cost:</Label><span class = "proposal-details">{{proposal.tentative_cost}} </span>
-            <a class = "labels" ng-if="isParentProposal == 'true'" href="" ng-click="editInitialProposal(proposal.proposal_id)"><b>Edit Proposal</b></a>
-            <a class = "labels" data-target="#invoiceModal" data-toggle="modal"><b>Enter Invoice Details</b></a>
+            <!-- <a class = "labels" ng-if="isParentProposal == 'true'" href="" ng-click="editInitialProposal(proposal.proposal_id)"><b>Edit Proposal</b></a>
+            <a class = "labels" data-target="#invoiceModal" data-toggle="modal"><b>Enter Invoice Details</b></a> -->
           </div >
+          <br>
           <div class="row">
             <div class="col-md-10 center-heading"><label>Center Details:</label></div>
           </div>
@@ -33,6 +37,7 @@
       </div>
   </div>
 </form>
+<a class = "labels" style="text-align:right" ng-if="isParentProposal == 'true'" href="" ng-click="editInitialProposal(proposal.proposal_id)"><b>Edit Proposal</b></a>
 <div class="col-md-3" style="margin-left:83px;"><label>Select Advertising Location:</label>
   <select ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
     <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
@@ -62,7 +67,7 @@
             <tbody ng-repeat=" supplier in current_center_data.suppliers['RS']">
               <tr ng-if="supplier.status != 'R'">
                 <td>{{current_center_data.center.center_name}}</td>
-                <td>{{supplier.society_name}}</td>
+                <td>{{supplier.name}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_poster">{{supplier.tower_count}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_standee">{{supplier.total_standee_count}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_stall">{{supplier.total_stall_count}}</td>
@@ -70,9 +75,16 @@
                 <td ng-if="supplier.status == 'S'">Shortlisted</td>
                 <td ng-if="supplier.status == 'B'">Buffer</td>
                 <td>
-                  <a ng-href="" ng-if="supplier.status == 'S'" ng-click="setSupplierStatus(supplier,'B')">Buffer</a>
-                  <a ng-href="" ng-if="supplier.status == 'B'" ng-click="setSupplierStatus(supplier,'S')">Shortlist</a>
-                  <a ng-href="" ng-if="supplier.status != 'R'" ng-click="setSupplierStatus(supplier,'R')">Remove</a>
+                  <!-- <a ng-href="" ng-model="supplier.status" ng-if="supplier.status == 'S'" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Buffer</a> -->
+                  <div class="radio">
+                         <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Shortlist</label>
+                  </div>
+                  <div class="radio">
+                         <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Buffer</label>
+                  </div>
+                  <div class="radio">
+                         <label><input type="radio" ng-model="supplier.status" value="R" ng-change="updateSupplierStatus(supplier,current_center_data,'RS')">Remove</label>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -95,13 +107,18 @@
            <tbody ng-repeat=" supplier in current_center_data.suppliers['RS']">
              <tr ng-if="supplier.status == 'R'">
                <td>{{current_center_data.center.center_name}}</td>
-               <td>{{supplier.society_name}}</td>
+               <td>{{supplier.name}}</td>
                <td ng-if="current_center_data.societyFilters.inv_poster">{{supplier.tower_count}}</td>
                <td ng-if="current_center_data.societyFilters.inv_standee">{{supplier.total_standee_count}}</td>
                <td ng-if="current_center_data.societyFilters.inv_stall">{{supplier.total_stall_count}}</td>
                <td ng-if="current_center_data.societyFilters.inv_flier">{{supplier.flat_count}}</td>
                <td>
-                <button class="btn btn-danger active" ng-click="setSupplierStatus(supplier,'S')">Shortlist</button>
+                 <div class="radio">
+                        <label><input type="radio" ng-model="supplier.status" value="S" ng-change="updateSupplierStatus(supplier,current_center_data,'RS')">Shortlist</label>
+                 </div>
+                 <div class="radio" ng-if="supplier.status != 'X'">
+                        <label><input type="radio" ng-model="supplier.status" value="R" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Remove</label>
+                 </div>
                </td>
              </tr>
            </tbody>
@@ -112,8 +129,8 @@
   </div>
 </div>
 <!-- End: Display supplier details for selected center-->
-<div class = "col-md-12">
-  <button class="btn btn-danger update-button" ng-click="updateProposal()">Update Details</button>
+<div class = "col-md-12" style="text-align:right">
+  <button ng-hide="hideData" class="btn btn-danger" data-target="#invoiceModal" data-toggle="modal"><b>Enter Invoice Details</b></button>
 </div>
 
 <!--Start: Code for Invoice Modal Window -->
@@ -156,4 +173,4 @@
 </div>
 <!--End: Code for Invoice Modal Window -->
 
-<div><footer-bar></footer-bar></div>
+<div style="margin-top:160px;"><footer-bar></footer-bar></div>

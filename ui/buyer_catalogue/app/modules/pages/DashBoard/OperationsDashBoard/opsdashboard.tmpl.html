@@ -2,13 +2,11 @@
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
-<h3 style = "margin-left: 460px; margin-top: 60px;">Machadalo Operations Dashboard</h3>
-<div class="container">
+</br></br></br><back-Button></back-Button>
+<h3 ng-hide="hideData" style = "margin-left: 460px; margin-top: 60px;">Machadalo Operations Dashboard</h3>
+<div class="container" ng-hide="hideData">
   <div class="row">
-    <div class="panel panel-default">
-      <!-- <div class="panel-heading">
-        <h4 style="text-align: center;">Proposal List</h4>
-      </div > -->
+    <div class=" table-responsive panel panel-default">
       <table class="table table-fixed table-bordered" style="text-align: center;">
         <thead>
           <tr>
@@ -21,18 +19,21 @@
               <a>{{proposal.proposal.proposal_id}}</a>
             </td>
             <td class="col-md-2">{{proposal.proposal.name}}</td>
+            <td class="col-md-2">{{proposal.proposal.account}}</td>
             <td class="col-md-2">{{proposal.proposal.created_by}}</td>
             <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
             <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
             <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
-            <!-- <td class="col-md-2">{{proposal.invoice_number}}</td> -->
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="true" ng-click="updateCampaign(proposal)">Yes</label>
+                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="true" ng-click="updateCampaign(proposal)" data-target = "#assignModal" data-toggle = "modal">Accept</label>
               </div>
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="false" ng-click="updateCampaign(proposal)" data-target="#detailModal" data-toggle="modal">No</label>
+                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="false" ng-click="updateCampaign(proposal)" data-target="#detailModal" data-toggle="modal">Decline</label>
               </div>
+              <!-- <div class="radio">
+                     <label><input type="radio" ng-model="proposal.proposal.is_campaign" ng-value="" ng-click="updateCampaign(proposal)" data-target="#detailModal" data-toggle="modal">OnHold</label>
+              </div> -->
             </td>
             <td class="col-md-2">
               <a href="http://mdimages.s3.amazonaws.com/{{proposal.file_name}}" Download> Download </a>
@@ -44,6 +45,40 @@
   </div>
 </div>
 
+<!-- Start: Displaying table of converted campaigns -->
+<!-- <h3 uib-tooltip="List of all Campaigns" style = "margin-left: 105px; margin-top: 60px;">Campaign List</h3> -->
+<span uib-tooltip="List of all Campaigns" class = "campaign-list">Campaign List</span>
+<div class="container">
+  <div class="row">
+    <div class=" table-responsive panel panel-default">
+      <table class="table table-fixed table-bordered" style="text-align: center;">
+        <thead>
+          <tr>
+            <th ng-repeat="header in campaignHeadings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="proposal in proposals">
+            <td class="col-md-1">{{proposal.proposal.proposal_id}}</td>
+            <td class="col-md-2">{{proposal.proposal.name}}</td>
+            <td class="col-md-2">{{proposal.proposal.created_by}}</td>
+            <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
+            <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
+            <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
+            <td class="col-md-2">
+              <a ng-click="getDetails(proposal.proposal.proposal_id)" Download> Details </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div><footer-bar></footer-bar></div>
+
+<!--End: Displaying table of converted campaigns -->
+
+<!-- Start: Code for reason specifying modal-->
 <div id="detailModal" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -60,3 +95,27 @@
     </div>
   </div>
 </div>
+<!-- End: Code for reason specifying modal-->
+
+<!-- Start: Code for assgining campaign -->
+<div id="assignModal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Assign Campaign to Operations Manager</h4>
+        <hr/>
+        <div class = "modal-body">
+        <div class = "row">
+        <label>Assign to:</label>
+          <select ng-model= "userData.selecteduser">
+            <option ng-repeat = "name in userData.names" value = "{{name.name}}">{{name.name}}</option>
+          </select>
+        </div>
+          <button class="btn btn-danger active notify" ng-click="saveAssignment()">Assign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End: Code for assgining campaign -->

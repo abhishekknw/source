@@ -1,7 +1,21 @@
 angular.module('machadaloPages')
+.constant('constants',{
+  base_url : 'http://localhost:8108/',
+  url_base : 'v0/ui/website/',
+  AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
+  policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
+  acl : 'public-read',
+  signature : "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=",
+  content_type : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+})
 .controller('CreateCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'pagesService',
-    function ($scope, $rootScope, $window, $location, pagesService) {
+    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload) {
+
+      //start:code added to show or hide details based on user permissions
+      $scope.user_code = $window.localStorage.user_code;
+      if($scope.user_code == 'agency')
+        $scope.hideData = true;
+      //End:code added to show or hide details based on user permissions
       $scope.account_proposals = [];
       $scope.model = {};
       $scope.model.business = {};
@@ -19,7 +33,6 @@ angular.module('machadaloPages')
         $scope.clear = function() {
         $scope.dt = null;
       };
-
       $scope.maxDate = new Date(2020, 5, 22);
       $scope.today = new Date();
       $scope.popup1 = false;
@@ -59,16 +72,16 @@ angular.module('machadaloPages')
 
       // Start: for persisting values after refresh or back from other pages
       $scope.getStoredData = function(){
-        if($window.sessionStorage.business != null){
-          $scope.model.business = JSON.parse($window.sessionStorage.business);
-          if($window.sessionStorage.accounts != null){
-            $scope.model.accounts = JSON.parse($window.sessionStorage.accounts);
-            if($window.sessionStorage.sel_account_index >= 0){
-              $scope.sel_account_id = $scope.model.accounts[$window.sessionStorage.sel_account_index].account_id;
+        if($window.localStorage.business != null){
+          $scope.model.business = JSON.parse($window.localStorage.business);
+          if($window.localStorage.accounts != null){
+            $scope.model.accounts = JSON.parse($window.localStorage.accounts);
+            if($window.localStorage.sel_account_index >= 0){
+              $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
             }
           }
-          if($window.sessionStorage.account_proposals != null)
-            $scope.account_proposals = JSON.parse($window.sessionStorage.account_proposals);
+          if($window.localStorage.account_proposals != null)
+            $scope.account_proposals = JSON.parse($window.localStorage.account_proposals);
           $scope.choice = "selected";
         }else {
           $scope.model.business = null;
@@ -89,26 +102,27 @@ angular.module('machadaloPages')
               $scope.model.business = response.business;
               $scope.model.accounts = response.accounts;
               $rootScope.business_id = response.business.business_id;
-              $window.sessionStorage.business_id = response.business.business_id;
+              $window.localStorage.business_id = response.business.business_id;
               $rootScope.business_name = response.business.name;
-              $window.sessionStorage.business_id = response.business.name;
+              $window.localStorage.business_id = response.business.name;
               $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
               $scope.getSubTypes();
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
               $scope.choice = "selected";
               // pagesService.setBusinessObject($scope.model.business);
               //Start: added to persit data after refresh
-              $window.sessionStorage.business = JSON.stringify($scope.model.business);
+              $window.localStorage.business = JSON.stringify($scope.model.business);
               if($scope.model.accounts.length != 0){
-                $window.sessionStorage.accounts = JSON.stringify($scope.model.accounts);
+                $window.localStorage.accounts = JSON.stringify($scope.model.accounts);
               }else{
-                $window.sessionStorage.accounts = null;
+                $window.localStorage.accounts = null;
               }
-              $window.sessionStorage.account_proposals = null;
+              $window.localStorage.account_proposals = null;
               $scope.account_proposals = null;
-              $window.sessionStorage.sel_account_index = -1;
+              $window.localStorage.sel_account_index = -1;
               $scope.sel_account_id = null;
               $scope.error = false;
+              $scope.successMsg = null;
               //End: added to persit data after refresh
          });
       };
@@ -145,8 +159,8 @@ angular.module('machadaloPages')
       };
 
     	$scope.getAllBusinesses = function() {
-        $window.sessionStorage.account_proposals = null;
-        $window.sessionStorage.sel_account_index = null;
+        $window.localStorage.account_proposals = null;
+        $window.localStorage.sel_account_index = null;
         $scope.bsSelect = undefined;
 	    	pagesService.getAllBusinesses()
 	    	.success(function (response, status) {
@@ -196,15 +210,15 @@ angular.module('machadaloPages')
           // $rootScope.account_id = sel_account_id;
 
           //start : added to persist data after refresh
-          $window.sessionStorage.sel_account_index = index;
-          $window.sessionStorage.account_id = sel_account_id;
+          $window.localStorage.sel_account_index = index;
+          $window.localStorage.account_id = sel_account_id;
 
           //start : added to persist data after refresh
 
           pagesService.getAccountProposal(sel_account_id)
           .success(function(response, status){
               $scope.account_proposals = response.data;
-              $window.sessionStorage.account_proposals = JSON.stringify($scope.account_proposals);
+              $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
           })
           .error(function(response, status){
               if(typeof(response) == typeof([]))
@@ -220,20 +234,20 @@ angular.module('machadaloPages')
         }
         else{
           pagesService.setProposalAccountId(sel_account_id);
-          $window.sessionStorage.proposal_id = 0;
-          $window.sessionStorage.isSavedProposal = false;
+          $window.localStorage.proposal_id = 0;
+          $window.localStorage.isSavedProposal = false;
           $location.path('/'+sel_account_id + '/createproposal');
         }
       }
 
       $scope.showProposalDetails = function(proposal_id){
-        $window.sessionStorage.parentProposal = true;
-        $window.sessionStorage.parent_proposal_id = proposal_id;
+        $window.localStorage.parentProposal = true;
+        $window.localStorage.parent_proposal_id = proposal_id;
         $location.path('/' + proposal_id + '/showcurrentproposal');
       }
 
       $scope.showHistory = function(proposalId){
-        $window.sessionStorage.parent_proposal_id = proposalId;
+        $window.localStorage.parent_proposal_id = proposalId;
         $location.path('/' + proposalId + '/showproposalhistory');
       }
     	$scope.create = function() {
@@ -254,7 +268,7 @@ angular.module('machadaloPages')
             if (status == '200'){
               $scope.choice = "selected";
               pagesService.setBusinessObject($scope.model.business);
-              $window.sessionStorage.business = JSON.stringify($scope.model.business);
+              $window.localStorage.business = JSON.stringify($scope.model.business);
             }
         }).error(function(response, status){
              if (typeof response != 'number'){
@@ -264,5 +278,43 @@ angular.module('machadaloPages')
             }
         })
         };
+        //Start: To upload file when upload button is clicked
+        $scope.upload = function (file,proposal_id) {
+          var uploadUrl = 'http://localhost:8108/v0/ui/website/';
+          var token = $rootScope.globals.currentUser.token ;
+          Upload.upload({
+              url: uploadUrl + proposal_id + '/import-supplier-data/',
+              data: {file: file, 'username': $scope.username},
+              headers: {'Authorization': 'JWT ' + token},
+          }).success(function (response) {
+            uploadFileToAmazonServer(response.data,file);
+              //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
+          }).error(function (response) {
+              console.log('Error status: ' + response.status);
+              alert("Data not Imported");
+          });
+        };
+        //End: To upload file when upload button is clicked
+        //Start : function to upload files to amazon server, just provide file name and file
+           var uploadFileToAmazonServer = function(file_name,file){
+             // upload it to S3 Bucket
+             Upload.upload({
+                 url: 'http://mdimages.s3.amazonaws.com/',
+                 method : 'POST',
+                 data: {
+                     key: file_name, // the key to store the file on S3, could be file name or customized
+                     AWSAccessKeyId : constants.AWSAccessKeyId,
+                     acl : constants.acl, // sets the access to the uploaded file in the bucket: private, public-read, ...
+                     policy : constants.policy,
+                     signature : constants.signature, // base64-encoded signature based on policy string (see article below)
+                     "Content-Type": constants.content_type,// content type of the file (NotEmpty)
+                     file: file }
+                 }).success(function (response){
+                      alert("Upload to Server Successful");
+                 }).error(function(response) {
+                     alert("Upload to server Unsuccessful");
+                 });
+           }
+        //End : function to upload files to amazon server, just provide file name and file
       // [TODO] implement this
-    }]);
+    });

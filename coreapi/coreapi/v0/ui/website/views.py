@@ -20,7 +20,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import viewsets
-from rest_framework.decorators import detail_route,list_route
+from rest_framework.decorators import detail_route, list_route
 from openpyxl import Workbook
 from openpyxl.compat import range
 import requests
@@ -74,7 +74,7 @@ class GetBusinessTypesAPIView(APIView):
 
 
 class BusinessAPIListView(APIView):
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def get(self, request):
         """
@@ -119,7 +119,7 @@ class BusinessAccounts(APIView):
     """
     Fetches one buissiness data
     """
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def get(self, request, id):
         class_name = self.__class__.__name__
@@ -139,7 +139,7 @@ class BusinessAccounts(APIView):
 
 class Accounts(APIView):
 
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def get(self, request, format=None):
         class_name = self.__class__.__name__
@@ -153,7 +153,7 @@ class Accounts(APIView):
 
 class AccountAPIView(APIView):
 
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def get(self, request, id, format=None):
 
@@ -175,7 +175,7 @@ class AccountAPIView(APIView):
 
 class BusinessContacts(APIView):
 
-    permission_classes = (v0_permissions.IsGeneralBdUser,)
+    # permission_classes = (v0_permissions.IsGeneralBdUser,)
 
     def post(self, request):
         class_name = self.__class__.__name__
@@ -2340,7 +2340,7 @@ class GenericExportData(APIView):
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
         """
     renderer_classes = (website_renderers.XlsxRenderer, )
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
@@ -2376,6 +2376,7 @@ class ImportSupplierData(APIView):
         """
         class_name = self.__class__.__name__
         try:
+
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
             my_file = request.FILES['file']
@@ -2463,17 +2464,6 @@ class ImportSupplierData(APIView):
 
                     # update the center dict in result with modified center_object
                     result[center_id] = center_object
-            # delete the data from shortlisted_inventory_pricing_details before adding new data
-            models.ShortlistedInventoryPricingDetails.objects.filter(user=request.user, proposal_id=proposal_id).delete()
-
-            # data for this supplier is made. populate the shortlisted_inventory_details table before hiting the urls 
-            response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
-            if not response.data['status']:
-                return response
-
-            # delete all the shortlisted_spaces rows for this proposal. we do not delete filter
-            # data while importing 
-            models.ShortlistedSpaces.objects.filter(user=request.user, proposal_id=proposal_id).delete()
 
             # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
             # once data is prepared for all sheets,  we hit the url. if it creates problems in future, me might change
@@ -2486,11 +2476,17 @@ class ImportSupplierData(APIView):
             headers={
                 'Content-Type': 'application/json',
                 'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-            }
+             }
+
             response = requests.post(url, json.dumps(data), headers=headers)
 
             if response.status_code != status.HTTP_200_OK:
                 return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
+
+            # data for this supplier is made. populate the shortlisted_inventory_details table before hitting the urls
+            response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
+            if not response.data['status']:
+                return response
 
             # hit metric url to save metric data. current m sending the entire file, though only first sheet sending
             # is required.
@@ -2586,7 +2582,7 @@ class CreateInitialProposal(APIView):
     data is stored hence we have created new classes CreateInitialProposal and CreateFinalProposal API.
     author: nikhil
     """
-    permission_classes = (v0_permissions.IsGeneralBdUser,)
+    # permission_classes = (v0_permissions.IsGeneralBdUser,)
 
     def post(self, request, account_id):
         """
@@ -2663,7 +2659,7 @@ class CreateFinalProposal(APIView):
     information we have all the suppliers shortlisted, all the Filters and all.
 
     """
-    permission_classes = (v0_permissions.IsGeneralBdUser, )
+    # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def post(self, request, proposal_id):
         """
@@ -2721,7 +2717,7 @@ class ProposalViewSet(viewsets.ViewSet):
     are related to Proposal domain. so keeping them at one place makes sense.
     """
     parser_classes = (JSONParser, FormParser)
-    permission_classes = (v0_permissions.IsGeneralBdUser,)
+    # permission_classes = (v0_permissions.IsGeneralBdUser,)
 
     def retrieve(self, request, pk=None):
         """
@@ -3473,7 +3469,9 @@ class ProposalVersion(APIView):
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
             business = models.BusinessInfo.objects.get(business_id=account.business.business_id)
-            is_proposal_version_created = request.data['is_proposal_version_created']
+
+            # if you don't provide this value, No proposal version is created.
+            is_proposal_version_created = request.data['is_proposal_version_created'] if request.data.get('is_proposal_version_created') else False
             data = request.data['centers']
 
             # if this variable is true, we will have to create a new proposal version.
@@ -3558,3 +3556,148 @@ class ProposalVersion(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+
+class AssignCampaign(APIView):
+    """
+    This API assigns a campaign to a user by a user
+    """
+    def post(self, request):
+        """
+        Args:
+            request: The request object
+            campaign_id: Assigns campaign_id to a user by a user.
+        Returns: Success in case campaign is successfully assigned to the user.
+        """
+        class_name = self.__class__.__name__
+        try:
+            assigned_by = request.user
+
+            campaign_id = request.data['campaign_id']
+
+            if assigned_by.is_anonymous():
+                return ui_utils.handle_response(class_name, data='A campaign cannot be assigned by an Anonymous user')
+
+            if not request.data['to']:
+                return ui_utils.handle_response(class_name, data='You must provide a user to which this campaign will be assigned')
+
+            # fetch BaseUser object.
+            assigned_to = models.BaseUser.objects.get(id=request.data['to'])
+
+            # fetch ProposalInfo object.
+            proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
+
+            # check weather it's a campaign or not ?
+            if not proposal.is_campaign or not proposal.invoice_number:
+                return ui_utils.handle_response(class_name, data='This proposal is not a campaign')
+
+            # todo: check for dates also. you should not assign a past campaign to any user. left for later
+
+            # create the object
+            models.CampaignAssignment.objects.get_or_create(assigned_by=assigned_by, assigned_to=assigned_to, campaign=proposal)
+
+            return ui_utils.handle_response(class_name, data='success', success=True)
+
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def get(self, request):
+        """
+        Args:
+            request: Request object
+
+        Returns: AssignedCampaign objects.
+        {
+          "status": true,
+          "data": [
+            {
+              "id": 1,
+              "assigned_by": {
+                "id": 1,
+                "first_name": "Nikhil",
+                "last_name": "Kumar",
+              },
+              "assigned_to": {
+                "id": 9,
+                "first_name": "kamlesh",
+                "last_name": "sabziwale"
+              },
+              "campaign": {
+                "proposal_id": "zUkqLPYR",
+                "created_at": "2016-12-01T00:00:00Z",
+                "updated_at": "2016-12-15T10:18:04.514008Z",
+              },
+            }
+          ]
+        }
+        Handles three cases :
+        Fetches campaigns assigned by a user only
+        Fetches campaigns assigned to a particular user only
+        Fetches campaigns assigned by a user to a particular user.
+        """
+        class_name = self.__class__.__name__
+
+        try:
+            assigned_by = request.user
+
+            if assigned_by.is_anonymous():
+                return ui_utils.handle_response(class_name, data='Anonymous users can\'t have any campaigns assigned')
+
+            query = {}
+            # this field determined weather to include 'assigned_by' in query or not
+            is_assigned_by = int(request.query_params['is_assigned_by'])
+
+            # to field  must be present  if is_assigned_by is False.
+            if not is_assigned_by:
+                # 'to' must be present. There should be something to query !
+                to = request.query_params['to']
+            else:
+                # if is_assigned_by is False, try to get to, but assigned_by field must be set to request.user
+                to = request.query_params.get('to')
+                query['assigned_by'] = request.user
+
+            # if you found to field, fetch the object from BaseUser table.
+            if to:
+                query['assigned_to'] = models.BaseUser.objects.get(id=to)
+
+            assigned_objects = models.CampaignAssignment.objects.filter(**query)
+            serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+        except KeyError as e:
+            return ui_utils.handle_response(class_name, data='key Error', exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class CampaignInventory(APIView):
+    """
+
+    """
+    def get(self, request, campaign_id):
+        """
+        The API fetches campaign data + SS  + SID
+        Args:
+            request: request data
+            campaign_id: The proposal_id which has been converted into campaign.
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
+
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
+
+            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
+            if not response.data['status']:
+                return response
+
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
