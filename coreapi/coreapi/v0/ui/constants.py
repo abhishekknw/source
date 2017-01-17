@@ -17,7 +17,7 @@ keys = [
 decision = {
 
     "YES": "yes",
-    "NO": "no"
+    "NO": "No"
 }
 
 # add new supplier type and corresponding class here
@@ -48,5 +48,5 @@ model_to_codes = {
 }
 
 # default state and state codes. used to fetch state object in various import api's.
-state_name = 'Maharashtra'
-state_code = 'MH'
+state_name = 'Uttar Pradesh'
+state_code = 'UP'

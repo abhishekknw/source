@@ -13,7 +13,7 @@ from django.db import transaction
 from django.db.models import Q, F
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django.core.mail import EmailMessage
@@ -2855,6 +2855,7 @@ def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code
     Returns: price for the inventory, for this inventory type and this duration
     """
     function = handle_inventory_pricing.__name__
+    price_mapping = None
     try:
         response = ui_utils.get_content_type(supplier_type_code)
         if not response.data['data']:
@@ -2862,7 +2863,10 @@ def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code
         content_type = response.data['data']
         adinventory_type_dict = ui_utils.adinventory_func()
         duration_type_dict = ui_utils.duration_type_func()
-        price_mapping = get_object_or_404(PriceMappingDefault,adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type], object_id=supplier_id, content_type=content_type)
+        price_mappings = PriceMappingDefault.objects.filter(adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type], object_id=supplier_id, content_type=content_type)
+        if not price_mapping:
+            return ui_utils.handle_response(function, data=0, success=True)
+        price_mapping = price_mappings[0]
         price_mapping.business_price = business_price
         price_mapping.save()
         return ui_utils.handle_response(function, data=price_mapping.business_price, success=True)
