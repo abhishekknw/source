@@ -7,18 +7,19 @@ angular.module('machadaloPages')
      $scope.options = [
         {usercode : 'BD', id : '01'},
         {usercode : 'Ops', id: '02'},
-        {usercode : 'BD Manager', id: '03'}
+        {usercode : 'Agency', id: '03'}
       ];
 
      $scope.register = function(){
      userService.createUser($scope.model)
       .success(function(response, status){
-        console.log("Successful",response);
+        console.log("Successful");
+        alert("Successfully Created");
         })
         .error(function(response, status){
             console.log("error occured", status);
+            alert("Error Occured");
         });
-        console.log($scope.model);
      }
 
     }]);
