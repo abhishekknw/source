@@ -44,7 +44,6 @@ angular.module('catalogueApp')
     	.success(function(response, status){
     		$scope.proposals = response.data;
         $scope.loading = response;
-    		console.log("$scope.proposals : ", response.data);
     	})
     	.error(function(response, status){
     		console.log("error occured", status);
@@ -58,7 +57,7 @@ angular.module('catalogueApp')
       };
       opsDashBoardService.sendMail(email_Data)
       .success(function(response, status){
-        alert('hello BD team has been notified');
+        alert('BD team has been notified');
     	})
     	.error(function(response, status){
     		console.log("error occured", status);
@@ -68,12 +67,9 @@ angular.module('catalogueApp')
    }
 
     $scope.updateCampaign = function(proposal){
-      if(proposal.proposal.is_campaign == false){
         $scope.currentProposal = proposal;
-      }
       opsDashBoardService.updateProposalDetails(proposal.proposal.proposal_id,proposal.proposal)
       .success(function(response, status){
-        console.log("Successful",response);
     	})
     	.error(function(response, status){
     		console.log("error occured", status);
