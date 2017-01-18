@@ -72,7 +72,7 @@ center_keys = ['center_name', 'proposal', 'id']
 export_keys = ['center', 'societies', 'societies_inventory', 'societies_inventory_count']
 
 contact_keys = [
-    'city', 'area', 'sub_area', 'supplier_type', 'society_name', 'supplier_code', 'contact_type', 'salutation', \
+    'city', 'city_code', 'area', 'area_code', 'sub_area', 'subarea_code', 'supplier_type', 'society_name', 'supplier_code', 'contact_type', 'salutation', \
     'name', 'landline', 'mobile', 'email'
 ]
 

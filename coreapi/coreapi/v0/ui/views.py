@@ -604,6 +604,7 @@ class SocietyList(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         try:
+
             societies = models.SupplierTypeSociety.objects.filter(created_by=request.user)
             societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
             paginator = PageNumberPagination()
@@ -1038,7 +1039,7 @@ class ImportSummaryData(APIView):
                     }
                     response = requests.post(url, json.dumps(data), headers=headers)
                     if response.status_code != status.HTTP_200_OK:
-                        error_list.append(str(data['supplier_id']) + ' ' +  str(response.json()))
+                        error_list.append(str(data['supplier_id']) + ' ' + str(response.json()))
                         continue
 
             source_file.close()
@@ -1600,12 +1601,12 @@ class TowerAPIView(APIView):
                 try:
                     item = SocietyTower.objects.get(pk=key['tower_id'])
                     tower_dict = {
-                        'tower_tag' : key['tower_tag'],
-                        'tower_name' : key['tower_name'],
-                        'tower_id' :  key['tower_id'],
-                        'lift_count' : item.lift_count,
-                        'nb_count' : item.notice_board_count_per_tower,
-                        'standee_count' : item.standee_count,
+                        'tower_tag': key['tower_tag'],
+                        'tower_name': key['tower_name'],
+                        'tower_id':  key['tower_id'],
+                        'lift_count': item.lift_count,
+                        'nb_count': item.notice_board_count_per_tower,
+                        'standee_count': item.standee_count,
                     }
 
                 except SocietyTower.DoesNotExist:
