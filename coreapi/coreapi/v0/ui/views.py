@@ -207,7 +207,7 @@ class UsersProfilesAPIView(APIView):
             for u in UserProfile.objects.filter(created_by=user).select_related('user'):
                 users.append(u.user)
         else:
-            users = User.objects.all()
+            users = models.BaseUser.objects.all()
         serializer = UserSerializer(users, many = True)
         return Response(serializer.data, status = 200)
 
@@ -221,7 +221,7 @@ class UsersProfilesAPIView(APIView):
             serializer.save()
         else:
             return Response(serializer.errors, status=400)
-        user = User.objects.get(pk=serializer.data['id'])
+        user = models.BaseUser.objects.get(pk=serializer.data['id'])
         up = UserProfile(user=user, created_by=request.user)
         up.save()
         return Response(serializer.data, status=200)
@@ -230,7 +230,7 @@ class UsersProfilesAPIView(APIView):
 class getUserData(APIView):
 
     def get(self, request, id, format=None):
-            user = User.objects.get(pk=id)
+            user = models.BaseUser.objects.get(pk=id)
             user_profile = user.user_profile.all().first()
             user_serializer = UserSerializer(user)
             serializer = UserProfileSerializer(user_profile)
@@ -242,7 +242,7 @@ class getUserData(APIView):
 
     def post(self, request, id, format=None):
         data = request.data
-        user = User.objects.get(pk=id)
+        user = models.BaseUser.objects.get(pk=id)
         serializer = UserSerializer(user, data=data['user'])
         if serializer.is_valid():
             serializer.save()
@@ -283,14 +283,14 @@ class getUserData(APIView):
 
     #to update password
     def put(self, request, id, format=None):
-        user = User.objects.get(pk=id)
+        user = models.BaseUser.objects.get(pk=id)
         user.set_password(request.data['password'])
         user.save()
         return Response(status=200)
 
     def delete(self, request, id, format=None):
         try:
-            item = User.objects.get(pk=id)
+            item = models.BaseUser.objects.get(pk=id)
         except User.DoesNotExist:
             return Response(status=404)
         item.delete()
@@ -300,7 +300,7 @@ class getUserData(APIView):
 class deleteUsersAPIView(APIView):
 
     def post(self, request, format=None):
-        User.objects.filter(id__in=request.data).delete()
+        models.BaseUser.objects.filter(id__in=request.data).delete()
         return Response(status=204)
 
 
