@@ -579,7 +579,7 @@ class SocietyAPIListView(APIView):
             else:
                 if user.is_superuser:
                     items = SupplierTypeSociety.objects.all().order_by('society_name')
-                elif user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
+                else:
                     items = SupplierTypeSociety.objects.filter(Q(society_city__in=[item.city.city_name for item in user.cities.all()]) | Q(created_by=user.id))
                 
             # modify items to have society images data
@@ -604,7 +604,7 @@ class SocietyList(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         try:
-            societies = models.SupplierTypeSociety.objects.filter(created_by=request.user)
+            societies = models.SupplierTypeSociety.objects.all().order_by("society_name")
             societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(societies_with_images, request)
