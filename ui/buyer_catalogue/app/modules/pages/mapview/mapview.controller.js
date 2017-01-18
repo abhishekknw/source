@@ -1217,8 +1217,15 @@ if($scope.user_code == 'agency')
        };
      $scope.exportData = function(){
          $scope.checkFileExport = true;
-         console.log($window.localStorage.isSavedProposal);
          var parent_proposal_id = $window.localStorage.parent_proposal_id;
+         if(parent_proposal_id == undefined){
+            parent_proposal_id = $stateParams.proposal_id;
+
+         }
+          if($window.localStorage.isSavedProposal == undefined){
+            $window.localStorage.isSavedProposal = false;
+          }
+         console.log(parent_proposal_id);
          saveSelectedFilters();
          var proposal_data = {
            centers:$scope.center_data,

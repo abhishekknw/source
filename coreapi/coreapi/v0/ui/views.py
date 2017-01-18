@@ -1014,6 +1014,7 @@ class ImportSummaryData(APIView):
                         }
                         response = requests.post(url, json.dumps(data), headers=headers)
                         if response.status_code != status.HTTP_200_OK:
+                            #return ui_utils.handle_response(class_name, data=response.json())
                             error_list.append(str(data['supplier_id']) + ' ' +  str(response.json()))
                             continue
 
