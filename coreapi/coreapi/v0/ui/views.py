@@ -994,7 +994,6 @@ class ImportSummaryData(APIView):
                 if num == 0:
                     continue
                 else:
-
                     if len(row) != len(keys):
                         error = 'length of row read {0} does not match with number of predefined keys {1}'.format(len(row), len(keys))
                         return ui_utils.handle_response(class_name, data=error)
@@ -1038,7 +1037,8 @@ class ImportSummaryData(APIView):
                     }
                     response = requests.post(url, json.dumps(data), headers=headers)
                     if response.status_code != status.HTTP_200_OK:
-                        error_list.append(str(data['supplier_id']) + ' ' + str(response.json()))
+                        #return ui_utils.handle_response(class_name, data=response.json())
+                        error_list.append(str(data['supplier_id']) + ' ' +  str(response.json()))
                         continue
 
             source_file.close()

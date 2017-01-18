@@ -2980,7 +2980,10 @@ def save_price_mapping_default(supplier_id, supplier_type_code, row):
             for inventory in website_constants.current_inventories:
                 inventory_type = inventory[0]  # at index 0 we have inventory_type
                 inventory_duration = inventory[1]  # at index 1 we have inventory_duration
-                price = int(row[inventory[2]])  # at index 2 we have inventory_pricing index.
+                if not row[inventory[2]]:
+                    price = 0
+                else:
+                    price = int(row[inventory[2]])  # at index 2 we have inventory_pricing index.
                 # todo: one db hit in each loop. improve if code slows down in future
                 response = handle_inventory_pricing(inventory_type, inventory_duration, supplier_id, supplier_type_code, business_price=price)
                 if not response.data['status']:

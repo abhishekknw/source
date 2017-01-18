@@ -48,8 +48,10 @@ model_to_codes = {
 }
 
 # default state and state codes. used to fetch state object in various import api's.
+
 state_name = 'Uttar Pradesh'
 state_code = 'UP'
 
 # supplier type names
 society_name = 'Society'
+
