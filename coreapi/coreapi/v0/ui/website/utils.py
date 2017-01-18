@@ -4072,3 +4072,27 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
+
+def get_campaign_status(proposal_start_date, proposal_end_date):
+    """
+    Args:
+        proposal_start_date: The start date
+        proposal_end_date: The end date
+
+    Returns:     returns 'completed', 'running', and 'upcoming' based on date
+    """
+    function = get_campaign_status.__name__
+    try:
+        if not proposal_end_date or not proposal_start_date:
+            return ui_utils.handle_response(function, data=website_constants.unknown, success=True)
+
+        current_date = timezone.now()
+
+        if proposal_end_date < current_date:
+            return ui_utils.handle_response(function, data=website_constants.completed, success=True)
+        if proposal_start_date > current_date:
+            return ui_utils.handle_response(function, data=website_constants.upcoming, success=True)
+        return ui_utils.handle_response(function, data=website_constants.running, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)

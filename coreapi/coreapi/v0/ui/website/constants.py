@@ -581,3 +581,19 @@ standee_class_name = 'StandeeInventory'
 proposal_converted_to_campaign = 'PTC'
 proposal_not_converted_to_campaign = 'PNC'
 proposal_on_hold = 'POH'
+
+# different mode of payments
+cash = 'CASH'
+neft ='NEFT'
+cheque = 'CHEQUE'
+
+# different payments statuses
+payment_done = 'PD'
+payment_not_initiated = 'PNI'
+payment_in_progress = 'PIP'
+
+# different campaign states
+completed = 'COMPLETED'
+running = 'RUNNING'
+upcoming = 'UPCOMING'
+unknown = 'UNKNOWN'

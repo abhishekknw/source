@@ -2180,6 +2180,9 @@ class ShortlistedSpaces(BaseModel):
     objects = managers.GeneralManager()
     campaign_status = models.CharField(max_length=10, default='', null=True, blank=True)
     phase = models.CharField(max_length=10, default='',  null=True, blank=True)
+    payment_status = models.CharField(max_length=255, null=True, blank=True)
+    payment_method = models.CharField(max_length=255, null=True, blank=True)
+    total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'shortlisted_spaces'
