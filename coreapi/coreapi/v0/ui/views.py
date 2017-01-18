@@ -596,6 +596,28 @@ class SocietyAPIListView(APIView):
             return Response(status=404)
 
 
+class SocietyList(APIView):
+    """
+    API to list all societies for a given user. This is new api and hence should be preferred over other.
+    """
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+        try:
+            societies = models.SupplierTypeSociety.objects.filter(created_by=request.user)
+            societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
+            paginator = PageNumberPagination()
+            result_page = paginator.paginate_queryset(societies_with_images, request)
+            paginator_response = paginator.get_paginated_response(result_page)
+            data = {
+                'count': len(societies_with_images),
+                'societies': paginator_response.data
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
 class CorporateAPIListView(APIView):
     def get(self, request, format=None):
         class_name = self.__class__.__name__
@@ -2950,4 +2972,3 @@ class BusShelterSearchView(APIView):
             return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
-
