@@ -1213,7 +1213,6 @@ class InventorySummaryAPIView(APIView):
 
                 flag1 = True
                 if 'id' in request.data:
-
                     flag1 = False
                     if request.data.get('flier_allowed'):
                         if request.data.get('flier_frequency') and inventory_object.flier_frequency < request.data.get(
@@ -1583,7 +1582,7 @@ class TowerAPIView(APIView):
         except InventorySummary.DoesNotExist:
             return Response({'message' : 'Please fill Inventory Summary Tab','inventory':'true'},status=404)
 
-        if total_nb_count !=0 and total_nb_count != inventory_nb_count:
+        if total_nb_count !=0 and total_nb_count != inventory_obj.nb_count:
 
             return Response({'message' : 'Total Notice Board Count should equal to Notice Board Count in Inventory Summary Tab'}, status=404)
         if total_lift_count !=0 and total_lift_count != inventory_obj.lift_count:
@@ -1846,7 +1845,7 @@ class FlierAPIView(APIView):
             data['supplier_type_code'] = supplier_type_code
 
             society = SupplierTypeSociety.objects.get(pk=id)
-            flyers = FlyerInventory.objects.filter(supplier=id)
+            flyers = FlyerInventory.objects.filter(object_id=id)
             response['flat_count'] = society.flat_count
 
             serializer = FlyerInventorySerializer(flyers, many=True)
@@ -1933,7 +1932,7 @@ class FlierAPIView(APIView):
             #adinventory_type = request.query_params.get('type', None)
             society = SupplierTypeSociety.objects.get(pk=id)
 
-            flyer = FlyerInventory.objects.filter(supplier=society, pk =adinventory_id)
+            flyer = FlyerInventory.objects.filter(object_id=society, pk =adinventory_id)
             flyer.delete()
             return Response(status=204)
         except SupplierTypeSociety.DoesNotExist:
@@ -2001,7 +2000,7 @@ class StallAPIView(APIView):
         data['supplier_type_code'] = supplier_type_code
 
         society = SupplierTypeSociety.objects.get(pk=id)
-        stalls = StallInventory.objects.filter(supplier=id)
+        stalls = StallInventory.objects.filter(object_id=id)
 
         #item = InventorySummary.objects.get(supplier=society)
 
