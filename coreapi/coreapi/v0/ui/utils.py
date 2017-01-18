@@ -173,6 +173,7 @@ def make_supplier_data(data):
                          'society_subarea': subarea.subarea_name,
                          'society_locality': area.label,
                          'society_state': city.state_code.state_name,
+                         'society_location_type': subarea.locality_rating
                          },
 
                 'serializer': get_serializer('RS')

@@ -57,7 +57,7 @@ angular.module('catalogueApp')
       };
       opsDashBoardService.sendMail(email_Data)
       .success(function(response, status){
-        alert('BD team has been notified');
+        // alert('BD team has been notified');
     	})
     	.error(function(response, status){
     		console.log("error occured", status);

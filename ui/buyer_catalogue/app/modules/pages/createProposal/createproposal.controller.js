@@ -75,7 +75,7 @@ angular.module('catalogueApp')
 			}
 		}).error(function(response, status){
 			console.log("Error Occured");
-			alert("Error Occured");
+			// alert("Error Occured");
 		});
 	}
 	else {
@@ -162,7 +162,7 @@ angular.module('catalogueApp')
 				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){
-				alert("Error Occured");
+				// alert("Error Occured");
 				console.log("Error");
 				if(typeof(response) != typeof(12)){
 					console.log("response is ", response);
@@ -173,7 +173,7 @@ angular.module('catalogueApp')
 			});
     }
     else {
-      alert("Please Provide Space Type");
+      // alert("Please Provide Space Type");
     }
 	}
 });

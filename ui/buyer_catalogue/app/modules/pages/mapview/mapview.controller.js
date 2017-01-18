@@ -528,7 +528,7 @@ if($scope.user_code == 'agency')
                 $scope.loadIcon1 = response;
             })
               .error(function(response, status){
-                alert("Error Occured");
+                // alert("Error Occured");
               });
           }
           //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
@@ -970,7 +970,7 @@ if($scope.user_code == 'agency')
   //End: generic function for fetching all supplier filters
   //Start : function to handle all errors on mapview and gridview, call this function when error comes in response
     var handleErrors = function(){
-      alert("Error Occured");
+      // alert("Error Occured");
     }
   //End : function to handle all errors on mapview and gridview, call this function when error comes in response
             var promises = [];
@@ -1237,7 +1237,7 @@ if($scope.user_code == 'agency')
               }
          }).success(function(response){
            console.log(response);
-           alert("Successful");
+          //  alert("Successful");
               // convert it onto Blob object because it's a binary file.
               // var blob = new Blob([data], {
               //     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -1257,7 +1257,7 @@ if($scope.user_code == 'agency')
          }).error(function(response){
               //Some error log
               $scope.checkFileExport = false;
-              alert('Error in exporting the file');
+              // alert('Error in exporting the file');
          });
      }
 
@@ -1276,9 +1276,9 @@ if($scope.user_code == 'agency')
              "Content-Type": constants.content_type,// content type of the file (NotEmpty)
              file: file }
          }).success(function (response){
-              alert("Upload to Server Successful");
+              // alert("Upload to Server Successful");
          }).error(function(response) {
-             alert("Upload to server Unsuccessful");
+            //  alert("Upload to server Unsuccessful");
          });
    }
 //End : function to upload files to amazon server, just provide file name and file
@@ -1294,7 +1294,7 @@ if($scope.user_code == 'agency')
           //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
       }).error(function (response) {
           console.log('Error status: ' + response.status);
-          alert("Data not Imported");
+          // alert("Data not Imported");
       });
     };
     //End: upload and import functionality
@@ -1303,9 +1303,9 @@ if($scope.user_code == 'agency')
        saveSelectedFilters();
       mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
         .success(function(response, status){
-          alert("Saved Successfully");
+          // alert("Saved Successfully");
         }).error(function(response, status){
-          alert("Error Occured");
+          // alert("Error Occured");
       });//
     }
     //End:save suppliers and filters to save the current state
@@ -1319,9 +1319,9 @@ if($scope.user_code == 'agency')
       };
       mapViewService.updateSupplierStatus($scope.proposal_id_temp,data)
         .success(function(response, status){
-          alert("Saved Successfully");
+          // alert("Saved Successfully");
         }).error(function(response, status){
-          alert("Error Occured");
+          // alert("Error Occured");
       });
     }
     // End: function to update status of supplier and save in db

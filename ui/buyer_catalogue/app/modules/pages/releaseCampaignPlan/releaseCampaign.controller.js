@@ -40,7 +40,7 @@ console.log($stateParams.proposal_id);
       $scope.altInputFormats = ['M!/d!/yyyy'];
 
     $scope.saveDetails = function(){
-      alert("vidhi");
+      // alert("vidhi");
     };
 
     releaseCampaignService.getCampaignReleaseDetails($scope.campaign_id)

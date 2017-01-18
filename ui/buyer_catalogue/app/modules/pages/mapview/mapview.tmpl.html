@@ -1,6 +1,9 @@
 <link rel="stylesheet" href="modules/pages/mapview/mapview.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
+<div class="fade-out" ng-loading="loadIcon1 || loadIcon2"></div> <!--For displaying loading icon-->
+<html>
+<body>
 <!-- Start: Center and Radius Detail Section -->
 <div class="navbar-default nav-subtab space">
   <div class="table">
@@ -182,7 +185,7 @@
 </div>
 </div>
 
-<div ng-loading="loadIcon1 || loadIcon2"></div> <!--For displaying loading icon-->
+
 
 <!-- Map Starts here -->
 <div class="col-md-3 map-width" ng-if="!show_societies">
@@ -881,7 +884,7 @@
         <div class="item Image" ng-class="{active:!$index}"  ng-repeat="image in FlierImages">
           <div class="row">
             <img ng-src="{{image}}" width="300px" height="180"/>
-            <img ng-src="{{FlierImages[$index+1]}}"  width="300px" height="180" />
+            <img ng-src="{{FlierImages[$index+1]}}"  width="300px" height="180" ng-if="FlierImages[getSecondIndex(FlierImages,$index+1)]"/>
           </div>
           <a class="left carousel-control" data-toggle="carousel" data-target = "#slider-Flier" role="button" data-slide="prev">
            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
@@ -947,3 +950,5 @@
 </div>
 </div>
 <!--End: code for societyDetails-->
+</body>
+</html>

@@ -579,7 +579,7 @@ class SocietyAPIListView(APIView):
             else:
                 if user.is_superuser:
                     items = SupplierTypeSociety.objects.all().order_by('society_name')
-                elif user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
+                else:
                     items = SupplierTypeSociety.objects.filter(Q(society_city__in=[item.city.city_name for item in user.cities.all()]) | Q(created_by=user.id))
                 
             # modify items to have society images data
@@ -604,8 +604,7 @@ class SocietyList(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         try:
-
-            societies = models.SupplierTypeSociety.objects.filter(created_by=request.user)
+            societies = models.SupplierTypeSociety.objects.all().order_by("society_name")
             societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(societies_with_images, request)
@@ -1214,7 +1213,6 @@ class InventorySummaryAPIView(APIView):
 
                 flag1 = True
                 if 'id' in request.data:
-
                     flag1 = False
                     if request.data.get('flier_allowed'):
                         if request.data.get('flier_frequency') and inventory_object.flier_frequency < request.data.get(
@@ -1584,7 +1582,7 @@ class TowerAPIView(APIView):
         except InventorySummary.DoesNotExist:
             return Response({'message' : 'Please fill Inventory Summary Tab','inventory':'true'},status=404)
 
-        if total_nb_count !=0 and total_nb_count != inventory_nb_count:
+        if total_nb_count !=0 and total_nb_count != inventory_obj.nb_count:
 
             return Response({'message' : 'Total Notice Board Count should equal to Notice Board Count in Inventory Summary Tab'}, status=404)
         if total_lift_count !=0 and total_lift_count != inventory_obj.lift_count:
@@ -1847,7 +1845,7 @@ class FlierAPIView(APIView):
             data['supplier_type_code'] = supplier_type_code
 
             society = SupplierTypeSociety.objects.get(pk=id)
-            flyers = FlyerInventory.objects.filter(supplier=id)
+            flyers = FlyerInventory.objects.filter(object_id=id)
             response['flat_count'] = society.flat_count
 
             serializer = FlyerInventorySerializer(flyers, many=True)
@@ -1934,7 +1932,7 @@ class FlierAPIView(APIView):
             #adinventory_type = request.query_params.get('type', None)
             society = SupplierTypeSociety.objects.get(pk=id)
 
-            flyer = FlyerInventory.objects.filter(supplier=society, pk =adinventory_id)
+            flyer = FlyerInventory.objects.filter(object_id=society, pk =adinventory_id)
             flyer.delete()
             return Response(status=204)
         except SupplierTypeSociety.DoesNotExist:
@@ -2002,7 +2000,7 @@ class StallAPIView(APIView):
         data['supplier_type_code'] = supplier_type_code
 
         society = SupplierTypeSociety.objects.get(pk=id)
-        stalls = StallInventory.objects.filter(supplier=id)
+        stalls = StallInventory.objects.filter(object_id=id)
 
         #item = InventorySummary.objects.get(supplier=society)
 
