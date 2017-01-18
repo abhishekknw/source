@@ -2122,7 +2122,7 @@ class ProposalInfo(BaseModel):
     tentative_cost = models.IntegerField(default=5000)
     tentative_start_date = models.DateTimeField(null=True)
     tentative_end_date = models.DateTimeField(null=True)
-    is_campaign = models.BooleanField(default=False, blank=True)
+    campaign_state = models.CharField(max_length=10, null=True, blank=True)
     parent = models.ForeignKey('ProposalInfo', null=True, blank=True, default=None)
     objects = managers.GeneralManager()
     invoice_number = models.CharField(max_length=1000, null=True, blank=True)
@@ -2180,6 +2180,9 @@ class ShortlistedSpaces(BaseModel):
     objects = managers.GeneralManager()
     campaign_status = models.CharField(max_length=10, default='', null=True, blank=True)
     phase = models.CharField(max_length=10, default='',  null=True, blank=True)
+    payment_status = models.CharField(max_length=255, null=True, blank=True)
+    payment_method = models.CharField(max_length=255, null=True, blank=True)
+    total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'shortlisted_spaces'

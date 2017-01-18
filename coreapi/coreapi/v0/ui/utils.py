@@ -115,6 +115,7 @@ def get_supplier_id(request, data):
     """
     function = get_supplier_id.__name__
 
+    error = 'You might want to double check the state name {0} and state code {1} defined in ui constants'.format(ui_constants.state_name, ui_constants.state_code)
     try:
         try:
             state_name = ui_constants.state_name
@@ -138,9 +139,9 @@ def get_supplier_id(request, data):
     except KeyError as e:
         return handle_response(function, exception_object=e)
     except ObjectDoesNotExist as e:
-        return handle_response(function, exception_object=e)
+        return handle_response(function, data=error, exception_object=e)
     except Exception as e:
-        return handle_response(function, exception_object=e)
+        return handle_response(function, data=error, exception_object=e)
 
     
 def make_supplier_data(data):
@@ -172,6 +173,7 @@ def make_supplier_data(data):
                          'society_subarea': subarea.subarea_name,
                          'society_locality': area.label,
                          'society_state': city.state_code.state_name,
+                         'society_location_type': subarea.locality_rating
                          },
 
                 'serializer': get_serializer('RS')

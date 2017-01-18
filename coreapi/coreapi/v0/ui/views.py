@@ -54,6 +54,7 @@ from constants import keys, decision
 import constants as ui_constants
 from website.utils import save_price_mapping_default
 from website.serializers import BaseUserSerializer
+import v0.models as models
 
 
 class UserViewSet(viewsets.ViewSet):
@@ -207,7 +208,7 @@ class UsersProfilesAPIView(APIView):
             for u in UserProfile.objects.filter(created_by=user).select_related('user'):
                 users.append(u.user)
         else:
-            users = User.objects.all()
+            users = models.BaseUser.objects.all()
         serializer = UserSerializer(users, many = True)
         return Response(serializer.data, status = 200)
 
@@ -221,7 +222,7 @@ class UsersProfilesAPIView(APIView):
             serializer.save()
         else:
             return Response(serializer.errors, status=400)
-        user = User.objects.get(pk=serializer.data['id'])
+        user = models.BaseUser.objects.get(pk=serializer.data['id'])
         up = UserProfile(user=user, created_by=request.user)
         up.save()
         return Response(serializer.data, status=200)
@@ -230,7 +231,7 @@ class UsersProfilesAPIView(APIView):
 class getUserData(APIView):
 
     def get(self, request, id, format=None):
-            user = User.objects.get(pk=id)
+            user = models.BaseUser.objects.get(pk=id)
             user_profile = user.user_profile.all().first()
             user_serializer = UserSerializer(user)
             serializer = UserProfileSerializer(user_profile)
@@ -242,7 +243,7 @@ class getUserData(APIView):
 
     def post(self, request, id, format=None):
         data = request.data
-        user = User.objects.get(pk=id)
+        user = models.BaseUser.objects.get(pk=id)
         serializer = UserSerializer(user, data=data['user'])
         if serializer.is_valid():
             serializer.save()
@@ -283,14 +284,14 @@ class getUserData(APIView):
 
     #to update password
     def put(self, request, id, format=None):
-        user = User.objects.get(pk=id)
+        user = models.BaseUser.objects.get(pk=id)
         user.set_password(request.data['password'])
         user.save()
         return Response(status=200)
 
     def delete(self, request, id, format=None):
         try:
-            item = User.objects.get(pk=id)
+            item = models.BaseUser.objects.get(pk=id)
         except User.DoesNotExist:
             return Response(status=404)
         item.delete()
@@ -300,7 +301,7 @@ class getUserData(APIView):
 class deleteUsersAPIView(APIView):
 
     def post(self, request, format=None):
-        User.objects.filter(id__in=request.data).delete()
+        models.BaseUser.objects.filter(id__in=request.data).delete()
         return Response(status=204)
 
 
@@ -572,19 +573,19 @@ class SocietyAPIListView(APIView):
         try:
             user = request.user
             search_txt = request.query_params.get('search', None)
+            items = None
             if search_txt:
                 items = SupplierTypeSociety.objects.filter(Q(supplier_id__icontains=search_txt) | Q(society_name__icontains=search_txt)| Q(society_address1__icontains=search_txt)| Q(society_city__icontains=search_txt)| Q(society_state__icontains=search_txt)).order_by('society_name')
             else:
                 if user.is_superuser:
                     items = SupplierTypeSociety.objects.all().order_by('society_name')
-                elif user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
+                else:
                     items = SupplierTypeSociety.objects.filter(Q(society_city__in=[item.city.city_name for item in user.cities.all()]) | Q(created_by=user.id))
-            
-        #Changes in code to show images for society list                  
+                
+            # modify items to have society images data
             items = ui_utils.get_supplier_image(items,'Society')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
-            #serializer = SocietyListSerializer(result_page, many=True)
             paginator_response = paginator.get_paginated_response(result_page)
             data = {
               'count': len(items),
@@ -593,6 +594,28 @@ class SocietyAPIListView(APIView):
             return ui_utils.handle_response(class_name, data=data, success=True)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
+
+
+class SocietyList(APIView):
+    """
+    API to list all societies for a given user. This is new api and hence should be preferred over other.
+    """
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+        try:
+            societies = models.SupplierTypeSociety.objects.all().order_by("society_name")
+            societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
+            paginator = PageNumberPagination()
+            result_page = paginator.paginate_queryset(societies_with_images, request)
+            paginator_response = paginator.get_paginated_response(result_page)
+            data = {
+                'count': len(societies_with_images),
+                'societies': paginator_response.data
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class CorporateAPIListView(APIView):
@@ -963,60 +986,60 @@ class ImportSummaryData(APIView):
         try:
             source_file = open(BASE_DIR + '/files/inventory_summary_new.csv', 'rb')
             error_list = []
-            with transaction.atomic():
-                reader = csv.reader(source_file)
-                source_file.seek(0)
-                for num, row in enumerate(reader):
-                    data = {}
-                    if num == 0:
+
+            reader = csv.reader(source_file)
+            source_file.seek(0)
+            for num, row in enumerate(reader):
+                data = {}
+                if num == 0:
+                    continue
+                else:
+                    if len(row) != len(keys):
+                        error = 'length of row read {0} does not match with number of predefined keys {1}'.format(len(row), len(keys))
+                        return ui_utils.handle_response(class_name, data=error)
+
+                    for index, key in enumerate(keys):
+                        if row[index] == '':
+                            data[key] = None
+                        elif row[index].lower() == decision["YES"]:
+                            data[key] = True
+                        elif row[index] == decision["NO"]:
+                            data[key] = False
+                        else:
+                            data[key] = row[index]
+
+                    # make the data in order to make supplier_id
+                    supplier_id_data = {
+                        'city_code': data['city_code'],
+                        'area_code': data['area_code'],
+                        'subarea_code': data['subarea_code'],
+                        'supplier_type': data['supplier_type'],
+                        'supplier_code': data['supplier_code']
+                    }
+
+                    response = ui_utils.get_supplier_id(request, supplier_id_data)
+                    if not response.data['status']:
+                        return response
+
+                    data['supplier_id'] = response.data['data']
+                    data['supplier_type_code'] = 'RS'
+
+                    # save pricing information in price_mapping_default table
+                    response = save_price_mapping_default(data['supplier_id'], data['supplier_type_code'], row)
+                    if not response.data['status']:
+                        return response
+
+                    url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
+                    url = BASE_URL + url[1:]
+                    headers = {
+                        'Content-Type': 'application/json',
+                        'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
+                    }
+                    response = requests.post(url, json.dumps(data), headers=headers)
+                    if response.status_code != status.HTTP_200_OK:
+                        #return ui_utils.handle_response(class_name, data=response.json())
+                        error_list.append(str(data['supplier_id']) + ' ' +  str(response.json()))
                         continue
-                    else:
-                        if len(row) != len(keys):
-                            error = 'length of row read {0} does not match with number of predefined keys {1}'.format(len(row), len(keys))
-                            return ui_utils.handle_response(class_name, data=error)
-
-                        for index, key in enumerate(keys):
-                            if row[index] == '':
-                                data[key] = None
-                            elif row[index].lower() == decision["YES"]:
-                                data[key] = True
-                            elif row[index] == decision["NO"]:
-                                data[key] = False
-                            else:
-                                data[key] = row[index]
-
-                        # make the data in order to make supplier_id
-                        supplier_id_data = {
-                            'city_code': data['city_code'],
-                            'area_code': data['area_code'],
-                            'subarea_code': data['subarea_code'],
-                            'supplier_type': data['supplier_type'],
-                            'supplier_code': data['supplier_code']
-                        }
-
-                        response = ui_utils.get_supplier_id(request, supplier_id_data)
-                        if not response.data['status']:
-                            return response
-
-                        data['supplier_id'] = response.data['data']
-                        data['supplier_type_code'] = 'RS'
-
-                        # save pricing information in price_mapping_default table
-                        response = save_price_mapping_default(data['supplier_id'], data['supplier_type_code'], row)
-                        if not response.data['status']:
-                            return response
-
-                        url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
-                        url = BASE_URL + url[1:]
-                        headers = {
-                            'Content-Type': 'application/json',
-                            'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-                        }
-                        response = requests.post(url, json.dumps(data), headers=headers)
-                        if response.status_code != status.HTTP_200_OK:
-                            #return ui_utils.handle_response(class_name, data=response.json())
-                            error_list.append(str(data['supplier_id']) + ' ' +  str(response.json()))
-                            continue
 
             source_file.close()
             return ui_utils.handle_response(class_name, data=error_list, success=True)
@@ -1026,7 +1049,7 @@ class ImportSummaryData(APIView):
 
 class InventorySummaryAPIView(APIView):
     """
-    This api provides summary of all the inventories associated with a supplier
+    This api provides summary of a  ll the inventories associated with a supplier
     supplierTypeCode -- supplier type code RS, CP etc
 
     """
@@ -1190,7 +1213,6 @@ class InventorySummaryAPIView(APIView):
 
                 flag1 = True
                 if 'id' in request.data:
-
                     flag1 = False
                     if request.data.get('flier_allowed'):
                         if request.data.get('flier_frequency') and inventory_object.flier_frequency < request.data.get(
@@ -1248,47 +1270,48 @@ class InventorySummaryAPIView(APIView):
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['poster_a3'],
                                                            duration_type_dict['campaign_weekly']), id, supplier_type_code)
-                            # ui_utils.save_price_data(price, posPrice)
+                            ui_utils.save_price_data(price, posPrice)
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['poster_a3'],
                                                            duration_type_dict['unit_weekly']), id, supplier_type_code)
-                            # ui_utils.save_price_data(price, posPrice / towercount)
+                            ui_utils.save_price_data(price, posPrice / towercount)
 
                         if request.data.get('nb_A4_allowed'):
                             price = PriceMappingDefault.objects.get_price_mapping_object( ui_utils.make_dict_manager(adinventory_dict['poster_a3'], duration_type_dict['campaign_weekly']), id, supplier_type_code)
-                            # ui_utils.save_price_data(price, posPrice)
+                            ui_utils.save_price_data(price, posPrice)
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['poster_a4'],
                                                            duration_type_dict['unit_weekly']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, posPrice / towercount)
+                            ui_utils.save_price_data(price, posPrice / towercount)
 
                 if request.data.get('poster_price_week_lift'):
                     posPrice = int(request.data.get('poster_price_week_lift'))
                     if request.data.get('poster_allowed_lift'):
                         price = PriceMappingDefault.objects.get_price_mapping_object(
-                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],duration_type_dict['campaign_weekly']), id, supplier_type_code)
-                        # ui_utils.save_price_data(price, posPrice)
+                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],
+                                                       duration_type_dict['campaign_weekly']), id, supplier_type_code)
+                        ui_utils.save_price_data(price, posPrice)
 
                         price = PriceMappingDefault.objects.get_price_mapping_object(
-                         ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],duration_type_dict['unit_weekly']), id, supplier_type_code)
+                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],
+                                                       duration_type_dict['unit_weekly']), id, supplier_type_code)
 
-                        # ui_utils.save_price_data(price, posPrice / towercount)
+                        ui_utils.save_price_data(price, posPrice / towercount)
 
                         price = PriceMappingDefault.objects.get_price_mapping_object(
                             ui_utils.make_dict_manager(adinventory_dict['poster_lift_a4'],
                                                        duration_type_dict['campaign_weekly']), id, supplier_type_code)
 
-
-                        # ui_utils.save_price_data(price, posPrice)
+                        ui_utils.save_price_data(price, posPrice)
 
                         price = PriceMappingDefault.objects.get_price_mapping_object(
                             ui_utils.make_dict_manager(adinventory_dict['poster_lift_a4'],
                                                        duration_type_dict['unit_weekly']), id, supplier_type_code)
 
-                        # ui_utils.save_price_data(price, posPrice / towercount)
+                        ui_utils.save_price_data(price, posPrice / towercount)
 
                 if request.data.get('standee_price_week'):
                     stanPrice = int(request.data.get('standee_price_week'))
@@ -1298,24 +1321,24 @@ class InventorySummaryAPIView(APIView):
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['standee_small'],duration_type_dict['campaign_weekly']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, stanPrice)
+                            ui_utils.save_price_data(price, stanPrice)
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['standee_small'], duration_type_dict['unit_weekly']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, stanPrice / towercount)
+                            ui_utils.save_price_data(price, stanPrice / towercount)
 
                         if request.data.get('standee_medium'):
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['standee_medium'], duration_type_dict['campaign_weekly']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, stanPrice)
+                            ui_utils.save_price_data(price, stanPrice)
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['standee_medium'],
                                                            duration_type_dict['unit_weekly']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, stanPrice / towercount)
+                            ui_utils.save_price_data(price, stanPrice / towercount)
 
                 if request.data.get('stall_allowed'):
                     if request.data.get('stall_small'):
@@ -1327,13 +1350,13 @@ class InventorySummaryAPIView(APIView):
                                 ui_utils.make_dict_manager(adinventory_dict['stall_small'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, stallPrice)
+                            ui_utils.save_price_data(price, stallPrice)
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['stall_canopy'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, stallPrice)
+                            ui_utils.save_price_data(price, stallPrice)
 
                     if request.data.get('stall_large'):
                         if request.data.get('stall_price_day_large'):
@@ -1343,7 +1366,7 @@ class InventorySummaryAPIView(APIView):
                                 ui_utils.make_dict_manager(adinventory_dict['stall_large'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, stallPrice)
+                            ui_utils.save_price_data(price, stallPrice)
 
                 if request.data.get('car_display_allowed'):
                     if request.data.get('cd_standard'):
@@ -1354,7 +1377,7 @@ class InventorySummaryAPIView(APIView):
                                 ui_utils.make_dict_manager(adinventory_dict['car_display_standard'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, cdPrice)
+                            ui_utils.save_price_data(price, cdPrice)
 
                     if request.data.get('cd_premium'):
                         if request.data.get('cd_price_day_premium'):
@@ -1364,7 +1387,7 @@ class InventorySummaryAPIView(APIView):
                                 ui_utils.make_dict_manager(adinventory_dict['car_display_premium'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, cdPrice)
+                            ui_utils.save_price_data(price, cdPrice)
 
                 if request.data.get('flier_price_day'):
                     flierPrice = int(request.data.get('flier_price_day'))
@@ -1373,14 +1396,14 @@ class InventorySummaryAPIView(APIView):
                             ui_utils.make_dict_manager(adinventory_dict['flier_mailbox'],
                                                        duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                        # ui_utils.save_price_data(price, flierPrice)
+                        ui_utils.save_price_data(price, flierPrice)
 
                     if request.data.get('d2d_allowed'):
                         price = PriceMappingDefault.objects.get_price_mapping_object(
                             ui_utils.make_dict_manager(adinventory_dict['flier_door_to_door'],
                                                        duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                        # ui_utils.save_price_data(price, flierPrice)
+                        ui_utils.save_price_data(price, flierPrice)
 
                     if request.data.get('flier_lobby_allowed'):
                         try:
@@ -1388,7 +1411,7 @@ class InventorySummaryAPIView(APIView):
                                 ui_utils.make_dict_manager(adinventory_dict['flier_lobby'],
                                                            duration_type_dict['unit_daily']), id, supplier_type_code)
 
-                            # ui_utils.save_price_data(price, flierPrice)
+                            ui_utils.save_price_data(price, flierPrice)
 
                         except KeyError as e:
                             raise KeyError(e.message)
@@ -1559,7 +1582,7 @@ class TowerAPIView(APIView):
         except InventorySummary.DoesNotExist:
             return Response({'message' : 'Please fill Inventory Summary Tab','inventory':'true'},status=404)
 
-        if total_nb_count !=0 and total_nb_count != inventory_nb_count:
+        if total_nb_count !=0 and total_nb_count != inventory_obj.nb_count:
 
             return Response({'message' : 'Total Notice Board Count should equal to Notice Board Count in Inventory Summary Tab'}, status=404)
         if total_lift_count !=0 and total_lift_count != inventory_obj.lift_count:
@@ -1576,12 +1599,12 @@ class TowerAPIView(APIView):
                 try:
                     item = SocietyTower.objects.get(pk=key['tower_id'])
                     tower_dict = {
-                        'tower_tag' : key['tower_tag'],
-                        'tower_name' : key['tower_name'],
-                        'tower_id' :  key['tower_id'],
-                        'lift_count' : item.lift_count,
-                        'nb_count' : item.notice_board_count_per_tower,
-                        'standee_count' : item.standee_count,
+                        'tower_tag': key['tower_tag'],
+                        'tower_name': key['tower_name'],
+                        'tower_id':  key['tower_id'],
+                        'lift_count': item.lift_count,
+                        'nb_count': item.notice_board_count_per_tower,
+                        'standee_count': item.standee_count,
                     }
 
                 except SocietyTower.DoesNotExist:
@@ -1822,7 +1845,7 @@ class FlierAPIView(APIView):
             data['supplier_type_code'] = supplier_type_code
 
             society = SupplierTypeSociety.objects.get(pk=id)
-            flyers = FlyerInventory.objects.filter(supplier=id)
+            flyers = FlyerInventory.objects.filter(object_id=id)
             response['flat_count'] = society.flat_count
 
             serializer = FlyerInventorySerializer(flyers, many=True)
@@ -1909,7 +1932,7 @@ class FlierAPIView(APIView):
             #adinventory_type = request.query_params.get('type', None)
             society = SupplierTypeSociety.objects.get(pk=id)
 
-            flyer = FlyerInventory.objects.filter(supplier=society, pk =adinventory_id)
+            flyer = FlyerInventory.objects.filter(object_id=society, pk =adinventory_id)
             flyer.delete()
             return Response(status=204)
         except SupplierTypeSociety.DoesNotExist:
@@ -1977,7 +2000,7 @@ class StallAPIView(APIView):
         data['supplier_type_code'] = supplier_type_code
 
         society = SupplierTypeSociety.objects.get(pk=id)
-        stalls = StallInventory.objects.filter(supplier=id)
+        stalls = StallInventory.objects.filter(object_id=id)
 
         #item = InventorySummary.objects.get(supplier=society)
 
@@ -2948,4 +2971,3 @@ class BusShelterSearchView(APIView):
             return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
-

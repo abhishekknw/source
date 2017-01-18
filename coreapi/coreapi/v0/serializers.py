@@ -19,7 +19,7 @@ import models
 
 class UserSerializer(ModelSerializer):
     class Meta:
-        model = User
+        model = models.BaseUser
 
 
 class UserProfileSerializer(ModelSerializer):

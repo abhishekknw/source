@@ -164,9 +164,9 @@ angular.module('catalogueApp')
         };
         currentProposalService.updateSupplierStatus($stateParams.proposal_id,data)
           .success(function(response, status){
-            alert("Saved Successfully");
+            // alert("Saved Successfully");
           }).error(function(response, status){
-            alert("Error Occured");
+            // alert("Error Occured");
         });
       }
       //End:code to change and save status of supplier
@@ -196,7 +196,7 @@ angular.module('catalogueApp')
          $scope.proposal.tentative_end_date = $scope.campaign_end_date;
         currentProposalService.saveInvoiceDetails($stateParams.proposal_id,$scope.proposal)
           .success(function(response, status){
-            alert("Successful");
+            // alert("Successful");
                   console.log("success");
           })
           .error(function(response, status){

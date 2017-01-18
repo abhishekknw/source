@@ -72,7 +72,7 @@ center_keys = ['center_name', 'proposal', 'id']
 export_keys = ['center', 'societies', 'societies_inventory', 'societies_inventory_count']
 
 contact_keys = [
-    'city', 'area', 'sub_area', 'supplier_type', 'society_name', 'supplier_code', 'contact_type', 'salutation', \
+    'city', 'city_code', 'area', 'area_code', 'sub_area', 'subarea_code', 'supplier_type', 'society_name', 'supplier_code', 'contact_type', 'salutation', \
     'name', 'landline', 'mobile', 'email'
 ]
 
@@ -577,3 +577,23 @@ default_standee_assignment_frequency = 1
 stall_class_name = 'StallInventory'
 standee_class_name = 'StandeeInventory'
 
+# different states of a proposal being converted to campaign
+proposal_converted_to_campaign = 'PTC'
+proposal_not_converted_to_campaign = 'PNC'
+proposal_on_hold = 'POH'
+
+# different mode of payments
+cash = 'CASH'
+neft ='NEFT'
+cheque = 'CHEQUE'
+
+# different payments statuses
+payment_done = 'PD'
+payment_not_initiated = 'PNI'
+payment_in_progress = 'PIP'
+
+# different campaign states
+completed = 'COMPLETED'
+running = 'RUNNING'
+upcoming = 'UPCOMING'
+unknown = 'UNKNOWN'

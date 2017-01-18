@@ -57,6 +57,7 @@ import renderers as website_renderers
 import v0.ui.constants as ui_constants
 import v0.permissions as v0_permissions
 import v0.utils as v0_utils
+from v0 import errors
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -2134,9 +2135,8 @@ class ImportSocietyData(APIView):
                     if num == 0:
                         continue
                     else:
-
                         if len(row) != len(website_constants.supplier_keys):
-                            return ui_utils.handle_response(class_name, data='length of row {0} and length of supplier_keys do not match {1}'.format(len(row), len(website_constants.supplier_keys)))
+                            return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(len(row), len(website_constants.supplier_keys)))
 
                         for index, key in enumerate(website_constants.supplier_keys):
                             if row[index] == '':
@@ -3142,16 +3142,26 @@ class ImportContactDetails(APIView):
                         continue
                     else:
                         data = {}
-                        for index, key in enumerate(contact_keys):
+
+                        length_of_row = len(row)
+                        length_of_predefined_keys = len(website_constants.contact_keys)
+                        if length_of_row != length_of_predefined_keys:
+                            return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(length_of_row, length_of_predefined_keys))
+
+                        # make the data
+                        for index, key in enumerate(website_constants.contact_keys):
                             if row[index] == '':
                                 data[key] = None
                             else:
                                 data[key] = row[index]
 
-                        landline_number = data['landline'].split('-')
-                        data['landline'] = landline_number[1]
-                        data['std_code'] = landline_number[0]
-                        data['country_code'] = COUNTRY_CODE
+                        if data.get('landline'):
+                            landline_number = data['landline'].split('-')
+                            data['landline'] = landline_number[1]
+                            data['std_code'] = landline_number[0]
+
+                        data['country_code'] = website_constants.COUNTRY_CODE
+
                         try:
                             response = get_supplier_id(request, data)
                             # this method of handing error code will  change in future
@@ -3167,10 +3177,12 @@ class ImportContactDetails(APIView):
                             contact_object.__dict__.update(data)
                             contact_object.save()
 
+                            # print it for universe satisfaction that something is going on !
+                            print '{0} supplier contact done'.format(data['supplier_id'])
                         except ObjectDoesNotExist as e:
                             return ui_utils.handle_response(class_name, exception_object=e)
                         except Exception as e:
-                            return Response(data={str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+                            return ui_utils.handle_response(class_name, exception_object=e)
 
             finally:
                 file.close()
@@ -3586,9 +3598,9 @@ class AssignCampaign(APIView):
             # fetch ProposalInfo object.
             proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
 
-            # check weather it's a campaign or not ?
-            if not proposal.is_campaign or not proposal.invoice_number:
-                return ui_utils.handle_response(class_name, data='This proposal is not a campaign')
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
 
             # todo: check for dates also. you should not assign a past campaign to any user. left for later
 
@@ -3646,7 +3658,7 @@ class AssignCampaign(APIView):
 
             query = {}
             # this field determined weather to include 'assigned_by' in query or not
-            is_assigned_by = int(request.query_params['is_assigned_by'])
+            is_assigned_by = int(request.query_params['include_assigned_by'])
 
             # to field  must be present  if is_assigned_by is False.
             if not is_assigned_by:
@@ -3663,6 +3675,15 @@ class AssignCampaign(APIView):
 
             assigned_objects = models.CampaignAssignment.objects.filter(**query)
             serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
+
+            # assign statuses to each of the campaigns.
+            for data in serializer.data:
+                proposal_start_date = data['campaign']['tentative_start_date']
+                proposal_end_date = data['campaign']['tentative_end_date']
+                response = website_utils.get_campaign_status(proposal_start_date, proposal_end_date)
+                if not response.data['status']:
+                    return response
+                data['campaign']['status'] = response.data['data']
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, exception_object=e)
