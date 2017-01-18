@@ -3135,6 +3135,8 @@ class ImportContactDetails(APIView):
 
             file = open(BASE_DIR + '/files/contacts.csv', 'rb')
             try:
+                length_mismatch_error = 'Length of row read {0} , does not match with length of predefined keys {1}'
+
                 reader = csv.reader(file)
                 file.seek(0)
                 for num, row in enumerate(reader):
@@ -3142,16 +3144,26 @@ class ImportContactDetails(APIView):
                         continue
                     else:
                         data = {}
-                        for index, key in enumerate(contact_keys):
+
+                        length_of_row = len(row)
+                        length_of_predefined_keys = len(website_constants.contact_keys)
+                        if length_of_row != length_of_predefined_keys:
+                            return ui_utils.handle_response(class_name, data=length_mismatch_error.format(length_of_row, length_of_predefined_keys))
+
+                        # make the data
+                        for index, key in enumerate(website_constants.contact_keys):
                             if row[index] == '':
                                 data[key] = None
                             else:
                                 data[key] = row[index]
 
-                        landline_number = data['landline'].split('-')
-                        data['landline'] = landline_number[1]
-                        data['std_code'] = landline_number[0]
-                        data['country_code'] = COUNTRY_CODE
+                        if data.get('landline'):
+                            landline_number = data['landline'].split('-')
+                            data['landline'] = landline_number[1]
+                            data['std_code'] = landline_number[0]
+
+                        data['country_code'] = website_constants.COUNTRY_CODE
+
                         try:
                             response = get_supplier_id(request, data)
                             # this method of handing error code will  change in future
@@ -3167,10 +3179,12 @@ class ImportContactDetails(APIView):
                             contact_object.__dict__.update(data)
                             contact_object.save()
 
+                            # print it for universe satisfaction that something is going on !
+                            print '{0} supplier contact done'.format(data['supplier_id'])
                         except ObjectDoesNotExist as e:
                             return ui_utils.handle_response(class_name, exception_object=e)
                         except Exception as e:
-                            return Response(data={str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+                            return ui_utils.handle_response(class_name, exception_object=e)
 
             finally:
                 file.close()
