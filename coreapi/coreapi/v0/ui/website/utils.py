@@ -3781,7 +3781,9 @@ def prepare_bucket(inventory_name, master_sorted_list_inventories):
             return response
         inventory_general_data = response.data['data']
 
-        tower_ids_per_supplier = {}
+        # stores inventory count per bucket id per supplier. Useful in making buckets and assigning frequencies.
+        inventory_count_per_bucket_per_supplier = {}
+        # inventory_id to tower map.
         inventory_ids_to_tower_id_map = {}
 
         for inv in inventories:
@@ -3796,10 +3798,21 @@ def prepare_bucket(inventory_name, master_sorted_list_inventories):
 
             if not inventory_ids_to_tower_id_map.get(inv.adinventory_id):
                 inventory_ids_to_tower_id_map[inv.adinventory_id] = ''
-            if not (content_type, object_id) in tower_ids_per_supplier.keys():
-                tower_ids_per_supplier[content_type, object_id] = set()
 
-            tower_ids_per_supplier[content_type, object_id].add(tower_id)
+            try:
+                frequency_bucket = inventory_count_per_bucket_per_supplier[content_type, object_id]
+            except KeyError:
+                inventory_count_per_bucket_per_supplier[content_type, object_id] = {}
+                frequency_bucket = inventory_count_per_bucket_per_supplier[content_type, object_id]
+
+            try:
+                frequency_bucket[tower_id] += 1
+                # increment count of inventories if we encounter more inventories for this bucket
+            except KeyError:
+                # set inventory count against this bucket to 1 because we just encountered first inventory for this
+                # bucket
+                frequency_bucket[tower_id] = 1
+
             inventory_ids_to_tower_id_map[inv.adinventory_id] = tower_id
 
         for inv_id in sorted_inventory_ids:
@@ -3810,9 +3823,10 @@ def prepare_bucket(inventory_name, master_sorted_list_inventories):
 
             if bucket_key not in bucket.keys():
                 # this is a list of bucket_ids or tower ids for this supplier
-                list_of_bucket_ids = tower_ids_per_supplier[inv.content_type, inv.object_id]
+                list_of_bucket_ids = inventory_count_per_bucket_per_supplier[inv.content_type, inv.object_id].keys()
+                bucket_id_to_max_frequency = inventory_count_per_bucket_per_supplier[inv.content_type, inv.object_id]
                 # this prepares the bucket based on the above mentioned list
-                response = prepare_bucket_per_inventory(inventory_content_type, inventory_name, list_of_bucket_ids)
+                response = prepare_bucket_per_inventory(inventory_content_type, inventory_name, list_of_bucket_ids, bucket_id_to_max_frequency)
                 if not response.data['status']:
                     return response
                 # a mapping like { 10: { } , 12: { }, 13: { } } is received for each bucket_id.
@@ -3848,11 +3862,17 @@ def get_inventory_general_data(inventory_name, inventory_content_type):
                 'inventory_content_type': inventory_content_type,
             }
 
-        if inventory_name == website_constants.stall:
+        elif inventory_name == website_constants.stall:
             # general inventory data
             inventory_general_data = {
                 'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.stall,adinventory_type=website_constants.default_stall_type),
                 'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_stall_duration_type),
+                'inventory_content_type': inventory_content_type,
+            }
+        elif inventory_name == website_constants.flier:
+            inventory_general_data = {
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.flier,adinventory_type=website_constants.default_flier_type),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_flier_duration_type),
                 'inventory_content_type': inventory_content_type,
             }
 
@@ -3874,7 +3894,7 @@ def get_tower_id(inventory_object):
     function = get_tower_id.__name__
     try:
         class_name = inventory_object.__class__.__name__
-        if class_name == website_constants.stall_class_name:
+        if class_name == website_constants.stall_class_name or class_name == website_constants.flier_class_name:
             return ui_utils.handle_response(function, data=0, success=True)
         elif class_name == website_constants.standee_class_name:
             return ui_utils.handle_response(function, data=inventory_object.tower_id, success=True)
@@ -3883,14 +3903,14 @@ def get_tower_id(inventory_object):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_bucket_per_inventory(inventory_content_type, inventory_name,  list_of_bucket_ids):
+def prepare_bucket_per_inventory(inventory_content_type, inventory_name,  list_of_bucket_ids, bucket_id_to_max_frequency):
     """
     The function that prepares buckets per inventory_content_type
     Args:
         inventory_content_type: The inventory content type.
         inventory_name: The name of the inventory.
         list_of_bucket_ids: List of bucket ids.
-
+        bucket_id_to_max_frequency: { 8: 10, 12: 14 .. } is a map from bucket ids to total number of inventories in that bucket
     Returns: { 0: [ { } ],
 
     """
@@ -3902,6 +3922,10 @@ def prepare_bucket_per_inventory(inventory_content_type, inventory_name,  list_o
             assignment_frequency = 1
         elif inventory_name == website_constants.standee_name:
             assignment_frequency = 1
+        elif inventory_name == website_constants.flier:
+            # because all inventories for a supplier must be assigned to a proposal. We know that flier can only have
+            # a bucket number as zero.
+            assignment_frequency = bucket_id_to_max_frequency[0]
 
         buckets = {}
         inventory_name = inventory_content_type.model
