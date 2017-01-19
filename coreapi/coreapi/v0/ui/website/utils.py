@@ -20,6 +20,7 @@ from django.core.mail import EmailMessage
 from django.utils import timezone
 from django.conf import settings
 from django.db.models import Count
+from django.forms.models import model_to_dict
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -38,6 +39,7 @@ from v0.models import PriceMappingDefault
 import v0.ui.utils as ui_utils
 import serializers
 import v0.utils as v0_utils
+from v0 import errors
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -3432,16 +3434,16 @@ def is_campaign(proposal):
     function = is_campaign.__name__
     try:
         if not proposal.invoice_number:
-            return ui_utils.handle_response(function, data='This proposal is not a campaign because it does not have any invoice number')
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_NO_INVOICE_ERROR)
 
         if proposal.campaign_state == website_constants.proposal_not_converted_to_campaign:
-            return ui_utils.handle_response(function, data='This proposal is not a campaign yet because it has not been approved by ops HEAD')
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_NOT_APPROVED_ERROR)
 
         if proposal.campaign_state == website_constants.proposal_on_hold:
-            return ui_utils.handle_response(function, data='This proposal is not a campaign yet because it is on hold')
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_ON_HOLD_ERROR)
 
         if proposal.campaign_state != website_constants.proposal_converted_to_campaign:
-            return ui_utils.handle_response(function, data='This proposal is not a campaign yet because of unknown reasons.')
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_INVALID_STATE_ERROR.format(proposal.campaign_state ,  website_constants.proposal_converted_to_campaign))
 
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
@@ -3485,6 +3487,12 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         # information for that supplier
         supplier_specific_info = response.data['data']
 
+        response = get_contact_information()
+        if not response.data['status']:
+            return response
+        contact_object_per_content_type_per_supplier = response.data['data']
+        keys_contact_object_per_content_type_per_supplier = contact_object_per_content_type_per_supplier.keys()
+
         shortlisted_suppliers_serializer = serializers.ShortlistedSpacesSerializerReadOnly(shortlisted_spaces, many=True)
         result['shortlisted_suppliers'] = shortlisted_suppliers_serializer.data
 
@@ -3494,8 +3502,36 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
             supplier_id = supplier['object_id']
             for key, value in supplier_specific_info[supplier_content_type_id, supplier_id].iteritems():
                 supplier[key] = value
+            if (supplier_content_type_id, supplier_id) in keys_contact_object_per_content_type_per_supplier:
+                supplier['contacts'] = contact_object_per_content_type_per_supplier[supplier_content_type_id, supplier_id]
+            else:
+                supplier['contacts'] = []
 
         return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_contact_information():
+    """
+    The content types list and suppliers objects list
+    Args:
+        content_types:
+        suppliers:
+
+    Returns:
+    """
+    function = get_contact_information.__name__
+    try:
+        contacts = models.ContactDetails.objects.all()
+        contact_object_per_content_type_per_supplier = {}
+        for contact in contacts:
+            object_id = contact.object_id
+            content_type_object = contact.content_type_id
+            if (content_type_object, object_id) not in contact_object_per_content_type_per_supplier.keys():
+                contact_object_per_content_type_per_supplier[content_type_object, object_id] = []
+            contact_object_per_content_type_per_supplier[content_type_object, object_id].append(model_to_dict(contact))
+        return ui_utils.handle_response(function, data=contact_object_per_content_type_per_supplier, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -3546,7 +3582,6 @@ def map_objects_ids_to_objects(mapping):
         return ui_utils.handle_response(function, data=output, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
-
 
 def get_objects_per_content_type(objects):
     """
