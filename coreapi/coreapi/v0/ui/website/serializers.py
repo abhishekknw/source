@@ -325,3 +325,15 @@ class ShortlistedSpacesSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.ShortlistedSpaces
+
+
+class PriceMappingDefaultSerializerReadOnly(ModelSerializer):
+
+    inventory_type = AdInventoryTypeSerializer(source='adinventory_type')
+    inventory_duration = DurationTypeSerializer(source='duration_type')
+
+    class Meta:
+        model = models.PriceMappingDefault
+
+
+

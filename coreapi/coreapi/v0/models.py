@@ -39,6 +39,8 @@ AD_INVENTORY_CHOICES = (
     ('CAR DISPLAY', 'Car Display'),
     ('FLIER', 'Flier'),
     ('BANNER', 'Banner'),
+    ('POSTER LIFT', 'Poster Lift'),
+
 )
 
 

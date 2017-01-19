@@ -3476,10 +3476,11 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         response = get_objects_per_content_type(shortlisted_spaces)
         if not response.data['status']:
             return response
+        content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
 
         # converts the ids store in previous step to actual objects and adds additional information which is
         #  supplier specific  like area, name, subarea etc.
-        response = map_objects_ids_to_objects(response.data['data'])
+        response = map_objects_ids_to_objects(content_type_supplier_id_map)
         if not response.data['status']:
             return response
 
@@ -3487,43 +3488,69 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         # information for that supplier
         supplier_specific_info = response.data['data']
 
-        response = get_contact_information()
+        response = get_contact_information(content_type_set, supplier_id_set)
         if not response.data['status']:
             return response
         contact_object_per_content_type_per_supplier = response.data['data']
-        keys_contact_object_per_content_type_per_supplier = contact_object_per_content_type_per_supplier.keys()
+
+        response = get_supplier_price_information(content_type_set, supplier_id_set)
+        if not response.data['status']:
+            return response
+        supplier_price_per_content_type_per_supplier = response.data['data']
 
         shortlisted_suppliers_serializer = serializers.ShortlistedSpacesSerializerReadOnly(shortlisted_spaces, many=True)
         result['shortlisted_suppliers'] = shortlisted_suppliers_serializer.data
 
         # put the extra supplier specific info like name, area, subarea in the final result.
         for supplier in shortlisted_suppliers_serializer.data:
+
             supplier_content_type_id = supplier['content_type']
             supplier_id = supplier['object_id']
-            for key, value in supplier_specific_info[supplier_content_type_id, supplier_id].iteritems():
+
+            supplier_tuple = (supplier_content_type_id, supplier_id)
+            for key, value in supplier_specific_info[supplier_tuple].iteritems():
                 supplier[key] = value
-            if (supplier_content_type_id, supplier_id) in keys_contact_object_per_content_type_per_supplier:
-                supplier['contacts'] = contact_object_per_content_type_per_supplier[supplier_content_type_id, supplier_id]
-            else:
+            # no good way to check if the tuple exist in the dict. Hence resorted to KeyError checking.
+            try:
+                supplier['contacts'] = contact_object_per_content_type_per_supplier[supplier_tuple]
+            except KeyError:
                 supplier['contacts'] = []
+            try:
+                supplier['supplier_price_per_inventory'] = supplier_price_per_content_type_per_supplier[supplier_tuple]
+            except KeyError:
+                supplier['supplier_price_per_inventory'] = []
 
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def get_contact_information():
+def get_supplier_price_information(content_type_id_set, supplier_id_set):
     """
-    The content types list and suppliers objects list
-    Args:
-        content_types:
-        suppliers:
 
-    Returns:
+    """
+    function = get_supplier_price_information.__name__
+    try:
+        price_objects = models.PriceMappingDefault.objects.filter(content_type__id__in=content_type_id_set, object_id__in=supplier_id_set)
+        price_objects_per_content_type_per_supplier = {}
+        for price in price_objects:
+            object_id = price.object_id
+            content_type_object = price.content_type_id
+            if (content_type_object, object_id) not in price_objects_per_content_type_per_supplier.keys():
+                price_objects_per_content_type_per_supplier[content_type_object, object_id] = []
+            serializer = serializers.PriceMappingDefaultSerializerReadOnly(price)
+            price_objects_per_content_type_per_supplier[content_type_object, object_id].append(serializer.data)
+        return ui_utils.handle_response(function, data=price_objects_per_content_type_per_supplier, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_contact_information(content_type_id_set, supplier_id_set):
+    """
     """
     function = get_contact_information.__name__
     try:
-        contacts = models.ContactDetails.objects.all()
+        contacts = models.ContactDetails.objects.filter(content_type__id__in=content_type_id_set, object_id__in=supplier_id_set)
         contact_object_per_content_type_per_supplier = {}
         for contact in contacts:
             object_id = contact.object_id
@@ -3583,6 +3610,7 @@ def map_objects_ids_to_objects(mapping):
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
+
 def get_objects_per_content_type(objects):
     """
 
@@ -3595,16 +3623,20 @@ def get_objects_per_content_type(objects):
     function = get_objects_per_content_type.__name__
     try:
         result = {}
+        content_type_set = set()
+        supplier_id_set = set()
         for my_object in objects:
             content_type_id = my_object.content_type.id
             object_id = my_object.object_id
 
             if not result.get(content_type_id):
                 result[content_type_id] = []
+                content_type_set.add(content_type_id)
 
             result[content_type_id].append(object_id)
+            supplier_id_set.add(object_id)
 
-        return ui_utils.handle_response(function ,data=result, success=True)
+        return ui_utils.handle_response(function ,data=(result, content_type_set, supplier_id_set), success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
