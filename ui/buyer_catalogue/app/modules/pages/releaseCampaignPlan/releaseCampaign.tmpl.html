@@ -23,57 +23,132 @@
           </tr>
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
-          <tr ng-repeat="filter in supplier.shortlisted_inventories">
+          <tr ng-repeat="filter in getFilters(supplier)">
             <td class="col-md-1">{{supplier.name}}</td>
             <td class="col-md-2">{{supplier.area}}</td>
             <td class="col-md-2">{{supplier.subarea}}</td>
+            <td class="col-md-2">{{supplier.object_id}}</td>
             <td class="col-md-2">{{filter.inventory_type.adinventory_name}}</td>
+            <td class="col-md-2">{{filter.inventory_type.inventory_count}}</td>
+            <td class="col-md-2">{{filter.supplier_price}}</td>
+            <td class="col-md-2">{{filter.inventory_type.total_price}}</td>
+            <td class="col-md-2"><input type="number" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width"></td>
             <td class="col-md-2">
-              <input type="text" ng-model="filter.release_date" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
-              <!-- <span class="input-group-btn"> -->
-                <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
-              <!-- </span> -->
+              <select class="drop-width box-spacing" ng-model="supplier.booking_status">
+                <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
+              </select>
+            </td>
+            <td class="col-md-2">{{supplier.phase}}</td>
+            <!--mode of payment  -->
+            <td class="col-md-2" style="text-align:left">
+              <div class="radio">
+                     <label><input type="radio" ng-model="supplier.payment_method" value="NEFT" ng-click="updateSupplierStatus()">NEFT</label>
+              </div>
+              <div class="radio">
+                     <label><input type="radio" ng-model="supplier.payment_method" value="CHEQ" ng-click="updateSupplierStatus()">Cheque</label>
+              </div>
+              <div class="radio" ng-if="supplier.status != 'X'">
+                     <label><input type="radio" ng-model="supplier.payment_method" value="CASH" ng-click="updateSupplierStatus()">Cash</label>
+              </div>
+              <a class="" data-target="#paymentModal" data-toggle="modal"><b>Details</b></a>
             </td>
             <td class="col-md-2">
-              <input type="text" ng-model="filter.audit_date" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup2" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
-              <!-- <span class="input-group-btn"> -->
-                <button type="button" class="btn btn-default" ng-click="popup2 = true"><i class="glyphicon glyphicon-calendar"></i></button>
-              <!-- </span> -->
+              <a class="" data-target="#contactModal" data-toggle="modal" ng-click="setContact(supplier)"><b>View Contact Details</b></a>
             </td>
-            <td class="col-md-2">
-              <input type="text" ng-model="filter.closure_date" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup3" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
-              <!-- <span class="input-group-btn"> -->
-                <button type="button" class="btn btn-default" ng-click="popup3 = true"><i class="glyphicon glyphicon-calendar"></i></button>
-              <!-- </span> -->
-            </td>
-            <td class="col-md-2"><textarea name="comments" class="form-control"></textarea></td>
-            <td class="col-md-2">
-              <input type="text" class="form-control spacing">
+            <!--for payment status  -->
+            <td class="col-md-2" style="text-align:left">
+              <div class="radio">
+                     <label><input type="radio" ng-model="supplier.payment_status" value="PD" ng-click="updateSupplierStatus()">Paid</label>
+              </div>
+              <div class="radio">
+                     <label><input type="radio" ng-model="supplier.payment_status" value="PE" ng-click="updateSupplierStatus()">Pending</label>
+              </div>
+              <div class="radio" ng-if="supplier.status != 'X'">
+                     <label><input type="radio" ng-model="supplier.payment_status" value="NP" ng-click="updateSupplierStatus()">Not Paid</label>
+              </div>
             </td>
           </tr>
-          <!-- <tr>
-            <td class="col-md-1">Powai Palazzio</td>
-            <td class="col-md-2">Powai</td>
-            <td class="col-md-2">Hiranandani Gardens</td>
-            <td class="col-md-2">Poster</td>
-            <td class="col-md-2">
-              <input type="text" ng-model="campaign_start_date" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
-            </td>
-            <td class="col-md-2">
-              <input type="text" class="form-control spacing">
-            </td>
-            <td class="col-md-2">
-              <input type="text" class="form-control spacing">
-            </td>
-            <td class="col-md-2"><textarea name="comments" class="form-control"></textarea></td>
-            <td class="col-md-2">
-              <input type="text" class="form-control spacing">
-            </td>
-          </tr> -->
         </tbody>
       </table>
     </div>
   </div>
-  <button class="btn btn-danger active notify" ng-click="saveDetails()">Update</button>
+  <div class = "col-md-12" style="text-align:right">
+    <button class="btn btn-danger active notify" ng-click="changeLocation()">Planning Release-Audit</button>
+  </div>
 </div>
+<!--Start: Code for contacts Modal Window -->
+<div id="contactModal" class="modal fade">
+  <div class="modal-dialog" style="width:700px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Contact Details</h4>
+        <hr/>
+        <div class = "modal-body" style = "width: 650px; height: 300px;">
+          <div class="modal-body col-md-4 table-responsive" style="width: 650px; height: 350px">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th ng-repeat="header in contact_headings" class="col-md-2" style="text-align: center;"><b>{{header.header}}</b></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat = "contact in contacts">
+                    <td>{{contact.salutation}}</td>
+                    <td>{{contact.name}}</td>
+                    <td>{{contact.contact_type}}</td>
+                    <td>{{contact.email}}</td>
+                    <td>{{contact.std_code}}</td>
+                    <td>{{contact.landline}}</td>
+                    <td>{{contact.mobile}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for contacts Modal Window -->
+
+<!--Start: Code for payment mode Modal Window -->
+<div id="paymentModal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Mode of Payment Details</h4>
+        <hr/>
+        <div class = "modal-body" style = "height: 300px;">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th ng-repeat="header in payment_headings" class="col-md-2" style="text-align: center;"><b>{{header.header}}</b></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat = "contact in contacts">
+                <td>{{contact.salutation}}</td>
+                <td>{{contact.name}}</td>
+                <td>{{contact.contact_type}}</td>
+                <td>{{contact.email}}</td>
+                <td>{{contact.std_code}}</td>
+                <td>{{contact.landline}}</td>
+                <td>{{contact.mobile}}</td>
+              </tr>
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for payment Modal Window -->
+
 <div><footer-bar></footer-bar></div>
