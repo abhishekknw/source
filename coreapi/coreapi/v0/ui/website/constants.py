@@ -521,6 +521,7 @@ buffer = 'B'
 poster = 'POSTER'
 standee = 'STANDEE'
 stall = 'STALL'
+flier = 'FLIER'
 
 
 # to identify unique supplier types
@@ -565,7 +566,7 @@ default_stall_allocation_interval = 1
 default_stall_assignment_frequency = 1
 
 # temp list of inventories not implemented yet. delete it after implemantation. 
-inv_not_implemented = ['POSTER', 'FLIER',  'CAR_DISPLAY']
+inv_not_implemented = ['POSTER', 'CAR_DISPLAY']
 
 # standee name
 standee_name = 'STANDEE'
@@ -573,9 +574,15 @@ default_standee_type = 'Medium'
 default_standee_duration_type = 'Unit Weekly'
 default_standee_assignment_frequency = 1
 
+# Flier
+default_flier_type = 'Mailbox'
+default_flier_duration_type = 'Unit Daily'
+
+
 # class names
 stall_class_name = 'StallInventory'
 standee_class_name = 'StandeeInventory'
+flier_class_name = 'FlyerInventory'
 
 # different states of a proposal being converted to campaign
 proposal_converted_to_campaign = 'PTC'
