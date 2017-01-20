@@ -3516,11 +3516,61 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
             except KeyError:
                 supplier['contacts'] = []
             try:
-                supplier['supplier_price_per_inventory'] = supplier_price_per_content_type_per_supplier[supplier_tuple]
+                pmd_objects_per_supplier = supplier_price_per_content_type_per_supplier[supplier_tuple]
             except KeyError:
-                supplier['supplier_price_per_inventory'] = []
+                pmd_objects_per_supplier = []
+            shortlisted_inventories = supplier['shortlisted_inventories']
+            response = add_total_price_per_inventory_per_supplier(pmd_objects_per_supplier, shortlisted_inventories)
+            if not response.data['status']:
+                return response
+            supplier['shortlisted_inventories'], total_inventory_supplier_price = response.data['data']
+            supplier['total_inventory_supplier_price'] = total_inventory_supplier_price
 
         return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        import pdb
+        pdb.set_trace()
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def add_total_price_per_inventory_per_supplier(price_mapping_default_inventories, shortlisted_inventories):
+    """
+    Args:
+        price_mapping_default_inventories: a list of PMD entries for a supplier
+        shortlisted_inventories: List of SI.
+
+    Returns: a dict with total supplier price keyed by inventory name.
+
+    """
+    function = add_total_price_per_inventory_per_supplier.__name__
+    try:
+        total_price = 0
+        pmd_inv_to_supplier_price_map = {}
+        pmd_inventory_names = set()
+
+        for pmd in price_mapping_default_inventories:
+            inventory_name = pmd['inventory_type']['adinventory_name']
+            inventory_supplier_price = pmd['supplier_price'] if pmd['supplier_price'] else 0
+            if not pmd_inv_to_supplier_price_map.get(inventory_name):
+                pmd_inventory_names.add(inventory_name)
+                pmd_inv_to_supplier_price_map[inventory_name] = inventory_supplier_price
+
+        result = {}
+        for inventory in shortlisted_inventories:
+
+            inventory_name = inventory['inventory_type']['adinventory_name']
+
+            if not result.get(inventory_name):
+                result[inventory_name] = {}
+                result[inventory_name]['supplier_price'] = pmd_inv_to_supplier_price_map[inventory_name] if pmd_inv_to_supplier_price_map.get(inventory_name) else 0
+                result[inventory_name]['detail'] = []
+                result[inventory_name]['total_count'] = 0
+                total_price += float(result[inventory_name]['supplier_price'])
+
+            result[inventory_name]['detail'].append(inventory)
+            result[inventory_name]['total_count'] += 1
+
+        return ui_utils.handle_response(function, data=(result, total_price), success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -3536,10 +3586,14 @@ def get_supplier_price_information(content_type_id_set, supplier_id_set):
         for price in price_objects:
             object_id = price.object_id
             content_type_object = price.content_type_id
-            if (content_type_object, object_id) not in price_objects_per_content_type_per_supplier.keys():
+            try:
+                reference = price_objects_per_content_type_per_supplier[content_type_object, object_id]
+            except KeyError:
                 price_objects_per_content_type_per_supplier[content_type_object, object_id] = []
+                reference = price_objects_per_content_type_per_supplier[content_type_object, object_id]
+
             serializer = serializers.PriceMappingDefaultSerializerReadOnly(price)
-            price_objects_per_content_type_per_supplier[content_type_object, object_id].append(serializer.data)
+            reference.append(serializer.data)
         return ui_utils.handle_response(function, data=price_objects_per_content_type_per_supplier, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
@@ -3604,8 +3658,11 @@ def map_objects_ids_to_objects(mapping):
 
             # map the extra supplier_specific attributes to content_type, supplier_id
             for supplier in supplier_objects:
-                output[content_type_id, supplier['supplier_id']] = {'area': supplier['area'], 'name': supplier['name'], 'subarea': supplier['subarea']}
-
+                extra_data = {'area': supplier['area'], 'name': supplier['name'], 'subarea': supplier['subarea']}
+                response = merge_two_dicts(supplier, extra_data)
+                if not response.data['status']:
+                    return response
+                output[content_type_id, supplier['supplier_id']] = response.data['data']
         return ui_utils.handle_response(function, data=output, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
@@ -3626,6 +3683,7 @@ def get_objects_per_content_type(objects):
         content_type_set = set()
         supplier_id_set = set()
         for my_object in objects:
+
             content_type_id = my_object.content_type.id
             object_id = my_object.object_id
 
@@ -3636,7 +3694,7 @@ def get_objects_per_content_type(objects):
             result[content_type_id].append(object_id)
             supplier_id_set.add(object_id)
 
-        return ui_utils.handle_response(function ,data=(result, content_type_set, supplier_id_set), success=True)
+        return ui_utils.handle_response(function, data=(result, content_type_set, supplier_id_set), success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 

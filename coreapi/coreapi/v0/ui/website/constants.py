@@ -560,7 +560,7 @@ shortlisted_inventory_detail_keys = ['inventory_price', 'inventory_count', 'fact
 society_model_name = 'suppliertypesociety'
 
 # stall_settings
-default_stall_type = 'Small'
+default_stall_type  = 'Small'
 default_stall_duration_type = 'Unit Daily'
 default_stall_allocation_interval = 1
 default_stall_assignment_frequency = 1
