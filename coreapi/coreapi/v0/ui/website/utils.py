@@ -3559,7 +3559,7 @@ def handle_update_campaign_inventories(user, data):
             if not shortlisted_spaces.get(ss_global_id):
                 shortlisted_spaces[ss_global_id] = {}
 
-            response = check_valid_codes(supplier['payment_status'],  supplier['payment_method'])
+            response = check_valid_codes(supplier['payment_status'],  supplier['payment_method'], supplier['booking_status'])
             if not response.data['status']:
                 return response
 
@@ -3568,6 +3568,7 @@ def handle_update_campaign_inventories(user, data):
                 'payment_status': supplier['payment_status'],
                 'payment_method': supplier['payment_method'],
                 'total_negotiated_price': supplier['total_negotiated_price'],
+                'booking_status': supplier['booking_status']
             }
             shortlisted_inventories = supplier['shortlisted_inventories']
             for inventory, inventory_detail in shortlisted_inventories.iteritems():
@@ -3578,7 +3579,8 @@ def handle_update_campaign_inventories(user, data):
 
                     shortlisted_inventory_details[sid_global_id] = {
                         'release_date': inv['release_date'],
-                        'closure_date': inv['closure_date']
+                        'closure_date': inv['closure_date'],
+                        'comment': inv['comment']
                     }
                     for audit_date in inv['audit_dates']:
 
@@ -3634,6 +3636,7 @@ def update_campaign_inventories(data):
             obj.payment_status = shortlisted_spaces[ss_global_id]['payment_status']
             obj.payment_method = shortlisted_spaces[ss_global_id]['payment_method']
             obj.total_negotiated_price = shortlisted_spaces[ss_global_id]['total_negotiated_price']
+            obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
 
         sid_ids = shortlisted_inventory_details.keys()
         sid_objects = models.ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
@@ -3643,6 +3646,7 @@ def update_campaign_inventories(data):
             sid_global_id = obj.id
             obj.release_date = shortlisted_inventory_details[sid_global_id]['release_date']
             obj.closure_date = shortlisted_inventory_details[sid_global_id]['closure_date']
+            obj.comment = shortlisted_inventory_details[sid_global_id]['comment']
 
         new_audit_date_objects = []
         for obj_dict in new_audit_dates:
@@ -3671,12 +3675,13 @@ def update_campaign_inventories(data):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def check_valid_codes(payment_status, payment_method):
+def check_valid_codes(payment_status, payment_method, booking_status):
     """
     checks weather these codes are valid or not
     Args:
-        payment_status:
-        payment_method:
+        payment_status: payment status
+        payment_method: payment method
+        booking_status: booking status
 
     Returns:
     """
@@ -3686,6 +3691,8 @@ def check_valid_codes(payment_status, payment_method):
             return ui_utils.handle_response(function, data=errors.INVALID_PAYMENT_METHOD_CODE.format(payment_method))
         if payment_status and payment_status not in website_constants.payment_status.values():
             return ui_utils.handle_response(function, data=errors.INVALID_PAYMENT_STATUS_CODE.format(payment_status))
+        if booking_status and booking_status not in website_constants.booking_status.values():
+            return ui_utils.handle_response(function, data=errors.INVALID_BOOKING_STATUS_CODE.format(booking_status))
 
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:

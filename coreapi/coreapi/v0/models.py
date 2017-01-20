@@ -1981,6 +1981,7 @@ class ShortlistedInventoryPricingDetails(BaseModel):
     shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True)
     objects = managers.GeneralManager()
     inventory_object = generic.GenericForeignKey('inventory_content_type', 'inventory_id')
+    comment = models.CharField(max_length=1000, null=True, blank=True)
 
     class Meta:
         db_table = 'shortlisted_inventory_pricing_details'
@@ -2185,6 +2186,7 @@ class ShortlistedSpaces(BaseModel):
     payment_status = models.CharField(max_length=255, null=True, blank=True)
     payment_method = models.CharField(max_length=255, null=True, blank=True)
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
+    booking_status = models.CharField(max_length=10, null=True, blank=True)
 
     class Meta:
         db_table = 'shortlisted_spaces'

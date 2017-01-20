@@ -603,6 +603,12 @@ payment_status = {
     'payment_pending': 'PP'
 }
 
+# supplier booking status
+booking_status = {
+    'booked': 'BK',
+    'not_booked': 'NB'
+}
+
 # different campaign states
 completed = 'COMPLETED'
 running = 'RUNNING'

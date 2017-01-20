@@ -9,3 +9,4 @@ CAMPAIGN_NO_INVOICE_ERROR = 'This proposal is not a campaign because it does not
 
 INVALID_PAYMENT_METHOD_CODE = 'This code {0} is not a valid payment method code'
 INVALID_PAYMENT_STATUS_CODE = 'This code {0} is not a valid payment status code'
+INVALID_BOOKING_STATUS_CODE =  'This code {0} is not a valid booking status code'
