@@ -590,14 +590,18 @@ proposal_not_converted_to_campaign = 'PNC'
 proposal_on_hold = 'POH'
 
 # different mode of payments
-cash = 'CASH'
-neft ='NEFT'
-cheque = 'CHEQUE'
+payment_method = {
+    'cash':'CASH',
+    'neft':'NEFT',
+    'cheque': 'CHEQUE'
+}
 
 # different payments statuses
-payment_done = 'PD'
-payment_not_initiated = 'PNI'
-payment_in_progress = 'PIP'
+payment_status = {
+    'payment_done': 'PD',
+    'payment_not_initiated': 'PNI',
+    'payment_pending': 'PP'
+}
 
 # different campaign states
 completed = 'COMPLETED'

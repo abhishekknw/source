@@ -31,6 +31,7 @@ from openpyxl import Workbook
 import boto
 import boto.s3
 from boto.s3.key import Key
+from bulk_update.helper import bulk_update
 
 import constants as website_constants
 from constants import price_per_flat, inventorylist
@@ -3530,6 +3531,164 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
     except Exception as e:
         import pdb
         pdb.set_trace()
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def handle_update_campaign_inventories(user, data):
+    """
+    Update campaign and inventories
+    Args:
+        data:
+
+    Returns:
+
+    """
+    function = handle_update_campaign_inventories.__name__
+    try:
+        if not data:
+            return ui_utils.handle_response(function, data='success', success=True)
+
+        # collect shortlisted spaces specific details
+        shortlisted_spaces = {}
+        shortlisted_inventory_details = {}
+        new_audit_dates = []
+        old_audit_dates = {}
+
+        for supplier in data:
+            ss_global_id = supplier['id']
+            if not shortlisted_spaces.get(ss_global_id):
+                shortlisted_spaces[ss_global_id] = {}
+
+            response = check_valid_codes(supplier['payment_status'],  supplier['payment_method'])
+            if not response.data['status']:
+                return response
+
+            shortlisted_spaces[ss_global_id] = {
+                'phase': supplier['phase'],
+                'payment_status': supplier['payment_status'],
+                'payment_method': supplier['payment_method'],
+                'total_negotiated_price': supplier['total_negotiated_price'],
+            }
+            shortlisted_inventories = supplier['shortlisted_inventories']
+            for inventory, inventory_detail in shortlisted_inventories.iteritems():
+                for inv in inventory_detail['detail']:
+                    sid_global_id = inv['id']
+                    if not shortlisted_inventory_details.get(sid_global_id):
+                        shortlisted_inventory_details[sid_global_id] = {}
+
+                    shortlisted_inventory_details[sid_global_id] = {
+                        'release_date': inv['release_date'],
+                        'closure_date': inv['closure_date']
+                    }
+                    for audit_date in inv['audit_dates']:
+
+                        audit_global_id = audit_date.get('id')
+                        if not audit_global_id:
+                            audit_data = {
+                                'shortlisted_inventory_id': sid_global_id,
+                                'audit_date': audit_date['audit_date'],
+                                'audited_by': user
+                            }
+                            new_audit_dates.append(audit_data)
+                        else:
+                            old_audit_dates[audit_global_id] = {
+                                'shortlisted_inventory_id': sid_global_id,
+                                'audit_date': audit_date['audit_date'],
+                                'audited_by': user
+                            }
+        data = {
+            'shortlisted_spaces': shortlisted_spaces,
+            'shortlisted_inventory_details': shortlisted_inventory_details,
+            'new_audit_dates': new_audit_dates,
+            'old_audit_dates': old_audit_dates
+        }
+        response = update_campaign_inventories(data)
+        if not response.data['status']:
+            return response
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def update_campaign_inventories(data):
+    """
+    updates the data in three tables: SS , SID, and Audit dates.
+    Args:
+        data: a dict of  individual dicts.
+
+    Returns: success or failure
+    """
+    function = update_campaign_inventories.__name__
+    try:
+        shortlisted_spaces = data['shortlisted_spaces']
+        shortlisted_inventory_details = data['shortlisted_inventory_details']
+        new_audit_dates = data['new_audit_dates']
+        old_audit_dates = data['old_audit_dates']
+
+        shortlisted_spaces_ids = shortlisted_spaces.keys()
+        ss_objects = models.ShortlistedSpaces.objects.filter(id__in=shortlisted_spaces_ids)
+
+        for obj in ss_objects:
+            ss_global_id = obj.id
+            obj.phase = shortlisted_spaces[ss_global_id]['phase']
+            obj.payment_status = shortlisted_spaces[ss_global_id]['payment_status']
+            obj.payment_method = shortlisted_spaces[ss_global_id]['payment_method']
+            obj.total_negotiated_price = shortlisted_spaces[ss_global_id]['total_negotiated_price']
+
+        sid_ids = shortlisted_inventory_details.keys()
+        sid_objects = models.ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
+        sid_object_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(sid_ids)
+
+        for obj in sid_objects:
+            sid_global_id = obj.id
+            obj.release_date = shortlisted_inventory_details[sid_global_id]['release_date']
+            obj.closure_date = shortlisted_inventory_details[sid_global_id]['closure_date']
+
+        new_audit_date_objects = []
+        for obj_dict in new_audit_dates:
+            obj_dict['shortlisted_inventory'] = sid_object_map[obj_dict['shortlisted_inventory_id']]
+            del obj_dict['shortlisted_inventory_id']
+            new_audit_date_objects.append(models.AuditDate(**obj_dict))
+
+        audit_ids = old_audit_dates.keys()
+        audit_objects = models.AuditDate.objects.filter(id__in=audit_ids)
+
+        for audit_obj in audit_objects:
+            audit_id = audit_obj.id
+            audit_obj.audit_date = old_audit_dates[audit_id]['audit_date']
+            audit_obj.audited_by = old_audit_dates[audit_id]['audited_by']
+
+        bulk_update(ss_objects)
+        bulk_update(sid_objects)
+        bulk_update(audit_objects)
+        models.AuditDate.objects.bulk_create(new_audit_date_objects)
+
+        # todo: .save() won't be called because we are using bulk update to update the tables. as a consequence dates
+        # todo: won't be updated. Find a solution later.
+
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def check_valid_codes(payment_status, payment_method):
+    """
+    checks weather these codes are valid or not
+    Args:
+        payment_status:
+        payment_method:
+
+    Returns:
+    """
+    function = check_valid_codes.__name__
+    try:
+        if payment_method and payment_method not in website_constants.payment_method.values():
+            return ui_utils.handle_response(function, data=errors.INVALID_PAYMENT_METHOD_CODE.format(payment_method))
+        if payment_status and payment_status not in website_constants.payment_status.values():
+            return ui_utils.handle_response(function, data=errors.INVALID_PAYMENT_STATUS_CODE.format(payment_status))
+
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
 

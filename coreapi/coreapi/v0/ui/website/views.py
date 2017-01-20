@@ -3722,3 +3722,32 @@ class CampaignInventory(APIView):
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+    def put(self, request, campaign_id):
+        """
+        The api updates data against this campaign_id.
+        Args:
+            request:
+            campaign_id: The campaign id to which we want to update
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+
+            proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
+
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
+
+            data = request.data
+
+            response = website_utils.handle_update_campaign_inventories(request.user, data)
+            if not response.data['status']:
+                return response
+
+            return ui_utils.handle_response(class_name, data='successfully updated', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
