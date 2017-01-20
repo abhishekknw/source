@@ -188,7 +188,12 @@ angular
            url : '/manageUser',
            controller : 'userCtrl',
            templateUrl : 'modules/pages/manageUsers/user.tmpl.html'
-       });
+       })
+       .state('auditReleasePlan',{
+            url : '/:proposal_id/auditReleasePlan',
+            controller : 'AuditReleasePlanCtrl',
+            templateUrl : 'modules/pages/auditReleasePlan/auditReleasePlan.tmpl.html'
+        });
 })
 .run(['$rootScope', '$window', '$location', 'AuthService',
      function ($rootScope, $window, $location, AuthService) {

@@ -502,6 +502,8 @@ class SocietyAPIView(APIView):
             return Response(serializer.errors, status=400)
 
         society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
+        object_id = serializer.data['supplier_id']
+        content_type = models.ContentType.objects.get_for_model(SupplierTypeSociety)
 
         #here we will start storing contacts
         if request.data and 'basic_contact_available' in request.data and request.data['basic_contact_available']:
@@ -512,7 +514,7 @@ class SocietyAPIView(APIView):
                 else:
                     contact_serializer = ContactDetailsSerializer(data=contact)
                 if contact_serializer.is_valid():
-                    contact_serializer.save(supplier=society)
+                    contact_serializer.save(object_id=object_id, content_type=content_type)
 
         if request.data and 'basic_reference_available' in request.data and request.data['basic_reference_available']:
             contact = request.data['basic_reference_contacts']
@@ -522,7 +524,7 @@ class SocietyAPIView(APIView):
             else:
                 contact_serializer = ContactDetailsSerializer(data=contact)
             if contact_serializer.is_valid():
-                contact_serializer.save(supplier = society, contact_type="Reference")
+                contact_serializer.save(contact_type="Reference", object_id=object_id, content_type=content_type)
 
 
         towercount = SocietyTower.objects.filter(supplier = society).count()
@@ -531,7 +533,7 @@ class SocietyAPIView(APIView):
             abc = request.data['tower_count'] - towercount
         if 'tower_count' in request.data:
             for i in range(abc):
-                tower = SocietyTower(supplier = society)
+                tower = SocietyTower(supplier = society, object_id=object_id, content_type=content_type)
                 tower.save()
         return Response(serializer.data, status=201)
 
