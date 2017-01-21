@@ -2,7 +2,6 @@ angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
     ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams',
     function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams) {
-console.log($stateParams.proposal_id);
   $scope.campaign_id = $stateParams.proposal_id;
  	$scope.headings = [
         {header : 'Supplier Name'},
@@ -22,7 +21,6 @@ console.log($stateParams.proposal_id);
       ];
   $scope.booking_status = [
     {name:'Booked', code : 'BK'},
-    {name:'Pending', code : 'PE'},
     {name:'Not Booked', code : 'NB'},
   ];
   $scope.contact_headings = [
@@ -36,7 +34,7 @@ console.log($stateParams.proposal_id);
 
   ];
   $scope.payment_headings = [
-    {header : 'Name For Payment'},
+    {header : 'Name On Cheque'},
     {header : 'Bank Name'},
     {header : 'IFSC Code'},
     {header : 'Account Number'},
@@ -70,22 +68,30 @@ console.log($stateParams.proposal_id);
 
     releaseCampaignService.getCampaignReleaseDetails($scope.campaign_id)
     	.success(function(response, status){
-        console.log(response);
     		$scope.releaseDetails = response.data;
+        setDataToModel($scope.releaseDetails.shortlisted_suppliers);
             $scope.loading = response;
     	})
     	.error(function(response, status){
     		console.log("error occured", status);
     	});
 
-    $scope.emptyList = ['empty'];
+      var setDataToModel = function(suppliers){
+        for(var i=0;i<suppliers.length;i++){
+          suppliers[i].total_negotiated_price = parseInt(suppliers[i].total_negotiated_price);
+          suppliers[i].phase = parseInt(suppliers[i].phase);
+        }
+      }
+    $scope.emptyList = {NA:'NA'};
     $scope.getFilters = function(supplier){
-      // console.log(supplier);
-      if(supplier.shortlisted_inventories.length > 0){
+      var keys = Object.keys(supplier.shortlisted_inventories);
+      if(keys.length > 0){
+        $scope.inventory_type = supplier.shortlisted_inventories
         return supplier.shortlisted_inventories;
       }
-      else
+      else{
         return $scope.emptyList;
+      }
     }
     //Start:To set contacts to show in contactModal
     $scope.setContact = function(supplier){
@@ -97,14 +103,24 @@ console.log($stateParams.proposal_id);
     //End:To set contacts to show in contactModal
     //Start:To set payment details to show in paymentModal
     $scope.setPayment = function(supplier){
-      if(supplier.contacts.length > 0) //need to change varible
-        $scope.contacts = supplier.contacts;
-      else
-        $scope.contacts = null;
+        $scope.payment = supplier;
     }
     //End:To set payment details to show in paymentModal
     //Start: TO go to audit release plan pages
     $scope.changeLocation = function(){
       $location.path('/' + $scope.campaign_id + '/auditReleasePlan');
+    }
+    //To show inventory ids in modal after clicking on inventory type
+    $scope.setInventoryIds = function(filter){
+      $scope.inventoryIds = [];
+      $scope.inventoryIds = filter.detail;
+    }
+    $scope.updateData = function(){
+      releaseCampaignService.updateAuditReleasePlanDetails($scope.campaign_id,$scope.releaseDetails.shortlisted_suppliers)
+      .success(function(response, status){
+      })
+      .error(function(response, status){
+        console.log("error occured", status);
+      });
     }
 }]);//Controller function ends here

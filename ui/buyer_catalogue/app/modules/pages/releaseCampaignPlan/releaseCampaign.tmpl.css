@@ -44,3 +44,10 @@ body{
 .proposal-details{
 	margin-left: 10px;
 }
+.table-scroll {
+  height:250px;
+  overflow:scroll;
+  margin-top:0px;
+  margin-left: 10px;
+  /*z-index: 3;*/
+}

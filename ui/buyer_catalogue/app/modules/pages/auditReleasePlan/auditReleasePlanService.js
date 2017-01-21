@@ -12,6 +12,11 @@ angular.module('catalogueApp')
      return machadaloHttp.get(url);
    }
 
+
+    auditReleasePlanService.updateAuditReleasePlanDetails = function(proposal_id,data){
+         var url = url_base + proposal_id + "/campaign-inventories/";
+      return machadaloHttp.put(url,data);
+    }
    return auditReleasePlanService;
   return 0;
 }]);

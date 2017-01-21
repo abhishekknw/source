@@ -2,45 +2,48 @@
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 </br></br></br><back-Button></back-Button>
 <h3 style = "margin-left: 460px; margin-top: 60px;">Audit / Release Plan Details</h3>
-<div class="container">
-  <div class="row">
-    <div class="panel panel-default">
-      <table class="table table-responsive table-bordered" style="text-align: center;">
+<!-- <div class="container"> -->
+  <!-- <div class="row"> -->
+    <!-- <div class="panel panel-default"> -->
+      <table class="table  table-bordered table-scroll" style="text-align: center;margin-left:10px;table-layout:fixed;word-wrap:break-word;">
         <thead>
           <tr>
             <th ng-repeat="header in headings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
           </tr>
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
-          <tr ng-repeat="filter in getFilters(supplier)">
+          <tr ng-repeat="(key,filter) in getFilters(supplier)">
             <td class="col-md-1">
-              <input type="number" ng-model="supplier.phase" class="form-control spacing col-width">
+            {{supplier.phase}}
             </td>
-            <td class="col-md-2">{{filter.inventory_type.adinventory_name}}</td>
+            <td class="col-md-2">{{key}}</td>
             <td class="col-md-2">{{supplier.object_id}}</td>
-            <td class="col-md-2">{{supplier.supplier_code}}</td>
+            <td class="col-md-2">{{}}</td>
             <td class="col-md-2">
-              <input type="text" ng-model="filter.release_date" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
+              <input type="text" ng-model="filter.detail.release_date" ng-change="addReleaseDate(filter.detail,filter.detail.release_date)" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" date-parser="{{format}}"ng-model-options="{timezone:'UTC'}"/>
               <!-- <span class="input-group-btn"> -->
                 <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
               <!-- </span> -->
             </td>
             <td class="col-md-2">
-              <a class="" data-target="#auditDateModal" data-toggle="modal" ng-click="setAuditDate(filter)"><b>Add Date</b></a>
+              <a class="" data-target="#auditDateModal" data-toggle="modal" ng-click="setAuditDate(filter,$parent.$index,key)"><b>Add Date</b></a>
             </td>
             <td class="col-md-2">
-              <input type="text" ng-model="filter.closure_date" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup3" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
+              <input type="text" ng-model="filter.detail.closure_date" ng-change="addClosureDate(filter.detail,filter.detail.closure_date)" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup3" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
               <!-- <span class="input-group-btn"> -->
                 <button type="button" class="btn btn-default" ng-click="popup3 = true"><i class="glyphicon glyphicon-calendar"></i></button>
               <!-- </span> -->
             </td>
-            <td class="col-md-4"><textarea name="comments" class="form-control"></textarea></td>
+            <td class="col-md-8"><textarea rows="4" cols="50" name="comments" ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing"></textarea></td>
           </tr>
         </tbody>
       </table>
-    </div>
-  </div>
-</div>
+      <div class = "col-md-12" style="text-align:right">
+        <button class="btn btn-danger active notify" ng-click="updateData()">Update</button>
+      </div>
+    <!-- </div> -->
+  <!-- </div> -->
+<!-- </div> -->
 <!--Start: Code for Audit Date Modal Window -->
 <div id="auditDateModal" class="modal fade">
   <div class="modal-dialog" style="width:400px">
@@ -60,7 +63,7 @@
                 <tbody>
                   <tr ng-repeat = "date in auditDates">
                     <td class="col-md-2">
-                      <input type="text" ng-model="filter.release_date" class="form-control col-md-2" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
+                      <input type="text" ng-model="date.audit_date" class="form-control col-md-2" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
                       <!-- <span class="input-group-btn"> -->
                         <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
                       <!-- </span> -->
@@ -74,6 +77,10 @@
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </br>
+            <div class = "col-md-12" style="text-align:left">
+              <button class="btn btn-danger active notify" ng-click="saveAuditDates()">Save</button>
             </div>
 
 

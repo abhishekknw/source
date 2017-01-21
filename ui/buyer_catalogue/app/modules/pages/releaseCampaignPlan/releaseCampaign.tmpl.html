@@ -13,44 +13,46 @@
          </div>
       </div>
   </div>
-<div class="container">
-  <div class="row">
-    <div class=" table-responsive panel panel-default">
-      <table class="table table-fixed table-bordered" style="text-align: center;">
+</div>
+<!-- <div class="container"> -->
+  <!-- <div class="row" style="margin-left:10px;"> -->
+    <!-- <div class=" table-responsive" > -->
+      <table class="table table-bordered table-responsive table-scroll" style="text-align: center;table-layout:fixed;word-wrap:break-word;">
         <thead>
           <tr>
             <th ng-repeat="header in headings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
           </tr>
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
-          <tr ng-repeat="filter in getFilters(supplier)">
+          <tr ng-repeat="(key,filter) in getFilters(supplier)">
             <td class="col-md-1">{{supplier.name}}</td>
             <td class="col-md-2">{{supplier.area}}</td>
             <td class="col-md-2">{{supplier.subarea}}</td>
             <td class="col-md-2">{{supplier.object_id}}</td>
-            <td class="col-md-2">{{filter.inventory_type.adinventory_name}}</td>
-            <td class="col-md-2">{{filter.inventory_type.inventory_count}}</td>
+            <td class="col-md-2" ng-if="key=='NA'">{{key}}</td>
+            <td class="col-md-2" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)"><b>{{key}}</b></a></td>
+            <td class="col-md-2">{{filter.total_count}}</td>
             <td class="col-md-2">{{filter.supplier_price}}</td>
-            <td class="col-md-2">{{filter.inventory_type.total_price}}</td>
+            <td class="col-md-2">{{supplier.total_inventory_supplier_price}}</td>
             <td class="col-md-2"><input type="number" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width"></td>
-            <td class="col-md-2">
-              <select class="drop-width box-spacing" ng-model="supplier.booking_status">
+            <td class="col-md-4">
+              <select class="form-control spacing" ng-model="supplier.booking_status">
                 <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
               </select>
             </td>
-            <td class="col-md-2">{{supplier.phase}}</td>
+            <td class="col-md-2"><input type="number" class="form-control spacing" ng-model="supplier.phase"></td>
             <!--mode of payment  -->
             <td class="col-md-2" style="text-align:left">
               <div class="radio">
                      <label><input type="radio" ng-model="supplier.payment_method" value="NEFT" ng-click="updateSupplierStatus()">NEFT</label>
               </div>
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.payment_method" value="CHEQ" ng-click="updateSupplierStatus()">Cheque</label>
+                     <label><input type="radio" ng-model="supplier.payment_method" value="CHEQUE" ng-click="updateSupplierStatus()">Cheque</label>
               </div>
               <div class="radio" ng-if="supplier.status != 'X'">
                      <label><input type="radio" ng-model="supplier.payment_method" value="CASH" ng-click="updateSupplierStatus()">Cash</label>
               </div>
-              <a class="" data-target="#paymentModal" data-toggle="modal"><b>Details</b></a>
+              <a class="" data-target="#paymentModal" data-toggle="modal" ng-click="setPayment(supplier)"><b>Details</b></a>
             </td>
             <td class="col-md-2">
               <a class="" data-target="#contactModal" data-toggle="modal" ng-click="setContact(supplier)"><b>View Contact Details</b></a>
@@ -70,12 +72,20 @@
           </tr>
         </tbody>
       </table>
-    </div>
+    <!-- </div> -->
+  <!-- </div> -->
+  <div class = "row">
+    <span class = "col-md-12" style="text-align:left">
+      <button class="btn btn-danger active notify" style="text-align:left" ng-click="updateData()">Update</button>
+    </span>
+      <span class = "col-md-12" style="text-align:right">
+        <button class="btn btn-danger active notify" style="text-align:right" ng-click="changeLocation()">Planning Release-Audit</button>
+      </span>
   </div>
-  <div class = "col-md-12" style="text-align:right">
-    <button class="btn btn-danger active notify" ng-click="changeLocation()">Planning Release-Audit</button>
+
+
   </div>
-</div>
+<!-- </div> -->
 <!--Start: Code for contacts Modal Window -->
 <div id="contactModal" class="modal fade">
   <div class="modal-dialog" style="width:700px">
@@ -124,7 +134,7 @@
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h4 class="modal-title">Mode of Payment Details</h4>
         <hr/>
-        <div class = "modal-body" style = "height: 300px;">
+        <div class = "modal-body" style = "height: 200px;">
           <table class="table table-bordered">
             <thead>
               <tr>
@@ -132,14 +142,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat = "contact in contacts">
-                <td>{{contact.salutation}}</td>
-                <td>{{contact.name}}</td>
-                <td>{{contact.contact_type}}</td>
-                <td>{{contact.email}}</td>
-                <td>{{contact.std_code}}</td>
-                <td>{{contact.landline}}</td>
-                <td>{{contact.mobile}}</td>
+              <tr>
+                <td>{{payment.name_for_payment}}</td>
+                <td>{{payment.bank_name}}</td>
+                <td>{{payment.ifsc_code}}</td>
+                <td>{{payment.account_no}}</td>
               </tr>
             </tbody>
           </table>
@@ -150,5 +157,38 @@
   </div>
 </div>
 <!--End: Code for payment Modal Window -->
+<!--Start: Code for inventory_type Modal Window -->
+<div id="invTypeModal" class="modal fade">
+  <div class="modal-dialog" style="width:300px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Inventory Details</h4>
+        <hr/>
+        <div class = "modal-body" style = "width: 250px; height: 300px;">
+          <div class="modal-body col-md-4 table-responsive" style="width: 250px; height: 250px">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th class="col-md-2" style="text-align: center;"><b>Inventory Id</b></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat = "item in inventoryIds">
+                    <td>{{item.inventory_id}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for inventory type Modal Window -->
 
 <div><footer-bar></footer-bar></div>
