@@ -1421,7 +1421,7 @@ def create_proposal_id(business_id, account_id):
         # get number of account letters to append
         account_letters = website_constants.account_letters
         # make the proposal id.
-        proposal_id = business_id[-business_letters:].upper() + account_id[-account_letters:].upper() + (str(uuid.uuid4())[-website_constants.proposal_id_limit:])
+        proposal_id = business_id[business_letters:].upper() + account_id[account_letters:].upper() + (str(uuid.uuid4())[-website_constants.proposal_id_limit:])
 
         return ui_utils.handle_response(function, data=proposal_id, success=True)
     except Exception as e:
