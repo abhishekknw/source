@@ -614,3 +614,10 @@ completed = 'COMPLETED'
 running = 'RUNNING'
 upcoming = 'UPCOMING'
 unknown = 'UNKNOWN'
+
+# to fetch default inventory duration type.
+default_inventory_durations = {
+    'stallinventory': 1,
+    'standeeinventory': 7,
+    'flyerinventory': 1
+}

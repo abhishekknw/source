@@ -56,6 +56,8 @@ urlpatterns = [
     url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/proposal-version/$', views.ProposalVersion.as_view()),
     url(r'^campaign-assignment/$', views.AssignCampaign.as_view()),
     url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/campaign-inventories/$', views.CampaignInventory.as_view()),
+    url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/convert-to-campaign/$', views.ProposalToCampaign.as_view()),
+    url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/convert-to-proposal/$', views.CampaignToProposal.as_view()),
 
 ]
 

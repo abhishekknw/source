@@ -732,8 +732,7 @@ def generate_poster_objects(count, nb, society, society_content_type):
         for i in range(1, pos):
             nb_id = society.supplier_id + nb_tag + "PO" + str(i).zfill(2)
             supplier_id = society.supplier_id
-            nb = models.PosterInventory(adinventory_id=nb_id, poster_location=nb_tag, tower_name=nb_tower, supplier=society,
-                                 object_id=supplier_id, content_type=society_content_type)
+            nb = models.PosterInventory(adinventory_id=nb_id, poster_location=nb_tag, tower_name=nb_tower, supplier=society, object_id=supplier_id, content_type=society_content_type)
             nb.save()
         return handle_response(function, data='success', success=True)
     except Exception as e:

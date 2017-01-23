@@ -4414,3 +4414,121 @@ def get_campaign_status(proposal_start_date, proposal_end_date):
 
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def do_dates_overlap(base_start_date_1, base_end_date_1, target_start_date_1, target_end_date_2):
+    """
+
+    Args:
+        base_start_date_1:
+        base_end_date_1:
+        target_start_date_1:
+        target_end_date_2:
+
+    Returns:
+
+    """
+    function = do_dates_overlap.__name__
+    try:
+        # check for valid dates.
+        if base_end_date_1 < base_start_date_1:
+            return ui_utils.handle_response(function, data=errors.INVALID_START_END_DATE.format(base_start_date_1, base_end_date_1))
+
+        if target_end_date_2 < target_start_date_1:
+            return ui_utils.handle_response(function, data=errors.INVALID_START_END_DATE.format(target_start_date_1, target_end_date_2))
+
+        # now test for overlap
+        if base_end_date_1 < target_start_date_1:
+            return ui_utils.handle_response(function, data=False, success=True)
+
+        if base_start_date_1 > target_end_date_2:
+            return ui_utils.handle_response(function, data=False, success=True)
+
+        return ui_utils.handle_response(function, data=True, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_overlapping_campaigns(proposal):
+    """
+    """
+    function = get_overlapping_campaigns.__name__
+    try:
+        start_date = proposal.tentative_start_date
+        end_date = proposal.tentative_end_date
+
+        overlapping_campaigns = []
+        campaigns = models.ProposalInfo.objects.filter(campaign_state=website_constants.proposal_converted_to_campaign, invoice_number__isnull=False).exclude(pk=proposal.pk)
+
+        for campaign in campaigns:
+            target_start_date = campaign.tentative_start_date
+            target_end_date = campaign.tentative_end_date
+            # if the campaign does not have dates, it's an error. a campaign must have dates
+            if not target_start_date or not target_end_date:
+                return ui_utils.handle_response(function, data=errors.NO_DATES_ERROR.format(campaign.proposal_id))
+
+            # check for overlapping
+            response = do_dates_overlap(start_date, end_date, target_start_date, target_end_date)
+            if not response.data['status']:
+                return response
+            verdict = response.data['data']
+            if verdict:
+                overlapping_campaigns.append(campaign)
+
+        return ui_utils.handle_response(function, data=overlapping_campaigns, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def book_inventories(current_inventories_map, already_inventories_map):
+    """
+
+    Args:
+        current_inventories_map:
+        already_inventories_map:
+
+    Returns:
+
+    """
+    function = book_inventories.__name__
+    try:
+        booked_inventories = []
+        inv_errors = []
+        for inv_tuple, inv_date_tuple in current_inventories_map.iteritems():
+            release_date = inv_date_tuple[0]
+            closure_date = inv_date_tuple[1]
+            inv_obj = inv_date_tuple[2]
+            inv_obj.release_date = release_date
+            inv_obj.closure_date = closure_date
+
+            # if this inventory is not found in already_booked_inventories map, book this inventory.
+            try:
+                already_book_inv_map_reference = already_inventories_map[inv_tuple]
+                is_overlapped = False
+                for already_booked_inv_tuple in already_book_inv_map_reference:
+
+                    target_release_date = already_booked_inv_tuple[0]
+                    target_closure_date = already_booked_inv_tuple[1]
+                    target_proposal_id = already_booked_inv_tuple[2]
+
+                    response = do_dates_overlap(release_date, closure_date, target_release_date, target_closure_date)
+                    if not response.data['status']:
+                        return response
+                    verdict = response.data['data']
+                    # if the dates overlap we don't book this inventory
+                    if verdict:
+                        is_overlapped = True
+                        inv_errors.append(errors.DATES_OVERLAP_ERROR.format(inv_obj.inventory_id, release_date, closure_date, target_release_date, target_closure_date, target_proposal_id))
+                # if the inv does not overlaps with any of the pre booked versions of it, we book it.
+                if not is_overlapped:
+                    booked_inventories.append(inv_obj)
+            except KeyError:
+                # means this inventory is already not booked. hence we book it.
+                booked_inventories.append(inv_obj)
+
+        return ui_utils.handle_response(function, data=(booked_inventories, inv_errors), success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+

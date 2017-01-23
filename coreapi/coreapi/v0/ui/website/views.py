@@ -25,6 +25,8 @@ from openpyxl import Workbook
 from openpyxl.compat import range
 import requests
 from rest_framework.parsers import JSONParser, FormParser
+from bulk_update.helper import bulk_update
+
 from rest_framework import permissions
 # from import_export import resources
 
@@ -3751,3 +3753,122 @@ class CampaignInventory(APIView):
             return ui_utils.handle_response(class_name, data='successfully updated', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ProposalToCampaign(APIView):
+    """
+    tries to  book the assigned inventories to this proposal. if successfull, sets the campaign state to right state that
+    marks this proposal a campaign.
+    """
+    def post(self, request, proposal_id):
+        """
+        Args:
+            request:
+            proposal_id:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+
+            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+
+            if not proposal.invoice_number:
+                return ui_utils.handle_response(class_name, data=errors.CAMPAIGN_NO_INVOICE_ERROR)
+
+            proposal_start_date = proposal.tentative_start_date
+            proposal_end_date = proposal.tentative_end_date
+
+            if not proposal_start_date or not proposal_end_date:
+                return ui_utils.handle_response(class_name, data=errors.NO_DATES_ERROR.format(proposal_id))
+
+            current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
+
+            if not current_assigned_inventories:
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORIES_ASSIGNED_ERROR.format(proposal_id))
+
+            current_assigned_inventories_map = {}
+
+            for inv in current_assigned_inventories:
+                inv_tuple = (inv.inventory_content_type, inv.inventory_id)
+                current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
+
+            # get all the proposals which are campaign and which overlap with the current campaign
+            response = website_utils.get_overlapping_campaigns(proposal)
+            if not response.data['status']:
+                return response
+            overlapping_campaigns = response.data['data']
+
+            if not overlapping_campaigns:
+                # currently we have no choice but to book all inventories the same proposal_start and end date
+                # this can be made smarter when we know for how many days a particular inventory  is allowed in a
+                # supplier this will help in automatically determining R.D and C.D.
+                current_assigned_inventories.update(release_date=proposal_start_date, closure_date=proposal_end_date)
+                proposal.campaign_state = website_constants.proposal_converted_to_campaign
+                proposal.save()
+                return ui_utils.handle_response(class_name,data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
+
+            already_booked_inventories = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal__in=overlapping_campaigns)
+            already_booked_inventories_map = {}
+
+            for inv in already_booked_inventories:
+                inv_tuple = (inv.inventory_content_type, inv.inventory_id)
+                target_tuple = (inv.release_date, inv.closure_date, inv.shortlisted_spaces.proposal_id)
+                try:
+                    reference = already_booked_inventories_map[inv_tuple]
+                except KeyError:
+                    already_booked_inventories_map[inv_tuple] = []
+                    reference = already_booked_inventories_map[inv_tuple]
+                reference.append(target_tuple)
+
+            response = website_utils.book_inventories(current_assigned_inventories_map, already_booked_inventories_map)
+            if not response.data['status']:
+                return response
+            booked_inventories, inv_error_list = response.data['data']
+
+            # if there is something in error list then one or more inventories overlapped with already running campaigns
+            # we do not convert a proposal into campaign in this case
+            if inv_error_list:
+                return ui_utils.handle_response(class_name, data=errors.CANNOT_CONVERT_TO_CAMPAIGN_ERROR.format(proposal_id, inv_error_list))
+
+            bulk_update(booked_inventories)
+            proposal.campaign_state = website_constants.proposal_converted_to_campaign
+            proposal.save()
+
+            return ui_utils.handle_response(class_name, data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class CampaignToProposal(APIView):
+    """
+    Releases the inventories booked under a campaign and the sets the campaign state back to proposal state.
+    """
+    def post(self, request, campaign_id):
+        """
+        Args:
+            request:
+            campaign_id: The campaign_id
+
+        Returns:
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
+
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
+
+            proposal.campaign_state = website_constants.proposal_not_converted_to_campaign
+            proposal.save()
+
+            current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=campaign_id)
+            current_assigned_inventories.update(release_date=None, closure_date=None)
+
+            return ui_utils.handle_response(class_name, data=errors.REVERT_CAMPAIGN_TO_PROPOSAL.format(campaign_id, website_constants.proposal_not_converted_to_campaign), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
