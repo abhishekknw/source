@@ -1,9 +1,11 @@
 angular.module('catalogueApp')
-.controller('OpsDashCtrl',
-    ['$scope', '$rootScope', '$window', '$location','opsDashBoardService',
+
+.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService',
+
     function ($scope, $rootScope, $window, $location, opsDashBoardService) {
     	$scope.proposals = [];
       $scope.reason;
+
       //Start: code added to show or hide details based on user permissions
       $scope.user_code = $window.localStorage.user_code;
       if($scope.user_code == 'agency')
@@ -73,8 +75,39 @@ angular.module('catalogueApp')
     	})
     	.error(function(response, status){
     		console.log("error occured", status);
+    		console.log(response);
+
+    	});
+
+    }
+
+    $scope.convertProposalToCampaign = function(proposal){
+
+      $scope.currentProposal = proposal;
+
+      opsDashBoardService.convertProposalToCampaign(proposal.proposal.proposal_id, proposal.proposal)
+          .success(function(response, status){
+              console.table(response);
+    	})
+          .error(function(response, status){
+    	  	    console.log("error occured", status);
     	});
     }
+
+
+    $scope.convertCampaignToProposal = function(proposal){
+
+      $scope.currentProposal = proposal;
+
+      opsDashBoardService.convertCampaignToProposal(proposal.proposal.proposal_id, proposal.proposal)
+          .success(function(response, status){
+              console.table(response);
+    	})
+          .error(function(response, status){
+    	  	    console.log("error occured", status);
+    	});
+    }
+
 
     //code added when the user clicks on proposal id the proposal details page will open
     $scope.showProposalDetails = function(proposal_id){

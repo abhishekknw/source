@@ -4488,7 +4488,7 @@ def book_inventories(current_inventories_map, already_inventories_map):
         current_inventories_map:
         already_inventories_map:
 
-    Returns:
+    Returns: a list of SID objects if no object overlaps with already booked inventories.
 
     """
     function = book_inventories.__name__

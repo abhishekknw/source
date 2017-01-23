@@ -2734,7 +2734,7 @@ class ProposalViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
 
-            proposal = ProposalInfo.objects.get_user_related_object(request.user, proposal_id=pk)
+            proposal = ProposalInfo.objects.get(proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -2754,7 +2754,7 @@ class ProposalViewSet(viewsets.ViewSet):
             data = request.data.copy()
             data['proposal_id'] = pk
 
-            proposal = ProposalInfo.objects.get_user_related_object(request.user, proposal_id=pk)
+            proposal = ProposalInfo.objects.get(proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal, data=data)
             if serializer.is_valid():
                 serializer.save()
