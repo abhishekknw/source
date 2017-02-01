@@ -3872,3 +3872,87 @@ class CampaignToProposal(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+
+class ImportCorporateData(APIView):
+    """
+    This API reads a csv file and  makes supplier id's for each row. then it adds the data along with
+    supplier id in the  supplier_society table. it also populates society_tower table.
+    """
+
+    def get(self, request):
+        """
+        :param request: request object
+        :return: success response in case it succeeds else failure message.
+        """
+        class_name = self.__class__.__name__
+        try:
+            source_file = open(BASE_DIR + '/files/corporate.csv', 'rb')
+            with transaction.atomic():
+                reader = csv.reader(source_file)
+                for num, row in enumerate(reader):
+                    data = {}
+                    if num == 0:
+                        continue
+                    else:
+                        if len(row) != len(website_constants.corporate_keys):
+                            return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(len(row), len(website_constants.corporate_keys)))
+
+                        for index, key in enumerate(website_constants.corporate_keys):
+                            if row[index] == '':
+                                data[key] = None
+                            else:
+                                data[key] = row[index]
+                        state_name = ui_constants.state_name
+                        state_code = ui_constants.state_code
+                        state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
+                        city_object = models.City.objects.get(city_code=data['city_code'], state_code=state_object)
+                        area_object = models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
+                        subarea_object = models.CitySubArea.objects.get(subarea_code=data['subarea_code'],area_code=area_object)
+                        # make the data needed to make supplier_id
+                        supplier_id_data = {
+                            'city_code': data['city_code'],
+                            'area_code': data['area_code'],
+                            'subarea_code': data['subarea_code'],
+                            'supplier_type': data['supplier_type'],
+                            'supplier_code': data['supplier_code']
+                        }
+
+                        response = get_supplier_id(request, supplier_id_data)
+                        # this method of handing error code will  change in future
+                        if response.status_code == status.HTTP_200_OK:
+                            data['supplier_id'] = response.data['data']
+                        else:
+                            return response
+
+                        (corporate_object, value) = SupplierTypeCorporate.objects.get_or_create(supplier_id=data['supplier_id'])
+                        #data['society_location_type'] = subarea_object.locality_rating
+                        #data['society_state'] = 'Maharashtra'Uttar Pradesh
+                        data['society_state'] = 'Maharashtra'
+                        corporate_object.__dict__.update(data)
+                        corporate_object.save()
+
+
+
+                        # make entry into PMD here.
+                        response = ui_utils.set_default_pricing(data['supplier_id'], data['supplier_type'])
+                        if not response.data['status']:
+                            return response
+
+                        url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
+                        url = BASE_URL + url[1:]
+                        headers = {
+                            'Content-Type': 'application/json',
+                            'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
+                        }
+                        response = requests.post(url, json.dumps(data), headers=headers)
+
+
+                        print "{0} done \n".format(data['supplier_id'])
+            source_file.close()
+            return Response(data="success", status=status.HTTP_200_OK)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+        except KeyError as e:
+            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)

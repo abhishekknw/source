@@ -14,6 +14,15 @@ supplier_keys = [
     'count_15_25', 'count_25_60', 'count_60above', 'society_weekly_off',
 ]
 
+corporate_keys = [
+
+    'city', 'city_code', 'area', 'area_code', 'subarea', 'subarea_code', 'supplier_type', 'supplier_code', 'name', 'address1', \
+    'address2', 'zipcode', 'latitude', 'longitude', 'corporate_type', 'industry_segment', 'building_count', 'floorperbuilding_count', \
+    'totallift_count', 'locality_rating' , 'quality_rating', 'quantity_rating' , 'totalemployees_count', 'isrealestateallowed', \
+    'averagerent', 'commoncafeteria', 'bank_account_name', 'bank_name', 'ifsc_code', 'account_number'
+
+]
+
 proposal_header_keys = [
     'Center Name','Center Proposal Id', 'Center Id', 'Space Mapping Id', 'Inventory Type Id', 'Supplier Id', 'Supplier Name', 'Supplier Sub Area', 'Supplier Type', 'Supplier Tower Count', \
     'Supplier Flat Count',
