@@ -630,3 +630,6 @@ default_inventory_durations = {
     'standeeinventory': 7,
     'flyerinventory': 1
 }
+
+# define number of days within which we will show the campaigns.
+delta_days = 3

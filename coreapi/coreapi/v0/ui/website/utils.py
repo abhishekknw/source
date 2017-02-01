@@ -3529,8 +3529,6 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
 
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
-        import pdb
-        pdb.set_trace()
         return ui_utils.handle_response(function, exception_object=e)
 
 
