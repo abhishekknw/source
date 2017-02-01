@@ -26,7 +26,7 @@
             <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)" data-target = "assignModal" data-toggle="modal">Accept</label>
+                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)" data-target = "#assignModal" data-toggle="modal">Accept</label>
               </div>
               <div class="radio">
                      <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PNC" ng-click="convertCampaignToProposal(proposal)" data-target="#declineModal" data-toggle="modal">Decline</label>
