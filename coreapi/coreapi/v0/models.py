@@ -141,6 +141,8 @@ class BasicSupplierDetails(BaseModel):
     bank_name = models.CharField(max_length=250, blank=True, null=True)
     ifsc_code = models.CharField(max_length=30, blank=True, null=True)
     account_number = models.CharField(max_length=250, blank=True, null=True)
+    food_tasting_allowed = models.BooleanField(default=False)
+    sales_allowed = models.BooleanField(default=False)
     objects = managers.GeneralManager()
 
     class Meta:
@@ -1010,7 +1012,7 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     openspace = models.FloatField(blank=True, null=True, default=0.0)
     averagerent = models.FloatField(blank=True, null=True, default=0.0)
     generic.GenericRelation(ContactDetailsGeneric)
-
+    is_common_cafeteria_available = models.BooleanField(default=False)
 
     def get_buildings(self):
         return self.corporatebuilding.all()
@@ -2301,15 +2303,3 @@ class AuditDate(BaseModel):
 
     class Meta:
         db_table = 'audit_date'
-
-
-
-
-
-
-
-
-
-
-
-
