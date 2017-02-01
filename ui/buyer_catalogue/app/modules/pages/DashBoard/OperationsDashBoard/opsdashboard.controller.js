@@ -88,6 +88,9 @@ angular.module('catalogueApp')
       opsDashBoardService.convertProposalToCampaign(proposal.proposal.proposal_id, proposal.proposal)
           .success(function(response, status){
               console.table(response);
+              if(status == 200){
+                $scope.showAssignModal = true;
+              }
     	})
           .error(function(response, status){
     	  	    console.log("error occured", status);
