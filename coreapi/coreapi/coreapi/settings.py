@@ -93,8 +93,8 @@ DATABASES = {
         'NAME':'machadalo',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': 'localhost',
-         'USER': 'root',
-         'PASSWORD': 'root',
+         'USER': '',
+         'PASSWORD': '',
       }
 
     }
@@ -219,7 +219,6 @@ DEFAULT_DATE = timezone.make_aware(datetime.datetime.strptime(date_string, forma
 AWS_ACCESS_KEY_ID = 'AKIAIIGRT3EJEDSRVSFQ'
 AWS_SECRET_ACCESS_KEY = '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'
 BUCKET_NAME = 'mdimages-test'
-
 
 # app name
 APP_NAME = 'v0'
