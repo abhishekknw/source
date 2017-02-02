@@ -43,6 +43,12 @@ AD_INVENTORY_CHOICES = (
 
 )
 
+INVENTORY_ACTIVITY_TYPES = (
+    ('RELEASE', 'RELEASE'),
+    ('CLOSURE', 'CLOSURE'),
+    ('AUDIT', 'AUDIT')
+)
+
 
 class BaseUser(AbstractUser):
     """
@@ -1985,6 +1991,7 @@ class ShortlistedInventoryPricingDetails(BaseModel):
     inventory_object = generic.GenericForeignKey('inventory_content_type', 'inventory_id')
     comment = models.CharField(max_length=1000, null=True, blank=True)
 
+
     class Meta:
         db_table = 'shortlisted_inventory_pricing_details'
 
@@ -2303,3 +2310,20 @@ class AuditDate(BaseModel):
 
     class Meta:
         db_table = 'audit_date'
+
+
+class InventoryActivityImage(BaseModel):
+    """
+    stores image path against each inventory id under given activity.
+    """
+    shortlisted_inventory_details = models.ForeignKey('ShortlistedInventoryPricingDetails')
+    image_path = models.CharField(max_length=1000, null=True, blank=True)
+    comment = models.CharField(max_length=1000, null=True, blank=True)
+    activity_type = models.CharField(max_length=1000, choices=INVENTORY_ACTIVITY_TYPES)
+    activity_date = models.CharField(max_length=1000, null=True, blank=True)
+
+    class Meta:
+        db_table = 'inventory_activity_image'
+
+
+

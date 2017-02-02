@@ -7,7 +7,7 @@ import os
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum,F
 from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
@@ -3737,7 +3737,6 @@ class CampaignInventory(APIView):
         """
         class_name = self.__class__.__name__
         try:
-
             proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
 
             response = website_utils.is_campaign(proposal)
@@ -3751,6 +3750,39 @@ class CampaignInventory(APIView):
                 return response
 
             return ui_utils.handle_response(class_name, data='successfully updated', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class CampaignInventoryList(APIView):
+    """
+    List all valid shortlisted suppliers and there respective shortlisted inventories belonging to any campaign upcoming within
+    d days of current date plus all the running campaigns
+    """
+    def get(self, request):
+        """
+        Args:
+            request: The request object
+        Returns:
+        """
+        class_name = self.__class__.__name__
+
+        try:
+            # find proposals running and which are starting withing delta d days from the current date
+            current_date = timezone.now().date()
+
+            campaigns = []
+            proposals = models.ProposalInfo.objects.filter(Q(tentative_start_date__lte=current_date, tentative_end_date__gte=current_date) | Q(tentative_start_date__gte=current_date,  tentative_start_date__lte=current_date + timezone.timedelta(days=website_constants.delta_days)))
+
+            # find all campaigns out of these proposals
+            for proposal in proposals:
+                response = website_utils.is_campaign(proposal)
+                if not response.data['status']:
+                    continue
+                campaigns.append(proposal)
+            serializer = website_serializers.ProposalInfoSerializerReadOnly(campaigns, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -3771,7 +3803,6 @@ class ProposalToCampaign(APIView):
         """
         class_name = self.__class__.__name__
         try:
-
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
 
             if not proposal.invoice_number:
@@ -3954,5 +3985,74 @@ class ImportCorporateData(APIView):
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
         except KeyError as e:
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class InventoryActivityImage(APIView):
+    """
+     makes an entry into InventoryActivityImage table.
+    """
+    def post(self, request):
+        """
+        stores image_path against an inventory_id.
+        Args:
+            request: The request data
+
+        Returns: success in case the object is created.
+        """
+        class_name = self.__class__.__name__
+        shortlisted_inventory_detail_id = ''
+        try:
+            shortlisted_inventory_detail_id = request.data['shortlisted_inventory_detail_id']
+            image_path = request.data.get('image_path')
+            comment = request.data.get('comment')
+            activity_type = request.data['activity_type']
+            activity_date = request.data['activity_date']
+
+            shortlisted_inventory_pricing_object = models.ShortlistedInventoryPricingDetails.objects.get(id=shortlisted_inventory_detail_id)
+
+            # get inv_id and it's name in case we have to return ZERO_AUDIT_ERROR
+            inventory_id = shortlisted_inventory_pricing_object.inventory_id
+            inventory_name = shortlisted_inventory_pricing_object.ad_inventory_type.adinventory_name
+
+            # if activity is AUDIT then we need a check to make sure number of audits match up the number of audit dates
+            number_of_possible_audits = models.AuditDate.objects.filter(shortlisted_inventory=shortlisted_inventory_pricing_object).count()
+
+            # they can send all the garbage in activity_type. we need to check if it's valid.
+            valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
+
+            if activity_type not in valid_activity_types:
+                return ui_utils.handle_response(class_name, data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
+
+            number_of_activities_done = models.InventoryActivityImage.objects.filter(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type).count()
+
+            # if activity type is AUDIT
+            if activity_type == models.INVENTORY_ACTIVITY_TYPES[2][0]:
+                # check fot zero number of audits possible
+                if not number_of_possible_audits:
+                    return ui_utils.handle_response(class_name, data=errors.ZERO_AUDITS_ERROR.format(inventory_name, inventory_id))
+
+                # check for equal number of audits already done
+                if number_of_activities_done == number_of_possible_audits:
+                    return ui_utils.handle_response(class_name, data=errors.NUMBER_OF_ACTIVITY_EXCEEDED_ERROR.format(activity_type, number_of_possible_audits))
+                # in case of audit, the date of audit matters. you can take as many images as you want in a single
+                # day. That will be counted as only one audit. Only when the date will change, the number of audits
+                # exceed by 1.
+                instance, is_created = models.InventoryActivityImage.objects.get_or_create(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type, activity_date=activity_date)
+            else:
+                # in case of release and closure, the date on which actual release/closure happened, doesn't matter to
+                # system. All that matters is there has to be only one Release and one closure
+                instance, is_created = models.InventoryActivityImage.objects.get_or_create(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type)
+                instance.image_path = image_path
+                instance.activity_date = activity_date
+
+            instance.image_path = image_path
+            instance.comment = comment
+            instance.save()
+
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=errors.OBJECT_DOES_NOT_EXIST_ERROR.format(models.ShortlistedInventoryPricingDetails.__name__, shortlisted_inventory_detail_id), exception_object=e)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)

@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
@@ -10,6 +12,8 @@ from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping
                     ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, BaseUser
 
 import v0.models as models
+import constants as website_constants
+import utils as website_utils
 
 
 class LeadSerializer(ModelSerializer):
@@ -64,6 +68,7 @@ class ProposalInfoSerializer(ModelSerializer):
 
     class Meta:
         model = ProposalInfo
+
 
 
 class BaseUserSerializer(ModelSerializer):
@@ -335,5 +340,28 @@ class PriceMappingDefaultSerializerReadOnly(ModelSerializer):
     class Meta:
         model = models.PriceMappingDefault
 
+
+class ProposalInfoSerializerReadOnly(ModelSerializer):
+    # need to fetch only those suppliers which are shortlisted
+    shortlisted_suppliers = serializers.SerializerMethodField('filter_shortlisted_spaces')
+    # calculate running state of campaign like 'RUNNING', 'UPCOMING' etc.
+    campaign_running_state = serializers.SerializerMethodField()
+
+    def filter_shortlisted_spaces(self, instance):
+        # fetch all objects of ss for this instance of proposal_info
+        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(campaign_status=website_constants.shortlisted, proposal=instance)
+        serializer = ShortlistedSpacesSerializerReadOnly(shortlisted_suppliers, many=True)
+        return serializer.data
+
+    def get_campaign_running_state(self, instance):
+
+        response = website_utils.get_campaign_status(instance.tentative_start_date, instance.tentative_end_date)
+        if not response.data['status']:
+            raise Exception(response.data)
+
+        return response.data['data']
+
+    class Meta:
+        model = ProposalInfo
 
 
