@@ -1,0 +1,46 @@
+<link rel="stylesheet" href="modules/pages/operations/opsExecutionPlan/OperationsDashBoard/opsExecutionPlan.tmpl.css"/>
+<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
+<div><nav-bar></nav-bar></div>
+<!-- <div ng-loading="loading"></div> --> <!--For displaying loading icon-->
+</br></br></br><back-Button></back-Button>
+<h3 ng-hide="hideData" style = "margin-left: 460px; margin-top: 60px;">Operations Execution Plan</h3>
+<div class="container" ng-hide="hideData">
+  <div class="row">
+    <div class=" table-responsive panel panel-default">
+      <table class="table table-fixed table-bordered" style="text-align: center;">
+        <thead>
+          <tr>
+            <th ng-repeat="header in headings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="proposal in proposals">
+            <td class="col-md-1" ng-click="showProposalDetails(proposal.proposal.proposal_id)">
+              <a>{{proposal.proposal.proposal_id}}</a>
+            </td>
+            <td class="col-md-2">{{proposal.proposal.name}}</td>
+            <td class="col-md-2">{{proposal.proposal.account}}</td>
+            <td class="col-md-2">{{proposal.proposal.created_by}}</td>
+            <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
+            <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
+            <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
+            <td class="col-md-2">
+              <div class="radio">
+                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)" data-target = "#assignModal" data-toggle="modal">Accept</label>
+              </div>
+              <div class="radio">
+                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PNC" ng-click="convertCampaignToProposal(proposal)" data-target="#declineModal" data-toggle="modal">Decline</label>
+              </div>
+              <div class="radio">
+                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#onHoldModal" data-toggle="modal">OnHold</label>
+              </div>
+            </td>
+            <td class="col-md-2">
+              <a href="http://mdimages.s3.amazonaws.com/{{proposal.file_name}}" Download> Download </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
