@@ -189,11 +189,16 @@ angular
            controller : 'userCtrl',
            templateUrl : 'modules/pages/manageUsers/user.tmpl.html'
        })
-       .state('auditReleasePlan',{
+      .state('auditReleasePlan',{
             url : '/:proposal_id/auditReleasePlan',
             controller : 'AuditReleasePlanCtrl',
-            templateUrl : 'modules/pages/auditReleasePlan/auditReleasePlan.tmpl.html'
-        });
+            templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.html'
+      })
+      .state('opsExecutionPlan',{
+            url : '/:proposal_id/opsExecutionPlan',
+            controller : 'OpsExecutionPlanCtrl',
+            templateUrl : 'modules/pages/operations/opsExecutionPlan/opsExecutionPlan.tmpl.html'
+      });
 })
 .run(['$rootScope', '$window', '$location', 'AuthService',
      function ($rootScope, $window, $location, AuthService) {

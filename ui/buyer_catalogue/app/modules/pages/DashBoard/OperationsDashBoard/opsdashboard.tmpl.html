@@ -46,7 +46,6 @@
 </div>
 
 <!-- Start: Displaying table of converted campaigns -->
-<!-- <h3 uib-tooltip="List of all Campaigns" style = "margin-left: 105px; margin-top: 60px;">Campaign List</h3> -->
 <span uib-tooltip="List of all Campaigns" class = "campaign-list">Campaign List</span>
 <div class="container">
   <div class="row">
@@ -66,7 +65,10 @@
             <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
             <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
             <td class="col-md-2">
-              <a ng-click="getDetails(proposal.proposal.proposal_id)" Download> Details </a>
+              <a ng-click="getDetails(proposal.proposal.proposal_id)"> Details </a>
+            </td>
+            <td class="col-md-2">
+              <a ng-click="getExecutionDetails(proposal.proposal.proposal_id)"> Details </a>
             </td>
           </tr>
         </tbody>

@@ -30,14 +30,15 @@ angular.module('catalogueApp')
         {header : 'Assigned Date'},
         {header : 'Start Date'},
         {header : 'End Date'},
-        {header : 'View Release Details'}
+        {header : 'View Release Details'},
+        {header : 'View Execution Details'}
       ];
       $scope.userData = {
         selecteduser: null,
         names: [
         {name : 'Ankit'},
         {name : 'Amit'},
-        {name : 'njnjnj'}
+        {name : 'Komal'}
         ]
       };
 
@@ -121,5 +122,8 @@ angular.module('catalogueApp')
     }
     $scope.getDetails = function(proposal_id){
       $location.path('/' + proposal_id + '/releasePlan');
+    }
+    $scope.getExecutionDetails = function(proposal_id){
+      $location.path('/' + proposal_id + '/opsExecutionPlan');
     }
 }]);//Controller function ends here
