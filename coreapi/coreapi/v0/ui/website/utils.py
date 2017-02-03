@@ -3474,7 +3474,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         result['campaign'] = proposal_serializer.data
 
         # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
-        response = get_objects_per_content_type(shortlisted_spaces)
+        response = get_objects_per_content_type(shortlisted_spaces.values())
         if not response.data['status']:
             return response
         content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
@@ -3848,8 +3848,8 @@ def get_objects_per_content_type(objects):
         supplier_id_set = set()
         for my_object in objects:
 
-            content_type_id = my_object.content_type.id
-            object_id = my_object.object_id
+            content_type_id = my_object['content_type']
+            object_id = my_object['object_id']
 
             if not result.get(content_type_id):
                 result[content_type_id] = []

@@ -3780,7 +3780,39 @@ class CampaignInventoryList(APIView):
                 if not response.data['status']:
                     continue
                 campaigns.append(proposal)
+
             serializer = website_serializers.ProposalInfoSerializerReadOnly(campaigns, many=True)
+
+            shortlisted_spaces = []
+            for data in serializer.data:
+                shortlisted_spaces.extend(data['shortlisted_suppliers'])
+
+            # # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
+            response = website_utils.get_objects_per_content_type(shortlisted_spaces)
+            if not response.data['status']:
+                return response
+            content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
+
+            # converts the ids store in previous step to actual objects and adds additional information which is
+            #  supplier specific  like area, name, subarea etc.
+            response = website_utils.map_objects_ids_to_objects(content_type_supplier_id_map)
+            if not response.data['status']:
+                return response
+
+            # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
+            # information for that supplier
+            supplier_detail = response.data['data']
+
+            # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
+            for data in serializer.data:
+                for shortlisted_space in data['shortlisted_suppliers']:
+                    try:
+                        shortlisted_space['supplier_detail'] = supplier_detail[shortlisted_space['content_type'], shortlisted_space['object_id']]
+                    except KeyError:
+                        # ideally every supplier in ss table must also be in the corresponding supplier table. But
+                        # because current data is corrupt as i have manually added suppliers, i have to set this to
+                        # empty when KeyError occurres. #todo change this later.
+                        shortlisted_space['supplier_detail'] = []
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
 
         except Exception as e:
