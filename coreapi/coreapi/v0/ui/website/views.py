@@ -3812,7 +3812,7 @@ class CampaignInventoryList(APIView):
                         # ideally every supplier in ss table must also be in the corresponding supplier table. But
                         # because current data is corrupt as i have manually added suppliers, i have to set this to
                         # empty when KeyError occurres. #todo change this later.
-                        shortlisted_space['supplier_detail'] = []
+                        shortlisted_space['supplier_detail'] = {}
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
 
         except Exception as e:
@@ -4088,3 +4088,33 @@ class InventoryActivityImage(APIView):
             return ui_utils.handle_response(class_name, data=errors.OBJECT_DOES_NOT_EXIST_ERROR.format(models.ShortlistedInventoryPricingDetails.__name__, shortlisted_inventory_detail_id), exception_object=e)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+    def get(self, request):
+        """
+        Args:
+            self:
+            request: Request Data
+
+        Returns: matching InventoryActivityImage objects
+
+        """
+        class_name = self.__class__.__name__
+
+        try:
+            proposal_id = request.query_params['proposal_id']
+
+            proposal_instance = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            response = website_utils.is_campaign(proposal_instance)
+            if not response.data['status']:
+                return response
+
+            inventory_activity_image_objects = models.InventoryActivityImage.objects.select_related('shortlisted_inventory_details').filter(shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id)
+            serializer = website_serializers.InventoryActivityImageSerializerReadOnly(inventory_activity_image_objects, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
+        except KeyError as e:
+            return ui_utils.handle_response(class_name, data='Key Error', exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+

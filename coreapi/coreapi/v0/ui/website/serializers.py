@@ -365,3 +365,19 @@ class ProposalInfoSerializerReadOnly(ModelSerializer):
         model = ProposalInfo
 
 
+class ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(ModelSerializer):
+    audit_dates = AuditDateSerializer(many=True, source='auditdate_set')
+    inventory_type = AdInventoryTypeSerializer(source='ad_inventory_type')
+    inventory_duration = DurationTypeSerializer(source='ad_inventory_duration')
+    shortlisted_supplier = ShortlistedSpacesSerializer(source='shortlisted_spaces')
+
+    class Meta:
+        model = models.ShortlistedInventoryPricingDetails
+
+
+class InventoryActivityImageSerializerReadOnly(ModelSerializer):
+
+    inventory_details = ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(source='shortlisted_inventory_details')
+
+    class Meta:
+        model = models.InventoryActivityImage
