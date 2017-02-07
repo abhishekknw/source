@@ -52,6 +52,15 @@ angular.module('catalogueApp')
     		console.log("error occured", status);
     	});
 
+    opsDashBoardService.getCampaignDetails($rootScope.globals.currentUser.user_id)
+    	.success(function(response, status){
+    		$scope.campaignData = response.data;
+    	})
+    	.error(function(response, status){
+    		console.log("error occured", status);
+    	});
+
+
     $scope.sendNotification = function(){
       var email_Data = {
         subject:'Machadalo Mail',
@@ -76,7 +85,6 @@ angular.module('catalogueApp')
     	})
     	.error(function(response, status){
     		console.log("error occured", status);
-    		console.log(response);
 
     	});
 
@@ -88,7 +96,6 @@ angular.module('catalogueApp')
 
       opsDashBoardService.convertProposalToCampaign(proposal.proposal.proposal_id, proposal.proposal)
           .success(function(response, status){
-              console.table(response);
               if(status == 200){
                 $scope.showAssignModal = true;
               }

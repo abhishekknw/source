@@ -12,7 +12,7 @@ angular.module('catalogueApp')
    }
 
    opsExecutionPlanService.getSuppierDetails = function(supplier_id,content_type){
-     var url = url_base + "supplier-basic-details/" + "?supplier_id=" + supplier_id  + "&content_type=" + content_type;
+     var url = url_base + "supplier-details/" + "?supplier_id=" + supplier_id  + "&content_type=" + content_type;
      return machadaloHttp.get(url);
    }
 

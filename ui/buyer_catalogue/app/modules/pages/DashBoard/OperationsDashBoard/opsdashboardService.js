@@ -12,6 +12,10 @@
       var url = url_base + "proposal/invoice_proposals/";
   		return machadaloHttp.get(url);
   	}
+    opsDashBoard.getCampaignDetails = function(userId){
+      var url = url_base + "campaign-assignment/?include_assigned_by=0&to="+userId;
+      return machadaloHttp.get(url);
+    }
     opsDashBoard.updateProposalDetails = function(proposal_id,data){
       var url = url_base + "proposal/" + proposal_id + "/";
       return machadaloHttp.put(url,data);
