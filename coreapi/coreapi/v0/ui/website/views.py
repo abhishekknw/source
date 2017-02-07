@@ -13,6 +13,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
 from django.utils import timezone
+from django.forms.models import model_to_dict
+from django.db.models import get_model
 
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
@@ -4114,6 +4116,31 @@ class InventoryActivityImage(APIView):
 
         except KeyError as e:
             return ui_utils.handle_response(class_name, data='Key Error', exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+class SupplierBasicDetails(APIView):
+    def get(self, request):
+        """
+        Args:
+            self:
+            request Data
+        Returns: matching supplier object from supplier type model
+
+        """
+        class_name = self.__class__.__name__
+
+        try:
+            supplier_id = request.query_params['supplier_id']
+            content_type = request.query_params['content_type']
+     
+            supplier_model = ContentType.objects.get(pk=content_type).model
+            model = get_model(settings.APP_NAME,supplier_model)
+
+            supplier_object = model.objects.get(supplier_id=supplier_id)
+            data = model_to_dict(supplier_object)
+            return ui_utils.handle_response(class_name, data=data, success=True)
+
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
