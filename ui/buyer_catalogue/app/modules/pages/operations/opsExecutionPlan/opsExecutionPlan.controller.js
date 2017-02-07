@@ -18,6 +18,8 @@ angular.module('catalogueApp')
         {header : 'Supplier Name'},
         {header : 'Area'},
         {header : 'SubArea'},
+        {header : 'City'},
+        {header : 'State'},
          {header : 'PinCode'},
       ];
 
@@ -35,13 +37,12 @@ angular.module('catalogueApp')
         $scope.image_url = "http://androidtokyo.s3.amazonaws.com/" + image_path;
       }
       $scope.getSupplierDetails = function(supplier){
-        console.log(supplier);
+        $scope.supplierData = [];
         var supplierId = supplier.inventory_details.shortlisted_supplier.object_id;
         var contentType = supplier.inventory_details.shortlisted_supplier.content_type;
         opsExecutionPlanService.getSuppierDetails(supplierId,contentType)
         	.success(function(response, status){
             $scope.supplierData = response.data;
-            // console.log(response);
       	   })
         	.error(function(response, status){
         		console.log("error occured", status);

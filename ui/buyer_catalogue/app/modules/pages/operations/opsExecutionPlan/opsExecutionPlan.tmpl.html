@@ -22,17 +22,20 @@
               <label ng-if="!item.image_path">No Image</td>
             <td class="col-md-2">{{item.activity_type}}</td>
             <td class="col-md-2">{{item.activity_date}}</td>
-            <td class="col-md-2">{{item.inventory_details.comment}}</td>
-            <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
+            <td class="col-md-2">{{item.comment}}</td>
+            <td class="col-md-2"> <input type="checkbox" ng-model="item.status"></td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
+  <div class = "col-md-12" style="text-align:right">
+    <button class="btn btn-danger active notify" ng-click="">ReAssign</button>
+  </div>
 </div>
 <!--Start: Code for supplier details Modal Window -->
 <div id="supplierModal" class="modal fade">
-  <div class="modal-dialog">
+  <div class="modal-dialog" style="width:800px">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -48,10 +51,12 @@
             <tbody>
               <tr>
                 <td>{{supplierData.supplier_id}}</td>
-                <td>{{supplierData.society_name}}</td>
+                <td>{{supplierData.name}}</td>
                 <td>{{supplierData.area}}</td>
                 <td>{{supplierData.subarea}}</td>
-                <td>{{supplierData.pincode}}</td>
+                <td>{{supplierData.city}}</td>
+                <td>{{supplierData.state}}</td>
+                <td>{{supplierData.zipcode}}</td>
               </tr>
             </tbody>
           </table>
