@@ -57,18 +57,18 @@
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="proposal in proposals">
-            <td class="col-md-1">{{proposal.proposal.proposal_id}}</td>
-            <td class="col-md-2">{{proposal.proposal.name}}</td>
-            <td class="col-md-2">{{proposal.proposal.created_by}}</td>
-            <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
-            <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
-            <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
+          <tr ng-repeat="proposal in campaignData">
+            <td class="col-md-1">{{proposal.campaign.proposal_id}}</td>
+            <td class="col-md-2">{{proposal.campaign.name}}</td>
+            <td class="col-md-2">{{proposal.assigned_to.username}}</td>
+            <td class="col-md-2"></td>
+            <td class="col-md-2">{{proposal.campaign.tentative_start_date|limitTo:10}}</td>
+            <td class="col-md-2">{{proposal.campaign.tentative_end_date|limitTo:10}}</td>
             <td class="col-md-2">
-              <a ng-click="getDetails(proposal.proposal.proposal_id)"> Details </a>
+              <a ng-click="getDetails(proposal.campaign.proposal_id)"> Details </a>
             </td>
             <td class="col-md-2">
-              <a ng-click="getExecutionDetails(proposal.proposal.proposal_id)"> Details </a>
+              <a ng-click="getExecutionDetails(proposal.campaign.proposal_id)"> Details </a>
             </td>
           </tr>
         </tbody>
