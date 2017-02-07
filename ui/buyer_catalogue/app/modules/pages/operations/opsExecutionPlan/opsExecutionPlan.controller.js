@@ -25,16 +25,20 @@ angular.module('catalogueApp')
 
       opsExecutionPlanService.getOpsExecutionImageDetails($scope.campaign_id)
       	.success(function(response, status){
-          console.log(response);
       		$scope.campaignData = response.data;
+          if($scope.campaignData.length == 0)
+            $scope.hideData = true;
               $scope.loading = response;
       	})
       	.error(function(response, status){
+          $scope.hideData = true;
       		console.log("error occured", status);
       	});
       $scope.setImageUrl = function(image_path){
-        console.log(image_path);
         $scope.image_url = "http://androidtokyo.s3.amazonaws.com/" + image_path;
+      }
+      $scope.getImageUrl = function(){
+        return $scope.image_url;
       }
       $scope.getSupplierDetails = function(supplier){
         $scope.supplierData = [];
@@ -47,8 +51,5 @@ angular.module('catalogueApp')
         	.error(function(response, status){
         		console.log("error occured", status);
         	});
-
       }
-
-
 }]);
