@@ -96,6 +96,7 @@ angular.module('catalogueApp')
 
       opsDashBoardService.convertProposalToCampaign(proposal.proposal.proposal_id, proposal.proposal)
           .success(function(response, status){
+            console.log(response);
               if(status == 200){
                 $scope.showAssignModal = true;
               }
@@ -118,14 +119,25 @@ angular.module('catalogueApp')
     	  	    console.log("error occured", status);
     	});
     }
-
-
     //code added when the user clicks on proposal id the proposal details page will open
     $scope.showProposalDetails = function(proposal_id){
       $location.path('/' + proposal_id + '/showcurrentproposal');
     }
 
-    $scope.saveAssignment = function(proposal){
+    $scope.saveAssignment = function(){
+
+      var userId = 6;
+      var data = {
+        to:userId,
+        campaign_id:$scope.currentProposal.proposal.proposal_id
+      };
+      opsDashBoardService.saveAssignment(data)
+          .success(function(response, status){
+              console.table(response);
+    	})
+          .error(function(response, status){
+    	  	    console.log("error occured", status);
+    	});
     }
     $scope.getDetails = function(proposal_id){
       $location.path('/' + proposal_id + '/releasePlan');
