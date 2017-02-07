@@ -4119,12 +4119,16 @@ class InventoryActivityImage(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
-class SupplierBasicDetails(APIView):
+
+class SupplierDetails(APIView):
+    """
+    Detail of individual supplier
+    """
     def get(self, request):
         """
         Args:
             self:
-            request Data
+            request:
         Returns: matching supplier object from supplier type model
 
         """
@@ -4138,7 +4142,14 @@ class SupplierBasicDetails(APIView):
             model = get_model(settings.APP_NAME,supplier_model)
 
             supplier_object = model.objects.get(supplier_id=supplier_id)
+
             data = model_to_dict(supplier_object)
+
+            response = website_utils.manipulate_object_key_values([data])
+            if not response.data['status']:
+                return response
+            data = response.data['data'][0]
+
             return ui_utils.handle_response(class_name, data=data, success=True)
 
         except Exception as e:
