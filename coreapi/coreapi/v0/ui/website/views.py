@@ -3678,6 +3678,13 @@ class AssignCampaign(APIView):
                 query['assigned_to'] = models.BaseUser.objects.get(id=to)
 
             assigned_objects = models.CampaignAssignment.objects.filter(**query)
+
+            # check each one of them weather they are campaign or not
+            for assign_object in assigned_objects:
+                response = website_utils.is_campaign(assign_object.campaign)
+                if not response.data['status']:
+                    return response
+
             serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
 
             # assign statuses to each of the campaigns.

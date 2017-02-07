@@ -6,6 +6,7 @@ CAMPAIGN_INVALID_STATE_ERROR = 'This proposal is not a campaign yet because it\'
 CAMPAIGN_ON_HOLD_ERROR = 'This proposal is not a campaign yet because it is on hold'
 CAMPAIGN_NOT_APPROVED_ERROR = 'This proposal is not a campaign yet because it has not been approved by ops HEAD'
 CAMPAIGN_NO_INVOICE_ERROR = 'This proposal is not a campaign because it does not have any invoice number'
+CAMPAIGN_NO_START_OR_END_DATE_ERROR = 'This proposal {0} is not a campaign because it does not have either start or end date defined'
 
 INVALID_PAYMENT_METHOD_CODE = 'This code {0} is not a valid payment method code'
 INVALID_PAYMENT_STATUS_CODE = 'This code {0} is not a valid payment status code'

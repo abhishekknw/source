@@ -3430,7 +3430,6 @@ def is_campaign(proposal):
         proposal: The proposal object
 
     Returns: True if campaign else False.
-
     """
     function = is_campaign.__name__
     try:
@@ -3442,6 +3441,9 @@ def is_campaign(proposal):
 
         if proposal.campaign_state == website_constants.proposal_on_hold:
             return ui_utils.handle_response(function, data=errors.CAMPAIGN_ON_HOLD_ERROR)
+
+        if not proposal.tentative_start_date or not proposal.tentative_end_date:
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_NO_START_OR_END_DATE_ERROR.format(proposal.proposal_id))
 
         if proposal.campaign_state != website_constants.proposal_converted_to_campaign:
             return ui_utils.handle_response(function, data=errors.CAMPAIGN_INVALID_STATE_ERROR.format(proposal.campaign_state ,  website_constants.proposal_converted_to_campaign))
