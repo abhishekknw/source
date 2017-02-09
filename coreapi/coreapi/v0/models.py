@@ -39,6 +39,14 @@ AD_INVENTORY_CHOICES = (
     ('CAR DISPLAY', 'Car Display'),
     ('FLIER', 'Flier'),
     ('BANNER', 'Banner'),
+    ('POSTER LIFT', 'Poster Lift'),
+
+)
+
+INVENTORY_ACTIVITY_TYPES = (
+    ('RELEASE', 'RELEASE'),
+    ('CLOSURE', 'CLOSURE'),
+    ('AUDIT', 'AUDIT')
 )
 
 
@@ -139,6 +147,8 @@ class BasicSupplierDetails(BaseModel):
     bank_name = models.CharField(max_length=250, blank=True, null=True)
     ifsc_code = models.CharField(max_length=30, blank=True, null=True)
     account_number = models.CharField(max_length=250, blank=True, null=True)
+    food_tasting_allowed = models.BooleanField(default=False)
+    sales_allowed = models.BooleanField(default=False)
     objects = managers.GeneralManager()
 
     class Meta:
@@ -1008,7 +1018,7 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     openspace = models.FloatField(blank=True, null=True, default=0.0)
     averagerent = models.FloatField(blank=True, null=True, default=0.0)
     generic.GenericRelation(ContactDetailsGeneric)
-
+    is_common_cafeteria_available = models.BooleanField(default=False)
 
     def get_buildings(self):
         return self.corporatebuilding.all()
@@ -1979,6 +1989,8 @@ class ShortlistedInventoryPricingDetails(BaseModel):
     shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True)
     objects = managers.GeneralManager()
     inventory_object = generic.GenericForeignKey('inventory_content_type', 'inventory_id')
+    comment = models.CharField(max_length=1000, null=True, blank=True)
+
 
     class Meta:
         db_table = 'shortlisted_inventory_pricing_details'
@@ -2183,6 +2195,7 @@ class ShortlistedSpaces(BaseModel):
     payment_status = models.CharField(max_length=255, null=True, blank=True)
     payment_method = models.CharField(max_length=255, null=True, blank=True)
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
+    booking_status = models.CharField(max_length=10, null=True, blank=True)
 
     class Meta:
         db_table = 'shortlisted_spaces'
@@ -2299,13 +2312,18 @@ class AuditDate(BaseModel):
         db_table = 'audit_date'
 
 
+class InventoryActivityImage(BaseModel):
+    """
+    stores image path against each inventory id under given activity.
+    """
+    shortlisted_inventory_details = models.ForeignKey('ShortlistedInventoryPricingDetails')
+    image_path = models.CharField(max_length=1000, null=True, blank=True)
+    comment = models.CharField(max_length=1000, null=True, blank=True)
+    activity_type = models.CharField(max_length=1000, choices=INVENTORY_ACTIVITY_TYPES)
+    activity_date = models.CharField(max_length=1000, null=True, blank=True)
 
-
-
-
-
-
-
+    class Meta:
+        db_table = 'inventory_activity_image'
 
 
 

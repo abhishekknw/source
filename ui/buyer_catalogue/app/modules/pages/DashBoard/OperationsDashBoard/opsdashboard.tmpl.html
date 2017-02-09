@@ -26,13 +26,13 @@
             <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="updateCampaign(proposal)" data-target = "#assignModal" data-toggle = "modal">Accept</label>
+                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)" data-target = "#assignModal" data-toggle="modal">Accept</label>
               </div>
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PNC" ng-click="updateCampaign(proposal)" data-target="#detailModal" data-toggle="modal">Decline</label>
+                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PNC" ng-click="convertCampaignToProposal(proposal)" data-target="#declineModal" data-toggle="modal">Decline</label>
               </div>
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#detailModal" data-toggle="modal">OnHold</label>
+                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#onHoldModal" data-toggle="modal">OnHold</label>
               </div>
             </td>
             <td class="col-md-2">
@@ -46,7 +46,6 @@
 </div>
 
 <!-- Start: Displaying table of converted campaigns -->
-<!-- <h3 uib-tooltip="List of all Campaigns" style = "margin-left: 105px; margin-top: 60px;">Campaign List</h3> -->
 <span uib-tooltip="List of all Campaigns" class = "campaign-list">Campaign List</span>
 <div class="container">
   <div class="row">
@@ -58,15 +57,18 @@
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="proposal in proposals">
-            <td class="col-md-1">{{proposal.proposal.proposal_id}}</td>
-            <td class="col-md-2">{{proposal.proposal.name}}</td>
-            <td class="col-md-2">{{proposal.proposal.created_by}}</td>
-            <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
-            <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
-            <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
+          <tr ng-repeat="proposal in campaignData">
+            <td class="col-md-1">{{proposal.campaign.proposal_id}}</td>
+            <td class="col-md-2">{{proposal.campaign.name}}</td>
+            <td class="col-md-2">{{proposal.assigned_to.username}}</td>
+            <td class="col-md-2"></td>
+            <td class="col-md-2">{{proposal.campaign.tentative_start_date|limitTo:10}}</td>
+            <td class="col-md-2">{{proposal.campaign.tentative_end_date|limitTo:10}}</td>
             <td class="col-md-2">
-              <a ng-click="getDetails(proposal.proposal.proposal_id)" Download> Details </a>
+              <a ng-click="getDetails(proposal.campaign.proposal_id)"> Details </a>
+            </td>
+            <td class="col-md-2">
+              <a ng-click="getExecutionDetails(proposal.campaign.proposal_id)"> Details </a>
             </td>
           </tr>
         </tbody>
@@ -79,7 +81,7 @@
 <!--End: Displaying table of converted campaigns -->
 
 <!-- Start: Code for reason specifying modal-->
-<div id="detailModal" class="modal fade">
+<div id="declineModal" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -88,17 +90,35 @@
         <hr/>
         <div class = "modal-body" style = "height: 300px;">
         <label>Please enter the reason in below box why this proposal can't be converted to campaign</label>
-          <textarea name="reason" id="reason" class="form-control" ng-model="reason"></textarea>
+          <textarea name="reason" id="onDeclineReason" class="form-control" ng-model="reason"></textarea>
           <button class="btn btn-danger active notify" ng-click="sendNotification()">Notify</button>
         </div>
       </div>
     </div>
   </div>
 </div>
-<!-- End: Code for reason specifying modal-->
 
+<div id="onHoldModal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Specify Reason</h4>
+        <hr/>
+        <div class = "modal-body" style = "height: 300px;">
+        <label>Please enter the reason in below box why this proposal is on hold</label>
+          <textarea name="reason" id="onHoldReason" class="form-control" ng-model="reason"></textarea>
+          <button class="btn btn-danger active notify" ng-click="sendNotification()">Notify</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- End: Code for reason specifying modal-->
 <!-- Start: Code for assgining campaign -->
-<div id="assignModal" class="modal fade">
+<div id="assignModal" ng-if="showAssignModal"  class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">

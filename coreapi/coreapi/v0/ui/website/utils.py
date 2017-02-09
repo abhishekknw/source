@@ -20,6 +20,7 @@ from django.core.mail import EmailMessage
 from django.utils import timezone
 from django.conf import settings
 from django.db.models import Count
+from django.forms.models import model_to_dict
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -30,6 +31,7 @@ from openpyxl import Workbook
 import boto
 import boto.s3
 from boto.s3.key import Key
+from bulk_update.helper import bulk_update
 
 import constants as website_constants
 from constants import price_per_flat, inventorylist
@@ -38,6 +40,7 @@ from v0.models import PriceMappingDefault
 import v0.ui.utils as ui_utils
 import serializers
 import v0.utils as v0_utils
+from v0 import errors
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -1418,7 +1421,7 @@ def create_proposal_id(business_id, account_id):
         # get number of account letters to append
         account_letters = website_constants.account_letters
         # make the proposal id.
-        proposal_id = business_id[-business_letters:].upper() + account_id[-account_letters:].upper() + (str(uuid.uuid4())[-website_constants.proposal_id_limit:])
+        proposal_id = business_id[:business_letters].upper() + account_id[:account_letters].upper() + (str(uuid.uuid4())[-website_constants.proposal_id_limit:])
 
         return ui_utils.handle_response(function, data=proposal_id, success=True)
     except Exception as e:
@@ -3427,21 +3430,24 @@ def is_campaign(proposal):
         proposal: The proposal object
 
     Returns: True if campaign else False.
-
     """
     function = is_campaign.__name__
     try:
+
         if not proposal.invoice_number:
-            return ui_utils.handle_response(function, data='This proposal is not a campaign because it does not have any invoice number')
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_NO_INVOICE_ERROR)
 
         if proposal.campaign_state == website_constants.proposal_not_converted_to_campaign:
-            return ui_utils.handle_response(function, data='This proposal is not a campaign yet because it has not been approved by ops HEAD')
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_NOT_APPROVED_ERROR)
 
         if proposal.campaign_state == website_constants.proposal_on_hold:
-            return ui_utils.handle_response(function, data='This proposal is not a campaign yet because it is on hold')
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_ON_HOLD_ERROR)
+
+        if not proposal.tentative_start_date or not proposal.tentative_end_date:
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_NO_START_OR_END_DATE_ERROR.format(proposal.proposal_id))
 
         if proposal.campaign_state != website_constants.proposal_converted_to_campaign:
-            return ui_utils.handle_response(function, data='This proposal is not a campaign yet because of unknown reasons.')
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_INVALID_STATE_ERROR.format(proposal.campaign_state ,  website_constants.proposal_converted_to_campaign))
 
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
@@ -3471,13 +3477,14 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         result['campaign'] = proposal_serializer.data
 
         # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
-        response = get_objects_per_content_type(shortlisted_spaces)
+        response = get_objects_per_content_type(shortlisted_spaces.values())
         if not response.data['status']:
             return response
+        content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
 
         # converts the ids store in previous step to actual objects and adds additional information which is
         #  supplier specific  like area, name, subarea etc.
-        response = map_objects_ids_to_objects(response.data['data'])
+        response = map_objects_ids_to_objects(content_type_supplier_id_map)
         if not response.data['status']:
             return response
 
@@ -3485,17 +3492,294 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         # information for that supplier
         supplier_specific_info = response.data['data']
 
+        response = get_contact_information(content_type_set, supplier_id_set)
+        if not response.data['status']:
+            return response
+        contact_object_per_content_type_per_supplier = response.data['data']
+
+        response = get_supplier_price_information(content_type_set, supplier_id_set)
+        if not response.data['status']:
+            return response
+        supplier_price_per_content_type_per_supplier = response.data['data']
+
         shortlisted_suppliers_serializer = serializers.ShortlistedSpacesSerializerReadOnly(shortlisted_spaces, many=True)
         result['shortlisted_suppliers'] = shortlisted_suppliers_serializer.data
 
         # put the extra supplier specific info like name, area, subarea in the final result.
         for supplier in shortlisted_suppliers_serializer.data:
+
             supplier_content_type_id = supplier['content_type']
             supplier_id = supplier['object_id']
-            for key, value in supplier_specific_info[supplier_content_type_id, supplier_id].iteritems():
+
+            supplier_tuple = (supplier_content_type_id, supplier_id)
+            for key, value in supplier_specific_info[supplier_tuple].iteritems():
                 supplier[key] = value
+            # no good way to check if the tuple exist in the dict. Hence resorted to KeyError checking.
+            try:
+                supplier['contacts'] = contact_object_per_content_type_per_supplier[supplier_tuple]
+            except KeyError:
+                supplier['contacts'] = []
+            try:
+                pmd_objects_per_supplier = supplier_price_per_content_type_per_supplier[supplier_tuple]
+            except KeyError:
+                pmd_objects_per_supplier = []
+            shortlisted_inventories = supplier['shortlisted_inventories']
+            response = add_total_price_per_inventory_per_supplier(pmd_objects_per_supplier, shortlisted_inventories)
+            if not response.data['status']:
+                return response
+            supplier['shortlisted_inventories'], total_inventory_supplier_price = response.data['data']
+            supplier['total_inventory_supplier_price'] = total_inventory_supplier_price
 
         return ui_utils.handle_response(function, data=result, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def handle_update_campaign_inventories(user, data):
+    """
+    Update campaign and inventories
+    Args:
+        data:
+
+    Returns:
+
+    """
+    function = handle_update_campaign_inventories.__name__
+    try:
+        if not data:
+            return ui_utils.handle_response(function, data='success', success=True)
+
+        # collect shortlisted spaces specific details
+        shortlisted_spaces = {}
+        shortlisted_inventory_details = {}
+        new_audit_dates = []
+        old_audit_dates = {}
+
+        for supplier in data:
+            ss_global_id = supplier['id']
+            if not shortlisted_spaces.get(ss_global_id):
+                shortlisted_spaces[ss_global_id] = {}
+
+            response = check_valid_codes(supplier['payment_status'],  supplier['payment_method'], supplier['booking_status'])
+            if not response.data['status']:
+                return response
+
+            shortlisted_spaces[ss_global_id] = {
+                'phase': supplier['phase'],
+                'payment_status': supplier['payment_status'],
+                'payment_method': supplier['payment_method'],
+                'total_negotiated_price': supplier['total_negotiated_price'],
+                'booking_status': supplier['booking_status']
+            }
+            shortlisted_inventories = supplier['shortlisted_inventories']
+            for inventory, inventory_detail in shortlisted_inventories.iteritems():
+                for inv in inventory_detail['detail']:
+                    sid_global_id = inv['id']
+                    if not shortlisted_inventory_details.get(sid_global_id):
+                        shortlisted_inventory_details[sid_global_id] = {}
+
+                    shortlisted_inventory_details[sid_global_id] = {
+                        'release_date': inv['release_date'],
+                        'closure_date': inv['closure_date'],
+                        'comment': inv['comment']
+                    }
+                    for audit_date in inv['audit_dates']:
+
+                        audit_global_id = audit_date.get('id')
+                        if not audit_global_id:
+                            audit_data = {
+                                'shortlisted_inventory_id': sid_global_id,
+                                'audit_date': audit_date['audit_date'],
+                                'audited_by': user
+                            }
+                            new_audit_dates.append(audit_data)
+                        else:
+                            old_audit_dates[audit_global_id] = {
+                                'shortlisted_inventory_id': sid_global_id,
+                                'audit_date': audit_date['audit_date'],
+                                'audited_by': user
+                            }
+        data = {
+            'shortlisted_spaces': shortlisted_spaces,
+            'shortlisted_inventory_details': shortlisted_inventory_details,
+            'new_audit_dates': new_audit_dates,
+            'old_audit_dates': old_audit_dates
+        }
+        response = update_campaign_inventories(data)
+        if not response.data['status']:
+            return response
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def update_campaign_inventories(data):
+    """
+    updates the data in three tables: SS , SID, and Audit dates.
+    Args:
+        data: a dict of  individual dicts.
+
+    Returns: success or failure
+    """
+    function = update_campaign_inventories.__name__
+    try:
+        shortlisted_spaces = data['shortlisted_spaces']
+        shortlisted_inventory_details = data['shortlisted_inventory_details']
+        new_audit_dates = data['new_audit_dates']
+        old_audit_dates = data['old_audit_dates']
+
+        shortlisted_spaces_ids = shortlisted_spaces.keys()
+        ss_objects = models.ShortlistedSpaces.objects.filter(id__in=shortlisted_spaces_ids)
+
+        for obj in ss_objects:
+            ss_global_id = obj.id
+            obj.phase = shortlisted_spaces[ss_global_id]['phase']
+            obj.payment_status = shortlisted_spaces[ss_global_id]['payment_status']
+            obj.payment_method = shortlisted_spaces[ss_global_id]['payment_method']
+            obj.total_negotiated_price = shortlisted_spaces[ss_global_id]['total_negotiated_price']
+            obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
+
+        sid_ids = shortlisted_inventory_details.keys()
+        sid_objects = models.ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
+        sid_object_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(sid_ids)
+
+        for obj in sid_objects:
+            sid_global_id = obj.id
+            obj.release_date = shortlisted_inventory_details[sid_global_id]['release_date']
+            obj.closure_date = shortlisted_inventory_details[sid_global_id]['closure_date']
+            obj.comment = shortlisted_inventory_details[sid_global_id]['comment']
+
+        new_audit_date_objects = []
+        for obj_dict in new_audit_dates:
+            obj_dict['shortlisted_inventory'] = sid_object_map[obj_dict['shortlisted_inventory_id']]
+            del obj_dict['shortlisted_inventory_id']
+            new_audit_date_objects.append(models.AuditDate(**obj_dict))
+
+        audit_ids = old_audit_dates.keys()
+        audit_objects = models.AuditDate.objects.filter(id__in=audit_ids)
+
+        for audit_obj in audit_objects:
+            audit_id = audit_obj.id
+            audit_obj.audit_date = old_audit_dates[audit_id]['audit_date']
+            audit_obj.audited_by = old_audit_dates[audit_id]['audited_by']
+
+        bulk_update(ss_objects)
+        bulk_update(sid_objects)
+        bulk_update(audit_objects)
+        models.AuditDate.objects.bulk_create(new_audit_date_objects)
+
+        # todo: .save() won't be called because we are using bulk update to update the tables. as a consequence dates
+        # todo: won't be updated. Find a solution later.
+
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def check_valid_codes(payment_status, payment_method, booking_status):
+    """
+    checks weather these codes are valid or not
+    Args:
+        payment_status: payment status
+        payment_method: payment method
+        booking_status: booking status
+
+    Returns:
+    """
+    function = check_valid_codes.__name__
+    try:
+        if payment_method and payment_method not in website_constants.payment_method.values():
+            return ui_utils.handle_response(function, data=errors.INVALID_PAYMENT_METHOD_CODE.format(payment_method))
+        if payment_status and payment_status not in website_constants.payment_status.values():
+            return ui_utils.handle_response(function, data=errors.INVALID_PAYMENT_STATUS_CODE.format(payment_status))
+        if booking_status and booking_status not in website_constants.booking_status.values():
+            return ui_utils.handle_response(function, data=errors.INVALID_BOOKING_STATUS_CODE.format(booking_status))
+
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def add_total_price_per_inventory_per_supplier(price_mapping_default_inventories, shortlisted_inventories):
+    """
+    Args:
+        price_mapping_default_inventories: a list of PMD entries for a supplier
+        shortlisted_inventories: List of SI.
+
+    Returns: a dict with total supplier price keyed by inventory name.
+
+    """
+    function = add_total_price_per_inventory_per_supplier.__name__
+    try:
+        total_price = 0
+        pmd_inv_to_supplier_price_map = {}
+        pmd_inventory_names = set()
+
+        for pmd in price_mapping_default_inventories:
+            inventory_name = pmd['inventory_type']['adinventory_name']
+            inventory_supplier_price = pmd['supplier_price'] if pmd['supplier_price'] else 0
+            if not pmd_inv_to_supplier_price_map.get(inventory_name):
+                pmd_inventory_names.add(inventory_name)
+                pmd_inv_to_supplier_price_map[inventory_name] = inventory_supplier_price
+
+        result = {}
+        for inventory in shortlisted_inventories:
+
+            inventory_name = inventory['inventory_type']['adinventory_name']
+
+            if not result.get(inventory_name):
+                result[inventory_name] = {}
+                result[inventory_name]['supplier_price'] = pmd_inv_to_supplier_price_map[inventory_name] if pmd_inv_to_supplier_price_map.get(inventory_name) else 0
+                result[inventory_name]['detail'] = []
+                result[inventory_name]['total_count'] = 0
+                total_price += float(result[inventory_name]['supplier_price'])
+
+            result[inventory_name]['detail'].append(inventory)
+            result[inventory_name]['total_count'] += 1
+
+        return ui_utils.handle_response(function, data=(result, total_price), success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_supplier_price_information(content_type_id_set, supplier_id_set):
+    """
+
+    """
+    function = get_supplier_price_information.__name__
+    try:
+        price_objects = models.PriceMappingDefault.objects.filter(content_type__id__in=content_type_id_set, object_id__in=supplier_id_set)
+        price_objects_per_content_type_per_supplier = {}
+        for price in price_objects:
+            object_id = price.object_id
+            content_type_object = price.content_type_id
+            try:
+                reference = price_objects_per_content_type_per_supplier[content_type_object, object_id]
+            except KeyError:
+                price_objects_per_content_type_per_supplier[content_type_object, object_id] = []
+                reference = price_objects_per_content_type_per_supplier[content_type_object, object_id]
+
+            serializer = serializers.PriceMappingDefaultSerializerReadOnly(price)
+            reference.append(serializer.data)
+        return ui_utils.handle_response(function, data=price_objects_per_content_type_per_supplier, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_contact_information(content_type_id_set, supplier_id_set):
+    """
+    """
+    function = get_contact_information.__name__
+    try:
+        contacts = models.ContactDetails.objects.filter(content_type__id__in=content_type_id_set, object_id__in=supplier_id_set)
+        contact_object_per_content_type_per_supplier = {}
+        for contact in contacts:
+            object_id = contact.object_id
+            content_type_object = contact.content_type_id
+            if (content_type_object, object_id) not in contact_object_per_content_type_per_supplier.keys():
+                contact_object_per_content_type_per_supplier[content_type_object, object_id] = []
+            contact_object_per_content_type_per_supplier[content_type_object, object_id].append(model_to_dict(contact))
+        return ui_utils.handle_response(function, data=contact_object_per_content_type_per_supplier, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -3541,8 +3825,11 @@ def map_objects_ids_to_objects(mapping):
 
             # map the extra supplier_specific attributes to content_type, supplier_id
             for supplier in supplier_objects:
-                output[content_type_id, supplier['supplier_id']] = {'area': supplier['area'], 'name': supplier['name'], 'subarea': supplier['subarea']}
-
+                extra_data = {'area': supplier['area'], 'name': supplier['name'], 'subarea': supplier['subarea']}
+                response = merge_two_dicts(supplier, extra_data)
+                if not response.data['status']:
+                    return response
+                output[content_type_id, supplier['supplier_id']] = response.data['data']
         return ui_utils.handle_response(function, data=output, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
@@ -3560,16 +3847,27 @@ def get_objects_per_content_type(objects):
     function = get_objects_per_content_type.__name__
     try:
         result = {}
+        content_type_set = set()
+        supplier_id_set = set()
+
         for my_object in objects:
-            content_type_id = my_object.content_type.id
-            object_id = my_object.object_id
+
+            #  key can be both. one from serializer and one directly hitting .values()
+            try:
+                content_type_id = my_object['content_type']
+            except KeyError:
+                content_type_id = my_object['content_type_id']
+
+            object_id = my_object['object_id']
 
             if not result.get(content_type_id):
                 result[content_type_id] = []
+                content_type_set.add(content_type_id)
 
             result[content_type_id].append(object_id)
+            supplier_id_set.add(object_id)
 
-        return ui_utils.handle_response(function ,data=result, success=True)
+        return ui_utils.handle_response(function, data=(result, content_type_set, supplier_id_set), success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -3714,7 +4012,9 @@ def prepare_bucket(inventory_name, master_sorted_list_inventories):
             return response
         inventory_general_data = response.data['data']
 
-        tower_ids_per_supplier = {}
+        # stores inventory count per bucket id per supplier. Useful in making buckets and assigning frequencies.
+        inventory_count_per_bucket_per_supplier = {}
+        # inventory_id to tower map.
         inventory_ids_to_tower_id_map = {}
 
         for inv in inventories:
@@ -3729,10 +4029,21 @@ def prepare_bucket(inventory_name, master_sorted_list_inventories):
 
             if not inventory_ids_to_tower_id_map.get(inv.adinventory_id):
                 inventory_ids_to_tower_id_map[inv.adinventory_id] = ''
-            if not (content_type, object_id) in tower_ids_per_supplier.keys():
-                tower_ids_per_supplier[content_type, object_id] = set()
 
-            tower_ids_per_supplier[content_type, object_id].add(tower_id)
+            try:
+                frequency_bucket = inventory_count_per_bucket_per_supplier[content_type, object_id]
+            except KeyError:
+                inventory_count_per_bucket_per_supplier[content_type, object_id] = {}
+                frequency_bucket = inventory_count_per_bucket_per_supplier[content_type, object_id]
+
+            try:
+                frequency_bucket[tower_id] += 1
+                # increment count of inventories if we encounter more inventories for this bucket
+            except KeyError:
+                # set inventory count against this bucket to 1 because we just encountered first inventory for this
+                # bucket
+                frequency_bucket[tower_id] = 1
+
             inventory_ids_to_tower_id_map[inv.adinventory_id] = tower_id
 
         for inv_id in sorted_inventory_ids:
@@ -3743,9 +4054,10 @@ def prepare_bucket(inventory_name, master_sorted_list_inventories):
 
             if bucket_key not in bucket.keys():
                 # this is a list of bucket_ids or tower ids for this supplier
-                list_of_bucket_ids = tower_ids_per_supplier[inv.content_type, inv.object_id]
+                list_of_bucket_ids = inventory_count_per_bucket_per_supplier[inv.content_type, inv.object_id].keys()
+                bucket_id_to_max_frequency = inventory_count_per_bucket_per_supplier[inv.content_type, inv.object_id]
                 # this prepares the bucket based on the above mentioned list
-                response = prepare_bucket_per_inventory(inventory_content_type, inventory_name, list_of_bucket_ids)
+                response = prepare_bucket_per_inventory(inventory_content_type, inventory_name, list_of_bucket_ids, bucket_id_to_max_frequency)
                 if not response.data['status']:
                     return response
                 # a mapping like { 10: { } , 12: { }, 13: { } } is received for each bucket_id.
@@ -3781,11 +4093,17 @@ def get_inventory_general_data(inventory_name, inventory_content_type):
                 'inventory_content_type': inventory_content_type,
             }
 
-        if inventory_name == website_constants.stall:
+        elif inventory_name == website_constants.stall:
             # general inventory data
             inventory_general_data = {
                 'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.stall,adinventory_type=website_constants.default_stall_type),
                 'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_stall_duration_type),
+                'inventory_content_type': inventory_content_type,
+            }
+        elif inventory_name == website_constants.flier:
+            inventory_general_data = {
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.flier,adinventory_type=website_constants.default_flier_type),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_flier_duration_type),
                 'inventory_content_type': inventory_content_type,
             }
 
@@ -3807,7 +4125,7 @@ def get_tower_id(inventory_object):
     function = get_tower_id.__name__
     try:
         class_name = inventory_object.__class__.__name__
-        if class_name == website_constants.stall_class_name:
+        if class_name == website_constants.stall_class_name or class_name == website_constants.flier_class_name:
             return ui_utils.handle_response(function, data=0, success=True)
         elif class_name == website_constants.standee_class_name:
             return ui_utils.handle_response(function, data=inventory_object.tower_id, success=True)
@@ -3816,14 +4134,14 @@ def get_tower_id(inventory_object):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_bucket_per_inventory(inventory_content_type, inventory_name,  list_of_bucket_ids):
+def prepare_bucket_per_inventory(inventory_content_type, inventory_name,  list_of_bucket_ids, bucket_id_to_max_frequency):
     """
     The function that prepares buckets per inventory_content_type
     Args:
         inventory_content_type: The inventory content type.
         inventory_name: The name of the inventory.
         list_of_bucket_ids: List of bucket ids.
-
+        bucket_id_to_max_frequency: { 8: 10, 12: 14 .. } is a map from bucket ids to total number of inventories in that bucket
     Returns: { 0: [ { } ],
 
     """
@@ -3835,6 +4153,10 @@ def prepare_bucket_per_inventory(inventory_content_type, inventory_name,  list_o
             assignment_frequency = 1
         elif inventory_name == website_constants.standee_name:
             assignment_frequency = 1
+        elif inventory_name == website_constants.flier:
+            # because all inventories for a supplier must be assigned to a proposal. We know that flier can only have
+            # a bucket number as zero.
+            assignment_frequency = bucket_id_to_max_frequency[0]
 
         buckets = {}
         inventory_name = inventory_content_type.model
@@ -4099,3 +4421,121 @@ def get_campaign_status(proposal_start_date, proposal_end_date):
 
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def do_dates_overlap(base_start_date_1, base_end_date_1, target_start_date_1, target_end_date_2):
+    """
+
+    Args:
+        base_start_date_1:
+        base_end_date_1:
+        target_start_date_1:
+        target_end_date_2:
+
+    Returns:
+
+    """
+    function = do_dates_overlap.__name__
+    try:
+        # check for valid dates.
+        if base_end_date_1 < base_start_date_1:
+            return ui_utils.handle_response(function, data=errors.INVALID_START_END_DATE.format(base_start_date_1, base_end_date_1))
+
+        if target_end_date_2 < target_start_date_1:
+            return ui_utils.handle_response(function, data=errors.INVALID_START_END_DATE.format(target_start_date_1, target_end_date_2))
+
+        # now test for overlap
+        if base_end_date_1 < target_start_date_1:
+            return ui_utils.handle_response(function, data=False, success=True)
+
+        if base_start_date_1 > target_end_date_2:
+            return ui_utils.handle_response(function, data=False, success=True)
+
+        return ui_utils.handle_response(function, data=True, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_overlapping_campaigns(proposal):
+    """
+    """
+    function = get_overlapping_campaigns.__name__
+    try:
+        start_date = proposal.tentative_start_date
+        end_date = proposal.tentative_end_date
+
+        overlapping_campaigns = []
+        campaigns = models.ProposalInfo.objects.filter(campaign_state=website_constants.proposal_converted_to_campaign, invoice_number__isnull=False).exclude(pk=proposal.pk)
+
+        for campaign in campaigns:
+            target_start_date = campaign.tentative_start_date
+            target_end_date = campaign.tentative_end_date
+            # if the campaign does not have dates, it's an error. a campaign must have dates
+            if not target_start_date or not target_end_date:
+                return ui_utils.handle_response(function, data=errors.NO_DATES_ERROR.format(campaign.proposal_id))
+
+            # check for overlapping
+            response = do_dates_overlap(start_date, end_date, target_start_date, target_end_date)
+            if not response.data['status']:
+                return response
+            verdict = response.data['data']
+            if verdict:
+                overlapping_campaigns.append(campaign)
+
+        return ui_utils.handle_response(function, data=overlapping_campaigns, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def book_inventories(current_inventories_map, already_inventories_map):
+    """
+
+    Args:
+        current_inventories_map:
+        already_inventories_map:
+
+    Returns: a list of SID objects if no object overlaps with already booked inventories.
+
+    """
+    function = book_inventories.__name__
+    try:
+        booked_inventories = []
+        inv_errors = []
+        for inv_tuple, inv_date_tuple in current_inventories_map.iteritems():
+            release_date = inv_date_tuple[0]
+            closure_date = inv_date_tuple[1]
+            inv_obj = inv_date_tuple[2]
+            inv_obj.release_date = release_date
+            inv_obj.closure_date = closure_date
+
+            # if this inventory is not found in already_booked_inventories map, book this inventory.
+            try:
+                already_book_inv_map_reference = already_inventories_map[inv_tuple]
+                is_overlapped = False
+                for already_booked_inv_tuple in already_book_inv_map_reference:
+
+                    target_release_date = already_booked_inv_tuple[0]
+                    target_closure_date = already_booked_inv_tuple[1]
+                    target_proposal_id = already_booked_inv_tuple[2]
+
+                    response = do_dates_overlap(release_date, closure_date, target_release_date, target_closure_date)
+                    if not response.data['status']:
+                        return response
+                    verdict = response.data['data']
+                    # if the dates overlap we don't book this inventory
+                    if verdict:
+                        is_overlapped = True
+                        inv_errors.append(errors.DATES_OVERLAP_ERROR.format(inv_obj.inventory_id, release_date, closure_date, target_release_date, target_closure_date, target_proposal_id))
+                # if the inv does not overlaps with any of the pre booked versions of it, we book it.
+                if not is_overlapped:
+                    booked_inventories.append(inv_obj)
+            except KeyError:
+                # means this inventory is already not booked. hence we book it.
+                booked_inventories.append(inv_obj)
+
+        return ui_utils.handle_response(function, data=(booked_inventories, inv_errors), success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+

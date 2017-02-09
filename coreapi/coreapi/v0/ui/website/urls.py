@@ -40,6 +40,7 @@ urlpatterns = [
     #url(r'^putSocietiesInTable/$', views.SocietySaveCSVAPIView.as_view()),
     url(r'^save-society-data/$', views.ImportSocietyData.as_view()),
     url(r'^save-contact-details/$', views.ImportContactDetails.as_view()),
+    url(r'^save-corporate-data/$', views.ImportCorporateData.as_view()),
 
     url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/export-spaces-data/$', views.GenericExportData.as_view()),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/import-supplier-data/$', views.ImportSupplierData.as_view()),
@@ -56,6 +57,11 @@ urlpatterns = [
     url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/proposal-version/$', views.ProposalVersion.as_view()),
     url(r'^campaign-assignment/$', views.AssignCampaign.as_view()),
     url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/campaign-inventories/$', views.CampaignInventory.as_view()),
+    url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/convert-to-campaign/$', views.ProposalToCampaign.as_view()),
+    url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/convert-to-proposal/$', views.CampaignToProposal.as_view()),
+    url(r'^campaigns-inventory-list/$', views.CampaignInventoryList.as_view()),
+    url(r'^inventory-activity-image/$', views.InventoryActivityImage.as_view()),
+    url(r'^supplier-details/$', views.SupplierDetails.as_view()),
 
 ]
 

@@ -22,6 +22,7 @@ import v0.models
 import v0.serializers
 
 import constants as ui_constants
+import v0.models as models
 
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False):
@@ -719,3 +720,21 @@ def get_supplier_image(supplier_objects,supplier_name):
         return result
     except Exception as e:
         return None
+
+
+def generate_poster_objects(count, nb, society, society_content_type):
+
+    function = generate_poster_objects.__name__
+    try:
+        nb_tag = nb['notice_board_tag']
+        nb_tower = nb['tower_name']
+        pos = int(count) + 1
+        for i in range(1, pos):
+            nb_id = society.supplier_id + nb_tag + "PO" + str(i).zfill(2)
+            supplier_id = society.supplier_id
+            nb = models.PosterInventory(adinventory_id=nb_id, poster_location=nb_tag, tower_name=nb_tower, supplier=society, object_id=supplier_id, content_type=society_content_type)
+            nb.save()
+        return handle_response(function, data='success', success=True)
+    except Exception as e:
+        return handle_response(function, exception_object=e)
+

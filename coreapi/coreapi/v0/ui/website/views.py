@@ -7,12 +7,15 @@ import os
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum,F
 from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
 from django.utils import timezone
+from django.forms.models import model_to_dict
+from django.db.models import get_model
+from django.utils.dateparse import parse_datetime
 
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
@@ -25,6 +28,8 @@ from openpyxl import Workbook
 from openpyxl.compat import range
 import requests
 from rest_framework.parsers import JSONParser, FormParser
+from bulk_update.helper import bulk_update
+
 from rest_framework import permissions
 import openpyxl
 
@@ -2733,7 +2738,7 @@ class ProposalViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
 
-            proposal = ProposalInfo.objects.get_user_related_object(request.user, proposal_id=pk)
+            proposal = ProposalInfo.objects.get(proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -2753,7 +2758,7 @@ class ProposalViewSet(viewsets.ViewSet):
             data = request.data.copy()
             data['proposal_id'] = pk
 
-            proposal = ProposalInfo.objects.get_user_related_object(request.user, proposal_id=pk)
+            proposal = ProposalInfo.objects.get(proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal, data=data)
             if serializer.is_valid():
                 serializer.save()
@@ -3675,16 +3680,24 @@ class AssignCampaign(APIView):
                 query['assigned_to'] = models.BaseUser.objects.get(id=to)
 
             assigned_objects = models.CampaignAssignment.objects.filter(**query)
+
+            # check each one of them weather they are campaign or not
+            for assign_object in assigned_objects:
+                response = website_utils.is_campaign(assign_object.campaign)
+                if not response.data['status']:
+                    return response
+                    # assign statuses to each of the campaigns.
+
             serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
 
-            # assign statuses to each of the campaigns.
             for data in serializer.data:
-                proposal_start_date = data['campaign']['tentative_start_date']
-                proposal_end_date = data['campaign']['tentative_end_date']
+                proposal_start_date = parse_datetime(data['campaign']['tentative_start_date'])
+                proposal_end_date = parse_datetime(data['campaign']['tentative_end_date'])
                 response = website_utils.get_campaign_status(proposal_start_date, proposal_end_date)
                 if not response.data['status']:
                     return response
                 data['campaign']['status'] = response.data['data']
+
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -3723,3 +3736,456 @@ class CampaignInventory(APIView):
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+    def put(self, request, campaign_id):
+        """
+        The api updates data against this campaign_id.
+        Args:
+            request:
+            campaign_id: The campaign id to which we want to update
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
+
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
+
+            data = request.data
+
+            response = website_utils.handle_update_campaign_inventories(request.user, data)
+            if not response.data['status']:
+                return response
+
+            return ui_utils.handle_response(class_name, data='successfully updated', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class CampaignInventoryList(APIView):
+    """
+    List all valid shortlisted suppliers and there respective shortlisted inventories belonging to any campaign upcoming within
+    d days of current date plus all the running campaigns
+    """
+    def get(self, request):
+        """
+        Args:
+            request: The request object
+        Returns:
+        """
+        class_name = self.__class__.__name__
+
+        try:
+            # find proposals running and which are starting withing delta d days from the current date
+            current_date = timezone.now().date()
+
+            campaigns = []
+            proposals = models.ProposalInfo.objects.filter(Q(tentative_start_date__lte=current_date, tentative_end_date__gte=current_date) | Q(tentative_start_date__gte=current_date,  tentative_start_date__lte=current_date + timezone.timedelta(days=website_constants.delta_days)))
+
+            # find all campaigns out of these proposals
+            for proposal in proposals:
+                response = website_utils.is_campaign(proposal)
+                if not response.data['status']:
+                    continue
+                campaigns.append(proposal)
+
+            serializer = website_serializers.ProposalInfoSerializerReadOnly(campaigns, many=True)
+
+            shortlisted_spaces = []
+            for data in serializer.data:
+                shortlisted_spaces.extend(data['shortlisted_suppliers'])
+
+            # # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
+            response = website_utils.get_objects_per_content_type(shortlisted_spaces)
+            if not response.data['status']:
+                return response
+            content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
+
+            # converts the ids store in previous step to actual objects and adds additional information which is
+            #  supplier specific  like area, name, subarea etc.
+            response = website_utils.map_objects_ids_to_objects(content_type_supplier_id_map)
+            if not response.data['status']:
+                return response
+
+            # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
+            # information for that supplier
+            supplier_detail = response.data['data']
+
+            # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
+            for data in serializer.data:
+                for shortlisted_space in data['shortlisted_suppliers']:
+                    try:
+                        shortlisted_space['supplier_detail'] = supplier_detail[shortlisted_space['content_type'], shortlisted_space['object_id']]
+                    except KeyError:
+                        # ideally every supplier in ss table must also be in the corresponding supplier table. But
+                        # because current data is corrupt as i have manually added suppliers, i have to set this to
+                        # empty when KeyError occurres. #todo change this later.
+                        shortlisted_space['supplier_detail'] = {}
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ProposalToCampaign(APIView):
+    """
+    tries to  book the assigned inventories to this proposal. if successfull, sets the campaign state to right state that
+    marks this proposal a campaign.
+    """
+    def post(self, request, proposal_id):
+        """
+        Args:
+            request:
+            proposal_id:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+
+            if not proposal.invoice_number:
+                return ui_utils.handle_response(class_name, data=errors.CAMPAIGN_NO_INVOICE_ERROR)
+
+            proposal_start_date = proposal.tentative_start_date
+            proposal_end_date = proposal.tentative_end_date
+
+            if not proposal_start_date or not proposal_end_date:
+                return ui_utils.handle_response(class_name, data=errors.NO_DATES_ERROR.format(proposal_id))
+
+            current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
+
+            if not current_assigned_inventories:
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORIES_ASSIGNED_ERROR.format(proposal_id))
+
+            current_assigned_inventories_map = {}
+
+            for inv in current_assigned_inventories:
+                inv_tuple = (inv.inventory_content_type, inv.inventory_id)
+                current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
+
+            # get all the proposals which are campaign and which overlap with the current campaign
+            response = website_utils.get_overlapping_campaigns(proposal)
+            if not response.data['status']:
+                return response
+            overlapping_campaigns = response.data['data']
+
+            if not overlapping_campaigns:
+                # currently we have no choice but to book all inventories the same proposal_start and end date
+                # this can be made smarter when we know for how many days a particular inventory  is allowed in a
+                # supplier this will help in automatically determining R.D and C.D.
+                current_assigned_inventories.update(release_date=proposal_start_date, closure_date=proposal_end_date)
+                proposal.campaign_state = website_constants.proposal_converted_to_campaign
+                proposal.save()
+                return ui_utils.handle_response(class_name,data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
+
+            already_booked_inventories = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal__in=overlapping_campaigns)
+            already_booked_inventories_map = {}
+
+            for inv in already_booked_inventories:
+                inv_tuple = (inv.inventory_content_type, inv.inventory_id)
+                target_tuple = (inv.release_date, inv.closure_date, inv.shortlisted_spaces.proposal_id)
+                try:
+                    reference = already_booked_inventories_map[inv_tuple]
+                except KeyError:
+                    already_booked_inventories_map[inv_tuple] = []
+                    reference = already_booked_inventories_map[inv_tuple]
+                reference.append(target_tuple)
+
+            response = website_utils.book_inventories(current_assigned_inventories_map, already_booked_inventories_map)
+            if not response.data['status']:
+                return response
+            booked_inventories, inv_error_list = response.data['data']
+
+            # if there is something in error list then one or more inventories overlapped with already running campaigns
+            # we do not convert a proposal into campaign in this case
+            if inv_error_list:
+                return ui_utils.handle_response(class_name, data=errors.CANNOT_CONVERT_TO_CAMPAIGN_ERROR.format(proposal_id, inv_error_list))
+
+            bulk_update(booked_inventories)
+            proposal.campaign_state = website_constants.proposal_converted_to_campaign
+            proposal.save()
+
+            return ui_utils.handle_response(class_name, data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class CampaignToProposal(APIView):
+    """
+    Releases the inventories booked under a campaign and the sets the campaign state back to proposal state.
+    """
+    def post(self, request, campaign_id):
+        """
+        Args:
+            request:
+            campaign_id: The campaign_id
+
+        Returns:
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
+
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
+
+            proposal.campaign_state = website_constants.proposal_not_converted_to_campaign
+            proposal.save()
+
+            current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=campaign_id)
+            current_assigned_inventories.update(release_date=None, closure_date=None)
+
+            return ui_utils.handle_response(class_name, data=errors.REVERT_CAMPAIGN_TO_PROPOSAL.format(campaign_id, website_constants.proposal_not_converted_to_campaign), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ImportCorporateData(APIView):
+    """
+    This API reads a csv file and  makes supplier id's for each row. then it adds the data along with
+    supplier id in the  supplier_society table. it also populates society_tower table.
+    """
+
+    def get(self, request):
+        """
+        :param request: request object
+        :return: success response in case it succeeds else failure message.
+        """
+        class_name = self.__class__.__name__
+        try:
+            source_file = open(BASE_DIR + '/files/corporate.csv', 'rb')
+            with transaction.atomic():
+                reader = csv.reader(source_file)
+                for num, row in enumerate(reader):
+                    data = {}
+                    if num == 0:
+                        continue
+                    else:
+                        if len(row) != len(website_constants.corporate_keys):
+                            return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(len(row), len(website_constants.corporate_keys)))
+
+                        for index, key in enumerate(website_constants.corporate_keys):
+                            if row[index] == '':
+                                data[key] = None
+                            else:
+                                data[key] = row[index]
+                        state_name = ui_constants.state_name
+                        state_code = ui_constants.state_code
+                        state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
+                        city_object = models.City.objects.get(city_code=data['city_code'], state_code=state_object)
+                        area_object = models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
+                        subarea_object = models.CitySubArea.objects.get(subarea_code=data['subarea_code'],area_code=area_object)
+                        # make the data needed to make supplier_id
+                        supplier_id_data = {
+                            'city_code': data['city_code'],
+                            'area_code': data['area_code'],
+                            'subarea_code': data['subarea_code'],
+                            'supplier_type': data['supplier_type'],
+                            'supplier_code': data['supplier_code']
+                        }
+
+                        response = get_supplier_id(request, supplier_id_data)
+                        # this method of handing error code will  change in future
+                        if response.status_code == status.HTTP_200_OK:
+                            data['supplier_id'] = response.data['data']
+                        else:
+                            return response
+
+                        (corporate_object, value) = SupplierTypeCorporate.objects.get_or_create(supplier_id=data['supplier_id'])
+                        #data['society_location_type'] = subarea_object.locality_rating
+                        #data['society_state'] = 'Maharashtra'Uttar Pradesh
+                        data['society_state'] = 'Maharashtra'
+                        corporate_object.__dict__.update(data)
+                        corporate_object.save()
+
+
+
+                        # make entry into PMD here.
+                        response = ui_utils.set_default_pricing(data['supplier_id'], data['supplier_type'])
+                        if not response.data['status']:
+                            return response
+
+                        url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
+                        url = BASE_URL + url[1:]
+                        headers = {
+                            'Content-Type': 'application/json',
+                            'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
+                        }
+                        response = requests.post(url, json.dumps(data), headers=headers)
+
+
+                        print "{0} done \n".format(data['supplier_id'])
+            source_file.close()
+            return Response(data="success", status=status.HTTP_200_OK)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+        except KeyError as e:
+            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class InventoryActivityImage(APIView):
+    """
+     makes an entry into InventoryActivityImage table.
+    """
+    def post(self, request):
+        """
+        stores image_path against an inventory_id.
+        Args:
+            request: The request data
+
+        Returns: success in case the object is created.
+        """
+        class_name = self.__class__.__name__
+        shortlisted_inventory_detail_id = ''
+        try:
+            shortlisted_inventory_detail_id = request.data['shortlisted_inventory_detail_id']
+            image_path = request.data.get('image_path')
+            comment = request.data.get('comment')
+            activity_type = request.data['activity_type']
+            activity_date = request.data['activity_date']
+
+            shortlisted_inventory_pricing_object = models.ShortlistedInventoryPricingDetails.objects.get(id=shortlisted_inventory_detail_id)
+
+            # get inv_id and it's name in case we have to return ZERO_AUDIT_ERROR
+            inventory_id = shortlisted_inventory_pricing_object.inventory_id
+            inventory_name = shortlisted_inventory_pricing_object.ad_inventory_type.adinventory_name
+
+            # if activity is AUDIT then we need a check to make sure number of audits match up the number of audit dates
+            number_of_possible_audits = models.AuditDate.objects.filter(shortlisted_inventory=shortlisted_inventory_pricing_object).count()
+
+            # they can send all the garbage in activity_type. we need to check if it's valid.
+            valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
+
+            if activity_type not in valid_activity_types:
+                return ui_utils.handle_response(class_name, data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
+
+            number_of_activities_done = models.InventoryActivityImage.objects.filter(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type).count()
+
+            # if activity type is AUDIT
+            if activity_type == models.INVENTORY_ACTIVITY_TYPES[2][0]:
+                # check fot zero number of audits possible
+                if not number_of_possible_audits:
+                    return ui_utils.handle_response(class_name, data=errors.ZERO_AUDITS_ERROR.format(inventory_name, inventory_id))
+
+                # check for equal number of audits already done
+                if number_of_activities_done == number_of_possible_audits:
+                    return ui_utils.handle_response(class_name, data=errors.NUMBER_OF_ACTIVITY_EXCEEDED_ERROR.format(activity_type, number_of_possible_audits))
+                # in case of audit, the date of audit matters. you can take as many images as you want in a single
+                # day. That will be counted as only one audit. Only when the date will change, the number of audits
+                # exceed by 1.
+                instance, is_created = models.InventoryActivityImage.objects.get_or_create(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type, activity_date=activity_date)
+            else:
+                # in case of release and closure, the date on which actual release/closure happened, doesn't matter to
+                # system. All that matters is there has to be only one Release and one closure
+                instance, is_created = models.InventoryActivityImage.objects.get_or_create(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type)
+                instance.image_path = image_path
+                instance.activity_date = activity_date
+
+            instance.image_path = image_path
+            instance.comment = comment
+            instance.save()
+
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=errors.OBJECT_DOES_NOT_EXIST_ERROR.format(models.ShortlistedInventoryPricingDetails.__name__, shortlisted_inventory_detail_id), exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def get(self, request):
+        """
+        Args:
+            self:
+            request: Request Data
+
+        Returns: matching InventoryActivityImage objects
+
+        """
+        class_name = self.__class__.__name__
+
+        try:
+            proposal_id = request.query_params['proposal_id']
+
+            proposal_instance = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            response = website_utils.is_campaign(proposal_instance)
+            if not response.data['status']:
+                return response
+
+            inventory_activity_image_objects = models.InventoryActivityImage.objects.select_related('shortlisted_inventory_details').filter(shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id)
+            serializer = website_serializers.InventoryActivityImageSerializerReadOnly(inventory_activity_image_objects, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
+        except KeyError as e:
+            return ui_utils.handle_response(class_name, data='Key Error', exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class SupplierDetails(APIView):
+    """
+    Detail of individual supplier
+    """
+    def get(self, request):
+        """
+        Args:
+            self:
+            request:
+        Returns: matching supplier object from supplier type model
+
+        """
+        class_name = self.__class__.__name__
+
+        try:
+            supplier_id = request.query_params['supplier_id']
+            content_type = request.query_params['content_type']
+     
+            supplier_model = ContentType.objects.get(pk=content_type).model
+            model = get_model(settings.APP_NAME,supplier_model)
+
+            supplier_object = model.objects.get(supplier_id=supplier_id)
+
+            data = model_to_dict(supplier_object)
+
+            response = website_utils.manipulate_object_key_values([data])
+            if not response.data['status']:
+                return response
+            data = response.data['data'][0]
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class GenerateInventorySummary(APIView):
+    """
+    Generates inventory summary in which we show how much of the total inventories were release, audited, and closed
+    on particular date
+    """
+    def get(self, request):
+        """
+        Args:
+            request: The request param
+
+        Returns:
+        """
+        class_name = self.__class__.__name__
+        try:
+            pass
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+
+
+

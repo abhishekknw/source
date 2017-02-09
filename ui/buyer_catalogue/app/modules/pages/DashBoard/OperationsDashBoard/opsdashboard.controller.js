@@ -1,9 +1,11 @@
 angular.module('catalogueApp')
-.controller('OpsDashCtrl',
-    ['$scope', '$rootScope', '$window', '$location','opsDashBoardService',
+
+.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService',
+
     function ($scope, $rootScope, $window, $location, opsDashBoardService) {
     	$scope.proposals = [];
       $scope.reason;
+
       //Start: code added to show or hide details based on user permissions
       $scope.user_code = $window.localStorage.user_code;
       if($scope.user_code == 'agency')
@@ -28,14 +30,15 @@ angular.module('catalogueApp')
         {header : 'Assigned Date'},
         {header : 'Start Date'},
         {header : 'End Date'},
-        {header : 'View Release Details'}
+        {header : 'View Release Details'},
+        {header : 'View Execution Details'}
       ];
       $scope.userData = {
         selecteduser: null,
         names: [
         {name : 'Ankit'},
         {name : 'Amit'},
-        {name : 'njnjnj'}
+        {name : 'Komal'}
         ]
       };
 
@@ -48,6 +51,15 @@ angular.module('catalogueApp')
     	.error(function(response, status){
     		console.log("error occured", status);
     	});
+
+    opsDashBoardService.getCampaignDetails($rootScope.globals.currentUser.user_id)
+    	.success(function(response, status){
+    		$scope.campaignData = response.data;
+    	})
+    	.error(function(response, status){
+    		console.log("error occured", status);
+    	});
+
 
     $scope.sendNotification = function(){
       var email_Data = {
@@ -73,17 +85,64 @@ angular.module('catalogueApp')
     	})
     	.error(function(response, status){
     		console.log("error occured", status);
+
+    	});
+
+    }
+
+    $scope.convertProposalToCampaign = function(proposal){
+
+      $scope.currentProposal = proposal;
+
+      opsDashBoardService.convertProposalToCampaign(proposal.proposal.proposal_id, proposal.proposal)
+          .success(function(response, status){
+            console.log(response);
+              if(status == 200){
+                $scope.showAssignModal = true;
+              }
+    	})
+          .error(function(response, status){
+    	  	    console.log("error occured", status);
     	});
     }
 
+
+    $scope.convertCampaignToProposal = function(proposal){
+
+      $scope.currentProposal = proposal;
+
+      opsDashBoardService.convertCampaignToProposal(proposal.proposal.proposal_id, proposal.proposal)
+          .success(function(response, status){
+              console.table(response);
+    	})
+          .error(function(response, status){
+    	  	    console.log("error occured", status);
+    	});
+    }
     //code added when the user clicks on proposal id the proposal details page will open
     $scope.showProposalDetails = function(proposal_id){
       $location.path('/' + proposal_id + '/showcurrentproposal');
     }
 
-    $scope.saveAssignment = function(proposal){
+    $scope.saveAssignment = function(){
+
+      var userId = 6;
+      var data = {
+        to:userId,
+        campaign_id:$scope.currentProposal.proposal.proposal_id
+      };
+      opsDashBoardService.saveAssignment(data)
+          .success(function(response, status){
+              console.table(response);
+    	})
+          .error(function(response, status){
+    	  	    console.log("error occured", status);
+    	});
     }
     $scope.getDetails = function(proposal_id){
       $location.path('/' + proposal_id + '/releasePlan');
+    }
+    $scope.getExecutionDetails = function(proposal_id){
+      $location.path('/' + proposal_id + '/opsExecutionPlan');
     }
 }]);//Controller function ends here

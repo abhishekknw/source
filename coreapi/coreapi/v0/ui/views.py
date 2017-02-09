@@ -502,6 +502,8 @@ class SocietyAPIView(APIView):
             return Response(serializer.errors, status=400)
 
         society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
+        object_id = serializer.data['supplier_id']
+        content_type = models.ContentType.objects.get_for_model(SupplierTypeSociety)
 
         #here we will start storing contacts
         if request.data and 'basic_contact_available' in request.data and request.data['basic_contact_available']:
@@ -512,7 +514,7 @@ class SocietyAPIView(APIView):
                 else:
                     contact_serializer = ContactDetailsSerializer(data=contact)
                 if contact_serializer.is_valid():
-                    contact_serializer.save(supplier=society)
+                    contact_serializer.save(object_id=object_id, content_type=content_type)
 
         if request.data and 'basic_reference_available' in request.data and request.data['basic_reference_available']:
             contact = request.data['basic_reference_contacts']
@@ -522,7 +524,7 @@ class SocietyAPIView(APIView):
             else:
                 contact_serializer = ContactDetailsSerializer(data=contact)
             if contact_serializer.is_valid():
-                contact_serializer.save(supplier = society, contact_type="Reference")
+                contact_serializer.save(contact_type="Reference", object_id=object_id, content_type=content_type)
 
 
         towercount = SocietyTower.objects.filter(supplier = society).count()
@@ -531,7 +533,7 @@ class SocietyAPIView(APIView):
             abc = request.data['tower_count'] - towercount
         if 'tower_count' in request.data:
             for i in range(abc):
-                tower = SocietyTower(supplier = society)
+                tower = SocietyTower(supplier = society, object_id=object_id, content_type=content_type)
                 tower.save()
         return Response(serializer.data, status=201)
 
@@ -1709,6 +1711,7 @@ class TowerAPIView(APIView):
 
 
 class PosterAPIView(APIView):
+
     def get(self, request, id, format=None):
         lifts = []
         notice_boards = []
@@ -1756,6 +1759,7 @@ class PosterAPIView(APIView):
 
     def post(self, request, id, format=None):
             society=SupplierTypeSociety.objects.get(pk=id)
+            society_content_type = models.ContentType.objects.get_for_model(SupplierTypeSociety)
             if request.data['nb_a4_available']:
                  for notice_board in request.data['nb_details']:
                      data = request.data['nb_common_details']
@@ -1764,7 +1768,9 @@ class PosterAPIView(APIView):
                          notice_item = NoticeBoardDetails.objects.get(pk=notice_board['id'])
                          posCount =  notice_board['total_poster_per_notice_board']
                          if posCount != None:
-                             self.adId_nb(posCount, notice_board, society)
+                             response = ui_utils.generate_poster_objects(posCount, notice_board, society, society_content_type)
+                             if not response.data['status']:
+                                 return  response
 
                          notice_serializer = NoticeBoardDetailsSerializer(notice_item, data=data)
                      else:
@@ -1794,16 +1800,6 @@ class PosterAPIView(APIView):
                      else:
                          return Response(lift_serializer.errors, status=400)
             return Response(status=200)
-
-
-    def adId_nb(self, count, nb, society):
-       nb_tag = nb['notice_board_tag']
-       nb_tower = nb['tower_name']
-       pos = int(count) + 1
-       for i in range(1, pos):
-           nb_id = society.supplier_id + nb_tag + "PO" + str(i).zfill(2)
-           nb = PosterInventory(adinventory_id=nb_id, poster_location=nb_tag, tower_name=nb_tower, supplier=society)
-           nb.save()
 
     def delete(self, request, id, format=None):
         try:

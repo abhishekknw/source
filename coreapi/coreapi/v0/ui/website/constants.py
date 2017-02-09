@@ -14,6 +14,15 @@ supplier_keys = [
     'count_15_25', 'count_25_60', 'count_60above', 'society_weekly_off',
 ]
 
+corporate_keys = [
+
+    'city', 'city_code', 'area', 'area_code', 'subarea', 'subarea_code', 'supplier_type', 'supplier_code', 'name', 'address1', \
+    'address2', 'zipcode', 'latitude', 'longitude', 'corporate_type', 'industry_segment', 'building_count', 'floorperbuilding_count', \
+    'totallift_count', 'locality_rating' , 'quality_rating', 'quantity_rating' , 'totalemployees_count', 'isrealestateallowed', \
+    'averagerent', 'commoncafeteria', 'bank_account_name', 'bank_name', 'ifsc_code', 'account_number'
+
+]
+
 proposal_header_keys = [
     'Center Name','Center Proposal Id', 'Center Id', 'Space Mapping Id', 'Inventory Type Id', 'Supplier Id', 'Supplier Name', 'Supplier Sub Area', 'Supplier Type', 'Supplier Tower Count', \
     'Supplier Flat Count',
@@ -521,6 +530,7 @@ buffer = 'B'
 poster = 'POSTER'
 standee = 'STANDEE'
 stall = 'STALL'
+flier = 'FLIER'
 
 
 # to identify unique supplier types
@@ -559,13 +569,13 @@ shortlisted_inventory_detail_keys = ['inventory_price', 'inventory_count', 'fact
 society_model_name = 'suppliertypesociety'
 
 # stall_settings
-default_stall_type = 'Small'
+default_stall_type  = 'Small'
 default_stall_duration_type = 'Unit Daily'
 default_stall_allocation_interval = 1
 default_stall_assignment_frequency = 1
 
 # temp list of inventories not implemented yet. delete it after implemantation. 
-inv_not_implemented = ['POSTER', 'FLIER',  'CAR_DISPLAY']
+inv_not_implemented = ['POSTER', 'CAR_DISPLAY']
 
 # standee name
 standee_name = 'STANDEE'
@@ -573,9 +583,15 @@ default_standee_type = 'Medium'
 default_standee_duration_type = 'Unit Weekly'
 default_standee_assignment_frequency = 1
 
+# Flier
+default_flier_type = 'Mailbox'
+default_flier_duration_type = 'Unit Daily'
+
+
 # class names
 stall_class_name = 'StallInventory'
 standee_class_name = 'StandeeInventory'
+flier_class_name = 'FlyerInventory'
 
 # different states of a proposal being converted to campaign
 proposal_converted_to_campaign = 'PTC'
@@ -583,17 +599,37 @@ proposal_not_converted_to_campaign = 'PNC'
 proposal_on_hold = 'POH'
 
 # different mode of payments
-cash = 'CASH'
-neft ='NEFT'
-cheque = 'CHEQUE'
+payment_method = {
+    'cash':'CASH',
+    'neft':'NEFT',
+    'cheque': 'CHEQUE'
+}
 
 # different payments statuses
-payment_done = 'PD'
-payment_not_paid = 'NP'
-payment_pending = 'PE'
+payment_status = {
+    'payment_done': 'PD',
+    'payment_not_initiated': 'PNI',
+    'payment_pending': 'PP'
+}
+
+# supplier booking status
+booking_status = {
+    'booked': 'BK',
+    'not_booked': 'NB'
+}
 
 # different campaign states
 completed = 'COMPLETED'
 running = 'RUNNING'
 upcoming = 'UPCOMING'
 unknown = 'UNKNOWN'
+
+# to fetch default inventory duration type.
+default_inventory_durations = {
+    'stallinventory': 1,
+    'standeeinventory': 7,
+    'flyerinventory': 1
+}
+
+# define number of days within which we will show the campaigns.
+delta_days = 3
