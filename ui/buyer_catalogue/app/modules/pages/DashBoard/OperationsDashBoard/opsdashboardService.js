@@ -35,8 +35,10 @@
       var url = url_base + proposal_id + "/convert-to-proposal/";
       return machadaloHttp.post(url,data);
     }
-
-
+    opsDashBoard.saveAssignment = function(data){
+      var url = url_base  + "campaign-assignment/";
+      return machadaloHttp.post(url,data);
+    }
 
     return opsDashBoard;
 }]);
