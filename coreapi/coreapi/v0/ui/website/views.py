@@ -15,6 +15,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.forms.models import model_to_dict
 from django.db.models import get_model
+from django.utils.dateparse import parse_datetime
 
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
@@ -3684,17 +3685,18 @@ class AssignCampaign(APIView):
                 response = website_utils.is_campaign(assign_object.campaign)
                 if not response.data['status']:
                     return response
+                    # assign statuses to each of the campaigns.
 
             serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
 
-            # assign statuses to each of the campaigns.
             for data in serializer.data:
-                proposal_start_date = data['campaign']['tentative_start_date']
-                proposal_end_date = data['campaign']['tentative_end_date']
+                proposal_start_date = parse_datetime(data['campaign']['tentative_start_date'])
+                proposal_end_date = parse_datetime(data['campaign']['tentative_end_date'])
                 response = website_utils.get_campaign_status(proposal_start_date, proposal_end_date)
                 if not response.data['status']:
                     return response
                 data['campaign']['status'] = response.data['data']
+
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -4161,5 +4163,28 @@ class SupplierDetails(APIView):
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class GenerateInventorySummary(APIView):
+    """
+    Generates inventory summary in which we show how much of the total inventories were release, audited, and closed
+    on particular date
+    """
+    def get(self, request):
+        """
+        Args:
+            request: The request param
+
+        Returns:
+        """
+        class_name = self.__class__.__name__
+        try:
+            pass
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+
 
 

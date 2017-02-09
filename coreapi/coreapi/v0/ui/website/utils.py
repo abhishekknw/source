@@ -3433,6 +3433,7 @@ def is_campaign(proposal):
     """
     function = is_campaign.__name__
     try:
+
         if not proposal.invoice_number:
             return ui_utils.handle_response(function, data=errors.CAMPAIGN_NO_INVOICE_ERROR)
 
@@ -3848,9 +3849,15 @@ def get_objects_per_content_type(objects):
         result = {}
         content_type_set = set()
         supplier_id_set = set()
+
         for my_object in objects:
 
-            content_type_id = my_object['content_type']
+            #  key can be both. one from serializer and one directly hitting .values()
+            try:
+                content_type_id = my_object['content_type']
+            except KeyError:
+                content_type_id = my_object['content_type_id']
+
             object_id = my_object['object_id']
 
             if not result.get(content_type_id):
