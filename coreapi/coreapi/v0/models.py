@@ -2326,4 +2326,20 @@ class InventoryActivityImage(BaseModel):
         db_table = 'inventory_activity_image'
 
 
+class Amenity(BaseModel):
+    """
+    Stores individual amenities. There basic details.
+    """
+    name = models.CharField(max_length=1000)
+
+    class Meta:
+        db_table = 'amenities'
+
+
+class SupplierAmenitiesMap(BaseModel):
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.CharField(max_length=1000)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    amenity = models.ForeignKey(Amenity, null=True, blank=True)
+
 
