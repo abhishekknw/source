@@ -2499,6 +2499,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
         specific_filters: { 'real_estate_allowed': True, 'total_employee_count': 120, 'flat_type': [ '1RK', '2BHK' ]
 
           }
+        supplier_type_code: 'RS', 'CP'
     Returns: a Q object based on above filters
 
     """
@@ -2541,6 +2542,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
 
         if supplier_type_code == website_constants.corporate:
             # well, we can receive a multiple dicts for employee counts. each describing min and max employee counts.
+            # todo: does not make sense
             if specific_filters.get('employees_count'):
                 for employees_count_range in specific_filters.get('employees_count'):
                     max = employees_count_range['max']

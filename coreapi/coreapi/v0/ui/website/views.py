@@ -1182,7 +1182,7 @@ class FilteredSuppliers(APIView):
             inventory_type_query_suppliers = []
             # this is the main list. if no filter is selected this is what is returned by default
 
-            master_suppliers_list = supplier_model.objects.filter(common_filters_query).values_list('supplier_id')
+            master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
 
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
@@ -1193,7 +1193,7 @@ class FilteredSuppliers(APIView):
 
             if inventory_type_query.__len__():
                 inventory_type_query &= Q(content_type=content_type)
-                inventory_type_query_suppliers = list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id'))
+                inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
 
             # fetch specific_filters suppliers
             response = website_utils.handle_specific_filters(specific_filters, supplier_type_code)
@@ -1203,13 +1203,8 @@ class FilteredSuppliers(APIView):
             # if indeed there was something in the query
 
             if specific_filters_query.__len__():
-                specific_filters_suppliers = list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id'))
+                specific_filters_suppliers = set(list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id', flat=True)))
 
-            # pull only the ID's, not the tuples !  
-            inventory_type_query_suppliers = set([supplier_tuple[0] for supplier_tuple in inventory_type_query_suppliers])
-            specific_filters_suppliers = set([supplier_tuple[0] for supplier_tuple in specific_filters_suppliers])
-            master_suppliers_list = set([supplier_tuple[0] for supplier_tuple in master_suppliers_list])
-            
             # if both available, find the intersection. basically it's another way of doing AND query.
             # the following conditions are use case dependent. The checking is done on the basis of 
             # query length. an empty query length means that query didn't contain any thing in it.
