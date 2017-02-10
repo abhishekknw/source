@@ -115,7 +115,9 @@ if($scope.user_code == 'agency')
                 });
             };
           });
+            $scope.hideSpinner = true;
           return markers;
+
       };
       $scope.changeCurrentCenter = function(center_id){
             // changes the center currently shown on the map
@@ -352,7 +354,7 @@ if($scope.user_code == 'agency')
                 {name : '1 RK',         code : '1R',      selected : false},
                 {name : '1 BHK',        code : '1B',      selected : false},
                 {name : '1.5 BHK',      code : '1-5B',    selected : false},
-                {name : '2 BHK',        code : '2B',    selected : false},
+                {name : '2 BHK',        code : '2B',      selected : false},
                 {name : '2.5 BHK',      code : '2-5B',    selected : false},
                 {name : '3 BHK',        code : '3B',      selected : false},
                 {name : '3.5 BHK',      code : '3-5B',    selected : false},
@@ -375,13 +377,26 @@ if($scope.user_code == 'agency')
               inv_stall : 0,
               inv_flier : 0,
             };
+            //Start: api call to get amenity filters from database
+              mapViewService.getAmenityFilters()
+              .success(function(response, status) {
+                console.log(response);
+                $scope.amenities = response.data;
+                console.log($scope.amenities);
+              })
+              .error(function(response, status){
+                console.log("error occured in amenities");
+              });
+            //End:   api call to get amenity filters from database
         //Start: filters for suppliers
+        var createInitialFilterData = function(){
             $scope.RS_filters = {
               inventory : $scope.space_inventory_type,
               locality_rating : $scope.space_location,
               quality_type : $scope.space_quality_type,
               quantity_type : $scope.space_quantity_type,
               flat_type : $scope.society_flat_type,
+              amenities : $scope.amenities,
             };
             $scope.CP_filters = {
               inventory : $scope.space_inventory_type,
@@ -390,6 +405,7 @@ if($scope.user_code == 'agency')
               quantity_type : $scope.space_quantity_type,
               employee_count : $scope.employee_count,
             };
+          }
         //End: filters for suppliers
         //Start: add filter varible for each supplier in each center
         //set created to maintain unique_suppliers in all centers
@@ -469,6 +485,7 @@ if($scope.user_code == 'agency')
           if($window.localStorage.isSavedProposal == 'true'){
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
               .success(function(response, status){
+                createInitialFilterData();
                 //TO convert dict to array as response coming in dict form and very difficult to use
                 $scope.center_data = $.map(response.data, function(value, index){
                   return [value];
@@ -535,6 +552,7 @@ if($scope.user_code == 'agency')
           else{
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
+              createInitialFilterData();
                 $scope.business_name = response.data.business_name;
                 $scope.center_data = response.data.suppliers;
 
@@ -765,13 +783,16 @@ if($scope.user_code == 'agency')
           specific_filters : {
             flat_type : [],
           },
+          amenities:[],
         };
         makeFilters($scope.center_data[i].RS_filters.inventory,filters.inventory_filters);
         makeFilters($scope.center_data[i].RS_filters.flat_type,filters.specific_filters.flat_type);
         makeFilters($scope.center_data[i].RS_filters.quality_type,filters.common_filters.quality);
         makeFilters($scope.center_data[i].RS_filters.locality_rating,filters.common_filters.locality);
         makeFilters($scope.center_data[i].RS_filters.quantity_type,filters.common_filters.quantity);
+        makeFilters($scope.center_data[i].RS_filters.amenities,filters.amenities);
         $scope.checkFilters = true;
+        console.log(filters);
         promises.push(mapViewService.getFilterSuppliers(filters));
 
       }
@@ -807,12 +828,15 @@ if($scope.user_code == 'agency')
         specific_filters : {
           flat_type : [],
         },
+        amenities : [],
       };
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
       makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
       makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
       makeFilters($scope.current_center.RS_filters.locality_rating,filters.common_filters.locality);
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
+      makeFilters($scope.current_center.RS_filters.amenities,filters.amenities);
+      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       }
   }

@@ -122,6 +122,11 @@
       return machadaloHttp.post(url, data);
     }
     //End: code added for societydetails
+    //to get amenities
+    mapViewService.getAmenityFilters = function(){
+      var url = url_base + 'amenity-list/';
+      return machadaloHttp.get(url);
+    }
 
     return mapViewService;
 }]);
