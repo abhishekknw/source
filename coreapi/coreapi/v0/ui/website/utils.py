@@ -2511,31 +2511,35 @@ def handle_specific_filters(specific_filters, supplier_type_code):
         # get the predefined dict of specific filters for this supplier
         master_specific_filters = website_constants.supplier_filters[supplier_type_code]
 
-        # construct a dict for storing query values.
-        query = {}
+        specific_filters_query = Q()
         # the following loop stores those fields in received filters which can be mapped directly to db columns.
         for received_filter, filter_value in specific_filters.iteritems():
 
-            # get the database field for this specific filter
             database_field = master_specific_filters.get(received_filter)
 
+            # if filter_value is of type Dict, we assume it's for specifying min, max range of specific db filed value.
             if database_field:
-                # set it to the dict
-                query[database_field] = filter_value
-
-        # make the query for fields in the request that map directly to model fields.
-        specific_filters_query = Q(**query)
+                # do things only when you get a db field
+                if not specific_filters_query:
+                    if type(filter_value) == DictType:
+                        specific_filters_query = Q(**{received_filter + '__gte': filter_value['min'],received_filter + '__lte': filter_value['max']})
+                    else:
+                        specific_filters_query = Q(**{database_field:filter_value})
+                else:
+                    if type(filter_value) == DictType:
+                        specific_filters_query &= Q(**{received_filter + '__gte': filter_value['min'],received_filter + '__lte': filter_value['max']})
+                    else:
+                        specific_filters_query &= Q(**{database_field: filter_value})
 
         # do if else check on supplier type code to include things particular to that supplier. Things which
         # cannot be mapped to a particular supplier and vary from supplier to supplier
-
-        if supplier_type_code == 'RS':
+        if supplier_type_code == website_constants.society:
             if specific_filters.get('flat_type'):
                 flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
                 supplier_ids = models.FlatType.objects.select_related('society').filter(flat_type__in=flat_type_values).values_list('society__supplier_id')
                 specific_filters_query &= Q(supplier_id__in=supplier_ids)
 
-        if supplier_type_code == 'CP':
+        if supplier_type_code == website_constants.corporate:
             # well, we can receive a multiple dicts for employee counts. each describing min and max employee counts.
             if specific_filters.get('employees_count'):
                 for employees_count_range in specific_filters.get('employees_count'):

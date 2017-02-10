@@ -4176,6 +4176,40 @@ class SupplierDetails(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+    def put(self, request):
+        """
+        updates a particular supplier
+        Args:
+            request:
+        Returns: returns updated supplier object
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_id = request.data['supplier_id']
+            supplier_type_code = request.data['supplier_type_code']
+
+            data = request.data.copy()
+
+            data.pop('supplier_id')
+            data.pop('supplier_type_code')
+
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
+            supplier_model = content_type.model
+
+            model = get_model(settings.APP_NAME, supplier_model)
+
+            model.objects.filter(supplier_id=supplier_id).update(**data)
+
+            supplier_object = model.objects.get(pk=supplier_id)
+            return ui_utils.handle_response(class_name, data=model_to_dict(supplier_object), success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
 
 class GenerateInventorySummary(APIView):
     """
