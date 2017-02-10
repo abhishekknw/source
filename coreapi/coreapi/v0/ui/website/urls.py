@@ -62,6 +62,9 @@ urlpatterns = [
     url(r'^campaigns-inventory-list/$', views.CampaignInventoryList.as_view()),
     url(r'^inventory-activity-image/$', views.InventoryActivityImage.as_view()),
     url(r'^supplier-details/$', views.SupplierDetails.as_view()),
+    url(r'^amenity/$', views.Amenity.as_view()),
+    url(r'^amenity-list/$', views.GetAllAmenities.as_view()),
+    url(r'^supplier-amenity/$', views.SupplierAmenity.as_view()),
 
 ]
 

@@ -4185,6 +4185,85 @@ class GenerateInventorySummary(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
+class Amenity(APIView):
+    """
+    API to create an Amenity
+    """
+    def post(self, request):
+        """
+        create a single amenity
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            name = request.data['name']
+            amenity, is_created = models.Amenity.objects.get_or_create(name=name)
+            return ui_utils.handle_response(class_name, data=model_to_dict(amenity), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
+class GetAllAmenities(APIView):
+    """
+    Fetches all amenities
+    """
+    def get(self, request):
+        """
+        fetches all amenties
+        Args:
+            request:
 
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            amenities = models.Amenity.objects.all()
+            serializer = website_serializers.AmenitySerializer(amenities, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class SupplierAmenity(APIView):
+    """
+    Returns all amenities per supplier
+    """
+    def get(self, request):
+        """
+
+        Args:
+            request:
+
+        Returns:
+        """
+        class_name = self.__class__.__name__
+        try:
+            amenities = models.SupplierAmenitiesMap.objects.filter(object_id=request.query_params['supplier_id'], content_type_id=request.query_params['content_type_id'])
+            serializer = website_serializers.SupplierAmenitiesMapSerializer(amenities, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def post(self, request):
+        """
+
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_id = request.data['supplier_id']
+            content_type_id = request.data['content_type_id']
+            amenity_id = request.data['amenity_id']
+            models.SupplierAmenitiesMap.objects.get_or_create(object_id=supplier_id, content_type_id=content_type_id, amenity_id=amenity_id)
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
