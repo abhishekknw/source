@@ -41,6 +41,7 @@ import v0.ui.utils as ui_utils
 import serializers
 import v0.utils as v0_utils
 from v0 import errors
+import v0.constants as v0_constants
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -4537,5 +4538,34 @@ def book_inventories(current_inventories_map, already_inventories_map):
         return ui_utils.handle_response(function, data=(booked_inventories, inv_errors), success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_amenities_suppliers(supplier_type_code, amenities):
+    """
+    returns a list of supplier_ids which have one of the amenities in the list of amenities.
+    Args:
+        supplier_type_code: 'RS', 'CP'
+        amenities: [ .. ]
+
+    Returns: a list  of suppliers
+    """
+    function = get_amenities_suppliers.__name__
+    try:
+        for amenity in amenities:
+            if amenity not in v0_constants.valid_amenities.keys():
+                return ui_utils.handle_response(function, data=errors.INVALID_AMENITY_CODE_ERROR.format(amenity))
+
+        response = ui_utils.get_content_type(supplier_type_code)
+        if not response.data['status']:
+            return response
+        content_type = response.data['data']
+
+        supplier_ids = models.SupplierAmenitiesMap.objects.filter(content_type=content_type, amenity__code__in=amenities).values_list('object_id', flat=True)
+
+        return ui_utils.handle_response(function, data=supplier_ids, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
 
 

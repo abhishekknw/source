@@ -28,3 +28,5 @@ OBJECT_DOES_NOT_EXIST_ERROR = 'The object for table {0} does not exist for id {1
 INVALID_ACTIVITY_TYPE_ERROR = 'This activity type {0} is not recognised by our system'
 ZERO_AUDITS_ERROR = 'The inventory  {0}  with id {1} has zero audits assigned to it. You cannot audit this inventory.'
 NUMBER_OF_ACTIVITY_EXCEEDED_ERROR = 'Number of possible {0} s for this inventory was {1}. You have already done that many {0} s'
+
+INVALID_AMENITY_CODE_ERROR = 'The amenity code {0} is invalid'

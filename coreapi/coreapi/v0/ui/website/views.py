@@ -63,6 +63,7 @@ import v0.ui.constants as ui_constants
 import v0.permissions as v0_permissions
 import v0.utils as v0_utils
 from v0 import errors
+import v0.constants as v0_constants
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -1118,8 +1119,9 @@ class FilteredSuppliers(APIView):
         The request looks like :
         {
           'supplier_type_code': 'CP',
-          'common_filters': { 'latitude': 12, 'longitude': 11, 'radius': 2, 'quality': [ 'UH', 'H' ],'quantity': ['VL'] },
+          'common_filters': { 'latitude': 12, 'longitude': 11, 'radius': 2, 'quality': [ 'UH', 'H' ],'quantity': ['VL'] }
           'inventory_filters': ['PO', 'ST'],
+          'amenities': [ ... ]
           'specific_filters': { 'real_estate_allowed': True, 'employees_count': {min: 10, max: 100},}
           'center_id': '23',
           'proposal_id': 'abc'
@@ -1153,11 +1155,12 @@ class FilteredSuppliers(APIView):
             if not supplier_type_code:
                 return ui_utils.handle_response(class_name, data='provide supplier type code')
 
-            common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model
+            common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model or a few other models.
             inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
             specific_filters = request.data.get('specific_filters')  # maps to specific supplier table
             proposal_id = request.data.get('proposal_id')
             center_id = request.data.get('center_id')
+            amenities = request.data.get('amenities')
 
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
@@ -1165,6 +1168,7 @@ class FilteredSuppliers(APIView):
             if not response:
                 return response
             content_type = response.data.get('data')
+
             # first fetch common query which is applicable to all suppliers. The results of this query will form
             # our master supplier list.
             response = website_utils.handle_common_filters(common_filters, supplier_type_code)
@@ -1221,9 +1225,17 @@ class FilteredSuppliers(APIView):
             else:
                 final_suppliers_list = master_suppliers_list
 
-            # when the final supplier list is prepared. we need to take intersection with master list. 
+            # when the final supplier list is prepared. we need to take intersection with master list.
             final_suppliers_list = final_suppliers_list.intersection(master_suppliers_list)
-        
+
+            # check for amenities here
+            if amenities:
+                response = website_utils.get_amenities_suppliers(supplier_type_code, amenities)
+                if not response.data['status']:
+                    return response
+                amenities_suppliers = response.data['data']
+                final_suppliers_list = final_suppliers_list.intersection(amenities_suppliers)
+
             result = {}
 
             # query now for real objects for supplier_id in the list
@@ -4201,7 +4213,15 @@ class Amenity(APIView):
         class_name = self.__class__.__name__
         try:
             name = request.data['name']
-            amenity, is_created = models.Amenity.objects.get_or_create(name=name)
+            code = request.data['code']
+
+            if code not in v0_constants.valid_amenities.keys():
+                return ui_utils.handle_response(class_name, data=errors.INVALID_AMENITY_CODE_ERROR.format(code))
+
+            amenity, is_created = models.Amenity.objects.get_or_create(code=code)
+            amenity.name = name
+            amenity.save()
+
             return ui_utils.handle_response(class_name, data=model_to_dict(amenity), success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -4213,7 +4233,7 @@ class GetAllAmenities(APIView):
     """
     def get(self, request):
         """
-        fetches all amenties
+        fetches all amenities
         Args:
             request:
 
@@ -4235,7 +4255,6 @@ class SupplierAmenity(APIView):
     """
     def get(self, request):
         """
-
         Args:
             request:
 
@@ -4243,7 +4262,14 @@ class SupplierAmenity(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            amenities = models.SupplierAmenitiesMap.objects.filter(object_id=request.query_params['supplier_id'], content_type_id=request.query_params['content_type_id'])
+            supplier_type_code = request.data['supplier_type_code']
+
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
+
+            amenities = models.SupplierAmenitiesMap.objects.filter(object_id=request.query_params['supplier_id'], content_type=content_type)
             serializer = website_serializers.SupplierAmenitiesMapSerializer(amenities, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -4251,19 +4277,22 @@ class SupplierAmenity(APIView):
 
     def post(self, request):
         """
-
         Args:
             request:
-
         Returns:
-
         """
         class_name = self.__class__.__name__
         try:
             supplier_id = request.data['supplier_id']
-            content_type_id = request.data['content_type_id']
+            supplier_type_code = request.data['supplier_type_code']
             amenity_id = request.data['amenity_id']
-            models.SupplierAmenitiesMap.objects.get_or_create(object_id=supplier_id, content_type_id=content_type_id, amenity_id=amenity_id)
+
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
+
+            models.SupplierAmenitiesMap.objects.get_or_create(object_id=supplier_id, content_type=content_type, amenity_id=amenity_id)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
