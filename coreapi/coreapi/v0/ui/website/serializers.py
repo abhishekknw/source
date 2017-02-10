@@ -381,3 +381,17 @@ class InventoryActivityImageSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.InventoryActivityImage
+
+
+class AmenitySerializer(ModelSerializer):
+
+    class Meta:
+        model = models.Amenity
+
+
+class SupplierAmenitiesMapSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.SupplierAmenitiesMap
+        depth = 1
+

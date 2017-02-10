@@ -52,8 +52,9 @@ angular.module('catalogueApp')
     		console.log("error occured", status);
     	});
 
-    opsDashBoardService.getCampaignDetails($rootScope.globals.currentUser.user_id)
+    opsDashBoardService.getCampaignDetails(6)
     	.success(function(response, status){
+        console.log(response);
     		$scope.campaignData = response.data;
     	})
     	.error(function(response, status){
@@ -98,7 +99,8 @@ angular.module('catalogueApp')
           .success(function(response, status){
             console.log(response);
               if(status == 200){
-                $scope.showAssignModal = true;
+                // $scope.showAssignModal = true;
+                $("#assignModal").modal('show');
               }
     	})
           .error(function(response, status){
