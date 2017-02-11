@@ -12,7 +12,7 @@
       <div class="col-md-3 aligndropdown">Select Advertising Location
         <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
           <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
-         </select>
+        </select>
       </div>
       <div class="col-md-3">Center Latitude & Longitude:{{current_center.center.latitude | limitTo:8 }}/{{current_center.center.longitude | limitTo:8}}
       </div>
@@ -69,11 +69,21 @@
             <div class = "nbCheckbox two-col" ng-repeat="flat_type in current_center.RS_filters.flat_type">
                 <input type = "checkbox" ng-model="flat_type.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ flat_type.name }}&nbsp;
             </div>
-            <hr>
-            <span class = "filterPanelHeader ">Amenities</span>
-              <div class = "nbCheckbox two-col" ng-repeat="amenity in current_center.RS_filters.amenities">
-                  <input type = "checkbox" ng-model="amenity.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ amenity.name }}&nbsp;
-              </div>
+          <hr>
+          <span class = "filterPanelHeader ">Flat Average rental Per Sqft</span>
+          <rzslider rz-slider-model="current_center.RS_filters.flat_avg_rental_persqft.min" rz-slider-high="current_center.RS_filters.flat_avg_rental_persqft.max"
+            rz-slider-options="current_center.RS_filters.flat_avg_rental_persqft.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
+          </rzslider>
+          <hr>
+          <span class = "filterPanelHeader ">Flat Sale Cost Per Sqft</span>
+          <rzslider rz-slider-model="current_center.RS_filters.flat_sale_cost_persqft.min" rz-slider-high="current_center.RS_filters.flat_sale_cost_persqft.max"
+            rz-slider-options="current_center.RS_filters.flat_sale_cost_persqft.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
+          </rzslider>
+          <hr>
+          <span class = "filterPanelHeader ">Amenities</span>
+            <div class = "nbCheckbox two-col" ng-repeat="amenity in current_center.RS_filters.amenities">
+                <input type = "checkbox" ng-model="amenity.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ amenity.name }}&nbsp;
+            </div>
 
           </div>
         </div>
@@ -148,6 +158,18 @@
            <input type = "checkbox" ng-model="flat_type.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ flat_type.name }}&nbsp;
        </div>
      <hr>
+     <hr>
+     <span class = "filterPanelHeader ">Flat Average rental Per Sqft</span>
+     <rzslider rz-slider-model="gridView_RS_filters.flat_avg_rental_persqft.min" rz-slider-high="gridView_RS_filters.flat_avg_rental_persqft.max"
+       rz-slider-options="gridView_RS_filters.flat_avg_rental_persqft.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
+     </rzslider>
+
+     <hr>
+     <span class = "filterPanelHeader ">Flat Sale Cost Per Sqft</span>
+     <rzslider rz-slider-model="gridView_RS_filters.flat_sale_cost_persqft.min" rz-slider-high="gridView_RS_filters.flat_sale_cost_persqft.max"
+       rz-slider-options="gridView_RS_filters.flat_sale_cost_persqft.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
+     </rzslider>
+
      <span class = "filterPanelHeader ">Amenities</span>
        <div class = "nbCheckbox two-col" ng-repeat="amenity in gridView_RS_filters.amenities">
            <input type = "checkbox" ng-model="amenity.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{amenity.name }}&nbsp;
@@ -432,15 +454,17 @@
                 <option value="">Select Supplier</option>
                 <option  ng-repeat="supplier in supplier_names" value="{{supplier.code}}" required>{{supplier.name}}</option>
               </select>
-                  <label style="margin-left: 20px;margin-right: 20px;">Enter Search Text<label><input class="form-control input-size" type="text" ng-model="search" class="form-control spacing col-width">
+                  <label style="margin-left: 20px;margin-right: 20px;">Enter Search Text<label>
+                    <input class="form-control input-size" type="text" ng-model="search" class="form-control spacing col-width" style="margin-left:10px">
               <button data-target = "" class="btn btn-danger active" data-toggle="modal" ng-click="searchSuppliers()">Search</button>
             </div>
         </br>
           </div>
         </br>
-          <div ng-if="search_status">
-            <select class="col-xs-3" ng-model="center_index" ng-change="selectCenter(center_index)">
-              <option value="">Select Center</option>
+          <div class="row form-inline" ng-if="search_status">
+            <label style="margin-left:30px">Select Center</label>
+            <select class="form-control input-size" style="width:140px; margin-left:20px;" ng-model="center_index" ng-change="selectCenter(center_index)">
+              <!-- <option value="">Select Center</option> -->
               <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
             </select>
           </div>

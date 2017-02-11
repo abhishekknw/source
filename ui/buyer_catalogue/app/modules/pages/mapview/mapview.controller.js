@@ -380,14 +380,33 @@ if($scope.user_code == 'agency')
             //Start: api call to get amenity filters from database
               mapViewService.getAmenityFilters()
               .success(function(response, status) {
-                console.log(response);
                 $scope.amenities = response.data;
-                console.log($scope.amenities);
               })
               .error(function(response, status){
                 console.log("error occured in amenities");
               });
             //End:   api call to get amenity filters from database
+            $scope.flat_avg_rental_persqft = {
+                min: 0,
+                max: 100,
+                options: {
+                    floor: 0,
+                    ceil: 100,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+            $scope.flat_sale_cost_persqft = {
+                min: 0,
+                max: 10000,
+                options: {
+                    floor: 0,
+                    ceil: 10000,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+
         //Start: filters for suppliers
         var createInitialFilterData = function(){
             $scope.RS_filters = {
@@ -397,6 +416,8 @@ if($scope.user_code == 'agency')
               quantity_type : $scope.space_quantity_type,
               flat_type : $scope.society_flat_type,
               amenities : $scope.amenities,
+              flat_avg_rental_persqft:$scope.flat_avg_rental_persqft,
+              flat_sale_cost_persqft:$scope.flat_sale_cost_persqft,
             };
             $scope.CP_filters = {
               inventory : $scope.space_inventory_type,
@@ -659,7 +680,6 @@ if($scope.user_code == 'agency')
     }
     // Start : check saved filter
     var checkSavedFilters = function (){
-      console.log($scope.current_center);
         if($scope.current_center.suppliers_meta['RS'] != null){
           var filter_types = Object.keys($scope.current_center.suppliers_meta['RS']);
           for(var j=0;j<filter_types.length;j++){
@@ -782,6 +802,9 @@ if($scope.user_code == 'agency')
           inventory_filters : [],
           specific_filters : {
             flat_type : [],
+            flat_avg_rental_persqft : $scope.center_data[i].RS_filters.flat_avg_rental_persqft,
+            flat_sale_cost_persqft : $scope.center_data[i].RS_filters.flat_sale_cost_persqft,
+
           },
           amenities:[],
         };
@@ -792,7 +815,6 @@ if($scope.user_code == 'agency')
         makeFilters($scope.center_data[i].RS_filters.quantity_type,filters.common_filters.quantity);
         makeFilters($scope.center_data[i].RS_filters.amenities,filters.amenities);
         $scope.checkFilters = true;
-        console.log(filters);
         promises.push(mapViewService.getFilterSuppliers(filters));
 
       }
@@ -827,6 +849,8 @@ if($scope.user_code == 'agency')
         inventory_filters : [],
         specific_filters : {
           flat_type : [],
+          flat_avg_rental_persqft : $scope.current_center.RS_filters.flat_avg_rental_persqft,
+          flat_sale_cost_persqft : $scope.current_center.RS_filters.flat_sale_cost_persqft,
         },
         amenities : [],
       };
@@ -836,7 +860,6 @@ if($scope.user_code == 'agency')
       makeFilters($scope.current_center.RS_filters.locality_rating,filters.common_filters.locality);
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
       makeFilters($scope.current_center.RS_filters.amenities,filters.amenities);
-      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       }
   }
@@ -1249,7 +1272,6 @@ if($scope.user_code == 'agency')
           if($window.localStorage.isSavedProposal == undefined){
             $window.localStorage.isSavedProposal = false;
           }
-         console.log(parent_proposal_id);
          saveSelectedFilters();
          var proposal_data = {
            centers:$scope.center_data,
@@ -1267,7 +1289,6 @@ if($scope.user_code == 'agency')
                   'Authorization' : 'JWT ' + $rootScope.globals.currentUser.token
               }
          }).success(function(response){
-           console.log(response);
           //  alert("Successful");
               // convert it onto Blob object because it's a binary file.
               // var blob = new Blob([data], {
