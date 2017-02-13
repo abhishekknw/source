@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.db.models import Count
 from django.forms.models import model_to_dict
+from django.db import connection
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -4572,6 +4573,124 @@ def get_amenities_suppliers(supplier_type_code, amenities):
 
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_inventory_activity_image_objects(shortlisted_inventory_to_audit_count_map, image_activity_to_audit_count_map):
+    """
+    prepares  inventory activity image objects
+    Args:
+
+    Returns:
+
+    """
+    function = get_inventory_activity_image_objects.__name__
+    try:
+        inv_act_objects = []
+        for inventory_global_id, audit_count in shortlisted_inventory_to_audit_count_map.iteritems():
+
+            if not image_activity_to_audit_count_map.get(inventory_global_id):
+                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id, activity_type=website_constants.activity_type['RELEASE']))
+                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id, activity_type=website_constants.activity_type['CLOSURE']))
+                image_activity_to_audit_count_map[inventory_global_id] = 0
+
+            actual_audit_count = audit_count - image_activity_to_audit_count_map[inventory_global_id]
+            for count in actual_audit_count:
+                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id,activity_type=website_constants.activity_type['AUDIT']))
+
+        return ui_utils.handle_response(function, data=inv_act_objects, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_possible_activity_count(proposal_id):
+    """
+    returns possible counts of activities over inventories for a given proposal. The number of releases under a
+    proposal is same as inventory count under that proposal. same thing for number of closures. Number of audits
+    is number of rows in audits for all inventories under that proposal in audt date table.
+
+    Args:
+        proposal_id: The proposal id
+
+    Returns: a dict in which key is act name and value is respective count of that act possible according to system.
+    """
+    function = get_possible_activity_count.__name__
+    try:
+
+        sql = "select count(a.id) , count(b.audit_date) from shortlisted_inventory_pricing_details" \
+              " as a INNER JOIN audit_date as b on a.id = b.shortlisted_inventory_id" \
+              " where a.id in  ( select c.id from shortlisted_inventory_pricing_details as c " \
+              "INNER JOIN shortlisted_spaces as d on c.shortlisted_spaces_id = d.id where d.proposal_id = %s )"
+
+        with connection.cursor() as cursor:
+
+            cursor.execute(sql, [proposal_id])
+            row = cursor.fetchone()
+
+        data = None
+
+        if row:
+            data = {
+                website_constants.activity_type['RELEASE']: row[0],
+                website_constants.activity_type['CLOSURE']: row[0],
+                website_constants.activity_type['AUDIT']: row[1]
+            }
+        return ui_utils.handle_response(function, data=data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_actual_activity_count(proposal_id):
+    """
+    returns actual activity count. This data lives in inventory image activity table where only then entry
+    is made when user actually takes the image and uploads it to the server.
+    Args:
+        proposal_id:
+
+    Returns: a dict with keys as act names and values as counts of actual acts performed
+
+    """
+    function = get_actual_activity_count.__name__
+    try:
+        sql = "select activity_type,  count( distinct activity_date) as count from inventory_activity_image" \
+              " where  shortlisted_inventory_details_id in (  select a.id from shortlisted_inventory_pricing_details " \
+              "as a INNER JOIN shortlisted_spaces as b ON a.shortlisted_spaces_id = b.id " \
+              "where b.proposal_id = %s )  group by activity_type"
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [proposal_id])
+            act_data = dict_fetch_all(cursor)
+
+        # act_data will be an array of dicts. converting to just a dict with key as act name
+        data = {}
+        for item in act_data:
+            data[item['activity_type']] = item['count']
+
+        return ui_utils.handle_response(function, data=data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def dict_fetch_all(cursor):
+    """
+    Args:
+        cursor: database cursor
+
+    Returns:     "Return all rows from a cursor as a dict"
+
+    """
+    function = dict_fetch_all.__name__
+    try:
+        columns = [col[0] for col in cursor.description]
+        return [
+            dict(zip(columns, row))
+            for row in cursor.fetchall()
+        ]
+    except Exception as e:
+        raise e
+
+
+
+
 
 
 

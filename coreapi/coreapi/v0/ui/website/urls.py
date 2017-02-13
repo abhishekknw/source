@@ -65,6 +65,8 @@ urlpatterns = [
     url(r'^amenity/$', views.Amenity.as_view()),
     url(r'^amenity-list/$', views.GetAllAmenities.as_view()),
     url(r'^supplier-amenity/$', views.SupplierAmenity.as_view()),
+    url(r'^bulk-update-inventory-activity-image/$', views.BulkInsertInventoryActivityImage.as_view()),
+    url(r'^generate-inventory-activity-summary/$', views.GenerateInventoryActivitySummary.as_view()),
 
 ]
 

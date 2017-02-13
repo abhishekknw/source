@@ -635,3 +635,10 @@ default_inventory_durations = {
 
 # define number of days within which we will show the campaigns.
 delta_days = 3
+
+# activity type
+activity_type = {
+    'RELEASE': 'RELEASE',
+    'CLOSURE': 'CLOSURE',
+    'AUDIT': 'AUDIT'
+}

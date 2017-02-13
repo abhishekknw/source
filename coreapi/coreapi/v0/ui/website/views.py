@@ -3821,6 +3821,12 @@ class CampaignInventoryList(APIView):
             # information for that supplier
             supplier_detail = response.data['data']
 
+            # stores count of audit dates against each inv id
+            inventory_to_audit_count_map = {}
+
+            inv_image_to_audit_count_map = {}
+            shortlisted_inventory_detail_ids = []
+
             # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
             for data in serializer.data:
                 for shortlisted_space in data['shortlisted_suppliers']:
@@ -3831,6 +3837,18 @@ class CampaignInventoryList(APIView):
                         # because current data is corrupt as i have manually added suppliers, i have to set this to
                         # empty when KeyError occurres. #todo change this later.
                         shortlisted_space['supplier_detail'] = {}
+
+                    shortlisted_inventories = shortlisted_space['shortlisted_inventories']
+                    for inventory in shortlisted_inventories:
+                        inventory_global_id = inventory['id']
+                        shortlisted_inventory_detail_ids.append(inventory_global_id)
+                        if not inventory_to_audit_count_map.get(inventory_global_id):
+                            inventory_to_audit_count_map[inventory_global_id] = len(inventory['audit_dates'])
+
+            models.InventoryActivityImage.objects.filter(shortlisted_inventory_details_id__in=shortlisted_inventory_detail_ids)
+
+
+
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
 
         except Exception as e:
@@ -4052,22 +4070,19 @@ class InventoryActivityImage(APIView):
         Returns: success in case the object is created.
         """
         class_name = self.__class__.__name__
-        shortlisted_inventory_detail_id = ''
         try:
             shortlisted_inventory_detail_id = request.data['shortlisted_inventory_detail_id']
-            image_path = request.data.get('image_path')
-            comment = request.data.get('comment')
             activity_type = request.data['activity_type']
-            activity_date = request.data['activity_date']
 
-            shortlisted_inventory_pricing_object = models.ShortlistedInventoryPricingDetails.objects.get(id=shortlisted_inventory_detail_id)
+            shortlisted_inv_object = models.ShortlistedInventoryPricingDetails.objects.get(id=shortlisted_inventory_detail_id)
 
-            # get inv_id and it's name in case we have to return ZERO_AUDIT_ERROR
-            inventory_id = shortlisted_inventory_pricing_object.inventory_id
-            inventory_name = shortlisted_inventory_pricing_object.ad_inventory_type.adinventory_name
-
-            # if activity is AUDIT then we need a check to make sure number of audits match up the number of audit dates
-            number_of_possible_audits = models.AuditDate.objects.filter(shortlisted_inventory=shortlisted_inventory_pricing_object).count()
+            data = {
+                'shortlisted_inventory_details': shortlisted_inv_object,
+                'image_path': request.data['image_path'],
+                'comment': request.data['comment'],
+                'activity_type': activity_type,
+                'activity_date': request.data['activity_date']
+            }
 
             # they can send all the garbage in activity_type. we need to check if it's valid.
             valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
@@ -4075,35 +4090,26 @@ class InventoryActivityImage(APIView):
             if activity_type not in valid_activity_types:
                 return ui_utils.handle_response(class_name, data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
 
-            number_of_activities_done = models.InventoryActivityImage.objects.filter(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type).count()
+            instance = models.InventoryActivityImage.objects.create(**data)
+            return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
 
-            # if activity type is AUDIT
-            if activity_type == models.INVENTORY_ACTIVITY_TYPES[2][0]:
-                # check fot zero number of audits possible
-                if not number_of_possible_audits:
-                    return ui_utils.handle_response(class_name, data=errors.ZERO_AUDITS_ERROR.format(inventory_name, inventory_id))
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
-                # check for equal number of audits already done
-                if number_of_activities_done == number_of_possible_audits:
-                    return ui_utils.handle_response(class_name, data=errors.NUMBER_OF_ACTIVITY_EXCEEDED_ERROR.format(activity_type, number_of_possible_audits))
-                # in case of audit, the date of audit matters. you can take as many images as you want in a single
-                # day. That will be counted as only one audit. Only when the date will change, the number of audits
-                # exceed by 1.
-                instance, is_created = models.InventoryActivityImage.objects.get_or_create(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type, activity_date=activity_date)
-            else:
-                # in case of release and closure, the date on which actual release/closure happened, doesn't matter to
-                # system. All that matters is there has to be only one Release and one closure
-                instance, is_created = models.InventoryActivityImage.objects.get_or_create(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type)
-                instance.image_path = image_path
-                instance.activity_date = activity_date
+    def delete(self, request):
+        """
+        Deletes an instance of inventory activity image
+        Args:
+            request:
 
-            instance.image_path = image_path
-            instance.comment = comment
-            instance.save()
+        Returns:
 
-            return ui_utils.handle_response(class_name, data='success', success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=errors.OBJECT_DOES_NOT_EXIST_ERROR.format(models.ShortlistedInventoryPricingDetails.__name__, shortlisted_inventory_detail_id), exception_object=e)
+        """
+        class_name = self.__class__.__name__
+        try:
+            pk = request.data['id']
+            models.InventoryActivityImage.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=pk, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -4113,7 +4119,7 @@ class InventoryActivityImage(APIView):
             self:
             request: Request Data
 
-        Returns: matching InventoryActivityImage objects
+        Returns: matching InventoryActivityImage objects related to a given proposal
 
         """
         class_name = self.__class__.__name__
@@ -4206,7 +4212,7 @@ class SupplierDetails(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
-class GenerateInventorySummary(APIView):
+class GenerateInventoryActivitySummary(APIView):
     """
     Generates inventory summary in which we show how much of the total inventories were release, audited, and closed
     on particular date
@@ -4220,8 +4226,26 @@ class GenerateInventorySummary(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            pass
+            proposal_id = request.query_params['proposal_id']
+            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
 
+            data = {}
+
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
+
+            response = website_utils.get_possible_activity_count(proposal_id)
+            if not response.data['status']:
+                return response
+            data['Total'] = response.data['data']
+
+            response = website_utils.get_actual_activity_count(proposal_id)
+            if not response.data['status']:
+                return response
+            data['Actual'] = response.data['data']
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -4325,3 +4349,55 @@ class SupplierAmenity(APIView):
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class BulkInsertInventoryActivityImage(APIView):
+    """
+    used by android app to bulk upload image's paths when internet is switched on and there are images yet to
+    to be synced to django backend
+    """
+
+    def post(self, request):
+        """
+        Bulk inserts data into inv image table.
+
+        Args:
+            request: request data that holds info to be updated
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            inv_act_objects = []
+
+            shortlisted_inv_ids = set([ int(data['shortlisted_inventory_detail_id']) for data in request.data])
+            shortlisted_inv_objects_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(shortlisted_inv_ids)
+
+            # they can send all the garbage in activity_type. we need to check if it's valid.
+            valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
+
+            for data in request.data:
+                shortlisted_inv_id = int(data['shortlisted_inventory_detail_id'])
+                activity_type = data['activity_type']
+
+                if activity_type not in valid_activity_types:
+                    return ui_utils.handle_response(class_name,data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
+
+                detail = {
+                    'shortlisted_inventory_details': shortlisted_inv_objects_map[shortlisted_inv_id],
+                    'image_path': data['image_path'],
+                    'comment': data['comment'],
+                    'activity_type':  activity_type,
+                    'activity_date': data['activity_date']
+                }
+
+                inv_act_objects.append(models.InventoryActivityImage(**detail))
+
+            models.InventoryActivityImage.objects.bulk_create(inv_act_objects)
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+
