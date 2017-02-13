@@ -3821,12 +3821,6 @@ class CampaignInventoryList(APIView):
             # information for that supplier
             supplier_detail = response.data['data']
 
-            # stores count of audit dates against each inv id
-            inventory_to_audit_count_map = {}
-
-            inv_image_to_audit_count_map = {}
-            shortlisted_inventory_detail_ids = []
-
             # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
             for data in serializer.data:
                 for shortlisted_space in data['shortlisted_suppliers']:
@@ -3837,18 +3831,6 @@ class CampaignInventoryList(APIView):
                         # because current data is corrupt as i have manually added suppliers, i have to set this to
                         # empty when KeyError occurres. #todo change this later.
                         shortlisted_space['supplier_detail'] = {}
-
-                    shortlisted_inventories = shortlisted_space['shortlisted_inventories']
-                    for inventory in shortlisted_inventories:
-                        inventory_global_id = inventory['id']
-                        shortlisted_inventory_detail_ids.append(inventory_global_id)
-                        if not inventory_to_audit_count_map.get(inventory_global_id):
-                            inventory_to_audit_count_map[inventory_global_id] = len(inventory['audit_dates'])
-
-            models.InventoryActivityImage.objects.filter(shortlisted_inventory_details_id__in=shortlisted_inventory_detail_ids)
-
-
-
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
 
         except Exception as e:
@@ -4315,7 +4297,7 @@ class SupplierAmenity(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            supplier_type_code = request.data['supplier_type_code']
+            supplier_type_code = request.query_params['supplier_type_code']
 
             response = ui_utils.get_content_type(supplier_type_code)
             if not response.data['status']:
@@ -4328,6 +4310,28 @@ class SupplierAmenity(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+    # def post(self, request):
+    #     """
+    #     Args:
+    #         request:
+    #     Returns:
+    #     """
+    #     class_name = self.__class__.__name__
+    #     try:
+    #         supplier_id = request.data['supplier_id']
+    #         supplier_type_code = request.data['supplier_type_code']
+    #         amenity_id = request.data['amenity_id']
+
+    #         response = ui_utils.get_content_type(supplier_type_code)
+    #         if not response.data['status']:
+    #             return response
+    #         content_type = response.data['data']
+
+    #         models.SupplierAmenitiesMap.objects.get_or_create(object_id=supplier_id, content_type=content_type, amenity_id=amenity_id)
+    #         return ui_utils.handle_response(class_name, data='success', success=True)
+    #     except Exception as e:
+    #         return ui_utils.handle_response(class_name, exception_object=e)
+
     def post(self, request):
         """
         Args:
@@ -4336,17 +4340,15 @@ class SupplierAmenity(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            supplier_id = request.data['supplier_id']
             supplier_type_code = request.data['supplier_type_code']
-            amenity_id = request.data['amenity_id']
+            supplier_id = request.data['supplier_id']
+            response = website_utils.save_amenities_for_supplier(supplier_type_code, supplier_id, request.data['amenities'])
 
-            response = ui_utils.get_content_type(supplier_type_code)
             if not response.data['status']:
                 return response
-            content_type = response.data['data']
 
-            models.SupplierAmenitiesMap.objects.get_or_create(object_id=supplier_id, content_type=content_type, amenity_id=amenity_id)
             return ui_utils.handle_response(class_name, data='success', success=True)
+
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 

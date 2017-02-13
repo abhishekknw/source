@@ -4574,6 +4574,42 @@ def get_amenities_suppliers(supplier_type_code, amenities):
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
+def save_amenities_for_supplier(supplier_type_code, supplier_id, amenities):
+    """
+    save amenities for supplier
+    Args:
+        amenities: [ .. ]
+
+    Returns: 
+    """
+    function = save_amenities_for_supplier.__name__
+    try:
+        response = ui_utils.get_content_type(supplier_type_code)
+        if not response.data['status']:
+            return response
+        content_type = response.data['data']
+
+        #container to store amenities for supplier
+        total_amenities = []
+        amenity_ids = [ amenity['id']  for amenity in amenities]
+        amenity_objects_map = models.Amenity.objects.in_bulk(amenity_ids)
+
+        for amenity in amenities:
+            amenity_id = amenity['id']
+            data = {
+                'object_id' : supplier_id,
+                'amenity' : amenity_objects_map[amenity_id],
+                'content_type' : content_type,
+            }
+            total_amenities.append(models.SupplierAmenitiesMap(**data))
+
+        # delete previous  shortlisted suppliers and save new
+        models.SupplierAmenitiesMap.objects.filter(object_id=supplier_id, content_type=content_type).delete()
+        models.SupplierAmenitiesMap.objects.bulk_create(total_amenities)
+
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
 
 def get_inventory_activity_image_objects(shortlisted_inventory_to_audit_count_map, image_activity_to_audit_count_map):
     """
