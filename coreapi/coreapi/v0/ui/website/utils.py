@@ -4591,13 +4591,12 @@ def save_amenities_for_supplier(supplier_type_code, supplier_id, amenities):
         #container to store amenities for supplier
         total_amenities = []
         amenity_ids = [ amenity['id']  for amenity in amenities]
-        amenity_objects_map = models.Amenity.objects.in_bulk(total_amenities)
+        amenity_objects_map = models.Amenity.objects.in_bulk(amenity_ids)
 
         for amenity in amenities:
             amenity_id = amenity['id']
             data = {
-                'supplier_id' : supplier_id,
-                'supplier_type_code' : supplier_type_code,
+                'object_id' : supplier_id,
                 'amenity' : amenity_objects_map[amenity_id],
                 'content_type' : content_type,
             }
