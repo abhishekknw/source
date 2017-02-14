@@ -763,16 +763,26 @@ if($scope.user_code == 'agency')
           }
       }
     }
-          var reset = function(filter_array){
-            var length = filter_array.length;
-            for(var i=0;i<length;i++){
-              if(filter_array[i].selected == true){
-                 filter_array[i].selected = false;
-                 $scope.societyFilter(filter_array[i]);
-               }
-                filter_array[i].selected = false;
-              }
-            }
+    var reset = function(filter_array){
+      var length = filter_array.length;
+      for(var i=0;i<length;i++){
+        if(filter_array[i].selected == true){
+           filter_array[i].selected = false;
+           $scope.societyFilter(filter_array[i]);
+         }
+          filter_array[i].selected = false;
+        }
+      }
+  //Start: to apply flat_avg_rental_persqft and flat_sale_cost_persqft filter when clicked
+  $scope.avgRentalPerSqftFilter = function(){
+    $scope.flat_avg_rental_persqft_flag = true;
+    $scope.societyFilters();
+  }
+  $scope.saleCostPerSqftFilter = function(){
+    $scope.flat_sale_cost_persqft_flag = true;
+    $scope.societyFilters();
+  }
+  //End: to apply flat_avg_rental_persqft and flat_sale_cost_persqft filter when clicked
   //Start:code for society filters
   $scope.societyFilters = function(value){
     //Start : Code added to filter multiple centers on gridview
@@ -802,12 +812,15 @@ if($scope.user_code == 'agency')
           inventory_filters : [],
           specific_filters : {
             flat_type : [],
-            flat_avg_rental_persqft : $scope.center_data[i].RS_filters.flat_avg_rental_persqft,
-            flat_sale_cost_persqft : $scope.center_data[i].RS_filters.flat_sale_cost_persqft,
-
           },
           amenities:[],
         };
+        if($scope.flat_avg_rental_persqft_flag == true){
+          filters.specific_filters['flat_avg_rental_persqft'] = $scope.center_data[i].RS_filters.flat_avg_rental_persqft;
+        }
+        if($scope.flat_sale_cost_persqft_flag == true){
+          filters.specific_filters['flat_sale_cost_persqft'] = $scope.center_data[i].RS_filters.flat_sale_cost_persqft;
+        }
         makeFilters($scope.center_data[i].RS_filters.inventory,filters.inventory_filters);
         makeFilters($scope.center_data[i].RS_filters.flat_type,filters.specific_filters.flat_type);
         makeFilters($scope.center_data[i].RS_filters.quality_type,filters.common_filters.quality);
@@ -849,11 +862,15 @@ if($scope.user_code == 'agency')
         inventory_filters : [],
         specific_filters : {
           flat_type : [],
-          flat_avg_rental_persqft : $scope.current_center.RS_filters.flat_avg_rental_persqft,
-          flat_sale_cost_persqft : $scope.current_center.RS_filters.flat_sale_cost_persqft,
         },
         amenities : [],
       };
+      if($scope.flat_avg_rental_persqft_flag == true){
+        filters.specific_filters['flat_avg_rental_persqft'] = $scope.current_center.RS_filters.flat_avg_rental_persqft;
+      }
+      if($scope.flat_sale_cost_persqft_flag == true){
+        filters.specific_filters['flat_sale_cost_persqft'] = $scope.current_center.RS_filters.flat_sale_cost_persqft;
+      }
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
       makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
       makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
@@ -1353,6 +1370,7 @@ if($scope.user_code == 'agency')
     //Start:save suppliers and filters to save the current state
     $scope.saveData = function(){
        saveSelectedFilters();
+      $window.localStorage.isSavedProposal = true;
       mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
         .success(function(response, status){
           // alert("Saved Successfully");

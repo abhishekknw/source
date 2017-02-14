@@ -16,6 +16,11 @@ angular.module('catalogueApp')
      return machadaloHttp.get(url);
    }
 
+   opsExecutionPlanService.getSummaryDetails = function(proposal_id){
+        var url = url_base + "generate-inventory-activity-summary/" + "?proposal_id=" + proposal_id;
+     return machadaloHttp.get(url);
+   }
+
 
    return opsExecutionPlanService;
 }]);
