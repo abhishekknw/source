@@ -1370,6 +1370,7 @@ if($scope.user_code == 'agency')
     //Start:save suppliers and filters to save the current state
     $scope.saveData = function(){
        saveSelectedFilters();
+      $window.localStorage.isSavedProposal = true;
       mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
         .success(function(response, status){
           // alert("Saved Successfully");
