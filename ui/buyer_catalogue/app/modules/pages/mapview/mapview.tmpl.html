@@ -41,7 +41,7 @@
       <form id = "filterPanelForm" ng-if="!show_societies">
        <div class = "filterPanel" ng-show = "current_center.suppliers_allowed.society_show">
         <input type = "checkbox"  ng-model="current_center.suppliers_allowed.society_allowed" ng-click="spaceSupplier('RS',current_center.suppliers_allowed.society_allowed)"/>
-          <span class = "filterPanelHeader" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
+          <span class = "filterPanelHeader space-type" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
 
          <div ng-if = "current_center.suppliers_allowed.society_allowed" uib-collapse="isCollapsed">
           <span class = "filterPanelHeader ">Inventory Type</span>
@@ -72,7 +72,7 @@
         </div>
         <div class = "filterPanel" ng-if = "current_center.suppliers_allowed.corporate_show">
          <input type = "checkbox"  ng-model="current_center.suppliers_allowed.corporate_allowed"  ng-click="spaceSupplier('CP',current_center.suppliers_allowed.corporate_allowed)"/>
-           <span class = "filterPanelHeader"> Corporate Filters</span><br>
+           <span class = "filterPanelHeader space-type"> Corporate Filters</span><br>
           <div ng-if = "current_center.suppliers_allowed.corporate_allowed">
             <div>
               <input type = "checkbox"  ng-model="real_estate_allowed" ng-disabled = "checkFilters" ng-click="corporateFilters(real_estate_allowed)">
@@ -113,7 +113,7 @@
  <form id = "filterPanelForm" ng-if="show_societies">
   <div class = "filterPanel"  ng-show="society_show">
    <input type = "checkbox"  ng-model="society_allowed_gridview" ng-click="checkSuppliers('RS')"/>
-     <span class = "filterPanelHeader" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
+     <span class = "filterPanelHeader space-type" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
 
     <div ng-if = "society_allowed_gridview" uib-collapse="isCollapsed">
      <span class = "filterPanelHeader ">Inventory Type</span>
@@ -144,7 +144,7 @@
    </div>
    <div class = "filterPanel" ng-show="corporate_show">
     <input type = "checkbox"  ng-model="corporate_allowed_gridview"  ng-click="checkSuppliers('CP')"/>
-      <span class = "filterPanelHeader"> Corporate Filters</span><br>
+      <span class = "filterPanelHeader space-type"> Corporate Filters</span><br>
      <div ng-if = "corporate_allowed_gridview">
        <div>
          <input type = "checkbox"  ng-model="real_estate_allowed"  ng-disabled = "checkFilters" ng-click="corporateFilters(real_estate_allowed)">
