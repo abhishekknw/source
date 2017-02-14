@@ -32,6 +32,7 @@
   </div>
   <div class = "col-md-12" style="text-align:right">
     <button class="btn btn-danger active notify" ng-click="">ReAssign</button>
+    <button class="btn btn-danger active notify" data-target="#summaryModal" data-toggle="modal" ng-click="getSummary()">Summary</button>
   </div>
 </div>
 <!--Start: Code for supplier details Modal Window -->
@@ -88,3 +89,32 @@
   </div>
 </div>
 <!--End: Code for showing image Modal  Window -->
+<!--Start: Code for showing summary Modal Window -->
+<div id="summaryModal" class="modal fade">
+  <div class="modal-dialog" style="width:560px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Summary</h4>
+        <hr/>
+        <div class = "modal-body" style = "height: 460px;">
+          <table class="table table-bordered">
+            <thead >
+              <th ng-repeat="header in dates">{{header.header}}</th>
+            </thead>
+            <tbody>
+              <tr ng-repeat="header in summaryHeaders">
+                <td><label>{{header.header}}</label></td>
+                <td>{{summaryData.Total[header.key]}}</td>
+                <td>{{summaryData.Actual[header.key]}}</td>
+                <td>{{(summaryData.Actual[header.key]/summaryData.Total[header.key])*100|limitTo:5}}%</td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for showing summary Modal  Window -->
