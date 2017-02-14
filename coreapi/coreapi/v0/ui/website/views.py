@@ -4140,9 +4140,14 @@ class SupplierDetails(APIView):
 
         try:
             supplier_id = request.query_params['supplier_id']
-            content_type = request.query_params['content_type']
+            supplier_type_code = request.query_params['supplier_type_code']
+
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
      
-            supplier_model = ContentType.objects.get(pk=content_type).model
+            supplier_model = ContentType.objects.get(pk=content_type.id).model
             model = get_model(settings.APP_NAME,supplier_model)
 
             supplier_object = model.objects.get(supplier_id=supplier_id)

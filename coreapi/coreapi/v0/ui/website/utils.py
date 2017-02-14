@@ -4651,7 +4651,6 @@ def get_possible_activity_count(proposal_id):
     """
     function = get_possible_activity_count.__name__
     try:
-
         sql = "select count(a.id) , count(b.audit_date) from shortlisted_inventory_pricing_details" \
               " as a INNER JOIN audit_date as b on a.id = b.shortlisted_inventory_id" \
               " where a.id in  ( select c.id from shortlisted_inventory_pricing_details as c " \
@@ -4723,10 +4722,3 @@ def dict_fetch_all(cursor):
         ]
     except Exception as e:
         raise e
-
-
-
-
-
-
-
