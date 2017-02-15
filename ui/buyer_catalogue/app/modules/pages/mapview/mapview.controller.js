@@ -48,7 +48,10 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 $scope.user_code = $window.localStorage.user_code;
 if($scope.user_code == 'agency')
   $scope.hideData = true;
-
+//getting business_name and business_type from localStorage
+$scope.businessData = JSON.parse($window.localStorage.business);
+$scope.business_name = $scope.businessData.name;
+$scope.business_type = $scope.businessData.type_name.business_type;
 // after angular-google-maps is loaded properly only then proces code inside then
   uiGmapGoogleMapApi.then(function(maps) {
       function assignCenterMarkerToMap(center){
@@ -388,7 +391,7 @@ if($scope.user_code == 'agency')
             //End:   api call to get amenity filters from database
             $scope.flat_avg_rental_persqft = {
                 min: 0,
-                max: 100,
+                max: 0,
                 options: {
                     floor: 0,
                     ceil: 100,
@@ -398,7 +401,7 @@ if($scope.user_code == 'agency')
             };
             $scope.flat_sale_cost_persqft = {
                 min: 0,
-                max: 10000,
+                max: 0,
                 options: {
                     floor: 0,
                     ceil: 10000,
@@ -574,7 +577,7 @@ if($scope.user_code == 'agency')
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
               createInitialFilterData();
-                $scope.business_name = response.data.business_name;
+                // $scope.business_name = response.data.business_name;
                 $scope.center_data = response.data.suppliers;
 
                 $scope.current_center = response.data.suppliers[0];
@@ -821,6 +824,12 @@ if($scope.user_code == 'agency')
         if($scope.flat_sale_cost_persqft_flag == true){
           filters.specific_filters['flat_sale_cost_persqft'] = $scope.center_data[i].RS_filters.flat_sale_cost_persqft;
         }
+        if($scope.center_data[i].RS_filters.flat_avg_rental_persqft.max == 0){
+          delete filters.specific_filters['flat_avg_rental_persqft'];
+        }
+        if($scope.center_data[i].RS_filters.flat_sale_cost_persqft.max == 0){
+          delete filters.specific_filters['flat_sale_cost_persqft'];
+        }
         makeFilters($scope.center_data[i].RS_filters.inventory,filters.inventory_filters);
         makeFilters($scope.center_data[i].RS_filters.flat_type,filters.specific_filters.flat_type);
         makeFilters($scope.center_data[i].RS_filters.quality_type,filters.common_filters.quality);
@@ -870,6 +879,12 @@ if($scope.user_code == 'agency')
       }
       if($scope.flat_sale_cost_persqft_flag == true){
         filters.specific_filters['flat_sale_cost_persqft'] = $scope.current_center.RS_filters.flat_sale_cost_persqft;
+      }
+      if($scope.current_center.RS_filters.flat_avg_rental_persqft.max == 0){
+        delete filters.specific_filters['flat_avg_rental_persqft'];
+      }
+      if($scope.current_center.RS_filters.flat_sale_cost_persqft.max == 0){
+        delete filters.specific_filters['flat_sale_cost_persqft'];
       }
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
       makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
