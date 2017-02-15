@@ -4006,13 +4006,10 @@ class ImportCorporateData(APIView):
                             return response
 
                         (corporate_object, value) = SupplierTypeCorporate.objects.get_or_create(supplier_id=data['supplier_id'])
-                        #data['society_location_type'] = subarea_object.locality_rating
-                        #data['society_state'] = 'Maharashtra'Uttar Pradesh
+
                         data['society_state'] = 'Maharashtra'
                         corporate_object.__dict__.update(data)
                         corporate_object.save()
-
-
 
                         # make entry into PMD here.
                         response = ui_utils.set_default_pricing(data['supplier_id'], data['supplier_type'])
@@ -4026,9 +4023,8 @@ class ImportCorporateData(APIView):
                             'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
                         }
                         response = requests.post(url, json.dumps(data), headers=headers)
-
-
                         print "{0} done \n".format(data['supplier_id'])
+
             source_file.close()
             return Response(data="success", status=status.HTTP_200_OK)
         except ObjectDoesNotExist as e:
@@ -4081,6 +4077,7 @@ class InventoryActivityImage(APIView):
     def delete(self, request):
         """
         Deletes an instance of inventory activity image
+
         Args:
             request:
 
@@ -4405,6 +4402,3 @@ class BulkInsertInventoryActivityImage(APIView):
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
-
-
-

@@ -1,5 +1,7 @@
 from django.conf.urls import patterns, include, url
-from django.contrib import admin
+
+from rest_framework.routers import DefaultRouter
+
 from v0 import views
 
 
@@ -80,3 +82,9 @@ urlpatterns = patterns('',
 
 
 )
+
+# adding urls for Permission View Set
+router = DefaultRouter()
+router.include_format_suffixes = False
+router.register(r'permission', views.PermissionsViewSet, base_name='permission')
+urlpatterns += router.urls
