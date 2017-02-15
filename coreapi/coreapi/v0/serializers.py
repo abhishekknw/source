@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
@@ -465,3 +465,8 @@ class DataSciencesCostSerializer(ModelSerializer):
 class ProposalMetricsSerializer(ModelSerializer):
     class Meta:
         model = models.ProposalMetrics
+
+
+class PermissionSerializer(ModelSerializer):
+    class Meta:
+        model = Permission
