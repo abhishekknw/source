@@ -174,11 +174,6 @@ filter: alpha(opacity=0);
 opacity: .5;
 }
 
-.space-type{
-  margin-top: -22px;
-  margin-left: 20px;
-
-
 /* Absolute Center Spinner */
 .loading {
   position: fixed;
