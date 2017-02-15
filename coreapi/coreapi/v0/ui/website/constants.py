@@ -342,6 +342,8 @@ supplier_filters = {
         'building_count': 'building_count',
     },
     'RS': {
+        'flat_avg_rental_persqft': 'flat_avg_rental_persqft',
+        'flat_sale_cost_persqft': 'flat_sale_cost_persqft'
     }
 }
 
@@ -633,3 +635,10 @@ default_inventory_durations = {
 
 # define number of days within which we will show the campaigns.
 delta_days = 3
+
+# activity type
+activity_type = {
+    'RELEASE': 'RELEASE',
+    'CLOSURE': 'CLOSURE',
+    'AUDIT': 'AUDIT'
+}

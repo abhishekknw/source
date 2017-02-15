@@ -115,7 +115,9 @@ if($scope.user_code == 'agency')
                 });
             };
           });
+            $scope.hideSpinner = true;
           return markers;
+
       };
       $scope.changeCurrentCenter = function(center_id){
             // changes the center currently shown on the map
@@ -352,7 +354,7 @@ if($scope.user_code == 'agency')
                 {name : '1 RK',         code : '1R',      selected : false},
                 {name : '1 BHK',        code : '1B',      selected : false},
                 {name : '1.5 BHK',      code : '1-5B',    selected : false},
-                {name : '2 BHK',        code : '2B',    selected : false},
+                {name : '2 BHK',        code : '2B',      selected : false},
                 {name : '2.5 BHK',      code : '2-5B',    selected : false},
                 {name : '3 BHK',        code : '3B',      selected : false},
                 {name : '3.5 BHK',      code : '3-5B',    selected : false},
@@ -375,13 +377,47 @@ if($scope.user_code == 'agency')
               inv_stall : 0,
               inv_flier : 0,
             };
+            //Start: api call to get amenity filters from database
+              mapViewService.getAmenityFilters()
+              .success(function(response, status) {
+                $scope.amenities = response.data;
+              })
+              .error(function(response, status){
+                console.log("error occured in amenities");
+              });
+            //End:   api call to get amenity filters from database
+            $scope.flat_avg_rental_persqft = {
+                min: 0,
+                max: 100,
+                options: {
+                    floor: 0,
+                    ceil: 100,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+            $scope.flat_sale_cost_persqft = {
+                min: 0,
+                max: 10000,
+                options: {
+                    floor: 0,
+                    ceil: 10000,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+
         //Start: filters for suppliers
+        var createInitialFilterData = function(){
             $scope.RS_filters = {
               inventory : $scope.space_inventory_type,
               locality_rating : $scope.space_location,
               quality_type : $scope.space_quality_type,
               quantity_type : $scope.space_quantity_type,
               flat_type : $scope.society_flat_type,
+              amenities : $scope.amenities,
+              flat_avg_rental_persqft:$scope.flat_avg_rental_persqft,
+              flat_sale_cost_persqft:$scope.flat_sale_cost_persqft,
             };
             $scope.CP_filters = {
               inventory : $scope.space_inventory_type,
@@ -390,6 +426,7 @@ if($scope.user_code == 'agency')
               quantity_type : $scope.space_quantity_type,
               employee_count : $scope.employee_count,
             };
+          }
         //End: filters for suppliers
         //Start: add filter varible for each supplier in each center
         //set created to maintain unique_suppliers in all centers
@@ -469,6 +506,7 @@ if($scope.user_code == 'agency')
           if($window.localStorage.isSavedProposal == 'true'){
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
               .success(function(response, status){
+                createInitialFilterData();
                 //TO convert dict to array as response coming in dict form and very difficult to use
                 $scope.center_data = $.map(response.data, function(value, index){
                   return [value];
@@ -535,6 +573,7 @@ if($scope.user_code == 'agency')
           else{
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
+              createInitialFilterData();
                 $scope.business_name = response.data.business_name;
                 $scope.center_data = response.data.suppliers;
 
@@ -641,7 +680,6 @@ if($scope.user_code == 'agency')
     }
     // Start : check saved filter
     var checkSavedFilters = function (){
-      console.log($scope.current_center);
         if($scope.current_center.suppliers_meta['RS'] != null){
           var filter_types = Object.keys($scope.current_center.suppliers_meta['RS']);
           for(var j=0;j<filter_types.length;j++){
@@ -725,16 +763,26 @@ if($scope.user_code == 'agency')
           }
       }
     }
-          var reset = function(filter_array){
-            var length = filter_array.length;
-            for(var i=0;i<length;i++){
-              if(filter_array[i].selected == true){
-                 filter_array[i].selected = false;
-                 $scope.societyFilter(filter_array[i]);
-               }
-                filter_array[i].selected = false;
-              }
-            }
+    var reset = function(filter_array){
+      var length = filter_array.length;
+      for(var i=0;i<length;i++){
+        if(filter_array[i].selected == true){
+           filter_array[i].selected = false;
+           $scope.societyFilter(filter_array[i]);
+         }
+          filter_array[i].selected = false;
+        }
+      }
+  //Start: to apply flat_avg_rental_persqft and flat_sale_cost_persqft filter when clicked
+  $scope.avgRentalPerSqftFilter = function(){
+    $scope.flat_avg_rental_persqft_flag = true;
+    $scope.societyFilters();
+  }
+  $scope.saleCostPerSqftFilter = function(){
+    $scope.flat_sale_cost_persqft_flag = true;
+    $scope.societyFilters();
+  }
+  //End: to apply flat_avg_rental_persqft and flat_sale_cost_persqft filter when clicked
   //Start:code for society filters
   $scope.societyFilters = function(value){
     //Start : Code added to filter multiple centers on gridview
@@ -765,12 +813,20 @@ if($scope.user_code == 'agency')
           specific_filters : {
             flat_type : [],
           },
+          amenities:[],
         };
+        if($scope.flat_avg_rental_persqft_flag == true){
+          filters.specific_filters['flat_avg_rental_persqft'] = $scope.center_data[i].RS_filters.flat_avg_rental_persqft;
+        }
+        if($scope.flat_sale_cost_persqft_flag == true){
+          filters.specific_filters['flat_sale_cost_persqft'] = $scope.center_data[i].RS_filters.flat_sale_cost_persqft;
+        }
         makeFilters($scope.center_data[i].RS_filters.inventory,filters.inventory_filters);
         makeFilters($scope.center_data[i].RS_filters.flat_type,filters.specific_filters.flat_type);
         makeFilters($scope.center_data[i].RS_filters.quality_type,filters.common_filters.quality);
         makeFilters($scope.center_data[i].RS_filters.locality_rating,filters.common_filters.locality);
         makeFilters($scope.center_data[i].RS_filters.quantity_type,filters.common_filters.quantity);
+        makeFilters($scope.center_data[i].RS_filters.amenities,filters.amenities);
         $scope.checkFilters = true;
         promises.push(mapViewService.getFilterSuppliers(filters));
 
@@ -807,12 +863,20 @@ if($scope.user_code == 'agency')
         specific_filters : {
           flat_type : [],
         },
+        amenities : [],
       };
+      if($scope.flat_avg_rental_persqft_flag == true){
+        filters.specific_filters['flat_avg_rental_persqft'] = $scope.current_center.RS_filters.flat_avg_rental_persqft;
+      }
+      if($scope.flat_sale_cost_persqft_flag == true){
+        filters.specific_filters['flat_sale_cost_persqft'] = $scope.current_center.RS_filters.flat_sale_cost_persqft;
+      }
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
       makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
       makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
       makeFilters($scope.current_center.RS_filters.locality_rating,filters.common_filters.locality);
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
+      makeFilters($scope.current_center.RS_filters.amenities,filters.amenities);
       filterSupplierData(filters.supplier_type_code,filters);
       }
   }
@@ -1225,7 +1289,6 @@ if($scope.user_code == 'agency')
           if($window.localStorage.isSavedProposal == undefined){
             $window.localStorage.isSavedProposal = false;
           }
-         console.log(parent_proposal_id);
          saveSelectedFilters();
          var proposal_data = {
            centers:$scope.center_data,
@@ -1243,7 +1306,6 @@ if($scope.user_code == 'agency')
                   'Authorization' : 'JWT ' + $rootScope.globals.currentUser.token
               }
          }).success(function(response){
-           console.log(response);
           //  alert("Successful");
               // convert it onto Blob object because it's a binary file.
               // var blob = new Blob([data], {
@@ -1308,6 +1370,7 @@ if($scope.user_code == 'agency')
     //Start:save suppliers and filters to save the current state
     $scope.saveData = function(){
        saveSelectedFilters();
+      $window.localStorage.isSavedProposal = true;
       mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
         .success(function(response, status){
           // alert("Saved Successfully");

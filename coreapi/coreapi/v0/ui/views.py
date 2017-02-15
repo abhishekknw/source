@@ -55,6 +55,7 @@ import constants as ui_constants
 from website.utils import save_price_mapping_default
 from website.serializers import BaseUserSerializer
 import v0.models as models
+import v0.errors as errors
 
 
 class UserViewSet(viewsets.ViewSet):
@@ -354,8 +355,12 @@ class GenerateSupplierIdAPIView(APIView):
     """
     Generic API that generates unique supplier id and also saves supplier data
     """
-    def post(self, request, format=None):
+    def post(self, request):
+
+        class_name = self.__class__.__name__
         try:
+            user = request.user
+            supplier_type_code = request.data['supplier_type']
 
             data = {
                 'city_id': request.data['city_id'],
@@ -365,7 +370,13 @@ class GenerateSupplierIdAPIView(APIView):
                 'supplier_code': request.data['supplier_code'],
                 'supplier_name': request.data['supplier_name'],
             }
-    
+
+            city_object = models.City.objects.get(id=data['city_id'])
+            city_code = city_object.city_code
+
+            if not ui_utils.check_city_level_permission(user, supplier_type_code, city_code, ui_constants.permission_type_create):
+                return ui_utils.handle_response(class_name, errors.SUPPLIER_CITY_NO_CREATE_PERMISSION_ERROR.format(supplier_type_code, city_code))
+
             response = ui_utils.get_supplier_id(request, data)
             if not response.data['status']:
                 return response
@@ -378,7 +389,7 @@ class GenerateSupplierIdAPIView(APIView):
             if not response.data['status']:
                 return response
             all_supplier_data = response.data['data']
-            response = ui_utils.save_supplier_data(all_supplier_data)
+            response = ui_utils.save_supplier_data(user, all_supplier_data)
 
             if not response.data['status']:
                 return response
@@ -388,6 +399,7 @@ class GenerateSupplierIdAPIView(APIView):
             return Response(data={str(e.message) + " Object does not exists"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(data={str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class SupplierImageDetails(APIView):
     """
@@ -486,7 +498,6 @@ class SocietyAPIView(APIView):
         item.delete()
         return Response(status=204)
 
-
     def post(self, request, format=None):
         current_user = request.user
         if 'supplier_id' in request.data:
@@ -496,6 +507,7 @@ class SocietyAPIView(APIView):
             else:
 
                 serializer = SupplierTypeSocietySerializer(data=request.data)
+                
         if serializer.is_valid():
             serializer.save()
         else:
@@ -574,6 +586,7 @@ class SocietyAPIListView(APIView):
         class_name = self.__class__.__name__
         try:
             user = request.user
+
             search_txt = request.query_params.get('search', None)
             items = None
             if search_txt:
@@ -606,7 +619,12 @@ class SocietyList(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         try:
-            societies = models.SupplierTypeSociety.objects.all().order_by("society_name")
+            user = request.user
+            if user.is_superuser:
+                societies = models.SupplierTypeSociety.objects.all().order_by("society_name")
+            else:
+                societies = models.SupplierTypeSociety.objects.filter(user=request.user).order_by("society_name")
+
             societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(societies_with_images, request)

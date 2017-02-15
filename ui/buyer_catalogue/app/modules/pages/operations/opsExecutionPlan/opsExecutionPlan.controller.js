@@ -22,9 +22,21 @@ angular.module('catalogueApp')
         {header : 'State'},
          {header : 'PinCode'},
       ];
+      $scope.dates = [
+        {header:''},
+        {header:'Total'},
+        {header:'Actual'},
+        {header:'Percentage'},
+      ];
+      $scope.summaryHeaders = [
+        {header:'Release', key:'RELEASE'},
+        {header:'Audit',   key:'AUDIT'},
+        {header:'Closure', key:'CLOSURE'},
+      ];
 
       opsExecutionPlanService.getOpsExecutionImageDetails($scope.campaign_id)
       	.success(function(response, status){
+          console.log(response);
       		$scope.campaignData = response.data;
           if($scope.campaignData.length == 0)
             $scope.hideData = true;
@@ -51,5 +63,15 @@ angular.module('catalogueApp')
         	.error(function(response, status){
         		console.log("error occured", status);
         	});
+      }
+      $scope.getSummary = function(){
+        opsExecutionPlanService.getSummaryDetails($scope.campaign_id)
+        .success(function(response, status){
+          console.log(response);
+          $scope.summaryData = response.data;
+        })
+        .error(function(response, status){
+          console.log(response);
+        });
       }
 }]);

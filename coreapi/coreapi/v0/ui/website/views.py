@@ -1182,7 +1182,7 @@ class FilteredSuppliers(APIView):
             inventory_type_query_suppliers = []
             # this is the main list. if no filter is selected this is what is returned by default
 
-            master_suppliers_list = supplier_model.objects.filter(common_filters_query).values_list('supplier_id')
+            master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
 
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
@@ -1193,7 +1193,7 @@ class FilteredSuppliers(APIView):
 
             if inventory_type_query.__len__():
                 inventory_type_query &= Q(content_type=content_type)
-                inventory_type_query_suppliers = list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id'))
+                inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
 
             # fetch specific_filters suppliers
             response = website_utils.handle_specific_filters(specific_filters, supplier_type_code)
@@ -1203,13 +1203,8 @@ class FilteredSuppliers(APIView):
             # if indeed there was something in the query
 
             if specific_filters_query.__len__():
-                specific_filters_suppliers = list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id'))
+                specific_filters_suppliers = set(list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id', flat=True)))
 
-            # pull only the ID's, not the tuples !  
-            inventory_type_query_suppliers = set([supplier_tuple[0] for supplier_tuple in inventory_type_query_suppliers])
-            specific_filters_suppliers = set([supplier_tuple[0] for supplier_tuple in specific_filters_suppliers])
-            master_suppliers_list = set([supplier_tuple[0] for supplier_tuple in master_suppliers_list])
-            
             # if both available, find the intersection. basically it's another way of doing AND query.
             # the following conditions are use case dependent. The checking is done on the basis of 
             # query length. an empty query length means that query didn't contain any thing in it.
@@ -4057,22 +4052,19 @@ class InventoryActivityImage(APIView):
         Returns: success in case the object is created.
         """
         class_name = self.__class__.__name__
-        shortlisted_inventory_detail_id = ''
         try:
             shortlisted_inventory_detail_id = request.data['shortlisted_inventory_detail_id']
-            image_path = request.data.get('image_path')
-            comment = request.data.get('comment')
             activity_type = request.data['activity_type']
-            activity_date = request.data['activity_date']
 
-            shortlisted_inventory_pricing_object = models.ShortlistedInventoryPricingDetails.objects.get(id=shortlisted_inventory_detail_id)
+            shortlisted_inv_object = models.ShortlistedInventoryPricingDetails.objects.get(id=shortlisted_inventory_detail_id)
 
-            # get inv_id and it's name in case we have to return ZERO_AUDIT_ERROR
-            inventory_id = shortlisted_inventory_pricing_object.inventory_id
-            inventory_name = shortlisted_inventory_pricing_object.ad_inventory_type.adinventory_name
-
-            # if activity is AUDIT then we need a check to make sure number of audits match up the number of audit dates
-            number_of_possible_audits = models.AuditDate.objects.filter(shortlisted_inventory=shortlisted_inventory_pricing_object).count()
+            data = {
+                'shortlisted_inventory_details': shortlisted_inv_object,
+                'image_path': request.data['image_path'],
+                'comment': request.data['comment'],
+                'activity_type': activity_type,
+                'activity_date': request.data['activity_date']
+            }
 
             # they can send all the garbage in activity_type. we need to check if it's valid.
             valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
@@ -4080,35 +4072,26 @@ class InventoryActivityImage(APIView):
             if activity_type not in valid_activity_types:
                 return ui_utils.handle_response(class_name, data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
 
-            number_of_activities_done = models.InventoryActivityImage.objects.filter(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type).count()
+            instance = models.InventoryActivityImage.objects.create(**data)
+            return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
 
-            # if activity type is AUDIT
-            if activity_type == models.INVENTORY_ACTIVITY_TYPES[2][0]:
-                # check fot zero number of audits possible
-                if not number_of_possible_audits:
-                    return ui_utils.handle_response(class_name, data=errors.ZERO_AUDITS_ERROR.format(inventory_name, inventory_id))
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
-                # check for equal number of audits already done
-                if number_of_activities_done == number_of_possible_audits:
-                    return ui_utils.handle_response(class_name, data=errors.NUMBER_OF_ACTIVITY_EXCEEDED_ERROR.format(activity_type, number_of_possible_audits))
-                # in case of audit, the date of audit matters. you can take as many images as you want in a single
-                # day. That will be counted as only one audit. Only when the date will change, the number of audits
-                # exceed by 1.
-                instance, is_created = models.InventoryActivityImage.objects.get_or_create(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type, activity_date=activity_date)
-            else:
-                # in case of release and closure, the date on which actual release/closure happened, doesn't matter to
-                # system. All that matters is there has to be only one Release and one closure
-                instance, is_created = models.InventoryActivityImage.objects.get_or_create(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type)
-                instance.image_path = image_path
-                instance.activity_date = activity_date
+    def delete(self, request):
+        """
+        Deletes an instance of inventory activity image
+        Args:
+            request:
 
-            instance.image_path = image_path
-            instance.comment = comment
-            instance.save()
+        Returns:
 
-            return ui_utils.handle_response(class_name, data='success', success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=errors.OBJECT_DOES_NOT_EXIST_ERROR.format(models.ShortlistedInventoryPricingDetails.__name__, shortlisted_inventory_detail_id), exception_object=e)
+        """
+        class_name = self.__class__.__name__
+        try:
+            pk = request.data['id']
+            models.InventoryActivityImage.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=pk, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -4118,7 +4101,7 @@ class InventoryActivityImage(APIView):
             self:
             request: Request Data
 
-        Returns: matching InventoryActivityImage objects
+        Returns: matching InventoryActivityImage objects related to a given proposal
 
         """
         class_name = self.__class__.__name__
@@ -4157,9 +4140,14 @@ class SupplierDetails(APIView):
 
         try:
             supplier_id = request.query_params['supplier_id']
-            content_type = request.query_params['content_type']
+            supplier_type_code = request.query_params['supplier_type_code']
+
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
      
-            supplier_model = ContentType.objects.get(pk=content_type).model
+            supplier_model = ContentType.objects.get(pk=content_type.id).model
             model = get_model(settings.APP_NAME,supplier_model)
 
             supplier_object = model.objects.get(supplier_id=supplier_id)
@@ -4176,8 +4164,42 @@ class SupplierDetails(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+    def put(self, request):
+        """
+        updates a particular supplier
+        Args:
+            request:
+        Returns: returns updated supplier object
 
-class GenerateInventorySummary(APIView):
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_id = request.data['supplier_id']
+            supplier_type_code = request.data['supplier_type_code']
+
+            data = request.data.copy()
+
+            data.pop('supplier_id')
+            data.pop('supplier_type_code')
+
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
+            supplier_model = content_type.model
+
+            model = get_model(settings.APP_NAME, supplier_model)
+
+            model.objects.filter(supplier_id=supplier_id).update(**data)
+
+            supplier_object = model.objects.get(pk=supplier_id)
+            return ui_utils.handle_response(class_name, data=model_to_dict(supplier_object), success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class GenerateInventoryActivitySummary(APIView):
     """
     Generates inventory summary in which we show how much of the total inventories were release, audited, and closed
     on particular date
@@ -4191,8 +4213,26 @@ class GenerateInventorySummary(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            pass
+            proposal_id = request.query_params['proposal_id']
+            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
 
+            data = {}
+
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
+
+            response = website_utils.get_possible_activity_count(proposal_id)
+            if not response.data['status']:
+                return response
+            data['Total'] = response.data['data']
+
+            response = website_utils.get_actual_activity_count(proposal_id)
+            if not response.data['status']:
+                return response
+            data['Actual'] = response.data['data']
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -4262,7 +4302,7 @@ class SupplierAmenity(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            supplier_type_code = request.data['supplier_type_code']
+            supplier_type_code = request.query_params['supplier_type_code']
 
             response = ui_utils.get_content_type(supplier_type_code)
             if not response.data['status']:
@@ -4275,6 +4315,28 @@ class SupplierAmenity(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+    # def post(self, request):
+    #     """
+    #     Args:
+    #         request:
+    #     Returns:
+    #     """
+    #     class_name = self.__class__.__name__
+    #     try:
+    #         supplier_id = request.data['supplier_id']
+    #         supplier_type_code = request.data['supplier_type_code']
+    #         amenity_id = request.data['amenity_id']
+
+    #         response = ui_utils.get_content_type(supplier_type_code)
+    #         if not response.data['status']:
+    #             return response
+    #         content_type = response.data['data']
+
+    #         models.SupplierAmenitiesMap.objects.get_or_create(object_id=supplier_id, content_type=content_type, amenity_id=amenity_id)
+    #         return ui_utils.handle_response(class_name, data='success', success=True)
+    #     except Exception as e:
+    #         return ui_utils.handle_response(class_name, exception_object=e)
+
     def post(self, request):
         """
         Args:
@@ -4283,16 +4345,66 @@ class SupplierAmenity(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            supplier_id = request.data['supplier_id']
             supplier_type_code = request.data['supplier_type_code']
-            amenity_id = request.data['amenity_id']
+            supplier_id = request.data['supplier_id']
+            response = website_utils.save_amenities_for_supplier(supplier_type_code, supplier_id, request.data['amenities'])
 
-            response = ui_utils.get_content_type(supplier_type_code)
             if not response.data['status']:
                 return response
-            content_type = response.data['data']
 
-            models.SupplierAmenitiesMap.objects.get_or_create(object_id=supplier_id, content_type=content_type, amenity_id=amenity_id)
+            return ui_utils.handle_response(class_name, data='success', success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class BulkInsertInventoryActivityImage(APIView):
+    """
+    used by android app to bulk upload image's paths when internet is switched on and there are images yet to
+    to be synced to django backend
+    """
+
+    def post(self, request):
+        """
+        Bulk inserts data into inv image table.
+
+        Args:
+            request: request data that holds info to be updated
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            inv_act_objects = []
+
+            shortlisted_inv_ids = set([ int(data['shortlisted_inventory_detail_id']) for data in request.data])
+            shortlisted_inv_objects_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(shortlisted_inv_ids)
+
+            # they can send all the garbage in activity_type. we need to check if it's valid.
+            valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
+
+            for data in request.data:
+                shortlisted_inv_id = int(data['shortlisted_inventory_detail_id'])
+                activity_type = data['activity_type']
+
+                if activity_type not in valid_activity_types:
+                    return ui_utils.handle_response(class_name,data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
+
+                detail = {
+                    'shortlisted_inventory_details': shortlisted_inv_objects_map[shortlisted_inv_id],
+                    'image_path': data['image_path'],
+                    'comment': data['comment'],
+                    'activity_type':  activity_type,
+                    'activity_date': data['activity_date']
+                }
+
+                inv_act_objects.append(models.InventoryActivityImage(**detail))
+
+            models.InventoryActivityImage.objects.bulk_create(inv_act_objects)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+
