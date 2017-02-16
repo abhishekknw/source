@@ -13,7 +13,7 @@
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
-            <td class="col-md-1">
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">
             {{supplier.phase}}
             </td>
             <td class="col-md-1">{{key}}</td>
