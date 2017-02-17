@@ -412,3 +412,13 @@ class InventoryActivityAssignmentSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.InventoryActivityAssignment
+
+
+class InventoryActivityAssignmentSerializer(ModelSerializer):
+    """
+    General serializer for inv act assignment
+    """
+    class Meta:
+        model = models.InventoryActivityAssignment
+
+

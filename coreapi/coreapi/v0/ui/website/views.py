@@ -4376,32 +4376,75 @@ class BulkInsertInventoryActivityImage(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            inv_act_objects = []
 
-            shortlisted_inv_ids = set([ int(data['shortlisted_inventory_detail_id']) for data in request.data])
-            shortlisted_inv_objects_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(shortlisted_inv_ids)
+            shortlisted_inv_ids = set()  # to store shortlisted inv ids
+            act_dates = set()  # to store all act dates
+            act_types = set() # to store all act types
+            inv_act_assignment_to_image_data_map = {}  # map from tuple to inv act image data
+            inv_image_objects = []  # inv act image objects will be stored here for bulk create
 
             # they can send all the garbage in activity_type. we need to check if it's valid.
             valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
 
-            for data in request.data:
+            # this loop makes inv_act_assignment_to_image_data_map which maps a tuple of sid, act_date, act_type to
+            # image data this is required later for creation of inv act image objects.
+            image_taken_by = request.data['image_taken_by']
+            inv_image_data = request.data['data']
+
+            for data in inv_image_data:
                 shortlisted_inv_id = int(data['shortlisted_inventory_detail_id'])
-                activity_type = data['activity_type']
 
-                if activity_type not in valid_activity_types:
-                    return ui_utils.handle_response(class_name,data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
+                shortlisted_inv_ids.add(shortlisted_inv_id)
+                act_dates.add(data['activity_date'])
+                act_types.add(data['activity_type'])
 
-                detail = {
-                    'shortlisted_inventory_details': shortlisted_inv_objects_map[shortlisted_inv_id],
+                if data['activity_type'] not in valid_activity_types:
+                    return ui_utils.handle_response(class_name,data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(data['activity_type']))
+
+                image_data = {
                     'image_path': data['image_path'],
                     'comment': data['comment'],
-                    'activity_type':  activity_type,
-                    'activity_date': data['activity_date']
+                    'activity_by': image_taken_by,
+                    'actual_activity_date': data['activity_date']
                 }
 
-                inv_act_objects.append(models.InventoryActivityImage(**detail))
+                try:
+                    reference = inv_act_assignment_to_image_data_map[shortlisted_inv_id, data['activity_date'], data['activity_type']]
+                    reference.append(image_data)
+                except KeyError:
+                    reference = [image_data]
+                    inv_act_assignment_to_image_data_map[shortlisted_inv_id, data['activity_date'], data['activity_type']] = reference
 
-            models.InventoryActivityImage.objects.bulk_create(inv_act_objects)
+            user_who_took_image = models.BaseUser.objects.get(id=image_taken_by)
+
+            # fetch only those objects which have these fields in the list and assigned to the incoming user
+            inv_act_assignment_objects = models.InventoryActivityAssignment.objects.select_related('shortlisted_inventory_details').\
+                filter(
+                    shortlisted_inventory_details__id__in=shortlisted_inv_ids,
+                    activity_type__in=act_types,
+                    activity_date__in=act_dates,
+                    assigned_to__id=image_taken_by
+            )
+
+            if not inv_act_assignment_objects:
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
+
+            # this loop creates actual inv act image objects
+            for inv_act_assign in inv_act_assignment_objects:
+
+                image_data_list = inv_act_assignment_to_image_data_map[
+
+                        inv_act_assign.shortlisted_inventory_details.id,
+                        inv_act_assign.activity_date,
+                        inv_act_assign.activity_type
+                ]
+                for image_data in image_data_list:
+                    # add two more fields to complete image_data dict
+                    image_data['inventory_activity_assignment'] = inv_act_assign
+                    image_data['activity_by'] = user_who_took_image
+                    inv_image_objects.append(models.InventoryActivityImage(**image_data))
+
+            models.InventoryActivityImage.objects.bulk_create(inv_image_objects)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -4442,24 +4485,23 @@ class InventoryActivityAssignment(APIView):
             inv_assignment_objects = []
 
             for data in inv_assign_data:
-
                 shortlisted_inv_id = int(data['shortlisted_inventory_id'])
                 assigned_to_user_id = int(data['assigned_to'])
 
-                inv_assignment_objects.append(models.InventoryActivityAssignment(
-                 ** {
-                        'shortlisted_inventory_details': shortlisted_inv_objects_map[shortlisted_inv_id],
-                        'activity_type': data['activity_type'],
-                        'activity_date': data['activity_date'],
-                        'assigned_to': assigned_to_users_objects_map[assigned_to_user_id],
-                        'assigned_by': request.user
-                    }
-                ))
+                instance, is_created = models.InventoryActivityAssignment.objects.get_or_create(
 
-            # bulk create them all at once. Any repeating unit of
-            # (shortlisted_inventory_details,activity_type,activity_date) will throw an error as it has to be unique.
-            models.InventoryActivityAssignment.objects.bulk_create(inv_assignment_objects)
-            return ui_utils.handle_response(class_name, data='successfully assigned inventory activities', success=True)
+                    shortlisted_inventory_details=shortlisted_inv_objects_map[shortlisted_inv_id],
+                    activity_type=data['activity_type'],
+                    activity_date=data['activity_date']
+                )
+                instance.assigned_to = assigned_to_users_objects_map[assigned_to_user_id]
+                instance.assigned_by = request.user
+
+                instance.save()
+                inv_assignment_objects.append(instance)
+
+            serializer = website_serializers.InventoryActivityAssignmentSerializer(inv_assignment_objects, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 

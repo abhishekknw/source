@@ -34,3 +34,6 @@ INVALID_AMENITY_CODE_ERROR = 'The amenity code {0} is invalid'
 SUPPLIER_CITY_NO_CREATE_PERMISSION_ERROR = 'Sorry. You do not have sufficient permissions to create supplier of type {0} for city with code {1}'
 
 NO_INVENTORIES_PRESENT_MESSAGE = 'There are really no inventories available'
+
+NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR = 'There are no inventory activities assigned to you, hence you cannot sync images in our system. You must be assigned first in order to take images'
+

@@ -2339,7 +2339,7 @@ class SupplierAmenitiesMap(BaseModel):
 
 class InventoryActivityAssignment(BaseModel):
     """
-    Assignment of ( inv_global_id, act_date, act_type ) to a user here in this table.
+    Assignment of ( inv_global_id, act_date, act_t  ype ) to a user here in this table.
     """
 
     shortlisted_inventory_details = models.ForeignKey('ShortlistedInventoryPricingDetails')
