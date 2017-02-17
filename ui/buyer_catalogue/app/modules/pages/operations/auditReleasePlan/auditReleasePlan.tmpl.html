@@ -5,27 +5,27 @@
 <!-- <div class="container"> -->
   <!-- <div class="row"> -->
     <!-- <div class="panel panel-default"> -->
-      <table class="table  table-bordered table-scroll" style="text-align: center;margin-left:10px;table-layout:fixed;word-wrap:break-word;">
+      <table class="table-responsive  table-bordered table-scroll" style="text-align: center;margin-left:50px;margin-right:100px;">
         <thead>
           <tr>
-            <th ng-repeat="header in headings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
+            <th ng-repeat="header in headings"  style="text-align: center;">{{header.header}}</th>
           </tr>
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
-            <td class="col-md-1">
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">
             {{supplier.phase}}
             </td>
-            <td class="col-md-2">{{key}}</td>
-            <td class="col-md-2">{{supplier.object_id}}</td>
-            <td class="col-md-2">{{}}</td>
+            <td class="col-md-1">{{key}}</td>
+            <td class="col-md-1">{{supplier.object_id}}</td>
+            <td class="col-md-1">{{}}</td>
             <td class="col-md-2">
               <input type="text" ng-model="filter.detail.release_date" ng-change="addReleaseDate(filter.detail,filter.detail.release_date)" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" date-parser="{{format}}"ng-model-options="{timezone:'UTC'}"/>
               <!-- <span class="input-group-btn"> -->
                 <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
               <!-- </span> -->
             </td>
-            <td class="col-md-2">
+            <td class="col-md-1">
               <a class="" data-target="#auditDateModal" data-toggle="modal" ng-click="setAuditDate(filter,$parent.$index,key)"><b>Add Date</b></a>
             </td>
             <td class="col-md-2">
@@ -34,11 +34,15 @@
                 <button type="button" class="btn btn-default" ng-click="popup3 = true"><i class="glyphicon glyphicon-calendar"></i></button>
               <!-- </span> -->
             </td>
+            <td class="col-md-1">
+              <button data-target="#assignUserModal" data-toggle="modal" class="btn btn-danger active notify" ng-click="assignUserToActivity(filter.detail)">Assign</button>
+            </td>
             <td class="col-md-8"><textarea rows="4" cols="50" name="comments" ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing"></textarea></td>
           </tr>
         </tbody>
       </table>
-      <div class = "col-md-12" style="text-align:right">
+    </br>
+      <div class = "col-md-12" style="text-align:right;padding-right:150px">
         <button class="btn btn-danger active notify" ng-click="updateData()">Update</button>
       </div>
     <!-- </div> -->
@@ -82,13 +86,48 @@
             <div class = "col-md-12" style="text-align:left">
               <button class="btn btn-danger active notify" ng-click="saveAuditDates()">Save</button>
             </div>
-
-
-
-
         </div>
       </div>
     </div>
   </div>
 </div>
 <!--End: Code for Audit Date Modal Window -->
+<!--Start: Code for contacts Modal Window -->
+<div id="assignUserModal" class="modal fade">
+  <div class="modal-dialog" style="width:700px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Assign</h4>
+        <hr/>
+        <div class = "modal-body" style = "width: 650px; height: 300px;">
+          <div class="modal-body col-md-4 table-responsive" style="width: 650px; height: 350px">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th ng-repeat="header in assignModal_headers" class="col-md-2" style="text-align: center;"><b>{{header.header}}</b></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat = "inventory in inventoryList">
+                    <td>{{inventory.id}}</td>
+                    <td>{{inventory.activity_type}}</td>
+                    <td>{{inventory.activity_date|limitTo:10}}</td>
+                    <td class="col-md-2">
+                      <select class="form-control spacing" ng-model="inventory.user">s
+                        <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class = "col-md-12" style="text-align:right;padding-right:150px">
+                <button class="btn btn-danger active notify" ng-click="saveUserForActivity()">Save</button>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for contacts Modal Window -->

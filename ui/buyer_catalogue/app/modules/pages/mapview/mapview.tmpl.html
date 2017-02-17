@@ -169,7 +169,7 @@
      <rzslider rz-slider-model="gridView_RS_filters.flat_sale_cost_persqft.min" rz-slider-high="gridView_RS_filters.flat_sale_cost_persqft.max"
        rz-slider-options="gridView_RS_filters.flat_sale_cost_persqft.options" ng-click="saleCostPerSqftFilter()"  ng-disabled = "checkFilters">
      </rzslider>
-
+     <hr>
      <span class = "filterPanelHeader ">Amenities</span>
        <div class = "nbCheckbox two-col" ng-repeat="amenity in gridView_RS_filters.amenities">
            <input type = "checkbox" ng-model="amenity.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{amenity.name }}&nbsp;
