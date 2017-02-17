@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('AuditReleasePlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams',
-    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams) {
+    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare',
+    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.headings = [
         {header : 'Phase'},
@@ -11,10 +11,22 @@ angular.module('catalogueApp')
         {header : 'Release Date'},
         {header : 'Audit Date'},
         {header : 'Closure Date'},
+        {header : 'Assign'},
         {header : 'Comments'},
       ];
       $scope.audit_dates = [
         {header : 'Audit Date'},
+      ];
+      $scope.assignModal_headers = [
+        {header : 'AdInventory Id'},
+        {header : 'Activity'},
+        {header : 'Activity Date'},
+        {header : 'Action'},
+      ];
+      $scope.activity_names = [
+        {header : 'Release' , code : 'RE'},
+        {header : 'Closure',   code : 'CL'},
+        {header : 'Audit',     code : 'AU'},
       ];
       $scope.maxDate = new Date(2020, 5, 22);
       $scope.today = new Date();
@@ -119,4 +131,46 @@ angular.module('catalogueApp')
       		console.log("error occured", status);
       	});
       }
+
+      $scope.assignUserToActivity = function(inv){
+        try{
+          console.log(inv);
+          $scope.inventoryList = [];
+          for(var i=0; i<inv.length; i++){
+            createInventoryList(inv[i].inventory_id,'RELEASE',inv[i].release_date,inv[i].id);
+            createInventoryList(inv[i].inventory_id,'CLOSURE',inv[i].closure_date,inv[i].id);
+            for(var j=0; j<inv[i].audit_dates.length; j++){
+              createInventoryList(inv[i].inventory_id,'AUDIT',inv[i].audit_dates[j].audit_date,inv[i].id);
+            }
+          }
+        }catch(error){
+          commonDataShare.showMessage(error.message);
+        }
+      }
+      var createInventoryList = function(id,name,date,invId){
+        try{
+          var data = {
+            id : id,
+            activity_type : name,
+            activity_date : date,
+            shortlisted_inventory_id : invId,
+            assigned_to : 6,
+          };
+          $scope.inventoryList.push(data);
+      }catch(error){
+        commonDataShare.showMessage(error.message);
+      }
+    }
+    $scope.userList = [
+      {name : 'Ankit'},
+      {name : 'Komal'},
+    ];
+    $scope.saveUserForActivity = function(){
+      auditReleasePlanService.saveUser($scope.inventoryList)
+      .success(function(response, status){
+      })
+      .error(function(response, status){
+        console.log("error occured", status);
+      });
+    }
   }]);
