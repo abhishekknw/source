@@ -374,13 +374,13 @@ class ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(ModelSe
     class Meta:
         model = models.ShortlistedInventoryPricingDetails
 
-
-class InventoryActivityImageSerializerReadOnly(ModelSerializer):
-
-    inventory_details = ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(source='shortlisted_inventory_details')
-
-    class Meta:
-        model = models.InventoryActivityImage
+#
+# class InventoryActivityImageSerializerReadOnly(ModelSerializer):
+#
+#     inventory_details = ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(source='shortlisted_inventory_details')
+#
+#     class Meta:
+#         model = models.InventoryActivityImage
 
 
 class AmenitySerializer(ModelSerializer):
@@ -395,3 +395,20 @@ class SupplierAmenitiesMapSerializer(ModelSerializer):
         model = models.SupplierAmenitiesMap
         depth = 1
 
+
+class InventoryActivityImageSerializerReadOnly(ModelSerializer):
+
+    class Meta:
+        model = models.InventoryActivityImage
+
+
+class InventoryActivityAssignmentSerializerReadOnly(ModelSerializer):
+    """
+    Read only serializer for Inventory Activity Assignment Model
+    """
+
+    images = InventoryActivityImageSerializerReadOnly(many=True, source='inventoryactivityimage_set')
+    shortlisted_inventory_details = ShortlistedInventoryPricingSerializerReadOnly()
+
+    class Meta:
+        model = models.InventoryActivityAssignment

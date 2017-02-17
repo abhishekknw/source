@@ -67,7 +67,7 @@ urlpatterns = [
     url(r'^supplier-amenity/$', views.SupplierAmenity.as_view()),
     url(r'^bulk-update-inventory-activity-image/$', views.BulkInsertInventoryActivityImage.as_view()),
     url(r'^generate-inventory-activity-summary/$', views.GenerateInventoryActivitySummary.as_view()),
-
+    url(r'^inventory-activity-assignment/$', views.InventoryActivityAssignment.as_view()),
 ]
 
 router = DefaultRouter()

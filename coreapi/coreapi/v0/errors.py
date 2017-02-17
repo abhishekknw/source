@@ -32,3 +32,5 @@ NUMBER_OF_ACTIVITY_EXCEEDED_ERROR = 'Number of possible {0} s for this inventory
 INVALID_AMENITY_CODE_ERROR = 'The amenity code {0} is invalid'
 
 SUPPLIER_CITY_NO_CREATE_PERMISSION_ERROR = 'Sorry. You do not have sufficient permissions to create supplier of type {0} for city with code {1}'
+
+NO_INVENTORIES_PRESENT_MESSAGE = 'There are really no inventories available'

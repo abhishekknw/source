@@ -2130,8 +2130,8 @@ class ImportSocietyData(APIView):
     """
     This API reads a csv file and  makes supplier id's for each row. then it adds the data along with
     supplier id in the  supplier_society table. it also populates society_tower table.
-    """
 
+    """
     def get(self, request):
         """
         :param request: request object
@@ -2140,6 +2140,7 @@ class ImportSocietyData(APIView):
         class_name = self.__class__.__name__
         try:
             source_file = open(BASE_DIR + '/files/modified_new_tab.csv', 'rb')
+
             with transaction.atomic():
                 reader = csv.reader(source_file)
                 for num, row in enumerate(reader):
@@ -2147,6 +2148,7 @@ class ImportSocietyData(APIView):
                     if num == 0:
                         continue
                     else:
+                        # todo: city is not being saved in society.
                         if len(row) != len(website_constants.supplier_keys):
                             return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(len(row), len(website_constants.supplier_keys)))
 
@@ -2155,6 +2157,7 @@ class ImportSocietyData(APIView):
                                 data[key] = None
                             else:
                                 data[key] = row[index]
+
                         state_name = ui_constants.state_name
                         state_code = ui_constants.state_code
                         state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
@@ -4402,3 +4405,95 @@ class BulkInsertInventoryActivityImage(APIView):
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class InventoryActivityAssignment(APIView):
+    """
+    Handles assignment of inventory activities to a user
+    """
+
+    def post(self, request):
+        """
+        Assigns inv act dates to a user
+
+        Args:
+            request: contains shortlisted_spaces_id, inventory_content_type_id, and assigned_activities
+
+        Returns: success in case assignment is complete.
+        """
+        class_name = self.__class__.__name__
+        try:
+            inv_assign_data = request.data
+
+            # to store shortlisted inventory pricing details ID and ids of users assigned to
+            shortlisted_inv_ids = []
+            assigned_to_users_ids = []
+
+            # collect these ids
+            for data in inv_assign_data:
+                shortlisted_inv_ids.append(int(data['shortlisted_inventory_id']))
+                assigned_to_users_ids.append(int(data['assigned_to']))
+
+            # form a map from id --> object. it's helps in fetching objects on basis of ids.
+            shortlisted_inv_objects_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(shortlisted_inv_ids)
+            assigned_to_users_objects_map = models.BaseUser.objects.in_bulk(assigned_to_users_ids)
+
+            # inv_act_assign objects container
+            inv_assignment_objects = []
+
+            for data in inv_assign_data:
+
+                shortlisted_inv_id = int(data['shortlisted_inventory_id'])
+                assigned_to_user_id = int(data['assigned_to'])
+
+                inv_assignment_objects.append(models.InventoryActivityAssignment(
+                 ** {
+                        'shortlisted_inventory_details': shortlisted_inv_objects_map[shortlisted_inv_id],
+                        'activity_type': data['activity_type'],
+                        'activity_date': data['activity_date'],
+                        'assigned_to': assigned_to_users_objects_map[assigned_to_user_id],
+                        'assigned_by': request.user
+                    }
+                ))
+
+            # bulk create them all at once. Any repeating unit of
+            # (shortlisted_inventory_details,activity_type,activity_date) will throw an error as it has to be unique.
+            models.InventoryActivityAssignment.objects.bulk_create(inv_assignment_objects)
+            return ui_utils.handle_response(class_name, data='successfully assigned inventory activities', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def put(self, request):
+        """
+        updates a single object of inventory activity assignment table
+        Args:
+            request: contains id of inventory activity assignment model
+
+        Returns: updated object
+        """
+        class_name = self.__class__.__name__
+        try:
+            inv_act_assignment_id = request.data['inventory_activity_assignment_id']
+            data = request.data.copy()
+            data.pop('inventory_activity_assignment_id')
+            models.InventoryActivityAssignment.objects.filter(id=inv_act_assignment_id).update(**data)
+            instance = models.InventoryActivityAssignment.objects.get(id=inv_act_assignment_id)
+            return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def get(self, request):
+        """
+        Args:
+            request:
+        Returns: fetches inv act assignment  object along with the images that are associated
+        """
+        class_name = self.__class__.__name__
+        try:
+            inv_act_assignment_id = request.query_params['inventory_activity_assignment_id']
+            inventory_activity_assignment_object = models.InventoryActivityAssignment.objects.get(id=inv_act_assignment_id)
+            serializer = website_serializers.InventoryActivityAssignmentSerializerReadOnly(inventory_activity_assignment_object)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
