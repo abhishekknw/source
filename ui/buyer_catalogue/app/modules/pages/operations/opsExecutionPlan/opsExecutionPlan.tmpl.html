@@ -17,14 +17,14 @@
         </thead>
         <tbody>
           <tr ng-repeat="supplier in campaignData">
-            <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(item)">{{supplier.inventory_assignment_details.inventory_details.shortlisted_supplier.object_id}}</a></td>
-            <td class="col-md-1">{{supplier.inventory_assignment_details.inventory_details.inventory_id}}</td>
-            <td class="col-md-2">{{supplier.inventory_assignment_details.inventory_details.inventory_type.adinventory_name}}</td>
-            <td class="col-md-2"><a ng-if="supplier.image_path" data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(supplier.image_path)">View Image</a>
-              <label ng-if="!supplier.image_path">No Image</td>
-            <td class="col-md-2">{{supplier.inventory_assignment_details.activity_type}}</td>
+            <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(item)">{{supplier.shortlisted_inventory_details.shortlisted_supplier.object_id}}</a></td>
+            <td class="col-md-1">{{supplier.shortlisted_inventory_details.inventory_id}}</td>
+            <td class="col-md-2">{{supplier.shortlisted_inventory_details.inventory_type.adinventory_name}}</td>
+            <td class="col-md-2"><a  data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(supplier.image_path)">View Image</a>
+              <!-- <label ng-if="!supplier.image_path">No Image</td> -->
+            <td class="col-md-2">{{supplier.activity_type}}</td>
             <td class="col-md-2">{{supplier.activity_date}}</td>
-            <td class="col-md-2">{{supplier.comment}}</td>
+            <td class="col-md-2">{{supplier.images.comment}}</td>
             <td class="col-md-2"> <input type="checkbox" ng-model="supplier.status"></td>
           </tr>
         </tbody>
@@ -80,7 +80,7 @@
         <hr/>
         <div class = "modal-body" style = "height: 460px;">
           <table class="table table-bordered">
-            <tbody>
+            <tbody ng-repeat = "images in campaignData.images">
                 <img ng-src="{{getImageUrl()}}" width="500px" height="400px"alt="No Image Found"/>
             </tbody>
           </table>
