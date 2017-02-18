@@ -4053,10 +4053,12 @@ class InventoryActivityImage(APIView):
         class_name = self.__class__.__name__
         try:
 
-            shortlisted_inventory_detail_instance = models.ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_details_id'])
+            shortlisted_inventory_detail_instance = models.ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_detail_id'])
             activity_date = request.data['activity_date']
             activity_type = request.data['activity_type']
             activity_by = int(request.data['activity_by'])
+
+            user = models.BaseUser.objects.get(id=activity_by)
 
             # they can send all the garbage in activity_type. we need to check if it's valid.
             valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
@@ -4069,8 +4071,8 @@ class InventoryActivityImage(APIView):
                 activity_type=activity_type,
                 activity_date=activity_date,
             )
-
-            if not instance.assigned_to_id == activity_by:
+            # if it's not superuser and it's not assigned to take the image
+            if (not user.is_superuser) and (not instance.assigned_to_id == activity_by):
                 return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
 
             data = {
@@ -4124,8 +4126,8 @@ class InventoryActivityImage(APIView):
             if not response.data['status']:
                 return response
 
-            inventory_activity_image_objects = models.InventoryActivityImage.objects.filter(inventory_activity_assignment__shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id)
-            serializer = website_serializers.InventoryActivityImageSerializerReadOnly(inventory_activity_image_objects, many=True)
+            inventory_activity_assignment_objects = models.InventoryActivityAssignment.objects.filter(shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id)
+            serializer = website_serializers.InventoryActivityAssignmentSerializerReadOnly(inventory_activity_assignment_objects, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
 
         except KeyError as e:
@@ -4427,17 +4429,29 @@ class BulkInsertInventoryActivityImage(APIView):
 
             user_who_took_image = models.BaseUser.objects.get(id=image_taken_by)
 
-            # fetch only those objects which have these fields in the list and assigned to the incoming user
-            inv_act_assignment_objects = models.InventoryActivityAssignment.objects.select_related('shortlisted_inventory_details').\
-                filter(
+            if user_who_took_image.is_superuser:
+
+                inv_act_assignment_objects = models.InventoryActivityAssignment.objects.select_related(
+                    'shortlisted_inventory_details'). \
+                    filter(
+                    shortlisted_inventory_details__id__in=shortlisted_inv_ids,
+                    activity_type__in=act_types,
+                    activity_date__in=act_dates,
+                )
+
+            else:
+                # fetch only those objects which have these fields in the list and assigned to the incoming user
+                inv_act_assignment_objects = models.InventoryActivityAssignment.objects.select_related(
+                    'shortlisted_inventory_details'). \
+                    filter(
                     shortlisted_inventory_details__id__in=shortlisted_inv_ids,
                     activity_type__in=act_types,
                     activity_date__in=act_dates,
                     assigned_to__id=image_taken_by
-            )
+                )
 
-            if not inv_act_assignment_objects:
-                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
+                if not inv_act_assignment_objects:
+                    return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
 
             # this loop creates actual inv act image objects
             for inv_act_assign in inv_act_assignment_objects:
@@ -4455,7 +4469,7 @@ class BulkInsertInventoryActivityImage(APIView):
                     inv_image_objects.append(models.InventoryActivityImage(**image_data))
 
             models.InventoryActivityImage.objects.bulk_create(inv_image_objects)
-            return ui_utils.handle_response(class_name, data='success', success=True)
+            return ui_utils.handle_response(class_name, data='success. {0} objects created'.format(len(inv_image_objects)), success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 

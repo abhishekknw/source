@@ -35,5 +35,5 @@ SUPPLIER_CITY_NO_CREATE_PERMISSION_ERROR = 'Sorry. You do not have sufficient pe
 
 NO_INVENTORIES_PRESENT_MESSAGE = 'There are really no inventories available'
 
-NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR = 'There are no inventory activities assigned to you, hence you cannot sync images in our system. You must be assigned first in order to take images'
+NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR = 'Your are not a superuser and there are no inventory activities assigned to you, hence you cannot sync images in our system. You must be assigned first in order to take images'
 
