@@ -4052,24 +4052,34 @@ class InventoryActivityImage(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            shortlisted_inventory_detail_id = request.data['shortlisted_inventory_detail_id']
+
+            shortlisted_inventory_detail_instance = models.ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_details_id'])
+            activity_date = request.data['activity_date']
             activity_type = request.data['activity_type']
-
-            shortlisted_inv_object = models.ShortlistedInventoryPricingDetails.objects.get(id=shortlisted_inventory_detail_id)
-
-            data = {
-                'shortlisted_inventory_details': shortlisted_inv_object,
-                'image_path': request.data['image_path'],
-                'comment': request.data['comment'],
-                'activity_type': activity_type,
-                'activity_date': request.data['activity_date']
-            }
+            activity_by = int(request.data['activity_by'])
 
             # they can send all the garbage in activity_type. we need to check if it's valid.
             valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
 
             if activity_type not in valid_activity_types:
                 return ui_utils.handle_response(class_name, data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
+
+            instance = models.InventoryActivityAssignment.objects.get(
+                shortlisted_inventory_details=shortlisted_inventory_detail_instance,
+                activity_type=activity_type,
+                activity_date=activity_date,
+            )
+
+            if not instance.assigned_to_id == activity_by:
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
+
+            data = {
+                'inventory_activity_assignment': instance,
+                'image_path': request.data['image_path'],
+                'comment': request.data['comment'],
+                'actual_activity_date': activity_date,
+                'activity_by': models.BaseUser.objects.get(id=activity_by)
+            }
 
             instance = models.InventoryActivityImage.objects.create(**data)
             return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
@@ -4114,7 +4124,7 @@ class InventoryActivityImage(APIView):
             if not response.data['status']:
                 return response
 
-            inventory_activity_image_objects = models.InventoryActivityImage.objects.select_related('shortlisted_inventory_details').filter(shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id)
+            inventory_activity_image_objects = models.InventoryActivityImage.objects.filter(inventory_activity_assignment__shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id)
             serializer = website_serializers.InventoryActivityImageSerializerReadOnly(inventory_activity_image_objects, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
 
@@ -4489,7 +4499,6 @@ class InventoryActivityAssignment(APIView):
                 assigned_to_user_id = int(data['assigned_to'])
 
                 instance, is_created = models.InventoryActivityAssignment.objects.get_or_create(
-
                     shortlisted_inventory_details=shortlisted_inv_objects_map[shortlisted_inv_id],
                     activity_type=data['activity_type'],
                     activity_date=data['activity_date']
