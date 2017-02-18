@@ -39,7 +39,7 @@ angular.module('catalogueApp')
           console.log(response);
       		$scope.campaignData = response.data;
           if($scope.campaignData.length == 0)
-            $scope.hideData = true;
+            $scope.hideData = false;//change to true doing for testing
               $scope.loading = response;
       	})
       	.error(function(response, status){
