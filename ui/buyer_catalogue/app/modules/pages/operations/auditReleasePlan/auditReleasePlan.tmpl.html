@@ -20,7 +20,7 @@
             <td class="col-md-1">{{supplier.object_id}}</td>
             <td class="col-md-1">{{}}</td>
             <td class="col-md-2">
-              <input type="text" ng-model="filter.detail.release_date" ng-change="addReleaseDate(filter.detail,filter.detail.release_date)" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" date-parser="{{format}}"ng-model-options="{timezone:'UTC'}"/>
+              <input type="text" ng-model="filter.detail.release_date" ng-change="addReleaseDate(filter.detail,filter.detail.release_date)" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" date-parser="{{format}}" ng-model-options="{timezone:'UTC'}"/>
               <!-- <span class="input-group-btn"> -->
                 <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
               <!-- </span> -->

@@ -43,7 +43,8 @@ angular.module('catalogueApp')
         startingDay: 1
       };
 
-      $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+      // $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+      $scope.formats = ['yyyy-MM-dd'];
       $scope.format = $scope.formats[1];
       $scope.altInputFormats = ['M!/d!/yyyy'];
 
@@ -166,6 +167,7 @@ angular.module('catalogueApp')
       {name : 'Komal'},
     ];
     $scope.saveUserForActivity = function(){
+      console.log($scope.inventoryList);
       auditReleasePlanService.saveUser($scope.inventoryList)
       .success(function(response, status){
       })
