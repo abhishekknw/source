@@ -20,10 +20,9 @@
             <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(item)">{{supplier.shortlisted_inventory_details.shortlisted_supplier.object_id}}</a></td>
             <td class="col-md-1">{{supplier.shortlisted_inventory_details.inventory_id}}</td>
             <td class="col-md-2">{{supplier.shortlisted_inventory_details.inventory_type.adinventory_name}}</td>
-            <td class="col-md-2" ng-if="supplier.images"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(supplier.image_path)">View Image</a>
-              <!-- <label ng-if="!supplier.image_path">No Image</td> -->
+            <td class="col-md-2" ng-if="supplier.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(supplier)">View Image</a></td>
+              <td ng-if="supplier.images.length == 0"><label>No Image<label></td>
             <td class="col-md-2">{{supplier.activity_type}}</td>
-            <td class="col-md-2">{{supplier.activity_date}}</td>
             <td class="col-md-2">{{supplier.images.comment}}</td>
             <td class="col-md-2"> <input type="checkbox" ng-model="supplier.status"></td>
           </tr>
@@ -72,18 +71,27 @@
 <!--End: Code for supplier details Modal Window -->
 <!--Start: Code for showing image Modal Window -->
 <div id="imageModal" class="modal fade">
-  <div class="modal-dialog" style="width:560px">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title">Image</h4>
+        <h4 class="modal-title">View Image</h4>
         <hr/>
-        <div class = "modal-body" style = "height: 460px;">
-          <table class="table table-bordered">
-            <tbody ng-repeat = "images in campaignData.images">
-                <img ng-src="{{getImageUrl()}}" width="500px" height="400px"alt="No Image Found"/>
-            </tbody>
-          </table>
+        <div class = "modal-body">
+          <div class="carousel" id="slider" >
+             <div class="carousel-inner">
+                 <div class="item" ng-class="{active:!$index}" ng-repeat="image in imageUrlList">
+                    <img ng-src="{{image.image_url}}" style="width:600px; height:400px;" class="img-responsive" alt="NO Image Found"/></br>
+                    Comment : {{image.comment}}
+                 </div>
+             </div>
+              <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider" role="button" data-slide="prev">
+                 <span class="glyphicon glyphicon-chevron-left"></span>
+              </a>
+             <a class="right carousel-control" data-toggle = "carousel" data-target = "#slider" role="button" data-slide="next">
+               <span class="glyphicon glyphicon-chevron-right"></span>
+             </a>
+          </div>
         </div>
       </div>
     </div>
@@ -110,7 +118,6 @@
                 <td>{{summaryData.Actual[header.key]}}</td>
                 <td>{{(summaryData.Actual[header.key]/summaryData.Total[header.key])*100|limitTo:5}}%</td>
               </tr>
-
             </tbody>
           </table>
         </div>
@@ -128,7 +135,6 @@
         <h4 class="modal-title">ReAssign User</h4>
         <hr/>
         <div class = "modal-body" style = "height: 150px;">
-          
         </div>
       </div>
     </div>
