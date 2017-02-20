@@ -17,7 +17,7 @@
         </thead>
         <tbody>
           <tr ng-repeat="supplier in campaignData">
-            <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(item)">{{supplier.shortlisted_inventory_details.shortlisted_supplier.object_id}}</a></td>
+            <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(supplier)">{{supplier.shortlisted_inventory_details.shortlisted_supplier.object_id}}</a></td>
             <td class="col-md-1">{{supplier.shortlisted_inventory_details.inventory_id}}</td>
             <td class="col-md-2">{{supplier.shortlisted_inventory_details.inventory_type.adinventory_name}}</td>
             <td class="col-md-2" ng-if="supplier.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(supplier)">View Image</a></td>
