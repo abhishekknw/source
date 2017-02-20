@@ -9,12 +9,16 @@ order of imports
 
 '''
 import json
+import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 from django.apps import apps
 from django.forms.models import model_to_dict
 from django.conf import settings
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import is_aware, make_aware
+from django.utils import timezone
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -24,6 +28,7 @@ import v0.serializers
 
 import constants as ui_constants
 import v0.models as models
+import v0.errors as errors
 
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False):
@@ -771,5 +776,44 @@ def check_city_level_permission(user, supplier_type_code, city_code, permission_
         return False
 
     except Exception as e:
-        raise (e, custom_permission, function)
+        raise Exception(e, custom_permission, function)
+
+
+def validate_date_format(date_string, date_format):
+    """
+    Validates a raw string date against a given format
+    Args:
+        date_string:
+        date_format:
+    Returns: True or False depending weather the date_string matches the format or not.
+    """
+    try:
+        datetime.datetime.strptime(date_string, date_format)
+        return True
+    except ValueError:
+        return False
+
+
+def get_aware_datetime_from_string(date_string):
+    """
+    converts string to django's datetime
+    Args:
+        date_string: "2017-02-25"
+    Returns: DateTimeField which can be put into Django's model DateTimeField
+    """
+    function = get_aware_datetime_from_string.__name__
+    try:
+        first_format = "%Y-%m-%d"
+        second_format = "%Y-%m-%dT%H:%M:%SZ"
+
+        if validate_date_format(date_string, first_format):
+            ret = timezone.make_aware(datetime.datetime.strptime(date_string, first_format), timezone.get_default_timezone())
+        elif validate_date_format(date_string, second_format):
+            ret = parse_datetime(date_string)
+        else:
+            raise ValueError(errors.INVALID_DATE_FORMAT.format(first_format, second_format))
+
+        return ret
+    except Exception as e:
+        raise Exception(e, function)
 

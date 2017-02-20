@@ -3560,8 +3560,9 @@ def handle_update_campaign_inventories(user, data):
         # collect shortlisted spaces specific details
         shortlisted_spaces = {}
         shortlisted_inventory_details = {}
-        new_audit_dates = []
-        old_audit_dates = {}
+        old_inventory_activity_assignments = {}
+        new_inventory_activity_assignments = []
+        inventory_activity_ids = set()
 
         for supplier in data:
             ss_global_id = supplier['id']
@@ -3579,39 +3580,45 @@ def handle_update_campaign_inventories(user, data):
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status']
             }
+
             shortlisted_inventories = supplier['shortlisted_inventories']
             for inventory, inventory_detail in shortlisted_inventories.iteritems():
                 for inv in inventory_detail['detail']:
+                    for inventory_activity in inv['inventory_activities']:
+                        inventory_activity_id = inventory_activity['id']
+
+                        inventory_activity_ids.add(inventory_activity_id)
+
+                        for inventory_activity_assignment in inventory_activity['inventory_activity_assignment']:
+                            if not inventory_activity_assignment.get('id'):
+                                new_inventory_activity_assignments.append(
+                                    {
+                                        'inventory_activity_id': inventory_activity_id,
+                                        'activity_date': ui_utils.get_aware_datetime_from_string(inventory_activity_assignment['activity_date'])
+                                    }
+                            )
+                            else:
+                                old_inventory_activity_assignments[inventory_activity_assignment['id']] = {
+
+                                    'inventory_activity_id': inventory_activity_id,
+                                    'activity_date': ui_utils.get_aware_datetime_from_string
+                                          (inventory_activity_assignment['activity_date'])
+                                }
+
                     sid_global_id = inv['id']
                     if not shortlisted_inventory_details.get(sid_global_id):
                         shortlisted_inventory_details[sid_global_id] = {}
 
                     shortlisted_inventory_details[sid_global_id] = {
-                        'release_date': inv['release_date'],
-                        'closure_date': inv['closure_date'],
                         'comment': inv['comment']
                     }
-                    for audit_date in inv['audit_dates']:
 
-                        audit_global_id = audit_date.get('id')
-                        if not audit_global_id:
-                            audit_data = {
-                                'shortlisted_inventory_id': sid_global_id,
-                                'audit_date': audit_date['audit_date'],
-                                'audited_by': user
-                            }
-                            new_audit_dates.append(audit_data)
-                        else:
-                            old_audit_dates[audit_global_id] = {
-                                'shortlisted_inventory_id': sid_global_id,
-                                'audit_date': audit_date['audit_date'],
-                                'audited_by': user
-                            }
         data = {
             'shortlisted_spaces': shortlisted_spaces,
             'shortlisted_inventory_details': shortlisted_inventory_details,
-            'new_audit_dates': new_audit_dates,
-            'old_audit_dates': old_audit_dates
+            'old_inventory_activity_assignments': old_inventory_activity_assignments,
+            'new_inventory_activity_assignments': new_inventory_activity_assignments,
+            'inventory_activity_ids': inventory_activity_ids
         }
         response = update_campaign_inventories(data)
         if not response.data['status']:
@@ -3633,8 +3640,12 @@ def update_campaign_inventories(data):
     try:
         shortlisted_spaces = data['shortlisted_spaces']
         shortlisted_inventory_details = data['shortlisted_inventory_details']
-        new_audit_dates = data['new_audit_dates']
-        old_audit_dates = data['old_audit_dates']
+        new_inventory_activity_assignments = data['new_inventory_activity_assignments']  # user can issue new dates
+        old_inventory_activity_assignments = data['old_inventory_activity_assignments']  # user can edit existing dates
+        inventory_activity_ids = data['inventory_activity_ids']
+
+        # mapping from id to object instance. used later to fetch objects directly from id
+        inventory_activity_object_map = models.InventoryActivity.objects.in_bulk(inventory_activity_ids)
 
         shortlisted_spaces_ids = shortlisted_spaces.keys()
         ss_objects = models.ShortlistedSpaces.objects.filter(id__in=shortlisted_spaces_ids)
@@ -3649,32 +3660,28 @@ def update_campaign_inventories(data):
 
         sid_ids = shortlisted_inventory_details.keys()
         sid_objects = models.ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
-        sid_object_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(sid_ids)
 
         for obj in sid_objects:
             sid_global_id = obj.id
-            obj.release_date = shortlisted_inventory_details[sid_global_id]['release_date']
-            obj.closure_date = shortlisted_inventory_details[sid_global_id]['closure_date']
             obj.comment = shortlisted_inventory_details[sid_global_id]['comment']
 
-        new_audit_date_objects = []
-        for obj_dict in new_audit_dates:
-            obj_dict['shortlisted_inventory'] = sid_object_map[obj_dict['shortlisted_inventory_id']]
-            del obj_dict['shortlisted_inventory_id']
-            new_audit_date_objects.append(models.AuditDate(**obj_dict))
+        new_inventory_activity_assignment_objects = []
+        for obj_dict in new_inventory_activity_assignments:
+            obj_dict['inventory_activity'] = inventory_activity_object_map[obj_dict['inventory_activity_id']]
+            del obj_dict['inventory_activity_id']
+            new_inventory_activity_assignment_objects.append(models.InventoryActivityAssignment(**obj_dict))
 
-        audit_ids = old_audit_dates.keys()
-        audit_objects = models.AuditDate.objects.filter(id__in=audit_ids)
+        old_inventory_assignment_ids = old_inventory_activity_assignments.keys()
+        old_inventory_activity_assignment_objects = models.InventoryActivityAssignment.objects.filter(id__in=old_inventory_assignment_ids)
 
-        for audit_obj in audit_objects:
-            audit_id = audit_obj.id
-            audit_obj.audit_date = old_audit_dates[audit_id]['audit_date']
-            audit_obj.audited_by = old_audit_dates[audit_id]['audited_by']
+        for instance in old_inventory_activity_assignment_objects:
+            inventory_activity_assignment_id = instance.id
+            instance.activity_date = old_inventory_activity_assignments[inventory_activity_assignment_id]['activity_date']
 
         bulk_update(ss_objects)
         bulk_update(sid_objects)
-        bulk_update(audit_objects)
-        models.AuditDate.objects.bulk_create(new_audit_date_objects)
+        bulk_update(old_inventory_activity_assignment_objects)
+        models.InventoryActivityAssignment.objects.bulk_create(new_inventory_activity_assignment_objects)
 
         # todo: .save() won't be called because we are using bulk update to update the tables. as a consequence dates
         # todo: won't be updated. Find a solution later.
@@ -4510,10 +4517,13 @@ def book_inventories(current_inventories_map, already_inventories_map):
     try:
         booked_inventories = []
         inv_errors = []
+        inventory_release_closure_list = []
         for inv_tuple, inv_date_tuple in current_inventories_map.iteritems():
+
             release_date = inv_date_tuple[0]
             closure_date = inv_date_tuple[1]
             inv_obj = inv_date_tuple[2]
+
             inv_obj.release_date = release_date
             inv_obj.closure_date = closure_date
 
@@ -4521,6 +4531,7 @@ def book_inventories(current_inventories_map, already_inventories_map):
             try:
                 already_book_inv_map_reference = already_inventories_map[inv_tuple]
                 is_overlapped = False
+
                 for already_booked_inv_tuple in already_book_inv_map_reference:
 
                     target_release_date = already_booked_inv_tuple[0]
@@ -4535,14 +4546,20 @@ def book_inventories(current_inventories_map, already_inventories_map):
                     if verdict:
                         is_overlapped = True
                         inv_errors.append(errors.DATES_OVERLAP_ERROR.format(inv_obj.inventory_id, release_date, closure_date, target_release_date, target_closure_date, target_proposal_id))
+
                 # if the inv does not overlaps with any of the pre booked versions of it, we book it.
                 if not is_overlapped:
+                    # we collect this info as we have to insert RD and CD for this inventory later
+                    inventory_release_closure_list.append((inv_obj, release_date, closure_date))
+                    # book it
                     booked_inventories.append(inv_obj)
             except KeyError:
+                # we collect this info as we have to insert RD and CD for this inventory later
+                inventory_release_closure_list.append((inv_obj, release_date, closure_date))
                 # means this inventory is already not booked. hence we book it.
                 booked_inventories.append(inv_obj)
 
-        return ui_utils.handle_response(function, data=(booked_inventories, inv_errors), success=True)
+        return ui_utils.handle_response(function, data=(booked_inventories, inventory_release_closure_list, inv_errors), success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -4721,4 +4738,70 @@ def dict_fetch_all(cursor):
             for row in cursor.fetchall()
         ]
     except Exception as e:
-        raise e
+        raise (e, function)
+
+
+def construct_date_range_query(database_field):
+    """
+    Args:
+        database_field: The db field to query upon
+
+    Returns: Q object
+    """
+    function = construct_date_range_query.__name__
+    try:
+        # The database field must be within delta days of the current date
+        current_date = timezone.now().date()
+        first_query = Q(**{database_field + '__gte': current_date})
+        second_query = Q(**{database_field + '__lte': current_date + timezone.timedelta(days=website_constants.delta_days)})
+        return first_query & second_query
+    except Exception as e:
+        raise (e, function)
+
+
+def insert_release_closure_dates(inventory_release_closure_list):
+    """
+    inserts release date and closure dates for all inventories in the shortlisted_inventories list
+    Args:
+        inventory_release_closure_list: a list of tuples where each tuple describes an inventory instance, R.D and
+        C.D. This is so because in theory, each inventory can have different RD and CD.
+
+    Returns: success in case insert happens successfully
+    """
+    function = insert_release_closure_dates.__name__
+    try:
+        # todo: using get_or_create in a loop can be a bottleneck as it hits db each time. this is simplest solution
+        # need to improve if api response takes too long because of this
+        inventory_activity_instance_list = []
+        for shortlisted_inv_instance, release_date, closure_date in inventory_release_closure_list:
+
+            # RELEASE
+            inv_activity_instance, is_created = models.InventoryActivity.objects.get_or_create(
+                shortlisted_inventory_details=shortlisted_inv_instance,
+                activity_type = models.INVENTORY_ACTIVITY_TYPES[0][0]
+            )
+
+            inventory_activity_instance_list.append((inv_activity_instance, release_date.date()))
+
+            # CLOSURE
+            inv_activity_instance, is_created = models.InventoryActivity.objects.get_or_create(
+                shortlisted_inventory_details=shortlisted_inv_instance,
+                activity_type=models.INVENTORY_ACTIVITY_TYPES[1][0]
+            )
+
+            inventory_activity_instance_list.append((inv_activity_instance, closure_date.date()))
+
+            # AUDIT. No dates are put against audit. it can contain many dates, that's why
+            inv_activity_instance, is_created = models.InventoryActivity.objects.get_or_create(
+                shortlisted_inventory_details=shortlisted_inv_instance,
+                activity_type=models.INVENTORY_ACTIVITY_TYPES[2][0]
+            )
+
+        for inv_activity_instance, activity_date in inventory_activity_instance_list:
+
+            models.InventoryActivityAssignment.objects.\
+                get_or_create(inventory_activity=inv_activity_instance, activity_date=activity_date)
+
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
