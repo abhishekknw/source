@@ -20,7 +20,7 @@
             <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(item)">{{supplier.shortlisted_inventory_details.shortlisted_supplier.object_id}}</a></td>
             <td class="col-md-1">{{supplier.shortlisted_inventory_details.inventory_id}}</td>
             <td class="col-md-2">{{supplier.shortlisted_inventory_details.inventory_type.adinventory_name}}</td>
-            <td class="col-md-2"><a  data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(supplier.image_path)">View Image</a>
+            <td class="col-md-2" ng-if="supplier.images"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(supplier.image_path)">View Image</a>
               <!-- <label ng-if="!supplier.image_path">No Image</td> -->
             <td class="col-md-2">{{supplier.activity_type}}</td>
             <td class="col-md-2">{{supplier.activity_date}}</td>
@@ -32,7 +32,7 @@
     </div>
   </div>
   <div class = "col-md-12" style="text-align:right">
-    <button class="btn btn-danger active notify" ng-click="">ReAssign</button>
+    <button class="btn btn-danger active notify" data-target = "#reAssignModal" data-toggle = "modal" ng-click="">ReAssign</button>
     <button class="btn btn-danger active notify" data-target="#summaryModal" data-toggle="modal" ng-click="getSummary()">Summary</button>
   </div>
 </div>
@@ -119,3 +119,18 @@
   </div>
 </div>
 <!--End: Code for showing summary Modal  Window -->
+
+<div id="reAssignModal" class="modal fade">
+  <div class="modal-dialog" style="width:560px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">ReAssign User</h4>
+        <hr/>
+        <div class = "modal-body" style = "height: 150px;">
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
