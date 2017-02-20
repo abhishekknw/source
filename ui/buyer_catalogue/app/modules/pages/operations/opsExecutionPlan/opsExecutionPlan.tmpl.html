@@ -23,7 +23,7 @@
             <td class="col-md-2" ng-if="supplier.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(supplier)">View Image</a></td>
               <td ng-if="supplier.images.length == 0"><label>No Image<label></td>
             <td class="col-md-2">{{supplier.activity_type}}</td>
-            <td class="col-md-2">{{supplier.images.comment}}</td>
+            <td class="col-md-2">{{supplier.activity_date|limitTo:10}}</td>
             <td class="col-md-2"> <input type="checkbox" ng-model="supplier.status"></td>
           </tr>
         </tbody>
@@ -32,7 +32,7 @@
   </div>
   <div class = "col-md-12" style="text-align:right">
     <button class="btn btn-danger active notify" data-target = "#reAssignModal" data-toggle = "modal" ng-click="">ReAssign</button>
-    <button class="btn btn-danger active notify" data-target="#summaryModal" data-toggle="modal" ng-click="getSummary()">Summary</button>
+    <button class="btn btn-danger active notify" ng-click="getSummary()">Summary</button>
   </div>
 </div>
 <!--Start: Code for supplier details Modal Window -->
@@ -108,7 +108,7 @@
         <hr/>
         <div class = "modal-body" style = "height: 460px;">
           <table class="table table-bordered">
-            <thead >
+            <thead>
               <th ng-repeat="header in dates">{{header.header}}</th>
             </thead>
             <tbody>

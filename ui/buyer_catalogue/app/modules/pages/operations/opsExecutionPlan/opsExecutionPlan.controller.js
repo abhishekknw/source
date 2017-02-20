@@ -10,7 +10,6 @@ angular.module('catalogueApp')
         {header : 'Image'},
          {header : 'Activity Name'},
         {header : 'Activity Date'},
-        {header : 'Comments'},
         {header : 'ReAssign'},
       ];
       $scope.supplier_headings = [
@@ -36,6 +35,8 @@ angular.module('catalogueApp')
 
       opsExecutionPlanService.getOpsExecutionImageDetails($scope.campaign_id)
       	.success(function(response, status){
+          console.log(response);
+
       		$scope.campaignData = response.data;
           if($scope.campaignData.length == 0)
             $scope.hideData = false;//change to true doing for testing
@@ -71,6 +72,7 @@ angular.module('catalogueApp')
         opsExecutionPlanService.getSummaryDetails($scope.campaign_id)
         .success(function(response, status){
           console.log(response);
+          $("#summaryModal").modal('show');
           $scope.summaryData = response.data;
         })
         .error(function(response, status){
