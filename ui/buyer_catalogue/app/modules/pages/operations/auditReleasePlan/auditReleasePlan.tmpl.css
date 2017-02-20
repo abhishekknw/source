@@ -1,0 +1,16 @@
+#table-scroll {
+  height:150px;
+  overflow:auto;
+  margin-top:20px;
+  margin-left:20px;
+}
+
+.commentBox{
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.updateButton{
+	text-align:right;
+	padding-right:100px
+}
