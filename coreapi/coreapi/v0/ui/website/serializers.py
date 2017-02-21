@@ -70,7 +70,6 @@ class ProposalInfoSerializer(ModelSerializer):
         model = ProposalInfo
 
 
-
 class BaseUserSerializer(ModelSerializer):
     """
     You can only write a password. Not allowed to read it. Hence password is in extra_kwargs dict.
@@ -314,9 +313,30 @@ class AuditDateSerializer(ModelSerializer):
         model = models.AuditDate
 
 
+class InventoryActivityImageSerializer(ModelSerializer):
+    class Meta:
+        model = models.InventoryActivityImage
+
+
+class InventoryActivityAssignmentSerializerWithImages(ModelSerializer):
+
+    images = InventoryActivityImageSerializer(many=True, source='inventoryactivityimage_set')
+
+    class Meta:
+        model = models.InventoryActivityAssignment
+
+
+class InventoryActivitySerializerWithInventoryAssignmentsAndImages(ModelSerializer):
+
+    inventory_activity_assignment = InventoryActivityAssignmentSerializerWithImages(many=True, source='inventoryactivityassignment_set')
+
+    class Meta:
+        model = models.InventoryActivity
+
+
 class ShortlistedInventoryPricingSerializerReadOnly(ModelSerializer):
 
-    audit_dates = AuditDateSerializer(many=True, source='auditdate_set')
+    inventory_activities = InventoryActivitySerializerWithInventoryAssignmentsAndImages(many=True, source='inventoryactivity_set')
     inventory_type = AdInventoryTypeSerializer(source='ad_inventory_type')
     inventory_duration = DurationTypeSerializer(source='ad_inventory_duration')
 
@@ -324,9 +344,61 @@ class ShortlistedInventoryPricingSerializerReadOnly(ModelSerializer):
         model = models.ShortlistedInventoryPricingDetails
 
 
+class ShortlistedInventoryPricingSerializerWithDateRangeReadOnly(ModelSerializer):
+
+    audit_dates = serializers.SerializerMethodField('filter_audit_dates')
+    inventory_type = AdInventoryTypeSerializer(source='ad_inventory_type')
+    inventory_duration = DurationTypeSerializer(source='ad_inventory_duration')
+
+    def filter_audit_dates(self, instance):
+        """
+        filters audit dates within date range
+        Args:
+            instance:
+
+        Returns:
+        """
+        audit_dates = models.AuditDate.objects.filter(
+
+                website_utils.construct_date_range_query('audit_date'),
+                shortlisted_inventory=instance
+        )
+        serializer = AuditDateSerializer(audit_dates, many=True)
+        return serializer.data
+
+    class Meta:
+        model = models.ShortlistedInventoryPricingDetails
+
+
+class ShortlistedSpacesSerializerWithDateRangeQuery(ModelSerializer):
+
+    shortlisted_inventories = serializers.SerializerMethodField('filter_shortlisted_inventories')
+
+    def filter_shortlisted_inventories(self, instance):
+        """
+        Filters those inventories who have either release or closure dates withing delta days of current date
+        Args:
+            instance: shortlisted space instance
+
+        Returns:
+        """
+
+        release_date_query = website_utils.construct_date_range_query('release_date')
+        closure_date_query = website_utils.construct_date_range_query('closure_date')
+
+        shortlisted_inventories = instance.shortlistedinventorypricingdetails_set.filter(
+            release_date_query | closure_date_query, id__in=self.context['inventory_assigned_ids'])
+                
+        serializer = ShortlistedInventoryPricingSerializerWithDateRangeReadOnly(shortlisted_inventories, many=True)
+        return serializer.data
+
+    class Meta:
+        model = models.ShortlistedSpaces
+
+
 class ShortlistedSpacesSerializerReadOnly(ModelSerializer):
 
-    shortlisted_inventories = ShortlistedInventoryPricingSerializerReadOnly(many=True, read_only=True, source='shortlistedinventorypricingdetails_set')
+    shortlisted_inventories = ShortlistedInventoryPricingSerializerReadOnly(many=True, source='shortlistedinventorypricingdetails_set')
 
     class Meta:
         model = models.ShortlistedSpaces
@@ -342,15 +414,17 @@ class PriceMappingDefaultSerializerReadOnly(ModelSerializer):
 
 
 class ProposalInfoSerializerReadOnly(ModelSerializer):
+
     # need to fetch only those suppliers which are shortlisted
     shortlisted_suppliers = serializers.SerializerMethodField('filter_shortlisted_spaces')
+
     # calculate running state of campaign like 'RUNNING', 'UPCOMING' etc.
     campaign_running_state = serializers.SerializerMethodField()
 
     def filter_shortlisted_spaces(self, instance):
         # fetch all objects of ss for this instance of proposal_info
         shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(campaign_status=website_constants.shortlisted, proposal=instance)
-        serializer = ShortlistedSpacesSerializerReadOnly(shortlisted_suppliers, many=True)
+        serializer = ShortlistedSpacesSerializerWithDateRangeQuery(shortlisted_suppliers, many=True, context={'inventory_assigned_ids': self.context['inventory_assigned_ids']})
         return serializer.data
 
     def get_campaign_running_state(self, instance):
@@ -366,24 +440,12 @@ class ProposalInfoSerializerReadOnly(ModelSerializer):
 
 
 class ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(ModelSerializer):
-    audit_dates = AuditDateSerializer(many=True, source='auditdate_set')
     inventory_type = AdInventoryTypeSerializer(source='ad_inventory_type')
     inventory_duration = DurationTypeSerializer(source='ad_inventory_duration')
     shortlisted_supplier = ShortlistedSpacesSerializer(source='shortlisted_spaces')
 
     class Meta:
         model = models.ShortlistedInventoryPricingDetails
-
-
-
-#
-# class InventoryActivityImageSerializerReadOnly(ModelSerializer):
-#
-#     inventory_details = ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(source='shortlisted_inventory_details')
-#
-#     class Meta:
-#         model = models.InventoryActivityImage
-
 
 
 class AmenitySerializer(ModelSerializer):
@@ -411,11 +473,6 @@ class InventoryActivityImageSerializerReadOnly(ModelSerializer):
 
     inventory_assignment_details = InventoryActivityAssignmentWithShortlistedSpaceReadOnly(source='inventory_activity_assignment')
 
-    class Meta:
-        model = models.InventoryActivityImage
-
-
-class InventoryActivityImageSerializer(ModelSerializer):
     class Meta:
         model = models.InventoryActivityImage
 

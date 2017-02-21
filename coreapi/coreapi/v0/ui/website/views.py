@@ -3731,6 +3731,7 @@ class CampaignInventory(APIView):
 
         """
         class_name = self.__class__.__name__
+        # todo: reduce the time taken for this API. currently it takes 15ms to fetch data which is too much.
         try:
             proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
 
@@ -3775,10 +3776,13 @@ class CampaignInventory(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
-class CampaignInventoryList(APIView):
+class CampaignSuppliersInventoryList(APIView):
     """
-    List all valid shortlisted suppliers and there respective shortlisted inventories belonging to any campaign upcoming within
-    d days of current date plus all the running campaigns
+    @Android API
+
+    List all valid shortlisted suppliers and there respective shortlisted inventories belonging to any campaign in which
+    shortlisted inventories have release, closure, or audit dates within delta d days from current date
+
     """
     def get(self, request):
         """
@@ -3791,6 +3795,7 @@ class CampaignInventoryList(APIView):
         try:
             # find proposals running and which are starting withing delta d days from the current date
             current_date = timezone.now().date()
+            assigned_to = int(request.query_params['assigned_to'])
 
             campaigns = []
             proposals = models.ProposalInfo.objects.filter(Q(tentative_start_date__lte=current_date, tentative_end_date__gte=current_date) | Q(tentative_start_date__gte=current_date,  tentative_start_date__lte=current_date + timezone.timedelta(days=website_constants.delta_days)))
@@ -3802,14 +3807,32 @@ class CampaignInventoryList(APIView):
                     continue
                 campaigns.append(proposal)
 
-            serializer = website_serializers.ProposalInfoSerializerReadOnly(campaigns, many=True)
+            if not request.user.is_superuser:
+                inventories_assigned_ids = models.InventoryActivityAssignment.objects.select_related('shortlisted_inventory_details').\
+                    filter(assigned_to_id=assigned_to).values_list('shortlisted_inventory_details_id', flat=True)
+            else:
+                inventories_assigned_ids = models.InventoryActivityAssignment.objects.select_related('shortlisted_inventory_details').\
+                    values_list('shortlisted_inventory_details_id', flat=True)
 
-            shortlisted_spaces = []
+            if not inventories_assigned_ids:
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
+
+            serializer = website_serializers.ProposalInfoSerializerReadOnly(campaigns, many=True, context={'inventory_assigned_ids': inventories_assigned_ids})
+
+            # this list is required later to fetch space objects later
+            total_shortlisted_spaces = []
             for data in serializer.data:
-                shortlisted_spaces.extend(data['shortlisted_suppliers'])
+                    shortlisted_suppliers_per_proposal = data['shortlisted_suppliers']
+                    shortlisted_spaces = []
+                    # we care for only those suppliers which have some inventories to show !
+                    for ss in shortlisted_suppliers_per_proposal:
+                        if ss['shortlisted_inventories']:
+                            shortlisted_spaces.append(ss)
+                    total_shortlisted_spaces.extend(shortlisted_spaces)
+                    data['shortlisted_suppliers'] = shortlisted_spaces
 
             # # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
-            response = website_utils.get_objects_per_content_type(shortlisted_spaces)
+            response = website_utils.get_objects_per_content_type(total_shortlisted_spaces)
             if not response.data['status']:
                 return response
             content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
@@ -3867,6 +3890,10 @@ class ProposalToCampaign(APIView):
             if not proposal_start_date or not proposal_end_date:
                 return ui_utils.handle_response(class_name, data=errors.NO_DATES_ERROR.format(proposal_id))
 
+            response = website_utils.is_campaign(proposal)
+            if response.data['status']:
+                return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id))
+
             current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
 
             if not current_assigned_inventories:
@@ -3888,7 +3915,10 @@ class ProposalToCampaign(APIView):
                 # currently we have no choice but to book all inventories the same proposal_start and end date
                 # this can be made smarter when we know for how many days a particular inventory  is allowed in a
                 # supplier this will help in automatically determining R.D and C.D.
-                current_assigned_inventories.update(release_date=proposal_start_date, closure_date=proposal_end_date)
+                inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
+                response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
+                if not response.data['status']:
+                    return response
                 proposal.campaign_state = website_constants.proposal_converted_to_campaign
                 proposal.save()
                 return ui_utils.handle_response(class_name,data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
@@ -3909,12 +3939,17 @@ class ProposalToCampaign(APIView):
             response = website_utils.book_inventories(current_assigned_inventories_map, already_booked_inventories_map)
             if not response.data['status']:
                 return response
-            booked_inventories, inv_error_list = response.data['data']
+            booked_inventories, inventory_release_closure_list, inv_error_list = response.data['data']
 
             # if there is something in error list then one or more inventories overlapped with already running campaigns
             # we do not convert a proposal into campaign in this case
             if inv_error_list:
                 return ui_utils.handle_response(class_name, data=errors.CANNOT_CONVERT_TO_CAMPAIGN_ERROR.format(proposal_id, inv_error_list))
+
+            # insert the RD and CD dates for each inventory
+            response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
+            if not response.data['status']:
+                return response
 
             bulk_update(booked_inventories)
             proposal.campaign_state = website_constants.proposal_converted_to_campaign
@@ -3950,7 +3985,7 @@ class CampaignToProposal(APIView):
             proposal.save()
 
             current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=campaign_id)
-            current_assigned_inventories.update(release_date=None, closure_date=None)
+            models.InventoryActivityAssignment.objects.filter(inventory_activity__shortlisted_inventory_details__in=current_assigned_inventories).delete()
 
             return ui_utils.handle_response(class_name, data=errors.REVERT_CAMPAIGN_TO_PROPOSAL.format(campaign_id, website_constants.proposal_not_converted_to_campaign), success=True)
         except Exception as e:

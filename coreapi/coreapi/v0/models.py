@@ -2337,20 +2337,29 @@ class SupplierAmenitiesMap(BaseModel):
         db_table = 'supplier_amenities_map'
 
 
+class InventoryActivity(BaseModel):
+    """
+    Stores activities like Release, Closure, Audits against each inventory
+    """
+    shortlisted_inventory_details = models.ForeignKey('ShortlistedInventoryPricingDetails')
+    activity_type = models.CharField(max_length=255, null=True,  choices=INVENTORY_ACTIVITY_TYPES)
+
+    class Meta:
+        db_table = 'inventory_activity'
+
+
 class InventoryActivityAssignment(BaseModel):
     """
     Assignment of ( inv_global_id, act_date, act_t  ype ) to a user here in this table.
     """
 
-    shortlisted_inventory_details = models.ForeignKey('ShortlistedInventoryPricingDetails')
-    activity_type = models.CharField(max_length=255, choices=INVENTORY_ACTIVITY_TYPES)
-    activity_date = models.CharField(max_length=255)
+    inventory_activity = models.ForeignKey('InventoryActivity', null=True, blank=True)
+    activity_date = models.DateTimeField(max_length=255, null=True, blank=True)
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activity_assigned_to', null=True, blank=True)
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activity_assigned_by', null=True, blank=True)
 
     class Meta:
         db_table = 'inventory_activity_assignment'
-        unique_together = (('shortlisted_inventory_details', 'activity_type', 'activity_date'), )
 
 
 class InventoryActivityImage(BaseModel):
@@ -2360,7 +2369,7 @@ class InventoryActivityImage(BaseModel):
     inventory_activity_assignment = models.ForeignKey('InventoryActivityAssignment', null=True, blank=True)
     image_path = models.CharField(max_length=1000, null=True, blank=True)
     comment = models.CharField(max_length=1000, null=True, blank=True)
-    actual_activity_date = models.CharField(max_length=255, null=True, blank=True)
+    actual_activity_date = models.DateTimeField(null=True, blank=True)
     activity_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
 
     class Meta:
