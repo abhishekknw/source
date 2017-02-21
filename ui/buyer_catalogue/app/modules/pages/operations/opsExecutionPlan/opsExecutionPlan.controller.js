@@ -10,7 +10,6 @@ angular.module('catalogueApp')
         {header : 'Image'},
          {header : 'Activity Name'},
         {header : 'Activity Date'},
-        {header : 'Comments'},
         {header : 'ReAssign'},
       ];
       $scope.supplier_headings = [
@@ -37,6 +36,7 @@ angular.module('catalogueApp')
       opsExecutionPlanService.getOpsExecutionImageDetails($scope.campaign_id)
       	.success(function(response, status){
           console.log(response);
+
       		$scope.campaignData = response.data;
           if($scope.campaignData.length == 0)
             $scope.hideData = false;//change to true doing for testing
@@ -46,17 +46,22 @@ angular.module('catalogueApp')
           $scope.hideData = true;
       		console.log("error occured", status);
       	});
-      $scope.setImageUrl = function(image_path){
-        $scope.image_url = "http://androidtokyo.s3.amazonaws.com/" + image_path;
-      }
-      $scope.getImageUrl = function(){
-        return $scope.image_url;
+      $scope.setImageUrl = function(supplier){
+        $scope.imageUrlList = [];
+        for(var i=0; i<supplier.images.length; i++){
+          var imageData = {
+            image_url : 'http://androidtokyo.s3.amazonaws.com/' + supplier.images[i].image_path,
+            comment : supplier.images[i].comment,
+          };
+          $scope.imageUrlList.push(imageData);
+        }
       }
       $scope.getSupplierDetails = function(supplier){
+        console.log(supplier);
         $scope.supplierData = [];
-        var supplierId = supplier.inventory_details.shortlisted_supplier.object_id;
-        var contentType = supplier.inventory_details.shortlisted_supplier.content_type;
-        opsExecutionPlanService.getSuppierDetails(supplierId,contentType)
+        var supplierId = supplier.shortlisted_inventory_details.shortlisted_supplier.object_id;
+        var supplier_type_code = 'RS';
+        opsExecutionPlanService.getSuppierDetails(supplierId,supplier_type_code)
         	.success(function(response, status){
             $scope.supplierData = response.data;
       	   })
@@ -68,6 +73,7 @@ angular.module('catalogueApp')
         opsExecutionPlanService.getSummaryDetails($scope.campaign_id)
         .success(function(response, status){
           console.log(response);
+          $("#summaryModal").modal('show');
           $scope.summaryData = response.data;
         })
         .error(function(response, status){

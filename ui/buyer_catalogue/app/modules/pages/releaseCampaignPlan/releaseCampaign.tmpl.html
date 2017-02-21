@@ -25,16 +25,16 @@
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}</td>
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.object_id}})</td>
             <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.area}}</td>
             <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.subarea}}</td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td>
+            <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
             <td class="col-md-1" ng-if="key=='NA'">{{key}}</td>
             <td class="col-md-1" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)"><b>{{key}}</b></a></td>
             <td class="col-md-1">{{filter.total_count}}</td>
             <td class="col-md-1">{{filter.supplier_price}}</td>
             <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.total_inventory_supplier_price}}</td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first"><input type="number" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width"></td>
+            <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first"><input type="number" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width"></td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first">
               <select class="form-control spacing" ng-model="supplier.booking_status">
                 <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
@@ -77,10 +77,10 @@
     <!-- </div> -->
   <!-- </div> -->
   <div class = "row">
-    <span class = "col-md-12" style="text-align:left">
-      <button class="btn btn-danger active notify" style="text-align:left" ng-click="updateData()">Update</button>
+    <span class = "col-md-6">
+      <button class="btn btn-danger active notify" style="text-align:left; margin-left:10px" ng-click="updateData()">Update</button>
     </span>
-      <span class = "col-md-12" style="text-align:right">
+      <span class = "col-md-6" style="text-align:right">
         <button class="btn btn-danger active notify" style="text-align:right" ng-click="changeLocation()">Planning Release-Audit</button>
       </span>
   </div>
@@ -136,15 +136,15 @@
           <table class="table table-bordered">
             <thead>
               <tr>
-                <th ng-repeat="header in payment_headings" class="col-md-2" style="text-align: center;"><b>{{header.header}}</b></th>
+                <th ng-repeat="header in payment_headings" class="col-md-2 alignment"><b>{{header.header}}</b></th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>{{payment.name_for_payment}}</td>
-                <td>{{payment.bank_name}}</td>
-                <td>{{payment.ifsc_code}}</td>
-                <td>{{payment.account_no}}</td>
+                <td class="alignment">{{payment.name_for_payment}}</td>
+                <td class="alignment">{{payment.bank_name}}</td>
+                <td class="alignment">{{payment.ifsc_code}}</td>
+                <td class="alignment">{{payment.account_no}}</td>
               </tr>
             </tbody>
           </table>

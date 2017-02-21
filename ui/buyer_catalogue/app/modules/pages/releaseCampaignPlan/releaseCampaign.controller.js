@@ -7,7 +7,7 @@ angular.module('catalogueApp')
         {header : 'Supplier Name'},
         {header : 'Area'},
         {header : 'Sub Area'},
-        {header : 'Supplier ID'},
+        // {header : 'Supplier ID'},
         {header : 'Inventory Type'},
         {header : 'Inventory Count'},
         {header : 'Inventory Price'},
@@ -26,7 +26,7 @@ angular.module('catalogueApp')
   $scope.contact_headings = [
     {header : 'Salutation'},
     {header : 'Name'},
-    {header : 'Contact_type'},
+    {header : 'Designation'},
     {header : 'Email'},
     {header : 'STD Code'},
     {header : 'Landline No'},
@@ -69,6 +69,7 @@ angular.module('catalogueApp')
     releaseCampaignService.getCampaignReleaseDetails($scope.campaign_id)
     	.success(function(response, status){
     		$scope.releaseDetails = response.data;
+        console.log($scope.releaseDetails);
         setDataToModel($scope.releaseDetails.shortlisted_suppliers);
             $scope.loading = response;
     	})

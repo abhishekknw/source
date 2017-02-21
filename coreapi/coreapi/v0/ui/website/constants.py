@@ -547,7 +547,7 @@ subjects = {
 
 # body
 bodys = {
-    'agency': 'Hi, your proposal request has been received and machadalo team will never contact you !',
+    'agency': 'Hi, your proposal request has been received and machadalo team will contact you !',
     'bd_head': 'Please find following details of proposal:  \n \n User Name: $user_name '
                '\n Business: $business \n Account: $account \n Proposal: $proposal_id \n '
                ' and the sheet \t  $file_name \t attached'

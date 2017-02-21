@@ -483,7 +483,8 @@ class InventoryActivityAssignmentSerializerReadOnly(ModelSerializer):
     """
 
     images = InventoryActivityImageSerializer(many=True, source='inventoryactivityimage_set')
-    shortlisted_inventory_details = ShortlistedInventoryPricingSerializerReadOnly()
+    shortlisted_inventory_details = ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly()
+
 
     class Meta:
         model = models.InventoryActivityAssignment

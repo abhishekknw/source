@@ -42,7 +42,7 @@ angular.module('catalogueApp')
         ]
       };
 
-
+  var getProposalDetails = function(){
     opsDashBoardService.getProposalDetails()
     	.success(function(response, status){
     		$scope.proposals = response.data;
@@ -51,7 +51,9 @@ angular.module('catalogueApp')
     	.error(function(response, status){
     		console.log("error occured", status);
     	});
+    }
 
+  var getCampaignDetails = function(){
     opsDashBoardService.getCampaignDetails(6)
     	.success(function(response, status){
         console.log(response);
@@ -60,7 +62,14 @@ angular.module('catalogueApp')
     	.error(function(response, status){
     		console.log("error occured", status);
     	});
+    }
 
+    var init = function(){
+      getProposalDetails();
+      getCampaignDetails();
+    }
+    //Call init function TO Load reuired data initially..
+    init();
 
     $scope.sendNotification = function(){
       var email_Data = {
@@ -75,7 +84,6 @@ angular.module('catalogueApp')
     	.error(function(response, status){
     		console.log("error occured", status);
     	});
-
       $scope.reason = "";
    }
 
@@ -86,15 +94,11 @@ angular.module('catalogueApp')
     	})
     	.error(function(response, status){
     		console.log("error occured", status);
-
     	});
-
     }
 
     $scope.convertProposalToCampaign = function(proposal){
-
       $scope.currentProposal = proposal;
-
       opsDashBoardService.convertProposalToCampaign(proposal.proposal.proposal_id, proposal.proposal)
           .success(function(response, status){
             console.log(response);
@@ -108,11 +112,8 @@ angular.module('catalogueApp')
     	});
     }
 
-
     $scope.convertCampaignToProposal = function(proposal){
-
       $scope.currentProposal = proposal;
-
       opsDashBoardService.convertCampaignToProposal(proposal.proposal.proposal_id, proposal.proposal)
           .success(function(response, status){
               console.table(response);
@@ -136,6 +137,7 @@ angular.module('catalogueApp')
       opsDashBoardService.saveAssignment(data)
           .success(function(response, status){
               console.table(response);
+              getCampaignDetails();
     	})
           .error(function(response, status){
     	  	    console.log("error occured", status);
