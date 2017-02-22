@@ -15,12 +15,12 @@
             <th ng-repeat="header in headings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
           </tr>
         </thead>
-        <tbody>
-          <tr ng-repeat="supplier in campaignData">
-            <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(supplier)">{{supplier.shortlisted_inventory_details.shortlisted_supplier.object_id}}</a></td>
-            <td class="col-md-1">{{supplier.shortlisted_inventory_details.inventory_id}}</td>
-            <td class="col-md-2">{{supplier.shortlisted_inventory_details.inventory_type.adinventory_name}}</td>
-            <td class="col-md-2" ng-if="supplier.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(supplier)">View Image</a></td>
+        <tbody ng-repeat="supplier in campaignData">
+          <tr ng-repeat="c1 in supplier.shortlisted_inventories">
+            <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(supplier)">{{supplier.object_id}}</a></td>
+            <td class="col-md-1">{{c1.inventory_id}}</td>
+            <td class="col-md-2">{{c1.inventory_type.adinventory_name}}</td>
+            <td class="col-md-2" ><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(c1.inventory_activities)">View Image</a></td>
               <td ng-if="supplier.images.length == 0"><label>No Image<label></td>
             <td class="col-md-2">{{supplier.activity_type}}</td>
             <td class="col-md-2">{{supplier.activity_date|limitTo:10}}</td>

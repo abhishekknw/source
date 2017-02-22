@@ -35,9 +35,8 @@ angular.module('catalogueApp')
 
       opsExecutionPlanService.getOpsExecutionImageDetails($scope.campaign_id)
       	.success(function(response, status){
-          console.log(response);
-
       		$scope.campaignData = response.data;
+          console.log('vidhi', $scope.campaignData);
           if($scope.campaignData.length == 0)
             $scope.hideData = false;//change to true doing for testing
               $scope.loading = response;
@@ -46,18 +45,17 @@ angular.module('catalogueApp')
           $scope.hideData = true;
       		console.log("error occured", status);
       	});
-      $scope.setImageUrl = function(supplier){
+      $scope.setImageUrl = function(c1){
         $scope.imageUrlList = [];
-        for(var i=0; i<supplier.images.length; i++){
+        for(var i=0; i<c1.length; i++){
           var imageData = {
-            image_url : 'http://androidtokyo.s3.amazonaws.com/' + supplier.images[i].image_path,
-            comment : supplier.images[i].comment,
+            image_url : 'http://androidtokyo.s3.amazonaws.com/' + c1[i].inventory_activity_assignment[i].images[i].image_path,
+            comment : c1[i].inventory_activity_assignment[i].images[i].comment,
           };
           $scope.imageUrlList.push(imageData);
         }
       }
       $scope.getSupplierDetails = function(supplier){
-        console.log(supplier);
         $scope.supplierData = [];
         var supplierId = supplier.shortlisted_inventory_details.shortlisted_supplier.object_id;
         var supplier_type_code = 'RS';
