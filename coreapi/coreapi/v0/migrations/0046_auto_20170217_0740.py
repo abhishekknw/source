@@ -57,8 +57,8 @@ class Migration(migrations.Migration):
             name='inventory_activity_assignment',
             field=models.ForeignKey(blank=True, to='v0.InventoryActivityAssignment', null=True),
         ),
-        migrations.AlterUniqueTogether(
-            name='inventoryactivityassignment',
-            unique_together=set([('shortlisted_inventory_details', 'activity_type', 'activity_date')]),
-        ),
+        # migrations.AlterUniqueTogether(
+        #     name='inventoryactivityassignment',
+        #     unique_together=set([('shortlisted_inventory_details', 'activity_type', 'activity_date')]),
+        # ),
     ]

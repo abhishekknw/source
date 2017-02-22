@@ -31,10 +31,10 @@ class Migration(migrations.Migration):
             name='activity_date',
             field=models.DateTimeField(max_length=255, null=True, blank=True),
         ),
-        migrations.AlterUniqueTogether(
-            name='inventoryactivityassignment',
-            unique_together=set([]),
-        ),
+        # migrations.AlterUniqueTogether(
+        #     name='inventoryactivityassignment',
+        #     unique_together=set([]),
+        # ),
         migrations.RemoveField(
             model_name='inventoryactivityassignment',
             name='activity_type',
