@@ -3793,46 +3793,101 @@ class CampaignSuppliersInventoryList(APIView):
         class_name = self.__class__.__name__
 
         try:
-            # find proposals running and which are starting withing delta d days from the current date
-            current_date = timezone.now().date()
+            result = {}
+
             assigned_to = int(request.query_params['assigned_to'])
 
-            campaigns = []
-            proposals = models.ProposalInfo.objects.filter(Q(tentative_start_date__lte=current_date, tentative_end_date__gte=current_date) | Q(tentative_start_date__gte=current_date,  tentative_start_date__lte=current_date + timezone.timedelta(days=website_constants.delta_days)))
+            assigned_date_range_query = website_utils.construct_date_range_query('activity_date')
+            reassigned_date_range_query = website_utils.construct_date_range_query('reassigned_activity_date')
 
-            # find all campaigns out of these proposals
-            for proposal in proposals:
-                response = website_utils.is_campaign(proposal)
-                if not response.data['status']:
-                    continue
-                campaigns.append(proposal)
+            # we do a huge query to fetch everything we need at once.
+            inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
+                select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
+                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
+                filter(assigned_date_range_query|reassigned_date_range_query, assigned_to_id=assigned_to).values(
 
-            if not request.user.is_superuser:
-                inventories_assigned_ids = models.InventoryActivityAssignment.objects.select_related('shortlisted_inventory_details').\
-                    filter(assigned_to_id=assigned_to).values_list('shortlisted_inventory_details_id', flat=True)
-            else:
-                inventories_assigned_ids = models.InventoryActivityAssignment.objects.select_related('shortlisted_inventory_details').\
-                    values_list('shortlisted_inventory_details_id', flat=True)
+                'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type',
+                'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
+                'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
+                'inventory_activity__shortlisted_inventory_details',
+                'inventory_activity__shortlisted_inventory_details__inventory_id',
+                'inventory_activity__shortlisted_inventory_details__inventory_content_type',
+                'inventory_activity__shortlisted_inventory_details__comment',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
+            )
 
-            if not inventories_assigned_ids:
-                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
+            total_shortlisted_spaces_list = []
+            # the idea of this loop is to separate different table data in different keys.
+            for content in inv_act_assignment_objects:
+                if not result.get('shortlisted_suppliers'):
+                    result['shortlisted_suppliers'] = {}
 
-            serializer = website_serializers.ProposalInfoSerializerReadOnly(campaigns, many=True, context={'inventory_assigned_ids': inventories_assigned_ids})
+                shortlisted_space_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces']
+                proposal_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id']
+                supplier_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id']
+                supplier_content_type_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type']
 
-            # this list is required later to fetch space objects later
-            total_shortlisted_spaces = []
-            for data in serializer.data:
-                    shortlisted_suppliers_per_proposal = data['shortlisted_suppliers']
-                    shortlisted_spaces = []
-                    # we care for only those suppliers which have some inventories to show !
-                    for ss in shortlisted_suppliers_per_proposal:
-                        if ss['shortlisted_inventories']:
-                            shortlisted_spaces.append(ss)
-                    total_shortlisted_spaces.extend(shortlisted_spaces)
-                    data['shortlisted_suppliers'] = shortlisted_spaces
+                result['shortlisted_suppliers'][shortlisted_space_id] = {
+                    'proposal_id': proposal_id,
+                    'supplier_id': supplier_id,
+                    'content_type_id': supplier_content_type_id
+                }
+
+                total_shortlisted_spaces_list.append(
+                    {
+                        'content_type_id': supplier_content_type_id,
+                        'supplier_id': supplier_id
+                    }
+                )
+
+                if not result.get('shortlisted_inventories'):
+                    result['shortlisted_inventories'] = {}
+
+                shortlisted_inventory_id = content['inventory_activity__shortlisted_inventory_details']
+                inventory_id = content['inventory_activity__shortlisted_inventory_details__inventory_id']
+                inventory_content_type_id = content['inventory_activity__shortlisted_inventory_details__inventory_content_type']
+                comment = content['inventory_activity__shortlisted_inventory_details__comment']
+                inventory_name = content['inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
+                inventory_duration = content['inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name']
+
+                result['shortlisted_inventories'][shortlisted_inventory_id] = {
+                    'shortlisted_spaces_id': shortlisted_space_id,
+                    'inventory_id': inventory_id,
+                    'inventory_content_type_id': inventory_content_type_id,
+                    'comment': comment,
+                    'inventory_name': inventory_name,
+                    'inventory_duration': inventory_duration
+                }
+
+                if not result.get('inventory_activities'):
+                    result['inventory_activities'] = {}
+
+                inventory_activity_id = content['inventory_activity']
+                activity_type = content['inventory_activity__activity_type']
+
+                result['inventory_activities'][inventory_activity_id] = {
+                    'shortlisted_inventory_id': shortlisted_inventory_id,
+                    'activity_type': activity_type
+                }
+
+                if not result.get('inventory_activity_assignment'):
+                    result['inventory_activity_assignment'] = {}
+
+                inventory_activity_assignment_id = content['id']
+                activity_date = content['activity_date']
+                reassigned_activity_date = content['reassigned_activity_date']
+
+                result['inventory_activity_assignment'][inventory_activity_assignment_id] = {
+                    'activity_date': activity_date,
+                    'reassigned_activity_date': reassigned_activity_date,
+                    'inventory_activity_id': inventory_activity_id
+                }
 
             # # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
-            response = website_utils.get_objects_per_content_type(total_shortlisted_spaces)
+            response = website_utils.get_objects_per_content_type(total_shortlisted_spaces_list)
             if not response.data['status']:
                 return response
             content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
@@ -3848,16 +3903,16 @@ class CampaignSuppliersInventoryList(APIView):
             supplier_detail = response.data['data']
 
             # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
-            for data in serializer.data:
-                for shortlisted_space in data['shortlisted_suppliers']:
+            for shortlisted_space_id, detail in result['shortlisted_suppliers'].iteritems():
                     try:
-                        shortlisted_space['supplier_detail'] = supplier_detail[shortlisted_space['content_type'], shortlisted_space['object_id']]
+                        detail['supplier_detail'] = supplier_detail[detail['content_type_id'], detail['supplier_id']]
                     except KeyError:
                         # ideally every supplier in ss table must also be in the corresponding supplier table. But
                         # because current data is corrupt as i have manually added suppliers, i have to set this to
                         # empty when KeyError occurres. #todo change this later.
-                        shortlisted_space['supplier_detail'] = {}
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+                        detail['supplier_detail'] = {}
+
+            return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)

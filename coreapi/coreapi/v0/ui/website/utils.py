@@ -3872,8 +3872,10 @@ def get_objects_per_content_type(objects):
                 content_type_id = my_object['content_type']
             except KeyError:
                 content_type_id = my_object['content_type_id']
-
-            object_id = my_object['object_id']
+            try:
+                object_id = my_object['object_id']
+            except KeyError:
+                object_id = my_object['supplier_id']
 
             if not result.get(content_type_id):
                 result[content_type_id] = []

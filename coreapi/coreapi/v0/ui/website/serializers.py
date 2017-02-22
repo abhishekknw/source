@@ -16,6 +16,16 @@ import constants as website_constants
 import utils as website_utils
 
 
+class InventoryActivitySerializer(ModelSerializer):
+    """
+    General serializer for inventory activity
+    """
+
+    class Meta:
+        model = models.InventoryActivity
+
+
+
 class LeadSerializer(ModelSerializer):
     class Meta:
         model = models.Lead
@@ -348,58 +358,6 @@ class ShortlistedInventoryPricingSerializerReadOnly(ModelSerializer):
         exclude = ('created_at', 'updated_at', 'ad_inventory_type', 'ad_inventory_duration')
 
 
-class ShortlistedInventoryPricingSerializerWithDateRangeReadOnly(ModelSerializer):
-
-    audit_dates = serializers.SerializerMethodField('filter_audit_dates')
-    inventory_type = AdInventoryTypeSerializer(source='ad_inventory_type')
-    inventory_duration = DurationTypeSerializer(source='ad_inventory_duration')
-
-    def filter_audit_dates(self, instance):
-        """
-        filters audit dates within date range
-        Args:
-            instance:
-
-        Returns:
-        """
-        audit_dates = models.AuditDate.objects.filter(
-
-                website_utils.construct_date_range_query('audit_date'),
-                shortlisted_inventory=instance
-        )
-        serializer = AuditDateSerializer(audit_dates, many=True)
-        return serializer.data
-
-    class Meta:
-        model = models.ShortlistedInventoryPricingDetails
-
-
-class ShortlistedSpacesSerializerWithDateRangeQuery(ModelSerializer):
-
-    shortlisted_inventories = serializers.SerializerMethodField('filter_shortlisted_inventories')
-
-    def filter_shortlisted_inventories(self, instance):
-        """
-        Filters those inventories who have either release or closure dates withing delta days of current date
-        Args:
-            instance: shortlisted space instance
-
-        Returns:
-        """
-
-        release_date_query = website_utils.construct_date_range_query('release_date')
-        closure_date_query = website_utils.construct_date_range_query('closure_date')
-
-        shortlisted_inventories = instance.shortlistedinventorypricingdetails_set.filter(
-            release_date_query | closure_date_query, id__in=self.context['inventory_assigned_ids'])
-                
-        serializer = ShortlistedInventoryPricingSerializerWithDateRangeReadOnly(shortlisted_inventories, many=True)
-        return serializer.data
-
-    class Meta:
-        model = models.ShortlistedSpaces
-
-
 class ShortlistedSpacesSerializerReadOnly(ModelSerializer):
 
     shortlisted_inventories = ShortlistedInventoryPricingSerializerReadOnly(many=True, source='shortlistedinventorypricingdetails_set')
@@ -418,33 +376,10 @@ class PriceMappingDefaultSerializerReadOnly(ModelSerializer):
         model = models.PriceMappingDefault
 
 
-class ProposalInfoSerializerReadOnly(ModelSerializer):
-
-    # need to fetch only those suppliers which are shortlisted
-    shortlisted_suppliers = serializers.SerializerMethodField('filter_shortlisted_spaces')
-
-    # calculate running state of campaign like 'RUNNING', 'UPCOMING' etc.
-    campaign_running_state = serializers.SerializerMethodField()
-
-    def filter_shortlisted_spaces(self, instance):
-        # fetch all objects of ss for this instance of proposal_info
-        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(campaign_status=website_constants.shortlisted, proposal=instance)
-        serializer = ShortlistedSpacesSerializerWithDateRangeQuery(shortlisted_suppliers, many=True, context={'inventory_assigned_ids': self.context['inventory_assigned_ids']})
-        return serializer.data
-
-    def get_campaign_running_state(self, instance):
-
-        response = website_utils.get_campaign_status(instance.tentative_start_date, instance.tentative_end_date)
-        if not response.data['status']:
-            raise Exception(response.data)
-
-        return response.data['data']
-
-    class Meta:
-        model = ProposalInfo
-
-
 class ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(ModelSerializer):
+    """
+
+    """
     inventory_type = AdInventoryTypeSerializer(source='ad_inventory_type')
     inventory_duration = DurationTypeSerializer(source='ad_inventory_duration')
     shortlisted_supplier = ShortlistedSpacesSerializer(source='shortlisted_spaces')
@@ -500,5 +435,3 @@ class InventoryActivityAssignmentSerializer(ModelSerializer):
     """
     class Meta:
         model = models.InventoryActivityAssignment
-
-
