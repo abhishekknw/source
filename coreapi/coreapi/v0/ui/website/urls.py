@@ -69,6 +69,7 @@ urlpatterns = [
     url(r'^generate-inventory-activity-summary/$', views.GenerateInventoryActivitySummary.as_view()),
     url(r'^inventory-activity-assignment/$', views.InventoryActivityAssignment.as_view()),
     url(r'^inventory-activity-date-user-assignment/$', views.AssignInventoryActivityDateUsers.as_view()),
+    url(r'^inventory-activity-date-user-reassignment/$', views.ReassignInventoryActivityDateUsers.as_view()),
 
 ]
 

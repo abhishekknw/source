@@ -49,11 +49,13 @@ class AdInventoryLocationMappingSerializer(ModelSerializer):
 class AdInventoryTypeSerializer(ModelSerializer):
     class Meta:
         model = AdInventoryType
+        exclude = ('created_at', 'updated_at')
 
 
 class DurationTypeSerializer(ModelSerializer):
     class Meta:
         model = DurationType
+        exclude = ('created_at', 'updated_at')
 
 
 class PriceMappingSerializer(ModelSerializer):

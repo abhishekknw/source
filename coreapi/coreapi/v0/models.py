@@ -2357,6 +2357,7 @@ class InventoryActivityAssignment(BaseModel):
     activity_date = models.DateTimeField(max_length=255, null=True, blank=True)
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activity_assigned_to', null=True, blank=True)
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activity_assigned_by', null=True, blank=True)
+    reassigned_activity_date = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'inventory_activity_assignment'

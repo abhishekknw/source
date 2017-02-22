@@ -4160,9 +4160,8 @@ class InventoryActivityImage(APIView):
             response = website_utils.is_campaign(proposal_instance)
             if not response.data['status']:
                 return response
-
-            inventory_activity_assignment_objects = models.InventoryActivityAssignment.objects.filter(shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id)
-            serializer = website_serializers.InventoryActivityAssignmentSerializerReadOnly(inventory_activity_assignment_objects, many=True)
+            data = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id)
+            serializer = website_serializers.ShortlistedSpacesSerializerReadOnly(data, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
 
         except KeyError as e:
@@ -4608,7 +4607,7 @@ class AssignInventoryActivityDateUsers(APIView):
         Args:
             request:
 
-        Returns:
+        Returns: success in case dates and users are assigned to all the inventories in the request
 
         """
         class_name = self.__class__.__name__
@@ -4665,7 +4664,36 @@ class AssignInventoryActivityDateUsers(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
-class ReassignInventoryDate(APIView):
+class ReassignInventoryActivityDateUsers(APIView):
     """
+    handles Reassignment of dates on images page.
+    """
+    def post(self, request):
+        """
+        updates inventory activity assignment table with new dates which goes in reassigned_activity_date and user
+        which goes in assigned_to field.
+        Args:
+            request:
 
-    """
+        Returns: success in case update is successfull
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            inventory_activity_assignment_ids = [long(obj_id) for obj_id in data.keys()]
+            user_ids = [long(detail['assigned_to']) for detail in data.values()]
+            inventory_activity_assignment_map = models.InventoryActivityAssignment.objects.in_bulk(inventory_activity_assignment_ids)
+            user_map = models.BaseUser.objects.in_bulk(user_ids)
+            inventory_activity_assignment_objects = []
+            for inventory_activity_assignment_id, detail in data.iteritems():
+                instance = inventory_activity_assignment_map[long(inventory_activity_assignment_id)]
+                instance.reassigned_activity_date = ui_utils.get_aware_datetime_from_string(detail['reassigned_activity_date'])
+                instance.assigned_to = user_map[long(detail['assigned_to'])]
+                inventory_activity_assignment_objects.append(instance)
+            bulk_update(inventory_activity_assignment_objects)
+            return ui_utils.handle_response(class_name, data='successfully reassigned', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
