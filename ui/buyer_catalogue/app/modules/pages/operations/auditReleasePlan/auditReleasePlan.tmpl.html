@@ -55,9 +55,6 @@
       <div class = "col-md-12" style="text-align:right;padding-right:150px">
         <button class="btn btn-danger active notify" ng-click="updateData()">Update</button>
       </div>
-    <!-- </div> -->
-  <!-- </div> -->
-<!-- </div> -->
 <!--Start: Code for Audit Date Modal Window -->
 <div id="auditDateModal" class="modal fade">
   <div class="modal-dialog" style="width:400px">
@@ -68,19 +65,16 @@
         <hr/>
         <div class = "modal-body" style = "width: 450px; height: 400px;">
           <div class="modal-body col-md-4 table-responsive" style="width: 350px; height: 250px">
-              <table class="table table-bordered">
-                <thead>
-                  <tr>
-                    <th ng-repeat="header in audit_dates" class="col-md-5"><b>{{header.header}}</b></th>
-                  </tr>
-                </thead>
+              <table>
                 <tbody>
-                  <td>
-                    <td class="col-md-2">
-                      <input type="text" ng-model="date.audit_date" class="form-control col-md-2" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
-                      <!-- <span class="input-group-btn"> -->
-                        <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
-                      <!-- </span> -->
+                  <tr ng-repeat = "date in auditDates">
+                    <td class="col-md-8">
+                      <p class="input-group">
+                        <input type="text" class="form-control col-md-4"  ng-model="date.audit_date" uib-datepicker-popup="{{format}}" is-open="popup1"  min-date="today" datepicker-options="dateOptions" close-text="Close" date-parser="{{format}}" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
+                        <span class="input-group-btn">
+                          <button type="button" class="btn btn-default" ng-click="popup1=true"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                      </p>
                     </td>
                     <td>
                       <button class="btn btn-danger active notify" ng-click="addAuditDate()">Add</button>

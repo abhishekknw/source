@@ -316,6 +316,7 @@ class AuditDateSerializer(ModelSerializer):
 class InventoryActivityImageSerializer(ModelSerializer):
     class Meta:
         model = models.InventoryActivityImage
+        exclude = ('created_at', 'updated_at')
 
 
 class InventoryActivityAssignmentSerializerWithImages(ModelSerializer):
@@ -324,6 +325,7 @@ class InventoryActivityAssignmentSerializerWithImages(ModelSerializer):
 
     class Meta:
         model = models.InventoryActivityAssignment
+        exclude = ('created_at', 'updated_at')
 
 
 class InventoryActivitySerializerWithInventoryAssignmentsAndImages(ModelSerializer):
@@ -332,6 +334,7 @@ class InventoryActivitySerializerWithInventoryAssignmentsAndImages(ModelSerializ
 
     class Meta:
         model = models.InventoryActivity
+        exclude = ('created_at', 'updated_at')
 
 
 class ShortlistedInventoryPricingSerializerReadOnly(ModelSerializer):
@@ -342,6 +345,7 @@ class ShortlistedInventoryPricingSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.ShortlistedInventoryPricingDetails
+        exclude = ('created_at', 'updated_at', 'ad_inventory_type', 'ad_inventory_duration')
 
 
 class ShortlistedInventoryPricingSerializerWithDateRangeReadOnly(ModelSerializer):
@@ -402,6 +406,7 @@ class ShortlistedSpacesSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.ShortlistedSpaces
+        exclude = ('created_at', 'updated_at', 'space_mapping')
 
 
 class PriceMappingDefaultSerializerReadOnly(ModelSerializer):
@@ -484,7 +489,6 @@ class InventoryActivityAssignmentSerializerReadOnly(ModelSerializer):
 
     images = InventoryActivityImageSerializer(many=True, source='inventoryactivityimage_set')
     shortlisted_inventory_details = ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly()
-
 
     class Meta:
         model = models.InventoryActivityAssignment
