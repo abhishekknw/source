@@ -27,7 +27,7 @@
             <td class="col-md-1">
               <button  class="btn btn-default" data-target="#manageDatesModal" data-toggle="modal" ng-click="getActivityDates(filter.detail)">Manage Date</button>
               </br>
-              <button  class="btn btn-default" data-target="#showDatesModal" data-toggle="modal" ng-click="">View Dates</button>
+              <button  class="btn btn-default" data-target="#showDatesModal" data-toggle="modal" ng-click="showActivityDates(filter.detail)">View Dates</button>
             </td>
             <!-- <td class="col-md-2">
               <input type="text" ng-model="filter.detail.release_date" ng-change="addReleaseDate(filter.detail,filter.detail.release_date)" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" date-parser="{{format}}" ng-model-options="{timezone:'UTC'}"/>
@@ -211,7 +211,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title">Assign</h4>
+        <h4 class="modal-title">Activity Date & Assigned User Details</h4>
         <hr/>
         <div class = "modal-body" style = "width: 650px; height: 300px;">
           <div class="modal-body col-md-4 table-responsive" style="width: 650px; height: 350px">
@@ -221,22 +221,23 @@
                     <th ng-repeat="header in assignModal_headers" class="col-md-2" style="text-align: center;"><b>{{header.header}}</b></th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr ng-repeat = "inventory in inventoryList">
-                    <td>{{inventory.id}}</td>
-                    <td>{{inventory.activity_type}}</td>
-                    <td>{{inventory.activity_date|limitTo:10}}</td>
-                    <td class="col-md-2">
-                      <select class="form-control spacing" ng-model="inventory.user">s
-                        <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
-                      </select>
+                <tbody ng-repeat = "inventory in ActivityDatesData">
+                  <tr ng-repeat = "activity in inventory.inventory_activities">
+                    <td>{{inventory.inventory_id}}</td>
+                    <td>{{activity.activity_type}}</td>
+                    <td>
+                      <div ng-repeat = "date in activity.inventory_activity_assignment">
+                        {{date.activity_date|limitTo:10}}</hr>
+                      </div>
+                    </td>
+                    <td>
+                      <div ng-repeat = "user in activity.inventory_activity_assignment">
+                        {{user.assigned_to}}
+                      </div>
                     </td>
                   </tr>
                 </tbody>
               </table>
-              <div class = "col-md-12" style="text-align:right;padding-right:150px">
-                <button class="btn btn-danger active notify" ng-click="saveUserForActivity()">Save</button>
-              </div>
             </div>
         </div>
       </div>
