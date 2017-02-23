@@ -3778,7 +3778,7 @@ class CampaignInventory(APIView):
 
 class CampaignSuppliersInventoryList(APIView):
     """
-    @Android API
+    works as @Android API and as website API.
 
     List all valid shortlisted suppliers and there respective shortlisted inventories belonging to any campaign in which
     shortlisted inventories have release, closure, or audit dates within delta d days from current date
@@ -3794,17 +3794,28 @@ class CampaignSuppliersInventoryList(APIView):
 
         try:
             result = {}
+            # both are optional. generally the 'assigned_to' query is given by android, and 'proposal_id' query is given
+            # by website
+            assigned_to = request.query_params.get('assigned_to')
+            proposal_id = request.query_params.get('proposal_id')
 
-            assigned_to = int(request.query_params['assigned_to'])
-
+            # constructs a Q object based on current date and delta d days defined in constants
             assigned_date_range_query = website_utils.construct_date_range_query('activity_date')
             reassigned_date_range_query = website_utils.construct_date_range_query('reassigned_activity_date')
+
+            proposal_query = Q()
+            if proposal_id:
+                proposal_query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id)
+
+            assigned_to_query = Q()
+            if assigned_to:
+                assigned_to_query = Q(assigned_to_id=long(assigned_to))
 
             # we do a huge query to fetch everything we need at once.
             inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
                 select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
-                filter(assigned_date_range_query|reassigned_date_range_query, assigned_to_id=assigned_to).values(
+                filter(assigned_date_range_query|reassigned_date_range_query, proposal_query, assigned_to_query).values(
 
                 'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type',
                 'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
@@ -3819,12 +3830,14 @@ class CampaignSuppliersInventoryList(APIView):
                 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
             )
 
-            total_shortlisted_spaces_list = []
+            total_shortlisted_spaces_list = []  # this is required to fetch supplier details later
+            inv_act_assignment_ids = set()  # this is required to fetch images data later
             # the idea of this loop is to separate different table data in different keys.
             for content in inv_act_assignment_objects:
                 if not result.get('shortlisted_suppliers'):
                     result['shortlisted_suppliers'] = {}
 
+                # fetch data fro shortlisted_suppliers key
                 shortlisted_space_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces']
                 proposal_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id']
                 supplier_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id']
@@ -3845,7 +3858,7 @@ class CampaignSuppliersInventoryList(APIView):
 
                 if not result.get('shortlisted_inventories'):
                     result['shortlisted_inventories'] = {}
-
+                # fetch data for shortlisted_inventories key
                 shortlisted_inventory_id = content['inventory_activity__shortlisted_inventory_details']
                 inventory_id = content['inventory_activity__shortlisted_inventory_details__inventory_id']
                 inventory_content_type_id = content['inventory_activity__shortlisted_inventory_details__inventory_content_type']
@@ -3864,7 +3877,7 @@ class CampaignSuppliersInventoryList(APIView):
 
                 if not result.get('inventory_activities'):
                     result['inventory_activities'] = {}
-
+                # fetch data for inventory activity key
                 inventory_activity_id = content['inventory_activity']
                 activity_type = content['inventory_activity__activity_type']
 
@@ -3875,16 +3888,36 @@ class CampaignSuppliersInventoryList(APIView):
 
                 if not result.get('inventory_activity_assignment'):
                     result['inventory_activity_assignment'] = {}
-
+                # fetch data for inventory activity assignment
                 inventory_activity_assignment_id = content['id']
                 activity_date = content['activity_date']
                 reassigned_activity_date = content['reassigned_activity_date']
+                inv_act_assignment_ids.add(inventory_activity_assignment_id)
 
                 result['inventory_activity_assignment'][inventory_activity_assignment_id] = {
                     'activity_date': activity_date,
                     'reassigned_activity_date': reassigned_activity_date,
                     'inventory_activity_id': inventory_activity_id
                 }
+
+            # after the result is prepared, here we collect images data
+            inventory_activity_images = models.InventoryActivityImage.objects.filter(inventory_activity_assignment_id__in=inv_act_assignment_ids)
+            images = {}
+            for inv_act_image in inventory_activity_images:
+                image_id = inv_act_image.id
+
+                if not images.get(image_id):
+                    images[image_id] = {}
+
+                images[image_id] = {
+                    'image_path': inv_act_image.image_path,
+                    'comment': inv_act_image.comment,
+                    'actual_activity_date': inv_act_image.actual_activity_date,
+                    'inventory_activity_assignment_id': inv_act_image.inventory_activity_assignment_id
+                }
+
+            # set images data to final result
+            result['images'] = images
 
             # # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
             response = website_utils.get_objects_per_content_type(total_shortlisted_spaces_list)
