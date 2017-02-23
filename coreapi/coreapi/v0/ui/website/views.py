@@ -4163,6 +4163,7 @@ class ImportCorporateData(APIView):
 
 class InventoryActivityImage(APIView):
     """
+     @Android API. used to insert image paths from Android.
      makes an entry into InventoryActivityImage table.
     """
     def post(self, request):
@@ -4179,7 +4180,14 @@ class InventoryActivityImage(APIView):
             shortlisted_inventory_detail_instance = models.ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_detail_id'])
             activity_date = request.data['activity_date']
             activity_type = request.data['activity_type']
-            activity_by = int(request.data['activity_by'])
+            activity_by = long(request.data['activity_by'])
+            actual_activity_date = request.data['actual_activity_date']
+            use_assigned_date = int(request.data['use_assigned_date'])
+
+            if use_assigned_date:
+                date_query = Q(activity_date=ui_utils.get_aware_datetime_from_string(activity_date))
+            else:
+                date_query = Q(reassigned_activity_date=ui_utils.get_aware_datetime_from_string(activity_date))
 
             user = models.BaseUser.objects.get(id=activity_by)
 
@@ -4189,24 +4197,23 @@ class InventoryActivityImage(APIView):
             if activity_type not in valid_activity_types:
                 return ui_utils.handle_response(class_name, data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
 
-            instance = models.InventoryActivityAssignment.objects.get(
-                shortlisted_inventory_details=shortlisted_inventory_detail_instance,
-                activity_type=activity_type,
-                activity_date=activity_date,
+            inventory_activity_assignment_instance = models.InventoryActivityAssignment.objects.get(
+                date_query,
+                inventory_activity__shortlisted_inventory_details=shortlisted_inventory_detail_instance,
+                inventory_activity__activity_type=activity_type,
             )
             # if it's not superuser and it's not assigned to take the image
-            if (not user.is_superuser) and (not instance.assigned_to_id == activity_by):
+            if (not user.is_superuser) and (not inventory_activity_assignment_instance.assigned_to_id == activity_by):
                 return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
 
-            data = {
-                'inventory_activity_assignment': instance,
-                'image_path': request.data['image_path'],
-                'comment': request.data['comment'],
-                'actual_activity_date': activity_date,
-                'activity_by': models.BaseUser.objects.get(id=activity_by)
-            }
+            # image path shall be unique
+            instance, is_created = models.InventoryActivityImage.objects.get_or_create(image_path=request.data['image_path'])
+            instance.inventory_activity_assignment = inventory_activity_assignment_instance
+            instance.comment = request.data['comment']
+            instance.actual_activity_date = actual_activity_date
+            instance.activity_by = models.BaseUser.objects.get(id=activity_by)
+            instance.save()
 
-            instance = models.InventoryActivityImage.objects.create(**data)
             return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
 
         except Exception as e:
@@ -4227,33 +4234,6 @@ class InventoryActivityImage(APIView):
             pk = request.data['id']
             models.InventoryActivityImage.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data=pk, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    def get(self, request):
-        """
-        Args:
-            self:
-            request: Request Data
-
-        Returns: matching InventoryActivityImage objects related to a given proposal
-
-        """
-        class_name = self.__class__.__name__
-
-        try:
-            proposal_id = request.query_params['proposal_id']
-
-            proposal_instance = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-            response = website_utils.is_campaign(proposal_instance)
-            if not response.data['status']:
-                return response
-            data = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id)
-            serializer = website_serializers.ShortlistedSpacesSerializerReadOnly(data, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-
-        except KeyError as e:
-            return ui_utils.handle_response(class_name, data='Key Error', exception_object=e)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -4494,6 +4474,8 @@ class SupplierAmenity(APIView):
 
 class BulkInsertInventoryActivityImage(APIView):
     """
+    @Android API
+
     used by android app to bulk upload image's paths when internet is switched on and there are images yet to
     to be synced to django backend
     """
