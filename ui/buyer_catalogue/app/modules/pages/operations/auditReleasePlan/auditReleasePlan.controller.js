@@ -21,9 +21,9 @@ angular.module('catalogueApp')
       ];
       $scope.assignModal_headers = [
         {header : 'AdInventory Id'},
-        {header : 'Activity'},
+        {header : 'Activity Name'},
         {header : 'Activity Date'},
-        {header : 'Action'},
+        {header : 'Assigned User'},
       ];
       $scope.activity_names = [
         {header : 'Release' , code : 'RE'},
@@ -52,6 +52,7 @@ angular.module('catalogueApp')
 
 
       $scope.auditDates = [];
+      function getCampaignReleaseDetails(){
       auditReleasePlanService.getCampaignReleaseDetails($scope.campaign_id)
       	.success(function(response, status){
           console.log(response);
@@ -62,6 +63,8 @@ angular.module('catalogueApp')
       	.error(function(response, status){
       		console.log("error occured", status);
       	});
+      }
+      getCampaignReleaseDetails();
         var setDataToModel = function(suppliers){
           for(var i=0;i<suppliers.length;i++){
             angular.forEach(suppliers[i].shortlisted_inventories, function(filter){
@@ -172,6 +175,7 @@ angular.module('catalogueApp')
       console.log($scope.inventoryList);
       auditReleasePlanService.saveUser($scope.inventoryList)
       .success(function(response, status){
+        getCampaignReleaseDetails();
       })
       .error(function(response, status){
         console.log("error occured", status);
@@ -188,6 +192,7 @@ angular.module('catalogueApp')
     $scope.key;
     $scope.invIdList = [];
     $scope.addInventory = function(inventory,index){
+
       if(inventory.status == true)
         $scope.invIdList.push(inventory.id);
       else
@@ -281,6 +286,10 @@ angular.module('catalogueApp')
     if (day.length < 2) day = '0' + day;
 
     return [year, month, day].join('-');
+  }
+  $scope.showActivityDates = function(inventory){
+    console.log(inventory);
+    $scope.ActivityDatesData = inventory;
   }
 
   }]);
