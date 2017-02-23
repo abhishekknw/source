@@ -1,61 +1,69 @@
-<link rel="stylesheet" href="modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.css" />
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 </br></br></br><back-Button></back-Button>
-<h3 style = "margin-left: 460px; margin-top: 60px;">Audit/Release Plan Details</h3>
-  <table class="table-responsive  table-bordered table-scroll" style="text-align: center;margin-left:50px;margin-right:100px;">
-    <thead>
-      <tr>
-        <th ng-repeat="header in headings"  style="text-align: center;">{{header.header}}</th>
-      </tr>
-    </thead>
-    <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
-      <tr ng-repeat="(key,filter) in getFilters(supplier)">
-        <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">
-        {{supplier.phase}}
-        </td>
-        <td class="col-md-1">{{key}}</td>
-        <td class="col-md-1">{{supplier.object_id}}</td>
-        <td class="col-md-1">{{}}</td>
-        <td class="col-md-2">
-           <p class="input-group">
-            <input type="text" class="form-control" ng-model="filter.detail.release_date" uib-datepicker-popup="{{format}}" is-open="popup1"  min-date="today" datepicker-options="dateOptions"  ng-change="addReleaseDate(filter.detail,filter.detail.release_date)" close-text="Close" date-parser="{{format}}" ng-model-options="{timezone:'UTC'}"/>
-            <span class="input-group-btn">
-              <button type="button" class="btn btn-default" ng-click="popup1=true"><i class="glyphicon glyphicon-calendar"></i></button>
-            </span>
-           </p>
-        </td>
-        <td class="col-md-1">
-          <a class="" data-target="#auditDateModal" data-toggle="modal" ng-click="setAuditDate(filter,$parent.$index,key)"><b>Add Date</b></a>
-        </td>
-        <td class="col-md-2">
-          <p class="input-group">
-            <input type="text" class="form-control" ng-model="filter.detail.closure_date"  ng-change="addClosureDate(filter.detail,filter.detail.closure_date)" uib-datepicker-popup="{{format}}" is-open="popup3"  min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}" date-parser="{{format}}"/>
-            <span class="input-group-btn">
-              <button type="button" class="btn btn-default" ng-click="popup3=true"><i class="glyphicon glyphicon-calendar"></i></button>
-            </span>
-           </p>
-        </td>
-        <td class="col-md-1">
-          <button data-target="#assignUserModal" data-toggle="modal" class="btn btn-danger active notify" ng-click="assignUserToActivity(filter.detail)">Assign</button>
-        </td>
-        <td class="col-md-8"><textarea rows="4" cols="50" name="comments" ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)" class="form-control commentBox"></textarea></td>
-      </tr>
-    </tbody>
-  </table>
+<h3 style = "margin-left: 460px; margin-top: 60px;">Audit / Release Plan Details</h3>
+<!-- <div class="container"> -->
+  <!-- <div class="row"> -->
+    <!-- <div class="panel panel-default"> -->
+      <table class="table-responsive  table-bordered table-scroll">
+        <thead>
+          <tr>
+            <th ng-repeat="header in headings"  style="text-align: center;">{{header.header}}</th>
+          </tr>
+        </thead>
+        <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
+          <tr ng-repeat="(key,filter) in getFilters(supplier)">
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">
+            {{supplier.phase}}
+            </td>
+            <td class="col-md-1">{{key}}</td>
+            <td class="col-md-1">{{supplier.object_id}}</td>
+            <td class="col-md-1">{{supplier.supplier_code}}</td>
+            <td class="col-md-3">
+              <div ng-repeat="inventory in filter.detail" id="buttons">
+                <input type="checkbox" class="" ng-model="inventory.status" ng-value="true" ng-click="addInventory(inventory,index)"/>{{inventory.inventory_id}}
+              </div>
+            </td>
+            <td class="col-md-1">
+              <button  class="btn btn-default" data-target="#manageDatesModal" data-toggle="modal" ng-click="getActivityDates(filter.detail)">Manage Date</button>
+              </br>
+              <button  class="btn btn-default" data-target="#showDatesModal" data-toggle="modal" ng-click="">View Dates</button>
+            </td>
+            <!-- <td class="col-md-2">
+              <input type="text" ng-model="filter.detail.release_date" ng-change="addReleaseDate(filter.detail,filter.detail.release_date)" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" date-parser="{{format}}" ng-model-options="{timezone:'UTC'}"/>
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+              </span>
+            </td>
+            <td class="col-md-1">
+              <a class="" data-target="#auditDateModal" data-toggle="modal" ng-click="setAuditDate(filter,$parent.$index,key)"><b>Add Date</b></a>
+            </td>
+            <td class="col-md-2">
+              <input type="text" ng-model="filter.detail.closure_date" ng-change="addClosureDate(filter.detail,filter.detail.closure_date)" class="form-control spacing" uib-datepicker-popup="{{format}}" is-open="popup3" min-date="today" datepicker-options="dateOptions" close-text="Close" alt-input-formats="altInputFormats" ng-model-options="{timezone:'UTC'}"/>
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default" ng-click="popup3 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+              </span>
+            </td> -->
+            <!-- <td class="col-md-1">
+              <button data-target="#assignUserModal" data-toggle="modal" class="btn btn-danger active notify" ng-click="assignUserToActivity(filter.detail)">Assign</button>
+            </td> -->
+            <td class="col-md-8"><textarea rows="4" cols="50" name="comments" ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing"></textarea></td>
+          </tr>
+        </tbody>
+      </table>
     </br>
-      <div class = "col-md-12 updateButton">
+      <div class = "col-md-12" style="text-align:right;padding-right:150px">
         <button class="btn btn-danger active notify" ng-click="updateData()">Update</button>
       </div>
 <!--Start: Code for Audit Date Modal Window -->
 <div id="auditDateModal" class="modal fade">
-  <div class="modal-dialog" style="width:500px">
+  <div class="modal-dialog" style="width:400px">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title">Enter Multiple Audit Dates below</h4>
+        <h4 class="modal-title">Contact Details</h4>
         <hr/>
-        <div class = "modal-body" style = "width: 450px; height: 300px;">
+        <div class = "modal-body" style = "width: 450px; height: 400px;">
           <div class="modal-body col-md-4 table-responsive" style="width: 350px; height: 250px">
               <table>
                 <tbody>
@@ -69,25 +77,97 @@
                       </p>
                     </td>
                     <td>
-                      <a class="btn btn-danger btn-sm"  style = "margin-top: -13px"><span class="glyphicon glyphicon-trash" uib-tooltip = "Delete Date" ng-click="deleteDate($index)"></span></a>
+                      <button class="btn btn-danger active notify" ng-click="addAuditDate()">Add</button>
+                    </td>
+                    <td>
+                      <button class="btn btn-danger active notify" ng-click="deleteDate($index)">Delete</button>
                     </td>
                   </tr>
+                  </td>
+                </tr>
+
                 </tbody>
               </table>
             </div>
           </br>
-          <div class = "col-md-12" style="text-align:left">
-            <button class="btn btn-danger active notify" ng-click="saveAuditDates()">Save</button>
-            <button class="btn btn-danger active notify" ng-click="addDate()">Add Date</button>
-          </div>
+            <div class = "col-md-12" style="text-align:left">
+              <button class="btn btn-danger active notify" ng-click="saveAuditDates()">Save</button>
+            </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 <!--End: Code for Audit Date Modal Window -->
-<!--Start: Code for contacts Modal Window -->
-<div id="assignUserModal" class="modal fade">
+<!--Start: Code for assign Modal Window -->
+<div id="manageDatesModal" class="modal fade">
+  <div class="modal-dialog" style="width:700px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Manage Activity Dates</h4>
+        <hr/>
+        <div class = "modal-body" style = "width: 650px; height: 300px;">
+          <div class="modal-body col-md-4 table-responsive" style="width: 650px; height: 350px">
+              <table class="table table-bordered table-align">
+                <tbody>
+                  <tr ng-repeat = "inventory in invActivityData">
+                    <td class="col-md-1">{{inventory.activity_type}}</td>
+                    <td class="col-md-2">
+                      <input type="text" ng-model="inventory.act_date.date" ng-change="setDate(inventory.act_date.date)" class="form-control col-md-2" uib-datepicker-popup="yyyy-MM-dd" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close"  ng-model-options="{timezone:'UTC'}"/>
+                      <!-- <span class="input-group-btn"> -->
+                        <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+                      <!-- </span> -->
+                    </td>
+                    <td class="col-md-2">
+                      <select class="form-control spacing" ng-model="inventory.act_date.userCode">
+                        <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </br>
+              <label>Audit Dates</label>
+              <table>
+                <tbody>
+                  <tr ng-repeat="inventory in invActivityAuditData.audit_dates">
+                    <td class="col-md-2">
+                      <input type="text" ng-model="inventory.date" ng-change="setDate(inventory.date)" class="form-control col-md-2" uib-datepicker-popup="yyyy-MM-dd" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close"  ng-model-options="{timezone:'UTC'}"/>
+                      <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
+                      </span>
+                    </td>
+                    <td class="col-md-2" rowspan="invActivityAuditData.audit_dates.length">
+                      <select class="form-control spacing" ng-model="inventory.userCode">
+                        <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
+                      </select>
+                    </td>
+                    <td class="col-md-1">
+                       <a class="btn btn-danger btn-sm"  >
+                         <span class="glyphicon glyphicon-plus" uib-tooltip = "Add Date" ng-click="addAuditDate(invActivityAuditData.audit_dates)"></span>
+                       </a>
+                    </td>
+                    <td class="col-md-1">
+                       <a class="btn btn-danger btn-sm"  >
+                         <span class="glyphicon glyphicon-trash" uib-tooltip = "Delete Date" ng-click="removeAuditDate(invActivityAuditData.audit_dates,$index)"></span>
+                       </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class = "col-md-12" style="text-align:right;padding-right:150px">
+                <button class="btn btn-danger active notify" ng-click="saveActivityDates()">Save</button>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for contacts Modal Window -->
+<!--Start: Code for manage Dates Modal Window -->
+<div id="" class="modal fade">
   <div class="modal-dialog" style="width:700px">
     <div class="modal-content">
       <div class="modal-header">
@@ -124,4 +204,43 @@
     </div>
   </div>
 </div>
-<!--End: Code for contacts Modal Window -->
+<!--End: Code for manage dates Modal Window -->
+<!--Start: Code for show Dates Modal Window -->
+<div id="showDatesModal" class="modal fade">
+  <div class="modal-dialog" style="width:700px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Assign</h4>
+        <hr/>
+        <div class = "modal-body" style = "width: 650px; height: 300px;">
+          <div class="modal-body col-md-4 table-responsive" style="width: 650px; height: 350px">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th ng-repeat="header in assignModal_headers" class="col-md-2" style="text-align: center;"><b>{{header.header}}</b></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat = "inventory in inventoryList">
+                    <td>{{inventory.id}}</td>
+                    <td>{{inventory.activity_type}}</td>
+                    <td>{{inventory.activity_date|limitTo:10}}</td>
+                    <td class="col-md-2">
+                      <select class="form-control spacing" ng-model="inventory.user">s
+                        <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class = "col-md-12" style="text-align:right;padding-right:150px">
+                <button class="btn btn-danger active notify" ng-click="saveUserForActivity()">Save</button>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for show dates Modal Window -->
