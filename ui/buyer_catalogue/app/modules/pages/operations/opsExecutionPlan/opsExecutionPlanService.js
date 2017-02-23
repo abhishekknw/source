@@ -7,7 +7,7 @@ angular.module('catalogueApp')
    var opsExecutionPlanService = {};
 
    opsExecutionPlanService.getOpsExecutionImageDetails = function(proposal_id){
-        var url = url_base + "inventory-activity-image/" + "?proposal_id=" + proposal_id;
+        var url = url_base + "campaigns-suppliers-inventory-list/" + "?proposal_id=" + proposal_id;
      return machadaloHttp.get(url);
    }
 
@@ -21,6 +21,10 @@ angular.module('catalogueApp')
      return machadaloHttp.get(url);
    }
 
+   opsExecutionPlanService.saveReAssignedActivities = function(data){
+     var url = url_base + "inventory-activity-date-user-reassignment/";
+     return machadaloHttp.post(url,data);
+   }
 
    return opsExecutionPlanService;
 }]);
