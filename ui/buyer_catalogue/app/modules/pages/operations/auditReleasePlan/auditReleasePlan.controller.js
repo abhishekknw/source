@@ -52,6 +52,7 @@ angular.module('catalogueApp')
 
 
       $scope.auditDates = [];
+      //initial call to get release Data
       function getCampaignReleaseDetails(){
       auditReleasePlanService.getCampaignReleaseDetails($scope.campaign_id)
       	.success(function(response, status){
@@ -132,6 +133,8 @@ angular.module('catalogueApp')
       $scope.updateData = function(){
         auditReleasePlanService.updateAuditReleasePlanDetails($scope.campaign_id,$scope.releaseDetails.shortlisted_suppliers)
         .success(function(response, status){
+          getCampaignReleaseDetails();
+          $scope.resetData();
       	})
       	.error(function(response, status){
       		console.log("error occured", status);
@@ -191,16 +194,26 @@ angular.module('catalogueApp')
     };
     $scope.key;
     $scope.invIdList = [];
-    $scope.addInventory = function(inventory,index){
-
-      if(inventory.status == true)
+    //adding adIds to list to send in request
+    $scope.addInventory = function(inventory,rowIndex,index){
+      if(inventory.status == true){
         $scope.invIdList.push(inventory.id);
+        $scope.selectedRow = rowIndex;
+      }
       else
         $scope.invIdList.splice(index,1);
     }
+    //To disable other checkboxes of other rows of adInventory Id
+    $scope.isDisable = function(index){
+      if($scope.invIdList.length == 0)
+        $scope.selectedRow = undefined;
+      if($scope.selectedRow == undefined || $scope.selectedRow == index)
+        return false;
+      else
+        return true;
+    }
     $scope.setDate = function(date){
       date = formatDate(date);
-      console.log(date);
     }
     $scope.addAuditDate = function(inventory){
       console.log(inventory);
@@ -214,20 +227,24 @@ angular.module('catalogueApp')
       inventory.splice(index,1);
     }
     $scope.saveActivityDates = function(){
+      //below function creates complex request structure for data
       editActivityDates();
-      console.log($scope.requestaActivityData);
       auditReleasePlanService.saveActivityDetails($scope.requestaActivityData)
       .success(function(response, status){
+        getCampaignReleaseDetails();
+        $scope.resetData();
       })
       .error(function(response, status){
         console.log("error occured", status);
       });
     }
-     $scope.getActivityDates = function(inventoryList){
-       for(var i=0;i<inventoryList.length; i++){
-         inventoryList[i].status = false;
-       }
-       console.log(inventoryList);
+     $scope.getActivityDates = function(supplier){
+       angular.forEach(supplier.shortlisted_inventories, function(inventoryList,inventory){
+          for(var i=0; i<inventoryList.detail.length; i++){
+            inventoryList.detail[i].status = false;
+          }
+       });
+      //  console.log(inventoryList);
      }
     var editActivityDates = function(){
       // console.log($scope.invActivityData);
@@ -254,7 +271,6 @@ angular.module('catalogueApp')
       }
 
       auditData.activity_type = $scope.invActivityAuditData.activity_type;
-      console.log($scope.invActivityAuditData.audit_dates[0].date);
       for(var i=0; i<$scope.invActivityAuditData.audit_dates.length; i++){
         if($scope.invActivityAuditData.audit_dates[i].date){
           // auditData.date_user_assignments[i] = {};
@@ -264,32 +280,32 @@ angular.module('catalogueApp')
           auditData.date_user_assignments[date] = userCode;
         }
       }
-      console.log(auditData);
       data.push(auditData);
       $scope.requestaActivityData = {
         shortlisted_inventory_id_detail : $scope.invIdList,
         assignment_detail : data,
       };
-      console.log(data);
-      // console.log($scope.invActivityData);
     }
-    function makeAssignActivityData(inventory, inventoryData){
-      data.assignment_detail.push()
-    }
+
+    //To convert date in yyyy-MM-dd format
     function formatDate(date) {
-    var d = new Date(date),
-        month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate(),
-        year = d.getFullYear();
-    console.log(month,day,year);
-    if (month.length < 2) month = '0' + month;
-    if (day.length < 2) day = '0' + day;
+      var d = new Date(date),
+          month = '' + (d.getMonth() + 1),
+          day = '' + d.getDate(),
+          year = d.getFullYear();
+      if (month.length < 2) month = '0' + month;
+      if (day.length < 2) day = '0' + day;
 
-    return [year, month, day].join('-');
-  }
-  $scope.showActivityDates = function(inventory){
-    console.log(inventory);
-    $scope.ActivityDatesData = inventory;
-  }
-
-  }]);
+      return [year, month, day].join('-');
+    }
+    $scope.showActivityDates = function(inventory){
+      $scope.ActivityDatesData = inventory;
+    }
+    //event on modal close i.e - clear invIdList
+    $scope.resetData = function(){
+      $scope.invIdList = [];
+      $scope.selectedRow = undefined;
+      $('#manageDatesModal').on('hide.bs.modal', function () {
+      })
+    }
+}]);

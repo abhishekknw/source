@@ -26,6 +26,7 @@
             <td class="col-md-2">{{inventory.act_date|limitTo:10}}</td>
             <td class="col-md-2"> <input type="checkbox" ng-model="inventory.status" ng-value="true" ng-click="addActivity($index,inventory)"></td>
             <td class="col-md-2">{{inventory.reAssigner_user}}</td>
+            <td class="col-md-2">{{inventory.reAssign_date}}</td>
           </tr>
         </tbody>
       </table>
@@ -116,8 +117,8 @@
               <tr ng-repeat="header in summaryHeaders">
                 <td><label>{{header.header}}</label></td>
                 <td>{{summaryData.Total[header.key]}}</td>
-                <td>{{summaryData.Actual[header.key]}}</td>
-                <td>{{(summaryData.Actual[header.key]/summaryData.Total[header.key])*100|limitTo:5}}%</td>
+                <td>{{summaryData.Actual[header.key]||0}}</td>
+                <td>{{((summaryData.Actual[header.key])||0/summaryData.Total[header.key])*100|limitTo:5}}%</td>
               </tr>
             </tbody>
           </table>

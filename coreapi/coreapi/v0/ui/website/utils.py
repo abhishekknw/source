@@ -4670,24 +4670,23 @@ def get_possible_activity_count(proposal_id):
     """
     function = get_possible_activity_count.__name__
     try:
-        sql = "select count(a.id) , count(b.audit_date) from shortlisted_inventory_pricing_details" \
-              " as a INNER JOIN audit_date as b on a.id = b.shortlisted_inventory_id" \
-              " where a.id in  ( select c.id from shortlisted_inventory_pricing_details as c " \
-              "INNER JOIN shortlisted_spaces as d on c.shortlisted_spaces_id = d.id where d.proposal_id = %s )"
+
+        sql = " select a.activity_type, count(b.activity_date) as count from inventory_activity as a  " \
+              " INNER JOIN inventory_activity_assignment as b on a.id = b.inventory_activity_id " \
+              " INNER JOIN shortlisted_inventory_pricing_details as c on c.id = a.shortlisted_inventory_details_id" \
+              " INNER JOIN shortlisted_spaces as d on d.id = c.shortlisted_spaces_id WHERE d.proposal_id = %s " \
+              " group by a.activity_type"
 
         with connection.cursor() as cursor:
 
             cursor.execute(sql, [proposal_id])
-            row = cursor.fetchone()
+            act_data = dict_fetch_all(cursor)
 
-        data = None
+        # act_data will be an array of dicts. converting to just a dict with key as act name
+        data = {}
+        for item in act_data:
+            data[item['activity_type']] = item['count']
 
-        if row:
-            data = {
-                website_constants.activity_type['RELEASE']: row[0],
-                website_constants.activity_type['CLOSURE']: row[0],
-                website_constants.activity_type['AUDIT']: row[1]
-            }
         return ui_utils.handle_response(function, data=data, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
@@ -4705,10 +4704,13 @@ def get_actual_activity_count(proposal_id):
     """
     function = get_actual_activity_count.__name__
     try:
-        sql = "select activity_type,  count( distinct activity_date) as count from inventory_activity_image" \
-              " where  shortlisted_inventory_details_id in (  select a.id from shortlisted_inventory_pricing_details " \
-              "as a INNER JOIN shortlisted_spaces as b ON a.shortlisted_spaces_id = b.id " \
-              "where b.proposal_id = %s )  group by activity_type"
+
+        sql = " select a.activity_type, count(b.activity_date) as count from inventory_activity as a " \
+              " INNER JOIN inventory_activity_assignment as b on a.id = b.inventory_activity_id " \
+              " INNER JOIN shortlisted_inventory_pricing_details as c on c.id = a.shortlisted_inventory_details_id " \
+              " INNER JOIN shortlisted_spaces as d on d.id = c.shortlisted_spaces_id " \
+              " INNER JOIN inventory_activity_image as e  on e.inventory_activity_assignment_id = b.id " \
+              " WHERE d.proposal_id = %s group by a.activity_type "
 
         with connection.cursor() as cursor:
             cursor.execute(sql, [proposal_id])
