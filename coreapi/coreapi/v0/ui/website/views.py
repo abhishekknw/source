@@ -3895,8 +3895,8 @@ class CampaignSuppliersInventoryList(APIView):
                 inv_act_assignment_ids.add(inventory_activity_assignment_id)
 
                 result['inventory_activity_assignment'][inventory_activity_assignment_id] = {
-                    'activity_date': activity_date,
-                    'reassigned_activity_date': reassigned_activity_date,
+                    'activity_date': activity_date.date() if activity_date else None,
+                    'reassigned_activity_date': reassigned_activity_date.date() if reassigned_activity_date else None,
                     'inventory_activity_id': inventory_activity_id
                 }
 
@@ -3912,12 +3912,9 @@ class CampaignSuppliersInventoryList(APIView):
                 images[image_id] = {
                     'image_path': inv_act_image.image_path,
                     'comment': inv_act_image.comment,
-                    'actual_activity_date': inv_act_image.actual_activity_date,
+                    'actual_activity_date': inv_act_image.actual_activity_date.date() if inv_act_image.actual_activity_date else None,
                     'inventory_activity_assignment_id': inv_act_image.inventory_activity_assignment_id
                 }
-
-            # set images data to final result
-            result['images'] = images
 
             # # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
             response = website_utils.get_objects_per_content_type(total_shortlisted_spaces_list)
@@ -3936,7 +3933,8 @@ class CampaignSuppliersInventoryList(APIView):
             supplier_detail = response.data['data']
 
             # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
-            for shortlisted_space_id, detail in result['shortlisted_suppliers'].iteritems():
+            if result:
+                for shortlisted_space_id, detail in result['shortlisted_suppliers'].iteritems():
                     try:
                         detail['supplier_detail'] = supplier_detail[detail['content_type_id'], detail['supplier_id']]
                     except KeyError:
@@ -3944,7 +3942,8 @@ class CampaignSuppliersInventoryList(APIView):
                         # because current data is corrupt as i have manually added suppliers, i have to set this to
                         # empty when KeyError occurres. #todo change this later.
                         detail['supplier_detail'] = {}
-
+                        # set images data to final result
+                result['images'] = images
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
@@ -4487,7 +4486,7 @@ class BulkInsertInventoryActivityImage(APIView):
         Args:
             request: request data that holds info to be updated
 
-        Returns:
+        Returns: 
 
         """
         class_name = self.__class__.__name__
@@ -4503,14 +4502,29 @@ class BulkInsertInventoryActivityImage(APIView):
 
             # this loop makes inv_act_assignment_to_image_data_map which maps a tuple of sid, act_date, act_type to
             # image data this is required later for creation of inv act image objects.
-            image_taken_by = request.data['image_taken_by']
-            inv_image_data = request.data['data']
+            image_taken_by = request.user
+            inv_image_data = request.data
+
+            # pull out all image paths for these assignment objects
+            database_image_paths = models.InventoryActivityImage.objects.all().values_list('image_path', flat=True)
+
+            # to reduce checking of certain image_path in the list above, instead create a dict and map image_paths to some
+            # value like True. it's faster to check for this image_path in the dict rather in the list
+            image_path_dict = {}
+            for image_path in database_image_paths:
+                image_path_dict[image_path] = True
 
             for data in inv_image_data:
-                shortlisted_inv_id = int(data['shortlisted_inventory_detail_id'])
 
+                image_path = data['image_path']
+                if image_path_dict.get(image_path):
+                    # move to next path buddy, we have already stored this path
+                    continue
+
+                shortlisted_inv_id = int(data['shortlisted_inventory_detail_id'])
                 shortlisted_inv_ids.add(shortlisted_inv_id)
-                act_dates.add(data['activity_date'])
+
+                act_dates.add(ui_utils.get_aware_datetime_from_string(data['activity_date']))
                 act_types.add(data['activity_type'])
 
                 if data['activity_type'] not in valid_activity_types:
@@ -4520,55 +4534,48 @@ class BulkInsertInventoryActivityImage(APIView):
                     'image_path': data['image_path'],
                     'comment': data['comment'],
                     'activity_by': image_taken_by,
-                    'actual_activity_date': data['activity_date']
+                    'actual_activity_date': data['activity_date'],
                 }
 
                 try:
+                    # these three keys determine unique inventory assignment object for an image object
                     reference = inv_act_assignment_to_image_data_map[shortlisted_inv_id, data['activity_date'], data['activity_type']]
                     reference.append(image_data)
                 except KeyError:
                     reference = [image_data]
                     inv_act_assignment_to_image_data_map[shortlisted_inv_id, data['activity_date'], data['activity_type']] = reference
 
-            user_who_took_image = models.BaseUser.objects.get(id=image_taken_by)
+            # i can determine weather all images synced up or not by checking this dict because we are not proceeding further in the
+            # above loop if the path is already stored.
+            if not inv_act_assignment_to_image_data_map:
+                return  ui_utils.handle_response(class_name, data=errors.ALL_IMAGES_SYNCED_UP_MESSAGE, success=True)
 
-            if user_who_took_image.is_superuser:
+            # fetch only those objects which have these fields in the list and assigned to the incoming user
+            inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
+                filter(
+                inventory_activity__shortlisted_inventory_details__id__in=shortlisted_inv_ids,
+                inventory_activity__activity_type__in=act_types,
+                activity_date__in=act_dates,
+                assigned_to=image_taken_by
+            )
 
-                inv_act_assignment_objects = models.InventoryActivityAssignment.objects.select_related(
-                    'shortlisted_inventory_details'). \
-                    filter(
-                    shortlisted_inventory_details__id__in=shortlisted_inv_ids,
-                    activity_type__in=act_types,
-                    activity_date__in=act_dates,
-                )
-
-            else:
-                # fetch only those objects which have these fields in the list and assigned to the incoming user
-                inv_act_assignment_objects = models.InventoryActivityAssignment.objects.select_related(
-                    'shortlisted_inventory_details'). \
-                    filter(
-                    shortlisted_inventory_details__id__in=shortlisted_inv_ids,
-                    activity_type__in=act_types,
-                    activity_date__in=act_dates,
-                    assigned_to__id=image_taken_by
-                )
-
-                if not inv_act_assignment_objects:
-                    return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
+            if not inv_act_assignment_objects:
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
 
             # this loop creates actual inv act image objects
             for inv_act_assign in inv_act_assignment_objects:
 
                 image_data_list = inv_act_assignment_to_image_data_map[
 
-                        inv_act_assign.shortlisted_inventory_details.id,
-                        inv_act_assign.activity_date,
-                        inv_act_assign.activity_type
+                        inv_act_assign.inventory_activity.shortlisted_inventory_details.id,
+                        ui_utils.get_date_string_from_datetime(inv_act_assign.activity_date),
+                        inv_act_assign.inventory_activity.activity_type
                 ]
                 for image_data in image_data_list:
+
                     # add two more fields to complete image_data dict
                     image_data['inventory_activity_assignment'] = inv_act_assign
-                    image_data['activity_by'] = user_who_took_image
+                    image_data['activity_by'] = image_taken_by
                     inv_image_objects.append(models.InventoryActivityImage(**image_data))
 
             models.InventoryActivityImage.objects.bulk_create(inv_image_objects)
