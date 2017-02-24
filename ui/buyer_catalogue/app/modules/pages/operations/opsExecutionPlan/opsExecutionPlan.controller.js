@@ -11,6 +11,7 @@ angular.module('catalogueApp')
          {header : 'Activity Name'},
         {header : 'Activity Date'},
         {header : 'ReAssign'},
+        {header : 'ReAssigned User'},
       ];
       $scope.supplier_headings = [
         {header : 'Supplier Id'},
@@ -81,12 +82,13 @@ angular.module('catalogueApp')
                       data.inv_type = $scope.campaignData.shortlisted_inventories[invId].inventory_name;
                       data.act_name = $scope.campaignData.inventory_activities[actId].activity_type;
                       data.act_date = $scope.campaignData.inventory_activity_assignment[assignId].activity_date;
-                      $scope.campaignDataList.push(data);
                       angular.forEach($scope.campaignData.images, function(images,imgKey){
                         if($scope.campaignData.images[imgKey].inventory_activity_assignment_id == assignId){
                           data.images.push($scope.campaignData.images[imgKey]);
                         }
                       });
+                      // data.reAssigner_user = $scope.campaignData.inventory_activity_assignment[assignId].assigned_to;
+                      $scope.campaignDataList.push(data);
                     }
                   });
                 }
