@@ -817,3 +817,21 @@ def get_aware_datetime_from_string(date_string):
     except Exception as e:
         raise Exception(e, function)
 
+
+def get_date_string_from_datetime(datetime_instance, required_format="%Y-%m-%d"):
+    """
+
+    Args:
+        datetime_instance:
+        required_format:
+
+    Returns:
+    """
+    function = get_date_string_from_datetime.__name__
+    try:
+        return datetime_instance.strftime(required_format)
+
+    except Exception as e:
+        raise Exception(e, function)
+
+
