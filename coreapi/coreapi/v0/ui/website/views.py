@@ -64,6 +64,7 @@ import v0.ui.constants as ui_constants
 import v0.permissions as v0_permissions
 import v0.utils as v0_utils
 from v0 import errors
+import v0.constants as v0_constants
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -1119,8 +1120,9 @@ class FilteredSuppliers(APIView):
         The request looks like :
         {
           'supplier_type_code': 'CP',
-          'common_filters': { 'latitude': 12, 'longitude': 11, 'radius': 2, 'quality': [ 'UH', 'H' ],'quantity': ['VL'] },
+          'common_filters': { 'latitude': 12, 'longitude': 11, 'radius': 2, 'quality': [ 'UH', 'H' ],'quantity': ['VL'] }
           'inventory_filters': ['PO', 'ST'],
+          'amenities': [ ... ]
           'specific_filters': { 'real_estate_allowed': True, 'employees_count': {min: 10, max: 100},}
           'center_id': '23',
           'proposal_id': 'abc'
@@ -1154,11 +1156,12 @@ class FilteredSuppliers(APIView):
             if not supplier_type_code:
                 return ui_utils.handle_response(class_name, data='provide supplier type code')
 
-            common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model
+            common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model or a few other models.
             inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
             specific_filters = request.data.get('specific_filters')  # maps to specific supplier table
             proposal_id = request.data.get('proposal_id')
             center_id = request.data.get('center_id')
+            amenities = request.data.get('amenities')
 
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
@@ -1166,6 +1169,7 @@ class FilteredSuppliers(APIView):
             if not response:
                 return response
             content_type = response.data.get('data')
+
             # first fetch common query which is applicable to all suppliers. The results of this query will form
             # our master supplier list.
             response = website_utils.handle_common_filters(common_filters, supplier_type_code)
@@ -1179,7 +1183,7 @@ class FilteredSuppliers(APIView):
             inventory_type_query_suppliers = []
             # this is the main list. if no filter is selected this is what is returned by default
 
-            master_suppliers_list = supplier_model.objects.filter(common_filters_query).values_list('supplier_id')
+            master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
 
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
@@ -1190,7 +1194,7 @@ class FilteredSuppliers(APIView):
 
             if inventory_type_query.__len__():
                 inventory_type_query &= Q(content_type=content_type)
-                inventory_type_query_suppliers = list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id'))
+                inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
 
             # fetch specific_filters suppliers
             response = website_utils.handle_specific_filters(specific_filters, supplier_type_code)
@@ -1200,13 +1204,8 @@ class FilteredSuppliers(APIView):
             # if indeed there was something in the query
 
             if specific_filters_query.__len__():
-                specific_filters_suppliers = list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id'))
+                specific_filters_suppliers = set(list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id', flat=True)))
 
-            # pull only the ID's, not the tuples !  
-            inventory_type_query_suppliers = set([supplier_tuple[0] for supplier_tuple in inventory_type_query_suppliers])
-            specific_filters_suppliers = set([supplier_tuple[0] for supplier_tuple in specific_filters_suppliers])
-            master_suppliers_list = set([supplier_tuple[0] for supplier_tuple in master_suppliers_list])
-            
             # if both available, find the intersection. basically it's another way of doing AND query.
             # the following conditions are use case dependent. The checking is done on the basis of 
             # query length. an empty query length means that query didn't contain any thing in it.
@@ -1222,9 +1221,17 @@ class FilteredSuppliers(APIView):
             else:
                 final_suppliers_list = master_suppliers_list
 
-            # when the final supplier list is prepared. we need to take intersection with master list. 
+            # when the final supplier list is prepared. we need to take intersection with master list.
             final_suppliers_list = final_suppliers_list.intersection(master_suppliers_list)
-        
+
+            # check for amenities here
+            if amenities:
+                response = website_utils.get_amenities_suppliers(supplier_type_code, amenities)
+                if not response.data['status']:
+                    return response
+                amenities_suppliers = response.data['data']
+                final_suppliers_list = final_suppliers_list.intersection(amenities_suppliers)
+
             result = {}
 
             # query now for real objects for supplier_id in the list
@@ -2124,8 +2131,8 @@ class ImportSocietyData(APIView):
     """
     This API reads a csv file and  makes supplier id's for each row. then it adds the data along with
     supplier id in the  supplier_society table. it also populates society_tower table.
-    """
 
+    """
     def get(self, request):
         """
         :param request: request object
@@ -2134,6 +2141,7 @@ class ImportSocietyData(APIView):
         class_name = self.__class__.__name__
         try:
             source_file = open(BASE_DIR + '/files/modified_new_tab.csv', 'rb')
+
             with transaction.atomic():
                 reader = csv.reader(source_file)
                 for num, row in enumerate(reader):
@@ -2141,6 +2149,7 @@ class ImportSocietyData(APIView):
                     if num == 0:
                         continue
                     else:
+                        # todo: city is not being saved in society.
                         if len(row) != len(website_constants.supplier_keys):
                             return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(len(row), len(website_constants.supplier_keys)))
 
@@ -2149,6 +2158,7 @@ class ImportSocietyData(APIView):
                                 data[key] = None
                             else:
                                 data[key] = row[index]
+
                         state_name = ui_constants.state_name
                         state_code = ui_constants.state_code
                         state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
@@ -3722,6 +3732,7 @@ class CampaignInventory(APIView):
 
         """
         class_name = self.__class__.__name__
+        # todo: reduce the time taken for this API. currently it takes 15ms to fetch data which is too much.
         try:
             proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
 
@@ -3766,10 +3777,13 @@ class CampaignInventory(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
-class CampaignInventoryList(APIView):
+class CampaignSuppliersInventoryList(APIView):
     """
-    List all valid shortlisted suppliers and there respective shortlisted inventories belonging to any campaign upcoming within
-    d days of current date plus all the running campaigns
+    works as @Android API and as website API.
+
+    List all valid shortlisted suppliers and there respective shortlisted inventories belonging to any campaign in which
+    shortlisted inventories have release, closure, or audit dates within delta d days from current date
+
     """
     def get(self, request):
         """
@@ -3780,27 +3794,131 @@ class CampaignInventoryList(APIView):
         class_name = self.__class__.__name__
 
         try:
-            # find proposals running and which are starting withing delta d days from the current date
-            current_date = timezone.now().date()
+            result = {}
+            # both are optional. generally the 'assigned_to' query is given by android, and 'proposal_id' query is given
+            # by website
+            assigned_to = request.query_params.get('assigned_to')
+            proposal_id = request.query_params.get('proposal_id')
 
-            campaigns = []
-            proposals = models.ProposalInfo.objects.filter(Q(tentative_start_date__lte=current_date, tentative_end_date__gte=current_date) | Q(tentative_start_date__gte=current_date,  tentative_start_date__lte=current_date + timezone.timedelta(days=website_constants.delta_days)))
+            # constructs a Q object based on current date and delta d days defined in constants
+            assigned_date_range_query = website_utils.construct_date_range_query('activity_date')
+            reassigned_date_range_query = website_utils.construct_date_range_query('reassigned_activity_date')
 
-            # find all campaigns out of these proposals
-            for proposal in proposals:
-                response = website_utils.is_campaign(proposal)
-                if not response.data['status']:
-                    continue
-                campaigns.append(proposal)
+            proposal_query = Q()
+            if proposal_id:
+                proposal_query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id)
 
-            serializer = website_serializers.ProposalInfoSerializerReadOnly(campaigns, many=True)
+            assigned_to_query = Q()
+            if assigned_to:
+                assigned_to_query = Q(assigned_to_id=long(assigned_to))
 
-            shortlisted_spaces = []
-            for data in serializer.data:
-                shortlisted_spaces.extend(data['shortlisted_suppliers'])
+            # we do a huge query to fetch everything we need at once.
+            inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
+                select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
+                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
+                filter(assigned_date_range_query|reassigned_date_range_query, proposal_query, assigned_to_query).values(
+
+                'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type',
+                'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
+                'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
+                'inventory_activity__shortlisted_inventory_details',
+                'inventory_activity__shortlisted_inventory_details__inventory_id',
+                'inventory_activity__shortlisted_inventory_details__inventory_content_type',
+                'inventory_activity__shortlisted_inventory_details__comment',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
+            )
+
+            total_shortlisted_spaces_list = []  # this is required to fetch supplier details later
+            inv_act_assignment_ids = set()  # this is required to fetch images data later
+            # the idea of this loop is to separate different table data in different keys.
+            for content in inv_act_assignment_objects:
+                if not result.get('shortlisted_suppliers'):
+                    result['shortlisted_suppliers'] = {}
+
+                # fetch data fro shortlisted_suppliers key
+                shortlisted_space_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces']
+                proposal_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id']
+                supplier_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id']
+                supplier_content_type_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type']
+
+                result['shortlisted_suppliers'][shortlisted_space_id] = {
+                    'proposal_id': proposal_id,
+                    'supplier_id': supplier_id,
+                    'content_type_id': supplier_content_type_id
+                }
+
+                total_shortlisted_spaces_list.append(
+                    {
+                        'content_type_id': supplier_content_type_id,
+                        'supplier_id': supplier_id
+                    }
+                )
+
+                if not result.get('shortlisted_inventories'):
+                    result['shortlisted_inventories'] = {}
+                # fetch data for shortlisted_inventories key
+                shortlisted_inventory_id = content['inventory_activity__shortlisted_inventory_details']
+                inventory_id = content['inventory_activity__shortlisted_inventory_details__inventory_id']
+                inventory_content_type_id = content['inventory_activity__shortlisted_inventory_details__inventory_content_type']
+                comment = content['inventory_activity__shortlisted_inventory_details__comment']
+                inventory_name = content['inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
+                inventory_duration = content['inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name']
+
+                result['shortlisted_inventories'][shortlisted_inventory_id] = {
+                    'shortlisted_spaces_id': shortlisted_space_id,
+                    'inventory_id': inventory_id,
+                    'inventory_content_type_id': inventory_content_type_id,
+                    'comment': comment,
+                    'inventory_name': inventory_name,
+                    'inventory_duration': inventory_duration
+                }
+
+                if not result.get('inventory_activities'):
+                    result['inventory_activities'] = {}
+                # fetch data for inventory activity key
+                inventory_activity_id = content['inventory_activity']
+                activity_type = content['inventory_activity__activity_type']
+
+                result['inventory_activities'][inventory_activity_id] = {
+                    'shortlisted_inventory_id': shortlisted_inventory_id,
+                    'activity_type': activity_type
+                }
+
+                if not result.get('inventory_activity_assignment'):
+                    result['inventory_activity_assignment'] = {}
+                # fetch data for inventory activity assignment
+                inventory_activity_assignment_id = content['id']
+                activity_date = content['activity_date']
+                reassigned_activity_date = content['reassigned_activity_date']
+                inv_act_assignment_ids.add(inventory_activity_assignment_id)
+
+                result['inventory_activity_assignment'][inventory_activity_assignment_id] = {
+                    'activity_date': activity_date.date() if activity_date else None,
+                    'reassigned_activity_date': reassigned_activity_date.date() if reassigned_activity_date else None,
+                    'inventory_activity_id': inventory_activity_id
+                }
+
+            # after the result is prepared, here we collect images data
+            inventory_activity_images = models.InventoryActivityImage.objects.filter(inventory_activity_assignment_id__in=inv_act_assignment_ids)
+            images = {}
+            for inv_act_image in inventory_activity_images:
+                image_id = inv_act_image.id
+
+                if not images.get(image_id):
+                    images[image_id] = {}
+
+                images[image_id] = {
+                    'image_path': inv_act_image.image_path,
+                    'comment': inv_act_image.comment,
+                    'actual_activity_date': inv_act_image.actual_activity_date.date() if inv_act_image.actual_activity_date else None,
+                    'inventory_activity_assignment_id': inv_act_image.inventory_activity_assignment_id
+                }
 
             # # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
-            response = website_utils.get_objects_per_content_type(shortlisted_spaces)
+            response = website_utils.get_objects_per_content_type(total_shortlisted_spaces_list)
             if not response.data['status']:
                 return response
             content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
@@ -3816,16 +3934,18 @@ class CampaignInventoryList(APIView):
             supplier_detail = response.data['data']
 
             # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
-            for data in serializer.data:
-                for shortlisted_space in data['shortlisted_suppliers']:
+            if result:
+                for shortlisted_space_id, detail in result['shortlisted_suppliers'].iteritems():
                     try:
-                        shortlisted_space['supplier_detail'] = supplier_detail[shortlisted_space['content_type'], shortlisted_space['object_id']]
+                        detail['supplier_detail'] = supplier_detail[detail['content_type_id'], detail['supplier_id']]
                     except KeyError:
                         # ideally every supplier in ss table must also be in the corresponding supplier table. But
                         # because current data is corrupt as i have manually added suppliers, i have to set this to
                         # empty when KeyError occurres. #todo change this later.
-                        shortlisted_space['supplier_detail'] = {}
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+                        detail['supplier_detail'] = {}
+                        # set images data to final result
+                result['images'] = images
+            return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -3858,6 +3978,10 @@ class ProposalToCampaign(APIView):
             if not proposal_start_date or not proposal_end_date:
                 return ui_utils.handle_response(class_name, data=errors.NO_DATES_ERROR.format(proposal_id))
 
+            response = website_utils.is_campaign(proposal)
+            if response.data['status']:
+                return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id))
+
             current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
 
             if not current_assigned_inventories:
@@ -3879,7 +4003,10 @@ class ProposalToCampaign(APIView):
                 # currently we have no choice but to book all inventories the same proposal_start and end date
                 # this can be made smarter when we know for how many days a particular inventory  is allowed in a
                 # supplier this will help in automatically determining R.D and C.D.
-                current_assigned_inventories.update(release_date=proposal_start_date, closure_date=proposal_end_date)
+                inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
+                response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
+                if not response.data['status']:
+                    return response
                 proposal.campaign_state = website_constants.proposal_converted_to_campaign
                 proposal.save()
                 return ui_utils.handle_response(class_name,data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
@@ -3900,12 +4027,17 @@ class ProposalToCampaign(APIView):
             response = website_utils.book_inventories(current_assigned_inventories_map, already_booked_inventories_map)
             if not response.data['status']:
                 return response
-            booked_inventories, inv_error_list = response.data['data']
+            booked_inventories, inventory_release_closure_list, inv_error_list = response.data['data']
 
             # if there is something in error list then one or more inventories overlapped with already running campaigns
             # we do not convert a proposal into campaign in this case
             if inv_error_list:
                 return ui_utils.handle_response(class_name, data=errors.CANNOT_CONVERT_TO_CAMPAIGN_ERROR.format(proposal_id, inv_error_list))
+
+            # insert the RD and CD dates for each inventory
+            response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
+            if not response.data['status']:
+                return response
 
             bulk_update(booked_inventories)
             proposal.campaign_state = website_constants.proposal_converted_to_campaign
@@ -3941,7 +4073,7 @@ class CampaignToProposal(APIView):
             proposal.save()
 
             current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=campaign_id)
-            current_assigned_inventories.update(release_date=None, closure_date=None)
+            models.InventoryActivityAssignment.objects.filter(inventory_activity__shortlisted_inventory_details__in=current_assigned_inventories).delete()
 
             return ui_utils.handle_response(class_name, data=errors.REVERT_CAMPAIGN_TO_PROPOSAL.format(campaign_id, website_constants.proposal_not_converted_to_campaign), success=True)
         except Exception as e:
@@ -4000,13 +4132,10 @@ class ImportCorporateData(APIView):
                             return response
 
                         (corporate_object, value) = SupplierTypeCorporate.objects.get_or_create(supplier_id=data['supplier_id'])
-                        #data['society_location_type'] = subarea_object.locality_rating
-                        #data['society_state'] = 'Maharashtra'Uttar Pradesh
+
                         data['society_state'] = 'Maharashtra'
                         corporate_object.__dict__.update(data)
                         corporate_object.save()
-
-
 
                         # make entry into PMD here.
                         response = ui_utils.set_default_pricing(data['supplier_id'], data['supplier_type'])
@@ -4020,9 +4149,8 @@ class ImportCorporateData(APIView):
                             'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
                         }
                         response = requests.post(url, json.dumps(data), headers=headers)
-
-
                         print "{0} done \n".format(data['supplier_id'])
+
             source_file.close()
             return Response(data="success", status=status.HTTP_200_OK)
         except ObjectDoesNotExist as e:
@@ -4035,6 +4163,7 @@ class ImportCorporateData(APIView):
 
 class InventoryActivityImage(APIView):
     """
+     @Android API. used to insert image paths from Android.
      makes an entry into InventoryActivityImage table.
     """
     def post(self, request):
@@ -4046,22 +4175,21 @@ class InventoryActivityImage(APIView):
         Returns: success in case the object is created.
         """
         class_name = self.__class__.__name__
-        shortlisted_inventory_detail_id = ''
         try:
-            shortlisted_inventory_detail_id = request.data['shortlisted_inventory_detail_id']
-            image_path = request.data.get('image_path')
-            comment = request.data.get('comment')
-            activity_type = request.data['activity_type']
+
+            shortlisted_inventory_detail_instance = models.ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_detail_id'])
             activity_date = request.data['activity_date']
+            activity_type = request.data['activity_type']
+            activity_by = long(request.data['activity_by'])
+            actual_activity_date = request.data['actual_activity_date']
+            use_assigned_date = int(request.data['use_assigned_date'])
 
-            shortlisted_inventory_pricing_object = models.ShortlistedInventoryPricingDetails.objects.get(id=shortlisted_inventory_detail_id)
+            if use_assigned_date:
+                date_query = Q(activity_date=ui_utils.get_aware_datetime_from_string(activity_date))
+            else:
+                date_query = Q(reassigned_activity_date=ui_utils.get_aware_datetime_from_string(activity_date))
 
-            # get inv_id and it's name in case we have to return ZERO_AUDIT_ERROR
-            inventory_id = shortlisted_inventory_pricing_object.inventory_id
-            inventory_name = shortlisted_inventory_pricing_object.ad_inventory_type.adinventory_name
-
-            # if activity is AUDIT then we need a check to make sure number of audits match up the number of audit dates
-            number_of_possible_audits = models.AuditDate.objects.filter(shortlisted_inventory=shortlisted_inventory_pricing_object).count()
+            user = models.BaseUser.objects.get(id=activity_by)
 
             # they can send all the garbage in activity_type. we need to check if it's valid.
             valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
@@ -4069,63 +4197,43 @@ class InventoryActivityImage(APIView):
             if activity_type not in valid_activity_types:
                 return ui_utils.handle_response(class_name, data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
 
-            number_of_activities_done = models.InventoryActivityImage.objects.filter(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type).count()
+            inventory_activity_assignment_instance = models.InventoryActivityAssignment.objects.get(
+                date_query,
+                inventory_activity__shortlisted_inventory_details=shortlisted_inventory_detail_instance,
+                inventory_activity__activity_type=activity_type,
+            )
+            # if it's not superuser and it's not assigned to take the image
+            if (not user.is_superuser) and (not inventory_activity_assignment_instance.assigned_to_id == activity_by):
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
 
-            # if activity type is AUDIT
-            if activity_type == models.INVENTORY_ACTIVITY_TYPES[2][0]:
-                # check fot zero number of audits possible
-                if not number_of_possible_audits:
-                    return ui_utils.handle_response(class_name, data=errors.ZERO_AUDITS_ERROR.format(inventory_name, inventory_id))
-
-                # check for equal number of audits already done
-                if number_of_activities_done == number_of_possible_audits:
-                    return ui_utils.handle_response(class_name, data=errors.NUMBER_OF_ACTIVITY_EXCEEDED_ERROR.format(activity_type, number_of_possible_audits))
-                # in case of audit, the date of audit matters. you can take as many images as you want in a single
-                # day. That will be counted as only one audit. Only when the date will change, the number of audits
-                # exceed by 1.
-                instance, is_created = models.InventoryActivityImage.objects.get_or_create(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type, activity_date=activity_date)
-            else:
-                # in case of release and closure, the date on which actual release/closure happened, doesn't matter to
-                # system. All that matters is there has to be only one Release and one closure
-                instance, is_created = models.InventoryActivityImage.objects.get_or_create(shortlisted_inventory_details=shortlisted_inventory_pricing_object, activity_type=activity_type)
-                instance.image_path = image_path
-                instance.activity_date = activity_date
-
-            instance.image_path = image_path
-            instance.comment = comment
+            # image path shall be unique
+            instance, is_created = models.InventoryActivityImage.objects.get_or_create(image_path=request.data['image_path'])
+            instance.inventory_activity_assignment = inventory_activity_assignment_instance
+            instance.comment = request.data['comment']
+            instance.actual_activity_date = actual_activity_date
+            instance.activity_by = models.BaseUser.objects.get(id=activity_by)
             instance.save()
 
-            return ui_utils.handle_response(class_name, data='success', success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=errors.OBJECT_DOES_NOT_EXIST_ERROR.format(models.ShortlistedInventoryPricingDetails.__name__, shortlisted_inventory_detail_id), exception_object=e)
+            return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
+
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
-    def get(self, request):
+    def delete(self, request):
         """
-        Args:
-            self:
-            request: Request Data
+        Deletes an instance of inventory activity image
 
-        Returns: matching InventoryActivityImage objects
+        Args:
+            request:
+
+        Returns:
 
         """
         class_name = self.__class__.__name__
-
         try:
-            proposal_id = request.query_params['proposal_id']
-
-            proposal_instance = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-            response = website_utils.is_campaign(proposal_instance)
-            if not response.data['status']:
-                return response
-
-            inventory_activity_image_objects = models.InventoryActivityImage.objects.select_related('shortlisted_inventory_details').filter(shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id)
-            serializer = website_serializers.InventoryActivityImageSerializerReadOnly(inventory_activity_image_objects, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-
-        except KeyError as e:
-            return ui_utils.handle_response(class_name, data='Key Error', exception_object=e)
+            pk = request.data['id']
+            models.InventoryActivityImage.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=pk, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -4146,9 +4254,14 @@ class SupplierDetails(APIView):
 
         try:
             supplier_id = request.query_params['supplier_id']
-            content_type = request.query_params['content_type']
+            supplier_type_code = request.query_params['supplier_type_code']
+
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
      
-            supplier_model = ContentType.objects.get(pk=content_type).model
+            supplier_model = ContentType.objects.get(pk=content_type.id).model
             model = get_model(settings.APP_NAME,supplier_model)
 
             supplier_object = model.objects.get(supplier_id=supplier_id)
@@ -4165,8 +4278,42 @@ class SupplierDetails(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+    def put(self, request):
+        """
+        updates a particular supplier
+        Args:
+            request:
+        Returns: returns updated supplier object
 
-class GenerateInventorySummary(APIView):
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_id = request.data['supplier_id']
+            supplier_type_code = request.data['supplier_type_code']
+
+            data = request.data.copy()
+
+            data.pop('supplier_id')
+            data.pop('supplier_type_code')
+
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
+            supplier_model = content_type.model
+
+            model = get_model(settings.APP_NAME, supplier_model)
+
+            model.objects.filter(supplier_id=supplier_id).update(**data)
+
+            supplier_object = model.objects.get(pk=supplier_id)
+            return ui_utils.handle_response(class_name, data=model_to_dict(supplier_object), success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class GenerateInventoryActivitySummary(APIView):
     """
     Generates inventory summary in which we show how much of the total inventories were release, audited, and closed
     on particular date
@@ -4180,12 +4327,451 @@ class GenerateInventorySummary(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            pass
+            proposal_id = request.query_params['proposal_id']
+            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+
+            data = {}
+
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
+
+            response = website_utils.get_possible_activity_count(proposal_id)
+            if not response.data['status']:
+                return response
+            data['Total'] = response.data['data']
+
+            response = website_utils.get_actual_activity_count(proposal_id)
+            if not response.data['status']:
+                return response
+            data['Actual'] = response.data['data']
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class Amenity(APIView):
+    """
+    API to create an Amenity
+    """
+    def post(self, request):
+        """
+        create a single amenity
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            name = request.data['name']
+            code = request.data['code']
+
+            if code not in v0_constants.valid_amenities.keys():
+                return ui_utils.handle_response(class_name, data=errors.INVALID_AMENITY_CODE_ERROR.format(code))
+
+            amenity, is_created = models.Amenity.objects.get_or_create(code=code)
+            amenity.name = name
+            amenity.save()
+
+            return ui_utils.handle_response(class_name, data=model_to_dict(amenity), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class GetAllAmenities(APIView):
+    """
+    Fetches all amenities
+    """
+    def get(self, request):
+        """
+        fetches all amenities
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            amenities = models.Amenity.objects.all()
+            serializer = website_serializers.AmenitySerializer(amenities, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class SupplierAmenity(APIView):
+    """
+    Returns all amenities per supplier
+    """
+    def get(self, request):
+        """
+        Args:
+            request:
+
+        Returns:
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_type_code = request.query_params['supplier_type_code']
+
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
+
+            amenities = models.SupplierAmenitiesMap.objects.filter(object_id=request.query_params['supplier_id'], content_type=content_type)
+            serializer = website_serializers.SupplierAmenitiesMapSerializer(amenities, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    # def post(self, request):
+    #     """
+    #     Args:
+    #         request:
+    #     Returns:
+    #     """
+    #     class_name = self.__class__.__name__
+    #     try:
+    #         supplier_id = request.data['supplier_id']
+    #         supplier_type_code = request.data['supplier_type_code']
+    #         amenity_id = request.data['amenity_id']
+
+    #         response = ui_utils.get_content_type(supplier_type_code)
+    #         if not response.data['status']:
+    #             return response
+    #         content_type = response.data['data']
+
+    #         models.SupplierAmenitiesMap.objects.get_or_create(object_id=supplier_id, content_type=content_type, amenity_id=amenity_id)
+    #         return ui_utils.handle_response(class_name, data='success', success=True)
+    #     except Exception as e:
+    #         return ui_utils.handle_response(class_name, exception_object=e)
+
+    def post(self, request):
+        """
+        Args:
+            request:
+        Returns:
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_type_code = request.data['supplier_type_code']
+            supplier_id = request.data['supplier_id']
+            response = website_utils.save_amenities_for_supplier(supplier_type_code, supplier_id, request.data['amenities'])
+
+            if not response.data['status']:
+                return response
+
+            return ui_utils.handle_response(class_name, data='success', success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
+class BulkInsertInventoryActivityImage(APIView):
+    """
+    @Android API
 
+    used by android app to bulk upload image's paths when internet is switched on and there are images yet to
+    to be synced to django backend
+    """
+
+    def post(self, request):
+        """
+        Bulk inserts data into inv image table.
+
+        Args:
+            request: request data that holds info to be updated
+
+        Returns: 
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            shortlisted_inv_ids = set()  # to store shortlisted inv ids
+            act_dates = set()  # to store all act dates
+            act_types = set() # to store all act types
+            inv_act_assignment_to_image_data_map = {}  # map from tuple to inv act image data
+            inv_image_objects = []  # inv act image objects will be stored here for bulk create
+
+            # they can send all the garbage in activity_type. we need to check if it's valid.
+            valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
+
+            # this loop makes inv_act_assignment_to_image_data_map which maps a tuple of sid, act_date, act_type to
+            # image data this is required later for creation of inv act image objects.
+            image_taken_by = request.user
+            inv_image_data = request.data
+
+            # pull out all image paths for these assignment objects
+            database_image_paths = models.InventoryActivityImage.objects.all().values_list('image_path', flat=True)
+
+            # to reduce checking of certain image_path in the list above, instead create a dict and map image_paths to some
+            # value like True. it's faster to check for this image_path in the dict rather in the list
+            image_path_dict = {}
+            for image_path in database_image_paths:
+                image_path_dict[image_path] = True
+
+            for data in inv_image_data:
+
+                image_path = data['image_path']
+                if image_path_dict.get(image_path):
+                    # move to next path buddy, we have already stored this path
+                    continue
+
+                shortlisted_inv_id = int(data['shortlisted_inventory_detail_id'])
+                shortlisted_inv_ids.add(shortlisted_inv_id)
+
+                act_dates.add(ui_utils.get_aware_datetime_from_string(data['activity_date']))
+                act_types.add(data['activity_type'])
+
+                if data['activity_type'] not in valid_activity_types:
+                    return ui_utils.handle_response(class_name,data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(data['activity_type']))
+
+                image_data = {
+                    'image_path': data['image_path'],
+                    'comment': data['comment'],
+                    'activity_by': image_taken_by,
+                    'actual_activity_date': data['activity_date'],
+                }
+
+                try:
+                    # these three keys determine unique inventory assignment object for an image object
+                    reference = inv_act_assignment_to_image_data_map[shortlisted_inv_id, data['activity_date'], data['activity_type']]
+                    reference.append(image_data)
+                except KeyError:
+                    reference = [image_data]
+                    inv_act_assignment_to_image_data_map[shortlisted_inv_id, data['activity_date'], data['activity_type']] = reference
+
+            # i can determine weather all images synced up or not by checking this dict because we are not proceeding further in the
+            # above loop if the path is already stored.
+            if not inv_act_assignment_to_image_data_map:
+                return  ui_utils.handle_response(class_name, data=errors.ALL_IMAGES_SYNCED_UP_MESSAGE, success=True)
+
+            # fetch only those objects which have these fields in the list and assigned to the incoming user
+            inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
+                filter(
+                inventory_activity__shortlisted_inventory_details__id__in=shortlisted_inv_ids,
+                inventory_activity__activity_type__in=act_types,
+                activity_date__in=act_dates,
+                assigned_to=image_taken_by
+            )
+
+            if not inv_act_assignment_objects:
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
+
+            # this loop creates actual inv act image objects
+            for inv_act_assign in inv_act_assignment_objects:
+
+                image_data_list = inv_act_assignment_to_image_data_map[
+
+                        inv_act_assign.inventory_activity.shortlisted_inventory_details.id,
+                        ui_utils.get_date_string_from_datetime(inv_act_assign.activity_date),
+                        inv_act_assign.inventory_activity.activity_type
+                ]
+                for image_data in image_data_list:
+
+                    # add two more fields to complete image_data dict
+                    image_data['inventory_activity_assignment'] = inv_act_assign
+                    image_data['activity_by'] = image_taken_by
+                    inv_image_objects.append(models.InventoryActivityImage(**image_data))
+
+            models.InventoryActivityImage.objects.bulk_create(inv_image_objects)
+            return ui_utils.handle_response(class_name, data='success. {0} objects created'.format(len(inv_image_objects)), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class InventoryActivityAssignment(APIView):
+    """
+    Handles assignment of inventory activities to a user
+    """
+
+    def post(self, request):
+        """
+        Assigns inv act dates to a user
+
+        Args:
+            request: contains shortlisted_spaces_id, inventory_content_type_id, and assigned_activities
+
+        Returns: success in case assignment is complete.
+        """
+        class_name = self.__class__.__name__
+        try:
+            inv_assign_data = request.data
+
+            # to store shortlisted inventory pricing details ID and ids of users assigned to
+            shortlisted_inv_ids = []
+            assigned_to_users_ids = []
+
+            # collect these ids
+            for data in inv_assign_data:
+                shortlisted_inv_ids.append(int(data['shortlisted_inventory_id']))
+                assigned_to_users_ids.append(int(data['assigned_to']))
+
+            # form a map from id --> object. it's helps in fetching objects on basis of ids.
+            shortlisted_inv_objects_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(shortlisted_inv_ids)
+            assigned_to_users_objects_map = models.BaseUser.objects.in_bulk(assigned_to_users_ids)
+
+            # inv_act_assign objects container
+            inv_assignment_objects = []
+
+            for data in inv_assign_data:
+                shortlisted_inv_id = int(data['shortlisted_inventory_id'])
+                assigned_to_user_id = int(data['assigned_to'])
+
+                instance, is_created = models.InventoryActivityAssignment.objects.get_or_create(
+                    shortlisted_inventory_details=shortlisted_inv_objects_map[shortlisted_inv_id],
+                    activity_type=data['activity_type'],
+                    activity_date=data['activity_date']
+                )
+                instance.assigned_to = assigned_to_users_objects_map[assigned_to_user_id]
+                instance.assigned_by = request.user
+
+                instance.save()
+                inv_assignment_objects.append(instance)
+
+            serializer = website_serializers.InventoryActivityAssignmentSerializer(inv_assignment_objects, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def put(self, request):
+        """
+        updates a single object of inventory activity assignment table
+        Args:
+            request: contains id of inventory activity assignment model
+
+        Returns: updated object
+        """
+        class_name = self.__class__.__name__
+        try:
+            inv_act_assignment_id = request.data['inventory_activity_assignment_id']
+            data = request.data.copy()
+            data.pop('inventory_activity_assignment_id')
+            models.InventoryActivityAssignment.objects.filter(id=inv_act_assignment_id).update(**data)
+            instance = models.InventoryActivityAssignment.objects.get(id=inv_act_assignment_id)
+            return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def get(self, request):
+        """
+        Args:
+            request:
+        Returns: fetches inv act assignment  object along with the images that are associated
+        """
+        class_name = self.__class__.__name__
+        try:
+            inv_act_assignment_id = request.query_params['inventory_activity_assignment_id']
+            inventory_activity_assignment_object = models.InventoryActivityAssignment.objects.get(id=inv_act_assignment_id)
+            serializer = website_serializers.InventoryActivityAssignmentSerializerReadOnly(inventory_activity_assignment_object)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class AssignInventoryActivityDateUsers(APIView):
+    """
+    Assign inventory dates and users for each of the inventories in the list
+    """
+    def post(self, request):
+        """
+        request data contains
+
+        Args:
+            request:
+
+        Returns: success in case dates and users are assigned to all the inventories in the request
+
+        """
+        class_name = self.__class__.__name__
+        try:
+
+            shortlisted_inventory_detail_ids = [long(sipd) for sipd in request.data['shortlisted_inventory_id_detail']]
+            assignment_detail = request.data['assignment_detail']
+
+            shortlisted_inventory_detail_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(shortlisted_inventory_detail_ids)
+            # they can send all the garbage in activity_type. we need to check if it's valid.
+            valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
+
+            inventory_activity_objects = models.InventoryActivity.objects.filter(shortlisted_inventory_details__id__in=shortlisted_inventory_detail_ids)
+            # to reduce db hits, a map is created for InventoryActivity model where (shortlisted_inventory_detail_id, activity_type)
+            # is keyed for inventoryActivity instance
+            inventory_activity_objects_map = {}
+            for inv_act_instance in inventory_activity_objects:
+                try:
+                    inventory_activity_objects_map[inv_act_instance.shortlisted_inventory_details_id, inv_act_instance.activity_type]
+                except KeyError:
+                    inventory_activity_objects_map[inv_act_instance.shortlisted_inventory_details_id, inv_act_instance.activity_type] = inv_act_instance
+
+            # to reduce db hits, all users are stored and queried beforehand.
+            users = set()
+            for assignment_data in assignment_detail:
+                for date, user in assignment_data['date_user_assignments'].iteritems():
+                    users.add(long(user))
+            user_map = models.BaseUser.objects.in_bulk(users)
+
+            # now assign for each shortlisted inventory detail id
+            for shortlisted_inv_detail_id in shortlisted_inventory_detail_ids:
+                for assignment_data in assignment_detail:
+
+                    activity_type = assignment_data['activity_type']
+
+                    if activity_type not in valid_activity_types:
+                        return ui_utils.handle_response(class_name, data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
+                    try:
+                        inventory_activity_instance = inventory_activity_objects_map[shortlisted_inv_detail_id, activity_type]
+                    except KeyError:
+                        # only create when above combo is not found
+                        inventory_activity_instance, is_created = models.InventoryActivity.objects.get_or_create(
+                            shortlisted_inventory_details = shortlisted_inventory_detail_map[shortlisted_inv_detail_id],
+                            activity_type=activity_type
+                        )
+
+                    for date, user in assignment_data['date_user_assignments'].iteritems():
+                        inv_act_assignment, is_created = models.InventoryActivityAssignment.objects.get_or_create(inventory_activity=inventory_activity_instance, activity_date=ui_utils.get_aware_datetime_from_string(date))
+                        inv_act_assignment.assigned_to = user_map[long(user)]
+                        inv_act_assignment.save()
+
+            return ui_utils.handle_response(class_name, data='successfully assigned', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ReassignInventoryActivityDateUsers(APIView):
+    """
+    handles Reassignment of dates on images page.
+    """
+    def post(self, request):
+        """
+        updates inventory activity assignment table with new dates which goes in reassigned_activity_date and user
+        which goes in assigned_to field.
+        Args:
+            request:
+
+        Returns: success in case update is successfull
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            inventory_activity_assignment_ids = [long(obj_id) for obj_id in data.keys()]
+            user_ids = [long(detail['assigned_to']) for detail in data.values()]
+            inventory_activity_assignment_map = models.InventoryActivityAssignment.objects.in_bulk(inventory_activity_assignment_ids)
+            user_map = models.BaseUser.objects.in_bulk(user_ids)
+            inventory_activity_assignment_objects = []
+            for inventory_activity_assignment_id, detail in data.iteritems():
+                instance = inventory_activity_assignment_map[long(inventory_activity_assignment_id)]
+                instance.reassigned_activity_date = ui_utils.get_aware_datetime_from_string(detail['reassigned_activity_date'])
+                instance.assigned_to = user_map[long(detail['assigned_to'])]
+                inventory_activity_assignment_objects.append(instance)
+            bulk_update(inventory_activity_assignment_objects)
+            return ui_utils.handle_response(class_name, data='successfully reassigned', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 

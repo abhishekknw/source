@@ -2312,18 +2312,66 @@ class AuditDate(BaseModel):
         db_table = 'audit_date'
 
 
-class InventoryActivityImage(BaseModel):
+class Amenity(BaseModel):
     """
-    stores image path against each inventory id under given activity.
+    Stores individual amenities. There basic details.
+    """
+    name = models.CharField(max_length=1000)
+    code = models.CharField(max_length=1000, null=True, blank=True)
+
+    class Meta:
+        db_table = 'amenities'
+
+
+class SupplierAmenitiesMap(BaseModel):
+    """
+    This table represents the idea that each supplier can have multiple amenities
+    """
+
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.CharField(max_length=1000)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    amenity = models.ForeignKey(Amenity, null=True, blank=True)
+
+    class Meta:
+        db_table = 'supplier_amenities_map'
+
+
+class InventoryActivity(BaseModel):
+    """
+    Stores activities like Release, Closure, Audits against each inventory
     """
     shortlisted_inventory_details = models.ForeignKey('ShortlistedInventoryPricingDetails')
+    activity_type = models.CharField(max_length=255, null=True,  choices=INVENTORY_ACTIVITY_TYPES)
+
+    class Meta:
+        db_table = 'inventory_activity'
+
+
+class InventoryActivityAssignment(BaseModel):
+    """
+    Assignment of ( inv_global_id, act_date, act_t  ype ) to a user here in this table.
+    """
+
+    inventory_activity = models.ForeignKey('InventoryActivity', null=True, blank=True)
+    activity_date = models.DateTimeField(max_length=255, null=True, blank=True)
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activity_assigned_to', null=True, blank=True)
+    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activity_assigned_by', null=True, blank=True)
+    reassigned_activity_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'inventory_activity_assignment'
+
+
+class InventoryActivityImage(BaseModel):
+    """
+    stores image path against each inventory_activity_assignment id
+    """
+    inventory_activity_assignment = models.ForeignKey('InventoryActivityAssignment', null=True, blank=True)
     image_path = models.CharField(max_length=1000, null=True, blank=True)
     comment = models.CharField(max_length=1000, null=True, blank=True)
-    activity_type = models.CharField(max_length=1000, choices=INVENTORY_ACTIVITY_TYPES)
-    activity_date = models.CharField(max_length=1000, null=True, blank=True)
+    actual_activity_date = models.DateTimeField(null=True, blank=True)
+    activity_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
 
     class Meta:
         db_table = 'inventory_activity_image'
-
-
-

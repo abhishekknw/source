@@ -3,13 +3,17 @@ from django.shortcuts import get_object_or_404
 from django.apps import apps
 import django.apps
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import Permission
+from django.forms import model_to_dict
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
-from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer
+from rest_framework import status, viewsets
+
+from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer
+from rest_framework.decorators import detail_route, list_route
 from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions
 import utils as v0_utils
 from constants import model_names
@@ -1401,8 +1405,6 @@ class FlatTypeAPIListView(APIView):
         return Response(serializer.errors, status=400)
 
 
-
-
 class SocietyAPIFiltersView(APIView):
 
      def get(self, request, format=None):
@@ -1412,3 +1414,179 @@ class SocietyAPIFiltersView(APIView):
             return Response(serializer.data)
         except StallInventory.DoesNotExist:
             return Response(status=404)
+
+
+class PermissionsViewSet(viewsets.ViewSet):
+    """
+    A View Set over Permissions. An Internal API.
+
+    """
+
+    def list(self, request):
+        """
+        Lists all permissions
+        Args:
+            request:
+        Returns: all permissions
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            queryset = Permission.objects.all()
+            serializer = PermissionSerializer(queryset, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def retrieve(self, request, pk=None):
+        """
+        Fetches a single Permission
+        Args:
+            request:
+            pk: primary key of Permission model
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+
+        try:
+            permission = Permission.objects.get(pk=pk)
+            serializer = PermissionSerializer(permission)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def create(self, request):
+        """
+        Creates a permission instance
+
+        Args:
+            request:
+
+        Returns:
+        """
+        class_name = self.__class__.__name__
+        try:
+            codename = request.data['codename']
+            name = request.data['name']
+            content_type_id = request.data['content_type_id']
+            content_type = ContentType.objects.get(pk=content_type_id)
+            permission = Permission.objects.create(codename=codename, name=name, content_type=content_type)
+            return ui_utils.handle_response(class_name, data=model_to_dict(permission), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def update(self, request, pk=None):
+        """
+        updates a single instance of Permission
+        Args:
+            request:
+
+        Returns: updated instance of Permission model
+        """
+        class_name = self.__class__.__name__
+
+        try:
+            Permission.objects.filter(pk=pk).update(**request.data)
+            permission = Permission.objects.get(pk=pk)
+            serializer = PermissionSerializer(permission)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def destroy(self, request, pk=None):
+        """
+        Deletes a  permission object
+        Args:
+            request:
+            pk:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            Permission.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data='successfully deleted {0}'.format(pk),  success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['post'])
+    def assign_permission(self, request, pk=None):
+        """
+        Args:
+            request: contains user_id
+
+        Returns: success in case permission is assigned to a user
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            user_id = request.data['user_id']
+            permission = Permission.objects.get(pk=pk)
+            user = BaseUser.objects.get(id=user_id)
+            user.user_permissions.add(permission)
+            return ui_utils.handle_response(class_name, data='Permission added successfully', success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @list_route(methods=['GET'])
+    def get_user_permissions(self, request):
+        """
+        fetches all permission assigned ever to a user
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__class__
+        try:
+            user_id = request.query_params['user_id']
+            user = BaseUser.objects.get(id=user_id)
+            user_permissions = user.user_permissions.all()
+            serializer = PermissionSerializer(user_permissions, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['POST'])
+    def remove_user_permission(self, request, pk=None):
+        """
+        removes a permission of a user
+        Args:
+            request: contains user_id
+
+        Returns: 'success in case permission is removed
+        """
+        class_name = self.__class__.__name__
+        try:
+            user_id = request.data['user_id']
+            user = BaseUser.objects.get(pk=user_id)
+            permission = Permission.objects.get(pk=pk)
+            user.user_permissions.remove(permission)
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @list_route(methods=['POST'])
+    def remove_all_user_permissions(self, request):
+        """
+        removes all permissions of a user
+        Args:
+            request: contains user_id
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            user_id = request.data['user_id']
+            user = BaseUser.objects.get(pk=user_id)
+            user.user_permissions.clear()
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+        

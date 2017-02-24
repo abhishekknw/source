@@ -53,4 +53,24 @@ state_code = 'MH'
 
 # supplier type names
 society_name = 'Society'
+corporate_name = 'corporate'
+
+
+# valid city codes as in the db
+mumbai_code = 'MUM'
+
+# basic supplier codes
+society_code = 'RS'
+corporate_code = 'CP'
+
+# basic permission types
+permission_type_create = 'create'
+permission_type_read = 'read'
+permission_type_update = 'update'
+permission_type_delete = 'delete'
+
+
+
+
+
 

@@ -17,3 +17,11 @@ model_name_user_mapping = {
     'AccountInfo': 'business__user__user_code',
     'ProposalInfo': 'account__business__user__user_code',
 }
+
+# the following is dict of valid amenities for supppliers
+valid_amenities = {
+    'GY': 'GYM',
+    'GA': 'GARDEN',
+    'PA': 'PLAY AREA',
+    'SP': 'SWIMMING POOL'
+}

@@ -17,6 +17,18 @@ angular.module('catalogueApp')
          var url = url_base + proposal_id + "/campaign-inventories/";
       return machadaloHttp.put(url,data);
     }
+
+    auditReleasePlanService.saveUser = function(data){
+      var url = url_base + 'inventory-activity-assignment/';
+      return machadaloHttp.post(url,data);
+    }
+
+    auditReleasePlanService.saveActivityDetails = function(data){
+      var url = url_base + 'inventory-activity-date-user-assignment/';
+      return machadaloHttp.post(url,data);
+    }
+
+
    return auditReleasePlanService;
   return 0;
 }]);

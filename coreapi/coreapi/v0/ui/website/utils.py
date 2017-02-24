@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.db.models import Count
 from django.forms.models import model_to_dict
+from django.db import connection
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -41,6 +42,7 @@ import v0.ui.utils as ui_utils
 import serializers
 import v0.utils as v0_utils
 from v0 import errors
+import v0.constants as v0_constants
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -2498,6 +2500,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
         specific_filters: { 'real_estate_allowed': True, 'total_employee_count': 120, 'flat_type': [ '1RK', '2BHK' ]
 
           }
+        supplier_type_code: 'RS', 'CP'
     Returns: a Q object based on above filters
 
     """
@@ -2510,32 +2513,37 @@ def handle_specific_filters(specific_filters, supplier_type_code):
         # get the predefined dict of specific filters for this supplier
         master_specific_filters = website_constants.supplier_filters[supplier_type_code]
 
-        # construct a dict for storing query values.
-        query = {}
+        specific_filters_query = Q()
         # the following loop stores those fields in received filters which can be mapped directly to db columns.
         for received_filter, filter_value in specific_filters.iteritems():
 
-            # get the database field for this specific filter
             database_field = master_specific_filters.get(received_filter)
 
+            # if filter_value is of type Dict, we assume it's for specifying min, max range of specific db filed value.
             if database_field:
-                # set it to the dict
-                query[database_field] = filter_value
-
-        # make the query for fields in the request that map directly to model fields.
-        specific_filters_query = Q(**query)
+                # do things only when you get a db field
+                if not specific_filters_query:
+                    if type(filter_value) == DictType:
+                        specific_filters_query = Q(**{received_filter + '__gte': filter_value['min'],received_filter + '__lte': filter_value['max']})
+                    else:
+                        specific_filters_query = Q(**{database_field:filter_value})
+                else:
+                    if type(filter_value) == DictType:
+                        specific_filters_query &= Q(**{received_filter + '__gte': filter_value['min'],received_filter + '__lte': filter_value['max']})
+                    else:
+                        specific_filters_query &= Q(**{database_field: filter_value})
 
         # do if else check on supplier type code to include things particular to that supplier. Things which
         # cannot be mapped to a particular supplier and vary from supplier to supplier
-
-        if supplier_type_code == 'RS':
+        if supplier_type_code == website_constants.society:
             if specific_filters.get('flat_type'):
                 flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
                 supplier_ids = models.FlatType.objects.select_related('society').filter(flat_type__in=flat_type_values).values_list('society__supplier_id')
                 specific_filters_query &= Q(supplier_id__in=supplier_ids)
 
-        if supplier_type_code == 'CP':
+        if supplier_type_code == website_constants.corporate:
             # well, we can receive a multiple dicts for employee counts. each describing min and max employee counts.
+            # todo: does not make sense
             if specific_filters.get('employees_count'):
                 for employees_count_range in specific_filters.get('employees_count'):
                     max = employees_count_range['max']
@@ -3552,8 +3560,9 @@ def handle_update_campaign_inventories(user, data):
         # collect shortlisted spaces specific details
         shortlisted_spaces = {}
         shortlisted_inventory_details = {}
-        new_audit_dates = []
-        old_audit_dates = {}
+        old_inventory_activity_assignments = {}
+        new_inventory_activity_assignments = []
+        inventory_activity_ids = set()
 
         for supplier in data:
             ss_global_id = supplier['id']
@@ -3571,39 +3580,45 @@ def handle_update_campaign_inventories(user, data):
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status']
             }
+
             shortlisted_inventories = supplier['shortlisted_inventories']
             for inventory, inventory_detail in shortlisted_inventories.iteritems():
                 for inv in inventory_detail['detail']:
+                    for inventory_activity in inv['inventory_activities']:
+                        inventory_activity_id = inventory_activity['id']
+
+                        inventory_activity_ids.add(inventory_activity_id)
+
+                        for inventory_activity_assignment in inventory_activity['inventory_activity_assignment']:
+                            if not inventory_activity_assignment.get('id'):
+                                new_inventory_activity_assignments.append(
+                                    {
+                                        'inventory_activity_id': inventory_activity_id,
+                                        'activity_date': ui_utils.get_aware_datetime_from_string(inventory_activity_assignment['activity_date'])
+                                    }
+                            )
+                            else:
+                                old_inventory_activity_assignments[inventory_activity_assignment['id']] = {
+
+                                    'inventory_activity_id': inventory_activity_id,
+                                    'activity_date': ui_utils.get_aware_datetime_from_string
+                                          (inventory_activity_assignment['activity_date'])
+                                }
+
                     sid_global_id = inv['id']
                     if not shortlisted_inventory_details.get(sid_global_id):
                         shortlisted_inventory_details[sid_global_id] = {}
 
                     shortlisted_inventory_details[sid_global_id] = {
-                        'release_date': inv['release_date'],
-                        'closure_date': inv['closure_date'],
                         'comment': inv['comment']
                     }
-                    for audit_date in inv['audit_dates']:
 
-                        audit_global_id = audit_date.get('id')
-                        if not audit_global_id:
-                            audit_data = {
-                                'shortlisted_inventory_id': sid_global_id,
-                                'audit_date': audit_date['audit_date'],
-                                'audited_by': user
-                            }
-                            new_audit_dates.append(audit_data)
-                        else:
-                            old_audit_dates[audit_global_id] = {
-                                'shortlisted_inventory_id': sid_global_id,
-                                'audit_date': audit_date['audit_date'],
-                                'audited_by': user
-                            }
         data = {
             'shortlisted_spaces': shortlisted_spaces,
             'shortlisted_inventory_details': shortlisted_inventory_details,
-            'new_audit_dates': new_audit_dates,
-            'old_audit_dates': old_audit_dates
+            'old_inventory_activity_assignments': old_inventory_activity_assignments,
+            'new_inventory_activity_assignments': new_inventory_activity_assignments,
+            'inventory_activity_ids': inventory_activity_ids
         }
         response = update_campaign_inventories(data)
         if not response.data['status']:
@@ -3625,8 +3640,12 @@ def update_campaign_inventories(data):
     try:
         shortlisted_spaces = data['shortlisted_spaces']
         shortlisted_inventory_details = data['shortlisted_inventory_details']
-        new_audit_dates = data['new_audit_dates']
-        old_audit_dates = data['old_audit_dates']
+        new_inventory_activity_assignments = data['new_inventory_activity_assignments']  # user can issue new dates
+        old_inventory_activity_assignments = data['old_inventory_activity_assignments']  # user can edit existing dates
+        inventory_activity_ids = data['inventory_activity_ids']
+
+        # mapping from id to object instance. used later to fetch objects directly from id
+        inventory_activity_object_map = models.InventoryActivity.objects.in_bulk(inventory_activity_ids)
 
         shortlisted_spaces_ids = shortlisted_spaces.keys()
         ss_objects = models.ShortlistedSpaces.objects.filter(id__in=shortlisted_spaces_ids)
@@ -3641,32 +3660,28 @@ def update_campaign_inventories(data):
 
         sid_ids = shortlisted_inventory_details.keys()
         sid_objects = models.ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
-        sid_object_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(sid_ids)
 
         for obj in sid_objects:
             sid_global_id = obj.id
-            obj.release_date = shortlisted_inventory_details[sid_global_id]['release_date']
-            obj.closure_date = shortlisted_inventory_details[sid_global_id]['closure_date']
             obj.comment = shortlisted_inventory_details[sid_global_id]['comment']
 
-        new_audit_date_objects = []
-        for obj_dict in new_audit_dates:
-            obj_dict['shortlisted_inventory'] = sid_object_map[obj_dict['shortlisted_inventory_id']]
-            del obj_dict['shortlisted_inventory_id']
-            new_audit_date_objects.append(models.AuditDate(**obj_dict))
+        new_inventory_activity_assignment_objects = []
+        for obj_dict in new_inventory_activity_assignments:
+            obj_dict['inventory_activity'] = inventory_activity_object_map[obj_dict['inventory_activity_id']]
+            del obj_dict['inventory_activity_id']
+            new_inventory_activity_assignment_objects.append(models.InventoryActivityAssignment(**obj_dict))
 
-        audit_ids = old_audit_dates.keys()
-        audit_objects = models.AuditDate.objects.filter(id__in=audit_ids)
+        old_inventory_assignment_ids = old_inventory_activity_assignments.keys()
+        old_inventory_activity_assignment_objects = models.InventoryActivityAssignment.objects.filter(id__in=old_inventory_assignment_ids)
 
-        for audit_obj in audit_objects:
-            audit_id = audit_obj.id
-            audit_obj.audit_date = old_audit_dates[audit_id]['audit_date']
-            audit_obj.audited_by = old_audit_dates[audit_id]['audited_by']
+        for instance in old_inventory_activity_assignment_objects:
+            inventory_activity_assignment_id = instance.id
+            instance.activity_date = old_inventory_activity_assignments[inventory_activity_assignment_id]['activity_date']
 
         bulk_update(ss_objects)
         bulk_update(sid_objects)
-        bulk_update(audit_objects)
-        models.AuditDate.objects.bulk_create(new_audit_date_objects)
+        bulk_update(old_inventory_activity_assignment_objects)
+        models.InventoryActivityAssignment.objects.bulk_create(new_inventory_activity_assignment_objects)
 
         # todo: .save() won't be called because we are using bulk update to update the tables. as a consequence dates
         # todo: won't be updated. Find a solution later.
@@ -3857,8 +3872,10 @@ def get_objects_per_content_type(objects):
                 content_type_id = my_object['content_type']
             except KeyError:
                 content_type_id = my_object['content_type_id']
-
-            object_id = my_object['object_id']
+            try:
+                object_id = my_object['object_id']
+            except KeyError:
+                object_id = my_object['supplier_id']
 
             if not result.get(content_type_id):
                 result[content_type_id] = []
@@ -4502,10 +4519,13 @@ def book_inventories(current_inventories_map, already_inventories_map):
     try:
         booked_inventories = []
         inv_errors = []
+        inventory_release_closure_list = []
         for inv_tuple, inv_date_tuple in current_inventories_map.iteritems():
+
             release_date = inv_date_tuple[0]
             closure_date = inv_date_tuple[1]
             inv_obj = inv_date_tuple[2]
+
             inv_obj.release_date = release_date
             inv_obj.closure_date = closure_date
 
@@ -4513,6 +4533,7 @@ def book_inventories(current_inventories_map, already_inventories_map):
             try:
                 already_book_inv_map_reference = already_inventories_map[inv_tuple]
                 is_overlapped = False
+
                 for already_booked_inv_tuple in already_book_inv_map_reference:
 
                     target_release_date = already_booked_inv_tuple[0]
@@ -4527,15 +4548,262 @@ def book_inventories(current_inventories_map, already_inventories_map):
                     if verdict:
                         is_overlapped = True
                         inv_errors.append(errors.DATES_OVERLAP_ERROR.format(inv_obj.inventory_id, release_date, closure_date, target_release_date, target_closure_date, target_proposal_id))
+
                 # if the inv does not overlaps with any of the pre booked versions of it, we book it.
                 if not is_overlapped:
+                    # we collect this info as we have to insert RD and CD for this inventory later
+                    inventory_release_closure_list.append((inv_obj, release_date, closure_date))
+                    # book it
                     booked_inventories.append(inv_obj)
             except KeyError:
+                # we collect this info as we have to insert RD and CD for this inventory later
+                inventory_release_closure_list.append((inv_obj, release_date, closure_date))
                 # means this inventory is already not booked. hence we book it.
                 booked_inventories.append(inv_obj)
 
-        return ui_utils.handle_response(function, data=(booked_inventories, inv_errors), success=True)
+        return ui_utils.handle_response(function, data=(booked_inventories, inventory_release_closure_list, inv_errors), success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
 
+def get_amenities_suppliers(supplier_type_code, amenities):
+    """
+    returns a list of supplier_ids which have one of the amenities in the list of amenities.
+    Args:
+        supplier_type_code: 'RS', 'CP'
+        amenities: [ .. ]
+
+    Returns: a list  of suppliers
+    """
+    function = get_amenities_suppliers.__name__
+    try:
+        for amenity in amenities:
+            if amenity not in v0_constants.valid_amenities.keys():
+                return ui_utils.handle_response(function, data=errors.INVALID_AMENITY_CODE_ERROR.format(amenity))
+
+        response = ui_utils.get_content_type(supplier_type_code)
+        if not response.data['status']:
+            return response
+        content_type = response.data['data']
+
+        supplier_ids = models.SupplierAmenitiesMap.objects.filter(content_type=content_type, amenity__code__in=amenities).values_list('object_id', flat=True)
+
+        return ui_utils.handle_response(function, data=supplier_ids, success=True)
+
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+def save_amenities_for_supplier(supplier_type_code, supplier_id, amenities):
+    """
+    save amenities for supplier
+    Args:
+        amenities: [ .. ]
+
+    Returns: 
+    """
+    function = save_amenities_for_supplier.__name__
+    try:
+        response = ui_utils.get_content_type(supplier_type_code)
+        if not response.data['status']:
+            return response
+        content_type = response.data['data']
+
+        #container to store amenities for supplier
+        total_amenities = []
+        amenity_ids = [ amenity['id']  for amenity in amenities]
+        amenity_objects_map = models.Amenity.objects.in_bulk(amenity_ids)
+
+        for amenity in amenities:
+            amenity_id = amenity['id']
+            data = {
+                'object_id' : supplier_id,
+                'amenity' : amenity_objects_map[amenity_id],
+                'content_type' : content_type,
+            }
+            total_amenities.append(models.SupplierAmenitiesMap(**data))
+
+        # delete previous  shortlisted suppliers and save new
+        models.SupplierAmenitiesMap.objects.filter(object_id=supplier_id, content_type=content_type).delete()
+        models.SupplierAmenitiesMap.objects.bulk_create(total_amenities)
+
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+def get_inventory_activity_image_objects(shortlisted_inventory_to_audit_count_map, image_activity_to_audit_count_map):
+    """
+    prepares  inventory activity image objects
+    Args:
+
+    Returns:
+
+    """
+    function = get_inventory_activity_image_objects.__name__
+    try:
+        inv_act_objects = []
+        for inventory_global_id, audit_count in shortlisted_inventory_to_audit_count_map.iteritems():
+
+            if not image_activity_to_audit_count_map.get(inventory_global_id):
+                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id, activity_type=website_constants.activity_type['RELEASE']))
+                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id, activity_type=website_constants.activity_type['CLOSURE']))
+                image_activity_to_audit_count_map[inventory_global_id] = 0
+
+            actual_audit_count = audit_count - image_activity_to_audit_count_map[inventory_global_id]
+            for count in actual_audit_count:
+                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id,activity_type=website_constants.activity_type['AUDIT']))
+
+        return ui_utils.handle_response(function, data=inv_act_objects, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_possible_activity_count(proposal_id):
+    """
+    returns possible counts of activities over inventories for a given proposal. The number of releases under a
+    proposal is same as inventory count under that proposal. same thing for number of closures. Number of audits
+    is number of rows in audits for all inventories under that proposal in audt date table.
+
+    Args:
+        proposal_id: The proposal id
+
+    Returns: a dict in which key is act name and value is respective count of that act possible according to system.
+    """
+    function = get_possible_activity_count.__name__
+    try:
+        sql = "select count(a.id) , count(b.audit_date) from shortlisted_inventory_pricing_details" \
+              " as a INNER JOIN audit_date as b on a.id = b.shortlisted_inventory_id" \
+              " where a.id in  ( select c.id from shortlisted_inventory_pricing_details as c " \
+              "INNER JOIN shortlisted_spaces as d on c.shortlisted_spaces_id = d.id where d.proposal_id = %s )"
+
+        with connection.cursor() as cursor:
+
+            cursor.execute(sql, [proposal_id])
+            row = cursor.fetchone()
+
+        data = None
+
+        if row:
+            data = {
+                website_constants.activity_type['RELEASE']: row[0],
+                website_constants.activity_type['CLOSURE']: row[0],
+                website_constants.activity_type['AUDIT']: row[1]
+            }
+        return ui_utils.handle_response(function, data=data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_actual_activity_count(proposal_id):
+    """
+    returns actual activity count. This data lives in inventory image activity table where only then entry
+    is made when user actually takes the image and uploads it to the server.
+    Args:
+        proposal_id:
+
+    Returns: a dict with keys as act names and values as counts of actual acts performed
+
+    """
+    function = get_actual_activity_count.__name__
+    try:
+        sql = "select activity_type,  count( distinct activity_date) as count from inventory_activity_image" \
+              " where  shortlisted_inventory_details_id in (  select a.id from shortlisted_inventory_pricing_details " \
+              "as a INNER JOIN shortlisted_spaces as b ON a.shortlisted_spaces_id = b.id " \
+              "where b.proposal_id = %s )  group by activity_type"
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [proposal_id])
+            act_data = dict_fetch_all(cursor)
+
+        # act_data will be an array of dicts. converting to just a dict with key as act name
+        data = {}
+        for item in act_data:
+            data[item['activity_type']] = item['count']
+
+        return ui_utils.handle_response(function, data=data, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def dict_fetch_all(cursor):
+    """
+    Args:
+        cursor: database cursor
+
+    Returns:     "Return all rows from a cursor as a dict"
+
+    """
+    function = dict_fetch_all.__name__
+    try:
+        columns = [col[0] for col in cursor.description]
+        return [
+            dict(zip(columns, row))
+            for row in cursor.fetchall()
+        ]
+    except Exception as e:
+        raise (e, function)
+
+
+def construct_date_range_query(database_field):
+    """
+    Args:
+        database_field: The db field to query upon
+
+    Returns: Q object
+    """
+    function = construct_date_range_query.__name__
+    try:
+        # The database field must be within delta days of the current date
+        current_date = timezone.now().date()
+        first_query = Q(**{database_field + '__gte': current_date})
+        second_query = Q(**{database_field + '__lte': current_date + timezone.timedelta(days=website_constants.delta_days)})
+        return first_query & second_query
+    except Exception as e:
+        raise (e, function)
+
+
+def insert_release_closure_dates(inventory_release_closure_list):
+    """
+    inserts release date and closure dates for all inventories in the shortlisted_inventories list
+    Args:
+        inventory_release_closure_list: a list of tuples where each tuple describes an inventory instance, R.D and
+        C.D. This is so because in theory, each inventory can have different RD and CD.
+
+    Returns: success in case insert happens successfully
+    """
+    function = insert_release_closure_dates.__name__
+    try:
+        # todo: using get_or_create in a loop can be a bottleneck as it hits db each time. this is simplest solution
+        # need to improve if api response takes too long because of this
+        inventory_activity_instance_list = []
+        for shortlisted_inv_instance, release_date, closure_date in inventory_release_closure_list:
+
+            # RELEASE
+            inv_activity_instance, is_created = models.InventoryActivity.objects.get_or_create(
+                shortlisted_inventory_details=shortlisted_inv_instance,
+                activity_type = models.INVENTORY_ACTIVITY_TYPES[0][0]
+            )
+
+            inventory_activity_instance_list.append((inv_activity_instance, release_date.date()))
+
+            # CLOSURE
+            inv_activity_instance, is_created = models.InventoryActivity.objects.get_or_create(
+                shortlisted_inventory_details=shortlisted_inv_instance,
+                activity_type=models.INVENTORY_ACTIVITY_TYPES[1][0]
+            )
+
+            inventory_activity_instance_list.append((inv_activity_instance, closure_date.date()))
+
+            # AUDIT. No dates are put against audit. it can contain many dates, that's why
+            inv_activity_instance, is_created = models.InventoryActivity.objects.get_or_create(
+                shortlisted_inventory_details=shortlisted_inv_instance,
+                activity_type=models.INVENTORY_ACTIVITY_TYPES[2][0]
+            )
+
+        for inv_activity_instance, activity_date in inventory_activity_instance_list:
+
+            models.InventoryActivityAssignment.objects.\
+                get_or_create(inventory_activity=inv_activity_instance, activity_date=activity_date)
+
+        return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)

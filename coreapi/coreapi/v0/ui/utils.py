@@ -9,11 +9,16 @@ order of imports
 
 '''
 import json
+import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 from django.apps import apps
 from django.forms.models import model_to_dict
+from django.conf import settings
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import is_aware, make_aware
+from django.utils import timezone
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -23,6 +28,7 @@ import v0.serializers
 
 import constants as ui_constants
 import v0.models as models
+import v0.errors as errors
 
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False):
@@ -239,11 +245,16 @@ def make_supplier_data(data):
         return handle_response(function, exception_object=e)
 
 
-def save_supplier_data(master_data):
+def save_supplier_data(user, master_data):
     """
-    :param master_data containing data for all suppliers
-    :return: saves corresponding supplier code data
+    saves basic data for single supplier
+    Args:
+        user:  The user instance
+        master_data: the data to be saved
+
+    Returns: saved supplier instance
     """
+
     try:
         function_name = save_supplier_data.__name__
 
@@ -253,7 +264,7 @@ def save_supplier_data(master_data):
         supplier_data = master_data[supplier_code]['data']
         serializer = serializer_class(data=supplier_data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=user)
             response = set_default_pricing(serializer.data['supplier_id'], supplier_code)
             if not response.data['status']:
                 return response
@@ -737,4 +748,90 @@ def generate_poster_objects(count, nb, society, society_content_type):
         return handle_response(function, data='success', success=True)
     except Exception as e:
         return handle_response(function, exception_object=e)
+
+
+def check_city_level_permission(user, supplier_type_code, city_code, permission_type):
+    """
+    checking city level permission on a given user
+    Args:
+        user: BaseUser instance
+        supplier_type_code: RS, CP
+        city_code: MUM
+        permission_type: 'create', 'read', 'update' etc
+
+    Returns: True or False depending on weather this user has this permission or not
+    """
+    function = check_city_level_permission.__name__
+    custom_permission = ''
+    try:
+
+        if user.is_superuser:
+            return True
+
+        # make custom permission here. we will check for this permission for the user
+        custom_permission = settings.APP_NAME + '.' + permission_type.lower() + '_' + city_code.lower() + '_' + supplier_type_code.lower()
+
+        if user.has_perm(custom_permission):
+            return True
+        return False
+
+    except Exception as e:
+        raise Exception(e, custom_permission, function)
+
+
+def validate_date_format(date_string, date_format):
+    """
+    Validates a raw string date against a given format
+    Args:
+        date_string:
+        date_format:
+    Returns: True or False depending weather the date_string matches the format or not.
+    """
+    try:
+        datetime.datetime.strptime(date_string, date_format)
+        return True
+    except ValueError:
+        return False
+
+
+def get_aware_datetime_from_string(date_string):
+    """
+    converts string to django's datetime
+    Args:
+        date_string: "2017-02-25"
+    Returns: DateTimeField which can be put into Django's model DateTimeField
+    """
+    function = get_aware_datetime_from_string.__name__
+    try:
+        first_format = "%Y-%m-%d"
+        second_format = "%Y-%m-%dT%H:%M:%SZ"
+
+        if validate_date_format(date_string, first_format):
+            ret = timezone.make_aware(datetime.datetime.strptime(date_string, first_format), timezone.get_default_timezone())
+        elif validate_date_format(date_string, second_format):
+            ret = parse_datetime(date_string)
+        else:
+            raise ValueError(errors.INVALID_DATE_FORMAT.format(first_format, second_format))
+
+        return ret
+    except Exception as e:
+        raise Exception(e, function)
+
+
+def get_date_string_from_datetime(datetime_instance, required_format="%Y-%m-%d"):
+    """
+
+    Args:
+        datetime_instance:
+        required_format:
+
+    Returns:
+    """
+    function = get_date_string_from_datetime.__name__
+    try:
+        return datetime_instance.strftime(required_format)
+
+    except Exception as e:
+        raise Exception(e, function)
+
 

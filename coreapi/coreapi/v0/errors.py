@@ -7,6 +7,7 @@ CAMPAIGN_ON_HOLD_ERROR = 'This proposal is not a campaign yet because it is on h
 CAMPAIGN_NOT_APPROVED_ERROR = 'This proposal is not a campaign yet because it has not been approved by ops HEAD'
 CAMPAIGN_NO_INVOICE_ERROR = 'This proposal is not a campaign because it does not have any invoice number'
 CAMPAIGN_NO_START_OR_END_DATE_ERROR = 'This proposal {0} is not a campaign because it does not have either start or end date defined'
+ALREADY_A_CAMPAIGN_ERROR = 'This proposal {0}  has already been converted to campaign'
 
 INVALID_PAYMENT_METHOD_CODE = 'This code {0} is not a valid payment method code'
 INVALID_PAYMENT_STATUS_CODE = 'This code {0} is not a valid payment status code'
@@ -28,3 +29,15 @@ OBJECT_DOES_NOT_EXIST_ERROR = 'The object for table {0} does not exist for id {1
 INVALID_ACTIVITY_TYPE_ERROR = 'This activity type {0} is not recognised by our system'
 ZERO_AUDITS_ERROR = 'The inventory  {0}  with id {1} has zero audits assigned to it. You cannot audit this inventory.'
 NUMBER_OF_ACTIVITY_EXCEEDED_ERROR = 'Number of possible {0} s for this inventory was {1}. You have already done that many {0} s'
+
+INVALID_AMENITY_CODE_ERROR = 'The amenity code {0} is invalid'
+
+SUPPLIER_CITY_NO_CREATE_PERMISSION_ERROR = 'Sorry. You do not have sufficient permissions to create supplier of type {0} for city with code {1}'
+
+NO_INVENTORIES_PRESENT_MESSAGE = 'There are really no inventories available'
+
+NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR = 'There are no inventory activities assigned, hence you cannot proceed further in our system. You must be assigned inventory activities first in order to proceed further'
+
+INVALID_DATE_FORMAT = "The recieved format of the date string does not matches the current supported format of {0} and {1}"
+
+ALL_IMAGES_SYNCED_UP_MESSAGE = "Seems like all the images synced up already"

@@ -17,32 +17,32 @@
 <!-- <div class="container"> -->
   <!-- <div class="row" style="margin-left:10px;"> -->
     <!-- <div class=" table-responsive" > -->
-      <table class="table table-bordered table-responsive table-scroll" style="text-align: center;table-layout:fixed;word-wrap:break-word;">
+      <table class="table-bordered table-responsive table-scroll" style="text-align: center;table-layout:fixed;word-wrap:break-word;">
         <thead>
           <tr>
-            <th ng-repeat="header in headings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
+            <th ng-repeat="header in headings" style="text-align: center;">{{header.header}}</th>
           </tr>
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
-            <td class="col-md-1">{{supplier.name}}</td>
-            <td class="col-md-2">{{supplier.area}}</td>
-            <td class="col-md-2">{{supplier.subarea}}</td>
-            <td class="col-md-2">{{supplier.object_id}}</td>
-            <td class="col-md-2" ng-if="key=='NA'">{{key}}</td>
-            <td class="col-md-2" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)"><b>{{key}}</b></a></td>
-            <td class="col-md-2">{{filter.total_count}}</td>
-            <td class="col-md-2">{{filter.supplier_price}}</td>
-            <td class="col-md-2">{{supplier.total_inventory_supplier_price}}</td>
-            <td class="col-md-2"><input type="number" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width"></td>
-            <td class="col-md-4">
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.object_id}})</td>
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.area}}</td>
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.subarea}}</td>
+            <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
+            <td class="col-md-1" ng-if="key=='NA'">{{key}}</td>
+            <td class="col-md-1" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)"><b>{{key}}</b></a></td>
+            <td class="col-md-1">{{filter.total_count}}</td>
+            <td class="col-md-1">{{filter.supplier_price}}</td>
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.total_inventory_supplier_price}}</td>
+            <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first"><input type="number" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width"></td>
+            <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first">
               <select class="form-control spacing" ng-model="supplier.booking_status">
                 <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
               </select>
             </td>
-            <td class="col-md-2"><input type="number" class="form-control spacing" ng-model="supplier.phase"></td>
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first"><input type="number" class="form-control spacing" ng-model="supplier.phase"></td>
             <!--mode of payment  -->
-            <td class="col-md-2" style="text-align:left">
+            <td class="col-md-1" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <div class="radio">
                      <label><input type="radio" ng-model="supplier.payment_method" value="NEFT" ng-click="updateSupplierStatus()">NEFT</label>
               </div>
@@ -52,13 +52,15 @@
               <div class="radio" ng-if="supplier.status != 'X'">
                      <label><input type="radio" ng-model="supplier.payment_method" value="CASH" ng-click="updateSupplierStatus()">Cash</label>
               </div>
-              <a class="" data-target="#paymentModal" data-toggle="modal" ng-click="setPayment(supplier)"><b>Details</b></a>
+              <div style="text-align:center">
+                <a data-target="#paymentModal" data-toggle="modal" ng-click="setPayment(supplier)"><b>Details</b></a>
+              </div>
             </td>
-            <td class="col-md-2">
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">
               <a class="" data-target="#contactModal" data-toggle="modal" ng-click="setContact(supplier)"><b>View Contact Details</b></a>
             </td>
             <!--for payment status  -->
-            <td class="col-md-2" style="text-align:left">
+            <td class="col-md-1" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <div class="radio">
                      <label><input type="radio" ng-model="supplier.payment_status" value="PD" ng-click="updateSupplierStatus()">Paid</label>
               </div>
@@ -75,16 +77,16 @@
     <!-- </div> -->
   <!-- </div> -->
   <div class = "row">
-    <span class = "col-md-12" style="text-align:left">
-      <button class="btn btn-danger active notify" style="text-align:left" ng-click="updateData()">Update</button>
+    <span class = "col-md-6">
+      <button class="btn btn-danger active notify" style="text-align:left; margin-left:10px" ng-click="updateData()">Update</button>
     </span>
-      <span class = "col-md-12" style="text-align:right">
+      <span class = "col-md-6" style="text-align:right">
         <button class="btn btn-danger active notify" style="text-align:right" ng-click="changeLocation()">Planning Release-Audit</button>
       </span>
   </div>
 
 
-  </div>
+  <!-- </div> -->
 <!-- </div> -->
 <!--Start: Code for contacts Modal Window -->
 <div id="contactModal" class="modal fade">
@@ -115,10 +117,6 @@
                 </tbody>
               </table>
             </div>
-
-
-
-
         </div>
       </div>
     </div>
@@ -138,19 +136,18 @@
           <table class="table table-bordered">
             <thead>
               <tr>
-                <th ng-repeat="header in payment_headings" class="col-md-2" style="text-align: center;"><b>{{header.header}}</b></th>
+                <th ng-repeat="header in payment_headings" class="col-md-2 alignment"><b>{{header.header}}</b></th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>{{payment.name_for_payment}}</td>
-                <td>{{payment.bank_name}}</td>
-                <td>{{payment.ifsc_code}}</td>
-                <td>{{payment.account_no}}</td>
+                <td class="alignment">{{payment.name_for_payment}}</td>
+                <td class="alignment">{{payment.bank_name}}</td>
+                <td class="alignment">{{payment.ifsc_code}}</td>
+                <td class="alignment">{{payment.account_no}}</td>
               </tr>
             </tbody>
           </table>
-
         </div>
       </div>
     </div>
@@ -180,10 +177,6 @@
                 </tbody>
               </table>
             </div>
-
-
-
-
         </div>
       </div>
     </div>
