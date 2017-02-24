@@ -12,6 +12,7 @@ angular.module('catalogueApp')
         {header : 'Activity Date'},
         {header : 'ReAssign'},
         {header : 'ReAssigned User'},
+        {header : 'ReAssigned Date'},
       ];
       $scope.supplier_headings = [
         {header : 'Supplier Id'},
@@ -43,20 +44,23 @@ angular.module('catalogueApp')
       $scope.formats = ['yyyy-MM-dd'];
       $scope.format = $scope.formats[1];
       $scope.altInputFormats = ['M!/d!/yyyy'];
+      var getOpsExecutionImageDetails = function(){
+        opsExecutionPlanService.getOpsExecutionImageDetails($scope.campaign_id)
+        	.success(function(response, status){
+        		$scope.campaignData = response.data;
+            createList();
+            console.log('vidhi', $scope.campaignData);
+            if($scope.campaignData.length == 0)
+              $scope.hideData = false;//change to true doing for testing
+                $scope.loading = response;
+        	})
+        	.error(function(response, status){
+            $scope.hideData = true;
+        		console.log("error occured", status);
+        	});
+        }
 
-      opsExecutionPlanService.getOpsExecutionImageDetails($scope.campaign_id)
-      	.success(function(response, status){
-      		$scope.campaignData = response.data;
-          createList();
-          console.log('vidhi', $scope.campaignData);
-          if($scope.campaignData.length == 0)
-            $scope.hideData = false;//change to true doing for testing
-              $scope.loading = response;
-      	})
-      	.error(function(response, status){
-          $scope.hideData = true;
-      		console.log("error occured", status);
-      	});
+      getOpsExecutionImageDetails();
       var campaignDataStruct = {
         id : '',
         supplier_id : '',
@@ -65,6 +69,7 @@ angular.module('catalogueApp')
         images : [],
         act_name : '',
         act_date : '',
+        reAssign_date : '',
       };
       $scope.campaignDataList = [];
       function createList(){
@@ -82,6 +87,7 @@ angular.module('catalogueApp')
                       data.inv_type = $scope.campaignData.shortlisted_inventories[invId].inventory_name;
                       data.act_name = $scope.campaignData.inventory_activities[actId].activity_type;
                       data.act_date = $scope.campaignData.inventory_activity_assignment[assignId].activity_date;
+                      data.reAssign_date = $scope.campaignData.inventory_activity_assignment[assignId].reassigned_activity_date;
                       angular.forEach($scope.campaignData.images, function(images,imgKey){
                         if($scope.campaignData.images[imgKey].inventory_activity_assignment_id == assignId){
                           data.images.push($scope.campaignData.images[imgKey]);
@@ -96,7 +102,6 @@ angular.module('catalogueApp')
             }
           });
         });
-        console.log($scope.campaignDataList);
       }
       $scope.setImageUrl = function(images){
         $scope.imageUrlList = [];
@@ -123,7 +128,6 @@ angular.module('catalogueApp')
       $scope.getSummary = function(){
         opsExecutionPlanService.getSummaryDetails($scope.campaign_id)
         .success(function(response, status){
-          console.log(response);
           $("#summaryModal").modal('show');
           $scope.summaryData = response.data;
         })
@@ -142,7 +146,7 @@ angular.module('catalogueApp')
         if(inventory.status == true){
           $scope.reAssignActivityList[inventory.id] = {};
         }else {
-          $scope.reAssignActivityList.splice(index,1);
+          delete $scope.reAssignActivityList[inventory.id];
         }
       }
       var reAssignActivityData = function(){
@@ -155,24 +159,24 @@ angular.module('catalogueApp')
       }
       $scope.saveReAssignedActivities = function(){
         reAssignActivityData();
-        console.log($scope.reAssignActivityList);
         opsExecutionPlanService.saveReAssignedActivities($scope.reAssignActivityList)
         .success(function(response, status){
-          console.log(response);
+          $scope.campaignDataList = [];
+          getOpsExecutionImageDetails();
+
         })
         .error(function(response, status){
           console.log(response);
         });
       }
       function formatDate(date) {
-      var d = new Date(date),
-          month = '' + (d.getMonth() + 1),
-          day = '' + d.getDate(),
-          year = d.getFullYear();
-      console.log(month,day,year);
-      if (month.length < 2) month = '0' + month;
-      if (day.length < 2) day = '0' + day;
+        var d = new Date(date),
+            month = '' + (d.getMonth() + 1),
+            day = '' + d.getDate(),
+            year = d.getFullYear();
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
 
-      return [year, month, day].join('-');
+        return [year, month, day].join('-');
     }
 }]);

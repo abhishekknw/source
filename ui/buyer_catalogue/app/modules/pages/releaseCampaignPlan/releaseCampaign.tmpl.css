@@ -3,7 +3,11 @@ body{
 	font-family: Source Sans Pro;
 	color: #707070;
 }
-
+th{
+  	background: #808080;
+    text-align: center;
+  	color: #fff;
+}
 .notify{
 	margin-top: 15px;
 }
