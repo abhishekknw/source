@@ -118,7 +118,7 @@
                 <td><label>{{header.header}}</label></td>
                 <td>{{summaryData.Total[header.key]}}</td>
                 <td>{{summaryData.Actual[header.key]||0}}</td>
-                <td>{{((summaryData.Actual[header.key])||0/summaryData.Total[header.key])*100|limitTo:5}}%</td>
+                <td>{{((summaryData.Actual[header.key]||0)/summaryData.Total[header.key])*100|limitTo:5}}%</td>
               </tr>
             </tbody>
           </table>
