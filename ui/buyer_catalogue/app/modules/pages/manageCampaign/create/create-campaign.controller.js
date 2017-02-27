@@ -1,13 +1,4 @@
 angular.module('machadaloPages')
-.constant('constants',{
-  base_url : 'http://localhost:8108/',
-  url_base : 'v0/ui/website/',
-  AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
-  policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
-  acl : 'public-read',
-  signature : "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=",
-  content_type : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-})
 .controller('CreateCampaignCtrl',
     function ($scope, $rootScope, $window, $location, pagesService, constants, Upload) {
 
@@ -280,7 +271,7 @@ angular.module('machadaloPages')
         };
         //Start: To upload file when upload button is clicked
         $scope.upload = function (file,proposal_id) {
-          var uploadUrl = 'http://localhost:8108/v0/ui/website/';
+          var uploadUrl = constants.base_url + constants.url_base;
           var token = $rootScope.globals.currentUser.token ;
           Upload.upload({
               url: uploadUrl + proposal_id + '/import-supplier-data/',
