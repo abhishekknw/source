@@ -102,10 +102,14 @@
                   <tr ng-repeat = "inventory in invActivityData">
                     <td class="col-md-1">{{inventory.activity_type}}</td>
                     <td class="col-md-2">
-                      <input type="text" ng-model="inventory.act_date.date" ng-change="setDate(inventory.act_date.date)" class="form-control col-md-2" uib-datepicker-popup="yyyy-MM-dd" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close"  ng-model-options="{timezone:'UTC'}"/>
-                      <!-- <span class="input-group-btn"> -->
-                        <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
-                      <!-- </span> -->
+                      <!-- <input type="text" ng-model="inventory.act_date.date" ng-change="setDate(inventory.act_date.date)" class="form-control col-md-2" uib-datepicker-popup="yyyy-MM-dd" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close"  ng-model-options="{timezone:'UTC'}"/>
+                      <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button> -->
+                      <p class="input-group">
+                        <input type="text" class="form-control col-md-4"  ng-model="inventory.act_date.date" ng-change="setDate(inventory.act_date.date)" uib-datepicker-popup="yyyy-MM-dd" is-open="popup1"  min-date="today" datepicker-options="dateOptions" close-text="Close" ng-model-options="{timezone:'UTC'}"/>
+                        <span class="input-group-btn">
+                          <button type="button" class="btn btn-default" ng-click="popup1=true"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                      </p>
                     </td>
                     <td class="col-md-2">
                       <select class="form-control spacing" ng-model="inventory.act_date.userCode">
@@ -116,26 +120,37 @@
                 </tbody>
               </table>
             </br>
-              <label>Audit Dates</label>
-              <table>
+              <label style="font-size: 20px;">Audit Dates</label>
+              <div style="position: relative;">
+                <a class="btn btn-danger btn-sm" style = "position: absolute; right: 10px; top: -32px;">
+                  <span class="glyphicon glyphicon-plus" uib-tooltip = "Add Date" ng-click="addAuditDate(invActivityAuditData.audit_dates)"></span>
+                </a>
+              </div>
+              <table class="table table-align">
                 <tbody>
                   <tr ng-repeat="inventory in invActivityAuditData.audit_dates">
                     <td class="col-md-2">
-                      <input type="text" ng-model="inventory.date" ng-change="setDate(inventory.date)" class="form-control col-md-2" uib-datepicker-popup="yyyy-MM-dd" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close"  ng-model-options="{timezone:'UTC'}"/>
+                      <!-- <input type="text" ng-model="inventory.date" ng-change="setDate(inventory.date)" class="form-control col-md-2" uib-datepicker-popup="yyyy-MM-dd" is-open="popup1" min-date="today" datepicker-options="dateOptions" close-text="Close"  ng-model-options="{timezone:'UTC'}"/>
                       <span class="input-group-btn">
                         <button type="button" class="btn btn-default" ng-click="popup1 = true"><i class="glyphicon glyphicon-calendar"></i></button>
-                      </span>
+                      </span> -->
+                      <p class="input-group">
+                        <input type="text" class="form-control col-md-4"  ng-model="inventory.date" ng-change="setDate(inventory.date)" uib-datepicker-popup="yyyy-MM-dd" is-open="popup1"  min-date="today" datepicker-options="dateOptions" close-text="Close" ng-model-options="{timezone:'UTC'}"/>
+                        <span class="input-group-btn">
+                          <button type="button" class="btn btn-default" ng-click="popup1=true"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </span>
+                      </p>
                     </td>
                     <td class="col-md-2" rowspan="invActivityAuditData.audit_dates.length">
                       <select class="form-control spacing" ng-model="inventory.userCode">
                         <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
                       </select>
                     </td>
-                    <td class="col-md-1">
+                    <!-- <td class="col-md-1">
                        <a class="btn btn-danger btn-sm"  >
                          <span class="glyphicon glyphicon-plus" uib-tooltip = "Add Date" ng-click="addAuditDate(invActivityAuditData.audit_dates)"></span>
                        </a>
-                    </td>
+                    </td> -->
                     <td class="col-md-1">
                        <a class="btn btn-danger btn-sm"  >
                          <span class="glyphicon glyphicon-trash" uib-tooltip = "Delete Date" ng-click="removeAuditDate(invActivityAuditData.audit_dates,$index)"></span>
@@ -144,7 +159,7 @@
                   </tr>
                 </tbody>
               </table>
-              <div class = "col-md-12" style="text-align:right;padding-right:150px">
+              <div class = "col-md-12 save ">
                 <button class="btn btn-danger active notify" ng-click="saveActivityDates()">Save</button>
               </div>
             </div>
