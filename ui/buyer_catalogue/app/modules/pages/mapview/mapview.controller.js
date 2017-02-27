@@ -1,15 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-    .constant('constants',{
-      base_url : 'http://localhost:8108/',
-      url_base : 'v0/ui/website/',
-      AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
-      policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
-      acl : 'public-read',
-      signature : "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=",
-      content_type : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    })
-    .controller('MapCtrl', function(constants, $scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare) {
+    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare, constants) {
 // You have to initailise some value for the map center beforehand
 // $scope.map is just for that purpose --> Set it according to your needs.
 // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
@@ -1400,6 +1391,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
        };
      $scope.exportData = function(){
        try{
+         console.log(constants);
          $scope.checkFileExport = true;
          var parent_proposal_id = $window.localStorage.parent_proposal_id;
          if(parent_proposal_id == undefined){
@@ -1480,7 +1472,8 @@ $scope.business_type = $scope.businessData.type_name.business_type;
 //End : function to upload files to amazon server, just provide file name and file
     $scope.upload = function (file) {
      try{
-      var uploadUrl = 'http://localhost:8108/v0/ui/website/';
+      var uploadUrl = constants.base_url + constants.url_base;
+      // var uploadUrl = 'http://localhost:8108/v0/ui/website/';
       var token = $rootScope.globals.currentUser.token ;
       Upload.upload({
           url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
@@ -1488,7 +1481,8 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           headers: {'Authorization': 'JWT ' + token},
       }).success(function (response) {
         uploadFileToAmazonServer(response.data,file);
-          //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
+          alert("Successfully Uploaded");
+          // console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
       }).error(function (response) {
           console.log('Error status: ' + response.status);
           // alert("Data not Imported");
@@ -1596,7 +1590,7 @@ $scope.getSocietyDetails = function(supplier,center,index){
      //$rootScope.societyname = response.society_data.society_name;
      $scope.residentCount = estimatedResidents(response.data.supplier_data.flat_count);
      $scope.flatcountflier = response.data.supplier_data.flat_count;
-     var baseUrl = 'http://mdimages.s3.amazonaws.com/';
+     var baseUrl = constants.aws_bucket_url;
      // Start : Code added to seperate images by their image tag names
      var imageUrl;
      $scope.SocietyImages = [],$scope.FlierImages=[],$scope.PosterImages=[],$scope.StandeeImages=[],$scope.StallImages=[],$scope.CarImages=[];

@@ -1,10 +1,11 @@
 angular.module('catalogueApp')
 
-.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService',
+.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService','constants',
 
-    function ($scope, $rootScope, $window, $location, opsDashBoardService) {
+    function ($scope, $rootScope, $window, $location, opsDashBoardService, constants) {
     	$scope.proposals = [];
       $scope.reason;
+      $scope.bucket_url = constants.aws_bucket_url;
 
       //Start: code added to show or hide details based on user permissions
       $scope.user_code = $window.localStorage.user_code;
@@ -54,7 +55,7 @@ angular.module('catalogueApp')
     }
 
   var getCampaignDetails = function(){
-    opsDashBoardService.getCampaignDetails(6)
+    opsDashBoardService.getCampaignDetails(2)
     	.success(function(response, status){
         console.log(response);
     		$scope.campaignData = response.data;
@@ -129,7 +130,7 @@ angular.module('catalogueApp')
 
     $scope.saveAssignment = function(){
 
-      var userId = 6;
+      var userId = 2;
       var data = {
         to:userId,
         campaign_id:$scope.currentProposal.proposal.proposal_id
