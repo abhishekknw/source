@@ -40,9 +40,9 @@ $scope.user_code = $window.localStorage.user_code;
 if($scope.user_code == 'agency')
   $scope.hideData = true;
 //getting business_name and business_type from localStorage
-$scope.businessData = JSON.parse($window.localStorage.business);
-$scope.business_name = $scope.businessData.name;
-$scope.business_type = $scope.businessData.type_name.business_type;
+// $scope.businessData = JSON.parse($window.localStorage.business);
+// $scope.business_name = $scope.businessData.name;
+// $scope.business_type = $scope.businessData.type_name.business_type;
 // after angular-google-maps is loaded properly only then proces code inside then
   uiGmapGoogleMapApi.then(function(maps) {
       function assignCenterMarkerToMap(center){
@@ -545,6 +545,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
               .success(function(response, status){
                 try{
+                  console.log(response);
                   createInitialFilterData();
                   //TO convert dict to array as response coming in dict form and very difficult to use
                   $scope.center_data = $.map(response.data, function(value, index){
@@ -618,6 +619,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           mapViewService.getSpaces($scope.proposal_id_temp)
             .success(function(response, status){
               try{
+                $scope.business_name = response.data.business_name;
                 createInitialFilterData();
                   // $scope.business_name = response.data.business_name;
                   $scope.center_data = response.data.suppliers;
@@ -1094,6 +1096,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           $scope.checkFilters = true;
           mapViewService.getFilterSuppliers(supplier_filters)
                 .success(function(response, status){
+                  $scope.business_name = response.data.business_name;
                     response.data.center = $scope.current_center.center;
                     $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.suppliers[code];
                     if($scope.center_data[$scope.current_center_index].suppliers_meta){
