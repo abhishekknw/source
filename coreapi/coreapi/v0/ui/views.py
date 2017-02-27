@@ -1554,6 +1554,7 @@ class TowerAPIView(APIView):
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
+
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
             serializer_tower = UITowerSerializer(towers, many=True)
             #inventory_summary = InventorySummary.objects.get(supplier_id=id)
@@ -1594,6 +1595,10 @@ class TowerAPIView(APIView):
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
+            content_type_response = ui_utils.get_content_type(supplier_type_code)
+            if not content_type_response.data['status']:
+                return None
+            content_type = content_type_response.data['data']
         # End: code added and changed for getting supplier_type_code
             inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(data, id)
             if not inventory_obj:
@@ -1642,7 +1647,7 @@ class TowerAPIView(APIView):
                 if tower_dict['nb_count'] < key['notice_board_count_per_tower']:
                     self.save_nb_locations(tower_dict['nb_count'], key['notice_board_count_per_tower'], tower_dict, society)
                 if tower_dict['standee_count'] < key['standee_count']:
-                    self.save_standee_locations(tower_dict['standee_count'], key['standee_count'], tower_dict, society)
+                    self.save_standee_locations(tower_dict['standee_count'], key['standee_count'], tower_dict, society, content_type)
 
             # else:
             #     serializer = SocietyTowerSerializer(data=key)
@@ -1719,11 +1724,11 @@ class TowerAPIView(APIView):
             nb.save()
             i += 1
 
-    def save_standee_locations(self, c1, c2, tower, society):
+    def save_standee_locations(self, c1, c2, tower, society, content_type):
         i = c1 + 1
         while i <= c2:
             sd_tag = society.supplier_id + tower['tower_tag'] + "0000SD" + str(i).zfill(2)
-            sd = StandeeInventory(adinventory_id=sd_tag, tower_id=int(tower['tower_id']))
+            sd = StandeeInventory(adinventory_id=sd_tag, tower_id=int(tower['tower_id']), object_id=society.supplier_id, content_type=content_type)
             sd.save()
             i += 1
 
