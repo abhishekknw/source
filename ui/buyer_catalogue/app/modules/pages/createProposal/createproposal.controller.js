@@ -142,14 +142,21 @@ angular.module('catalogueApp')
     }
     return 0;
   }
+	var convertPincodeToString = function(centers){
+		for(var i=0;i<centers.length; i++){
+			centers[i].center.pincode = centers[i].center.pincode.toString();
+		}
+	}
 	$scope.submit = function(){
     var status = checkSupplierCode();
     if(status >= 0){
 		$scope.model.account_id = $window.localStorage.account_id;
 		$scope.model.business_id = $window.localStorage.business_id;
 		$scope.model.parent = $window.localStorage.proposal_id;
+		$scope.requestData = angular.copy($scope.model);
+		convertPincodeToString($scope.requestData.centers);
 		// call backend to save only if all the latitudes are found
-			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)
+			createProposalService.saveInitialProposal($stateParams.account_id, $scope.requestData)
 			.success(function(response, status){
 				console.log(response);
 				$scope.errormsg = undefined;
@@ -173,7 +180,7 @@ angular.module('catalogueApp')
 			});
     }
     else {
-      // alert("Please Provide Space Type");
+      alert("Please Provide Space Type");
     }
 	}
 });
