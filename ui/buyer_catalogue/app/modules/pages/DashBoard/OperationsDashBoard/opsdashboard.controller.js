@@ -1,8 +1,8 @@
 angular.module('catalogueApp')
 
-.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService',
+.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService','commonDataShare',
 
-    function ($scope, $rootScope, $window, $location, opsDashBoardService) {
+    function ($scope, $rootScope, $window, $location, opsDashBoardService, commonDataShare) {
     	$scope.proposals = [];
       $scope.reason;
 
@@ -33,14 +33,6 @@ angular.module('catalogueApp')
         {header : 'View Release Details'},
         {header : 'View Execution Details'}
       ];
-      $scope.userData = {
-        selecteduser: null,
-        names: [
-        {name : 'Ankit'},
-        {name : 'Amit'},
-        {name : 'Komal'}
-        ]
-      };
 
   var getProposalDetails = function(){
     opsDashBoardService.getProposalDetails()
@@ -54,7 +46,7 @@ angular.module('catalogueApp')
     }
 
   var getCampaignDetails = function(){
-    opsDashBoardService.getCampaignDetails(6)
+    opsDashBoardService.getCampaignDetails($rootScope.globals.currentUser.user_id)
     	.success(function(response, status){
         console.log(response);
     		$scope.campaignData = response.data;
@@ -64,9 +56,20 @@ angular.module('catalogueApp')
     	});
     }
 
+    var getUsersList = function(){
+      commonDataShare.getUsersList()
+        .success(function(response, status){
+          console.log(response);
+      		$scope.userList = response.data;
+      	})
+      	.error(function(response, status){
+      		console.log("error occured", status);
+      	});
+    }
     var init = function(){
       getProposalDetails();
       getCampaignDetails();
+      getUsersList();
     }
     //Call init function TO Load reuired data initially..
     init();
@@ -128,8 +131,8 @@ angular.module('catalogueApp')
     }
 
     $scope.saveAssignment = function(){
-
-      var userId = 6;
+console.log($scope.userId);
+      var userId = $scope.userId;
       var data = {
         to:userId,
         campaign_id:$scope.currentProposal.proposal.proposal_id

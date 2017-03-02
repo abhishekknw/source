@@ -52,6 +52,23 @@ angular.module('catalogueApp')
 
 
       $scope.auditDates = [];
+      function init(){
+        getCampaignReleaseDetails();
+        getUsersList();
+      }
+      //get user list
+      var getUsersList = function(){
+        commonDataShare.getUsersList()
+          .success(function(response, status){
+            console.log(response);
+            $scope.userList = response.data;
+          })
+          .error(function(response, status){
+            console.log("error occured", status);
+          });
+      }
+      init();
+
       //initial call to get release Data
       function getCampaignReleaseDetails(){
       auditReleasePlanService.getCampaignReleaseDetails($scope.campaign_id)
@@ -65,7 +82,7 @@ angular.module('catalogueApp')
       		console.log("error occured", status);
       	});
       }
-      getCampaignReleaseDetails();
+      // getCampaignReleaseDetails();
         var setDataToModel = function(suppliers){
           for(var i=0;i<suppliers.length;i++){
             angular.forEach(suppliers[i].shortlisted_inventories, function(filter){
@@ -170,10 +187,6 @@ angular.module('catalogueApp')
         commonDataShare.showMessage(error.message);
       }
     }
-    $scope.userList = [
-      {name : 'Ankit'},
-      {name : 'Komal'},
-    ];
     $scope.saveUserForActivity = function(){
       console.log($scope.inventoryList);
       auditReleasePlanService.saveUser($scope.inventoryList)
@@ -213,7 +226,7 @@ angular.module('catalogueApp')
         return true;
     }
     $scope.setDate = function(date){
-      date = formatDate(date);
+      date = commonDataShare.formatDate(date);
     }
     $scope.addAuditDate = function(inventory){
       console.log(inventory);
@@ -262,9 +275,9 @@ angular.module('catalogueApp')
         if($scope.invActivityData[i].act_date.date){
           var releaseClosureData = angular.copy(releaseClosureDataStruct);
           releaseClosureData.activity_type = $scope.invActivityData[i].activity_type;
-          var date = formatDate($scope.invActivityData[i].act_date.date);
-          // var userCode = $scope.invActivityData[i].act_date.userCode;
-          var userCode = 6;
+          var date = commonDataShare.formatDate($scope.invActivityData[i].act_date.date);
+          var userCode = $scope.invActivityData[i].act_date.userCode;
+          // var userCode = 6;
           releaseClosureData.date_user_assignments[date] = userCode;
           data.push(releaseClosureData);
         }
@@ -274,9 +287,9 @@ angular.module('catalogueApp')
       for(var i=0; i<$scope.invActivityAuditData.audit_dates.length; i++){
         if($scope.invActivityAuditData.audit_dates[i].date){
           // auditData.date_user_assignments[i] = {};
-          var date = formatDate($scope.invActivityAuditData.audit_dates[i].date);
-          // var userCode = $scope.invActivityAuditData.audit_dates[i].userCode;
-          var userCode = 6;
+          var date = commonDataShare.formatDate($scope.invActivityAuditData.audit_dates[i].date);
+          var userCode = $scope.invActivityAuditData.audit_dates[i].userCode;
+          // var userCode = 6;
           auditData.date_user_assignments[date] = userCode;
         }
       }
@@ -287,17 +300,6 @@ angular.module('catalogueApp')
       };
     }
 
-    //To convert date in yyyy-MM-dd format
-    function formatDate(date) {
-      var d = new Date(date),
-          month = '' + (d.getMonth() + 1),
-          day = '' + d.getDate(),
-          year = d.getFullYear();
-      if (month.length < 2) month = '0' + month;
-      if (day.length < 2) day = '0' + day;
-
-      return [year, month, day].join('-');
-    }
     $scope.showActivityDates = function(inventory){
       $scope.ActivityDatesData = inventory;
     }

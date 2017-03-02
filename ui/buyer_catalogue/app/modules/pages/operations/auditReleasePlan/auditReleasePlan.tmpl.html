@@ -109,7 +109,7 @@
                     </td>
                     <td class="col-md-2">
                       <select class="form-control spacing" ng-model="inventory.act_date.userCode">
-                        <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
+                        <option ng-repeat="user in userList" value="{{user.id}}">{{user.username}}</option>
                       </select>
                     </td>
                   </tr>
@@ -128,7 +128,7 @@
                     </td>
                     <td class="col-md-2" rowspan="invActivityAuditData.audit_dates.length">
                       <select class="form-control spacing" ng-model="inventory.userCode">
-                        <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
+                        <option ng-repeat="user in userList" value="{{user.id}}">{{user.username}}</option>
                       </select>
                     </td>
                     <td class="col-md-1">

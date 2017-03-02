@@ -128,8 +128,8 @@
         <div class = "modal-body">
         <div class = "row">
         <label>Assign to:</label>
-          <select ng-model= "userData.selecteduser">
-            <option ng-repeat = "name in userData.names" value = "{{name.name}}">{{name.name}}</option>
+          <select ng-model= "userId">
+            <option ng-repeat = "user in userList" value = "{{user.id}}">{{user.username}}</option>
           </select>
         </div>
           <button class="btn btn-danger active notify" ng-click="saveAssignment()">Assign</button>
