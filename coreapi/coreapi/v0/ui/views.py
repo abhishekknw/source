@@ -48,6 +48,7 @@ from v0.ui.serializers import SocietyListSerializer
 
 # project imports
 import utils as ui_utils
+import website.utils as website_utils
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas, BaseUser
 from constants import keys, decision
@@ -625,13 +626,17 @@ class SocietyList(APIView):
             else:
                 societies = models.SupplierTypeSociety.objects.filter(user=request.user).order_by("society_name")
 
-            societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
-            paginator = PageNumberPagination()
-            result_page = paginator.paginate_queryset(societies_with_images, request)
-            paginator_response = paginator.get_paginated_response(result_page)
+            serializer = SupplierTypeSocietySerializer(societies, many=True)
+            # societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
+
+            response = website_utils.manipulate_object_key_values(serializer.data)
+            if not response.data['status']:
+                return response
+            suppliers = response.data['data']
+            societies_with_images = ui_utils.get_supplier_image(suppliers, ui_constants.society_name)            
             data = {
                 'count': len(societies_with_images),
-                'societies': paginator_response.data
+                'societies': societies_with_images
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:

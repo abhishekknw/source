@@ -721,8 +721,8 @@ def get_supplier_image(supplier_objects,supplier_name):
         images = v0.models.ImageMapping.objects.all()
         result = [] 
         # To optimize this for loop, Join query can be used
-        for model in supplier_objects:
-            data = model_to_dict(model)
+        for data in supplier_objects:
+            # data = model_to_dict(model)
             for image in images:
                 if (data['supplier_id'] == image.object_id):
                     if (image.name == supplier_name):
