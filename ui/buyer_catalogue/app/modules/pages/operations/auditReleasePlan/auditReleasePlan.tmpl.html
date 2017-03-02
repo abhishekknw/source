@@ -27,7 +27,7 @@
             </td>
             <td class="col-md-1">
               <div>
-              <button  class="btn btn-info" data-target="#manageDatesModal" data-toggle="modal" data-backdrop="static" ng-click="getActivityDates(supplier)">Manage Date</button>
+              <button  class="btn btn-info" ng-disabled="invIdList.length == 0" data-target="#manageDatesModal" data-toggle="modal" data-backdrop="static" ng-click="getActivityDates(supplier)">Manage Date</button>
             </div><br>
             <div>
               <a  class="" data-target="#showDatesModal" data-toggle="modal" ng-click="showActivityDates(filter.detail)">View Dates</a>
