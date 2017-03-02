@@ -4774,3 +4774,21 @@ class ReassignInventoryActivityDateUsers(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
+class UserList(APIView):
+    """
+        returns all users
+    """
+
+    def get(self, request):
+        """
+        Args:
+            request:
+        Returns: returns all users
+        """
+        class_name = self.__class__.__name__
+        try:
+            users = models.BaseUser.objects.all()
+            user_serializer = website_serializers.BaseUserSerializer(users, many=True)
+            return ui_utils.handle_response(class_name, data=user_serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
