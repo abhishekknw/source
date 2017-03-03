@@ -9,7 +9,7 @@ angular.module('catalogueApp')
       signature : "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=",
       content_type : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     })
-    .controller('MapCtrl', function(constants, $scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare) {
+    .controller('MapCtrl', function(constants, $scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare, errorHandler) {
 // You have to initailise some value for the map center beforehand
 // $scope.map is just for that purpose --> Set it according to your needs.
 // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
@@ -43,6 +43,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   $scope.show_societies = false;
   $scope.society_markers = []; // markers on the map
   $scope.circle = {};
+
+  //for loading icon
+  $scope.requestProposal = true;
 
 //code added to show or hide some details based on user permissions
 $scope.user_code = $window.localStorage.user_code;
@@ -1400,6 +1403,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
        };
      $scope.exportData = function(){
        try{
+         $scope.requestProposal = false;
          $scope.checkFileExport = true;
          var parent_proposal_id = $window.localStorage.parent_proposal_id;
          if(parent_proposal_id == undefined){
@@ -1414,48 +1418,31 @@ $scope.business_type = $scope.businessData.type_name.business_type;
            centers:$scope.center_data,
            is_proposal_version_created:$window.localStorage.isSavedProposal,
          };
-         //console.log(data);
          $http({
               url: constants.base_url + constants.url_base + parent_proposal_id + '/proposal-version/',
               method: 'POST',
-              //responseType: 'arraybuffer',
               data: proposal_data, //this is your json data string
               headers: {
                   'Content-type': 'application/json',
-                  // 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                   'Authorization' : 'JWT ' + $rootScope.globals.currentUser.token
               }
          }).success(function(response){
-          //  alert("Successful");
-              // convert it onto Blob object because it's a binary file.
-              // var blob = new Blob([data], {
-              //     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-              // });
-              // fetch the content_type and file name from headers
-              // $scope.content_type = headers('content-type');
-              // $scope.file_name = headers('file_name');
-              // set the file to blob
-              // $scope.file_data = blob
-              // var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
-              //upload file to amazon server
-              //uploadFileToAmazonServer($scope.file_name,$scope.file_data);
-              // download it immediately
-              //saveAs(blob, $scope.file_name);
+           $scope.requestProposal = true;
+           commonDataShare.showMessage(errorHandler.request_proposal_success);
               $scope.checkFileExport = false;
-
          }).error(function(response){
-              //Some error log
+           $scope.requestProposal = true;
+              commonDataShare.showMessage(errorHandler.request_proposal_error);
               $scope.checkFileExport = false;
-              // alert('Error in exporting the file');
          });
        }catch(error){
+         $scope.requestProposal = true;
          commonDataShare.showMessage(error.message);
        }
      }
 
 //Start : function to upload files to amazon server, just provide file name and file
    var uploadFileToAmazonServer = function(file_name,file){
-     // upload it to S3 Bucket
     try{
      Upload.upload({
          url: 'http://mdimages.s3.amazonaws.com/',
@@ -1469,32 +1456,37 @@ $scope.business_type = $scope.businessData.type_name.business_type;
              "Content-Type": constants.content_type,// content type of the file (NotEmpty)
              file: file }
          }).success(function (response){
-              // alert("Upload to Server Successful");
+              commonDataShare.showMessage(errorHandler.uploadfile_success);
          }).error(function(response) {
-            //  alert("Upload to server Unsuccessful");
+              commonDataShare.showMessage(errorHandler.uploadfile_error);
          });
        }catch(error){
+         $scope.requestProposal = true;
          commonDataShare.showMessage(error.message);
        }
    }
 //End : function to upload files to amazon server, just provide file name and file
     $scope.upload = function (file) {
-     try{
-      var uploadUrl = 'http://localhost:8108/v0/ui/website/';
-      var token = $rootScope.globals.currentUser.token ;
-      Upload.upload({
-          url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
-          data: {file: file, 'username': $scope.username},
-          headers: {'Authorization': 'JWT ' + token},
-      }).success(function (response) {
-        uploadFileToAmazonServer(response.data,file);
-          //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
-      }).error(function (response) {
-          console.log('Error status: ' + response.status);
-          // alert("Data not Imported");
-      });
-    }catch(error){
-      commonDataShare.showMessage(error.message);
+      if(file){
+       try{
+        $scope.requestProposal = false;
+        var uploadUrl = 'http://localhost:8108/v0/ui/website/';
+        var token = $rootScope.globals.currentUser.token ;
+        Upload.upload({
+            url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
+            data: {file: file, 'username': $scope.username},
+            headers: {'Authorization': 'JWT ' + token},
+        }).success(function (response) {
+          uploadFileToAmazonServer(response.data,file);
+          $scope.requestProposal = true;
+        }).error(function (response) {
+          $scope.requestProposal = true;
+            commonDataShare.showMessage(errorHandler.importfile_error);
+        });
+      }catch(error){
+        $scope.requestProposal = true;
+        commonDataShare.showMessage(error.message);
+      }
     }
   };
     //End: upload and import functionality

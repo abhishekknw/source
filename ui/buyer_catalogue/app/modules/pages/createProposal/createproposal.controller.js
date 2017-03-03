@@ -1,6 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-.controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http){
+.controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http, errorHandler,commonDataShare){
 	$scope.model = {}
 	$scope.model.centers = new Array();
 	$scope.society = 'RS';
@@ -169,7 +169,7 @@ angular.module('catalogueApp')
 				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){
-				// alert("Error Occured");
+				commonDataShare.showMessage(errorHandler.geo_location_error);
 				console.log("Error");
 				if(typeof(response) != typeof(12)){
 					console.log("response is ", response);
