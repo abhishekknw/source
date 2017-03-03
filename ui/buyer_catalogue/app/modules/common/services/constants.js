@@ -1,6 +1,7 @@
 angular
   .module('catalogueApp').
   constant('errorHandler',{
+    server_connection_error : 'Server is down, Please Try again',
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
     importfile_error : 'Please select correct file',
     uploadfile_success : 'File Uploaded successfully',

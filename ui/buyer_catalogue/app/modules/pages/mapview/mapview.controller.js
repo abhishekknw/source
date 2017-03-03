@@ -425,7 +425,6 @@ $scope.business_type = $scope.businessData.type_name.business_type;
                 $scope.amenities = response.data;
               })
               .error(function(response, status){
-                console.log("error occured in amenities");
               });
             //End:   api call to get amenity filters from database
             $scope.flat_avg_rental_persqft = {
@@ -617,12 +616,12 @@ $scope.business_type = $scope.businessData.type_name.business_type;
                   $scope.loadIcon1 = response;
                 }
               catch(error){
-                // alert("error");
                 commonDataShare.showMessage(error.message);
               }
             })
               .error(function(response, status){
-                // alert("Error Occured");
+                if(status == -1)
+                  commonDataShare.showMessage(errorHandler.server_connection_error);
               });
           }
           //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
@@ -696,8 +695,10 @@ $scope.business_type = $scope.businessData.type_name.business_type;
                 }
               })
             .error(function(response, status){
-                $scope.get_spaces_error = response.message;
-                console.log("Error response : ",response);
+              if(status == -1)
+                commonDataShare.showMessage(errorHandler.server_connection_error);
+              $scope.get_spaces_error = response.message;
+              console.log("Error response : ",response);
             });
           }
         });

@@ -9,13 +9,14 @@ angular.module('machadaloPages')
   content_type : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 })
 .controller('CreateCampaignCtrl',
-    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload) {
+    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, errorHandler) {
 
       //start:code added to show or hide details based on user permissions
       $scope.user_code = $window.localStorage.user_code;
       if($scope.user_code == 'agency')
         $scope.hideData = true;
       //End:code added to show or hide details based on user permissions
+      $scope.uploadfile = true; // added for loading spinner active/deactive
       $scope.account_proposals = [];
       $scope.model = {};
       $scope.model.business = {};
@@ -280,6 +281,7 @@ angular.module('machadaloPages')
         };
         //Start: To upload file when upload button is clicked
         $scope.upload = function (file,proposal_id) {
+          $scope.uploadfile = false;
           var uploadUrl = 'http://localhost:8108/v0/ui/website/';
           var token = $rootScope.globals.currentUser.token ;
           Upload.upload({
@@ -288,16 +290,14 @@ angular.module('machadaloPages')
               headers: {'Authorization': 'JWT ' + token},
           }).success(function (response) {
             uploadFileToAmazonServer(response.data,file);
-              //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
           }).error(function (response) {
-              console.log('Error status: ' + response.status);
-              alert("Data not Imported");
+            $scope.uploadfile = true;
+            commonDataShare.showMessage(errorHandler.importfile_error);
           });
         };
         //End: To upload file when upload button is clicked
         //Start : function to upload files to amazon server, just provide file name and file
            var uploadFileToAmazonServer = function(file_name,file){
-             // upload it to S3 Bucket
              Upload.upload({
                  url: 'http://mdimages.s3.amazonaws.com/',
                  method : 'POST',
@@ -310,9 +310,11 @@ angular.module('machadaloPages')
                      "Content-Type": constants.content_type,// content type of the file (NotEmpty)
                      file: file }
                  }).success(function (response){
-                      alert("Upload to Server Successful");
+                      $scope.uploadfile = true;
+                      commonDataShare.showMessage(errorHandler.uploadfile_success);
                  }).error(function(response) {
-                     alert("Upload to server Unsuccessful");
+                      $scope.uploadfile = true;
+                      commonDataShare.showMessage(errorHandler.uploadfile_error);
                  });
            }
         //End : function to upload files to amazon server, just provide file name and file
