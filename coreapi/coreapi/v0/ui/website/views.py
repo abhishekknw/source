@@ -1163,6 +1163,9 @@ class FilteredSuppliers(APIView):
             proposal_id = request.data.get('proposal_id')
             center_id = request.data.get('center_id')
             amenities = request.data.get('amenities')
+            # To get business name
+            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            business_name = proposal.account.business.name
 
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
@@ -1277,6 +1280,7 @@ class FilteredSuppliers(APIView):
                     suppliers = response.data['data'].values()
 
             # construct the response and return
+            result['business_name'] = business_name
             result['suppliers'] = {}
             result['suppliers_meta'] = {}
 

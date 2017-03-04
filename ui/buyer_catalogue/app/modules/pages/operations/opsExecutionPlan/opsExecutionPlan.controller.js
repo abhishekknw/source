@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('OpsExecutionPlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams',
-    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams) {
+    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare',
+    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.headings = [
         {header : 'Supplier Id'},
@@ -151,7 +151,7 @@ angular.module('catalogueApp')
       }
       var reAssignActivityData = function(){
         angular.forEach($scope.reAssignActivityList, function(activity, assignId){
-          $scope.reAssignActivityList[assignId]['reassigned_activity_date'] = formatDate($scope.activity_date);
+          $scope.reAssignActivityList[assignId]['reassigned_activity_date'] = commonDataShare.formatDate($scope.activity_date);
           // $scope.reAssignActivityList.data[assignId]['assigned_to'] = $scope.userCode;
           //use above after getting userList
           $scope.reAssignActivityList[assignId]['assigned_to'] = 6;
@@ -169,14 +169,4 @@ angular.module('catalogueApp')
           console.log(response);
         });
       }
-      function formatDate(date) {
-        var d = new Date(date),
-            month = '' + (d.getMonth() + 1),
-            day = '' + d.getDate(),
-            year = d.getFullYear();
-        if (month.length < 2) month = '0' + month;
-        if (day.length < 2) day = '0' + day;
-
-        return [year, month, day].join('-');
-    }
 }]);
