@@ -322,7 +322,6 @@
             <th class="center-align" ng-if="inv_stall">Stall Count</th>
             <th class="center-align" ng-if="inv_flier">Flyer Count</th>
             <th class = "col-md-4">Shortlisted/Buffer</th>
-            <th class = "col-md-4">Action</th>
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
@@ -330,10 +329,10 @@
         <tr ng-repeat = "supplier in center.suppliers['CP']">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
-            <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{supplier.supplier_id}}" target="_blank">{{supplier.name}}</a></td>
+            <td>{{supplier.name}}</td>
             <td>{{supplier.subarea}}</td>
-            <td>{{supplier.flat_count}}</td>
-            <td>{{supplier.average_rent}}</td>
+            <td>{{supplier.totalcompanies_count}}</td>
+            <td>{{supplier.totalemployees_count}}</td>
             <!-- <td>{{society.society_type_quality}}</td> -->
             <!-- <td>{{society.society_location_type}}</td> -->
             <td>{{supplier.machadalo_index}}</td>
@@ -345,14 +344,16 @@
             <!-- <td ng-if="inv_stall">{{society.stall_price}}</td> -->
             <td ng-if="inv_flier">{{supplier.flat_count}}</td>
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
-            <td>
-              <button class="btn btn-success active" ng-model="supplier.status" ng-if="!supplier.shortlisted" ng-click="setSupplierStatus(supplier,'S')">Shortlist</button>
-              <span ng-if="supplier.shortlisted">
-              <input type="checkbox" ng-model="supplier.buffer_status" ng-click="setSupplierStatus(supplier,'B')"> Buffer
-              </span>
-            </td>
-            <td>
-              <button class="btn btn-danger active" ng-model="supplier.status" ng-if="supplier.shortlisted" ng-click="setSupplierStatus(supplier,'R')">Remove</button>
+            <td class="col-md-2">
+              <div class="radio">
+                     <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,'CP')">Shortlist</label>
+              </div>
+              <div class="radio">
+                     <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,'CP')">Buffer</label>
+              </div>
+              <div class="radio" ng-if="supplier.status != 'X'">
+                     <label><input type="radio" ng-model="supplier.status" value="R" ng-click="updateSupplierStatus(supplier,center,'CP')">Remove</label>
+              </div>
             </td>
         </tr>
       </tbody>

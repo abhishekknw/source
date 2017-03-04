@@ -575,12 +575,11 @@ $scope.business_type = $scope.businessData.type_name.business_type;
                   $scope.current_center_index = 0;
                   $scope.current_center_id = $scope.current_center.center.id;
                   $scope.old_data = angular.copy($scope.center_data);
-                  toggleInventoryFilters($scope.current_center,'true','RS');
+                  // toggleInventoryFilters($scope.current_center,'true','RS');
                   mapViewBasicSummary();
                   suppliersData();
                   gridViewBasicSummary();
                   gridViewFilterSummary();
-
 
                   for(var i=0;i<$scope.center_data.length; i++)
                     $scope.initial_center_changed.push(false);
@@ -754,14 +753,15 @@ $scope.business_type = $scope.businessData.type_name.business_type;
         }
         if($scope.current_center.suppliers_meta['RS'] != null || $scope.current_center.suppliers['RS'] != null){
             $scope.societyFilters();
+            toggleInventoryFilters($scope.current_center,'true','RS');
           }
         if($scope.current_center.suppliers_meta['CP'] != null){
           var filter_types = Object.keys($scope.current_center.suppliers_meta['CP']);
           for(var j=0;j<filter_types.length;j++){
             if(filter_types[j]=='inventory_type_selected'){
-              selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.CP_filters['inventory']);
+              selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.current_center.CP_filters['inventory']);
             }else
-              selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.CP_filters[filter_types[j]]);
+              selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.current_center.CP_filters[filter_types[j]]);
           }
         }
         if($scope.current_center.suppliers_meta['CP'] != null || $scope.current_center.suppliers['CP'] != null){
