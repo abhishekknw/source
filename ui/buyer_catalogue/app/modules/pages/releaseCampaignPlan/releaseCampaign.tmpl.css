@@ -52,3 +52,6 @@ th{
 .alignment {
   text-align: center;
  }
+ .error{
+	 color: #c9302c;
+ }

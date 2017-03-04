@@ -1,8 +1,9 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams) {
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','errorHandler',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,errorHandler) {
   $scope.campaign_id = $stateParams.proposal_id;
+  $scope.positiveNoError = errorHandler.positive_number_error;
  	$scope.headings = [
         {header : 'Supplier Name'},
         {header : 'Area'},

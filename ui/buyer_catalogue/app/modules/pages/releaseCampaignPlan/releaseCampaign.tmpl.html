@@ -35,13 +35,19 @@
             <td class="col-md-1">{{filter.total_count}}</td>
             <td class="col-md-1">{{filter.supplier_price}}</td>
             <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.total_inventory_supplier_price}}</td>
-            <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first"><input type="number" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width"></td>
+            <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="priceform">
+              <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width" min="0">
+              <span class="error" ng-show="priceform.price.$error.min">{{positiveNoError}}</span>
+            </td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first">
               <select class="form-control spacing" ng-model="supplier.booking_status">
                 <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
               </select>
             </td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first"><input type="number" class="form-control spacing" ng-model="supplier.phase"></td>
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
+              <input type="number" name="phase" class="form-control spacing" ng-model="supplier.phase" min="1">
+              <span class="error" ng-show="phaseform.phase.$error.min">{{positiveNoError}}</span>
+            </td>
             <!--mode of payment  -->
             <td class="col-md-1" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <div class="radio">

@@ -9,5 +9,6 @@ angular
     request_proposal_success : 'Request for proposal is sent, Machadalo team will contact you soon',
     request_proposal_error : 'Error occured, Please check your internet connection and Try again',
     save_proposal_success : 'Your proposal is saved successfully',
+    positive_number_error : 'Enter Positive Number Only',
 
   });

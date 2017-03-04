@@ -33,7 +33,8 @@
               <a  class="" data-target="#showDatesModal" data-toggle="modal" ng-click="showActivityDates(filter.detail)">View Dates</a>
             </div>
             </td>
-            <td class="col-md-8"><textarea rows="4" cols="50" name="comments" ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing"></textarea></td>
+            <td class="col-md-8">
+              <textarea rows="4" cols="50" name="comments" placeholder="maximum 50 characters" ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing" maxlength="50"></textarea></td>
           </tr>
         </tbody>
       </table>
