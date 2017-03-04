@@ -535,7 +535,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
         center_ids = result.keys()
         # this creates a mapping like { 1: 'center_object_1', 2: 'center_object_2' } etc
         center_objects = models.ProposalCenterMapping.objects.in_bulk(center_ids)
-        proposal_object = models.ProposalInfo.objects.get_user_related_object(user, proposal_id=proposal_id)
+        proposal_object = models.ProposalInfo.objects.get_user_related_object(user=user, proposal_id=proposal_id)
 
         # set to hold all durations
         duration_list = set()
@@ -1206,7 +1206,7 @@ def save_center_data(proposal_data, user):
 
                 if 'id' in center_info:
                     # means an existing center was updated
-                    center_instance = models.ProposalCenterMapping.objects.get_user_related_object(id=center_info['id'])
+                    center_instance = models.ProposalCenterMapping.objects.get_user_related_object(user=user, id=center_info['id'])
                     center_serializer = serializers.ProposalCenterMappingSerializer(center_instance, data=center)
                 else:
                     # means we need to create new center
@@ -1655,7 +1655,7 @@ def suppliers_within_radius(data):
         user = data['user']
         proposal_id = data['proposal_id']
         center_id = data['center_id']
-        proposal = models.ProposalInfo.objects.get_user_related_object(user, proposal_id=proposal_id)
+        proposal = models.ProposalInfo.objects.get_user_related_object(user=user, proposal_id=proposal_id)
         business_name = proposal.account.business.name
 
         master_result = {
@@ -1678,20 +1678,20 @@ def suppliers_within_radius(data):
             serializer.data[0]['latitude'] = data['latitude']
             serializer.data[0]['longitude'] = data['longitude']
 
-            proposal_center_objects = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user, center_id=center_id)
+            proposal_center_objects = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user=user, center_id=center_id)
             supplier_type_codes_list = proposal_center_objects.select_related('center').values('center', 'supplier_type_code')
 
             # define center_id_list to be used later
             center_id_list = [center_id]
         else:
-            proposal_center_objects = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user, proposal_id=proposal_id)
+            proposal_center_objects = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user=user, proposal_id=proposal_id)
             supplier_type_codes_list = proposal_center_objects.select_related('center').values('center', 'supplier_type_code')
 
             # fetch the mapped centers. This centers    were saved when CreateInitialproposal was hit.
             center_id_list = [data['center'] for data in supplier_type_codes_list]
 
             # query the center objects
-            centers = models.ProposalCenterMapping.objects.filter_user_related_objects(user, proposal_id=proposal_id, id__in=center_id_list)
+            centers = models.ProposalCenterMapping.objects.filter_user_related_objects(user=user, proposal_id=proposal_id, id__in=center_id_list)
             # centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id, id__in=center_id_list)
             serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
 
@@ -1753,7 +1753,7 @@ def child_proposals(data):
         parent = data['parent']
         user = data['user']
         account_id = data['account_id']
-        proposal_children = models.ProposalInfo.objects.filter_user_related_objects(user)
+        proposal_children = models.ProposalInfo.objects.filter_user_related_objects(user=user)
         if account_id:
             proposal_children = proposal_children.filter(account_id=account_id)
         proposal_children = proposal_children.filter(parent=parent).order_by('-created_on')
@@ -1774,12 +1774,12 @@ def construct_proposal_response(proposal_id, user):
     """
     function_name = construct_proposal_response.__name__
     try:
-        supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user, proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
+        supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
         # fetch the mapped centers. This centers were saved when CreateInitialProposal was hit.
         center_id_list = [data['center'] for data in supplier_type_codes_list]
 
         # query the center objects
-        centers = models.ProposalCenterMapping.objects.filter_user_related_objects(user, proposal_id=proposal_id, id__in=center_id_list)
+        centers = models.ProposalCenterMapping.objects.filter_user_related_objects(user=user, proposal_id=proposal_id, id__in=center_id_list)
         serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
         supplier_codes_dict = {center['id']: [] for center in serializer.data}
         for data in supplier_type_codes_list:
@@ -1936,7 +1936,7 @@ def proposal_shortlisted_spaces(data):
         proposal_id = data['proposal_id']
 
         # fetch all shortlisted suppliers object id's for this proposal
-        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter_user_related_objects(user, proposal_id=proposal_id).select_related('content_object').values()
+        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).select_related('content_object').values()
 
         response = manipulate_object_key_values(shortlisted_suppliers)
         if not response.data['status']:
@@ -1948,7 +1948,7 @@ def proposal_shortlisted_spaces(data):
         supplier_ids = [supplier['object_id'] for supplier in shortlisted_suppliers ]
 
         # fetch all inventory_summary objects related to each one of suppliers
-        inventory_summary_objects = models.InventorySummary.objects.filter_user_related_objects(user, object_id__in=supplier_ids)
+        inventory_summary_objects = models.InventorySummary.objects.filter_user_related_objects(user=user, object_id__in=supplier_ids)
 
         # generate a mapping from object_id to inv_summ_object in a dict so that right object can be fetched up
         inventory_summary_objects_mapping = {inv_sum_object.object_id: inv_sum_object for inv_sum_object in inventory_summary_objects}

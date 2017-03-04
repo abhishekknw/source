@@ -347,6 +347,10 @@ class AccountInfoSerializer(ModelSerializer):
         # fields = ('id','name')
 
 
+class AccountSerializer(ModelSerializer):
+    class Meta:
+        model = AccountInfo
+
 # class AccountContactSerializer(ModelSerializer):
 
 #     class Meta:

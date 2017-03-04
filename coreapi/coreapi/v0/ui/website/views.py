@@ -61,6 +61,7 @@ import serializers as website_serializers
 import constants as website_constants
 import renderers as website_renderers
 import v0.ui.constants as ui_constants
+import v0.serializers as v0_serializers
 import v0.permissions as v0_permissions
 import v0.utils as v0_utils
 from v0 import errors
@@ -94,7 +95,7 @@ class BusinessAPIListView(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            items = BusinessInfo.objects.filter_user_related_objects(request.user)
+            items = BusinessInfo.objects.filter_user_related_objects(user=request.user)
             serializer = BusinessInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
@@ -132,9 +133,9 @@ class BusinessAccounts(APIView):
     def get(self, request, id):
         class_name = self.__class__.__name__
         try:
-            item = BusinessInfo.objects.get_user_related_object(request.user, pk=id)
+            item = BusinessInfo.objects.get_user_related_object(user=request.user, pk=id)
             business_serializer = UIBusinessInfoSerializer(item)
-            accounts = AccountInfo.objects.filter_user_related_objects(request.user, business=item)
+            accounts = AccountInfo.objects.filter_user_related_objects(user=request.user, business=item)
             accounts_serializer = UIAccountInfoSerializer(accounts, many=True)
             response = {
                 'business': business_serializer.data,
@@ -152,7 +153,7 @@ class Accounts(APIView):
     def get(self, request, format=None):
         class_name = self.__class__.__name__
         try:
-            items = AccountInfo.objects.filter_user_related_objects(request.user)
+            items = AccountInfo.objects.filter_user_related_objects(user=request.user)
             serializer = AccountInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
@@ -168,7 +169,7 @@ class AccountAPIView(APIView):
         class_name = self.__class__.__name__
 
         try:
-            account = AccountInfo.objects.get_user_related_object(request.user, pk=id)
+            account = AccountInfo.objects.get_user_related_object(user=request.user, pk=id)
             account_serializer = UIAccountInfoSerializer(account)
             business = BusinessInfo.objects.get(pk=account.business_id)
             business_serializer = BusinessInfoSerializer(business)
@@ -217,7 +218,7 @@ class BusinessContacts(APIView):
                 business_serializer_data = {}
 
                 if 'business_id' in business_data:
-                    business = BusinessInfo.objects.get(pk=business_data['business_id'])
+                    business = BusinessInfo.objects.get_user_related_object(user=request.user, pk=business_data['business_id'])
                     serializer = BusinessInfoSerializer(business, data=business_data)
                 else:
                     business_data['business_id'] = self.generate_business_id(business_name=business_data['name'], \
@@ -235,7 +236,7 @@ class BusinessContacts(APIView):
                      business_serializer_data['business_sub_type'] = sub_type.business_sub_type
                      business_serializer_data['business_type'] = type_name.business_type
 
-                business = BusinessInfo.objects.get_user_related_object(current_user, pk=business_data['business_id'])
+                business = BusinessInfo.objects.get_user_related_object(user=current_user, pk=business_data['business_id'])
                 content_type_business = ContentType.objects.get_for_model(BusinessInfo)
                 contact_ids = list(business.contacts.all().values_list('id', flat=True))
                 contact_list = []
@@ -362,10 +363,10 @@ class AccountContacts(APIView):
                 business_id = account_data['business_id']
                 # checking a valid business
 
-                business = BusinessInfo.objects.get_user_related_object(current_user, business_id=business_id)
+                business = BusinessInfo.objects.get_user_related_object(user=current_user, business_id=business_id)
 
                 if 'account_id' in account_data:
-                    account = AccountInfo.objects.get_user_related_object(current_user, pk=account_data['account_id'])
+                    account = AccountInfo.objects.get_user_related_object(user=current_user, pk=account_data['account_id'])
                     serializer = AccountInfoSerializer(account,data=account_data)
                 else:
                     account_data['account_id']= self.generate_account_id(account_name=account_data['name'],business_id=business_id)
@@ -2625,7 +2626,7 @@ class CreateInitialProposal(APIView):
                 proposal_data['proposal_id'] = response.data['data']
 
                 # get the account object. required for creating the proposal
-                account = AccountInfo.objects.get_user_related_object(user, account_id=account_id)
+                account = AccountInfo.objects.get_user_related_object(user=user, account_id=account_id)
                 proposal_data['account'] = account.account_id
                 proposal_data['user'] = user.id
 
@@ -2635,7 +2636,7 @@ class CreateInitialProposal(APIView):
                 proposal_data['parent'] = parent
                 # set parent if available
                 if parent:
-                    proposal_data['parent'] = ProposalInfo.objects.get_user_related_object(user, proposal_id=parent).proposal_id
+                    proposal_data['parent'] = ProposalInfo.objects.get_user_related_object(user=user, proposal_id=parent).proposal_id
 
                 # call the function that saves basic proposal information
                 response = website_utils.create_basic_proposal(proposal_data)
@@ -3451,9 +3452,10 @@ class Business(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         try:
-            master_user = models.BaseUser.objects.get(id=1)
-            result = AccountInfo.objects.filter_user_related_objects(master_user)
-            serializer = website_serializers.AccountInfoSerializer(result, many=True)
+            master_user = models.BaseUser.objects.get(id=8)
+            result = AccountInfo.objects.get_user_related_object(user=master_user)
+            # result = AccountInfo.objects.filter_user_related_objects(user=master_user)
+            serializer = v0_serializers.AccountSerializer(result)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -3802,7 +3804,6 @@ class CampaignSuppliersInventoryList(APIView):
 
             # constructs a Q object based on current date and delta d days defined in constants
             assigned_date_range_query = website_utils.construct_date_range_query('activity_date')
-            reassigned_date_range_query = website_utils.construct_date_range_query('reassigned_activity_date')
 
             proposal_query = Q()
             if proposal_id:
@@ -3816,7 +3817,7 @@ class CampaignSuppliersInventoryList(APIView):
             inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
                 select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
-                filter(assigned_date_range_query|reassigned_date_range_query, proposal_query, assigned_to_query).values(
+                filter(assigned_date_range_query, proposal_query, assigned_to_query).values(
 
                 'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type',
                 'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',

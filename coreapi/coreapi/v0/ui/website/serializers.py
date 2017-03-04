@@ -262,9 +262,9 @@ class UIBusinessInfoSerializer(ModelSerializer):
     class Meta:
         model = BusinessInfo
         depth = 2
-        read_only_fields = (
-        'contacts'
-        )
+        # read_only_fields = (
+        # 'contacts'
+        # )
 
 
 class UIAccountInfoSerializer(ModelSerializer):
@@ -273,9 +273,9 @@ class UIAccountInfoSerializer(ModelSerializer):
     class Meta:
         model = AccountInfo
         depth = 2
-        read_only_fields = (
-        'contacts'
-        )
+        # read_only_fields = (
+        # 'contacts'
+        # )
 
 
 class CampaignListSerializer(ModelSerializer):

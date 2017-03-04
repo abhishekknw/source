@@ -122,11 +122,17 @@ class GeneralManager(models.Manager):
         except Exception as e:
             pass
 
-    def get_user_related_object(self, user, **kwargs):
+    def get_user_related_object(self, **kwargs):
         function = self.get_user_related_object.__name__
         try:
-            query = HelperManagerMethods.prepare_query(user, **kwargs)
-            result = self.get(query)
+            if kwargs.get('user'):
+                user = kwargs['user']
+                # idea is to not involve user keyword when the user is superuser. When a superuser requests, it means
+                # no checking is done on user key. The request is straight away passed
+                if user.is_superuser:
+                    kwargs.pop('user')
+            # query = HelperManagerMethods.prepare_query(user, **kwargs)
+            result = self.get(**kwargs)
             return result
         except ObjectDoesNotExist as e:
             raise ObjectDoesNotExist(e, function)
@@ -135,11 +141,18 @@ class GeneralManager(models.Manager):
         except Exception as e:
             raise Exception(e, function)
 
-    def filter_user_related_objects(self, user, **kwargs):
+    def filter_user_related_objects(self, **kwargs):
         function = self.filter_user_related_objects.__name__
         try:
-            query = HelperManagerMethods.prepare_query(user, **kwargs)
-            result = self.filter(query)
+            if kwargs.get('user'):
+                user = kwargs['user']
+                # idea is to not involve user keyword when the user is superuser. When a superuser requests, it means
+                # no checking is done on user key. The request is straight away passed
+                if user.is_superuser:
+                    kwargs.pop('user')
+
+            result = self.filter(**kwargs)
+            # query = HelperManagerMethods.prepare_query(user, **kwargs)
             return result
         except ObjectDoesNotExist as e:
             raise ObjectDoesNotExist(e, function)
@@ -207,14 +220,3 @@ class HelperManagerMethods(object):
             return custom_query
         except Exception as e:
             raise Exception(e, function)
-
-
-
-
-
-
-
-
-
-
-
