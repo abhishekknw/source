@@ -2140,6 +2140,10 @@ class ImportSocietyData(APIView):
         class_name = self.__class__.__name__
         try:
             source_file = open(BASE_DIR + '/files/modified_new_tab.csv', 'rb')
+            response = ui_utils.get_content_type(website_constants.society)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
 
             with transaction.atomic():
                 reader = csv.reader(source_file)
@@ -2184,11 +2188,12 @@ class ImportSocietyData(APIView):
                         data['society_location_type'] = subarea_object.locality_rating
                         #data['society_state'] = 'Maharashtra'Uttar Pradesh
                         data['society_state'] = 'Haryana'
+                        supplier_id = data['supplier_id']
                         society_object.__dict__.update(data)
                         society_object.save()
 
                         # make entry into PMD here.
-                        response = ui_utils.set_default_pricing(data['supplier_id'], data['supplier_type'])
+                        response = ui_utils.set_default_pricing(supplier_id, data['supplier_type'])
                         if not response.data['status']:
                             return response
 
@@ -2199,7 +2204,7 @@ class ImportSocietyData(APIView):
                         if tower_count_given > towercount:
                             abc = tower_count_given - towercount
                             for i in range(abc):
-                                tower = SocietyTower(supplier=society_object)
+                                tower = SocietyTower(supplier=society_object, object_id=supplier_id, content_type=content_type)
                                 tower.save()
                         print "{0} done \n".format(data['supplier_id'])
             source_file.close()

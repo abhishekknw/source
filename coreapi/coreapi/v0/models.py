@@ -375,6 +375,7 @@ class NoticeBoardDetails(BaseModel):
 
 
 class PosterInventory(BaseModel):
+
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', primary_key=True, max_length=25)  # Field name made lowercase.
     tower_name = models.CharField(db_column='TOWER_NAME', max_length=20, blank=True, null=True)  # Field name made lowercase.
     poster_location = models.CharField(db_column='POSTER_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -387,6 +388,7 @@ class PosterInventory(BaseModel):
     object_id = models.CharField(max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
+    tower = models.ForeignKey('SocietyTower', null=True, blank=True)
 
     class Meta:
 

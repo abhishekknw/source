@@ -590,10 +590,11 @@ default_flier_type = 'Mailbox'
 default_flier_duration_type = 'Unit Daily'
 
 
-# class names
+# class names. change them when class name changes.
 stall_class_name = 'StallInventory'
 standee_class_name = 'StandeeInventory'
 flier_class_name = 'FlyerInventory'
+poster_class_name = 'PosterInventory'
 
 # different states of a proposal being converted to campaign
 proposal_converted_to_campaign = 'PTC'
