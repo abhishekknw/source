@@ -4123,6 +4123,12 @@ def get_inventory_general_data(inventory_name, inventory_content_type):
                 'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_flier_duration_type),
                 'inventory_content_type': inventory_content_type,
             }
+        elif inventory_name == website_constants.poster:
+            inventory_general_data = {
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.poster, adinventory_type=website_constants.default_poster_type),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_poster_duration_type),
+                'inventory_content_type': inventory_content_type,
+            }
 
         return ui_utils.handle_response(function, data=inventory_general_data, success=True)
     except Exception as e:
@@ -4171,9 +4177,11 @@ def prepare_bucket_per_inventory(inventory_content_type, inventory_name,  list_o
         # default assignment frequency of each bucket.
         assignment_frequency = 1
         if inventory_name == website_constants.stall:
-            assignment_frequency = 1
+            assignment_frequency = website_constants.default_stall_assignment_frequency
+        if inventory_name == website_constants.poster:
+            assignment_frequency = website_constants.default_poster_assignment_frequency
         elif inventory_name == website_constants.standee_name:
-            assignment_frequency = 1
+            assignment_frequency = website_constants.default_standee_assignment_frequency
         elif inventory_name == website_constants.flier:
             # because all inventories for a supplier must be assigned to a proposal. We know that flier can only have
             # a bucket number as zero.

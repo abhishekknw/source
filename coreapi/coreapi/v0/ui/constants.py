@@ -38,12 +38,12 @@ tower_count_attribute_mapping = {
 codes_to_model_names = {
                 'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate','GY': 'SupplierTypeGym',
                 'SA': 'SupplierTypeSalon', 'BS': 'SupplierTypeBusShelter', 'STALL': 'StallInventory',
-                'STANDEE': 'StandeeInventory', 'FLIER': 'FlyerInventory'
+                'STANDEE': 'StandeeInventory', 'FLIER': 'FlyerInventory', 'POSTER': 'PosterInventory'
          }
 # model to codes
 model_to_codes = {
     'SupplierTypeSociety': 'RS', 'SupplierTypeCorporate': 'CP', 'SupplierTypeGym': 'GY', 'SupplierTypeSalon': 'SA', 'SupplierTypeBusShelter': 'BS',
-    'StallInventory': 'SL', 'StandeeInventory': 'ST', 'FlyerInventory': 'FL'
+    'StallInventory': 'SL', 'StandeeInventory': 'ST', 'FlyerInventory': 'FL', 'PO': 'PosterInventory'
 }
 
 # default state and state codes. used to fetch state object in various import api's.

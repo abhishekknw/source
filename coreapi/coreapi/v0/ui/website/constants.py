@@ -577,18 +577,23 @@ default_stall_allocation_interval = 1
 default_stall_assignment_frequency = 1
 
 # temp list of inventories not implemented yet. delete it after implemantation. 
-inv_not_implemented = ['POSTER', 'CAR_DISPLAY']
+inv_not_implemented = ['CAR_DISPLAY']
 
-# standee name
+# standee configs
 standee_name = 'STANDEE'
 default_standee_type = 'Medium'
 default_standee_duration_type = 'Unit Weekly'
 default_standee_assignment_frequency = 1
 
-# Flier
+# poster configs
+poster_name = 'POSTER'
+default_poster_type = 'A4'
+default_poster_duration_type = 'Unit Weekly'
+default_poster_assignment_frequency = 1
+
+# Flier configs
 default_flier_type = 'Mailbox'
 default_flier_duration_type = 'Unit Daily'
-
 
 # class names. change them when class name changes.
 stall_class_name = 'StallInventory'

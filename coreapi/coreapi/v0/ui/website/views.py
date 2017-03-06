@@ -2433,10 +2433,11 @@ class ImportSupplierData(APIView):
                 for index, center_id in enumerate(center_id_list):
                     if not result.get(center_id):
                         result[center_id] = {}
-                
+
                 # iterate through all rows and populate result array
                 for index, row in enumerate(ws.iter_rows()):
-                    if index == 0:
+
+                    if index == 0 or website_utils.is_empty_row(row):
                         continue
 
                     """
