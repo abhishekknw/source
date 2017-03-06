@@ -1,6 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('CurrentProposal', function($scope, $rootScope, $stateParams, $window, $location, currentProposalService ,$http) {
+    .controller('CurrentProposal', function($scope, $rootScope, $stateParams, $window, $location, currentProposalService ,$http, errorHandler) {
 
     	$scope.proposal = {};
       $scope.society = {society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''};
@@ -191,19 +191,30 @@ angular.module('catalogueApp')
      }
 
      $scope.saveInvoiceDetails = function(){
-       if($window.confirm("Do You really want to confirm Invoice Details")) {
-         $scope.proposal.tentative_start_date = $scope.campaign_start_date;
-         $scope.proposal.tentative_end_date = $scope.campaign_end_date;
-        currentProposalService.saveInvoiceDetails($stateParams.proposal_id,$scope.proposal)
-          .success(function(response, status){
-            // alert("Successful");
-                  console.log("success");
-          })
-          .error(function(response, status){
-            console.log("Error Occured");
-          })
-        }
-
+       swal({
+          title: "Are you sure?",
+          text: errorHandler.invoice_confirm,
+          type: errorHandler.warning,
+          showCancelButton: true,
+          confirmButtonClass: "btn-success",
+          confirmButtonText: "Yes, confirm it!",
+          closeOnConfirm: false
+        },
+        function(){
+          $scope.proposal.tentative_start_date = $scope.campaign_start_date;
+          $scope.proposal.tentative_end_date = $scope.campaign_end_date;
+         currentProposalService.saveInvoiceDetails($stateParams.proposal_id,$scope.proposal)
+           .success(function(response, status){
+             // alert("Successful");
+             swal("Success!",errorHandler.invoice_success,errorHandler.success);
+             $('#invoiceModal').modal('hide');
+                   console.log("success");
+           })
+           .error(function(response, status){
+             swal("Error!",errorHandler.invoice_error,errorHandler.error);
+             console.log("Error Occured");
+         })
+        });
      }
 
     });//Controller ends here

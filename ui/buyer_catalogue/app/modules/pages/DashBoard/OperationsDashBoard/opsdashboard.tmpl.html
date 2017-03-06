@@ -26,10 +26,10 @@
             <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)"  data-toggle="modal">Accept</label>
+                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)"  data-toggle="modal" ng-loading="loadSpinner">Accept</label>
               </div>
               <div class="radio">
-                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PNC" ng-click="convertCampaignToProposal(proposal)" data-target="#declineModal" data-toggle="modal">Decline</label>
+                     <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PNC" ng-click="convertCampaignToProposal(proposal)" data-toggle="modal">Decline</label>
               </div>
               <div class="radio">
                      <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#onHoldModal" data-toggle="modal">OnHold</label>
@@ -91,7 +91,7 @@
         <div class = "modal-body" style = "height: 300px;">
         <label>Please enter the reason in below box why this proposal can't be converted to campaign</label>
           <textarea name="reason" id="onDeclineReason" class="form-control" ng-model="reason"></textarea>
-          <button class="btn btn-danger active notify" ng-click="sendNotification()">Notify</button>
+          <button class="btn btn-danger active notify" ng-click="sendNotification()" ng-loading="loadSpinner">Notify</button>
         </div>
       </div>
     </div>
@@ -108,7 +108,7 @@
         <div class = "modal-body" style = "height: 300px;">
         <label>Please enter the reason in below box why this proposal is on hold</label>
           <textarea name="reason" id="onHoldReason" class="form-control" ng-model="reason"></textarea>
-          <button class="btn btn-danger active notify" ng-click="sendNotification()">Notify</button>
+          <button class="btn btn-danger active notify" ng-click="sendNotification()" ng-loading="loadSpinner">Notify</button>
         </div>
       </div>
     </div>

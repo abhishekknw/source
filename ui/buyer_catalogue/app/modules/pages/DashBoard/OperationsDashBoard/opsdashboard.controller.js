@@ -1,10 +1,12 @@
 angular.module('catalogueApp')
 
-.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService','commonDataShare',
+.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService','commonDataShare','errorHandler',
 
-    function ($scope, $rootScope, $window, $location, opsDashBoardService, commonDataShare) {
+    function ($scope, $rootScope, $window, $location, opsDashBoardService, commonDataShare,errorHandler) {
     	$scope.proposals = [];
       $scope.reason;
+      //for loading spinner
+      $scope.loadSpinner = true;
 
       //Start: code added to show or hide details based on user permissions
       $scope.user_code = $window.localStorage.user_code;
@@ -75,6 +77,7 @@ angular.module('catalogueApp')
     init();
 
     $scope.sendNotification = function(){
+      $scope.loadSpinner = false;
       var email_Data = {
         subject:'Machadalo Mail',
         body:$scope.reason,
@@ -83,8 +86,17 @@ angular.module('catalogueApp')
       opsDashBoardService.sendMail(email_Data)
       .success(function(response, status){
         // alert('BD team has been notified');
+        $scope.loadSpinner = true;
+        $('#onHoldModal').modal('hide');
+        $('#declineModal').modal('hide');
+
+        swal(errorHandler.name,errorHandler.onhold_success,errorHandler.success);
     	})
     	.error(function(response, status){
+        $scope.loadSpinner = true;
+        $('#onHoldModal').modal('hide');
+        $('#declineModal').modal('hide');
+        swal(errorHandler.name,errorHandler.onhold_error,errorHandler.error);
     		console.log("error occured", status);
     	});
       $scope.reason = "";
@@ -101,27 +113,34 @@ angular.module('catalogueApp')
     }
 
     $scope.convertProposalToCampaign = function(proposal){
+      $scope.loadSpinner = false;
       $scope.currentProposal = proposal;
       opsDashBoardService.convertProposalToCampaign(proposal.proposal.proposal_id, proposal.proposal)
           .success(function(response, status){
             console.log(response);
+            $scope.loadSpinner = true;
               if(status == 200){
-                // $scope.showAssignModal = true;
                 $("#assignModal").modal('show');
               }
     	})
           .error(function(response, status){
+            $scope.loadSpinner = true;
+            swal(errorHandler.name,errorHandler.accept_proposal_error,errorHandler.error);
     	  	    console.log("error occured", status);
+              console.log(response);
     	});
     }
 
     $scope.convertCampaignToProposal = function(proposal){
+      console.log(proposal);
       $scope.currentProposal = proposal;
       opsDashBoardService.convertCampaignToProposal(proposal.proposal.proposal_id, proposal.proposal)
           .success(function(response, status){
+            $("#declineModal").modal('show');
               console.table(response);
     	})
           .error(function(response, status){
+            swal(errorHandler.name,errorHandler.decline_proposal_error,errorHandler.error);
     	  	    console.log("error occured", status);
     	});
     }
@@ -131,7 +150,6 @@ angular.module('catalogueApp')
     }
 
     $scope.saveAssignment = function(){
-console.log($scope.userId);
       var userId = $scope.userId;
       var data = {
         to:userId,
@@ -140,9 +158,13 @@ console.log($scope.userId);
       opsDashBoardService.saveAssignment(data)
           .success(function(response, status){
               console.table(response);
+              $('#assignModal').modal('hide');
+              swal(errorHandler.name,errorHandler.assign_user_success,errorHandler.success);
               getCampaignDetails();
     	})
           .error(function(response, status){
+            $('#assignModal').modal('hide');
+            swal(errorHandler.name,errorHandler.assign_user_error,errorHandler.error);
     	  	    console.log("error occured", status);
     	});
     }

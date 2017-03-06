@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('AuditReleasePlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare',
-    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare) {
+    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare','errorHandler',
+    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare, errorHandler) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.headings = [
         {header : 'Phase'},
@@ -152,8 +152,10 @@ angular.module('catalogueApp')
         .success(function(response, status){
           getCampaignReleaseDetails();
           $scope.resetData();
+          swal(errorHandler.name,errorHandler.updateData_success,errorHandler.success);
       	})
       	.error(function(response, status){
+          swal(errorHandler.name,errorHandler.updateData_error,errorHandler.error);
       		console.log("error occured", status);
       	});
       }
@@ -246,8 +248,12 @@ angular.module('catalogueApp')
       .success(function(response, status){
         getCampaignReleaseDetails();
         $scope.resetData();
+        $('#manageDatesModal').modal('hide');
+        swal(errorHandler.name,errorHandler.inventory_date_success,errorHandler.success);
       })
       .error(function(response, status){
+        $('#manageDatesModal').modal('hide');
+        swal(errorHandler.name,errorHandler.inventory_date_error,errorHandler.error);
         console.log("error occured", status);
       });
     }

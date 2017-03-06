@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('OpsExecutionPlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare',
-    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare) {
+    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare','errorHandler',
+    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare,errorHandler) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.headings = [
         {header : 'Supplier Id'},
@@ -173,9 +173,13 @@ angular.module('catalogueApp')
         .success(function(response, status){
           $scope.campaignDataList = [];
           getOpsExecutionImageDetails();
+          $('#reAssignModal').modal('hide');
+          swal(errorHandler.name,errorHandler.reAssign_success,errorHandler.success);
 
         })
         .error(function(response, status){
+          $('#reAssignModal').modal('hide');
+          swal(errorHandler.name,errorHandler.reAssign_error,errorHandler.error);
           console.log(response);
         });
       }

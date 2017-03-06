@@ -120,8 +120,10 @@ angular.module('catalogueApp')
     $scope.updateData = function(){
       releaseCampaignService.updateAuditReleasePlanDetails($scope.campaign_id,$scope.releaseDetails.shortlisted_suppliers)
       .success(function(response, status){
+        swal(errorHandler.name,errorHandler.updateData_success,errorHandler.success);
       })
       .error(function(response, status){
+        swal(errorHandler.name,errorHandler.updateData_error,errorHandler.error);
         console.log("error occured", status);
       });
     }
