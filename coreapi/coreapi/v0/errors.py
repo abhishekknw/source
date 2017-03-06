@@ -41,3 +41,5 @@ NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR = 'There are no inventory activities assi
 INVALID_DATE_FORMAT = "The recieved format of the date string does not matches the current supported format of {0} and {1}"
 
 ALL_IMAGES_SYNCED_UP_MESSAGE = "Seems like all the images synced up already"
+
+NO_TOWER_ASSIGNED_ERROR = "There is no tower assigned to this inventory {0} with id {1}"

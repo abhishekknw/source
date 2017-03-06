@@ -4133,7 +4133,9 @@ def get_tower_id(inventory_object):
     """
     returns tower_id of this object. The reason this is a function  because stall inventory for a society  is not
     associated with any tower.
-    neither do the gyms and saloons have concept of towers.  Hence they all have a concept of Zero tower.
+    neither do the gyms and saloons have concept of towers.  Hence they all have a concept of Zero tower. Those inventories
+    which have a concept of tower with them are treated differently than those who doesn't.
+
     Args:
         inventory_object:
 
@@ -4144,7 +4146,9 @@ def get_tower_id(inventory_object):
         class_name = inventory_object.__class__.__name__
         if class_name == website_constants.stall_class_name or class_name == website_constants.flier_class_name:
             return ui_utils.handle_response(function, data=0, success=True)
-        elif class_name == website_constants.standee_class_name:
+        elif class_name == website_constants.standee_class_name or class_name == website_constants.poster_class_name:
+            if not inventory_object.tower:
+                return ui_utils.handle_response(function, data=errors.NO_TOWER_ASSIGNED_ERROR.format(class_name, inventory_object.adinventory_id))
             return ui_utils.handle_response(function, data=inventory_object.tower_id, success=True)
 
     except Exception as e:
