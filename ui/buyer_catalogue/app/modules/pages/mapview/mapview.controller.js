@@ -157,7 +157,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
             gridViewBasicSummary();
           }
           catch(error){
-            commonDataShare.showMessage(error.message);
+            console.log(error.message);
           }
         }
         //Start:reset center to original center
@@ -229,7 +229,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
                       console.log("Error fetching : ", response.message);
               });
             }catch(error){
-              commonDataShare.showMessage(error.message);
+              console.log(error.message);
             }
           }
         //End: Change center,change radius and reset center functionality
@@ -248,7 +248,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
             $scope.corporates_count = $scope.current_center.suppliers['CP'].length;
           }
         }catch(error){
-          commonDataShare.showMessage(error.message);
+          console.log(error.message);
         }
       }
     //End: mapview basic summary
@@ -271,7 +271,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
          }
        }
      }catch(error){
-       commonDataShare.showMessage(error.message);
+       console.log(error.message);
      }
     }
     //End: mapview filter summary required after applying filters
@@ -283,7 +283,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
         $scope.stallMapImpression = $scope.flat_count*4*2;
         $scope.flierMapImpressions = $scope.flat_count * 4*1;
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
     //End: impressions on mapview
@@ -300,7 +300,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           }
         }
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
       //End: collectng all centers suppliers data in one varible like for RS,CP..etc
@@ -315,7 +315,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
             $scope.total_tower_count += $scope.total_societies[temp].tower_count;
           }
         }catch(error){
-          commonDataShare.showMessage(error.message);
+          console.log(error.message);
         }
       }
     //End: gridView basic summary
@@ -334,7 +334,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
         }
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //End: summary on gridview for total stalls & standees after applying filters
@@ -349,7 +349,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
       $scope.standeeGridImpression = $scope.total_flat_count *4*7*2;
       $scope.stallGridImpression = $scope.total_flat_count *4*2;
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
       //End: gridview impressions : multiply with total flat count for societies
@@ -469,7 +469,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
               employee_count : $scope.employee_count,
             };
           }catch(error){
-            commonDataShare.showMessage(error.message);
+            console.log(error.message);
           }
         }
         //End: filters for suppliers
@@ -531,7 +531,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
       }
       //End : code added to display filter panel for all centers on gridview
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //End: add filter varible for each supplier in each center
@@ -615,12 +615,12 @@ $scope.business_type = $scope.businessData.type_name.business_type;
                   $scope.loadIcon1 = response;
                 }
               catch(error){
-                commonDataShare.showMessage(error.message);
+                console.log(error.message);
               }
             })
               .error(function(response, status){
                 if(status == -1)
-                  commonDataShare.showMessage(errorHandler.server_connection_error);
+                  console.log(error.message);
               });
           }
           //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
@@ -690,12 +690,12 @@ $scope.business_type = $scope.businessData.type_name.business_type;
                   $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                 }
                 catch(error){
-                  commonDataShare.showMessage(error.message);
+                  console.log(error.message);
                 }
               })
             .error(function(response, status){
               if(status == -1)
-                commonDataShare.showMessage(errorHandler.server_connection_error);
+                console.log(errorHandler.server_connection_error);
               $scope.get_spaces_error = response.message;
               console.log("Error response : ",response);
             });
@@ -768,7 +768,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           $scope.corporateFilters();
         }
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
     var selectFilters = function(saved_filter_type,current_filter_type){
@@ -780,7 +780,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           }
         }
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
     // End : check saved filter
@@ -833,7 +833,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           }
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     var reset = function(filter_array){
@@ -966,7 +966,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
       filterSupplierData(filters.supplier_type_code,filters);
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
   //End: code for society filters
@@ -1058,7 +1058,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
         filterSupplierData(filters.supplier_type_code,filters);
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
 //End: code for corporate filters
@@ -1085,7 +1085,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
         $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
         $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
 //End: for handling multiplse center response in promises for all suppliers
@@ -1097,7 +1097,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
               filter_list.push(filter_array[i].code);
           }
         }catch(error){
-          commonDataShare.showMessage(error.message);
+          console.log(error.message);
         }
       }
 //End: function for adding filters code to provided filter type list
@@ -1133,7 +1133,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
                     $scope.checkFilters = false;
                 });
               }catch(error){
-                commonDataShare.showMessage(error.message);
+                console.log(error.message);
               }
         }
   //End: generic function for fetching all supplier filters
@@ -1274,7 +1274,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
         $scope.search_status = false;
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //End: code added to search & show all suppliers on add societies tab
@@ -1290,7 +1290,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
 
         $scope.createSupplierList();
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
     //Start: To add searched societies in given center
@@ -1322,7 +1322,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           $scope.errorMsg = "Selected supplier not allowedadd in this center";
         }
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
     //End: To add searched societies in given center
@@ -1338,7 +1338,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
         }
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //End: function to select center at add more suplliers
@@ -1378,7 +1378,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
            }
          }
        }catch(error){
-         commonDataShare.showMessage(error.message);
+         console.log(error.message);
        }
       }
        //End: For sending filtered inventory type
@@ -1395,7 +1395,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           if(value != 'B')
             supplier.shortlisted = !supplier.shortlisted;
         }catch(error){
-          commonDataShare.showMessage(error.message);
+          console.log(error.message);
         }
       };
        //End: setting status of suppliers like shortlisted, removed or buffer
@@ -1429,16 +1429,16 @@ $scope.business_type = $scope.businessData.type_name.business_type;
               }
          }).success(function(response){
            $scope.requestProposal = true;
-           commonDataShare.showMessage(errorHandler.request_proposal_success);
+           swal(errorHandler.name,errorHandler.request_proposal_success,errorHandler.success);
               $scope.checkFileExport = false;
          }).error(function(response){
            $scope.requestProposal = true;
-              commonDataShare.showMessage(errorHandler.request_proposal_error);
+              swal(errorHandler.name,errorHandler.request_proposal_error,errorHandler.error);
               $scope.checkFileExport = false;
          });
        }catch(error){
          $scope.requestProposal = true;
-         commonDataShare.showMessage(error.message);
+         console.log(error.message);
        }
      }
 
@@ -1457,13 +1457,13 @@ $scope.business_type = $scope.businessData.type_name.business_type;
              "Content-Type": constants.content_type,// content type of the file (NotEmpty)
              file: file }
          }).success(function (response){
-              commonDataShare.showMessage(errorHandler.uploadfile_success);
+              swal(errorHandler.name,errorHandler.uploadfile_success,errorHandler.success);
          }).error(function(response) {
-              commonDataShare.showMessage(errorHandler.uploadfile_error);
+              swal(errorHandler.name,errorHandler.uploadfile_error,errorHandler.error);
          });
        }catch(error){
          $scope.requestProposal = true;
-         commonDataShare.showMessage(error.message);
+         console.log(error.message);
        }
    }
 //End : function to upload files to amazon server, just provide file name and file
@@ -1482,11 +1482,11 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           $scope.requestProposal = true;
         }).error(function (response) {
           $scope.requestProposal = true;
-            commonDataShare.showMessage(errorHandler.importfile_error);
+            swal(errorHandler.name,errorHandler.importfile_error,errorHandler.error);
         });
       }catch(error){
         $scope.requestProposal = true;
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
   };
@@ -1499,11 +1499,13 @@ $scope.business_type = $scope.businessData.type_name.business_type;
       mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
         .success(function(response, status){
           // alert("Saved Successfully");
+          swal(errorHandler.name,errorHandler.save_success,errorHandler.success);
         }).error(function(response, status){
+          swal(errorHandler.name,errorHandler.save_error,errorHandler.error);
           // alert("Error Occured");
       });//
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //End:save suppliers and filters to save the current state
@@ -1518,12 +1520,12 @@ $scope.business_type = $scope.businessData.type_name.business_type;
       };
       mapViewService.updateSupplierStatus($scope.proposal_id_temp,data)
         .success(function(response, status){
-          // alert("Saved Successfully");
+
         }).error(function(response, status){
-          // alert("Error Occured");
+          swal(errorHandler.name,errorHandler.supplier_status_error,errorHandler.error);
       });
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     // End: function to update status of supplier and save in db
@@ -1544,7 +1546,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
         });
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //Start: check duplicate suppliers if adding more suppliers
@@ -1564,7 +1566,7 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           return true;
         }
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
   });
