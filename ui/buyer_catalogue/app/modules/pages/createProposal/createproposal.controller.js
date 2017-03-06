@@ -1,6 +1,7 @@
 "use strict";
 angular.module('catalogueApp')
 .controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http, errorHandler,commonDataShare){
+	$scope.loadingSpinner = true;
 	$scope.model = {}
 	$scope.model.centers = new Array();
 	$scope.society = 'RS';
@@ -148,6 +149,7 @@ angular.module('catalogueApp')
 		}
 	}
 	$scope.submit = function(){
+		$scope.loadingSpinner = false;
     var status = checkSupplierCode();
     if(status >= 0){
 		$scope.model.account_id = $window.localStorage.account_id;
@@ -169,7 +171,8 @@ angular.module('catalogueApp')
 				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){
-				commonDataShare.showMessage(errorHandler.geo_location_error);
+				$scope.loadingSpinner = true;
+				swal(errorHandler.name,errorHandler.geo_location_error,errorHandler.error);
 				console.log("Error");
 				if(typeof(response) != typeof(12)){
 					console.log("response is ", response);

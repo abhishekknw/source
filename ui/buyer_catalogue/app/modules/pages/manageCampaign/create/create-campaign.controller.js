@@ -252,8 +252,8 @@ angular.module('machadaloPages')
         $location.path('/' + proposalId + '/showproposalhistory');
       }
     	$scope.create = function() {
-            pagesService.createBusinessCampaign($scope.model)
-            .success(function (response, status) {
+        pagesService.createBusinessCampaign($scope.model)
+          .success(function (response, status) {
             var sub_type_id = $scope.model.business.sub_type_id;
             var type_id = $scope.model.business.business_type_id;
             // response = JSON.parse(response);
@@ -264,7 +264,8 @@ angular.module('machadaloPages')
             if (status == '201') {
                  $location.path("/manageCampaign/createAccount");
             }
-            $scope.successMsg = "Successfully Saved"
+            // $scope.successMsg = "Successfully Saved"
+            swal(errorHandler.name,errorHandler.business_success,errorHandler.success);
             $scope.errorMsg = undefined;
             if (status == '200'){
               $scope.choice = "selected";
@@ -272,6 +273,7 @@ angular.module('machadaloPages')
               $window.localStorage.business = JSON.stringify($scope.model.business);
             }
         }).error(function(response, status){
+            swal(errorHandler.name,errorHandler.business_error,errorHandler.error);
              if (typeof response != 'number'){
                $scope.successMsg = undefined;
                $scope.errorMsg = response.message;

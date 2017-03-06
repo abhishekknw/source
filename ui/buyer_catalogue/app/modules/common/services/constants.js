@@ -33,13 +33,19 @@ angular
     //auditReleasePlan
     inventory_date_success : 'Inventory Dates are saved successfully',
     inventory_date_error : 'Error occured while saving dates',
-    //currentProposal
+    //currentProposal or proposal summary
     invoice_confirm : 'Do You really want to confirm Invoice Details?',
     invoice_success : 'Your Invoice details are saved successfully',
     invoice_error : 'Error occured, Invoice details are not saved',
     //opsExecution
     reAssign_success : 'Reassign is Successful',
     reAssign_error : 'Error occured while reassigning, Please Try again',
+    //createAccount
+    account_success : 'Account Details saved successfully',
+    account_error : 'Error occured in saving account details',
+    //CreateCampaign
+    business_success : 'Business Details saved successfully',
+    business_error : 'Error occured in saving business details',
 
 
   });

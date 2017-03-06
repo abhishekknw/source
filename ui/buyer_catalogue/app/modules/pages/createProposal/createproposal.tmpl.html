@@ -78,7 +78,7 @@
     				</tr>
     			</tbody>
     		</table>
-    		<button class="btn btn-danger spacing" ng-click="submit()" ng-disabled="proposal.$invalid || centerDetail.$invalid">Submit</button>
+    		<button class="btn btn-danger spacing" ng-click="submit()" ng-disabled="proposal.$invalid || centerDetail.$invalid" ng-loading="loadingSpinner">Submit</button>
     	</div>
     </form>
 
