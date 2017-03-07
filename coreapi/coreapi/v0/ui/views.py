@@ -1642,7 +1642,7 @@ class TowerAPIView(APIView):
                     return Response(serializer.errors, status=400)
 
                 if tower_dict['lift_count'] < key['lift_count']:
-                    self.save_lift_locations(tower_dict['lift_count'], key['lift_count'], tower_dict, society)
+                    self.save_lift_locations(tower_dict['lift_count'], key['lift_count'], tower_dict, society, content_type)
                 if tower_dict['nb_count'] < key['notice_board_count_per_tower']:
                     self.save_nb_locations(tower_dict['nb_count'], key['notice_board_count_per_tower'], tower_dict, society)
                 if tower_dict['standee_count'] < key['standee_count']:
@@ -1702,14 +1702,14 @@ class TowerAPIView(APIView):
             return Response(status=404)
 
 
-    def save_lift_locations(self, c1, c2, tower, society):
+    def save_lift_locations(self, c1, c2, tower, society, content_type):
         i = c1 + 1
         tow_name = tower['tower_name']
         while i <= c2:
             lift_tag = tower['tower_tag'] + "00L" + str(i)
             adId = society.supplier_id + lift_tag + "PO01"
             lift = LiftDetails(adinventory_id=adId, lift_tag=lift_tag, tower_id=int(tower['tower_id']))
-            lift_inv = PosterInventory(adinventory_id=adId, poster_location=lift_tag, tower_name=tow_name, supplier=society)
+            lift_inv = PosterInventory(adinventory_id=adId, poster_location=lift_tag, tower_name=tow_name, supplier=society, tower_id=int(tower['tower_id']), object_id=society.supplier_id,content_type=content_type)
             lift.save()
             lift_inv.save()
             i += 1
