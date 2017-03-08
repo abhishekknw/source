@@ -30,6 +30,7 @@ angular
     'angularjs-dropdown-multiselect',
     'ngFileUpload',
     'uiGmapgoogle-maps',
+    'ncy-angular-breadcrumb',
     // ''
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
@@ -52,22 +53,40 @@ angular
           .state('MapView',{
            url : '/:proposal_id/mapview',
            templateUrl : 'modules/pages/mapview/mapview.tmpl.html',
-           controller : 'MapCtrl'
+           controller : 'MapCtrl',
+           ncyBreadcrumb: {
+             label:'mapview',
+             parent: function($rootScope) {
+              return $rootScope.getCurState();
+            },
+           }
         })
         .state('createProposalMe',{
           url : '/:account_id/createproposal',
           templateUrl : 'modules/pages/createProposal/createproposal.tmpl.html',
-          controller : 'ProposalCtrl'
-        })
-        .state('showProposalHistory',{
-          url : '/:proposal_id/showproposalhistory',
-          templateUrl : 'modules/pages/ProposalHistory/proposalHistory.tmpl.html',
-          controller : 'ProposalHistory',
+          controller : 'ProposalCtrl',
+          ncyBreadcrumb: {
+            label:'createProposal',
+            parent: 'manageCampaign.create'
+          }
         })
         .state('showCurrentProposal',{
            url : '/:proposal_id/showcurrentproposal',
            templateUrl : 'modules/pages/currentProposal/currentProposal.tmpl.html',
            controller : 'CurrentProposal',
+           ncyBreadcrumb: {
+             label:'proposalSummary',
+             parent : 'manageCampaign.create'
+           }
+        })
+        .state('showProposalHistory',{
+          url : '/:proposal_id/showproposalhistory',
+          templateUrl : 'modules/pages/ProposalHistory/proposalHistory.tmpl.html',
+          controller : 'ProposalHistory',
+          ncyBreadcrumb: {
+            label:'proposalHistory',
+            parent : 'manageCampaign.create'
+          }
         })
         .state('campaign.societyDetails', {
           url : '/societyDetails/:societyId', //:societyId/
@@ -92,17 +111,28 @@ angular
       .state('manageCampaign', {
           url : '/manageCampaign',
           // controller: '',
-          templateUrl: 'modules/pages/manageCampaign/manage-campaign.tmpl.html'
+          templateUrl: 'modules/pages/manageCampaign/manage-campaign.tmpl.html',
+          ncyBreadcrumb: {
+            skip: true // Never display this state in breadcrumb.
+          }
         })
       .state('manageCampaign.create', {
           url : '/create',
           controller: 'CreateCampaignCtrl',
-          templateUrl: 'modules/pages/manageCampaign/create/create-campaign.tmpl.html'
+          templateUrl: 'modules/pages/manageCampaign/create/create-campaign.tmpl.html',
+          ncyBreadcrumb: {
+            label: 'Home page'
+          }
         })
       .state('manageCampaign.createaccount', {
             url : '/createAccount',
             controller: 'CreateAccountCtrl',
-            templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html'
+            templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
+            ncyBreadcrumb: {
+              label: 'Create Account',
+              parent : 'manageCampaign.create'
+            }
+
         })
       .state('manageCampaign.shortlisted', {
           url : '/shortlisted',
@@ -172,17 +202,25 @@ angular
       .state('mapView',{
             url : '/mapview',
             controller : 'MapCtrl',
-            templateUrl : 'modules/pages/mapview/mapview.tmpl.html'
+            templateUrl : 'modules/pages/mapview/mapview.tmpl.html',
         })
       .state('releasePlan',{
            url : '/:proposal_id/releasePlan',
            controller : 'ReleaseCampaignCtrl',
-           templateUrl : 'modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.html'
+           templateUrl : 'modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.html',
+           ncyBreadcrumb: {
+             label:'ReleasePlan',
+             parent : 'OpsDashBoard'
+           }
        })
       .state('OpsDashBoard',{
            url : '/OpsDashBoard',
            controller : 'OpsDashCtrl',
-           templateUrl : 'modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.html'
+           templateUrl : 'modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.html',
+           ncyBreadcrumb: {
+             label:'DashBoard',
+             parent : 'manageCampaign.create'
+           }
        })
       .state('manageUsers',{
            url : '/manageUser',
@@ -192,19 +230,32 @@ angular
       .state('auditReleasePlan',{
             url : '/:proposal_id/auditReleasePlan',
             controller : 'AuditReleasePlanCtrl',
-            templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.html'
+            templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.html',
+            ncyBreadcrumb: {
+              label:'AuditReleasePlan',
+              parent : 'releasePlan'
+            }
       })
       .state('opsExecutionPlan',{
             url : '/:proposal_id/opsExecutionPlan',
             controller : 'OpsExecutionPlanCtrl',
-            templateUrl : 'modules/pages/operations/opsExecutionPlan/opsExecutionPlan.tmpl.html'
+            templateUrl : 'modules/pages/operations/opsExecutionPlan/opsExecutionPlan.tmpl.html',
+            ncyBreadcrumb: {
+              label:'ExecutionPlan',
+              parent : 'OpsDashBoard'
+            }
       });
 })
-.run(['$rootScope', '$window', '$location', 'AuthService',
-     function ($rootScope, $window, $location, AuthService) {
+.run(['$rootScope', '$window', '$location', 'AuthService','$state',
+     function ($rootScope, $window, $location, AuthService, $state) {
        $rootScope.globals = $rootScope.globals || {};
        $rootScope.globals.currentUser = AuthService.UserInfo();
-
+       $rootScope.getCurState = function() {
+            if($window.localStorage.isSavedProposal == 'true')
+              return 'showCurrentProposal';
+            else
+              return 'createProposalMe';
+        }
        var whence = $location.path();
        $rootScope.$on('$locationChangeStart', function (event, next, current) {
          var whence = $location.path();

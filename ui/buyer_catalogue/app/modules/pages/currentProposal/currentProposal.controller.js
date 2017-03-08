@@ -183,7 +183,7 @@ angular.module('catalogueApp')
     		})
     	}
      $scope.editInitialProposal = function(proposalId){
-       $window.localStorage.isSavedProposal = true;
+       $window.localStorage.isSavedProposal = 'true';
        $location.path('/' + proposalId + '/mapview');
      }
      $scope.showHistory = function(){
