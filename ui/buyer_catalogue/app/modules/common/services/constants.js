@@ -1,7 +1,7 @@
 angular
   .module('catalogueApp').
   constant('errorHandler',{
-    name : 'Machadalo',
+    name : '',
     success : 'success',
     error : 'error',
     warning : 'warning',

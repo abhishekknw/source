@@ -15,7 +15,7 @@ angular.module('catalogueApp')
         $scope.hideData = true;
       $scope.centerheaders = [
         {header : 'Serial No'},
-        {header : 'Center Name'},
+        {header : 'Name'},
         {header : 'Area'},
         {header : 'SubArea'},
         {header : 'Radius'}
