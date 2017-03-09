@@ -200,7 +200,7 @@ angular.module('catalogueApp')
       });
     }
 
-    $scope.invActivityData = [
+    $scope.invActivityData_struct = [
         {activity_type : "RELEASE", act_date:{date:'',userCode:''}},
         {activity_type : "CLOSURE", act_date:{date:'',userCode:''}},
       ];
@@ -258,6 +258,7 @@ angular.module('catalogueApp')
       });
     }
      $scope.getActivityDates = function(supplier){
+       $scope.invActivityData = angular.copy($scope.invActivityData_struct);
        angular.forEach(supplier.shortlisted_inventories, function(inventoryList,inventory){
           for(var i=0; i<inventoryList.detail.length; i++){
             inventoryList.detail[i].status = false;
@@ -313,6 +314,7 @@ angular.module('catalogueApp')
     $scope.resetData = function(){
       $scope.invIdList = [];
       $scope.selectedRow = undefined;
+      $scope.invActivityData = [];
       $('#manageDatesModal').on('hide.bs.modal', function () {
       })
     }
