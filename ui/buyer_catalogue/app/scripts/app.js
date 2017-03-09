@@ -110,7 +110,7 @@ angular
         })
       .state('manageCampaign', {
           url : '/manageCampaign',
-          // controller: '',
+          controller: 'CreateCampaignCtrl',
           templateUrl: 'modules/pages/manageCampaign/manage-campaign.tmpl.html',
           ncyBreadcrumb: {
             skip: true // Never display this state in breadcrumb.

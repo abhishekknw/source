@@ -320,5 +320,14 @@ angular.module('machadaloPages')
                  });
            }
         //End : function to upload files to amazon server, just provide file name and file
+        $scope.getMenu = function(){
+          if($scope.menuItem == true)
+            $scope.menuItem = false;
+          else
+            $scope.menuItem = true;
+        }
+        $scope.closeMenu = function(){
+          $scope.menuItem = undefined;
+        }
       // [TODO] implement this
     });

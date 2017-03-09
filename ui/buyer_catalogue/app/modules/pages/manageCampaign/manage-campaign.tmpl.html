@@ -1,9 +1,11 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/manage-campaign.tmpl.css" />
 <div><nav-bar></nav-bar></div>
 <div class="campaignTabs">
-	<div><span class="glyphicon glyphicon-menu-hamburger"></span></div>
-	<div class="col-md-3">
+	<div><span class="glyphicon glyphicon-menu-hamburger" ng-click="getMenu()"></span></div>
+	<div class="col-md-3 overlay" ng-show="menuItem">
     <div class="dashboard-left offset-0 textcenter">
+			<button class="close" style="font-size:30px;color:red" ng-click="closeMenu()">&times;</button>
+
     <br/><br/>
     <div class="collapse navbar-collapse" class = "divpadding">
       <ul class="nav dashboard-tabs nav-stacked" style="font-size:14px">
