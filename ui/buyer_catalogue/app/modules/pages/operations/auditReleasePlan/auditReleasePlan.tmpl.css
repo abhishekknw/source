@@ -28,3 +28,6 @@ body{
 .checkboxes-btn{
   text-align: left;
 }
+.breadcrumb{
+	background-color: transparent;
+}

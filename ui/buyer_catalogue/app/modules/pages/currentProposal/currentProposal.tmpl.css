@@ -54,3 +54,11 @@ body{
 	margin-right:300px;
 	margin-top: 10px
 }
+.breadcrumb{
+	background-color: transparent;
+}
+.page-header{
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}
