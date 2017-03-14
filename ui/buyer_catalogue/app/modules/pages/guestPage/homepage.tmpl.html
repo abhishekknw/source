@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Welcome to Machadalo</title>
+
+    <!-- Bootstrap -->
+    <!-- <link href="dist/css/bootstrap.css" rel="stylesheet" media="screen"> -->
+    <link href="modules/pages/guestPage/homepage.tmpl.cs" rel="stylesheet" media="screen">
+    <link href="modules/pages/guestPage/assets/css/custom.css" rel="stylesheet" media="screen">
+
+    <!-- Updates -->
+    <link href="modules/pages/guestPage/updates/update1/css/style01.css" rel="stylesheet" media="screen">
+    <link href="modules/pages/guestPage/css/carousel.css" rel="stylesheet" media="screen">
+
+    <!-- Carousel -->
+
+	<!-- <link href="examples/carousel/carousel.css" rel="stylesheet"> -->
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="assets/js/html5shiv.js"></script>
+      <script src="assets/js/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Fonts -->
+	<!-- <link href='http://fonts.googleapis.com/css?family=Lato:400,100,100italic,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'> -->
+	<!-- <link href='http://fonts.googleapis.com/css?family=Open+Sans:700,400,300,300italic' rel='stylesheet' type='text/css'> -->
+	<!-- Font-Awesome -->
+    <link rel="stylesheet" type="text/css" href="modules/pages/guestPage/assets/css/font-awesome.css" media="screen" />
+    <!--[if lt IE 7]><link rel="stylesheet" type="text/css" href="assets/css/font-awesome-ie7.css" media="screen" /><![endif]-->
+
+    <!-- REVOLUTION BANNER CSS SETTINGS -->
+    <link rel="stylesheet" type="text/css" href="modules/pages/guestPage/css/fullscreen.css" media="screen" />
+	<link rel="stylesheet" type="text/css" href="modules/pages/guestPage/rs-plugin/css/settings.css" media="screen" />
+
+    <!-- Picker UI-->
+	<link rel="stylesheet" href="modules/pages/guestPage/assets/css/jquery-ui.css" />
+
+    <!-- jQuery -->
+    <!-- <script src="assets/js/jquery.v2.0.3.js"></script> -->
+    <!-- Animo css-->
+	<link href="modules/pages/guestPage/css/carousel.css" rel="stylesheet" media="screen"/>
+
+
+    <!-- Masonry -->
+	<link href="modules/pages/guestPage/updates/update1/css/masonry.css" rel="stylesheet">
+	<script src="modules/pages/guestPage/updates/update1/js/masonry.pkgd.js"></script>
+	<script>
+	// http://masonry.desandro.com/masonry.pkgd.js added as external resource
+
+	docReady( function() {
+
+	  var container = document.querySelector('.masonry');
+	  var button = document.querySelector('#toggle-button');
+	  var msnry = new Masonry( container, {
+		columnWidth: 2
+	  });
+
+	  var isActive = true;
+
+	  eventie.bind( button, 'click', function() {
+		if ( isActive ) {
+		  msnry.destroy();
+		} else {
+		  msnry = new Masonry( container );
+		}
+		isActive = !isActive;
+	  });
+
+	});
+	//@ sourceURL=pen.js
+	</script>
+
+	<!--Angluar FIles from Index-->
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  <title>Welcome to Machadalo</title>
+	  <link rel="shortcut icon" type="image/png" href="images/favicon.png"/>
+    <!-- <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.3.min.js"></script> -->
+    <!--
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular-route.min.js"></script>-->
+	  <!-- <link href="examples/carousel/carousel.css" rel="stylesheet"> -->
+    <link href="modules/pages/guestPage/css/carousel.css" rel="stylesheet" media="screen"/>
+
+	  <!-- end -->
+    <!-- build:js(.) scripts/vendor.js -->
+    <!-- bower:js -->
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="bower_components/angular-animate/angular-animate.js"></script>
+    <script src="bower_components/angular-cookies/angular-cookies.js"></script>
+    <script src="bower_components/angular-resource/angular-resource.js"></script>
+    <script src="bower_components/angular-route/angular-route.js"></script>
+    <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+    <script src="bower_components/angular-touch/angular-touch.js"></script>
+    <script src="bower_components/slick-carousel/slick/slick.min.js"></script>
+    <script src="bower_components/angular-slick/dist/slick.js"></script>
+    <!-- endbower -->
+
+        <!-- <script src="http://maps.googleapis.com/maps/api/js?language=en"></script> -->
+
+        <script src="modules/pages/guestPage/scripts/app.js"></script>
+        <script src="modules/pages/guestPage/scripts/controllers/main.js"></script>
+        <script src="modules/pages/guestPage/scripts/controllers/societyDetails.js"></script>
+        <script src="modules/pages/guestPage/scripts/services/societyDetailsService.js"></script>
+        <script src="modules/pages/guestPage/scripts/controllers/map.js"></script>
+
+        <!-- endbuild -->
+
+
+
+	<!-- end -->
+
+    <link rel="stylesheet" type="text/css" href="modules/pages/guestPage/css/slider.css">
+	  <script type="text/javascript" src="modules/pages/guestPage/js/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="modules/pages/guestPage/js/jssor.slider.mini.js"></script>
+
+    <!--Slider End-->
+      <style type="text/css">
+	.bs-example{
+    	margin: 20px;
+
+    }
+          .verticalLine {
+    border-left:  solid lightgrey ;
+    .bs-example{
+	margin: 20px;
+}
+@media screen and (min-width: 768px) {
+  .dropdown:hover .dropdown-menu, .btn-group:hover .dropdown-menu{
+		display: block;
+	}
+	.dropdown-menu{
+		margin-top: 0;
+	}
+	.dropdown-toggle{
+		margin-bottom: 2px;
+	}
+	.navbar .dropdown-toggle, .nav-tabs .dropdown-toggle{
+		margin-bottom: 0;
+	}
+}
+}
+
+          .btn.btn-view {
+    color: #be3507;
+    background-color: #fcfffc;
+    background-image: linear-gradient(to bottom, #ffffff, #ffffff);
+    border-color: #be3507 #be3507 #be3507;
+}
+
+
+</style>
+<script type="text/javascript">
+$(document).ready(function(){
+	$(".dropdown, .btn-group").hover(function(){
+		var dropdownMenu = $(this).children(".dropdown-menu");
+		if(dropdownMenu.is(":visible")){
+			dropdownMenu.parent().toggleClass("open");
+		}
+	});
+});
+</script>
+    <!--Angluar FIles from Index-->
+
+  </head>
+    <body id="top" class="thebg" ng-app="societyCatalogApp">
+
+    <!-- HEADER -->
+
+	<!-- Top wrapper -->
+	<div class="navbar-wrapper3 navbar-fixed-top2" style="background: #fff;">
+      <div class="container">
+		<div class="navbar mtnav2">
+
+			<div class="container offset-3">
+			  <!-- Navigation-->
+			  <div class="navbar-header">
+				<button data-target=".navbar-collapse" data-toggle="collapse" class="navbar-toggle" type="button">
+				  <span class="icon-bar"></span>
+				  <span class="icon-bar"></span>
+				  <span class="icon-bar"></span>
+				</button>
+				<a href="index.html" class="navbar-brand"><img src="images/logo.png" alt="Travel Agency Logo" class="logo"/></a>
+			  </div>
+			  <div class="navbar-collapse collapse">
+				<ul class="nav navbar-nav navbar-right">
+				  <li class="dropdown active">
+					<a data-toggle="dropdown" class="dropdown-toggle" href="index.html"><img src="images/em.png"/>&nbsp;Hi Divya <b class="lightcaret mt-2"></b></a>
+					<ul class="dropdown-menu posright-0">
+					  <li>
+							<div class="row dropwidth01">
+								<ul class="droplist col-md-4">
+								  <li class="dropdown-header">Homepages</li>
+								  <li><a href="index.html">Home 1 minimal</a></li>
+								  <li><a href="index2.html">Home 2 offers</a></li>
+								  <li><a href="index3.html">Home 3 full search</a></li>
+								  <li><a href="index4.html">Home 4 presentation</a></li>
+								  <li><a href="index5.html">Home 5 footer2</a></li>
+								  <li><a href="index6.html">Home 6 full</a></li>
+								  <li><a href="index7.html">Home 7 </a></li>
+								  <li><a href="z-new-homepage.html">New Homepage</a> <span class="green">new</span></li>
+								</ul>
+								<ul class="droplist col-md-4">
+								  <li class="dropdown-header">Intro pages</li>
+								  <li><a href="intro.html">Intro 1</a></li>
+								  <li><a href="intro2.html">Intro 2 - slides</a> <span class="glyphicon glyphicon-star lblue"></span></li>
+								  <li><a href="intro3.html">Intro 3 - slides2</a> <span class="glyphicon glyphicon-star lblue"></span></li>
+								</ul>
+								<ul class="droplist col-md-4">
+								  <li class="dropdown-header">Colors</li>
+								  <li><a href="../blue/index.html">Blue</a></li>
+								  <li><a href="../green/index.html">Green</a></li>
+								  <li><a href="../orange/index.html">Orange</a></li>
+								  <li><a href="../cyan/index.html">Cyan</a></li>
+								  <li></li>
+								  <li class="inactive size10 lgrey caps"><span class="glyphicon glyphicon-star "></span> Popular pages</li>
+								</ul>
+							</div>
+					  </li>
+					</ul>
+				  </li>
+
+				  <li><a href="#"><img src="images/heart.png"/>&nbsp;Wishlist</a></li>
+				  <li><a href="#"><img src="icons/ic_cart_notification.png"/>&nbsp;Cart</a></li>
+
+				</ul>
+			  </div>
+			  <!-- /Navigation-->
+			</div>
+
+        </div>
+      </div>
+    </div>
+	<!-- /Top wrapper -->
+
+
+
+
+	<!--
+	#################################
+		- THEMEPUNCH BANNER -
+	#################################
+	-->
+	<div id="dajy" class="fullscreen-container2 mtslideb sliderbg fixed" >
+
+			<br><br><br><br><br>
+			<div class="searchcontainer textcenter" >
+				<span class="lato size48 slim white "style="opacity: 1;margin-top: 200px;">START BOOKING</span><br/>
+                <span class="lato size30 slim white ">YOUR CAMPAIGN NOW</span>
+                <br/><br/>
+                <button class="btn btn-default nbtn-search" style="margin-top:10px" type="button">HOW IT WORKS?</button><br><br>
+                <span class="lato size20 slim white ">POSTER CAMPAIGN, HIRANANDANI GARDENS</span><br/><br><br>
+
+				<div class=" wh95percent bottom">
+					<select class="form-control left " style="width:111px">
+									  <option selected>Select City</option>
+									  <option>5 stars</option>
+									  <option>4 stars</option>
+									  <option>3 stars</option>
+									  <option>2 stars</option>
+									  <option>1 stars</option>
+									</select>
+                    <select class="form-control left " style="width:121px">
+									  <option selected>Select Locality</option>
+									  <option>5 stars</option>
+									  <option>4 stars</option>
+									  <option>3 stars</option>
+									  <option>2 stars</option>
+									  <option>1 stars</option>
+									</select>
+                    <select class="form-control left " style="width:141px">
+									  <option selected>Campaign Type</option>
+									  <option>5 stars</option>
+									  <option>4 stars</option>
+									  <option>3 stars</option>
+									  <option>2 stars</option>
+									  <option>1 stars</option>
+									</select>
+                    <select class="form-control left " style="width:111px">
+									  <option selected>Duration</option>
+									  <option>5 stars</option>
+									  <option>4 stars</option>
+									  <option>3 stars</option>
+									  <option>2 stars</option>
+									  <option>1 stars</option>
+									</select>
+					<button class="btn btn-default nbtn-search right" type="button" style="margin-top:-35px"><span class="glyphicon glyphicon-search"></span></button>
+
+				</div>
+	</div>
+
+
+			<div class="fullscreenbanner">
+				<ul>
+
+					<!-- papercut fade turnoff flyin slideright slideleft slideup slidedown-->
+
+					<!-- FADE -->
+					<li data-transition="fade" data-slotamount="1" data-masterspeed="300">
+						<img src="modules/pages/guestPage/updates/update1/img/slider/slide1.jpg" alt=""/>
+						<div class="tp-caption scrolleffect sft"
+							 data-x="center"
+							 data-y="120"
+							 data-speed="1000"
+							 data-start="800"
+							 data-easing="easeOutExpo">
+						</div>
+					</li>
+
+					<!-- FADE -->
+					<li data-transition="fade" data-slotamount="1" data-masterspeed="300">
+
+						<img src="modules/pages/guestPage/updates/update1/img/slider/slide2.jpg" alt=""/>
+						<div class="tp-caption scrolleffect sft"
+							 data-x="center"
+							 data-y="120"
+							 data-speed="1000"
+							 data-start="800"
+							 data-easing="easeOutExpo"  >
+
+						</div>
+					</li>
+
+					<!-- FADE -->
+					<li data-transition="fade" data-slotamount="1" data-masterspeed="300">
+						<img src="modules/pages/guestPage/updates/update1/img/slider/slide3.jpg" alt=""/>
+						<div class="tp-caption scrolleffect sft"
+							 data-x="center"
+							 data-y="120"
+							 data-speed="1000"
+							 data-start="800"
+							 data-easing="easeOutExpo">
+
+						</div>
+					</li>
+
+					<!-- FADE -->
+					<li data-transition="fade" data-slotamount="1" data-masterspeed="300">
+						<img src="modules/pages/guestPage/updates/update1/img/slider/slide4.jpg" alt=""/>
+						<div class="tp-caption scrolleffect sft"
+							 data-x="center"
+							 data-y="120"
+							 data-speed="1000"
+							 data-start="800"
+							 data-easing="easeOutExpo">
+
+						</div>
+					</li>
+
+
+
+				</ul>
+				<div class="tp-bannertimer none"></div>
+			</div>
+		</div>
+
+		<!--
+		##############################
+		 - ACTIVATE THE BANNER HERE -
+		##############################
+		-->
+		<script type="text/javascript">
+
+			var tpj=jQuery;
+			tpj.noConflict();
+
+			tpj(document).ready(function() {
+
+			if (tpj.fn.cssOriginal!=undefined)
+				tpj.fn.css = tpj.fn.cssOriginal;
+
+				tpj('.fullscreenbanner').revolution(
+					{
+						delay:9000,
+						startwidth:1170,
+						startheight:600,
+
+						onHoverStop:"off",						// Stop Banner Timet at Hover on Slide on/off
+
+						thumbWidth:100,							// Thumb With and Height and Amount (only if navigation Tyope set to thumb !)
+						thumbHeight:50,
+						thumbAmount:3,
+
+						hideThumbs:0,
+						navigationType:"bullet",				// bullet, thumb, none
+						navigationArrows:"solo",				// nexttobullets, solo (old name verticalcentered), none
+
+						navigationStyle:false,				// round,square,navbar,round-old,square-old,navbar-old, or any from the list in the docu (choose between 50+ different item), custom
+
+
+						navigationHAlign:"left",				// Vertical Align top,center,bottom
+						navigationVAlign:"bottom",					// Horizontal Align left,center,right
+						navigationHOffset:30,
+						navigationVOffset:30,
+
+						soloArrowLeftHalign:"left",
+						soloArrowLeftValign:"center",
+						soloArrowLeftHOffset:20,
+						soloArrowLeftVOffset:0,
+
+						soloArrowRightHalign:"right",
+						soloArrowRightValign:"center",
+						soloArrowRightHOffset:20,
+						soloArrowRightVOffset:0,
+
+						touchenabled:"on",						// Enable Swipe Function : on/off
+
+
+						stopAtSlide:-1,							// Stop Timer if Slide "x" has been Reached. If stopAfterLoops set to 0, then it stops already in the first Loop at slide X which defined. -1 means do not stop at any slide. stopAfterLoops has no sinn in this case.
+						stopAfterLoops:-1,						// Stop Timer if All slides has been played "x" times. IT will stop at THe slide which is defined via stopAtSlide:x, if set to -1 slide never stop automatic
+
+						hideCaptionAtLimit:0,					// It Defines if a caption should be shown under a Screen Resolution ( Basod on The Width of Browser)
+						hideAllCaptionAtLilmit:0,				// Hide all The Captions if Width of Browser is less then this value
+						hideSliderAtLimit:0,					// Hide the whole slider, and stop also functions if Width of Browser is less than this value
+
+
+						fullWidth:"on",							// Same time only Enable FullScreen of FullWidth !!
+						fullScreen:"off",						// Same time only Enable FullScreen of FullWidth !!
+
+
+						shadow:0								//0 = no Shadow, 1,2,3 = 3 Different Art of Shadows -  (No Shadow in Fullwidth Version !)
+
+					});
+
+
+		});
+		</script>
+
+	<!-- WRAP -->
+	<div class="wrap cst03 bgfix " >
+		<div class="row" style="">
+      <div class="col-md-1"></div>
+      <div class="col-md-10" style="background-color:#fff; height:50px">
+        <p style="margin-top:15px "><center>Trending Campaign: Poster Campaign in powai no.of Ad spaces: 25 <a href="" style="color:#ffa500">Read more..</a></center></p>
+      </div>
+      <div class="col-md-1"></div>
+    </div>
+
+		<div class="container ">
+			<center>
+        <p style="font-style:bold; font-size:30px">Suggested Campaigns</p>
+        <p style="color:#c0c0c0; font-style:italic;">Campaigns designed for your brand</p>
+      </center>
+		</div>
+
+		<div class="masonry campaignCarousel">
+			<div class="item ht2">
+				<div class="msbox2">
+          <a href="#">
+            <img src="modules/pages/guestPage/updates/update1/img/pic04.jpg" class="fhimg" alt="">
+          </a>
+					<p class="msctext padding20">
+						<span class="newstitle"><a href="#">Poster Gold Campaign</a><br/><span style="color:#c0c0c0; font-style:italic;font-size:15px">Powai, Hiranandani</span></span>
+						<br/><br/>
+						Total no.of ad spaces: 20 &nbsp;&nbsp;  <label style="color:#000"> Rs:300</label>
+					</p><br/><br/>
+          <center><button class="btn btn-default nbtn-search" style="width:220px" type="button">BUY NOW</button></center>
+				</div>
+			</div>
+
+      <div class="item ht2">
+				<div class="msbox2"><a href="#"><img src="modules/pages/guestPage/updates/update1/img/pic04.jpg" class="fhimg" alt=""></a>
+					<p class="msctext padding20">
+						<span class="newstitle"><a href="#">Poster Gold Campaign</a><br/><span style="color:#c0c0c0; font-style:italic;font-size:15px">Powai, Hiranandani</span></span>
+						<br/><br/>
+						Total no.of ad spaces: 20 &nbsp;&nbsp;  <label style="color:#000"> Rs:300</label>
+					</p><br/><br/>
+          <center><button class="btn btn-default nbtn-search" style="width:220px" type="button">BUY NOW</button></center>
+				</div>
+			</div>
+
+      <div class="item ht2">
+				<div class="msbox2"><a href="#"><img src="modules/pages/guestPage/updates/update1/img/pic04.jpg" class="fhimg" alt=""></a>
+					<p class="msctext padding20">
+						<span class="newstitle"><a href="#">Poster Gold Campaign</a><br/><span style="color:#c0c0c0; font-style:italic;font-size:15px">Powai, Hiranandani</span></span>
+						<br/><br/>
+						Total no.of ad spaces: 20 &nbsp;&nbsp;  <label style="color:#000"> Rs:300</label>
+					</p><br/><br/>
+          <center><button class="btn btn-default nbtn-search" style="width:220px" type="button">BUY NOW</button></center>
+				</div>
+			</div>
+
+      <div class="item ht2">
+				<div class="msbox2"><a href="#"><img src="modules/pages/guestPage/updates/update1/img/pic04.jpg" class="fhimg" alt=""></a>
+					<p class="msctext padding20">
+						<span class="newstitle"><a href="#">Poster Gold Campaign</a><br/><span style="color:#c0c0c0; font-style:italic;font-size:15px">Powai, Hiranandani</span></span>
+						<br/><br/>
+						Total no.of ad spaces: 20 &nbsp;&nbsp;  <label style="color:#000"> Rs:300</label>
+					</p><br/><br/>
+          <center><button class="btn btn-default nbtn-search" style="width:220px" type="button">BUY NOW</button></center>
+				</div>
+			</div>
+      <div class="item ht2">
+				<div class="msbox2"><a href="#"><img src="modules/pages/guestPage/updates/update1/img/pic04.jpg" class="fhimg" alt=""></a>
+					<p class="msctext padding20">
+						<span class="newstitle"><a href="#">Poster Gold Campaign</a><br/><span style="color:#c0c0c0; font-style:italic;font-size:15px">Powai, Hiranandani</span></span>
+						<br/><br/>
+						Total no.of ad spaces: 20 &nbsp;&nbsp;  <label style="color:#000"> Rs:300</label>
+					</p><br/><br/>
+          <center><button class="btn btn-default nbtn-search" style="width:220px" type="button">BUY NOW</button></center>
+				</div>
+			</div>
+
+		</div><br/><br/>
+		<center><a href="#" class="btn btn-view btn-lg">VIEW ALL</a></center>
+		<div>
+		    <br/>
+		    <br/>
+		    <br/>
+		</div>
+    <div class="container">
+      <div class="pagecontainer2"><br><br><center><span class="size26 center dark opensans">Advertisement Spaces</span><br><span class="grey center opensans italic" style="font-style: italic;">Ad spaces for you to reach the users  </span></center><br/><br/>
+        <div class="row">
+          <div class="col-md-4"></div>
+            <div class="col-md-4" style="margin-left: 50px;">
+              <ul class="nav nav-tabs" >
+                <li class="active"><a href="#listedSpaces">Listed Spaces</a></li>
+                <li><a href="#listedSpaces">Available Spaces</a></li>
+              </ul>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <div class="row">
+          <!-- <div class="col-md-2" style="text-align: center; margin-top:100px;"><img src="img/cleft.png"></img></div> -->
+            <div class="col-md-12" style="text-align: center; margin-top:100px">
+              <div class="listedSpaces">
+                <div class="row spaceCarousel">
+                  <div class="col-md-4" style="text-align: center;">
+                    <div class="msbox2" style="height: 300px;">
+                      <a href="#">
+                        <img src="modules/pages/guestPage/updates/update1/img/pic04.jpg" class="fhimg" alt="">
+                      </a>
+					            <p class="padding10" style="text-align: left">
+						            <span ><a href="#" class=" size14 bold dark opensans">Yarrow Nahar Amrit Shakti</a><br/>
+                        <span style="color:#c0c0c0; font-style:italic;font-size:12px">
+                        <span class="glyphicon glyphicon glyphicon-map-marker" aria-hidden="true"></span>Powai, Hiranandani</span></span>
+						        </div>
+                  </div>
+                  <div class="col-md-4" style="text-align: center;">
+                    <div class="msbox2" style="height: 300px;">
+                      <a href="#">
+                        <img src="modules/pages/guestPage/updates/update1/img/pic04.jpg" class="fhimg" alt="">
+                      </a>
+					            <p class="padding10" style="text-align: left">
+						            <span ><a href="#" class=" size14 bold dark opensans">Yarrow Nahar Amrit Shakti</a><br/>
+                        <span style="color:#c0c0c0; font-style:italic;font-size:12px">
+                        <span class="glyphicon glyphicon glyphicon-map-marker" aria-hidden="true"></span>Powai, Hiranandani</span></span>
+						        </div>
+                  </div>
+                  <div class="col-md-4" style="text-align: center;">
+                    <div class="msbox2" style="height: 300px;">
+                      <a href="#">
+                        <img src="modules/pages/guestPage/updates/update1/img/pic04.jpg" class="fhimg" alt="">
+                      </a>
+                      <p class="padding10" style="text-align: left">
+                        <span ><a href="#" class=" size14 bold dark opensans">Yarrow Nahar Amrit Shakti</a><br/>
+                        <span style="color:#c0c0c0; font-style:italic;font-size:12px">
+                        <span class="glyphicon glyphicon glyphicon-map-marker" aria-hidden="true"></span>Powai, Hiranandani</span></span>
+                    </div>
+                  </div>
+                  <div class="col-md-4" style="text-align: center;">
+                    <div class="msbox2" style="height: 300px;">
+                      <a href="#">
+                        <img src="modules/pages/guestPage/updates/update1/img/pic04.jpg" class="fhimg" alt="">
+                      </a>
+                      <p class="padding10" style="text-align: left">
+                        <span ><a href="#" class=" size14 bold dark opensans">Yarrow Nahar Amrit Shakti</a><br/>
+                        <span style="color:#c0c0c0; font-style:italic;font-size:12px">
+                        <span class="glyphicon glyphicon glyphicon-map-marker" aria-hidden="true"></span>Powai, Hiranandani</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2" style="text-align: center; margin-top:100px">
+              <!-- <img src="img/cright.png"></img> -->
+            </div>
+        </div>
+      </div>
+    </div>
+    <br/>
+    <br/>
+		<!-- FOOTER -->
+		<div class="footerbg lcfix">
+			<div class="container">
+				<footer>
+					<div class="footer">
+						<a href="#" class="social1"><img src="images/icon-facebook.png" alt=""/></a>
+						<a href="#" class="social2"><img src="images/icon-twitter.png" alt=""/></a>
+						<a href="#" class="social3"><img src="images/icon-gplus.png" alt=""/></a>
+						<a href="#" class="social4"><img src="images/icon-youtube.png" alt=""/></a>
+						<br/><br/>
+						Copyright &copy; 2013 <a href="#">Travel Agency</a> All rights reserved. <a href="http://titanicthemes.com">TitanicThemes.com</a>
+						<br/><br/>
+						<a href="#top" id="gotop2" class="gotop"><img src="images/spacer.png" alt=""/></a>
+					</div>
+				</footer>
+			</div>
+		</div>
+	</div>
+	<!-- END OF WRAP -->
+    <!-- Javascript -->
+    <!-- This page JS -->
+	<script src="modules/pages/guestPage/updates/update1/js/js-new-homepage.js"></script>
+    <!-- Custom functions -->
+    <script src="modules/pages/guestPage/assets/js/functions.js"></script>
+    <!-- Picker UI-->
+	<script src="modules/pages/guestPage/assets/js/jquery-ui.js"></script>
+	<!-- Easing -->
+    <script src="modules/pages/guestPage/assets/js/jquery.easing.js"></script>
+    <!-- jQuery KenBurn Slider  -->
+    <script type="text/javascript" src="modules/pages/guestPage/rs-plugin/js/jquery.themepunch.revolution.min.js"></script>
+    <!-- Nicescroll  -->
+	   <script src="modules/pages/guestPage/assets/js/jquery.nicescroll.min.js"></script>
+    <!-- CarouFredSel -->
+    <script src="modules/pages/guestPage/assets/js/jquery.carouFredSel-6.2.1-packed.js"></script>
+    <script src="modules/pages/guestPage/assets/js/helper-plugins/jquery.touchSwipe.min.js"></script>
+	<script type="text/javascript" src="modules/pages/guestPage/assets/js/helper-plugins/jquery.mousewheel.min.js"></script>
+	<script type="text/javascript" src="modules/pages/guestPage/assets/js/helper-plugins/jquery.transit.min.js"></script>
+	<script type="text/javascript" src="modules/pages/guestPage/assets/js/helper-plugins/jquery.ba-throttle-debounce.min.js"></script>
+
+    <!-- Custom Select -->
+	<script type='text/javascript' src='modules/pages/guestPage/assets/js/jquery.customSelect.js'></script>
+
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  </body>
+</html>

@@ -31,6 +31,7 @@ angular
     'ngFileUpload',
     'uiGmapgoogle-maps',
     'ncy-angular-breadcrumb',
+    'slickCarousel',
     // ''
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
@@ -244,6 +245,11 @@ angular
               label:'ExecutionPlan',
               parent : 'OpsDashBoard'
             }
+      })
+      .state('guestHomePage',{
+            url : '/guestHomePage',
+            controller : 'guestHomePageController',
+            templateUrl : 'modules/pages/guestPage/homepage.tmpl.html',
       });
 })
 .run(['$rootScope', '$window', '$location', 'AuthService','$state',
