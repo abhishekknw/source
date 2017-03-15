@@ -343,7 +343,8 @@ supplier_filters = {
     },
     'RS': {
         'flat_avg_rental_persqft': 'flat_avg_rental_persqft',
-        'flat_sale_cost_persqft': 'flat_sale_cost_persqft'
+        'flat_sale_cost_persqft': 'flat_sale_cost_persqft',
+        'possession_year': 'age_of_society'
     }
 }
 

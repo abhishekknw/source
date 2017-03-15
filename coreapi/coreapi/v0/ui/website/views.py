@@ -187,7 +187,7 @@ class BusinessContacts(APIView):
     def post(self, request):
         class_name = self.__class__.__name__
         """
-        creates new campaign
+
         ---
         parameters:
         - name: business
@@ -415,7 +415,6 @@ class AccountContacts(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
-
     def generate_account_id(self, account_name, business_id, lower=False):
         business_code = business_id[-4:]
         account_code = create_code(name = account_name)
@@ -430,7 +429,7 @@ class AccountContacts(APIView):
 
             # still conflict ---> Generate random 4 uppercase character string
             i = 0  # i keeps track of infinite loop tune it according to the needs
-            while(True):
+            while True:
                 if i > 10:
                     return None
                 account_code = ''.join(random.choice(string.ascii_uppercase ) for _ in range(4))
