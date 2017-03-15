@@ -55,6 +55,7 @@ class BaseUser(AbstractUser):
     This is base user class that inherits AbstractBaseUser and adds an additional field.
     """
     user_code = models.CharField(max_length=255, default=settings.DEFAULT_USER_CODE)
+    mobile = models.CharField(max_length=20, null=True, blank=True)
 
     class Meta:
         db_table = 'base_user'
@@ -312,7 +313,9 @@ class DoorToDoorInfo(models.Model):
 
         db_table = 'door_to_door_info'
 
+
 class FlierThroughLobbyInfo(models.Model):
+
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='flier_lobby', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
@@ -328,6 +331,7 @@ class FlierThroughLobbyInfo(models.Model):
         db_table = 'flier_through_lobby_info'
 
 class LiftDetails(models.Model):
+
     lift_tag = models.CharField(db_column='LIFT_TAG', max_length=20, blank=True, null=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
     acrylic_board_available = models.CharField(db_column='ACRYLIC_BOARD_AVAILABLE', max_length=5, blank=True, null=True)  # Field name made lowercase.
@@ -351,7 +355,9 @@ class LiftDetails(models.Model):
     class Meta:
         db_table = 'lift_details'
 
+
 class NoticeBoardDetails(BaseModel):
+
     notice_board_tag = models.CharField(db_column='NOTICE_BOARD_TAG',max_length=20, blank=True, null=True )  # Field name made lowercase.
     notice_board_type = models.CharField(db_column='NOTICE_BOARD_TYPE', max_length=50, blank=True, null=True)  # Field name made lowercase.
     notice_board_type_other = models.CharField(db_column='NOTICE_BOARD_TYPE_OTHER', max_length=30, blank=True, null=True)  # Field name made lowercase.
@@ -391,7 +397,6 @@ class PosterInventory(BaseModel):
     tower = models.ForeignKey('SocietyTower', null=True, blank=True)
 
     class Meta:
-
         db_table = 'poster_inventory'
 
 
@@ -401,13 +406,14 @@ class SocietyFlat(models.Model):
     tower = models.ForeignKey('SocietyTower', related_name='flats', db_column='TOWER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
     flat_type = models.CharField(db_column='FLAT_TYPE', max_length=20)  # Field name made lowercase.
     flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)  # Field name made lowercase.
-    #flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         db_table = 'society_flat'
         unique_together = (('tower', 'flat_type'),)
 
+
 class FlatType(BaseModel):
+
     id = models.AutoField(db_column='ID', primary_key=True)
     society = models.ForeignKey('SupplierTypeSociety', related_name='flatTypes', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
     flat_type = models.CharField(db_column='FLAT_TYPE', max_length=20)  # Field name made lowercase.
@@ -427,6 +433,7 @@ class FlatType(BaseModel):
 
 
 class StandeeInventory(BaseModel):
+
     id = models.AutoField(db_column='ID', primary_key=True)
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
     inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
@@ -452,6 +459,7 @@ class StandeeInventory(BaseModel):
 
 
 class SwimmingPoolInfo(models.Model):
+
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='swimming_pools', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
     size_breadth = models.FloatField(db_column='SIZE_BREADTH', default=0.0, blank=True, null=True)  # Field name made lowercase.
