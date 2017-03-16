@@ -2531,13 +2531,32 @@ def handle_specific_filters(specific_filters, supplier_type_code):
                         specific_filters_query &= Q(**{database_field + '__gte': filter_value['min'], database_field + '__lte': filter_value['max']})
                     else:
                         specific_filters_query &= Q(**{database_field: filter_value})
-    
+
         # do if else check on supplier type code to include things particular to that supplier. Things which
         # cannot be mapped to a particular supplier and vary from supplier to supplier
         if supplier_type_code == website_constants.society:
             if specific_filters.get('flat_type'):
-                flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
-                supplier_ids = models.FlatType.objects.select_related('society').filter(flat_type__in=flat_type_values).values_list('society__supplier_id')
+                query = Q()
+                for flat_code, detail in specific_filters['flat_type'].iteritems():
+
+                    flat_code_value = website_constants.flat_type_dict[flat_code]
+                    query_dict = {'flat_type': flat_code_value}
+
+                    if detail.get('count'):
+                        query_dict['flat_count__gte'] = int(detail['count']['min'])
+                        query_dict['flat_count__lte'] = int(detail['count']['max'])
+
+                    if detail.get('size'):
+                        query_dict['size_builtup_area__gte'] = float(detail['size']['min'])
+                        query_dict['size_builtup_area__lte'] = float(detail['size']['max'])
+
+                    current_query = Q(**query_dict)
+
+                    if query:
+                        query |= current_query
+                    else:
+                        query = current_query
+                supplier_ids = models.FlatType.objects.select_related('society').filter(query).values_list('society__supplier_id')
                 specific_filters_query &= Q(supplier_id__in=supplier_ids)
 
         if supplier_type_code == website_constants.corporate:
@@ -4877,7 +4896,7 @@ def get_standalone_societies():
 def is_society_standalone(instance_detail):
     """
     checks if society instance is standalone or not as per definition of standalone society
-    Args:
+        Args:
         instance_detail:
 
     Returns: True or False
