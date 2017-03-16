@@ -34,7 +34,7 @@ angular
     'slickCarousel',
     // ''
   ])
-  .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
+  .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider) {
       $stateProvider
       .state('society', {
           url : '/society',
@@ -251,6 +251,7 @@ angular
             controller : 'guestHomePageController',
             templateUrl : 'modules/pages/guestPage/homepage.tmpl.html',
       });
+      $qProvider.errorOnUnhandledRejections(false);
 })
 .run(['$rootScope', '$window', '$location', 'AuthService','$state',
      function ($rootScope, $window, $location, AuthService, $state) {

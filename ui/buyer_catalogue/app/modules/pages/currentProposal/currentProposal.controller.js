@@ -52,10 +52,10 @@ angular.module('catalogueApp')
       $scope.altInputFormats = ['M!/d!/yyyy'];
 
     	currentProposalService.getProposal($stateParams.proposal_id)
-    	.success(function(response, status){
-    		$scope.proposal = response.data;
+    	.then(function onSuccess(response, status){
+    		$scope.proposal = response.data.data;
     	})
-    	.error(function(response, status){
+    	.catch(function onError(response, status){
     		console.log("Error Occured");
     		if(typeof(response) == typeof([])){
     			console.log("Error response is :", response);
@@ -68,14 +68,14 @@ angular.module('catalogueApp')
 
         // this service get the all shortlisted suppliers for this proposal
       currentProposalService.getShortlistedSuppliers($stateParams.proposal_id)
-        .success(function(response, status){
+        .then(function onSuccess(response, status){
           console.log(response);
-          $scope.center_data = response.data;
+          $scope.center_data = response.data.data;
           getAvailableSuppliers($scope.center_data);
           getFilters($scope.center_data);
-          $scope.loading = response;
+          $scope.loading = response.data;
       })
-        .error(function(response, status){
+        .catch(function onError(response, status){
           console.log("Error Occured");
           if(typeof(response) == typeof([])){
             console.log("Error response is :", response);
@@ -146,10 +146,10 @@ angular.module('catalogueApp')
       $scope.updateProposal = function() {
         $scope.current_center_data.proposal = $stateParams.proposal_id;
         currentProposalService.updateProposal($stateParams.proposal_id, $scope.current_center_data)
-        .success(function(response, status){
+        .then(function onSuccess(response, status){
                 $window.location.reload();
         })
-        .error(function(response, status){
+        .catch(function onError(response, status){
           console.log("Error Occured");
         })
       }
@@ -163,19 +163,19 @@ angular.module('catalogueApp')
           'supplier_type_code':code,
         };
         currentProposalService.updateSupplierStatus($stateParams.proposal_id,data)
-          .success(function(response, status){
+          .then(function onSuccess(response, status){
             // alert("Saved Successfully");
-          }).error(function(response, status){
+          }).catch(function onError(response, status){
             // alert("Error Occured");
         });
       }
       //End:code to change and save status of supplier
     	$scope.submit = function(){
     		currentProposalService.saveProposal($stateParams.proposal_id, $scope.proposal.centers)
-    		.success(function(response, status){
+    		.then(function onSuccess(response, status){
                 $window.location.reload();
     		})
-    		.error(function(response, status){
+    		.catch(function onError(response, status){
     			console.log("Error Occured");
     			if(typeof(response) == typeof([])){
 	    		console.log("Error response is :", response);
