@@ -4840,3 +4840,52 @@ def get_societies_within_tenants_flat_ratio(min_ratio, max_ratio):
         return ui_utils.handle_response(function, data=supplier_ids, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_standalone_societies():
+    """
+    Returns: returns a list of societies that are standalone
+
+    """
+    function = get_standalone_societies.__name__
+    try:
+        response = ui_utils.get_content_type(website_constants.society)
+        if not response.data['status']:
+            return response
+        content_type = response.data['data']
+        amenities = models.SupplierAmenitiesMap.objects.filter(content_type=content_type).values('object_id').annotate(amenity_count=Count('id'))
+        amenities_map = {amenity['object_id']: amenity['amenity_count'] for amenity in amenities}
+        societies = models.SupplierTypeSociety.objects.all().values('supplier_id', 'tower_count', 'flat_count')
+        societies_map = {
+            society['supplier_id']:
+                             {
+                                 'tower_count': society['tower_count'],
+                                 'flat_count': society['flat_count'],
+                                 'amenity_count': amenities_map.get(society['supplier_id'])
+
+                             } for society in societies}
+        standalone_society_ids = []
+        for society_id, detail in societies_map.iteritems():
+            if is_society_standalone(detail):
+                standalone_society_ids.append(society_id)
+
+        return ui_utils.handle_response(function, data=standalone_society_ids, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def is_society_standalone(instance_detail):
+    """
+    checks if society instance is standalone or not as per definition of standalone society
+    Args:
+        instance_detail:
+
+    Returns: True or False
+    """
+    function = is_society_standalone.__name__
+    try:
+        if instance_detail['tower_count'] <= website_constants.standalone_society_config['tower_count'] and instance_detail['flat_count'] <= website_constants.standalone_society_config['flat_count'] and  instance_detail['amenity_count'] <= website_constants.standalone_society_config['amenity_count']:
+                    return True
+        return False
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))

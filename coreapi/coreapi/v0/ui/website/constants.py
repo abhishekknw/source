@@ -652,3 +652,10 @@ activity_type = {
     'CLOSURE': 'CLOSURE',
     'AUDIT': 'AUDIT'
 }
+
+# standalone society configs
+standalone_society_config = {
+    'tower_count': 2,
+    'flat_count': 70,
+    'amenity_count': 3
+}

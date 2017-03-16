@@ -1160,6 +1160,7 @@ class FilteredSuppliers(APIView):
             proposal_id = request.data.get('proposal_id')
             center_id = request.data.get('center_id')
             amenities = request.data.get('amenities')
+            is_standalone_society = request.data.get('is_standalone_society')
             ratio_of_tenants_to_flats = request.data.get('ratio_of_tenants_to_flats')  # cannot be handled  under specific society filters because it involves operation of two columns in database which cannot be generalized to a query.
 
             # get the right model and content_type
@@ -1234,6 +1235,13 @@ class FilteredSuppliers(APIView):
             # check for society ratio of tenants to flats
             if supplier_type_code == website_constants.society and ratio_of_tenants_to_flats:
                 response = website_utils.get_societies_within_tenants_flat_ratio(float(ratio_of_tenants_to_flats['min']), float(ratio_of_tenants_to_flats['max']))
+                if not response.data['status']:
+                    return response
+                final_suppliers_list = final_suppliers_list.intersection(response.data['data'])
+
+            # check for standalone societies
+            if supplier_type_code == website_constants.society and is_standalone_society:
+                response = website_utils.get_standalone_societies()
                 if not response.data['status']:
                     return response
                 final_suppliers_list = final_suppliers_list.intersection(response.data['data'])
