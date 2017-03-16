@@ -34,7 +34,7 @@ angular
     'slickCarousel',
     // ''
   ])
-  .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider) {
+  .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider) {
       $stateProvider
       .state('society', {
           url : '/society',
@@ -252,6 +252,7 @@ angular
             templateUrl : 'modules/pages/guestPage/homepage.tmpl.html',
       });
       $qProvider.errorOnUnhandledRejections(false);
+      $locationProvider.hashPrefix('');
 })
 .run(['$rootScope', '$window', '$location', 'AuthService','$state',
      function ($rootScope, $window, $location, AuthService, $state) {
@@ -270,7 +271,9 @@ angular
 
          // redirect to login page if not logged in
          $rootScope.globals.currentUser = AuthService.UserInfo();
-         if (!$rootScope.globals.currentUser) {
+         if ($location.path() == '/guestHomePage') {
+           $location.path("/guestHomePage");
+         }else if (!$rootScope.globals.currentUser) {
            $location.path('/login');
          }else if ($rootScope.globals.currentUser && $location.path() == '/logout'){
            AuthService.Logout();
