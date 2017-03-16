@@ -10,7 +10,7 @@ from string import Template
 from operator import itemgetter
 
 from django.db import transaction
-from django.db.models import Q, F
+from django.db.models import Q, F, ExpressionWrapper, FloatField
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -2498,7 +2498,6 @@ def handle_specific_filters(specific_filters, supplier_type_code):
     This function is called from construct query which handles filters specific to supplier
     Args:
         specific_filters: { 'real_estate_allowed': True, 'total_employee_count': 120, 'flat_type': [ '1RK', '2BHK' ]
-
           }
         supplier_type_code: 'RS', 'CP'
     Returns: a Q object based on above filters
@@ -2524,15 +2523,15 @@ def handle_specific_filters(specific_filters, supplier_type_code):
                 # do things only when you get a db field
                 if not specific_filters_query:
                     if type(filter_value) == DictType:
-                        specific_filters_query = Q(**{received_filter + '__gte': filter_value['min'],received_filter + '__lte': filter_value['max']})
+                        specific_filters_query = Q(**{database_field + '__gte': filter_value['min'],database_field + '__lte': filter_value['max']})
                     else:
                         specific_filters_query = Q(**{database_field:filter_value})
                 else:
                     if type(filter_value) == DictType:
-                        specific_filters_query &= Q(**{received_filter + '__gte': filter_value['min'],received_filter + '__lte': filter_value['max']})
+                        specific_filters_query &= Q(**{database_field + '__gte': filter_value['min'], database_field + '__lte': filter_value['max']})
                     else:
                         specific_filters_query &= Q(**{database_field: filter_value})
-
+    
         # do if else check on supplier type code to include things particular to that supplier. Things which
         # cannot be mapped to a particular supplier and vary from supplier to supplier
         if supplier_type_code == website_constants.society:
@@ -4819,5 +4818,25 @@ def insert_release_closure_dates(inventory_release_closure_list):
                 get_or_create(inventory_activity=inv_activity_instance, activity_date=activity_date)
 
         return ui_utils.handle_response(function, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_societies_within_tenants_flat_ratio(min_ratio, max_ratio):
+    """
+    filters  societies by calculating a ratio of tenant to flat and ensuring the ratio within a range of
+    min max.
+    Args:
+        min_ratio: min value
+        max_ratio: max_value
+
+    Returns: filtered supplier ids
+
+    """
+    function = get_societies_within_tenants_flat_ratio.__name__
+    try:
+        supplier_ids = models.SupplierTypeSociety.objects.annotate(ratio=ExpressionWrapper(
+            F('total_tenant_flat_count')/F('flat_count'), output_field=FloatField())).filter(ratio__gte=min_ratio, ratio__lte=max_ratio).values_list('supplier_id', flat=True)
+        return ui_utils.handle_response(function, data=supplier_ids, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)

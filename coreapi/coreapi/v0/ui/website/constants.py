@@ -348,6 +348,9 @@ supplier_filters = {
     }
 }
 
+# Filter names which do not map directly to db field
+tenants_to_flat_count = 'percentage_of_tenants_to_flat_count'
+
 # from the front end we recieve only the codes, hence there is a mapping to actual values. Do not change it's name
 quality_dict = {
     'UH': 'Ultra High',
