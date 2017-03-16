@@ -378,6 +378,39 @@ $scope.business_type = $scope.businessData.type_name.business_type;
                     noSwitching: true,
                 }
             };
+            $scope.flat_avg_rental_persqft = {
+                min: 0,
+                max: 0,
+                options: {
+                    floor: 0,
+                    ceil: 100,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+            $scope.flat_sale_cost_persqft = {
+                min: 0,
+                max: 0,
+                options: {
+                    floor: 0,
+                    ceil: 10000,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+            $scope.possession_year = {
+                min: 1900,
+                max: 1900,
+                options: {
+                    floor: 1900,
+                    ceil: 2017,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+            $scope.no_of_tenants = angular.copy($scope.flat_count);
+            //$scope.no_of_tenants.options.ceil = integer value;  //need to uncomment to fix other ceil value
+            $scope.is_standalone_society;
             $scope.space_inventory_type = [
                 {name : 'Poster(PO)',  code : 'PO',   selected : false },
                 {name : 'Standee(ST)', code : 'ST',   selected : false },
@@ -446,26 +479,6 @@ $scope.business_type = $scope.businessData.type_name.business_type;
               .catch(function onError(response, status){
               });
             //End:   api call to get amenity filters from database
-            $scope.flat_avg_rental_persqft = {
-                min: 0,
-                max: 0,
-                options: {
-                    floor: 0,
-                    ceil: 100,
-                    step: 1,
-                    noSwitching: true,
-                }
-            };
-            $scope.flat_sale_cost_persqft = {
-                min: 0,
-                max: 0,
-                options: {
-                    floor: 0,
-                    ceil: 10000,
-                    step: 1,
-                    noSwitching: true,
-                }
-            };
 
         //Start: filters for suppliers
         var createInitialFilterData = function(){
@@ -479,6 +492,8 @@ $scope.business_type = $scope.businessData.type_name.business_type;
               amenities : $scope.amenities,
               flat_avg_rental_persqft:$scope.flat_avg_rental_persqft,
               flat_sale_cost_persqft:$scope.flat_sale_cost_persqft,
+              ratio_of_tenants_to_flats:$scope.no_of_tenants,
+              possession_year : $scope.possession_year,
             };
             $scope.CP_filters = {
               inventory : $scope.space_inventory_type,
@@ -866,18 +881,10 @@ $scope.business_type = $scope.businessData.type_name.business_type;
           filter_array[i].selected = false;
         }
       }
-  //Start: to apply flat_avg_rental_persqft and flat_sale_cost_persqft filter when clicked
-  $scope.avgRentalPerSqftFilter = function(){
-    $scope.flat_avg_rental_persqft_flag = true;
-    $scope.societyFilters();
-  }
-  $scope.saleCostPerSqftFilter = function(){
-    $scope.flat_sale_cost_persqft_flag = true;
-    $scope.societyFilters();
-  }
-  //End: to apply flat_avg_rental_persqft and flat_sale_cost_persqft filter when clicked
   //Start:code for society filters
+  $scope.is_standalone_society = false;
   $scope.societyFilters = function(value){
+    console.log(value);
     //Start : Code added to filter multiple centers on gridview
    try{
     promises = [];
@@ -961,28 +968,35 @@ $scope.business_type = $scope.businessData.type_name.business_type;
         },
         inventory_filters : [],
         specific_filters : {
-          flat_type : [],
+          flat_type : {},
         },
         amenities : [],
       };
-      if($scope.flat_avg_rental_persqft_flag == true){
+      if($scope.current_center.RS_filters.flat_avg_rental_persqft.max != $scope.current_center.RS_filters.flat_avg_rental_persqft.options.floor){
         filters.specific_filters['flat_avg_rental_persqft'] = $scope.current_center.RS_filters.flat_avg_rental_persqft;
       }
-      if($scope.flat_sale_cost_persqft_flag == true){
+      if($scope.current_center.RS_filters.flat_sale_cost_persqft.max != $scope.current_center.RS_filters.flat_sale_cost_persqft.options.floor){
         filters.specific_filters['flat_sale_cost_persqft'] = $scope.current_center.RS_filters.flat_sale_cost_persqft;
       }
-      if($scope.current_center.RS_filters.flat_avg_rental_persqft.max == 0){
-        delete filters.specific_filters['flat_avg_rental_persqft'];
+      if($scope.current_center.RS_filters.ratio_of_tenants_to_flats.max != $scope.current_center.RS_filters.ratio_of_tenants_to_flats.options.floor){
+        filters['ratio_of_tenants_to_flats'] = {};
+        filters['ratio_of_tenants_to_flats']['min'] = $scope.current_center.RS_filters.ratio_of_tenants_to_flats.min/100;
+        filters['ratio_of_tenants_to_flats']['max'] = $scope.current_center.RS_filters.ratio_of_tenants_to_flats.max/100;
       }
-      if($scope.current_center.RS_filters.flat_sale_cost_persqft.max == 0){
-        delete filters.specific_filters['flat_sale_cost_persqft'];
+      if($scope.current_center.RS_filters.possession_year.max != $scope.current_center.RS_filters.possession_year.options.floor){
+        filters.specific_filters['possession_year'] = $scope.current_center.RS_filters.possession_year;
+      }
+      if(value){
+        filters['is_standalone_society'] = true;
       }
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
-      makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
+      // makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
       makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
       makeFilters($scope.current_center.RS_filters.locality_rating,filters.common_filters.locality);
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
       makeFilters($scope.current_center.RS_filters.amenities,filters.amenities);
+      makeFlatTypeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
+      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
     }catch(error){
@@ -1121,6 +1135,24 @@ $scope.business_type = $scope.businessData.type_name.business_type;
         }
       }
 //End: function for adding filters code to provided filter type list
+//Start: for flat type filters
+ var makeFlatTypeFilters = function(filter_array,filter_list){
+   try{
+     for(var i=0;i<filter_array.length; i++){
+       if(filter_array[i].selected == true){
+         filter_list[filter_array[i].code] = angular.copy(filter_array[i]);
+         if(filter_array[i].flat_count.max != filter_array[i].flat_count.options.floor){
+            filter_list[filter_array[i].code]['count'] = angular.copy(filter_array[i].flat_count);
+          }
+         if(filter_array[i].flat_size.max != filter_array[i].flat_size.options.floor){
+            filter_list[filter_array[i].code]['size'] = filter_array[i].flat_size;
+          }
+       }
+     }
+   }catch(error){
+   }
+ }
+//End: for flat type filters
 //start: generic function for fetching all supplier filters
         var filterSupplierData = function (code,supplier_filters){
          try{

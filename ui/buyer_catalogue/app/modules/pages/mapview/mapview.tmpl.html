@@ -68,35 +68,50 @@
           <hr>
           <span class = "filterPanelHeader ">Society Flat Type</span>
             <div class = "" ng-repeat="flat_type in current_center.RS_filters.flat_type">
-                <input type = "checkbox" ng-model="flat_type.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ flat_type.name }}&nbsp;
+                <input type = "checkbox" ng-model="flat_type.selected" ng-click="societyFilters()" ng-disabled = "checkFilters">{{ flat_type.name }}&nbsp;
                 <div class="" ng-if="flat_type.selected == true">
                   <br>
                   <span class = "filterPanelHeader ">Flat count</span>
                   <rzslider rz-slider-model="flat_type.flat_count.min" rz-slider-high="flat_type.flat_count.max"
-                    rz-slider-options="flat_type.flat_count.options" ng-click=""  ng-disabled = "checkFilters">
+                    rz-slider-options="flat_type.flat_count.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
                   </rzslider>
                   <span class = "filterPanelHeader ">Flat Size</span>
                   <rzslider rz-slider-model="flat_type.flat_size.min" rz-slider-high="flat_type.flat_size.max"
-                    rz-slider-options="flat_type.flat_size.options" ng-click=""  ng-disabled = "checkFilters">
+                    rz-slider-options="flat_type.flat_size.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
                   </rzslider>
                 </div>
             </div>
           <hr>
           <span class = "filterPanelHeader ">Flat Average rental Per Sqft</span>
           <rzslider rz-slider-model="current_center.RS_filters.flat_avg_rental_persqft.min" rz-slider-high="current_center.RS_filters.flat_avg_rental_persqft.max"
-            rz-slider-options="current_center.RS_filters.flat_avg_rental_persqft.options" ng-click="avgRentalPerSqftFilter()"  ng-disabled = "checkFilters">
+            rz-slider-options="current_center.RS_filters.flat_avg_rental_persqft.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
           </rzslider>
           <hr>
           <span class = "filterPanelHeader ">Flat Sale Cost Per Sqft</span>
           <rzslider rz-slider-model="current_center.RS_filters.flat_sale_cost_persqft.min" rz-slider-high="current_center.RS_filters.flat_sale_cost_persqft.max"
-            rz-slider-options="current_center.RS_filters.flat_sale_cost_persqft.options" ng-click="saleCostPerSqftFilter()"  ng-disabled = "checkFilters">
+            rz-slider-options="current_center.RS_filters.flat_sale_cost_persqft.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
+          </rzslider>
+          <hr>
+          <span class = "filterPanelHeader ">Percentage of Tenants to Flats</span>
+          <rzslider rz-slider-model="current_center.RS_filters.ratio_of_tenants_to_flats.min" rz-slider-high="current_center.RS_filters.ratio_of_tenants_to_flats.max"
+            rz-slider-options="current_center.RS_filters.ratio_of_tenants_to_flats.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
+          </rzslider>
+          <hr>
+          <span class = "filterPanelHeader ">Possession Year</span>
+          <rzslider rz-slider-model="current_center.RS_filters.possession_year.min" rz-slider-high="current_center.RS_filters.possession_year.max"
+            rz-slider-options="current_center.RS_filters.possession_year.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
           </rzslider>
           <hr>
           <span class = "filterPanelHeader ">Amenities</span>
             <div class = "nbCheckbox two-col" ng-repeat="amenity in current_center.RS_filters.amenities">
                 <input type = "checkbox" ng-model="amenity.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ amenity.name }}&nbsp;
             </div>
-
+          <hr>
+          <div>
+            <input type = "checkbox"  ng-model="is_standalone_society" ng-disabled = "checkFilters" ng-click="societyFilters(is_standalone_society)">
+            <span style="color:crimson">Standalone Society
+            </span>
+          </div>
           </div>
         </div>
         <div class = "filterPanel" ng-if = "current_center.suppliers_allowed.corporate_show">
