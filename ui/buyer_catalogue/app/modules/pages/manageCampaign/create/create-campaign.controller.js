@@ -96,6 +96,8 @@ angular.module('machadaloPages')
       pagesService.loadBusinessTypes()
       .then(function (response){
           $scope.busTypes = response.data;
+        })
+        .catch(function onError(response){
         });
       $scope.getBusiness = function() {
         pagesService.getBusiness($scope.bsSelect)
@@ -165,7 +167,6 @@ angular.module('machadaloPages')
         $scope.bsSelect = undefined;
 	    	pagesService.getAllBusinesses()
 	    	.then(function (response, status) {
-          console.log(response);
 	            $scope.businesses = response.data;
 	       });
 	    };
@@ -219,11 +220,10 @@ angular.module('machadaloPages')
 
           pagesService.getAccountProposal(sel_account_id)
           .then(function(response, status){
-            console.log(response);
               $scope.account_proposals = response.data.data;
               $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
           })
-          .error(function(response, status){
+          .catch(function onError(response, status){
               if(typeof(response) == typeof([]))
                   $scope.proposal_error = response.error;
           });

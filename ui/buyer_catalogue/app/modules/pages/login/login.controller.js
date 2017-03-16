@@ -1,7 +1,7 @@
 angular.module('machadaloPages')
 .controller('LoginCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'AuthService',
-    function ($scope, $rootScope, $window, $location, AuthService) {
+    ['$scope', '$rootScope', '$window', '$location', 'AuthService','$state',
+    function ($scope, $rootScope, $window, $location, AuthService, $state) {
         // reset login status
 
         AuthService.Clear();
@@ -18,5 +18,7 @@ angular.module('machadaloPages')
                 }
             });
         };
-
+        $scope.guestPage = function(){
+          $location.path("/guestHomePage");
+        }
     }]);

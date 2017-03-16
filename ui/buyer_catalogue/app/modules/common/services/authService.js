@@ -18,24 +18,24 @@ angular.module('Authentication')
 
         authService.Login = function (username, password, callback) {
             $http.post(apiHost + 'api-token-auth/', { username: username, password: password })
-                .success(function (response) {
-                  $window.localStorage.user_code = user_codes[response.user_code];
-                   if (response.token) {
-                      authService.SetCredentials(response);
-                      response.logged_in = true;
-                      callback(response);
+                .then(function onSuccess(response) {
+                  $window.localStorage.user_code = user_codes[response.data.user_code];
+                   if (response.data.token) {
+                      authService.SetCredentials(response.data);
+                      response.data.logged_in = true;
+                      callback(response.data);
                    }
                    else {
-                      response.logged_in = false;
-                      callback(response);
+                      response.data.logged_in = false;
+                      callback(response.data);
                    }
                 })
-                .error(function (response) {
-                  if (!response)
-                    response = {};
+                .catch(function onError(response) {
+                  if (!response.data)
+                    response.data = {};
                     response.logged_in = false;
                     response.message = "Invalid username or password";
-                   callback(response);
+                   callback(response.data);
                 });
            };
 
