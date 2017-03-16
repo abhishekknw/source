@@ -343,9 +343,13 @@ supplier_filters = {
     },
     'RS': {
         'flat_avg_rental_persqft': 'flat_avg_rental_persqft',
-        'flat_sale_cost_persqft': 'flat_sale_cost_persqft'
+        'flat_sale_cost_persqft': 'flat_sale_cost_persqft',
+        'possession_year': 'age_of_society'
     }
 }
+
+# Filter names which do not map directly to db field
+tenants_to_flat_count = 'percentage_of_tenants_to_flat_count'
 
 # from the front end we recieve only the codes, hence there is a mapping to actual values. Do not change it's name
 quality_dict = {
@@ -647,4 +651,11 @@ activity_type = {
     'RELEASE': 'RELEASE',
     'CLOSURE': 'CLOSURE',
     'AUDIT': 'AUDIT'
+}
+
+# standalone society configs
+standalone_society_config = {
+    'tower_count': 2,
+    'flat_count': 70,
+    'amenity_count': 3
 }

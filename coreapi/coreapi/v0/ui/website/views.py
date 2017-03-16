@@ -187,7 +187,7 @@ class BusinessContacts(APIView):
     def post(self, request):
         class_name = self.__class__.__name__
         """
-        creates new campaign
+
         ---
         parameters:
         - name: business
@@ -415,7 +415,6 @@ class AccountContacts(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
-
     def generate_account_id(self, account_name, business_id, lower=False):
         business_code = business_id[-4:]
         account_code = create_code(name = account_name)
@@ -430,7 +429,7 @@ class AccountContacts(APIView):
 
             # still conflict ---> Generate random 4 uppercase character string
             i = 0  # i keeps track of infinite loop tune it according to the needs
-            while(True):
+            while True:
                 if i > 10:
                     return None
                 account_code = ''.join(random.choice(string.ascii_uppercase ) for _ in range(4))
@@ -1161,6 +1160,8 @@ class FilteredSuppliers(APIView):
             proposal_id = request.data.get('proposal_id')
             center_id = request.data.get('center_id')
             amenities = request.data.get('amenities')
+            is_standalone_society = request.data.get('is_standalone_society')
+            ratio_of_tenants_to_flats = request.data.get('ratio_of_tenants_to_flats')  # cannot be handled  under specific society filters because it involves operation of two columns in database which cannot be generalized to a query.
 
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
@@ -1230,6 +1231,20 @@ class FilteredSuppliers(APIView):
                     return response
                 amenities_suppliers = response.data['data']
                 final_suppliers_list = final_suppliers_list.intersection(amenities_suppliers)
+
+            # check for society ratio of tenants to flats
+            if supplier_type_code == website_constants.society and ratio_of_tenants_to_flats:
+                response = website_utils.get_societies_within_tenants_flat_ratio(float(ratio_of_tenants_to_flats['min']), float(ratio_of_tenants_to_flats['max']))
+                if not response.data['status']:
+                    return response
+                final_suppliers_list = final_suppliers_list.intersection(response.data['data'])
+
+            # check for standalone societies
+            if supplier_type_code == website_constants.society and is_standalone_society:
+                response = website_utils.get_standalone_societies()
+                if not response.data['status']:
+                    return response
+                final_suppliers_list = final_suppliers_list.intersection(response.data['data'])
 
             result = {}
 

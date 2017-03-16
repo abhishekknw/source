@@ -127,6 +127,7 @@ class BasicSupplierDetails(BaseModel):
     This is an abstract base class for all the suppliers. As we know more common fields, add
     them here in order of relevance and run python manage.py makemigrations. all the models who
     inherit from this class will have those fields automatically.
+
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     supplier_id = models.CharField(max_length=20, primary_key=True)
@@ -860,6 +861,7 @@ class SportsInfra(models.Model):
 
 
 class SupplierTypeSociety(BaseModel):
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     objects = managers.GeneralManager()
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
@@ -949,6 +951,7 @@ class SupplierTypeSociety(BaseModel):
     stall_allowed = models.BooleanField(db_column = 'STALL_ALLOWED', default=False)
     car_display_allowed = models.BooleanField(db_column='CAR_DISPLAY_ALLOWED', default=False)
     banner_allowed = models.BooleanField(db_column='BANNER_ALLOWED',default=False)
+    total_tenant_flat_count = models.IntegerField(null=True, blank=True)
 
     def get_society_image(self):
         try:

@@ -10,7 +10,7 @@ from string import Template
 from operator import itemgetter
 
 from django.db import transaction
-from django.db.models import Q, F
+from django.db.models import Q, F, ExpressionWrapper, FloatField
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -2498,7 +2498,6 @@ def handle_specific_filters(specific_filters, supplier_type_code):
     This function is called from construct query which handles filters specific to supplier
     Args:
         specific_filters: { 'real_estate_allowed': True, 'total_employee_count': 120, 'flat_type': [ '1RK', '2BHK' ]
-
           }
         supplier_type_code: 'RS', 'CP'
     Returns: a Q object based on above filters
@@ -2524,15 +2523,15 @@ def handle_specific_filters(specific_filters, supplier_type_code):
                 # do things only when you get a db field
                 if not specific_filters_query:
                     if type(filter_value) == DictType:
-                        specific_filters_query = Q(**{received_filter + '__gte': filter_value['min'],received_filter + '__lte': filter_value['max']})
+                        specific_filters_query = Q(**{database_field + '__gte': filter_value['min'],database_field + '__lte': filter_value['max']})
                     else:
                         specific_filters_query = Q(**{database_field:filter_value})
                 else:
                     if type(filter_value) == DictType:
-                        specific_filters_query &= Q(**{received_filter + '__gte': filter_value['min'],received_filter + '__lte': filter_value['max']})
+                        specific_filters_query &= Q(**{database_field + '__gte': filter_value['min'], database_field + '__lte': filter_value['max']})
                     else:
                         specific_filters_query &= Q(**{database_field: filter_value})
-
+    
         # do if else check on supplier type code to include things particular to that supplier. Things which
         # cannot be mapped to a particular supplier and vary from supplier to supplier
         if supplier_type_code == website_constants.society:
@@ -4821,3 +4820,72 @@ def insert_release_closure_dates(inventory_release_closure_list):
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_societies_within_tenants_flat_ratio(min_ratio, max_ratio):
+    """
+    filters  societies by calculating a ratio of tenant to flat and ensuring the ratio within a range of
+    min max.
+    Args:
+        min_ratio: min value
+        max_ratio: max_value
+
+    Returns: filtered supplier ids
+
+    """
+    function = get_societies_within_tenants_flat_ratio.__name__
+    try:
+        supplier_ids = models.SupplierTypeSociety.objects.annotate(ratio=ExpressionWrapper(
+            F('total_tenant_flat_count')/F('flat_count'), output_field=FloatField())).filter(ratio__gte=min_ratio, ratio__lte=max_ratio).values_list('supplier_id', flat=True)
+        return ui_utils.handle_response(function, data=supplier_ids, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_standalone_societies():
+    """
+    Returns: returns a list of societies that are standalone
+
+    """
+    function = get_standalone_societies.__name__
+    try:
+        response = ui_utils.get_content_type(website_constants.society)
+        if not response.data['status']:
+            return response
+        content_type = response.data['data']
+        amenities = models.SupplierAmenitiesMap.objects.filter(content_type=content_type).values('object_id').annotate(amenity_count=Count('id'))
+        amenities_map = {amenity['object_id']: amenity['amenity_count'] for amenity in amenities}
+        societies = models.SupplierTypeSociety.objects.all().values('supplier_id', 'tower_count', 'flat_count')
+        societies_map = {
+            society['supplier_id']:
+                             {
+                                 'tower_count': society['tower_count'],
+                                 'flat_count': society['flat_count'],
+                                 'amenity_count': amenities_map.get(society['supplier_id'])
+
+                             } for society in societies}
+        standalone_society_ids = []
+        for society_id, detail in societies_map.iteritems():
+            if is_society_standalone(detail):
+                standalone_society_ids.append(society_id)
+
+        return ui_utils.handle_response(function, data=standalone_society_ids, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def is_society_standalone(instance_detail):
+    """
+    checks if society instance is standalone or not as per definition of standalone society
+    Args:
+        instance_detail:
+
+    Returns: True or False
+    """
+    function = is_society_standalone.__name__
+    try:
+        if instance_detail['tower_count'] <= website_constants.standalone_society_config['tower_count'] and instance_detail['flat_count'] <= website_constants.standalone_society_config['flat_count'] and  instance_detail['amenity_count'] <= website_constants.standalone_society_config['amenity_count']:
+                    return True
+        return False
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
