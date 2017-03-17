@@ -1,10 +1,22 @@
 angular
   .module('catalogueApp').
-  constant('errorHandler',{
+  constant('constants',{
+    //amazon keys
+    base_url : 'http://localhost:8108/',
+    url_base : 'v0/ui/website/',
+    AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
+    policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
+    acl : 'public-read',
+    signature : "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=",
+    content_type : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    //amazon server
+    aws_bucket_url : 'http://mdimages.s3.amazonaws.com/',
+    //general
     name : '',
     success : 'success',
     error : 'error',
     warning : 'warning',
+    errorMsg : 'Error Occured',
     server_connection_error : 'Server is down, Please Try again',
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
@@ -18,6 +30,7 @@ angular
     request_proposal_error : 'Error occured, Please check your internet connection and Try again',
     save_proposal_success : 'Your proposal is saved successfully',
     supplier_status_error : 'Sorry, There is some error in saving supplier status',
+    amenity_error : 'Error in getting Amenities',
     //auditReleasePlan
     positive_number_error : 'Enter Positive Number Only',
     //opsDashboard

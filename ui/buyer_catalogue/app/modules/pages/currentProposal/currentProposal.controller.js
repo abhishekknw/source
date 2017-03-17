@@ -1,6 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('CurrentProposal', function($scope, $rootScope, $stateParams, $window, $location, currentProposalService ,$http, errorHandler) {
+    .controller('CurrentProposal', function($scope, $rootScope, $stateParams, $window, $location, currentProposalService ,$http, constants) {
 
     	$scope.proposal = {};
       $scope.society = {society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''};
@@ -10,7 +10,6 @@ angular.module('catalogueApp')
       $scope.campaign_end_date;
       //code added to show or not details based on permissions
       $scope.user_code = $window.localStorage.user_code;
-      console.log($scope.user_code);
       if($scope.user_code == 'agency')
         $scope.hideData = true;
       $scope.centerheaders = [
@@ -56,6 +55,7 @@ angular.module('catalogueApp')
     		$scope.proposal = response.data.data;
     	})
     	.catch(function onError(response, status){
+        swal(constants.name,constants.errorMsg,constants.error);
     		console.log("Error Occured");
     		if(typeof(response) == typeof([])){
     			console.log("Error response is :", response);
@@ -74,8 +74,9 @@ angular.module('catalogueApp')
           getAvailableSuppliers($scope.center_data);
           getFilters($scope.center_data);
           $scope.loading = response.data;
-      })
+        })
         .catch(function onError(response, status){
+          swal(constants.name,constants.errorMsg,constants.error);
           console.log("Error Occured");
           if(typeof(response) == typeof([])){
             console.log("Error response is :", response);
@@ -150,6 +151,7 @@ angular.module('catalogueApp')
                 $window.location.reload();
         })
         .catch(function onError(response, status){
+          swal(constants.name,constants.errorMsg,constants.error);
           console.log("Error Occured");
         })
       }
@@ -166,6 +168,7 @@ angular.module('catalogueApp')
           .then(function onSuccess(response, status){
             // alert("Saved Successfully");
           }).catch(function onError(response, status){
+            swal(constants.name,constants.errorMsg,constants.error);
             // alert("Error Occured");
         });
       }
@@ -176,6 +179,7 @@ angular.module('catalogueApp')
                 $window.location.reload();
     		})
     		.catch(function onError(response, status){
+          swal(constants.name,constants.errorMsg,constants.error);
     			console.log("Error Occured");
     			if(typeof(response) == typeof([])){
 	    		console.log("Error response is :", response);
@@ -193,8 +197,8 @@ angular.module('catalogueApp')
      $scope.saveInvoiceDetails = function(){
        swal({
           title: "Are you sure?",
-          text: errorHandler.invoice_confirm,
-          type: errorHandler.warning,
+          text: constants.invoice_confirm,
+          type: constants.warning,
           showCancelButton: true,
           confirmButtonClass: "btn-success",
           confirmButtonText: "Yes, confirm it!",
@@ -204,14 +208,14 @@ angular.module('catalogueApp')
           $scope.proposal.tentative_start_date = $scope.campaign_start_date;
           $scope.proposal.tentative_end_date = $scope.campaign_end_date;
          currentProposalService.saveInvoiceDetails($stateParams.proposal_id,$scope.proposal)
-           .success(function(response, status){
+           .then(function onSuccess(response, status){
              // alert("Successful");
-             swal("Success!",errorHandler.invoice_success,errorHandler.success);
+             swal("Success!",constants.invoice_success,constants.success);
              $('#invoiceModal').modal('hide');
                    console.log("success");
            })
-           .error(function(response, status){
-             swal("Error!",errorHandler.invoice_error,errorHandler.error);
+           .catch(function onError(response, status){
+             swal("Error!",constants.invoice_error,constants.error);
              console.log("Error Occured");
          })
         });
