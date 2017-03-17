@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('OpsExecutionPlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare',
-    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare) {
+    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare','errorHandler',
+    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare,errorHandler) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.headings = [
         {header : 'Supplier Id'},
@@ -59,8 +59,21 @@ angular.module('catalogueApp')
         		console.log("error occured", status);
         	});
         }
-
-      getOpsExecutionImageDetails();
+        var getUsersList = function(){
+          commonDataShare.getUsersList()
+            .success(function(response, status){
+              console.log(response);
+              $scope.userList = response.data;
+            })
+            .error(function(response, status){
+              console.log("error occured", status);
+            });
+        }
+        var init = function(){
+          getOpsExecutionImageDetails();
+          getUsersList();
+        }
+      init();
       var campaignDataStruct = {
         id : '',
         supplier_id : '',
@@ -135,10 +148,6 @@ angular.module('catalogueApp')
           console.log(response);
         });
       }
-      $scope.userList = [
-        {name:'Ankit'},
-        {name:'Komal'},
-      ];
       $scope.reAssignActivityList = {};
       $scope.activity_date;
       $scope.userCode;
@@ -150,11 +159,12 @@ angular.module('catalogueApp')
         }
       }
       var reAssignActivityData = function(){
+        console.log($scope.reAssignActivityList);
         angular.forEach($scope.reAssignActivityList, function(activity, assignId){
           $scope.reAssignActivityList[assignId]['reassigned_activity_date'] = commonDataShare.formatDate($scope.activity_date);
-          // $scope.reAssignActivityList.data[assignId]['assigned_to'] = $scope.userCode;
+          $scope.reAssignActivityList[assignId]['assigned_to'] = $scope.userCode;
           //use above after getting userList
-          $scope.reAssignActivityList[assignId]['assigned_to'] = 6;
+          // $scope.reAssignActivityList[assignId]['assigned_to'] = 6;
         });
       }
       $scope.saveReAssignedActivities = function(){
@@ -163,9 +173,13 @@ angular.module('catalogueApp')
         .success(function(response, status){
           $scope.campaignDataList = [];
           getOpsExecutionImageDetails();
+          $('#reAssignModal').modal('hide');
+          swal(errorHandler.name,errorHandler.reAssign_success,errorHandler.success);
 
         })
         .error(function(response, status){
+          $('#reAssignModal').modal('hide');
+          swal(errorHandler.name,errorHandler.reAssign_error,errorHandler.error);
           console.log(response);
         });
       }

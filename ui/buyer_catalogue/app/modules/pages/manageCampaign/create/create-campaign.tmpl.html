@@ -1,10 +1,11 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
   <div class="page-container">
-   <div>
-    <span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span><br>
-    <span style="color:blue;margin-left:28%;font-size:18px;">{{successMsg}}</span>
-  </div>
-    <div class="col-md-10">
+    <div class="breadcrumb" ncy-breadcrumb></div>
+   <!-- <div> -->
+    <!-- <span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span><br>
+    <span style="color:blue;margin-left:28%;font-size:18px;">{{successMsg}}</span> -->
+  <!-- </div> -->
+    <div class="content">
       <form class="choices">
       <div class="form-group">
         <div class="row">
@@ -130,7 +131,7 @@
                     <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">Edit</button>
                   </td>
                   <td>
-                    <button ng-hide="hideData" class="btn btn-danger active" ngf-select="upload($file,proposal.proposal_id)">Upload</button>
+                    <button ng-hide="hideData" class="btn btn-danger active" ngf-select="upload($file,proposal.proposal_id)" ng-loading="uploadfile">Upload</button>
                   </td>
                   <td>
                     <a href="" ng-click="showHistory(proposal.proposal_id)">Show History</a>
@@ -171,7 +172,7 @@
                       <div class = "row">
                         <div class = "col-md-3"><label>Phone</label></div>
                         <div class = "col-md-3">{{contact.phone}}</div>
-                        <div class = "col-md-3"><label>Single Point of Contact</label></div>
+                        <div class = "col-md-3"><label>Single Point of Contac</label></div>
                         <div class = "col-md-3">{{contact.spoc}}</div>
                       </div>
                       <br>

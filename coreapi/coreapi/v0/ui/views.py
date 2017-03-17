@@ -48,6 +48,7 @@ from v0.ui.serializers import SocietyListSerializer
 
 # project imports
 import utils as ui_utils
+import website.utils as website_utils
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas, BaseUser
 from constants import keys, decision
@@ -438,6 +439,7 @@ class SupplierImageDetails(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
+
 class SocietyAPIView(APIView):
     # permission_classes = (permissions.IsAuthenticated, IsOwnerOrManager,)
 
@@ -538,7 +540,6 @@ class SocietyAPIView(APIView):
             if contact_serializer.is_valid():
                 contact_serializer.save(contact_type="Reference", object_id=object_id, content_type=content_type)
 
-
         towercount = SocietyTower.objects.filter(supplier = society).count()
         abc = 0
         if request.data['tower_count'] > towercount:
@@ -625,13 +626,17 @@ class SocietyList(APIView):
             else:
                 societies = models.SupplierTypeSociety.objects.filter(user=request.user).order_by("society_name")
 
-            societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
-            paginator = PageNumberPagination()
-            result_page = paginator.paginate_queryset(societies_with_images, request)
-            paginator_response = paginator.get_paginated_response(result_page)
+            serializer = SupplierTypeSocietySerializer(societies, many=True)
+            # societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
+
+            response = website_utils.manipulate_object_key_values(serializer.data)
+            if not response.data['status']:
+                return response
+            suppliers = response.data['data']
+            societies_with_images = ui_utils.get_supplier_image(suppliers, ui_constants.society_name)
             data = {
                 'count': len(societies_with_images),
-                'societies': paginator_response.data
+                'societies': societies_with_images
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
@@ -1550,16 +1555,14 @@ class InventoryPricingAPIView(APIView):
 class TowerAPIView(APIView):
     def get(self, request, id, format=None):
         try:
-        # start: code added and changed for getting supplier_type_code
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
+
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
             serializer_tower = UITowerSerializer(towers, many=True)
-            #inventory_summary = InventorySummary.objects.get(supplier_id=id)
 
             inventory_summary = InventorySummary.objects.get_supplier_type_specific_object(data, id)
-        # End: code added and changed for getting supplier_type_code
             if not inventory_summary:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             serializer_inventory = InventorySummarySerializer(inventory_summary)
@@ -1590,32 +1593,34 @@ class TowerAPIView(APIView):
             total_standee_count += tower['standee_count']
 
         try:
-        # Start: code added and changed for getting supplier_type_code
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
+            content_type_response = ui_utils.get_content_type(supplier_type_code)
+            if not content_type_response.data['status']:
+                return None
+            content_type = content_type_response.data['data']
         # End: code added and changed for getting supplier_type_code
             inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(data, id)
             if not inventory_obj:
                 return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-            #inventory_obj = InventorySummary.objects.get(supplier=society)
         except InventorySummary.DoesNotExist:
             return Response({'message' : 'Please fill Inventory Summary Tab','inventory':'true'},status=404)
 
         if total_nb_count !=0 and total_nb_count != inventory_obj.nb_count:
 
-            return Response({'message' : 'Total Notice Board Count should equal to Notice Board Count in Inventory Summary Tab'}, status=404)
+            return Response({'message': 'Total Notice Board Count should equal to Notice Board Count in Inventory Summary Tab'}, status=404)
         if total_lift_count !=0 and total_lift_count != inventory_obj.lift_count:
-            return Response({'message' : 'Total Lift Count should equal to Lift Count in Inventory Summary Tab'}, status=404)
+            return Response({'message': 'Total Lift Count should equal to Lift Count in Inventory Summary Tab'}, status=404)
         if total_standee_count !=0 and total_standee_count != inventory_obj.total_standee_count:
-            return Response({'message' : 'Total Standee Count should equal to Standee Count in Inventory Summary Tab'}, status=404)
-
+            return Response({'message': 'Total Standee Count should equal to Standee Count in Inventory Summary Tab'}, status=404)
 
         # checking ends here
 
         for key in request.data['TowerDetails']:
-            if 'tower_id' in key:
 
+            if 'tower_id' in key:
+                # update code
                 try:
                     item = SocietyTower.objects.get(pk=key['tower_id'])
                     tower_dict = {
@@ -1632,21 +1637,19 @@ class TowerAPIView(APIView):
 
                 serializer = SocietyTowerSerializer(item, data=key)
                 if serializer.is_valid():
-                    serializer.save(supplier=society)
-
+                    serializer.save(supplier=society, content_type=content_type, object_id=society.supplier_id)
                 else:
                     return Response(serializer.errors, status=400)
 
                 if tower_dict['lift_count'] < key['lift_count']:
-                    self.save_lift_locations(tower_dict['lift_count'], key['lift_count'], tower_dict, society)
+                    self.save_lift_locations(tower_dict['lift_count'], key['lift_count'], tower_dict, society, content_type)
                 if tower_dict['nb_count'] < key['notice_board_count_per_tower']:
                     self.save_nb_locations(tower_dict['nb_count'], key['notice_board_count_per_tower'], tower_dict, society)
                 if tower_dict['standee_count'] < key['standee_count']:
-                    self.save_standee_locations(tower_dict['standee_count'], key['standee_count'], tower_dict, society)
+                    self.save_standee_locations(tower_dict['standee_count'], key['standee_count'], tower_dict, society, content_type)
 
             # else:
             #     serializer = SocietyTowerSerializer(data=key)
-
 
             try:
                 tower_data = SocietyTower.objects.get(pk=serializer.data['tower_id'])
@@ -1699,14 +1702,14 @@ class TowerAPIView(APIView):
             return Response(status=404)
 
 
-    def save_lift_locations(self, c1, c2, tower, society):
+    def save_lift_locations(self, c1, c2, tower, society, content_type):
         i = c1 + 1
         tow_name = tower['tower_name']
         while i <= c2:
             lift_tag = tower['tower_tag'] + "00L" + str(i)
             adId = society.supplier_id + lift_tag + "PO01"
             lift = LiftDetails(adinventory_id=adId, lift_tag=lift_tag, tower_id=int(tower['tower_id']))
-            lift_inv = PosterInventory(adinventory_id=adId, poster_location=lift_tag, tower_name=tow_name, supplier=society)
+            lift_inv = PosterInventory(adinventory_id=adId, poster_location=lift_tag, tower_name=tow_name, supplier=society, tower_id=int(tower['tower_id']), object_id=society.supplier_id,content_type=content_type)
             lift.save()
             lift_inv.save()
             i += 1
@@ -1719,11 +1722,11 @@ class TowerAPIView(APIView):
             nb.save()
             i += 1
 
-    def save_standee_locations(self, c1, c2, tower, society):
+    def save_standee_locations(self, c1, c2, tower, society, content_type):
         i = c1 + 1
         while i <= c2:
             sd_tag = society.supplier_id + tower['tower_tag'] + "0000SD" + str(i).zfill(2)
-            sd = StandeeInventory(adinventory_id=sd_tag, tower_id=int(tower['tower_id']))
+            sd = StandeeInventory(adinventory_id=sd_tag, tower_id=int(tower['tower_id']), object_id=society.supplier_id, content_type=content_type)
             sd.save()
             i += 1
 
@@ -1953,6 +1956,7 @@ class FlierAPIView(APIView):
             return Response(status=404)
         except FlyerInventory.DoesNotExist:
             return Response(status=404)
+
 
 class StandeeBannerAPIView(APIView):
     def get(self, request, id, format=None):

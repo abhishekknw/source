@@ -9,8 +9,10 @@
     <link rel="icon" type="image/ico" href="images/logo.jpg">
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
+    <link rel="stylesheet" type="text/css" href="bower_components/bootstrap-sweetalert/dist/sweetalert.css">
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" href="bower_components/slick-carousel/slick/slick.css" />
+    <link rel="stylesheet" href="bower_components/slick-carousel/slick/slick-theme.css" />
     <link rel="stylesheet" href="bower_components/angular-rangeslider/angular.rangeSlider.css" />
     <link rel="stylesheet" href="bower_components/angularjs-slider/dist/rzslider.css" />
     <!-- endbower -->
@@ -35,8 +37,10 @@
     <!-- Add your site or application content here -->
     <div ui-view=""></div>
      <script src='http://maps.googleapis.com/maps/api/js?key=AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY'></script>
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
+    <script src="bower_components/bootstrap-sweetalert/dist/sweetalert.min.js"></script>
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
@@ -65,6 +69,7 @@
     <script src="bower_components/google-maps-utility-library-v3-keydragzoom/dist/keydragzoom.js"></script>
     <script src="bower_components/js-rich-marker/src/richmarker.js"></script>
     <script src="bower_components/angular-google-maps/dist/angular-google-maps.js"></script>
+    <script src="bower_components/angular-breadcrumb/dist/angular-breadcrumb.min.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
@@ -108,6 +113,7 @@
         <script src="modules/common/services/authService.js"></script>
         <script src="modules/common/services/machadaloHttp.service.js"></script>
         <script src="modules/common/services/commonDataShare.service.js"></script>
+        <script src="modules/common/services/constants.js"></script>
         <script src="modules/pages/manageCampaign/create/create-campaign.controller.js"></script>
         <script src="modules/pages/manageCampaign/createaccount/create-account.controller.js"></script>
         <script src="modules/pages/manageCampaign/shortlisted/shortlisted.controller.js"></script>
@@ -142,7 +148,7 @@
         <script src="modules/pages/operations/auditReleasePlan/auditReleasePlanService.js"></script>
         <script src="modules/pages/operations/opsExecutionPlan/opsExecutionPlan.controller.js"></script>
         <script src="modules/pages/operations/opsExecutionPlan/opsExecutionPlanService.js"></script>
-
+        <script src="modules/pages/guestPage/homepage.controller.js"></script>
         <!-- endbuild -->
 
 </body>

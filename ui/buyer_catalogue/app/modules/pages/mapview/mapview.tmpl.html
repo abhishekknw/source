@@ -8,6 +8,7 @@
 <!-- Start: Center and Radius Detail Section -->
 <div class="navbar-default nav-subtab space">
   <div class="table">
+    <div class="breadcrumb" ncy-breadcrumb></div>
     <div class="row">
       <div class="col-md-3 aligndropdown">Select Advertising Location
         <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
@@ -17,7 +18,7 @@
       <div class="col-md-3">Center Latitude & Longitude:{{current_center.center.latitude | limitTo:8 }}/{{current_center.center.longitude | limitTo:8}}
       </div>
       <div class="col-md-2">Radius:
-        <input class="box-spacing-radius" type="number" step="0.5" ng-model="current_center.center.radius">
+        <input class="box-spacing-radius" type="number" step="0.5" ng-model="current_center.center.radius" min="0">
       </div>
       <!-- <div class="col-md-2">Business Name : {{business_name}}</div> -->
         <button class="btn btn-sm btn-danger center-button" ng-click="changeCenter()">Change Radius</button>
@@ -39,7 +40,7 @@
       </div>
       <hr>
        <!--Start: Filter Section on mapview-->
-      <form id = "filterPanelForm" ng-if="!show_societies">
+      <form id = "filterPanelForm">
        <div class = "filterPanel" ng-show = "current_center.suppliers_allowed.society_show">
         <input type = "checkbox"  ng-model="current_center.suppliers_allowed.society_allowed" ng-click="spaceSupplier('RS',current_center.suppliers_allowed.society_allowed)"/>
           <span class = "filterPanelHeader space-type" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
@@ -66,25 +67,51 @@
           </div>
           <hr>
           <span class = "filterPanelHeader ">Society Flat Type</span>
-            <div class = "nbCheckbox two-col" ng-repeat="flat_type in current_center.RS_filters.flat_type">
-                <input type = "checkbox" ng-model="flat_type.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ flat_type.name }}&nbsp;
+            <div class = "" ng-repeat="flat_type in current_center.RS_filters.flat_type">
+                <input type = "checkbox" ng-model="flat_type.selected" ng-click="societyFilters()" ng-disabled = "checkFilters">{{ flat_type.name }}&nbsp;
+                <div class="" ng-if="flat_type.selected == true">
+                  <br>
+                  <span class = "filterPanelHeader ">Flat count</span>
+                  <rzslider rz-slider-model="flat_type.flat_count.min" rz-slider-high="flat_type.flat_count.max"
+                    rz-slider-options="flat_type.flat_count.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
+                  </rzslider>
+                  <span class = "filterPanelHeader ">Flat Size</span>
+                  <rzslider rz-slider-model="flat_type.flat_size.min" rz-slider-high="flat_type.flat_size.max"
+                    rz-slider-options="flat_type.flat_size.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
+                  </rzslider>
+                </div>
             </div>
           <hr>
           <span class = "filterPanelHeader ">Flat Average rental Per Sqft</span>
           <rzslider rz-slider-model="current_center.RS_filters.flat_avg_rental_persqft.min" rz-slider-high="current_center.RS_filters.flat_avg_rental_persqft.max"
-            rz-slider-options="current_center.RS_filters.flat_avg_rental_persqft.options" ng-click="avgRentalPerSqftFilter()"  ng-disabled = "checkFilters">
+            rz-slider-options="current_center.RS_filters.flat_avg_rental_persqft.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
           </rzslider>
           <hr>
           <span class = "filterPanelHeader ">Flat Sale Cost Per Sqft</span>
           <rzslider rz-slider-model="current_center.RS_filters.flat_sale_cost_persqft.min" rz-slider-high="current_center.RS_filters.flat_sale_cost_persqft.max"
-            rz-slider-options="current_center.RS_filters.flat_sale_cost_persqft.options" ng-click="saleCostPerSqftFilter()"  ng-disabled = "checkFilters">
+            rz-slider-options="current_center.RS_filters.flat_sale_cost_persqft.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
+          </rzslider>
+          <hr>
+          <span class = "filterPanelHeader ">Percentage of Tenants to Flats</span>
+          <rzslider rz-slider-model="current_center.RS_filters.ratio_of_tenants_to_flats.min" rz-slider-high="current_center.RS_filters.ratio_of_tenants_to_flats.max"
+            rz-slider-options="current_center.RS_filters.ratio_of_tenants_to_flats.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
+          </rzslider>
+          <hr>
+          <span class = "filterPanelHeader ">Possession Year</span>
+          <rzslider rz-slider-model="current_center.RS_filters.possession_year.min" rz-slider-high="current_center.RS_filters.possession_year.max"
+            rz-slider-options="current_center.RS_filters.possession_year.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
           </rzslider>
           <hr>
           <span class = "filterPanelHeader ">Amenities</span>
             <div class = "nbCheckbox two-col" ng-repeat="amenity in current_center.RS_filters.amenities">
                 <input type = "checkbox" ng-model="amenity.selected" ng-disabled = "checkFilters" ng-change="societyFilters()">{{ amenity.name }}&nbsp;
             </div>
-
+          <hr>
+          <div>
+            <input type = "checkbox"  ng-model="is_standalone_society" ng-disabled = "checkFilters" ng-click="societyFilters(is_standalone_society)">
+            <span style="color:crimson">Standalone Society
+            </span>
+          </div>
           </div>
         </div>
         <div class = "filterPanel" ng-if = "current_center.suppliers_allowed.corporate_show">
@@ -127,7 +154,7 @@
       </form>
 <!-- Filter Section on mapview End -->
 <!--Start: Filter Section on gridview-->
- <form id = "filterPanelForm" ng-if="show_societies">
+ <!-- <form id = "filterPanelForm" ng-if="show_societies">
   <div class = "filterPanel"  ng-show="society_show">
    <input type = "checkbox"  ng-model="society_allowed_gridview" ng-click="checkSuppliers('RS')"/>
      <span class = "filterPanelHeader space-type" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
@@ -213,7 +240,7 @@
       <hr>
       </div>
     </div>
- </form>
+ </form> -->
 <!--End: Filter Section on gridview-->
 </div>
 </div>
@@ -322,7 +349,6 @@
             <th class="center-align" ng-if="inv_stall">Stall Count</th>
             <th class="center-align" ng-if="inv_flier">Flyer Count</th>
             <th class = "col-md-4">Shortlisted/Buffer</th>
-            <th class = "col-md-4">Action</th>
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
@@ -330,10 +356,10 @@
         <tr ng-repeat = "supplier in center.suppliers['CP']">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
-            <td><a ng-href="http://localhost:9000/#/campaign/5/societyDetails/{{supplier.supplier_id}}" target="_blank">{{supplier.name}}</a></td>
+            <td>{{supplier.name}}</td>
             <td>{{supplier.subarea}}</td>
-            <td>{{supplier.flat_count}}</td>
-            <td>{{supplier.average_rent}}</td>
+            <td>{{supplier.totalcompanies_count}}</td>
+            <td>{{supplier.totalemployees_count}}</td>
             <!-- <td>{{society.society_type_quality}}</td> -->
             <!-- <td>{{society.society_location_type}}</td> -->
             <td>{{supplier.machadalo_index}}</td>
@@ -345,14 +371,16 @@
             <!-- <td ng-if="inv_stall">{{society.stall_price}}</td> -->
             <td ng-if="inv_flier">{{supplier.flat_count}}</td>
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
-            <td>
-              <button class="btn btn-success active" ng-model="supplier.status" ng-if="!supplier.shortlisted" ng-click="setSupplierStatus(supplier,'S')">Shortlist</button>
-              <span ng-if="supplier.shortlisted">
-              <input type="checkbox" ng-model="supplier.buffer_status" ng-click="setSupplierStatus(supplier,'B')"> Buffer
-              </span>
-            </td>
-            <td>
-              <button class="btn btn-danger active" ng-model="supplier.status" ng-if="supplier.shortlisted" ng-click="setSupplierStatus(supplier,'R')">Remove</button>
+            <td class="col-md-2">
+              <div class="radio">
+                     <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,'CP')">Shortlist</label>
+              </div>
+              <div class="radio">
+                     <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,'CP')">Buffer</label>
+              </div>
+              <div class="radio" ng-if="supplier.status != 'X'">
+                     <label><input type="radio" ng-model="supplier.status" value="R" ng-click="updateSupplierStatus(supplier,center,'CP')">Remove</label>
+              </div>
             </td>
         </tr>
       </tbody>
@@ -428,7 +456,7 @@
           <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
           <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
           <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()">Add Suppliers</button>
-          <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()" ng-disabled = "checkFileExport">Request Proposal</button>
+          <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()" ng-loading="requestProposal" ng-disabled = "checkFileExport">Request Proposal</button>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "saveData()" >Save</button>
           <button ng-hide="hideData" class="btn btn-danger active" ngf-select="upload($file)">Upload</button>
         </div>

@@ -1,8 +1,6 @@
 <link rel="stylesheet" href="modules/pages/login/login.tmpl.css" />
 <!-- <nav-bar></nav-bar> -->
-
 <div class="container1" style="background-image:url(img/background.png);">
-
     <div class="col-sm-6 text-right" >
       <p class="font-r, quote">"Every great achievement was first  considered impossible"</h1><br>
     </div>
@@ -10,49 +8,91 @@
     <div class="col-sm-4" style=""> <div >
   <div id="login-panel" class="panel panel-default">
       <div style="height:450px" class="panel-heading"> <strong><div style="letter-spacing: 0.7px; margin-left: 17px;" class="login-panel-header-text font"><center>HELLO! LOGIN TO MACHADALO</center></div></strong><br />
-
       <form class="form-horizontal" role="form" ng-submit="login()">
         <div class="errorMessages">
             <div ng-show="error" class="error">{{error}}</div>
         </div>
-
           <div class="form-group">
             <div class="col-sm-12">
               <input type="text" name="username" id="username" class="form-control myClassNameOne" ng-model="username" required placeholder="USERNAME"/>
             </div>
           </div>
-
           <div class="form-group">
               <div class="col-sm-12">
                   <input type="password" class="form-control myClassNameOne" id="password" ng-model="password" placeholder="PASSWORD" required>
               </div>
           </div>
-
            <div class="form-group">
               <div class="col-sm-9">
                 <button class="font, submit-btn" type="submit" class="btn  btn-sm">LOGIN</button>
-              </div>
+              </div></br>
             </div>
-
-
+            <div class="form-group">
+              <div class="col-sm-10" style="text-align:center;">
+                <a  data-target="#guestModal" data-toggle="modal" formnovalidate>Continue as Guest</a>
+              </div>
+          </div>
           <div class="form-group">
               <div class="col-sm-offset-3 col-sm-9, extras">
                   <div class="checkbox checkbox1">
                       <label><input  type="checkbox" >Remember me</label>
-
                   </div>
               </div>
           </div>
-
           <div class="form-group">
               <div class="col-sm-offset-3 col-sm-9, extras">
                <label><a href="http://www.machadalo.com">Forgot Password?</a></label>
               </div>
           </div>
           </td>
-
           </tr>
       </form>
     </div>
-
 </div>
+<!--Start: Code for guestDetails Modal Window -->
+<div id="guestModal" class="modal fade">
+  <div class="modal-dialog" style="width:400px">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color:gray">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <div class="" style="margin-left:auto;margin-right:auto;width:100%">
+        <div class="row">
+          <div class="">
+        		<div class="">
+			    		<h4 class="" style="margin-left:20px">Please fill following details to continue</h4>
+			 			</div>
+			 			<div class="panel-body">
+			    		<form name="myform" role="form" ng-submit="guestPage()">
+			    			<div class="row">
+			    				<div class="col-xs-8 col-sm-8 col-md-8">
+			    					<div class="form-group">
+			                <input type="text" name="first_name" id="first_name" class="form-control input-sm" placeholder="Name" required>
+			    					</div>
+			    				</div>
+			    			</div>
+                <div class="row">
+                  <div class="col-xs-8 col-sm-8 col-md-8">
+    			    			<div class="form-group">
+    			    				<input type="email" name="email" id="email" class="form-control input-sm" placeholder="Email Address" required>
+    			    			</div>
+                  </div>
+                </div>
+			    			<div class="row">
+			    				<div class="col-xs-8 col-sm-8 col-md-8">
+			    					<div class="form-group">
+			    						<input type="number" name="mobile" class="form-control input-sm" minlength="10" placeholder="Mobile Number">
+                      <span ng-show="form.mobile.$error.minlength">error</span>
+			    					</div>
+			    				</div>
+			    			</div>
+			    			<button type="submit" class="btn btn-info" style="margin-left:60px">Continue</button>
+			    		</form>
+			    	  </div>
+    		    </div>
+    	     </div>
+         </div>
+       </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for guestDetails Modal Window -->

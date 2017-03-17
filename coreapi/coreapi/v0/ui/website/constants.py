@@ -343,9 +343,13 @@ supplier_filters = {
     },
     'RS': {
         'flat_avg_rental_persqft': 'flat_avg_rental_persqft',
-        'flat_sale_cost_persqft': 'flat_sale_cost_persqft'
+        'flat_sale_cost_persqft': 'flat_sale_cost_persqft',
+        'possession_year': 'age_of_society'
     }
 }
+
+# Filter names which do not map directly to db field
+tenants_to_flat_count = 'percentage_of_tenants_to_flat_count'
 
 # from the front end we recieve only the codes, hence there is a mapping to actual values. Do not change it's name
 quality_dict = {
@@ -577,23 +581,29 @@ default_stall_allocation_interval = 1
 default_stall_assignment_frequency = 1
 
 # temp list of inventories not implemented yet. delete it after implemantation. 
-inv_not_implemented = ['POSTER', 'CAR_DISPLAY']
+inv_not_implemented = ['CAR_DISPLAY']
 
-# standee name
+# standee configs
 standee_name = 'STANDEE'
 default_standee_type = 'Medium'
 default_standee_duration_type = 'Unit Weekly'
 default_standee_assignment_frequency = 1
 
-# Flier
+# poster configs
+poster_name = 'POSTER'
+default_poster_type = 'A4'
+default_poster_duration_type = 'Unit Weekly'
+default_poster_assignment_frequency = 1
+
+# Flier configs
 default_flier_type = 'Mailbox'
 default_flier_duration_type = 'Unit Daily'
 
-
-# class names
+# class names. change them when class name changes.
 stall_class_name = 'StallInventory'
 standee_class_name = 'StandeeInventory'
 flier_class_name = 'FlyerInventory'
+poster_class_name = 'PosterInventory'
 
 # different states of a proposal being converted to campaign
 proposal_converted_to_campaign = 'PTC'
@@ -641,4 +651,11 @@ activity_type = {
     'RELEASE': 'RELEASE',
     'CLOSURE': 'CLOSURE',
     'AUDIT': 'AUDIT'
+}
+
+# standalone society configs
+standalone_society_config = {
+    'tower_count': 2,
+    'flat_count': 70,
+    'amenity_count': 3
 }

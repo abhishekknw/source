@@ -2,6 +2,11 @@
 	padding: 5px;
 	position: relative;
 }
+.content{
+	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+}
 .business-panel{
 	margin-top: 0px;
 	padding: 10px;
@@ -15,10 +20,10 @@
 .choices{
 	font-size: 15px;
 	margin-top: 40px;
+	width: 1200px;
 }
 .choices.form-group {
 	padding: 20px;
-
 }
 .show-error{
 	font-size: 15px;
@@ -47,4 +52,10 @@
 }
 .modal-open {
   overflow-y: scroll;
+}
+.breadcrumb{
+	width:50%;
+	margin-left: auto;
+	margin-right: auto;
+	background-color: transparent;
 }

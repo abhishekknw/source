@@ -10,7 +10,7 @@ from string import Template
 from operator import itemgetter
 
 from django.db import transaction
-from django.db.models import Q, F
+from django.db.models import Q, F, ExpressionWrapper, FloatField
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -2498,7 +2498,6 @@ def handle_specific_filters(specific_filters, supplier_type_code):
     This function is called from construct query which handles filters specific to supplier
     Args:
         specific_filters: { 'real_estate_allowed': True, 'total_employee_count': 120, 'flat_type': [ '1RK', '2BHK' ]
-
           }
         supplier_type_code: 'RS', 'CP'
     Returns: a Q object based on above filters
@@ -2524,12 +2523,12 @@ def handle_specific_filters(specific_filters, supplier_type_code):
                 # do things only when you get a db field
                 if not specific_filters_query:
                     if type(filter_value) == DictType:
-                        specific_filters_query = Q(**{received_filter + '__gte': filter_value['min'],received_filter + '__lte': filter_value['max']})
+                        specific_filters_query = Q(**{database_field + '__gte': filter_value['min'],database_field + '__lte': filter_value['max']})
                     else:
                         specific_filters_query = Q(**{database_field:filter_value})
                 else:
                     if type(filter_value) == DictType:
-                        specific_filters_query &= Q(**{received_filter + '__gte': filter_value['min'],received_filter + '__lte': filter_value['max']})
+                        specific_filters_query &= Q(**{database_field + '__gte': filter_value['min'], database_field + '__lte': filter_value['max']})
                     else:
                         specific_filters_query &= Q(**{database_field: filter_value})
 
@@ -2537,8 +2536,27 @@ def handle_specific_filters(specific_filters, supplier_type_code):
         # cannot be mapped to a particular supplier and vary from supplier to supplier
         if supplier_type_code == website_constants.society:
             if specific_filters.get('flat_type'):
-                flat_type_values = [website_constants.flat_type_dict[flat_code] for flat_code in specific_filters.get('flat_type')]
-                supplier_ids = models.FlatType.objects.select_related('society').filter(flat_type__in=flat_type_values).values_list('society__supplier_id')
+                query = Q()
+                for flat_code, detail in specific_filters['flat_type'].iteritems():
+
+                    flat_code_value = website_constants.flat_type_dict[flat_code]
+                    query_dict = {'flat_type': flat_code_value}
+
+                    if detail.get('count'):
+                        query_dict['flat_count__gte'] = int(detail['count']['min'])
+                        query_dict['flat_count__lte'] = int(detail['count']['max'])
+
+                    if detail.get('size'):
+                        query_dict['size_builtup_area__gte'] = float(detail['size']['min'])
+                        query_dict['size_builtup_area__lte'] = float(detail['size']['max'])
+
+                    current_query = Q(**query_dict)
+
+                    if query:
+                        query |= current_query
+                    else:
+                        query = current_query
+                supplier_ids = models.FlatType.objects.select_related('society').filter(query).values_list('society__supplier_id')
                 specific_filters_query &= Q(supplier_id__in=supplier_ids)
 
         if supplier_type_code == website_constants.corporate:
@@ -4123,6 +4141,12 @@ def get_inventory_general_data(inventory_name, inventory_content_type):
                 'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_flier_duration_type),
                 'inventory_content_type': inventory_content_type,
             }
+        elif inventory_name == website_constants.poster:
+            inventory_general_data = {
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.poster, adinventory_type=website_constants.default_poster_type),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_poster_duration_type),
+                'inventory_content_type': inventory_content_type,
+            }
 
         return ui_utils.handle_response(function, data=inventory_general_data, success=True)
     except Exception as e:
@@ -4133,7 +4157,9 @@ def get_tower_id(inventory_object):
     """
     returns tower_id of this object. The reason this is a function  because stall inventory for a society  is not
     associated with any tower.
-    neither do the gyms and saloons have concept of towers.  Hence they all have a concept of Zero tower.
+    neither do the gyms and saloons have concept of towers.  Hence they all have a concept of Zero tower. Those inventories
+    which have a concept of tower with them are treated differently than those who doesn't.
+
     Args:
         inventory_object:
 
@@ -4144,7 +4170,9 @@ def get_tower_id(inventory_object):
         class_name = inventory_object.__class__.__name__
         if class_name == website_constants.stall_class_name or class_name == website_constants.flier_class_name:
             return ui_utils.handle_response(function, data=0, success=True)
-        elif class_name == website_constants.standee_class_name:
+        elif class_name == website_constants.standee_class_name or class_name == website_constants.poster_class_name:
+            if not inventory_object.tower:
+                return ui_utils.handle_response(function, data=errors.NO_TOWER_ASSIGNED_ERROR.format(class_name, inventory_object.adinventory_id))
             return ui_utils.handle_response(function, data=inventory_object.tower_id, success=True)
 
     except Exception as e:
@@ -4167,9 +4195,11 @@ def prepare_bucket_per_inventory(inventory_content_type, inventory_name,  list_o
         # default assignment frequency of each bucket.
         assignment_frequency = 1
         if inventory_name == website_constants.stall:
-            assignment_frequency = 1
+            assignment_frequency = website_constants.default_stall_assignment_frequency
+        if inventory_name == website_constants.poster:
+            assignment_frequency = website_constants.default_poster_assignment_frequency
         elif inventory_name == website_constants.standee_name:
-            assignment_frequency = 1
+            assignment_frequency = website_constants.default_standee_assignment_frequency
         elif inventory_name == website_constants.flier:
             # because all inventories for a supplier must be assigned to a proposal. We know that flier can only have
             # a bucket number as zero.
@@ -4809,3 +4839,72 @@ def insert_release_closure_dates(inventory_release_closure_list):
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_societies_within_tenants_flat_ratio(min_ratio, max_ratio):
+    """
+    filters  societies by calculating a ratio of tenant to flat and ensuring the ratio within a range of
+    min max.
+    Args:
+        min_ratio: min value
+        max_ratio: max_value
+
+    Returns: filtered supplier ids
+
+    """
+    function = get_societies_within_tenants_flat_ratio.__name__
+    try:
+        supplier_ids = models.SupplierTypeSociety.objects.annotate(ratio=ExpressionWrapper(
+            F('total_tenant_flat_count')/F('flat_count'), output_field=FloatField())).filter(ratio__gte=min_ratio, ratio__lte=max_ratio).values_list('supplier_id', flat=True)
+        return ui_utils.handle_response(function, data=supplier_ids, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def get_standalone_societies():
+    """
+    Returns: returns a list of societies that are standalone
+
+    """
+    function = get_standalone_societies.__name__
+    try:
+        response = ui_utils.get_content_type(website_constants.society)
+        if not response.data['status']:
+            return response
+        content_type = response.data['data']
+        amenities = models.SupplierAmenitiesMap.objects.filter(content_type=content_type).values('object_id').annotate(amenity_count=Count('id'))
+        amenities_map = {amenity['object_id']: amenity['amenity_count'] for amenity in amenities}
+        societies = models.SupplierTypeSociety.objects.all().values('supplier_id', 'tower_count', 'flat_count')
+        societies_map = {
+            society['supplier_id']:
+                             {
+                                 'tower_count': society['tower_count'],
+                                 'flat_count': society['flat_count'],
+                                 'amenity_count': amenities_map.get(society['supplier_id'])
+
+                             } for society in societies}
+        standalone_society_ids = []
+        for society_id, detail in societies_map.iteritems():
+            if is_society_standalone(detail):
+                standalone_society_ids.append(society_id)
+
+        return ui_utils.handle_response(function, data=standalone_society_ids, success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+
+def is_society_standalone(instance_detail):
+    """
+    checks if society instance is standalone or not as per definition of standalone society
+        Args:
+        instance_detail:
+
+    Returns: True or False
+    """
+    function = is_society_standalone.__name__
+    try:
+        if instance_detail['tower_count'] <= website_constants.standalone_society_config['tower_count'] and instance_detail['flat_count'] <= website_constants.standalone_society_config['flat_count'] and  instance_detail['amenity_count'] <= website_constants.standalone_society_config['amenity_count']:
+                    return True
+        return False
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))

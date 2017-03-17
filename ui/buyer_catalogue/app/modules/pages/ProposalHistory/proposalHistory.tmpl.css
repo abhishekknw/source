@@ -18,3 +18,9 @@
 .table-align{
 	margin-left: 20px;
 }
+.breadcrumb{
+	width: 80%;
+	margin-left: auto;
+	margin-right: auto;
+	background-color: transparent;
+}

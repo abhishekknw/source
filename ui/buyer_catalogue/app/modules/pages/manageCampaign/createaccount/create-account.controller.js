@@ -1,7 +1,7 @@
 angular.module('machadaloPages')
 .controller('CreateAccountCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'pagesService',
-    function ($scope, $rootScope, $window, $location, pagesService) {
+    ['$scope', '$rootScope', '$window', '$location', 'pagesService','errorHandler',
+    function ($scope, $rootScope, $window, $location, pagesService, errorHandler) {
       $scope.model = {};
       $scope.model.account = {};
     	$scope.accounts = [];
@@ -187,13 +187,14 @@ angular.module('machadaloPages')
                 $scope.model.account.contacts = response.contacts;
                 $scope.model.account.business_id = business_id;
                 $location.path("/manageCampaign/create");
-                $scope.successMsg = "Successfully Saved"
+                // $scope.successMsg = "Successfully Saved"
                 $scope.errorMsg = undefined;
                 $scope.choice = "selected";
+                swal(errorHandler.name,errorHandler.account_success,errorHandler.success);
 
               }
           }).error(function(response, status){
-
+              swal(errorHandler.name,errorHandler.account_error,errorHandler.error);
             // status = 406 comes from backend if some information is missing with info in response.message
              // response = response ? JSON.parse(response) : {}
              // console.log(response.message);

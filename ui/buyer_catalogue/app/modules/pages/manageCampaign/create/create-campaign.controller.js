@@ -1,12 +1,13 @@
 angular.module('machadaloPages')
 .controller('CreateCampaignCtrl',
-    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload) {
+    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, errorHandler) {
 
       //start:code added to show or hide details based on user permissions
       $scope.user_code = $window.localStorage.user_code;
       if($scope.user_code == 'agency')
         $scope.hideData = true;
       //End:code added to show or hide details based on user permissions
+      $scope.uploadfile = true; // added for loading spinner active/deactive
       $scope.account_proposals = [];
       $scope.model = {};
       $scope.model.business = {};
@@ -84,18 +85,20 @@ angular.module('machadaloPages')
       // End: for persisting values after refresh or back from other pages
 
       pagesService.loadBusinessTypes()
-      .success(function (response){
-          $scope.busTypes = response;
+      .then(function (response){
+          $scope.busTypes = response.data;
+        })
+        .catch(function onError(response){
         });
       $scope.getBusiness = function() {
         pagesService.getBusiness($scope.bsSelect)
-        .success(function (response, status) {
-              $scope.model.business = response.business;
-              $scope.model.accounts = response.accounts;
-              $rootScope.business_id = response.business.business_id;
-              $window.localStorage.business_id = response.business.business_id;
-              $rootScope.business_name = response.business.name;
-              $window.localStorage.business_id = response.business.name;
+        .then(function (response, status) {
+              $scope.model.business = response.data.business;
+              $scope.model.accounts = response.data.accounts;
+              $rootScope.business_id = response.data.business.business_id;
+              $window.localStorage.business_id = response.data.business.business_id;
+              $rootScope.business_name = response.data.business.name;
+              $window.localStorage.business_id = response.data.business.name;
               $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
               $scope.getSubTypes();
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
@@ -113,7 +116,7 @@ angular.module('machadaloPages')
               $window.localStorage.sel_account_index = -1;
               $scope.sel_account_id = null;
               $scope.error = false;
-              $scope.successMsg = null;
+              $scope.thenMsg = null;
               //End: added to persit data after refresh
          });
       };
@@ -131,8 +134,8 @@ angular.module('machadaloPages')
             }else{
                 var id = $scope.model.business.business_type_id;
                 pagesService.getSubTypes(id)
-                .success(function (response){
-                    $scope.sub_types = response;
+                .then(function (response){
+                    $scope.sub_types = response.data;
             });
             }
         }
@@ -154,8 +157,8 @@ angular.module('machadaloPages')
         $window.localStorage.sel_account_index = null;
         $scope.bsSelect = undefined;
 	    	pagesService.getAllBusinesses()
-	    	.success(function (response, status) {
-	            $scope.businesses = response;
+	    	.then(function (response, status) {
+	            $scope.businesses = response.data;
 	       });
 	    };
 
@@ -207,11 +210,11 @@ angular.module('machadaloPages')
           //start : added to persist data after refresh
 
           pagesService.getAccountProposal(sel_account_id)
-          .success(function(response, status){
-              $scope.account_proposals = response.data;
+          .then(function(response, status){
+              $scope.account_proposals = response.data.data;
               $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
           })
-          .error(function(response, status){
+          .catch(function onError(response, status){
               if(typeof(response) == typeof([]))
                   $scope.proposal_error = response.error;
           });
@@ -242,19 +245,20 @@ angular.module('machadaloPages')
         $location.path('/' + proposalId + '/showproposalhistory');
       }
     	$scope.create = function() {
-            pagesService.createBusinessCampaign($scope.model)
-            .success(function (response, status) {
+        pagesService.createBusinessCampaign($scope.model)
+          .then(function (response, status) {
             var sub_type_id = $scope.model.business.sub_type_id;
             var type_id = $scope.model.business.business_type_id;
             // response = JSON.parse(response);
-            $scope.model.business = response.business;
+            $scope.model.business = response.data.business;
             $scope.model.business.sub_type_id = sub_type_id;
             $scope.model.business.business_type_id = type_id;
-            $scope.model.business.contacts = response.contacts;
+            $scope.model.business.contacts = response.data.contacts;
             if (status == '201') {
                  $location.path("/manageCampaign/createAccount");
             }
-            $scope.successMsg = "Successfully Saved"
+            // $scope.thenMsg = "Successfully Saved"
+            swal(errorHandler.name,errorHandler.business_success,errorHandler.then);
             $scope.errorMsg = undefined;
             if (status == '200'){
               $scope.choice = "selected";
@@ -262,8 +266,9 @@ angular.module('machadaloPages')
               $window.localStorage.business = JSON.stringify($scope.model.business);
             }
         }).error(function(response, status){
+            swal(errorHandler.name,errorHandler.business_error,errorHandler.error);
              if (typeof response != 'number'){
-               $scope.successMsg = undefined;
+               $scope.thenMsg = undefined;
                $scope.errorMsg = response.message;
              // $location.path("");
             }
@@ -277,18 +282,16 @@ angular.module('machadaloPages')
               url: uploadUrl + proposal_id + '/import-supplier-data/',
               data: {file: file, 'username': $scope.username},
               headers: {'Authorization': 'JWT ' + token},
-          }).success(function (response) {
+          }).then(function (response) {
             uploadFileToAmazonServer(response.data,file);
-              //console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
           }).error(function (response) {
-              console.log('Error status: ' + response.status);
-              alert("Data not Imported");
+            $scope.uploadfile = true;
+            commonDataShare.showMessage(errorHandler.importfile_error);
           });
         };
         //End: To upload file when upload button is clicked
         //Start : function to upload files to amazon server, just provide file name and file
            var uploadFileToAmazonServer = function(file_name,file){
-             // upload it to S3 Bucket
              Upload.upload({
                  url: 'http://mdimages.s3.amazonaws.com/',
                  method : 'POST',
@@ -300,12 +303,23 @@ angular.module('machadaloPages')
                      signature : constants.signature, // base64-encoded signature based on policy string (see article below)
                      "Content-Type": constants.content_type,// content type of the file (NotEmpty)
                      file: file }
-                 }).success(function (response){
-                      alert("Upload to Server Successful");
+                 }).then(function (response){
+                      $scope.uploadfile = true;
+                      commonDataShare.showMessage(errorHandler.uploadfile_success);
                  }).error(function(response) {
-                     alert("Upload to server Unsuccessful");
+                      $scope.uploadfile = true;
+                      commonDataShare.showMessage(errorHandler.uploadfile_error);
                  });
            }
         //End : function to upload files to amazon server, just provide file name and file
+        $scope.getMenu = function(){
+          if($scope.menuItem == true)
+            $scope.menuItem = false;
+          else
+            $scope.menuItem = true;
+        }
+        $scope.closeMenu = function(){
+          $scope.menuItem = undefined;
+        }
       // [TODO] implement this
     });

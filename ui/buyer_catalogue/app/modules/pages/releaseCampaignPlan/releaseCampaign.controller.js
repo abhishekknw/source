@@ -1,8 +1,9 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams) {
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','errorHandler',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,errorHandler) {
   $scope.campaign_id = $stateParams.proposal_id;
+  $scope.positiveNoError = errorHandler.positive_number_error;
  	$scope.headings = [
         {header : 'Supplier Name'},
         {header : 'Area'},
@@ -119,8 +120,10 @@ angular.module('catalogueApp')
     $scope.updateData = function(){
       releaseCampaignService.updateAuditReleasePlanDetails($scope.campaign_id,$scope.releaseDetails.shortlisted_suppliers)
       .success(function(response, status){
+        swal(errorHandler.name,errorHandler.updateData_success,errorHandler.success);
       })
       .error(function(response, status){
+        swal(errorHandler.name,errorHandler.updateData_error,errorHandler.error);
         console.log("error occured", status);
       });
     }

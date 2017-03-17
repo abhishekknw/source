@@ -7,7 +7,8 @@
     	<span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span><br>
     	<span style="color:blue;margin-left:28%;font-size:18px;">{{successMsg}}</span>
   	</div>
-    <back-Button></back-Button>
+    <!-- <back-Button></back-Button> -->
+    <div class="breadcrumb" ncy-breadcrumb></div>
     <div ng-loading="loading"></div> <!--For displaying loading icon-->
   	<form name="proposal">
   		<div class="panel panel-default business-panel">
@@ -64,8 +65,8 @@
                 </select>
                 <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.subarea" class="form-control spacing" readonly>
               </td>
-              <td><input type="text" ng-if="center.isEditProposal" ng-model="center.center.pincode" class="form-control spacing col-width" required>
-                <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.pincode" class="form-control spacing" readonly>
+              <td><input type="number" ng-if="center.isEditProposal" ng-model="center.center.pincode" class="form-control spacing col-width" required>
+                <input type="number" ng-if="!center.isEditProposal" ng-model="center.center.pincode"  class="form-control spacing" readonly>
               </td>
     					<td><input type="number" name = "radius" ng-model="center.center.radius" class="form-control spacing col-width" required></td>
     					<td>
@@ -78,7 +79,7 @@
     				</tr>
     			</tbody>
     		</table>
-    		<button class="btn btn-danger spacing" ng-click="submit()" ng-disabled="proposal.$invalid || centerDetail.$invalid">Submit</button>
+    		<button class="btn btn-danger spacing" ng-click="submit()" ng-disabled="proposal.$invalid || centerDetail.$invalid" ng-loading="loadingSpinner">Submit</button>
     	</div>
     </form>
 

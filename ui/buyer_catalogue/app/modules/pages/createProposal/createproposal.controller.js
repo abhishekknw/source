@@ -1,6 +1,7 @@
 "use strict";
 angular.module('catalogueApp')
-.controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http){
+.controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http, errorHandler,commonDataShare){
+	$scope.loadingSpinner = true;
 	$scope.model = {}
 	$scope.model.centers = new Array();
 	$scope.society = 'RS';
@@ -142,14 +143,22 @@ angular.module('catalogueApp')
     }
     return 0;
   }
+	var convertPincodeToString = function(centers){
+		for(var i=0;i<centers.length; i++){
+			centers[i].center.pincode = centers[i].center.pincode.toString();
+		}
+	}
 	$scope.submit = function(){
+		$scope.loadingSpinner = false;
     var status = checkSupplierCode();
     if(status >= 0){
 		$scope.model.account_id = $window.localStorage.account_id;
 		$scope.model.business_id = $window.localStorage.business_id;
 		$scope.model.parent = $window.localStorage.proposal_id;
+		$scope.requestData = angular.copy($scope.model);
+		convertPincodeToString($scope.requestData.centers);
 		// call backend to save only if all the latitudes are found
-			createProposalService.saveInitialProposal($stateParams.account_id, $scope.model)
+			createProposalService.saveInitialProposal($stateParams.account_id, $scope.requestData)
 			.success(function(response, status){
 				console.log(response);
 				$scope.errormsg = undefined;
@@ -162,7 +171,8 @@ angular.module('catalogueApp')
 				$location.path('/' + response.data + '/mapview');
 			})
 			.error(function(response,status){
-				// alert("Error Occured");
+				$scope.loadingSpinner = true;
+				swal(errorHandler.name,errorHandler.geo_location_error,errorHandler.error);
 				console.log("Error");
 				if(typeof(response) != typeof(12)){
 					console.log("response is ", response);
@@ -173,7 +183,7 @@ angular.module('catalogueApp')
 			});
     }
     else {
-      // alert("Please Provide Space Type");
+      alert("Please Provide Space Type");
     }
 	}
 });

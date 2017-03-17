@@ -2,7 +2,9 @@
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 <!-- <div ng-loading="loading"></div> --> <!--For displaying loading icon-->
-</br></br></br><back-Button></back-Button>
+</br></br></br>
+<!-- <back-Button></back-Button> -->
+<div class="breadcrumb" ncy-breadcrumb></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 <div ng-hide="!hideData" style="text-align:center"><label>No Results Found</label></div>
 <h3 ng-hide="hideData" style = "margin-left: 460px; margin-top: 60px;">Operations Execution Plan</h3>
@@ -147,7 +149,7 @@
             <div class="row col-md-4" id="modalReAssign">
               <label>Assigned To</label>
               <select class="form-control spacing" ng-model="userCode">
-                <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
+                <option ng-repeat="user in userList" value="{{user.id}}">{{user.username}}</option>
               </select>
             </div>
         </div>

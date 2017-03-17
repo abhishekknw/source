@@ -1,6 +1,10 @@
 <link rel="stylesheet" href="modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.css"/>
+<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
-</br></br></br><back-Button></back-Button>
+<div ng-loading="loading"></div>
+</br></br></br>
+<!-- <back-Button></back-Button> -->
+<div ncy-breadcrumb></div>
 <h3 style = "margin-left: 460px; margin-top: 70px;">Campaign Release and Audit Plan</h3>
   <div class = "container">
       <div class="row">
@@ -9,11 +13,10 @@
             <Label>Campaign Id:</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
             <Label class = "labels">Campaign Name:</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
             <Label class = "labels">BD Owner:</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
-          </div >
-         </div>
+          </div>
+        </div>
       </div>
-  </div>
-</div>
+    </div>
 <!-- <div class="container"> -->
   <!-- <div class="row" style="margin-left:10px;"> -->
     <!-- <div class=" table-responsive" > -->
@@ -34,13 +37,19 @@
             <td class="col-md-1">{{filter.total_count}}</td>
             <td class="col-md-1">{{filter.supplier_price}}</td>
             <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.total_inventory_supplier_price}}</td>
-            <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first"><input type="number" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width"></td>
+            <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="priceform">
+              <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width" min="0">
+              <span class="error" ng-show="priceform.price.$error.min">{{positiveNoError}}</span>
+            </td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first">
               <select class="form-control spacing" ng-model="supplier.booking_status">
                 <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
               </select>
             </td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first"><input type="number" class="form-control spacing" ng-model="supplier.phase"></td>
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
+              <input type="number" name="phase" class="form-control spacing" ng-model="supplier.phase" min="1">
+              <span class="error" ng-show="phaseform.phase.$error.min">{{positiveNoError}}</span>
+            </td>
             <!--mode of payment  -->
             <td class="col-md-1" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <div class="radio">

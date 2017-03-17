@@ -592,20 +592,20 @@ def get_tower_count(supplier_object, supplier_type_code):
         return Response(data={'status': False, 'error': 'Error in fetching tower count'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def get_content_type(supplier_type_code):
+def get_content_type(code):
     """
     Args:
-        supplier_type_code: supplier_type_code
+        code: supplier_type_code
 
     Returns: The right content type object for the given supplier_type_code
 
     """
     function = get_content_type.__name__
     try:
-        if not supplier_type_code:
+        if not code:
             return Response({'status': False, 'error': 'No supplier type code provided'}, status=status.HTTP_400_BAD_REQUEST)
         ContentType = apps.get_model('contenttypes', 'ContentType')
-        load_model = get_model(supplier_type_code)
+        load_model = get_model(code)
         content_type = ContentType.objects.get_for_model(load_model)
         return handle_response(function, data=content_type, success=True)
     except Exception as e:
@@ -721,8 +721,8 @@ def get_supplier_image(supplier_objects,supplier_name):
         images = v0.models.ImageMapping.objects.all()
         result = [] 
         # To optimize this for loop, Join query can be used
-        for model in supplier_objects:
-            data = model_to_dict(model)
+        for data in supplier_objects:
+            # data = model_to_dict(model)
             for image in images:
                 if (data['supplier_id'] == image.object_id):
                     if (image.name == supplier_name):

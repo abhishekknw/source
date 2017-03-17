@@ -1,8 +1,10 @@
 <link rel="stylesheet" href="modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.css"/>
+<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 </br></br></br>
-<div style="text-align:left"><back-Button></back-Button></div>
+<!-- <div style="text-align:left"><back-Button></back-Button></div> -->
+<div class="breadcrumb" ncy-breadcrumb></div>
 <h3>Audit / Release Plan Details</h3>
 <div class="container">
   <div class="row">
@@ -18,22 +20,23 @@
             {{supplier.phase}}
             </td>
             <td class="col-md-1">{{key}}</td>
-            <td class="col-md-1">{{supplier.object_id}}</td>
+            <td class="col-md-2">{{supplier.name}}<br>({{supplier.object_id}})</td>
             <td class="col-md-1">RS</td>
-            <td class="col-md-3">
-              <div ng-repeat="inventory in filter.detail" id="buttons" >
+            <td class="col-md-3 checkboxes-btn">
+              <div ng-repeat="inventory in filter.detail">
                 <input type="checkbox" class="" ng-disabled="isDisable(rowIndex)" ng-model="inventory.status" ng-click="addInventory(inventory,rowIndex,$index)"/>{{inventory.inventory_id}}
               </div>
             </td>
             <td class="col-md-1">
               <div>
-              <button  class="btn btn-info" data-target="#manageDatesModal" data-toggle="modal" data-backdrop="static" ng-click="getActivityDates(supplier)">Manage Date</button>
+              <button  class="btn btn-info" ng-disabled="invIdList.length == 0 || isDisable(rowIndex)" data-target="#manageDatesModal" data-toggle="modal" data-backdrop="static" ng-click="getActivityDates(supplier)">Manage Date</button>
             </div><br>
             <div>
               <a  class="" data-target="#showDatesModal" data-toggle="modal" ng-click="showActivityDates(filter.detail)">View Dates</a>
             </div>
             </td>
-            <td class="col-md-8"><textarea rows="4" cols="50" name="comments" ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing"></textarea></td>
+            <td class="col-md-8">
+              <textarea rows="4" cols="50" name="comments"  ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing"></textarea></td>
           </tr>
         </tbody>
       </table>
@@ -87,7 +90,7 @@
   </div>
 </div>
 <!--End: Code for Audit Date Modal Window -->
-<!--Start: Code for assign Modal Window -->
+<!--Start: Code for manage date Modal Window -->
 <div id="manageDatesModal" class="modal fade">
   <div class="modal-dialog" style="width:700px">
     <div class="modal-content">
@@ -113,7 +116,7 @@
                     </td>
                     <td class="col-md-2">
                       <select class="form-control spacing" ng-model="inventory.act_date.userCode">
-                        <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
+                        <option ng-repeat="user in userList" value="{{user.id}}">{{user.username}}</option>
                       </select>
                     </td>
                   </tr>
@@ -143,7 +146,7 @@
                     </td>
                     <td class="col-md-2" rowspan="invActivityAuditData.audit_dates.length">
                       <select class="form-control spacing" ng-model="inventory.userCode">
-                        <option ng-repeat="user in userList" value="{{}}">{{user.name}}</option>
+                        <option ng-repeat="user in userList" value="{{user.id}}">{{user.username}}</option>
                       </select>
                     </td>
                     <!-- <td class="col-md-1">
@@ -168,7 +171,7 @@
     </div>
   </div>
 </div>
-<!--End: Code for contacts Modal Window -->
+<!--End: Code for manage dates Modal Window -->
 <!--Start: Code for manage Dates Modal Window -->
 <div id="" class="modal fade">
   <div class="modal-dialog" style="width:700px">

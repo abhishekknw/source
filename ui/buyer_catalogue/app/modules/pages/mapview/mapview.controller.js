@@ -35,6 +35,9 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   $scope.society_markers = []; // markers on the map
   $scope.circle = {};
 
+  //for loading icon
+  $scope.requestProposal = true;
+
 //code added to show or hide some details based on user permissions
 $scope.user_code = $window.localStorage.user_code;
 if($scope.user_code == 'agency')
@@ -145,7 +148,7 @@ if($scope.user_code == 'agency')
             gridViewBasicSummary();
           }
           catch(error){
-            commonDataShare.showMessage(error.message);
+            console.log(error.message);
           }
         }
         //Start:reset center to original center
@@ -185,11 +188,11 @@ if($scope.user_code == 'agency')
               // this service will return above deleted variables if checked in the filter
               $scope.current_center.center.center_id = $scope.current_center.center.id;
               mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center.center)
-              .success(function(response, status){
+              .then(function onSuccess(response, status){
                 // Start : Code changes to add response of suppliers
-                $scope.current_center.suppliers = response.data.suppliers[0].suppliers;
+                $scope.current_center.suppliers = response.data.data.suppliers[0].suppliers;
                 // $scope.current_center = response;
-                $scope.center_data[$scope.current_center_index].suppliers = response.data.suppliers[0].suppliers;
+                $scope.center_data[$scope.current_center_index].suppliers = response.data.data.suppliers[0].suppliers;
                 // to copy extra suppliers searched in add more suppliers
                 // needs to add every time whenever new response come from backend
                 // current_center_keys gets all keys in current_center so that we can copy
@@ -212,12 +215,11 @@ if($scope.user_code == 'agency')
                   }else
                       $scope.society_markers = [];
               })
-              .error(function(response, status){
-                  if (typeof(response) == typeof([]))
-                      console.log("Error fetching : ", response.message);
+              .catch(function onError(response, status){
+
               });
             }catch(error){
-              commonDataShare.showMessage(error.message);
+              console.log(error.message);
             }
           }
         //End: Change center,change radius and reset center functionality
@@ -236,7 +238,7 @@ if($scope.user_code == 'agency')
             $scope.corporates_count = $scope.current_center.suppliers['CP'].length;
           }
         }catch(error){
-          commonDataShare.showMessage(error.message);
+          console.log(error.message);
         }
       }
     //End: mapview basic summary
@@ -259,7 +261,7 @@ if($scope.user_code == 'agency')
          }
        }
      }catch(error){
-       commonDataShare.showMessage(error.message);
+       console.log(error.message);
      }
     }
     //End: mapview filter summary required after applying filters
@@ -271,7 +273,7 @@ if($scope.user_code == 'agency')
         $scope.stallMapImpression = $scope.flat_count*4*2;
         $scope.flierMapImpressions = $scope.flat_count * 4*1;
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
     //End: impressions on mapview
@@ -288,7 +290,7 @@ if($scope.user_code == 'agency')
           }
         }
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
       //End: collectng all centers suppliers data in one varible like for RS,CP..etc
@@ -303,7 +305,7 @@ if($scope.user_code == 'agency')
             $scope.total_tower_count += $scope.total_societies[temp].tower_count;
           }
         }catch(error){
-          commonDataShare.showMessage(error.message);
+          console.log(error.message);
         }
       }
     //End: gridView basic summary
@@ -322,7 +324,7 @@ if($scope.user_code == 'agency')
         }
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //End: summary on gridview for total stalls & standees after applying filters
@@ -337,7 +339,7 @@ if($scope.user_code == 'agency')
       $scope.standeeGridImpression = $scope.total_flat_count *4*7*2;
       $scope.stallGridImpression = $scope.total_flat_count *4*2;
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
       //End: gridview impressions : multiply with total flat count for societies
@@ -347,6 +349,59 @@ if($scope.user_code == 'agency')
         .then(function(instances) {
             // initiated here as this is used in the service below
             // similarly initiate for other spacecs as well
+            $scope.flat_count = {
+                min: 0,
+                max: 0,
+                options: {
+                    floor: 0,
+                    ceil: 100,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+            $scope.flat_size = {
+                min: 0,
+                max: 0,
+                options: {
+                    floor: 0,
+                    ceil: 2000,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+            $scope.flat_avg_rental_persqft = {
+                min: 0,
+                max: 0,
+                options: {
+                    floor: 0,
+                    ceil: 100,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+            $scope.flat_sale_cost_persqft = {
+                min: 0,
+                max: 0,
+                options: {
+                    floor: 0,
+                    ceil: 10000,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+            $scope.possession_year = {
+                min: 1900,
+                max: 1900,
+                options: {
+                    floor: 1900,
+                    ceil: 2017,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
+            $scope.no_of_tenants = angular.copy($scope.flat_count);
+            //$scope.no_of_tenants.options.ceil = integer value;  //need to uncomment to fix other ceil value
+            $scope.is_standalone_society;
             $scope.space_inventory_type = [
                 {name : 'Poster(PO)',  code : 'PO',   selected : false },
                 {name : 'Standee(ST)', code : 'ST',   selected : false },
@@ -381,18 +436,18 @@ if($scope.user_code == 'agency')
                 {name : 'Very Large',   code : 'VL',    selected : false},
             ];
             $scope.society_flat_type = [
-                {name : '1 RK',         code : '1R',      selected : false},
-                {name : '1 BHK',        code : '1B',      selected : false},
-                {name : '1.5 BHK',      code : '1-5B',    selected : false},
-                {name : '2 BHK',        code : '2B',      selected : false},
-                {name : '2.5 BHK',      code : '2-5B',    selected : false},
-                {name : '3 BHK',        code : '3B',      selected : false},
-                {name : '3.5 BHK',      code : '3-5B',    selected : false},
-                {name : '4 BHK',        code : '4B',      selected : false},
-                {name : '5 BHK',        code : '5B',      selected : false},
-                {name : 'PENT HOUSE',   code : 'PH',      selected : false},
-                {name : 'ROW HOUSE',    code : 'RH',      selected : false},
-                {name : 'DUPLEX',       code : 'DP',      selected : false},
+                {name : '1 RK',         code : '1R',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : '1 BHK',        code : '1B',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : '1.5 BHK',      code : '1-5B',    selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : '2 BHK',        code : '2B',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : '2.5 BHK',      code : '2-5B',    selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : '3 BHK',        code : '3B',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : '3.5 BHK',      code : '3-5B',    selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : '4 BHK',        code : '4B',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : '5 BHK',        code : '5B',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : 'PENT HOUSE',   code : 'PH',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : 'ROW HOUSE',    code : 'RH',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : 'DUPLEX',       code : 'DP',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
             ];
             $scope.employee_count = [
               {name:'0-1000',     code : {min:'0',      max:'1000'},   selected:false},
@@ -409,33 +464,12 @@ if($scope.user_code == 'agency')
             };
             //Start: api call to get amenity filters from database
               mapViewService.getAmenityFilters()
-              .success(function(response, status) {
-                $scope.amenities = response.data;
+              .then(function onSuccess(response, status) {
+                $scope.amenities = response.data.data;
               })
-              .error(function(response, status){
-                console.log("error occured in amenities");
+              .catch(function onError(response, status){
               });
             //End:   api call to get amenity filters from database
-            $scope.flat_avg_rental_persqft = {
-                min: 0,
-                max: 0,
-                options: {
-                    floor: 0,
-                    ceil: 100,
-                    step: 1,
-                    noSwitching: true,
-                }
-            };
-            $scope.flat_sale_cost_persqft = {
-                min: 0,
-                max: 0,
-                options: {
-                    floor: 0,
-                    ceil: 10000,
-                    step: 1,
-                    noSwitching: true,
-                }
-            };
 
         //Start: filters for suppliers
         var createInitialFilterData = function(){
@@ -449,6 +483,8 @@ if($scope.user_code == 'agency')
               amenities : $scope.amenities,
               flat_avg_rental_persqft:$scope.flat_avg_rental_persqft,
               flat_sale_cost_persqft:$scope.flat_sale_cost_persqft,
+              ratio_of_tenants_to_flats:$scope.no_of_tenants,
+              possession_year : $scope.possession_year,
             };
             $scope.CP_filters = {
               inventory : $scope.space_inventory_type,
@@ -457,8 +493,9 @@ if($scope.user_code == 'agency')
               quantity_type : $scope.space_quantity_type,
               employee_count : $scope.employee_count,
             };
+            console.log($scope.RS_filters);
           }catch(error){
-            commonDataShare.showMessage(error.message);
+            console.log(error.message);
           }
         }
         //End: filters for suppliers
@@ -520,7 +557,7 @@ if($scope.user_code == 'agency')
       }
       //End : code added to display filter panel for all centers on gridview
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //End: add filter varible for each supplier in each center
@@ -543,12 +580,11 @@ if($scope.user_code == 'agency')
           $scope.proposal_id_temp = $stateParams.proposal_id;
           if($window.localStorage.isSavedProposal == 'true'){
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
-              .success(function(response, status){
+              .then(function onSuccess(response, status){
                 try{
-                  console.log(response);
                   createInitialFilterData();
                   //TO convert dict to array as response coming in dict form and very difficult to use
-                  $scope.center_data = $.map(response.data, function(value, index){
+                  $scope.center_data = $.map(response.data.data, function(value, index){
                     return [value];
                   });
                   $scope.current_center = $scope.center_data[0];
@@ -565,12 +601,11 @@ if($scope.user_code == 'agency')
                   $scope.current_center_index = 0;
                   $scope.current_center_id = $scope.current_center.center.id;
                   $scope.old_data = angular.copy($scope.center_data);
-                  toggleInventoryFilters($scope.current_center,'true','RS');
+                  // toggleInventoryFilters($scope.current_center,'true','RS');
                   mapViewBasicSummary();
                   suppliersData();
                   gridViewBasicSummary();
                   gridViewFilterSummary();
-
 
                   for(var i=0;i<$scope.center_data.length; i++)
                     $scope.initial_center_changed.push(false);
@@ -603,34 +638,34 @@ if($scope.user_code == 'agency')
                     $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
                     $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                   //loading icon
-                  $scope.loadIcon1 = response;
+                  $scope.loadIcon1 = response.data;
                 }
               catch(error){
-                // alert("error");
-                commonDataShare.showMessage(error.message);
+                console.log(error.message);
               }
             })
-              .error(function(response, status){
-                // alert("Error Occured");
+              .catch(function onError(response, status){
+                if(status == -1)
+                  console.log(error.message);
               });
           }
           //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
           else{
           mapViewService.getSpaces($scope.proposal_id_temp)
-            .success(function(response, status){
+            .then(function onSuccess(response, status){
               try{
                 $scope.business_name = response.data.business_name;
                 createInitialFilterData();
                   // $scope.business_name = response.data.business_name;
-                  $scope.center_data = response.data.suppliers;
+                  $scope.center_data = response.data.data.suppliers;
 
-                  $scope.current_center = response.data.suppliers[0];
+                  $scope.current_center = response.data.data.suppliers[0];
                   $scope.current_center_index = 0;
                   $scope.current_center_id = $scope.current_center.center.id;
                   $scope.old_data = angular.copy($scope.center_data);
 
                   //loading icon
-                  $scope.loadIcon2 = response;
+                  $scope.loadIcon2 = response.data;
                   //Start: code added if proposal is already created or exported, and user wants to edit that proposal
                   var flag;
                   // for(var i=0;i<$scope.center_data.length;i++){
@@ -682,12 +717,14 @@ if($scope.user_code == 'agency')
                   $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                 }
                 catch(error){
-                  commonDataShare.showMessage(error.message);
+                  console.log(error.message);
                 }
               })
-            .error(function(response, status){
-                $scope.get_spaces_error = response.message;
-                console.log("Error response : ",response);
+            .catch(function onError(response, status){
+              if(status == -1)
+                console.log(errorHandler.server_connection_error);
+              $scope.get_spaces_error = response.message;
+              console.log("Error response : ",response);
             });
           }
         });
@@ -743,21 +780,22 @@ if($scope.user_code == 'agency')
         }
         if($scope.current_center.suppliers_meta['RS'] != null || $scope.current_center.suppliers['RS'] != null){
             $scope.societyFilters();
+            toggleInventoryFilters($scope.current_center,'true','RS');
           }
         if($scope.current_center.suppliers_meta['CP'] != null){
           var filter_types = Object.keys($scope.current_center.suppliers_meta['CP']);
           for(var j=0;j<filter_types.length;j++){
             if(filter_types[j]=='inventory_type_selected'){
-              selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.CP_filters['inventory']);
+              selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.current_center.CP_filters['inventory']);
             }else
-              selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.CP_filters[filter_types[j]]);
+              selectFilters($scope.current_center.suppliers_meta['CP'][filter_types[j]],$scope.current_center.CP_filters[filter_types[j]]);
           }
         }
         if($scope.current_center.suppliers_meta['CP'] != null || $scope.current_center.suppliers['CP'] != null){
           $scope.corporateFilters();
         }
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
     var selectFilters = function(saved_filter_type,current_filter_type){
@@ -769,7 +807,7 @@ if($scope.user_code == 'agency')
           }
         }
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
     // End : check saved filter
@@ -822,7 +860,7 @@ if($scope.user_code == 'agency')
           }
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     var reset = function(filter_array){
@@ -835,86 +873,78 @@ if($scope.user_code == 'agency')
           filter_array[i].selected = false;
         }
       }
-  //Start: to apply flat_avg_rental_persqft and flat_sale_cost_persqft filter when clicked
-  $scope.avgRentalPerSqftFilter = function(){
-    $scope.flat_avg_rental_persqft_flag = true;
-    $scope.societyFilters();
-  }
-  $scope.saleCostPerSqftFilter = function(){
-    $scope.flat_sale_cost_persqft_flag = true;
-    $scope.societyFilters();
-  }
-  //End: to apply flat_avg_rental_persqft and flat_sale_cost_persqft filter when clicked
   //Start:code for society filters
+  $scope.is_standalone_society = false;
   $scope.societyFilters = function(value){
+    console.log(value);
     //Start : Code added to filter multiple centers on gridview
    try{
     promises = [];
     var defer = $q.defer();
-    if($scope.show_societies){
-      for(var i=0;i<$scope.center_data.length;i++){
-        if($scope.center_data[i].suppliers['RS'] != null){
-          $scope.center_data[i].RS_filters = angular.copy($scope.gridView_RS_filters);
-          toggleInventoryFilters($scope.center_data[i],value,'RS');
-        }
-      }
-      for(var i=0;i<$scope.center_data.length;i++){
-        if($scope.center_data[i].suppliers['RS'] != null){
-          var filters = {
-            'supplier_type_code' : 'RS',
-            proposal_id : $scope.proposal_id_temp,
-            center_id : $scope.center_data[i].center.id,
-            common_filters : {
-            latitude : $scope.center_data[i].center.latitude,
-            longitude : $scope.center_data[i].center.longitude,
-            radius : $scope.center_data[i].center.radius,
-            quality : [],
-            locality : [],
-            quantity : [],
-          },
-          inventory_filters : [],
-          specific_filters : {
-            flat_type : [],
-          },
-          amenities:[],
-        };
-        if($scope.flat_avg_rental_persqft_flag == true){
-          filters.specific_filters['flat_avg_rental_persqft'] = $scope.center_data[i].RS_filters.flat_avg_rental_persqft;
-        }
-        if($scope.flat_sale_cost_persqft_flag == true){
-          filters.specific_filters['flat_sale_cost_persqft'] = $scope.center_data[i].RS_filters.flat_sale_cost_persqft;
-        }
-        if($scope.center_data[i].RS_filters.flat_avg_rental_persqft.max == 0){
-          delete filters.specific_filters['flat_avg_rental_persqft'];
-        }
-        if($scope.center_data[i].RS_filters.flat_sale_cost_persqft.max == 0){
-          delete filters.specific_filters['flat_sale_cost_persqft'];
-        }
-        makeFilters($scope.center_data[i].RS_filters.inventory,filters.inventory_filters);
-        makeFilters($scope.center_data[i].RS_filters.flat_type,filters.specific_filters.flat_type);
-        makeFilters($scope.center_data[i].RS_filters.quality_type,filters.common_filters.quality);
-        makeFilters($scope.center_data[i].RS_filters.locality_rating,filters.common_filters.locality);
-        makeFilters($scope.center_data[i].RS_filters.quantity_type,filters.common_filters.quantity);
-        makeFilters($scope.center_data[i].RS_filters.amenities,filters.amenities);
-        $scope.checkFilters = true;
-        promises.push(mapViewService.getFilterSuppliers(filters));
-
-      }
-    }
-    var data = [];
-    $q.all(promises).then(function(response){
-      data = angular.copy(promises);
-      handleSupplierPromise(data,"RS");
-      $scope.checkFilters = false;
-    },function (error) {
-    //This will be called if $q.all finds any of the requests erroring.
-      handleErrors();
-      $scope.checkFilters = false;
-  });
-  }
+  //   if($scope.show_societies){
+  //     for(var i=0;i<$scope.center_data.length;i++){
+  //       if($scope.center_data[i].suppliers['RS'] != null){
+  //         $scope.center_data[i].RS_filters = angular.copy($scope.gridView_RS_filters);
+  //         toggleInventoryFilters($scope.center_data[i],value,'RS');
+  //       }
+  //     }
+  //     for(var i=0;i<$scope.center_data.length;i++){
+  //       if($scope.center_data[i].suppliers['RS'] != null){
+  //         var filters = {
+  //           'supplier_type_code' : 'RS',
+  //           proposal_id : $scope.proposal_id_temp,
+  //           center_id : $scope.center_data[i].center.id,
+  //           common_filters : {
+  //           latitude : $scope.center_data[i].center.latitude,
+  //           longitude : $scope.center_data[i].center.longitude,
+  //           radius : $scope.center_data[i].center.radius,
+  //           quality : [],
+  //           locality : [],
+  //           quantity : [],
+  //         },
+  //         inventory_filters : [],
+  //         specific_filters : {
+  //           flat_type : [],
+  //         },
+  //         amenities:[],
+  //       };
+  //       if($scope.flat_avg_rental_persqft_flag == true){
+  //         filters.specific_filters['flat_avg_rental_persqft'] = $scope.center_data[i].RS_filters.flat_avg_rental_persqft;
+  //       }
+  //       if($scope.flat_sale_cost_persqft_flag == true){
+  //         filters.specific_filters['flat_sale_cost_persqft'] = $scope.center_data[i].RS_filters.flat_sale_cost_persqft;
+  //       }
+  //       if($scope.center_data[i].RS_filters.flat_avg_rental_persqft.max == 0){
+  //         delete filters.specific_filters['flat_avg_rental_persqft'];
+  //       }
+  //       if($scope.center_data[i].RS_filters.flat_sale_cost_persqft.max == 0){
+  //         delete filters.specific_filters['flat_sale_cost_persqft'];
+  //       }
+  //       makeFilters($scope.center_data[i].RS_filters.inventory,filters.inventory_filters);
+  //       makeFilters($scope.center_data[i].RS_filters.flat_type,filters.specific_filters.flat_type);
+  //       makeFilters($scope.center_data[i].RS_filters.quality_type,filters.common_filters.quality);
+  //       makeFilters($scope.center_data[i].RS_filters.locality_rating,filters.common_filters.locality);
+  //       makeFilters($scope.center_data[i].RS_filters.quantity_type,filters.common_filters.quantity);
+  //       makeFilters($scope.center_data[i].RS_filters.amenities,filters.amenities);
+  //       $scope.checkFilters = true;
+  //       promises.push(mapViewService.getFilterSuppliers(filters));
+  //
+  //     }
+  //   }
+  //   var data = [];
+  //   $q.all(promises).then(function(response){
+  //     data = angular.copy(promises);
+  //     handleSupplierPromise(data,"RS");
+  //     $scope.checkFilters = false;
+  //   },function (error) {
+  //   //This will be called if $q.all finds any of the requests erroring.
+  //     handleErrors();
+  //     $scope.checkFilters = false;
+  // });
+  // }
     //End : Code added to filter multiple centers on gridview
-  else{
-    $scope.gridView_RS_filters = angular.copy($scope.current_center.RS_filters);
+  // else{
+    // $scope.gridView_RS_filters = angular.copy($scope.current_center.RS_filters);
     toggleInventoryFilters($scope.current_center,value,'RS');
       var filters = {
         'supplier_type_code' : 'RS',
@@ -930,32 +960,39 @@ if($scope.user_code == 'agency')
         },
         inventory_filters : [],
         specific_filters : {
-          flat_type : [],
+          flat_type : {},
         },
         amenities : [],
       };
-      if($scope.flat_avg_rental_persqft_flag == true){
+      if($scope.current_center.RS_filters.flat_avg_rental_persqft.max != $scope.current_center.RS_filters.flat_avg_rental_persqft.options.floor){
         filters.specific_filters['flat_avg_rental_persqft'] = $scope.current_center.RS_filters.flat_avg_rental_persqft;
       }
-      if($scope.flat_sale_cost_persqft_flag == true){
+      if($scope.current_center.RS_filters.flat_sale_cost_persqft.max != $scope.current_center.RS_filters.flat_sale_cost_persqft.options.floor){
         filters.specific_filters['flat_sale_cost_persqft'] = $scope.current_center.RS_filters.flat_sale_cost_persqft;
       }
-      if($scope.current_center.RS_filters.flat_avg_rental_persqft.max == 0){
-        delete filters.specific_filters['flat_avg_rental_persqft'];
+      if($scope.current_center.RS_filters.ratio_of_tenants_to_flats.max != $scope.current_center.RS_filters.ratio_of_tenants_to_flats.options.floor){
+        filters['ratio_of_tenants_to_flats'] = {};
+        filters['ratio_of_tenants_to_flats']['min'] = $scope.current_center.RS_filters.ratio_of_tenants_to_flats.min/100;
+        filters['ratio_of_tenants_to_flats']['max'] = $scope.current_center.RS_filters.ratio_of_tenants_to_flats.max/100;
       }
-      if($scope.current_center.RS_filters.flat_sale_cost_persqft.max == 0){
-        delete filters.specific_filters['flat_sale_cost_persqft'];
+      if($scope.current_center.RS_filters.possession_year.max != $scope.current_center.RS_filters.possession_year.options.floor){
+        filters.specific_filters['possession_year'] = $scope.current_center.RS_filters.possession_year;
+      }
+      if(value){
+        filters['is_standalone_society'] = true;
       }
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
-      makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
+      // makeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
       makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
       makeFilters($scope.current_center.RS_filters.locality_rating,filters.common_filters.locality);
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
       makeFilters($scope.current_center.RS_filters.amenities,filters.amenities);
+      makeFlatTypeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
+      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
-      }
+      // }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
   //End: code for society filters
@@ -1047,7 +1084,7 @@ if($scope.user_code == 'agency')
         filterSupplierData(filters.supplier_type_code,filters);
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
 //End: code for corporate filters
@@ -1074,7 +1111,7 @@ if($scope.user_code == 'agency')
         $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
         $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
 //End: for handling multiplse center response in promises for all suppliers
@@ -1086,23 +1123,40 @@ if($scope.user_code == 'agency')
               filter_list.push(filter_array[i].code);
           }
         }catch(error){
-          commonDataShare.showMessage(error.message);
+          console.log(error.message);
         }
       }
 //End: function for adding filters code to provided filter type list
+//Start: for flat type filters
+ var makeFlatTypeFilters = function(filter_array,filter_list){
+   try{
+     for(var i=0;i<filter_array.length; i++){
+       if(filter_array[i].selected == true){
+         filter_list[filter_array[i].code] = angular.copy(filter_array[i]);
+         if(filter_array[i].flat_count.max != filter_array[i].flat_count.options.floor){
+            filter_list[filter_array[i].code]['count'] = angular.copy(filter_array[i].flat_count);
+          }
+         if(filter_array[i].flat_size.max != filter_array[i].flat_size.options.floor){
+            filter_list[filter_array[i].code]['size'] = filter_array[i].flat_size;
+          }
+       }
+     }
+   }catch(error){
+   }
+ }
+//End: for flat type filters
 //start: generic function for fetching all supplier filters
         var filterSupplierData = function (code,supplier_filters){
          try{
           $scope.checkFilters = true;
           mapViewService.getFilterSuppliers(supplier_filters)
-                .success(function(response, status){
-                  $scope.business_name = response.data.business_name;
-                    response.data.center = $scope.current_center.center;
-                    $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.suppliers[code];
+                .then(function onSuccess(response, status){
+                    response.data.data.center = $scope.current_center.center;
+                    $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.data.suppliers[code];
                     if($scope.center_data[$scope.current_center_index].suppliers_meta){
-                      $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.suppliers_meta[code];
+                      $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.data.suppliers_meta[code];
                     }else {
-                      $scope.center_data[$scope.current_center_index].suppliers_meta = response.data.suppliers_meta;
+                      $scope.center_data[$scope.current_center_index].suppliers_meta = response.data.data.suppliers_meta;
                     }
                     $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
                     $scope.current_center = $scope.center_data[$scope.current_center_index];
@@ -1118,12 +1172,12 @@ if($scope.user_code == 'agency')
                     $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                     $scope.checkFilters = false;
                 })
-                .error(function(response, status){
+                .catch(function onError(response, status){
                     console.log("Error Happened while filtering");
                     $scope.checkFilters = false;
                 });
               }catch(error){
-                commonDataShare.showMessage(error.message);
+                console.log(error.message);
               }
         }
   //End: generic function for fetching all supplier filters
@@ -1242,9 +1296,9 @@ if($scope.user_code == 'agency')
     $scope.search_status = false;
     if($scope.supplier_type_code && $scope.search){
       mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
-        .success(function(response, status){
+        .then(function onSuccess(response, status){
             $scope.center_index = null;
-          $scope.supplierData = response.data;
+          $scope.supplierData = response.data.data;
           if($scope.supplierData.length > 0){
             $scope.search_status = true;
             $scope.errorMsg = undefined;
@@ -1254,7 +1308,7 @@ if($scope.user_code == 'agency')
             $scope.search_status = false;
           }
         })
-        .error(function(response, status){
+        .catch(function onError(response, status){
             console.log("Error Happened while searching");
         });
       }
@@ -1264,7 +1318,7 @@ if($scope.user_code == 'agency')
         $scope.search_status = false;
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //End: code added to search & show all suppliers on add societies tab
@@ -1280,7 +1334,7 @@ if($scope.user_code == 'agency')
 
         $scope.createSupplierList();
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
     //Start: To add searched societies in given center
@@ -1312,7 +1366,7 @@ if($scope.user_code == 'agency')
           $scope.errorMsg = "Selected supplier not allowedadd in this center";
         }
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
     //End: To add searched societies in given center
@@ -1328,7 +1382,7 @@ if($scope.user_code == 'agency')
         }
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //End: function to select center at add more suplliers
@@ -1368,7 +1422,7 @@ if($scope.user_code == 'agency')
            }
          }
        }catch(error){
-         commonDataShare.showMessage(error.message);
+         console.log(error.message);
        }
       }
        //End: For sending filtered inventory type
@@ -1385,7 +1439,7 @@ if($scope.user_code == 'agency')
           if(value != 'B')
             supplier.shortlisted = !supplier.shortlisted;
         }catch(error){
-          commonDataShare.showMessage(error.message);
+          console.log(error.message);
         }
       };
        //End: setting status of suppliers like shortlisted, removed or buffer
@@ -1394,7 +1448,7 @@ if($scope.user_code == 'agency')
        };
      $scope.exportData = function(){
        try{
-         console.log(constants);
+         $scope.requestProposal = false;
          $scope.checkFileExport = true;
          var parent_proposal_id = $window.localStorage.parent_proposal_id;
          if(parent_proposal_id == undefined){
@@ -1409,48 +1463,31 @@ if($scope.user_code == 'agency')
            centers:$scope.center_data,
            is_proposal_version_created:$window.localStorage.isSavedProposal,
          };
-         //console.log(data);
          $http({
               url: constants.base_url + constants.url_base + parent_proposal_id + '/proposal-version/',
               method: 'POST',
-              //responseType: 'arraybuffer',
               data: proposal_data, //this is your json data string
               headers: {
                   'Content-type': 'application/json',
-                  // 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                   'Authorization' : 'JWT ' + $rootScope.globals.currentUser.token
               }
-         }).success(function(response){
-          //  alert("Successful");
-              // convert it onto Blob object because it's a binary file.
-              // var blob = new Blob([data], {
-              //     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-              // });
-              // fetch the content_type and file name from headers
-              // $scope.content_type = headers('content-type');
-              // $scope.file_name = headers('file_name');
-              // set the file to blob
-              // $scope.file_data = blob
-              // var uploadUrl = 'http://mdimages.s3.amazonaws.com/';
-              //upload file to amazon server
-              //uploadFileToAmazonServer($scope.file_name,$scope.file_data);
-              // download it immediately
-              //saveAs(blob, $scope.file_name);
+         }).then(function onSuccess(response){
+           $scope.requestProposal = true;
+           swal(errorHandler.name,errorHandler.request_proposal_success,errorHandler.success);
               $scope.checkFileExport = false;
-
-         }).error(function(response){
-              //Some error log
+         }).catch(function onError(response){
+           $scope.requestProposal = true;
+              swal(errorHandler.name,errorHandler.request_proposal_error,errorHandler.error);
               $scope.checkFileExport = false;
-              // alert('Error in exporting the file');
          });
        }catch(error){
-         commonDataShare.showMessage(error.message);
+         $scope.requestProposal = true;
+         console.log(error.message);
        }
      }
 
 //Start : function to upload files to amazon server, just provide file name and file
    var uploadFileToAmazonServer = function(file_name,file){
-     // upload it to S3 Bucket
     try{
      Upload.upload({
          url: 'http://mdimages.s3.amazonaws.com/',
@@ -1463,35 +1500,38 @@ if($scope.user_code == 'agency')
              signature : constants.signature, // base64-encoded signature based on policy string (see article below)
              "Content-Type": constants.content_type,// content type of the file (NotEmpty)
              file: file }
-         }).success(function (response){
-              // alert("Upload to Server Successful");
-         }).error(function(response) {
-            //  alert("Upload to server Unsuccessful");
+         }).then(function onSuccess(response){
+              swal(errorHandler.name,errorHandler.uploadfile_success,errorHandler.success);
+         }).catch(function onError(response) {
+              swal(errorHandler.name,errorHandler.uploadfile_error,errorHandler.error);
          });
        }catch(error){
-         commonDataShare.showMessage(error.message);
+         $scope.requestProposal = true;
+         console.log(error.message);
        }
    }
 //End : function to upload files to amazon server, just provide file name and file
     $scope.upload = function (file) {
-     try{
-      var uploadUrl = constants.base_url + constants.url_base;
-      // var uploadUrl = 'http://localhost:8108/v0/ui/website/';
-      var token = $rootScope.globals.currentUser.token ;
-      Upload.upload({
-          url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
-          data: {file: file, 'username': $scope.username},
-          headers: {'Authorization': 'JWT ' + token},
-      }).success(function (response) {
-        uploadFileToAmazonServer(response.data,file);
-          alert("Successfully Uploaded");
-          // console.log('Success ' + resp.config.data.file.name + 'uploaded. Response: ' + resp.data);
-      }).error(function (response) {
-          console.log('Error status: ' + response.status);
-          // alert("Data not Imported");
-      });
-    }catch(error){
-      commonDataShare.showMessage(error.message);
+      if(file){
+       try{
+        var uploadUrl = constants.base_url + constants.url_base;
+        $scope.requestProposal = false;
+        var token = $rootScope.globals.currentUser.token ;
+        Upload.upload({
+            url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
+            data: {file: file, 'username': $scope.username},
+            headers: {'Authorization': 'JWT ' + token},
+        }).then(function onSuccess(response) {
+          uploadFileToAmazonServer(response.data.data,file);
+          $scope.requestProposal = true;
+        }).catch(function onError(response) {
+          $scope.requestProposal = true;
+            swal(errorHandler.name,errorHandler.importfile_error,errorHandler.error);
+        });
+      }catch(error){
+        $scope.requestProposal = true;
+        console.log(error.message);
+      }
     }
   };
     //End: upload and import functionality
@@ -1501,13 +1541,15 @@ if($scope.user_code == 'agency')
        saveSelectedFilters();
       $window.localStorage.isSavedProposal = true;
       mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
-        .success(function(response, status){
+        .then(function onSuccess(response, status){
           // alert("Saved Successfully");
-        }).error(function(response, status){
+          swal(errorHandler.name,errorHandler.save_success,errorHandler.success);
+        }).catch(function(response, status){
+          swal(errorHandler.name,errorHandler.save_error,errorHandler.error);
           // alert("Error Occured");
       });//
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //End:save suppliers and filters to save the current state
@@ -1521,13 +1563,13 @@ if($scope.user_code == 'agency')
         'supplier_type_code':code,
       };
       mapViewService.updateSupplierStatus($scope.proposal_id_temp,data)
-        .success(function(response, status){
-          // alert("Saved Successfully");
-        }).error(function(response, status){
-          // alert("Error Occured");
+        .then(function onSuccess(response, status){
+
+        }).catch(function onError(response, status){
+          swal(errorHandler.name,errorHandler.supplier_status_error,errorHandler.error);
       });
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     // End: function to update status of supplier and save in db
@@ -1548,7 +1590,7 @@ if($scope.user_code == 'agency')
         });
       }
     }catch(error){
-      commonDataShare.showMessage(error.message);
+      console.log(error.message);
     }
   }
     //Start: check duplicate suppliers if adding more suppliers
@@ -1568,7 +1610,7 @@ if($scope.user_code == 'agency')
           return true;
         }
       }catch(error){
-        commonDataShare.showMessage(error.message);
+        console.log(error.message);
       }
     }
   });
@@ -1585,15 +1627,16 @@ $scope.getSocietyDetails = function(supplier,center,index){
   $scope.totalInventoryCount = {};
   $scope.supplier_type_code = "RS";
   mapViewService.getSociety(supplier_id,$scope.supplier_type_code)
-   .success(function (response) {
+   .then(function onSuccess(response) {
      $scope.myInterval=300;
-     $scope.society_images = response.data.supplier_images;
+     $scope.society_images = response.data.data.supplier_images;
      $scope.society = supplier;
     //  $scope.society = response.data.supplier_data;
      //$rootScope.societyname = response.society_data.society_name;
-     $scope.residentCount = estimatedResidents(response.data.supplier_data.flat_count);
-     $scope.flatcountflier = response.data.supplier_data.flat_count;
+     $scope.residentCount = estimatedResidents(response.data.data.supplier_data.flat_count);
+     $scope.flatcountflier = response.data.data.supplier_data.flat_count;
      var baseUrl = constants.aws_bucket_url;
+
      // Start : Code added to seperate images by their image tag names
      var imageUrl;
      $scope.SocietyImages = [],$scope.FlierImages=[],$scope.PosterImages=[],$scope.StandeeImages=[],$scope.StallImages=[],$scope.CarImages=[];
@@ -1627,10 +1670,10 @@ $scope.getSocietyDetails = function(supplier,center,index){
   });
 
   mapViewService.get_inventory_summary(supplier_id, $scope.supplier_type_code)
-  .success(function (response){
-    $scope.inventoryDetails = response;
+  .then(function onSuccess(response){
+    $scope.inventoryDetails = response.data;
      $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);
-     $scope.model = response;
+     $scope.model = response.data;
   });
 }//End of function getSocietyDetails
   function estimatedResidents (flatcount){
@@ -1650,18 +1693,18 @@ $scope.getSocietyDetails = function(supplier,center,index){
 
  if($rootScope.campaignId){
      mapViewService.getShortlistedSocietyCount($rootScope.campaignId)
-     .success(function(response,status){
-         $scope.societies_count = response.count;
+     .then(function onSuccess(response,status){
+         $scope.societies_count = response.data.count;
 
-     }).error(function(response,status){
-         console.log("error ",response.error);
+     }).catch(function onError(response,status){
+         console.log("error ",response.data.error);
      });
  }
 
  $scope.society_ids = {}
  mapViewService.getSocietyIds()
- .success(function(response,status){
-     $scope.society_ids = response.society_ids;
+ .then(function onSuccess(response,status){
+     $scope.society_ids = response.data.society_ids;
      $scope.minlength = 0;
      $scope.maxlength = $scope.society_ids.length-1;
      for(var i=0;i<= $scope.maxlength; i++){

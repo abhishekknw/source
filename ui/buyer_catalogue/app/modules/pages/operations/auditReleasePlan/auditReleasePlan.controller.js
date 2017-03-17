@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('AuditReleasePlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare',
-    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare) {
+    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare','errorHandler',
+    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare, errorHandler) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.headings = [
         {header : 'Phase'},
@@ -52,6 +52,23 @@ angular.module('catalogueApp')
 
 
       $scope.auditDates = [];
+      function init(){
+        getCampaignReleaseDetails();
+        getUsersList();
+      }
+      //get user list
+      var getUsersList = function(){
+        commonDataShare.getUsersList()
+          .success(function(response, status){
+            console.log(response);
+            $scope.userList = response.data;
+          })
+          .error(function(response, status){
+            console.log("error occured", status);
+          });
+      }
+      init();
+
       //initial call to get release Data
       function getCampaignReleaseDetails(){
       auditReleasePlanService.getCampaignReleaseDetails($scope.campaign_id)
@@ -65,7 +82,7 @@ angular.module('catalogueApp')
       		console.log("error occured", status);
       	});
       }
-      getCampaignReleaseDetails();
+      // getCampaignReleaseDetails();
         var setDataToModel = function(suppliers){
           for(var i=0;i<suppliers.length;i++){
             angular.forEach(suppliers[i].shortlisted_inventories, function(filter){
@@ -135,8 +152,10 @@ angular.module('catalogueApp')
         .success(function(response, status){
           getCampaignReleaseDetails();
           $scope.resetData();
+          swal(errorHandler.name,errorHandler.updateData_success,errorHandler.success);
       	})
       	.error(function(response, status){
+          swal(errorHandler.name,errorHandler.updateData_error,errorHandler.error);
       		console.log("error occured", status);
       	});
       }
@@ -170,10 +189,6 @@ angular.module('catalogueApp')
         commonDataShare.showMessage(error.message);
       }
     }
-    $scope.userList = [
-      {name : 'Ankit'},
-      {name : 'Komal'},
-    ];
     $scope.saveUserForActivity = function(){
       console.log($scope.inventoryList);
       auditReleasePlanService.saveUser($scope.inventoryList)
@@ -185,7 +200,7 @@ angular.module('catalogueApp')
       });
     }
 
-    $scope.invActivityData = [
+    $scope.invActivityData_struct = [
         {activity_type : "RELEASE", act_date:{date:'',userCode:''}},
         {activity_type : "CLOSURE", act_date:{date:'',userCode:''}},
       ];
@@ -233,12 +248,17 @@ angular.module('catalogueApp')
       .success(function(response, status){
         getCampaignReleaseDetails();
         $scope.resetData();
+        $('#manageDatesModal').modal('hide');
+        swal(errorHandler.name,errorHandler.inventory_date_success,errorHandler.success);
       })
       .error(function(response, status){
+        $('#manageDatesModal').modal('hide');
+        swal(errorHandler.name,errorHandler.inventory_date_error,errorHandler.error);
         console.log("error occured", status);
       });
     }
      $scope.getActivityDates = function(supplier){
+       $scope.invActivityData = angular.copy($scope.invActivityData_struct);
        angular.forEach(supplier.shortlisted_inventories, function(inventoryList,inventory){
           for(var i=0; i<inventoryList.detail.length; i++){
             inventoryList.detail[i].status = false;
@@ -263,8 +283,8 @@ angular.module('catalogueApp')
           var releaseClosureData = angular.copy(releaseClosureDataStruct);
           releaseClosureData.activity_type = $scope.invActivityData[i].activity_type;
           var date = commonDataShare.formatDate($scope.invActivityData[i].act_date.date);
-          // var userCode = $scope.invActivityData[i].act_date.userCode;
-          var userCode = 6;
+          var userCode = $scope.invActivityData[i].act_date.userCode;
+          // var userCode = 6;
           releaseClosureData.date_user_assignments[date] = userCode;
           data.push(releaseClosureData);
         }
@@ -275,8 +295,8 @@ angular.module('catalogueApp')
         if($scope.invActivityAuditData.audit_dates[i].date){
           // auditData.date_user_assignments[i] = {};
           var date = commonDataShare.formatDate($scope.invActivityAuditData.audit_dates[i].date);
-          // var userCode = $scope.invActivityAuditData.audit_dates[i].userCode;
-          var userCode = 6;
+          var userCode = $scope.invActivityAuditData.audit_dates[i].userCode;
+          // var userCode = 6;
           auditData.date_user_assignments[date] = userCode;
         }
       }
@@ -286,7 +306,7 @@ angular.module('catalogueApp')
         assignment_detail : data,
       };
     }
-        
+
     $scope.showActivityDates = function(inventory){
       $scope.ActivityDatesData = inventory;
     }
@@ -294,6 +314,7 @@ angular.module('catalogueApp')
     $scope.resetData = function(){
       $scope.invIdList = [];
       $scope.selectedRow = undefined;
+      $scope.invActivityData = [];
       $('#manageDatesModal').on('hide.bs.modal', function () {
       })
     }

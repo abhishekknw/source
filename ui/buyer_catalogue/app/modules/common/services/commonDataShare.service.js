@@ -4,9 +4,15 @@ angular.module('catalogueApp')
  function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location, $http) {
 
   var commonDataShare = {};
+  var url_base = 'v0/ui/website/';
 
    commonDataShare.showMessage = function(msg){
      alert(msg);
+   }
+
+   commonDataShare.getUsersList = function(){
+     var url = url_base  + "get-users-list/";
+     return machadaloHttp.get(url);
    }
 
    commonDataShare.formatDate = function(date){

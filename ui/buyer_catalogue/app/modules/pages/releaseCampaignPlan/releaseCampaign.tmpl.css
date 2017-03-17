@@ -12,12 +12,6 @@ th{
 	margin-top: 15px;
 }
 
-/*body{
-	background: #f2f2f2;
-	font-family: Source Sans Pro;
-	color: #707070;
-}
-*/
 .proposal-panel{
 	margin-top: 70px;
 }
@@ -57,4 +51,7 @@ th{
 }
 .alignment {
   text-align: center;
+ }
+ .error{
+	 color: #c9302c;
  }

@@ -2,6 +2,13 @@
 angular.module('catalogueApp')
     .controller('ProposalHistory', function($scope, $rootScope, $stateParams, $window, $location, proposalHistoryService ,$http) {
     	$scope.proposals = [];
+      $(document).ready(function(){
+        $('.my').slick({
+          infinite: true,
+         slidesToShow: 3,
+         slidesToScroll: 3
+        });
+      });
       //defining headers for table
       $scope.proposalHeaders = [
         {name : 'Proposal_id'},
@@ -11,15 +18,16 @@ angular.module('catalogueApp')
         {name : ''}
       ];
       // var proposalid = $window.localStorage.proposal_id;
-      $scope.proposalid = $window.localStorage.proposal_id;
+      $scope.proposalid = $stateParams.proposal_id;
       $stateParams.proposal_id;
+      console.log($scope.proposalid);
     	proposalHistoryService.getProposalHistory($stateParams.proposal_id)
-    	.success(function(response, status){
-    		$scope.proposals = response.data;
-        $scope.loading = response;
-    		console.log("$scope.proposals : ", response.data);
+    	.then(function(response, status){
+    		$scope.proposals = response.data.data;
+        $scope.loading = response.data;
+    		console.log("$scope.proposals : ", response.data.data);
     	})
-    	.error(function(response, status){
+    	.catch(function(response, status){
     		console.log("error occured");
     	});
       $scope.showDetails = function(proposal_id){

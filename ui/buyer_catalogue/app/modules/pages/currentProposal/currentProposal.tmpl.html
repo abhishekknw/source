@@ -2,7 +2,8 @@
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 <form name="proposalDetails" ng-hide="showEdit" class = "proposal-panel">
-  <back-Button></back-Button>
+  <!-- <back-Button style="text-align:left"></back-Button> -->
+  <div class="breadcrumb col-md-4" ncy-breadcrumb></div>
   <div ng-loading="loading"></div> <!--For displaying loading icon-->
   <div class = "container">
     <div class="page-header">
@@ -19,7 +20,7 @@
           </div >
           <br>
           <div class="row">
-            <div class="col-md-10 center-heading"><label>Center Details:</label></div>
+            <div class="col-md-10 center-heading"><label>Advertising Location Details:</label></div>
           </div>
           <div class = "row center-details">
             <div class="col-md-2 table-align" ng-repeat="header in centerheaders"><b>{{header.header}}</b></div>
@@ -37,7 +38,7 @@
       </div>
   </div>
 </form>
-<a class = "labels" style="text-align:right" ng-if="isParentProposal == 'true'" href="" ng-click="editInitialProposal(proposal.proposal_id)"><b>Edit Proposal</b></a>
+<div class = "invoiceButton"><a class="labels"ng-if="isParentProposal == 'true'" href="" ng-click="editInitialProposal(proposal.proposal_id)"><b>Edit Proposal</b></a></div>
 <div class="col-md-3" style="margin-left:83px;"><label>Select Advertising Location:</label>
   <select ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
     <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
@@ -47,21 +48,21 @@
 <div class = "container page-panel"  ng-if="current_center_id">
   <div class = "row">
     <div ng-if="current_center_data.filters.society_allowed">
-      <div class = "col-md-12"><label class = "society-heading" ng-click="isSociety=!isSociety">Society Details</label></div>
-      <div class="col-md-4 table-responsive" style="width: 1245px; height: 450px">
+      <div class = "col-md-2"><label class = "society-heading" ng-click="isSociety=!isSociety">Society Details</label></div>
+      <div class="table-responsive" style="width: 800px; height: 450px">
        <h5 class="panel-heading head" ng-click="isSociety=!isSociety"><b>Shortlisted Society Details</b></h5>
         <div uib-collapse="! isSociety">
-          <table class="table table-bordered society">
+          <table class="table table-bordered table-responsive society">
             <thead>
               <tr>
-               <th class="col-md-2 table-heading">Center</th>
-               <th class="col-md-3 table-heading">Society</th>
-               <th ng-if="current_center_data.societyFilters.inv_poster" class="col-md-0 table-heading">Poster Count</th>
-               <th ng-if="current_center_data.societyFilters.inv_standee" class="col-md-0 table-heading">Standee Count</th>
-               <th ng-if="current_center_data.societyFilters.inv_stall"  class="col-md-0 table-heading">Stall Count</th>
-               <th ng-if="current_center_data.societyFilters.inv_flier" class="col-md-0 table-heading">Flyer Count</th>
-               <th class = "col-md-4">Status</th>
-               <th class = "col-md-4">Action</th>
+               <th class="col-md-1 table-heading">Center</th>
+               <th class="col-md-1 table-heading">Society</th>
+               <th ng-if="current_center_data.societyFilters.inv_poster" class="col-md-1 table-heading">Poster Count</th>
+               <th ng-if="current_center_data.societyFilters.inv_standee" class="col-md-1 table-heading">Standee Count</th>
+               <th ng-if="current_center_data.societyFilters.inv_stall"  class="col-md-1 table-heading">Stall Count</th>
+               <th ng-if="current_center_data.societyFilters.inv_flier" class="col-md-1 table-heading">Flyer Count</th>
+               <th class = "col-md-1">Status</th>
+               <th class = "col-md-1">Action</th>
               </tr>
             </thead>
             <tbody ng-repeat=" supplier in current_center_data.suppliers['RS']">
@@ -129,7 +130,7 @@
   </div>
 </div>
 <!-- End: Display supplier details for selected center-->
-<div class = "col-md-12" style="text-align:right">
+<div class="invoiceButton">
   <button ng-hide="hideData" class="btn btn-danger" data-target="#invoiceModal" data-toggle="modal"><b>Enter Invoice Details</b></button>
 </div>
 

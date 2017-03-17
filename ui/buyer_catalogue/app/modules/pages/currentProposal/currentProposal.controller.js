@@ -1,6 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('CurrentProposal', function($scope, $rootScope, $stateParams, $window, $location, currentProposalService ,$http) {
+    .controller('CurrentProposal', function($scope, $rootScope, $stateParams, $window, $location, currentProposalService ,$http, errorHandler) {
 
     	$scope.proposal = {};
       $scope.society = {society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''};
@@ -15,7 +15,7 @@ angular.module('catalogueApp')
         $scope.hideData = true;
       $scope.centerheaders = [
         {header : 'Serial No'},
-        {header : 'Center Name'},
+        {header : 'Name'},
         {header : 'Area'},
         {header : 'SubArea'},
         {header : 'Radius'}
@@ -52,10 +52,10 @@ angular.module('catalogueApp')
       $scope.altInputFormats = ['M!/d!/yyyy'];
 
     	currentProposalService.getProposal($stateParams.proposal_id)
-    	.success(function(response, status){
-    		$scope.proposal = response.data;
+    	.then(function onSuccess(response, status){
+    		$scope.proposal = response.data.data;
     	})
-    	.error(function(response, status){
+    	.catch(function onError(response, status){
     		console.log("Error Occured");
     		if(typeof(response) == typeof([])){
     			console.log("Error response is :", response);
@@ -68,14 +68,14 @@ angular.module('catalogueApp')
 
         // this service get the all shortlisted suppliers for this proposal
       currentProposalService.getShortlistedSuppliers($stateParams.proposal_id)
-        .success(function(response, status){
+        .then(function onSuccess(response, status){
           console.log(response);
-          $scope.center_data = response.data;
+          $scope.center_data = response.data.data;
           getAvailableSuppliers($scope.center_data);
           getFilters($scope.center_data);
-          $scope.loading = response;
+          $scope.loading = response.data;
       })
-        .error(function(response, status){
+        .catch(function onError(response, status){
           console.log("Error Occured");
           if(typeof(response) == typeof([])){
             console.log("Error response is :", response);
@@ -146,10 +146,10 @@ angular.module('catalogueApp')
       $scope.updateProposal = function() {
         $scope.current_center_data.proposal = $stateParams.proposal_id;
         currentProposalService.updateProposal($stateParams.proposal_id, $scope.current_center_data)
-        .success(function(response, status){
+        .then(function onSuccess(response, status){
                 $window.location.reload();
         })
-        .error(function(response, status){
+        .catch(function onError(response, status){
           console.log("Error Occured");
         })
       }
@@ -163,19 +163,19 @@ angular.module('catalogueApp')
           'supplier_type_code':code,
         };
         currentProposalService.updateSupplierStatus($stateParams.proposal_id,data)
-          .success(function(response, status){
+          .then(function onSuccess(response, status){
             // alert("Saved Successfully");
-          }).error(function(response, status){
+          }).catch(function onError(response, status){
             // alert("Error Occured");
         });
       }
       //End:code to change and save status of supplier
     	$scope.submit = function(){
     		currentProposalService.saveProposal($stateParams.proposal_id, $scope.proposal.centers)
-    		.success(function(response, status){
+    		.then(function onSuccess(response, status){
                 $window.location.reload();
     		})
-    		.error(function(response, status){
+    		.catch(function onError(response, status){
     			console.log("Error Occured");
     			if(typeof(response) == typeof([])){
 	    		console.log("Error response is :", response);
@@ -183,7 +183,7 @@ angular.module('catalogueApp')
     		})
     	}
      $scope.editInitialProposal = function(proposalId){
-       $window.localStorage.isSavedProposal = true;
+       $window.localStorage.isSavedProposal = 'true';
        $location.path('/' + proposalId + '/mapview');
      }
      $scope.showHistory = function(){
@@ -191,19 +191,30 @@ angular.module('catalogueApp')
      }
 
      $scope.saveInvoiceDetails = function(){
-       if($window.confirm("Do You really want to confirm Invoice Details")) {
-         $scope.proposal.tentative_start_date = $scope.campaign_start_date;
-         $scope.proposal.tentative_end_date = $scope.campaign_end_date;
-        currentProposalService.saveInvoiceDetails($stateParams.proposal_id,$scope.proposal)
-          .success(function(response, status){
-            // alert("Successful");
-                  console.log("success");
-          })
-          .error(function(response, status){
-            console.log("Error Occured");
-          })
-        }
-
+       swal({
+          title: "Are you sure?",
+          text: errorHandler.invoice_confirm,
+          type: errorHandler.warning,
+          showCancelButton: true,
+          confirmButtonClass: "btn-success",
+          confirmButtonText: "Yes, confirm it!",
+          closeOnConfirm: false
+        },
+        function(){
+          $scope.proposal.tentative_start_date = $scope.campaign_start_date;
+          $scope.proposal.tentative_end_date = $scope.campaign_end_date;
+         currentProposalService.saveInvoiceDetails($stateParams.proposal_id,$scope.proposal)
+           .success(function(response, status){
+             // alert("Successful");
+             swal("Success!",errorHandler.invoice_success,errorHandler.success);
+             $('#invoiceModal').modal('hide');
+                   console.log("success");
+           })
+           .error(function(response, status){
+             swal("Error!",errorHandler.invoice_error,errorHandler.error);
+             console.log("Error Occured");
+         })
+        });
      }
 
     });//Controller ends here

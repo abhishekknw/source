@@ -4,8 +4,9 @@
   <div>
     <span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span>
   </div>
-<back-Button></back-Button>
-<form name = "form">
+<!-- <back-Button></back-Button> -->
+  <div class="breadcrumb" ncy-breadcrumb></div>
+<form name = "form" class="content">
   <div class = "panel panel-default business-panel">
     <h3 class = "panel-heading">Create Account</h3>
      <div class = "table">
@@ -132,6 +133,7 @@
         </div>
       </div>
     </div>
+    <button type="submit" class="btn btn-danger" ng-click="create()">Save Details</button>
   </form>
-  <button type="submit" class="btn btn-danger" ng-click="create()">Save Details</button>
+
 </div>
