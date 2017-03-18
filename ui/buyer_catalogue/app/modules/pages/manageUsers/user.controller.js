@@ -1,7 +1,7 @@
 angular.module('machadaloPages')
 .controller('userCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'userService',
-    function ($scope, $rootScope, $window, $location, userService) {
+    ['$scope', '$rootScope', '$window', '$location', 'userService','constants',
+    function ($scope, $rootScope, $window, $location, userService, constants) {
         // reset login status
      $scope.model = {};
      $scope.options = [
@@ -12,13 +12,15 @@ angular.module('machadaloPages')
 
      $scope.register = function(){
      userService.createUser($scope.model)
-      .success(function(response, status){
+      .then(function onSuccess(response){
         console.log("Successful");
-        alert("Successfully Created");
+        swal(constants.name,constants.createUser,constants.success);
+        // alert("Successfully Created");
         })
-        .error(function(response, status){
-            console.log("error occured", status);
-            alert("Error Occured");
+        .catch(function onError(response){
+            console.log("error occured");
+            swal(constants.name,constants.errorMsg,constants.error);
+            // alert("Error Occured");
         });
      }
 

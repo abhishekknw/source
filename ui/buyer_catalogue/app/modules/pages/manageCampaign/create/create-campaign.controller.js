@@ -140,7 +140,10 @@ angular.module('machadaloPages')
                 pagesService.getSubTypes(id)
                 .then(function (response){
                     $scope.sub_types = response.data;
-            });
+                  })
+                  .catch(function onError(response){
+                    swal(constants.name,constants.errorMsg,constants.error);
+                  });
             }
         }
 
@@ -218,6 +221,7 @@ angular.module('machadaloPages')
 
           pagesService.getAccountProposal(sel_account_id)
           .then(function(response){
+            console.log(response);
               $scope.account_proposals = response.data.data;
               $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
           })
@@ -253,6 +257,7 @@ angular.module('machadaloPages')
         $location.path('/' + proposalId + '/showproposalhistory');
       }
     	$scope.create = function() {
+        console.log($scope.model);
         pagesService.createBusinessCampaign($scope.model)
           .then(function (response) {
             var sub_type_id = $scope.model.business.sub_type_id;

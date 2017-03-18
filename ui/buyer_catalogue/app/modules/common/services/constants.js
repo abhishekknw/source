@@ -59,6 +59,10 @@ angular
     //CreateCampaign
     business_success : 'Business Details saved successfully',
     business_error : 'Error occured in saving business details',
+    //manage user
+    createUser_success : 'Successfully Created',
+    //guestPage
+    location_error : 'Please enter accurate location',
 
 
   });

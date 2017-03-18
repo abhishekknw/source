@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <!-- <div><nav-bar></nav-bar></div> -->
   	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Welcome to Machadalo</title>
@@ -256,39 +257,33 @@ $(document).ready(function(){
                 <span class="lato size20 slim white ">POSTER CAMPAIGN, HIRANANDANI GARDENS</span><br/><br><br>
 
 				<div class=" wh95percent bottom">
-					<select class="form-control left " style="width:111px">
-									  <option selected>Select City</option>
-									  <option>5 stars</option>
-									  <option>4 stars</option>
-									  <option>3 stars</option>
-									  <option>2 stars</option>
-									  <option>1 stars</option>
+					       <select class="form-control left " style="width:111px">
+									  <option disabled selected>Select City</option>
+									  <option  ng-repeat="city in cities" value="{{city.id}}" required>{{city.city_name}}</option>
 									</select>
-                    <select class="form-control left " style="width:121px">
-									  <option selected>Select Locality</option>
-									  <option>5 stars</option>
-									  <option>4 stars</option>
-									  <option>3 stars</option>
-									  <option>2 stars</option>
-									  <option>1 stars</option>
+                    <input type="text" ng-model="locality" googleplace class="form-control left " style="width:121px">
 									</select>
-                    <select class="form-control left " style="width:141px">
-									  <option selected>Campaign Type</option>
-									  <option>5 stars</option>
-									  <option>4 stars</option>
-									  <option>3 stars</option>
-									  <option>2 stars</option>
-									  <option>1 stars</option>
+                    <select class="form-control left " style="width:141px" ng-model="model.business.business_type_id" ng-click="getSubTypes(model.business.business_type_id)">
+  									  <option disabled selected>Select Business Type</option>
+                      <option  ng-repeat="business in businessTypes"  value="{{business.id}}"  required>{{business.business_type}}</option>
 									</select>
-                    <select class="form-control left " style="width:111px">
+                  <select class="form-control left " style="width:141px" ng-model="model.business.sub_type_id">
+                    <option disabled selected>Select Business Subtype</option>
+                    <option  ng-repeat="bus_subtype in business_subtypes"  value="{{bus_subtype.id}}" required>{{bus_subtype.business_sub_type}}</option>
+                  </select>
+                  <select class="form-control left " style="width:141px" ng-model="supplier_type_code.code" placeholder="asdas">
+                    <option disabled selected>Select Supplier</option>
+                    <option  ng-repeat="supplier in supplier_codes"  value="{{supplier.code}}" required>{{supplier.name}}</option>
+                  </select>
+                    <!-- <select class="form-control left " style="width:111px">
 									  <option selected>Duration</option>
 									  <option>5 stars</option>
 									  <option>4 stars</option>
 									  <option>3 stars</option>
 									  <option>2 stars</option>
 									  <option>1 stars</option>
-									</select>
-					<button class="btn btn-default nbtn-search right" type="button" style="margin-top:-35px"><span class="glyphicon glyphicon-search"></span></button>
+									</select> -->
+					<button class="btn btn-default nbtn-search right" type="button" style="margin-top:-35px" ng-click="create()"><span class="glyphicon glyphicon-search"></span></button>
 
 				</div>
 	</div>
