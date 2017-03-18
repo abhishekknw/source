@@ -44,6 +44,7 @@ INSTALLED_APPS = (
     'v0',
     'drf_generators',
     'rest_framework_swagger',
+    'djcelery',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -90,16 +91,11 @@ DATABASES = {
     },
 
     'default': {
-        'NAME':'machadalo_permissions',
+        'NAME':'machadalo',
          'ENGINE': 'django.db.backends.mysql',
          'HOST': 'localhost',
-<<<<<<< Updated upstream
-         'USER': '',
-         'PASSWORD': '',
-=======
          'USER': 'root',
-         'PASSWORD': 'yo@123',
->>>>>>> Stashed changes
+         'PASSWORD': 'root',
       }
 
     }
@@ -122,6 +118,11 @@ USE_TZ = True
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = '/static/'
+
+# path on the filesystem to the directory containing your static media.
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# URL that makes the static media accessible over HTTP
+MEDIA_URL = '/'
 
 # settings for Django Rest Framework
 
@@ -194,13 +195,13 @@ JWT_AUTH = {
       'JWT_VERIFY_EXPIRATION': False,
       }
 
-BASE_URL = 'http://localhost:8108/'
+BASE_URL = 'http://localhost:8000/'
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'yogesh.mhetre@machadalo.com'
-EMAIL_HOST_PASSWORD = 'mtechcse@2014'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER
@@ -225,5 +226,20 @@ AWS_ACCESS_KEY_ID = 'AKIAIIGRT3EJEDSRVSFQ'
 AWS_SECRET_ACCESS_KEY = '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'
 BUCKET_NAME = 'mdimages-test'
 
+ANDROID_BUCKET_NAME = 'androidtokyo'
+
 # app name
 APP_NAME = 'v0'
+
+# CELERY STUFF
+
+BROKER_URL = 'redis://localhost:6379'
+CELERY_IMPORTS = ['v0.ui.website.tasks']
+
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Africa/Nairobi'

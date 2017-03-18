@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.conf.urls import include, url, patterns
 
 from rest_framework.routers import DefaultRouter
 
@@ -71,9 +71,13 @@ urlpatterns = [
     url(r'^inventory-activity-date-user-assignment/$', views.AssignInventoryActivityDateUsers.as_view()),
     url(r'^inventory-activity-date-user-reassignment/$', views.ReassignInventoryActivityDateUsers.as_view()),
     url(r'^get-users-list/$', views.UserList.as_view()),
+    url(r'^bulk-download-images-amazon/$', views.BulkDownloadImagesAmazon.as_view()),
+    url(r'^task/is-task-successfull/(?P<task_id>.+)/$', views.IsTaskSuccessFull.as_view()),
+    url(r'^proposal-images-path/$', views.ProposalImagesPath.as_view()),
+
 ]
 
 router = DefaultRouter()
 router.include_format_suffixes = False
-router.register(r'^proposal', views.ProposalViewSet, base_name='Proposal')
+router.register(r'^proposal', views.ProposalViewSet, base_name='Proposal')  
 urlpatterns += router.urls

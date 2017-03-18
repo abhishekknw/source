@@ -43,3 +43,6 @@ INVALID_DATE_FORMAT = "The recieved format of the date string does not matches t
 ALL_IMAGES_SYNCED_UP_MESSAGE = "Seems like all the images synced up already"
 
 NO_TOWER_ASSIGNED_ERROR = "There is no tower assigned to this inventory {0} with id {1}"
+NO_IMAGES_FOR_THIS_PROPOSAL_MESSAGE = "There are no images in our system for this proposal {0}"
+TASK_NOT_DONE_YET_ERROR = "This task with id {0} is not successfull yet"
+PATH_DOES_NOT_EXIST = "This path {0} doesnt not exist"

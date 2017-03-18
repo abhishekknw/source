@@ -8,6 +8,9 @@ import uuid
 from smtplib import SMTPException
 from string import Template
 from operator import itemgetter
+import json
+import shutil
+
 
 from django.db import transaction
 from django.db.models import Q, F, ExpressionWrapper, FloatField
@@ -33,6 +36,8 @@ import boto
 import boto.s3
 from boto.s3.key import Key
 from bulk_update.helper import bulk_update
+from celery import group
+from celery.task.sets import TaskSet, subtask
 
 import constants as website_constants
 from constants import price_per_flat, inventorylist
@@ -43,6 +48,7 @@ import serializers
 import v0.utils as v0_utils
 from v0 import errors
 import v0.constants as v0_constants
+from tasks import bulk_download_from_amazon_per_supplier
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -3449,6 +3455,26 @@ def upload_to_amazon(file_name):
         return ui_utils.handle_response(function, exception_object=e)
 
 
+def print_bucket_content(bucket_name):
+    """
+    prints all bucket contents
+    Args:
+        bucket_name:
+    Returns: Nothing
+    """
+    function = print_bucket_content.__name__
+    try:
+        conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+        bucket = conn.get_bucket(bucket_name)
+        log_file_path = settings.BASE_DIR + '/files/bucket_content.txt'
+        output_file = open(log_file_path, 'w')
+        for key in bucket.list():
+            output_file.write(str(key) + "\n")
+        output_file.close()
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
 def is_campaign(proposal):
     """
     The function which tells weather a proposal is a campaign or not
@@ -4908,3 +4934,36 @@ def is_society_standalone(instance_detail):
         return False
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
+
+
+def start_download_from_amazon(proposal_id, image_map):
+    """
+    function responsible for downloading images from amazon and storing in a folder under files directory.
+    Args:
+        proposal_id: The proposal_id
+        image_map: The image_map in which images are stored against each supplier_id
+
+    Returns: task id
+    """
+    function = start_download_from_amazon.__name__
+    try:
+        image_map = json.loads(image_map)
+        # create this path before calling util to download
+        path_to_master_dir = settings.BASE_DIR + '/files/downloaded_images/' + proposal_id
+
+        if os.path.exists(path_to_master_dir):
+            shutil.rmtree(path_to_master_dir)
+        os.makedirs(path_to_master_dir)
+        sub_tasks = []
+        for supplier_key, image_name_list in image_map.iteritems():
+            supplier_id = supplier_key.split('_')[0]  # supplier_id and content_type_id are joined by '_'. splitting and getting first value
+            # call util function to download from amazon
+            sub_tasks.append(subtask(bulk_download_from_amazon_per_supplier, args=[path_to_master_dir + '/' + supplier_id, image_name_list]))
+
+        job = group(sub_tasks)
+        result = job.apply_async()
+        result.save()
+        return result.id
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+

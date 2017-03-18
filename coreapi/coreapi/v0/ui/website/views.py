@@ -1,9 +1,9 @@
 import math, random, string, operator
-#import tablib
 import csv
 import json
 import datetime
 import os
+import shutil
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
@@ -29,6 +29,10 @@ from openpyxl.compat import range
 import requests
 from rest_framework.parsers import JSONParser, FormParser
 from bulk_update.helper import bulk_update
+import boto
+import boto.s3
+from celery.task.sets import TaskSet, subtask
+from celery.result import GroupResult
 
 from rest_framework import permissions
 import openpyxl
@@ -4817,5 +4821,94 @@ class UserList(APIView):
             users = models.BaseUser.objects.all()
             user_serializer = website_serializers.BaseUserSerializer(users, many=True)
             return ui_utils.handle_response(class_name, data=user_serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class BulkDownloadImagesAmazon(APIView):
+    """
+    downloads images from Amazon and saves in file directory.
+    """
+    def get(self, request):
+        """
+        Args:
+            request:
+
+        Returns: The idea is store list of file names ( path ) per supplier. Call a util function to download the files from
+        Amazon for each supplier and store it in 'files' directory under folder 'downloaded_images/<proposal_id>'
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposal_id = request.query_params['proposal_id']
+            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            response = website_utils.is_campaign(proposal)
+            if not response.data['status']:
+                return response
+            # fetch all images for this proposal_id
+            inventory_images = models.InventoryActivityImage.objects.filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id).values(
+                'image_path', 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
+                'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type'
+            )
+            if not inventory_images:
+                return ui_utils.handle_response(class_name, data=errors.NO_IMAGES_FOR_THIS_PROPOSAL_MESSAGE.format(proposal_id), success=True)
+
+            # store images per supplier_id, content_type
+            image_map = {}
+            for detail in inventory_images:
+                supplier_id = detail['inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id']
+                content_type = detail['inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type']
+                image_name = detail['image_path']
+                try:
+                    reference = image_map[supplier_id + '_' + str(content_type)]
+                    reference.append(image_name)
+                except KeyError:
+                    image_map[supplier_id + '_' + str(content_type)] = [image_name]
+            # initiate the task and return the task id.
+            result = website_utils.start_download_from_amazon(proposal_id, json.dumps(image_map))
+            return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class IsTaskSuccessFull(APIView):
+    """
+    checks the status of the task
+    """
+
+    def get(self, request, task_id):
+        class_name = self.__class__.__name__
+        try:
+            result = GroupResult.restore(task_id)
+            return ui_utils.handle_response(class_name, data=result.successful(), success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ProposalImagesPath(APIView):
+    """
+    returns a path to downloaded images in zip format. The zipped file is stored in Media directory
+    This API  converts the folder present in 'files' directory into zip file and returns a path to download the file.
+    """
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+        try:
+            proposal_id = request.query_params['proposal_id']
+            task_id = request.query_params['task_id']
+            result = GroupResult.restore(task_id)
+            if not result.successful():
+                return ui_utils.handle_response(class_name, data=errors.TASK_NOT_DONE_YET_ERROR.format(task_id))
+
+            path_to_master_dir = settings.BASE_DIR + '/files/downloaded_images/' + proposal_id
+            output_path = os.path.join(settings.MEDIA_ROOT,  proposal_id)
+
+            if not os.path.exists(path_to_master_dir):
+                return ui_utils.handle_response(class_name, data=errors.PATH_DOES_NOT_EXIST.format(path_to_master_dir))
+
+            shutil.make_archive(output_path, 'zip', path_to_master_dir)
+            file_url = settings.BASE_URL + proposal_id + '.zip'
+            # we should remove the original folder as it will consume space.
+            shutil.rmtree(path_to_master_dir)
+            return ui_utils.handle_response(class_name, data=file_url, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
