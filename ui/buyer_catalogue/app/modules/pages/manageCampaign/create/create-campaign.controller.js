@@ -1,6 +1,6 @@
 angular.module('machadaloPages')
 .controller('CreateCampaignCtrl',
-    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, errorHandler) {
+    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, constants) {
 
       //start:code added to show or hide details based on user permissions
       $scope.user_code = $window.localStorage.user_code;
@@ -89,10 +89,11 @@ angular.module('machadaloPages')
           $scope.busTypes = response.data;
         })
         .catch(function onError(response){
+          swal(constants.name,constants.errorMsg,constants.error);
         });
       $scope.getBusiness = function() {
         pagesService.getBusiness($scope.bsSelect)
-        .then(function (response, status) {
+        .then(function (response) {
               $scope.model.business = response.data.business;
               $scope.model.accounts = response.data.accounts;
               $rootScope.business_id = response.data.business.business_id;
@@ -118,6 +119,9 @@ angular.module('machadaloPages')
               $scope.error = false;
               $scope.thenMsg = null;
               //End: added to persit data after refresh
+         })
+         .catch(function onError(response){
+           swal(constants.name,constants.errorMsg,constants.error);
          });
       };
 
@@ -128,7 +132,7 @@ angular.module('machadaloPages')
       };
 
       $scope.getSubTypes = function() {
-            if($scope.model.business.business_type_id == ''){
+            if($scope.model.business.business_type_id == null){
                 $scope.sub_types = {};
                 $scope.model.business.sub_type_id = "";
             }else{
@@ -136,7 +140,10 @@ angular.module('machadaloPages')
                 pagesService.getSubTypes(id)
                 .then(function (response){
                     $scope.sub_types = response.data;
-            });
+                  })
+                  .catch(function onError(response){
+                    swal(constants.name,constants.errorMsg,constants.error);
+                  });
             }
         }
 
@@ -157,9 +164,12 @@ angular.module('machadaloPages')
         $window.localStorage.sel_account_index = null;
         $scope.bsSelect = undefined;
 	    	pagesService.getAllBusinesses()
-	    	.then(function (response, status) {
+	    	.then(function (response) {
 	            $scope.businesses = response.data;
-	       });
+	       })
+         .catch(function onError(response){
+           swal(constants.name,constants.errorMsg,constants.error);
+         });
 	    };
 
       $scope.readMore = function() {
@@ -210,11 +220,13 @@ angular.module('machadaloPages')
           //start : added to persist data after refresh
 
           pagesService.getAccountProposal(sel_account_id)
-          .then(function(response, status){
+          .then(function(response){
+            console.log(response);
               $scope.account_proposals = response.data.data;
               $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
           })
-          .catch(function onError(response, status){
+          .catch(function onError(response){
+            swal(constants.name,constants.errorMsg,constants.error);
               if(typeof(response) == typeof([]))
                   $scope.proposal_error = response.error;
           });
@@ -245,8 +257,9 @@ angular.module('machadaloPages')
         $location.path('/' + proposalId + '/showproposalhistory');
       }
     	$scope.create = function() {
+        console.log($scope.model);
         pagesService.createBusinessCampaign($scope.model)
-          .then(function (response, status) {
+          .then(function (response) {
             var sub_type_id = $scope.model.business.sub_type_id;
             var type_id = $scope.model.business.business_type_id;
             // response = JSON.parse(response);
@@ -254,19 +267,19 @@ angular.module('machadaloPages')
             $scope.model.business.sub_type_id = sub_type_id;
             $scope.model.business.business_type_id = type_id;
             $scope.model.business.contacts = response.data.contacts;
-            if (status == '201') {
+            if (response.status == '201') {
                  $location.path("/manageCampaign/createAccount");
             }
             // $scope.thenMsg = "Successfully Saved"
-            swal(errorHandler.name,errorHandler.business_success,errorHandler.then);
+            swal(constants.name,constants.business_success,constants.success);
             $scope.errorMsg = undefined;
-            if (status == '200'){
+            if (response.status == '200'){
               $scope.choice = "selected";
               pagesService.setBusinessObject($scope.model.business);
               $window.localStorage.business = JSON.stringify($scope.model.business);
             }
-        }).error(function(response, status){
-            swal(errorHandler.name,errorHandler.business_error,errorHandler.error);
+        }).catch(function onError(response){
+            swal(constants.name,constants.business_error,constants.error);
              if (typeof response != 'number'){
                $scope.thenMsg = undefined;
                $scope.errorMsg = response.message;
@@ -276,24 +289,28 @@ angular.module('machadaloPages')
         };
         //Start: To upload file when upload button is clicked
         $scope.upload = function (file,proposal_id) {
+          $scope.uploadfile = false;
           var uploadUrl = constants.base_url + constants.url_base;
-          var token = $rootScope.globals.currentUser.token ;
-          Upload.upload({
-              url: uploadUrl + proposal_id + '/import-supplier-data/',
-              data: {file: file, 'username': $scope.username},
-              headers: {'Authorization': 'JWT ' + token},
-          }).then(function (response) {
-            uploadFileToAmazonServer(response.data,file);
-          }).error(function (response) {
-            $scope.uploadfile = true;
-            commonDataShare.showMessage(errorHandler.importfile_error);
-          });
+          var token = $rootScope.globals.currentUser.token;
+          if(file){
+            Upload.upload({
+                url: uploadUrl + proposal_id + '/import-supplier-data/',
+                data: {file: file, 'username': $scope.username},
+                headers: {'Authorization': 'JWT ' + token},
+            }).then(function (response) {
+              uploadFileToAmazonServer(response.data.data,file);
+            }).catch(function onError(response) {
+              swal(constants.name,constants.errorMsg,constants.error);
+              $scope.uploadfile = true;
+              // commonDataShare.showMessage(constants.importfile_error);
+            });
+          }
         };
         //End: To upload file when upload button is clicked
         //Start : function to upload files to amazon server, just provide file name and file
            var uploadFileToAmazonServer = function(file_name,file){
              Upload.upload({
-                 url: 'http://mdimages.s3.amazonaws.com/',
+                 url: constants.aws_bucket_url,
                  method : 'POST',
                  data: {
                      key: file_name, // the key to store the file on S3, could be file name or customized
@@ -305,10 +322,12 @@ angular.module('machadaloPages')
                      file: file }
                  }).then(function (response){
                       $scope.uploadfile = true;
-                      commonDataShare.showMessage(errorHandler.uploadfile_success);
-                 }).error(function(response) {
+                      swal(constants.name,constants.uploadfile_success,constants.success);
+                      // commonDataShare.showMessage(constants.uploadfile_success);
+                 }).catch(function onError(response) {
                       $scope.uploadfile = true;
-                      commonDataShare.showMessage(errorHandler.uploadfile_error);
+                      swal(constants.name,constants.uploadfile_error,constants.error);
+                      // commonDataShare.showMessage(constants.uploadfile_error);
                  });
            }
         //End : function to upload files to amazon server, just provide file name and file

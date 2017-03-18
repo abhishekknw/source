@@ -63,6 +63,8 @@ class UserViewSet(viewsets.ViewSet):
     """
     A View set for handling all the user related logic
     """
+    authentication_classes = [] 
+    permission_classes = []
 
     def retrieve(self, request, pk=None):
         """

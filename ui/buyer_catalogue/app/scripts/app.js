@@ -32,19 +32,7 @@ angular
     'uiGmapgoogle-maps',
     'ncy-angular-breadcrumb',
     'slickCarousel',
-    // ''
   ])
-  .constant('constants',{
-    base_url : 'http://localhost:8108/',
-    url_base : 'v0/ui/website/',
-    AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
-    policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
-    acl : 'public-read',
-    signature : "GsF32EZ1IFvr2ZDH3ww+tGzFvmw=",
-    content_type : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    //amazon server
-    aws_bucket_url : 'http://mdimages.s3.amazonaws.com/',
-  })
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider) {
       $stateProvider
       .state('society', {

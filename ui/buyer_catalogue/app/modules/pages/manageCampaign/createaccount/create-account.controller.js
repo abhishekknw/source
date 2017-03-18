@@ -1,7 +1,7 @@
 angular.module('machadaloPages')
 .controller('CreateAccountCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'pagesService','errorHandler',
-    function ($scope, $rootScope, $window, $location, pagesService, errorHandler) {
+    ['$scope', '$rootScope', '$window', '$location', 'pagesService','constants',
+    function ($scope, $rootScope, $window, $location, pagesService, constants) {
       $scope.model = {};
       $scope.model.account = {};
     	$scope.accounts = [];
@@ -81,13 +81,16 @@ angular.module('machadaloPages')
 
     	$scope.getAccount = function() {
     		pagesService.getAccount($scope.selectAcc)
-	    	.success(function (response, status) {
-	            $scope.model.account = response.account;
-              $scope.model.business = response.business;
-              $scope.model.business.contacts = response.business.contacts;
-              $scope.model.account.business_id = response.business.business_id.toString();
+	    	.then(function onSuccess(response) {
+	            $scope.model.account = response.data.account;
+              $scope.model.business = response.data.business;
+              $scope.model.business.contacts = response.data.business.contacts;
+              $scope.model.account.business_id = response.data.business.business_id.toString();
 	            $scope.choice = "selected";
-	       });
+	       })
+         .catch(function onError(response){
+           swal(constants.name,constants.errorMsg,constants.error);
+         });
       };
 
       var accId = pagesService.getAccountId();
@@ -175,26 +178,25 @@ angular.module('machadaloPages')
 
     	$scope.create = function() {
             pagesService.createAccountCampaign($scope.model)
-            .success(function (response, status) {
+            .then(function onSuccess(response) {
 
               console.log("\n\nresponse is : ");
 
               var business_id = $scope.model.account.business_id
 
-              if (status == '200'){
+              if (response.status == '200'){
                 pagesService.setBusinessId(business_id);
-                $scope.model.account = response.account;
-                $scope.model.account.contacts = response.contacts;
+                $scope.model.account = response.data.account;
+                $scope.model.account.contacts = response.data.contacts;
                 $scope.model.account.business_id = business_id;
                 $location.path("/manageCampaign/create");
                 // $scope.successMsg = "Successfully Saved"
                 $scope.errorMsg = undefined;
                 $scope.choice = "selected";
-                swal(errorHandler.name,errorHandler.account_success,errorHandler.success);
-
+                swal(constants.name,constants.account_success,constants.success);
               }
-          }).error(function(response, status){
-              swal(errorHandler.name,errorHandler.account_error,errorHandler.error);
+          }).catch(function onError(response){
+              swal(constants.name,constants.account_error,constants.error);
             // status = 406 comes from backend if some information is missing with info in response.message
              // response = response ? JSON.parse(response) : {}
              // console.log(response.message);

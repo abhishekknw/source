@@ -216,6 +216,7 @@ if($scope.user_code == 'agency')
                       $scope.society_markers = [];
               })
               .catch(function onError(response, status){
+                swal(constants.name,constants.errorMsg,constants.error);
 
               });
             }catch(error){
@@ -401,7 +402,9 @@ if($scope.user_code == 'agency')
             };
             $scope.no_of_tenants = angular.copy($scope.flat_count);
             //$scope.no_of_tenants.options.ceil = integer value;  //need to uncomment to fix other ceil value
-            $scope.is_standalone_society;
+            $scope.is_standalone_society= {
+              selected :false,
+            };
             $scope.space_inventory_type = [
                 {name : 'Poster(PO)',  code : 'PO',   selected : false },
                 {name : 'Standee(ST)', code : 'ST',   selected : false },
@@ -468,6 +471,7 @@ if($scope.user_code == 'agency')
                 $scope.amenities = response.data.data;
               })
               .catch(function onError(response, status){
+                swal(constants.name,constants.amenity_error,constants.error);
               });
             //End:   api call to get amenity filters from database
 
@@ -493,7 +497,6 @@ if($scope.user_code == 'agency')
               quantity_type : $scope.space_quantity_type,
               employee_count : $scope.employee_count,
             };
-            console.log($scope.RS_filters);
           }catch(error){
             console.log(error.message);
           }
@@ -645,6 +648,7 @@ if($scope.user_code == 'agency')
               }
             })
               .catch(function onError(response, status){
+                swal(constants.name,constants.errorMsg,constants.error);
                 if(status == -1)
                   console.log(error.message);
               });
@@ -721,8 +725,9 @@ if($scope.user_code == 'agency')
                 }
               })
             .catch(function onError(response, status){
+              swal(constants.name,constants.errorMsg,constants.error);
               if(status == -1)
-                console.log(errorHandler.server_connection_error);
+                console.log(constants.server_connection_error);
               $scope.get_spaces_error = response.message;
               console.log("Error response : ",response);
             });
@@ -874,9 +879,7 @@ if($scope.user_code == 'agency')
         }
       }
   //Start:code for society filters
-  $scope.is_standalone_society = false;
   $scope.societyFilters = function(value){
-    console.log(value);
     //Start : Code added to filter multiple centers on gridview
    try{
     promises = [];
@@ -978,7 +981,7 @@ if($scope.user_code == 'agency')
       if($scope.current_center.RS_filters.possession_year.max != $scope.current_center.RS_filters.possession_year.options.floor){
         filters.specific_filters['possession_year'] = $scope.current_center.RS_filters.possession_year;
       }
-      if(value){
+      if($scope.is_standalone_society.selected == true){
         filters['is_standalone_society'] = true;
       }
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
@@ -988,7 +991,6 @@ if($scope.user_code == 'agency')
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
       makeFilters($scope.current_center.RS_filters.amenities,filters.amenities);
       makeFlatTypeFilters($scope.current_center.RS_filters.flat_type,filters.specific_filters.flat_type);
-      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
     }catch(error){
@@ -1173,6 +1175,7 @@ if($scope.user_code == 'agency')
                     $scope.checkFilters = false;
                 })
                 .catch(function onError(response, status){
+                  swal(constants.name,constants.errorMsg,constants.error);
                     console.log("Error Happened while filtering");
                     $scope.checkFilters = false;
                 });
@@ -1310,6 +1313,7 @@ if($scope.user_code == 'agency')
         })
         .catch(function onError(response, status){
             console.log("Error Happened while searching");
+            swal(constants.name,constants.errorMsg,constants.error);
         });
       }
       else {
@@ -1473,11 +1477,11 @@ if($scope.user_code == 'agency')
               }
          }).then(function onSuccess(response){
            $scope.requestProposal = true;
-           swal(errorHandler.name,errorHandler.request_proposal_success,errorHandler.success);
+           swal(constants.name,constants.request_proposal_success,constants.success);
               $scope.checkFileExport = false;
          }).catch(function onError(response){
            $scope.requestProposal = true;
-              swal(errorHandler.name,errorHandler.request_proposal_error,errorHandler.error);
+              swal(constants.name,constants.request_proposal_error,constants.error);
               $scope.checkFileExport = false;
          });
        }catch(error){
@@ -1490,7 +1494,7 @@ if($scope.user_code == 'agency')
    var uploadFileToAmazonServer = function(file_name,file){
     try{
      Upload.upload({
-         url: 'http://mdimages.s3.amazonaws.com/',
+         url: constants.aws_bucket_url,
          method : 'POST',
          data: {
              key: file_name, // the key to store the file on S3, could be file name or customized
@@ -1501,9 +1505,9 @@ if($scope.user_code == 'agency')
              "Content-Type": constants.content_type,// content type of the file (NotEmpty)
              file: file }
          }).then(function onSuccess(response){
-              swal(errorHandler.name,errorHandler.uploadfile_success,errorHandler.success);
+              swal(constants.name,constants.uploadfile_success,constants.success);
          }).catch(function onError(response) {
-              swal(errorHandler.name,errorHandler.uploadfile_error,errorHandler.error);
+              swal(constants.name,constants.uploadfile_error,constants.error);
          });
        }catch(error){
          $scope.requestProposal = true;
@@ -1526,7 +1530,7 @@ if($scope.user_code == 'agency')
           $scope.requestProposal = true;
         }).catch(function onError(response) {
           $scope.requestProposal = true;
-            swal(errorHandler.name,errorHandler.importfile_error,errorHandler.error);
+            swal(constants.name,constants.importfile_error,constants.error);
         });
       }catch(error){
         $scope.requestProposal = true;
@@ -1543,9 +1547,9 @@ if($scope.user_code == 'agency')
       mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
         .then(function onSuccess(response, status){
           // alert("Saved Successfully");
-          swal(errorHandler.name,errorHandler.save_success,errorHandler.success);
+          swal(constants.name,constants.save_success,constants.success);
         }).catch(function(response, status){
-          swal(errorHandler.name,errorHandler.save_error,errorHandler.error);
+          swal(constants.name,constants.save_error,constants.error);
           // alert("Error Occured");
       });//
     }catch(error){
@@ -1566,7 +1570,7 @@ if($scope.user_code == 'agency')
         .then(function onSuccess(response, status){
 
         }).catch(function onError(response, status){
-          swal(errorHandler.name,errorHandler.supplier_status_error,errorHandler.error);
+          swal(constants.name,constants.supplier_status_error,constants.error);
       });
     }catch(error){
       console.log(error.message);
@@ -1698,6 +1702,7 @@ $scope.getSocietyDetails = function(supplier,center,index){
 
      }).catch(function onError(response,status){
          console.log("error ",response.data.error);
+         swal(constants.name,constants.errorMsg,constants.error);
      });
  }
 
