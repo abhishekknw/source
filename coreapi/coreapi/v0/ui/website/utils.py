@@ -10,6 +10,8 @@ from string import Template
 from operator import itemgetter
 import json
 import shutil
+import string
+import random
 
 
 from django.db import transaction
@@ -4967,3 +4969,10 @@ def start_download_from_amazon(proposal_id, image_map):
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
+
+def get_random_pattern(size=website_constants.pattern_length, chars=string.ascii_uppercase + string.digits):
+    function = get_random_pattern.__name__
+    try:
+        return ''.join(random.choice(chars) for _ in range(size))
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))

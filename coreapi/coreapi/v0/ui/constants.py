@@ -69,7 +69,8 @@ permission_type_read = 'read'
 permission_type_update = 'update'
 permission_type_delete = 'delete'
 
-
+# Guest User code
+guest_user_code = '99'
 
 
 

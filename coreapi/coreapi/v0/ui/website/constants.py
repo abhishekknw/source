@@ -659,3 +659,6 @@ standalone_society_config = {
     'flat_count': 70,
     'amenity_count': 3
 }
+
+# random pattern length
+pattern_length = 6

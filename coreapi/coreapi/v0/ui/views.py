@@ -15,7 +15,6 @@ from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 from django.contrib.auth import authenticate, login
 
-
 # third party imports
 import requests
 from rest_framework.pagination import PageNumberPagination
@@ -54,7 +53,7 @@ from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas, BaseUs
 from constants import keys, decision
 import constants as ui_constants
 from website.utils import save_price_mapping_default
-from website.serializers import BaseUserSerializer
+from website.serializers import BaseUserSerializer, GuestUserSerializer
 import v0.models as models
 import v0.errors as errors
 
@@ -2989,5 +2988,40 @@ class BusShelterSearchView(APIView):
             return paginator.get_paginated_response(serializer.data)
         except SupplierTypeBusShelter.DoesNotExist as e:
             return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class GuestUser(APIView):
+    """
+    creates a guest user with the details. The reason this api is written despite having a UserViewSet to manage users is
+    that, the post api will get or create user from username field. The ViewSet does not return the password. but we need
+    to in case of guest user.
+    """
+    authentication_classes = []  # we do not need authentication in this case
+    permission_classes = []  # we do not need authentication in this case
+
+    def post(self, request):
+        """
+        POST api creates a guest user. All guest users have code 99. The random password is also returned which makes possible
+        to authenticate this user later
+        """
+        class_name = self.__class__.__name__
+        try:
+            username = request.data['username']
+            mobile = request.data['mobile']
+            first_name = request.data['first_name']
+            user, is_created = models.BaseUser.objects.get_or_create(username=username)
+            # if the instance is created, only then you set the password.
+            if is_created:
+                password = website_utils.get_random_pattern()
+                user.password = password  # storing raw password for the guest user this way because we need to send this password back.
+
+            user.mobile = mobile
+            user.first_name = first_name
+            user.user_code = ui_constants.guest_user_code
+            user.save()
+            serializer = GuestUserSerializer(user)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)

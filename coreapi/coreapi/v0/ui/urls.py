@@ -73,6 +73,7 @@ urlpatterns = [
     url(r'^(?P<id>[A-Z_a-z0-9]+)/bus-shelter/$', views.BusShelter.as_view()),
 
     url(r'^supplier/(?P<id>[A-Z_a-z0-9]+)/image_details/$', views.SupplierImageDetails.as_view()),
+    url(r'^guest-user/$', views.GuestUser.as_view()),
 
 ]
 
