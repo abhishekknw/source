@@ -84,7 +84,7 @@ class GuestUserSerializer(ModelSerializer):
 
     class Meta:
         model = BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'password', 'mobile')
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile')
 
 
 class BaseUserSerializer(ModelSerializer):

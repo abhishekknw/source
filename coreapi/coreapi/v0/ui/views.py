@@ -3012,16 +3012,20 @@ class GuestUser(APIView):
             mobile = request.data['mobile']
             first_name = request.data['first_name']
             user, is_created = models.BaseUser.objects.get_or_create(username=username)
-            # if the instance is created, only then you set the password.
-            if is_created:
-                password = website_utils.get_random_pattern()
-                user.password = password  # storing raw password for the guest user this way because we need to send this password back.
-
+            password = website_utils.get_random_pattern()
+            user.set_password(password)
             user.mobile = mobile
             user.first_name = first_name
             user.user_code = ui_constants.guest_user_code
             user.save()
-            serializer = GuestUserSerializer(user)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            data = {
+                'id': user.id,
+                'first_name': user.first_name,
+                'mobile': user.mobile,
+                'user_code': user.user_code,
+                'password': password,
+                'username': user.username
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
