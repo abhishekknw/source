@@ -1,8 +1,8 @@
 angular.module('catalogueApp')
 
-.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService','commonDataShare','errorHandler',
+.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService','commonDataShare','constants',
 
-    function ($scope, $rootScope, $window, $location, opsDashBoardService, commonDataShare,errorHandler) {
+    function ($scope, $rootScope, $window, $location, opsDashBoardService, commonDataShare,constants) {
     	$scope.proposals = [];
       $scope.reason;
       $scope.bucket_url = constants.aws_bucket_url;
@@ -39,34 +39,37 @@ angular.module('catalogueApp')
 
   var getProposalDetails = function(){
     opsDashBoardService.getProposalDetails()
-    	.success(function(response, status){
-    		$scope.proposals = response.data;
-        $scope.loading = response;
+    	.then(function onSuccess(response){
+    		$scope.proposals = response.data.data;
+        $scope.loading = response.data;
     	})
-    	.error(function(response, status){
-    		console.log("error occured", status);
+    	.catch(function onError(response){
+    		console.log("error occured", response);
+        swal(constants.name,constants.errorMsg,constants.error);
     	});
     }
 
   var getCampaignDetails = function(){
     opsDashBoardService.getCampaignDetails($rootScope.globals.currentUser.user_id)
-    	.success(function(response, status){
+    	.then(function onSuccess(response){
         console.log(response);
-    		$scope.campaignData = response.data;
+    		$scope.campaignData = response.data.data;
     	})
-    	.error(function(response, status){
-    		console.log("error occured", status);
+    	.catch(function onError(response){
+    		console.log("error occured", response);
+        swal(constants.name,constants.errorMsg,constants.error);
     	});
     }
 
     var getUsersList = function(){
       commonDataShare.getUsersList()
-        .success(function(response, status){
+        .then(function onSuccess(response){
           console.log(response);
-      		$scope.userList = response.data;
+      		$scope.userList = response.data.data;
       	})
-      	.error(function(response, status){
-      		console.log("error occured", status);
+      	.catch(function onError(response){
+      		console.log("error occured", response);
+          swal(constants.name,constants.errorMsg,constants.error);
       	});
     }
     var init = function(){
@@ -85,20 +88,20 @@ angular.module('catalogueApp')
         to:$scope.currentProposal.user.email,
       };
       opsDashBoardService.sendMail(email_Data)
-      .success(function(response, status){
+      .then(function onSuccess(response){
         // alert('BD team has been notified');
         $scope.loadSpinner = true;
         $('#onHoldModal').modal('hide');
         $('#declineModal').modal('hide');
 
-        swal(errorHandler.name,errorHandler.onhold_success,errorHandler.success);
+        swal(constants.name,constants.onhold_success,constants.success);
     	})
-    	.error(function(response, status){
+    	.catch(function onError(response){
         $scope.loadSpinner = true;
         $('#onHoldModal').modal('hide');
         $('#declineModal').modal('hide');
-        swal(errorHandler.name,errorHandler.onhold_error,errorHandler.error);
-    		console.log("error occured", status);
+        swal(constants.name,constants.onhold_error,constants.error);
+    		console.log("error occured", response);
     	});
       $scope.reason = "";
    }
@@ -106,10 +109,10 @@ angular.module('catalogueApp')
     $scope.updateCampaign = function(proposal){
         $scope.currentProposal = proposal;
       opsDashBoardService.updateProposalDetails(proposal.proposal.proposal_id,proposal.proposal)
-      .success(function(response, status){
+      .then(function onSuccess(response){
     	})
-    	.error(function(response, status){
-    		console.log("error occured", status);
+    	.catch(function onError(response){
+    		console.log("error occured", response);
     	});
     }
 
@@ -117,16 +120,16 @@ angular.module('catalogueApp')
       $scope.loadSpinner = false;
       $scope.currentProposal = proposal;
       opsDashBoardService.convertProposalToCampaign(proposal.proposal.proposal_id, proposal.proposal)
-          .success(function(response, status){
+          .then(function onSuccess(response){
             console.log(response);
             $scope.loadSpinner = true;
-              if(status == 200){
+              if(response.status == 200){
                 $("#assignModal").modal('show');
               }
-    	})
-          .error(function(response, status){
+    	      })
+          .catch(function(response){
             $scope.loadSpinner = true;
-            swal(errorHandler.name,errorHandler.accept_proposal_error,errorHandler.error);
+            swal(constants.name,constants.accept_proposal_error,constants.error);
     	  	    console.log("error occured", status);
               console.log(response);
     	});
@@ -136,12 +139,12 @@ angular.module('catalogueApp')
       console.log(proposal);
       $scope.currentProposal = proposal;
       opsDashBoardService.convertCampaignToProposal(proposal.proposal.proposal_id, proposal.proposal)
-          .success(function(response, status){
+          .then(function onSuccess(response){
             $("#declineModal").modal('show');
               console.table(response);
     	})
-          .error(function(response, status){
-            swal(errorHandler.name,errorHandler.decline_proposal_error,errorHandler.error);
+          .catch(function onError(response){
+            swal(constants.name,constants.decline_proposal_error,constants.error);
     	  	    console.log("error occured", status);
     	});
     }
@@ -157,15 +160,15 @@ angular.module('catalogueApp')
         campaign_id:$scope.currentProposal.proposal.proposal_id
       };
       opsDashBoardService.saveAssignment(data)
-          .success(function(response, status){
+          .then(function onSuccess(response){
               console.table(response);
               $('#assignModal').modal('hide');
-              swal(errorHandler.name,errorHandler.assign_user_success,errorHandler.success);
+              swal(constants.name,constants.assign_user_success,constants.success);
               getCampaignDetails();
     	})
-          .error(function(response, status){
+          .catch(function onError(response){
             $('#assignModal').modal('hide');
-            swal(errorHandler.name,errorHandler.assign_user_error,errorHandler.error);
+            swal(constants.name,constants.assign_user_error,constants.error);
     	  	    console.log("error occured", status);
     	});
     }
