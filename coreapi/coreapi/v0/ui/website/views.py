@@ -4879,7 +4879,8 @@ class IsTaskSuccessFull(APIView):
         class_name = self.__class__.__name__
         try:
             result = GroupResult.restore(task_id)
-            return ui_utils.handle_response(class_name, data=result.successful(), success=True)
+            # 'ready' means have all subtask completed ? 'status' means all substask were successful ?
+            return ui_utils.handle_response(class_name, data={'ready': result.ready(), 'status': result.successful()}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
