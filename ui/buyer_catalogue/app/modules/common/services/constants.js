@@ -53,6 +53,7 @@ angular
     //opsExecution
     reAssign_success : 'Reassign is Successful',
     reAssign_error : 'Error occured while reassigning, Please Try again',
+    images_download_error : 'Download Failed, Retry later',
     //createAccount
     account_success : 'Account Details saved successfully',
     account_error : 'Error occured in saving account details',

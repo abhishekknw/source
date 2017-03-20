@@ -23,7 +23,7 @@ angular.module('machadaloPages')
           var userData = {
             first_name : $scope.name,
             email : $scope.email,
-            user_code : 10,
+            user_code : 99,
             username : $scope.email,
             password : $scope.mobile_no,
           }
@@ -35,7 +35,7 @@ angular.module('machadaloPages')
              AuthService.Login(username, password, function(response) {
                  if(response.logged_in) {
                      console.log("hello");
-                     $location.path("/guestHomePage");              
+                     $location.path("/guestHomePage");
                  } else {
                      $scope.error = response.message;
                  }

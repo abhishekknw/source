@@ -1,9 +1,9 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','errorHandler',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,errorHandler) {
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','constants',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants) {
   $scope.campaign_id = $stateParams.proposal_id;
-  $scope.positiveNoError = errorHandler.positive_number_error;
+  $scope.positiveNoError = constants.positive_number_error;
  	$scope.headings = [
         {header : 'Supplier Name'},
         {header : 'Area'},
@@ -68,14 +68,14 @@ angular.module('catalogueApp')
     };
 
     releaseCampaignService.getCampaignReleaseDetails($scope.campaign_id)
-    	.success(function(response, status){
-    		$scope.releaseDetails = response.data;
+    	.then(function onSuccess(response){
+    		$scope.releaseDetails = response.data.data;
         console.log($scope.releaseDetails);
         setDataToModel($scope.releaseDetails.shortlisted_suppliers);
             $scope.loading = response;
     	})
-    	.error(function(response, status){
-    		console.log("error occured", status);
+    	.catch(function onError(response){
+    		console.log("error occured", response.status);
     	});
 
       var setDataToModel = function(suppliers){
@@ -119,12 +119,12 @@ angular.module('catalogueApp')
     }
     $scope.updateData = function(){
       releaseCampaignService.updateAuditReleasePlanDetails($scope.campaign_id,$scope.releaseDetails.shortlisted_suppliers)
-      .success(function(response, status){
-        swal(errorHandler.name,errorHandler.updateData_success,errorHandler.success);
+      .then(function onSuccess(response){
+        swal(constants.name,constants.updateData_success,constants.success);
       })
-      .error(function(response, status){
-        swal(errorHandler.name,errorHandler.updateData_error,errorHandler.error);
-        console.log("error occured", status);
+      .then(function onError(response){
+        swal(constants.name,constants.updateData_error,constants.error);
+        console.log("error occured", response.status);
       });
     }
 }]);//Controller function ends here

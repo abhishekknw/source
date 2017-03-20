@@ -1,8 +1,9 @@
 angular.module('catalogueApp')
 .controller('OpsExecutionPlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare','errorHandler',
-    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare,errorHandler) {
+    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare','constants','$timeout',
+    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare,constants,$timeout) {
       $scope.campaign_id = $stateParams.proposal_id;
+      var sleepTime = 0;
       $scope.headings = [
         {header : 'Supplier Id'},
         {header : 'Inventory Id'},
@@ -46,27 +47,27 @@ angular.module('catalogueApp')
       $scope.altInputFormats = ['M!/d!/yyyy'];
       var getOpsExecutionImageDetails = function(){
         opsExecutionPlanService.getOpsExecutionImageDetails($scope.campaign_id)
-        	.success(function(response, status){
-        		$scope.campaignData = response.data;
+        	.then(function onSuccess(response){
+        		$scope.campaignData = response.data.data;
             createList();
             console.log('vidhi', $scope.campaignData);
             if($scope.campaignData.length == 0)
               $scope.hideData = false;//change to true doing for testing
-                $scope.loading = response;
+                $scope.loading = response.data;
         	})
-        	.error(function(response, status){
+        	.catch(function onError(response){
             $scope.hideData = true;
-        		console.log("error occured", status);
+        		console.log("error occured", response);
         	});
         }
         var getUsersList = function(){
           commonDataShare.getUsersList()
-            .success(function(response, status){
+            .then(function onSuccess(response){
               console.log(response);
-              $scope.userList = response.data;
+              $scope.userList = response.data.data;
             })
-            .error(function(response, status){
-              console.log("error occured", status);
+            .catch(function onError(response){
+              console.log("error occured", response);
             });
         }
         var init = function(){
@@ -140,11 +141,11 @@ angular.module('catalogueApp')
       }
       $scope.getSummary = function(){
         opsExecutionPlanService.getSummaryDetails($scope.campaign_id)
-        .success(function(response, status){
+        .then(function onSuccess(response){
           $("#summaryModal").modal('show');
-          $scope.summaryData = response.data;
+          $scope.summaryData = response.data.data;
         })
-        .error(function(response, status){
+        .catch(function onError(response){
           console.log(response);
         });
       }
@@ -170,17 +171,54 @@ angular.module('catalogueApp')
       $scope.saveReAssignedActivities = function(){
         reAssignActivityData();
         opsExecutionPlanService.saveReAssignedActivities($scope.reAssignActivityList)
-        .success(function(response, status){
+        .then(function onSuccess(response){
           $scope.campaignDataList = [];
           getOpsExecutionImageDetails();
           $('#reAssignModal').modal('hide');
-          swal(errorHandler.name,errorHandler.reAssign_success,errorHandler.success);
+          swal(constants.name,constants.reAssign_success,constants.success);
 
         })
-        .error(function(response, status){
+        .then(function onError(response){
           $('#reAssignModal').modal('hide');
-          swal(errorHandler.name,errorHandler.reAssign_error,errorHandler.error);
+          swal(constants.name,constants.reAssign_error,constants.error);
           console.log(response);
         });
       }
+    $scope.downloadImages = function(){
+      $scope.buttonDisable = true;
+      opsExecutionPlanService.downloadImages($stateParams.proposal_id)
+      .then(function onSuccess(response){
+        console.log(response);
+        $scope.taskId = response.data.data;
+        downloadInProgress();
+      }).catch(function onError(response){
+        console.log("Error occured", response.status);
+      })
+    }
+    function downloadInProgress(){
+      opsExecutionPlanService.downloadInProgress($scope.taskId)
+      .then(function onSuccess(response){
+        console.log(response);
+        // $scope.progress = response.progress+"%";
+        sleepTime = 2 * sleepTime + 5000;
+        if(response.data.data.ready != true){
+           $timeout(downloadInProgress,10000); // This will perform async
+        }
+        else if(response.data.data.status == true){
+          opsExecutionPlanService.finishDownload($scope.taskId,$stateParams.proposal_id)
+          .then(function onSuccess(response){
+            console.log(response);
+             $window.open(response.data.data, '_blank');
+             $scope.buttonDisable = false;
+          }).catch(function onError(response){
+            console.log(response);
+          });
+        }
+        else {
+          swal(constants.name,constants.images_download_error,constants.error);
+        }
+      }).catch(function onError(response){
+        console.log(response);
+      });
+    }
 }]);

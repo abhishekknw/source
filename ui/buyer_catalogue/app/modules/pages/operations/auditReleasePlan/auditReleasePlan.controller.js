@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('AuditReleasePlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare','errorHandler',
-    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare, errorHandler) {
+    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare','constants',
+    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare, constants) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.headings = [
         {header : 'Phase'},
@@ -59,12 +59,12 @@ angular.module('catalogueApp')
       //get user list
       var getUsersList = function(){
         commonDataShare.getUsersList()
-          .success(function(response, status){
+          .then(function onSuccess(response){
             console.log(response);
-            $scope.userList = response.data;
+            $scope.userList = response.data.data;
           })
-          .error(function(response, status){
-            console.log("error occured", status);
+          .catch(function onError(response){
+            console.log("error occured", response.status);
           });
       }
       init();
@@ -72,14 +72,14 @@ angular.module('catalogueApp')
       //initial call to get release Data
       function getCampaignReleaseDetails(){
       auditReleasePlanService.getCampaignReleaseDetails($scope.campaign_id)
-      	.success(function(response, status){
+      	.then(function onSuccess(response){
           console.log(response);
-      		$scope.releaseDetails = response.data;
+      		$scope.releaseDetails = response.data.data;
           setDataToModel($scope.releaseDetails.shortlisted_suppliers);
-              $scope.loading = response;
+              $scope.loading = response.data;
       	})
-      	.error(function(response, status){
-      		console.log("error occured", status);
+      	.then(function onError(response){
+      		console.log("error occured", response.status);
       	});
       }
       // getCampaignReleaseDetails();
@@ -149,14 +149,14 @@ angular.module('catalogueApp')
 
       $scope.updateData = function(){
         auditReleasePlanService.updateAuditReleasePlanDetails($scope.campaign_id,$scope.releaseDetails.shortlisted_suppliers)
-        .success(function(response, status){
+        .then(function onSuccess(response){
           getCampaignReleaseDetails();
           $scope.resetData();
-          swal(errorHandler.name,errorHandler.updateData_success,errorHandler.success);
+          swal(constants.name,constants.updateData_success,constants.success);
       	})
-      	.error(function(response, status){
-          swal(errorHandler.name,errorHandler.updateData_error,errorHandler.error);
-      		console.log("error occured", status);
+      	.catch(function onError(response){
+          swal(constants.name,constants.updateData_error,constants.error);
+      		console.log("error occured", response.status);
       	});
       }
 
@@ -192,11 +192,11 @@ angular.module('catalogueApp')
     $scope.saveUserForActivity = function(){
       console.log($scope.inventoryList);
       auditReleasePlanService.saveUser($scope.inventoryList)
-      .success(function(response, status){
+      .then(function onSuccess(response){
         getCampaignReleaseDetails();
       })
-      .error(function(response, status){
-        console.log("error occured", status);
+      .catch(function onError(response){
+        console.log("error occured", response.status);
       });
     }
 
@@ -245,16 +245,16 @@ angular.module('catalogueApp')
       //below function creates complex request structure for data
       editActivityDates();
       auditReleasePlanService.saveActivityDetails($scope.requestaActivityData)
-      .success(function(response, status){
+      .then(function onSuccess(response){
         getCampaignReleaseDetails();
         $scope.resetData();
         $('#manageDatesModal').modal('hide');
-        swal(errorHandler.name,errorHandler.inventory_date_success,errorHandler.success);
+        swal(constants.name,constants.inventory_date_success,constants.success);
       })
-      .error(function(response, status){
+      .catch(function onError(response){
         $('#manageDatesModal').modal('hide');
-        swal(errorHandler.name,errorHandler.inventory_date_error,errorHandler.error);
-        console.log("error occured", status);
+        swal(constants.name,constants.inventory_date_error,constants.error);
+        console.log("error occured", response.status);
       });
     }
      $scope.getActivityDates = function(supplier){

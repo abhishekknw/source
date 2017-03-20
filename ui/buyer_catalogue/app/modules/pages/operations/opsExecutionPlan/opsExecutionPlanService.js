@@ -26,5 +26,20 @@ angular.module('catalogueApp')
      return machadaloHttp.post(url,data);
    }
 
+   opsExecutionPlanService.downloadImages = function(proposal_id){
+     var url = url_base + "bulk-download-images-amazon/?proposal_id=" + proposal_id;
+     return machadaloHttp.get(url);
+   }
+
+   opsExecutionPlanService.downloadInProgress = function(taskId){
+     var url = url_base + "task/is-task-successfull/" + taskId + "/";
+     return machadaloHttp.get(url);
+   }
+
+   opsExecutionPlanService.finishDownload = function(taskId,proposal_id){
+     var url = url_base + "proposal-images-path/?task_id=" + taskId + "&proposal_id=" + proposal_id;
+     return machadaloHttp.get(url);
+   }
+
    return opsExecutionPlanService;
 }]);
