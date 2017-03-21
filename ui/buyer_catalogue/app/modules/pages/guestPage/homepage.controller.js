@@ -4,6 +4,7 @@ angular.module('machadaloPages')
     function ($scope, $rootScope, $window, $location, pagesService, constants, createProposalService,pagesService) {
       var $jq = jQuery.noConflict();
       var $jp = jQuery.noConflict();
+      $('.modal-backdrop').modal('hide');
       $scope.model = {};
       $scope.proposalRequest = {};
       $scope.address = {};

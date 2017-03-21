@@ -36,6 +36,9 @@ angular.module('machadaloPages')
              AuthService.Login(username, password, function(response) {
                  if(response.logged_in) {
                      console.log("hello");
+                     $('#guestModal').modal('hide');
+                      $('body').removeClass('modal-open');
+                      $('.modal-backdrop').remove();
                      $location.path("/guestHomePage");
                  } else {
                      $scope.error = response.message;
