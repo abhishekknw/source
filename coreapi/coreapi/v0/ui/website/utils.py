@@ -1211,6 +1211,9 @@ def save_center_data(proposal_data, user):
                     return geo_response
                 center['latitude'], center['longitude'] = geo_response.data['data']
                 center['user'] = user.id
+                # set pincode to zero if there isn't any
+                if not center['pincode']:
+                    center['pincode'] = 0
 
                 if 'id' in center_info:
                     # means an existing center was updated

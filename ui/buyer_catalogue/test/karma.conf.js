@@ -50,6 +50,8 @@ module.exports = function(config) {
       'bower_components/google-maps-utility-library-v3-keydragzoom/dist/keydragzoom.js',
       'bower_components/js-rich-marker/src/richmarker.js',
       'bower_components/angular-google-maps/dist/angular-google-maps.js',
+      'bower_components/angular-breadcrumb/release/angular-breadcrumb.js',
+      'bower_components/bootstrap-sweetalert/dist/sweetalert.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",
