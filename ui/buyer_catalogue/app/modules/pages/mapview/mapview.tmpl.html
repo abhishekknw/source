@@ -8,7 +8,7 @@
 <!-- Start: Center and Radius Detail Section -->
 <div class="navbar-default nav-subtab space">
   <div class="table">
-    <div class="breadcrumb" ncy-breadcrumb></div>
+    <div ng-if="!isGuestUser" class="breadcrumb" ncy-breadcrumb></div>
     <div class="row">
       <div class="col-md-3 aligndropdown">Select Advertising Location
         <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
@@ -458,7 +458,7 @@
           <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()">Add Suppliers</button>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "exportData()" ng-loading="requestProposal" ng-disabled = "checkFileExport">Request Proposal</button>
           <button class="btn btn-danger active" ng-show="show_societies" ng-click = "saveData()" >Save</button>
-          <button ng-hide="hideData" class="btn btn-danger active" ngf-select="upload($file)">Upload</button>
+          <button ng-hide="hideData || isGuestUser" class="btn btn-danger active" ngf-select="upload($file)">Upload</button>
         </div>
         </div>
     </div><!-- row div ends here-->

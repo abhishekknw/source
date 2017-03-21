@@ -263,7 +263,7 @@ $(document).ready(function(){
 									</select>
                     <input type="text" ng-model="locality" googleplace class="form-control left " style="width:121px"/>
 									</select>
-                    <select class="form-control left " style="width:141px" ng-model="model.business.business_type_id" ng-click="getSubTypes(model.business.business_type_id)">
+                    <select class="form-control left " style="width:141px" ng-model="model.business.business_type_id" ng-change="getSubTypes(model.business.business_type_id)">
   									  <option disabled selected>Select Business Type</option>
                       <option  ng-repeat="business in businessTypes"  value="{{business.id}}"  required>{{business.business_type}}</option>
 									</select>

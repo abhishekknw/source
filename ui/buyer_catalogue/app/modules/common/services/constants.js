@@ -27,7 +27,7 @@ angular
     uploadfile_success : 'File Uploaded successfully',
     uploadfile_error  : 'Error occured, Please check your internet connection and Try again',
     request_proposal_success : 'Request for proposal is sent, Machadalo team will contact you soon',
-    request_proposal_error : 'Error occured, Please check your internet connection and Try again',
+    request_proposal_error : 'Error occured, Please check your internet connection or Valid Email Id is not provided',
     save_proposal_success : 'Your proposal is saved successfully',
     supplier_status_error : 'Sorry, There is some error in saving supplier status',
     amenity_error : 'Error in getting Amenities',

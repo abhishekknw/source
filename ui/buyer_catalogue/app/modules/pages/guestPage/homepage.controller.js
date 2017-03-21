@@ -83,13 +83,11 @@ angular.module('machadaloPages')
       $scope.$on('place_changed', function (e, place) {
         $scope.address = {};
           // do something with place
-        console.log(place.address_components);
         for (var i = 0; i < place.address_components.length; i++) {
          var addressType = place.address_components[i].types[0];
          if (componentForm[addressType]) {
            var val = place.address_components[i][componentForm[addressType]];
            $scope.address[addressType] = val;
-           console.log(val);
          }
        }
        try{
@@ -116,7 +114,6 @@ angular.module('machadaloPages')
         // $scope.model.business.name="MyBusiness";
         $scope.model.business.name = calculateBusinessName();
         $scope.model.business['contacts'] = {};
-        console.log($scope.model);
         pagesService.createBusinessCampaign($scope.model)
           .then(function onSuccess(response) {
             $scope.model = response.data;
@@ -129,15 +126,12 @@ angular.module('machadaloPages')
             $scope.model.account.name = calculateAccountName();
             pagesService.createAccountCampaign($scope.model)
             .then(function onSuccess(response) {
-              console.log(response);
               $scope.account_id = response.data.account.account_id;
               $scope.proposalRequest.business_id = $scope.business_id;
               $scope.proposalRequest.centers[0].center.codes.push($scope.supplier_type_code.code);
-              console.log($scope.proposalRequest);
               createProposalService.saveInitialProposal($scope.account_id, $scope.proposalRequest)
               .then(function onSuccess(response){
                 $location.path('/' + response.data.data + '/mapview');
-                console.log(response);
               }).catch(function onError(response){
                 console.log("Error in creating proposal");
               })
@@ -146,18 +140,15 @@ angular.module('machadaloPages')
               console.log(response);
             });
 
-            console.log(response);
           }).catch(function onError(response){
             console.log(response);
           });
       }
       var calculateBusinessName = function(){
-        console.log($rootScope);
         var name = $rootScope.globals.currentUser.name + 'business' + Math.random().toString(36).substring(2, 8);
         return name;
       }
       var calculateAccountName = function(){
-        console.log($rootScope);
         var name = $rootScope.globals.currentUser.name + 'account' + Math.random().toString(36).substring(2, 8);
         return name;
       }

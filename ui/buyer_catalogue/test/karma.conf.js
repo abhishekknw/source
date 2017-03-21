@@ -51,6 +51,7 @@ module.exports = function(config) {
       'bower_components/angular-google-maps/dist/angular-google-maps.js',
       'bower_components/angular-breadcrumb/release/angular-breadcrumb.js',
       'bower_components/bootstrap-sweetalert/dist/sweetalert.js',
+      'bower_components/angular-aria/angular-aria.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",

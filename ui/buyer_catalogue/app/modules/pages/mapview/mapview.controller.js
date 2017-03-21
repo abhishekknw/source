@@ -42,6 +42,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 $scope.user_code = $window.localStorage.user_code;
 if($scope.user_code == 'agency')
   $scope.hideData = true;
+if($scope.user_code == 'guestUser')
+  $scope.isGuestUser = true; 
 //getting business_name and business_type from localStorage
 // $scope.businessData = JSON.parse($window.localStorage.business);
 // $scope.business_name = $scope.businessData.name;
