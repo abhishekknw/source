@@ -8,7 +8,7 @@
  *
  * Main module of the application.
  */
-  var APIBaseUrl = 'http://localhost:8108/';
+  var APIBaseUrl = 'http://localhost:8000/';
 
 angular.module('Authentication', []);
 angular
@@ -253,7 +253,7 @@ angular
               label:'Homepage',
             }
       });
-      // $qProvider.errorOnUnhandledRejections(false);
+      //$qProvider.errorOnUnhandledRejections(false);
       $locationProvider.hashPrefix('');
 })
 .run(['$rootScope', '$window', '$location', 'AuthService','$state',
