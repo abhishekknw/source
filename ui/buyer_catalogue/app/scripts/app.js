@@ -13,7 +13,7 @@
 angular.module('Authentication', []);
 angular
   .module('catalogueApp', [
-    'ngAnimate',
+    // 'ngAnimate',
     'ngCookies',
     'ngResource',
     'ngRoute',
@@ -250,7 +250,7 @@ angular
             controller : 'guestHomePageController',
             templateUrl : 'modules/pages/guestPage/homepage.tmpl.html',
       });
-      $qProvider.errorOnUnhandledRejections(false);
+      // $qProvider.errorOnUnhandledRejections(false);
       $locationProvider.hashPrefix('');
 })
 .run(['$rootScope', '$window', '$location', 'AuthService','$state',
@@ -277,7 +277,7 @@ angular
          }else if ($rootScope.globals.currentUser && $location.path() == '/logout'){
            AuthService.Logout();
            $location.path("/login");
-         }else if ($rootScope.globals.currentUser && ($location.path() == '/login' || $location.path() == '/')){
+         }else if ($rootScope.globals.currentUser && ($location.path() == '/login' || $location.path() == '/') && ($window.localStorage.user_code != 'guestUser')){
            $location.path("/manageCampaign/create");
          }else {
            $location.path(whence);

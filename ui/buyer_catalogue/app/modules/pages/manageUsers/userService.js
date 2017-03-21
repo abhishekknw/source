@@ -9,8 +9,12 @@ angular.module('machadaloPages')
       var url = url_base + "user/";
       return machadaloHttp.post(url,data);
     }
- 
-   
+
+    userService.createGuestUser = function(data){
+      var url = url_base + "guest-user/";
+      return machadaloHttp.post(url,data);
+    }
+
+
   return userService;
 }]);
-

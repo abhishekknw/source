@@ -1,6 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-.controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http, errorHandler,commonDataShare){
+.controller('ProposalCtrl', function($scope, $rootScope, $q, $stateParams, $window, pagesService, createProposalService, $location,$http, constants,commonDataShare){
 	$scope.loadingSpinner = true;
 	$scope.model = {}
 	$scope.model.centers = new Array();
@@ -51,21 +51,18 @@ angular.module('catalogueApp')
 
 	if($window.localStorage.proposal_id != '0'){
 		createProposalService.getProposal($window.localStorage.proposal_id)
-		.success(function(response, status){
-			$scope.model.name = response.data.name;
-			$scope.model.tentative_cost = response.data.tentative_cost;
+		.then(function onSuccess(response){
+			$scope.model.name = response.data.data.name;
+			$scope.model.tentative_cost = response.data.data.tentative_cost;
 		})
-		.error(function(response, status){
+		.catch(function onError(response){
 			console.log("Error Occured");
-			if(typeof(response) == typeof([])){
-				console.log("Error response is :", response);
-			}
 		});
 
 		//for centers if proposal is editable
 		createProposalService.getProposalCenters($window.localStorage.proposal_id)
-		.success(function(response, status){
-			$scope.centers = response.data;
+		.then(function onSuccess(response){
+			$scope.centers = response.data.data;
 			for(var i=0; i<$scope.centers.length; i++){
 				$scope.addCenter();
 				$scope.model.centers[i].center = $scope.centers[i];
@@ -74,7 +71,7 @@ angular.module('catalogueApp')
 				$scope.model.centers[i].center.codes = $scope.centers[i].codes;
 				selectSuppliers($scope.model.centers[i].suppliers,$scope.centers[i].codes);
 			}
-		}).error(function(response, status){
+		}).catch(function onError(response){
 			console.log("Error Occured");
 			// alert("Error Occured");
 		});
@@ -92,10 +89,12 @@ angular.module('catalogueApp')
 		}
 	}
 	createProposalService.loadInitialData()
-    .success(function (response){
-        $scope.cities = response.cities;
-				$scope.loading = response;
-      });
+    .then(function onSuccess(response){
+        $scope.cities = response.data.cities;
+				$scope.loading = response.data;
+      }).catch(function onError(response){
+				console.log("Error occured");
+			});
 			//changes for searching societies on basis of area,subarea
   $scope.get_areas = function(id,index) {
      	var id = id;
@@ -105,11 +104,14 @@ angular.module('catalogueApp')
 				}
 			}
    createProposalService.getLocations('areas', id,index)
-      .success(function (response){
-          $scope.areas[index] = response;
+      .then(function onSuccess(response){
+          $scope.areas[index] = response.data;
+        }).
+        catch(function onError(response){
         });
     }
   $scope.get_sub_areas = function(id,index) {
+    console.log($scope.cities);
       var id = id;
 			for(var i=0;i<$scope.areas[index].length;i++){
 				if($scope.areas[index][i].id == id){
@@ -117,8 +119,8 @@ angular.module('catalogueApp')
 				}
 			}
    createProposalService.getLocations('sub_areas', id)
-      .success(function (response){
-          $scope.sub_areas[index] = response;
+      .then(function onSuccess(response){
+          $scope.sub_areas[index] = response.data;
         });
     }
 	$scope.removeCenter = function(index){
@@ -159,20 +161,18 @@ angular.module('catalogueApp')
 		convertPincodeToString($scope.requestData.centers);
 		// call backend to save only if all the latitudes are found
 			createProposalService.saveInitialProposal($stateParams.account_id, $scope.requestData)
-			.success(function(response, status){
-				console.log(response);
+			.then(function onSuccess(response){
 				$scope.errormsg = undefined;
-				$scope.proposal_id = response.data;
+				$scope.proposal_id = response.data.data;
 				$scope.checkProposal = false;
 				createProposalService.setProposalId($scope.proposal_id);
-				console.log(response.data);
         $window.localStorage.isSavedProposal = false;
         $window.localStorage.parent_proposal_id = $scope.proposal_id;
-				$location.path('/' + response.data + '/mapview');
+				$location.path('/' + response.data.data + '/mapview');
 			})
-			.error(function(response,status){
+			.catch(function onError(response){
 				$scope.loadingSpinner = true;
-				swal(errorHandler.name,errorHandler.geo_location_error,errorHandler.error);
+				swal(constants.name,constants.geo_location_error,constants.error);
 				console.log("Error");
 				if(typeof(response) != typeof(12)){
 					console.log("response is ", response);

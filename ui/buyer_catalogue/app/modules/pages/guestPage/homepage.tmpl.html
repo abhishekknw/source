@@ -96,7 +96,7 @@
     <script src="bower_components/angular-resource/angular-resource.js"></script>
     <script src="bower_components/angular-route/angular-route.js"></script>
     <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
-    <script src="bower_components/angular-touch/angular-touch.js"></script>
+    <!-- <script src="bower_components/angular-touch/angular-touch.js"></script> -->
     <script src="bower_components/slick-carousel/slick/slick.min.js"></script>
     <script src="bower_components/angular-slick/dist/slick.js"></script>
     <!-- endbower -->
@@ -256,12 +256,12 @@ $(document).ready(function(){
                 <button class="btn btn-default nbtn-search" style="margin-top:10px" type="button">HOW IT WORKS?</button><br><br>
                 <span class="lato size20 slim white ">POSTER CAMPAIGN, HIRANANDANI GARDENS</span><br/><br><br>
 
-				<div class=" wh95percent bottom">
+				    <div class="wh100percent bottom">
 					       <select class="form-control left " style="width:111px">
 									  <option disabled selected>Select City</option>
 									  <option  ng-repeat="city in cities" value="{{city.id}}" required>{{city.city_name}}</option>
 									</select>
-                    <input type="text" ng-model="locality" googleplace class="form-control left " style="width:121px">
+                    <input type="text" ng-model="locality" googleplace class="form-control left " style="width:121px"/>
 									</select>
                     <select class="form-control left " style="width:141px" ng-model="model.business.business_type_id" ng-click="getSubTypes(model.business.business_type_id)">
   									  <option disabled selected>Select Business Type</option>

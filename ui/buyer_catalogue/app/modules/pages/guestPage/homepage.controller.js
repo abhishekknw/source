@@ -46,7 +46,7 @@ angular.module('machadaloPages')
         //To load business types
         $scope.bus_type_id;
       pagesService.loadBusinessTypes()
-      .then(function (response){
+      .then(function onSuccess(response){
         console.log(response);
           $scope.businessTypes = response.data;
         })
@@ -61,7 +61,7 @@ angular.module('machadaloPages')
         console.log("hello",id,$scope.bus_type_id);
         // var id = $scope.model.business.business_type_id;
         pagesService.getSubTypes(id)
-          .then(function (response){
+          .then(function onSuccess(response){
             console.log(response);
             $scope.business_subtypes = response.data;
         })
@@ -99,7 +99,7 @@ angular.module('machadaloPages')
                area : $scope.address.sublocality_level_1,
                subarea : $scope.address.natural_feature || $scope.address.sublocality_level_1,
                address : $scope.address.sublocality_level_1,
-               pincode : $scope.address.postal_code,
+               pincode : $scope.address.postal_code||'',
                city : $scope.address.locality,
                center_name : $scope.address.sublocality_level_1,
                radius : '2',
@@ -118,7 +118,7 @@ angular.module('machadaloPages')
         $scope.model.business['contacts'] = {};
         console.log($scope.model);
         pagesService.createBusinessCampaign($scope.model)
-          .then(function (response) {
+          .then(function onSuccess(response) {
             $scope.model = response.data;
             $scope.business_id = response.data.business.business_id;
 

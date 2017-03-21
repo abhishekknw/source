@@ -25,13 +25,14 @@ angular.module('machadaloPages')
             email : $scope.email,
             user_code : 99,
             username : $scope.email,
-            password : $scope.mobile_no,
+            mobile:$scope.mobile_no,
           }
           //api call to create user
-          userService.createUser(userData)
+          userService.createGuestUser(userData)
            .then(function onSuccess(response){
-             var username = $scope.email;
-             var password = $scope.mobile_no;
+             console.log(response);
+             var username = response.data.data.username;
+             var password = response.data.data.password;
              AuthService.Login(username, password, function(response) {
                  if(response.logged_in) {
                      console.log("hello");

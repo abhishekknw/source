@@ -14,6 +14,7 @@ angular.module('Authentication')
         var user_codes = {
           '0' : 'root',
           '03': 'agency',
+          '99': 'guestUser',
         };
 
         authService.Login = function (username, password, callback) {
