@@ -249,6 +249,9 @@ angular
             url : '/guestHomePage',
             controller : 'guestHomePageController',
             templateUrl : 'modules/pages/guestPage/homepage.tmpl.html',
+            ncyBreadcrumb: {
+              label:'Homepage',
+            }
       });
       // $qProvider.errorOnUnhandledRejections(false);
       $locationProvider.hashPrefix('');
@@ -260,8 +263,10 @@ angular
        $rootScope.getCurState = function() {
             if($window.localStorage.isSavedProposal == 'true')
               return 'showCurrentProposal';
-            else
+            else if($window.localStorage.isSavedProposal == 'false')
               return 'createProposalMe';
+            else if($window.localStorage.user_code == 'guestUser')
+              return 'guestHomePage';
         }
        var whence = $location.path();
        $rootScope.$on('$locationChangeStart', function (event, next, current) {

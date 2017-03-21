@@ -43,7 +43,7 @@ $scope.user_code = $window.localStorage.user_code;
 if($scope.user_code == 'agency')
   $scope.hideData = true;
 if($scope.user_code == 'guestUser')
-  $scope.isGuestUser = true; 
+  $scope.isGuestUser = true;
 //getting business_name and business_type from localStorage
 // $scope.businessData = JSON.parse($window.localStorage.business);
 // $scope.business_name = $scope.businessData.name;
@@ -1454,6 +1454,7 @@ if($scope.user_code == 'guestUser')
        };
      $scope.exportData = function(){
        try{
+         $scope.hideSpinner = false;
          $scope.requestProposal = false;
          $scope.checkFileExport = true;
          var parent_proposal_id = $window.localStorage.parent_proposal_id;
@@ -1478,16 +1479,16 @@ if($scope.user_code == 'guestUser')
                   'Authorization' : 'JWT ' + $rootScope.globals.currentUser.token
               }
          }).then(function onSuccess(response){
-           $scope.requestProposal = true;
+           $scope.hideSpinner = true;
            swal(constants.name,constants.request_proposal_success,constants.success);
               $scope.checkFileExport = false;
          }).catch(function onError(response){
-           $scope.requestProposal = true;
+           $scope.hideSpinner = true;
               swal(constants.name,constants.request_proposal_error,constants.error);
               $scope.checkFileExport = false;
          });
        }catch(error){
-         $scope.requestProposal = true;
+         $scope.hideSpinner = true;
          console.log(error.message);
        }
      }
@@ -1512,7 +1513,7 @@ if($scope.user_code == 'guestUser')
               swal(constants.name,constants.uploadfile_error,constants.error);
          });
        }catch(error){
-         $scope.requestProposal = true;
+         $scope.hideSpinner = true;
          console.log(error.message);
        }
    }
@@ -1521,7 +1522,7 @@ if($scope.user_code == 'guestUser')
       if(file){
        try{
         var uploadUrl = constants.base_url + constants.url_base;
-        $scope.requestProposal = false;
+        $scope.hideSpinner = false;
         var token = $rootScope.globals.currentUser.token ;
         Upload.upload({
             url: uploadUrl + $scope.proposal_id_temp + '/import-supplier-data/',
@@ -1529,13 +1530,13 @@ if($scope.user_code == 'guestUser')
             headers: {'Authorization': 'JWT ' + token},
         }).then(function onSuccess(response) {
           uploadFileToAmazonServer(response.data.data,file);
-          $scope.requestProposal = true;
+          $scope.hideSpinner = true;
         }).catch(function onError(response) {
-          $scope.requestProposal = true;
+          $scope.hideSpinner = true;
             swal(constants.name,constants.importfile_error,constants.error);
         });
       }catch(error){
-        $scope.requestProposal = true;
+        $scope.hideSpinner = true;
         console.log(error.message);
       }
     }
