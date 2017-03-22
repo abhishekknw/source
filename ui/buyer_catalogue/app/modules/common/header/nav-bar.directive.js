@@ -6,7 +6,14 @@ angular.module('machadaloCommon')
               $scope.user_code = $window.localStorage.user_code;
               if($scope.user_code == 'root')
                 $scope.showData =true;
+              if($scope.user_code == 'guestUser')
+                $scope.isGuestUser = true;
                 // Do some stuff
+              $scope.closeModal = function(){
+                $('#menuModal').modal('hide');
+                 $('body').removeClass('modal-open');
+                 $('.modal-backdrop').remove();
+              }
         }
   };
 });
