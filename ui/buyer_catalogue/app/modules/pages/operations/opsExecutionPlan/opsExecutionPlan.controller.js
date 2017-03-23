@@ -178,7 +178,7 @@ angular.module('catalogueApp')
           swal(constants.name,constants.reAssign_success,constants.success);
 
         })
-        .then(function onError(response){
+        .catch(function onError(response){
           $('#reAssignModal').modal('hide');
           swal(constants.name,constants.reAssign_error,constants.error);
           console.log(response);
