@@ -47,7 +47,6 @@ import v0.models as models
 from v0.models import PriceMappingDefault
 import v0.ui.utils as ui_utils
 import serializers
-import v0.utils as v0_utils
 from v0 import errors
 import v0.constants as v0_constants
 from tasks import bulk_download_from_amazon_per_supplier
@@ -1079,7 +1078,7 @@ def create_basic_proposal(data):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def get_geo_object(address):
+def get_geo_object_lat_long(address):
     """
 
     Args:
@@ -1087,7 +1086,7 @@ def get_geo_object(address):
     Returns: Function tries three variations of the address and returns wherever it finds a valid lat, long.
 
     """
-    function_name = get_geo_object.__name__
+    function_name = get_geo_object_lat_long.__name__
     try:
         # geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
         # geo_object = geocoder.geocode(address)
@@ -1206,7 +1205,7 @@ def save_center_data(proposal_data, user):
                 address = address_response.data['data']
 
                 # add lat long to center's data based on address calculated
-                geo_response = get_geo_object(address)
+                geo_response = get_geo_object_lat_long(address)
                 if not geo_response.data['status']:
                     return geo_response
                 center['latitude'], center['longitude'] = geo_response.data['data']

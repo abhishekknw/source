@@ -1,9 +1,17 @@
+from types import *
+import random
+import string
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+
+import geocoder
 
 import v0.ui.utils as ui_utils
 import v0.constants as v0_constants
 import models as v0_models
+import v0.ui.website.utils as website_utils
+import v0.ui.website.constants as website_constants
 
 
 def do_each_model(myModel, supplier_model, content_type):
@@ -62,4 +70,132 @@ def get_group_permission(user, group_code_name):
     if user.user_code not in v0_constants.group_codes[group_code_name]:
         return False
     return True
+
+
+def get_geo_code_instance(address):
+
+    function = get_geo_code_instance.__name__
+    try:
+        assert type(address) is UnicodeType, " {0} is not string type".format(address)
+        return geocoder.google(address)
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def generate_random_number(min_value, max_value):
+    """
+
+    Args:
+        min_value:
+        max_value:
+
+    Returns:
+    """
+    function = generate_random_number.__name__
+    try:
+        return random.uniform(min_value, max_value)
+
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def generate_coordinates_in_quadrant(count, origin_lat, origin_long, radius,  quadrant_code=v0_constants.first_quadrant_code):
+    """
+    generates a list of coordinates in a given quadrant
+
+    Args:
+        count:
+        origin_lat:
+        origin_long:
+        quadrant_code:
+        radius:
+    Returns:
+
+    """
+    function = generate_coordinates_in_quadrant.__name__
+    try:
+        assert type(radius) is FloatType, 'radius is not float type'
+        assert type(origin_lat) is FloatType, 'latitude is not float type'
+        assert type(origin_long) is FloatType, 'longitude is not float type'
+
+        coordinates = []
+        if quadrant_code == v0_constants.first_quadrant_code:
+            for i in range(count):
+                random_lat = origin_lat + random.uniform(0, radius)
+                random_long = origin_long + random.uniform(0, radius)
+                coordinates.append((random_lat, random_long))
+        elif quadrant_code == v0_constants.second_quadrant_code:
+            for i in range(count):
+                random_lat = origin_lat - random.uniform(0, radius)
+                random_long = origin_long + random.uniform(0, radius)
+                coordinates.append((random_lat, random_long))
+        elif quadrant_code == v0_constants.third_quadrant_code:
+            for i in range(count):
+                random_lat = origin_lat - random.uniform(0, radius)
+                random_long = origin_long - random.uniform(0, radius)
+                coordinates.append((random_lat, random_long))
+        else:
+            for i in range(count):
+                random_lat = origin_lat + random.uniform(0, radius)
+                random_long = origin_long - random.uniform(0, radius)
+                coordinates.append((random_lat, random_long))
+
+        return coordinates
+
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def assign_supplier_ids(state_code, city_code, supplier_type_code,  coordinates):
+    """
+    returns a dict containing a unique supplier_id for each of the coordinate in coordinates
+    Args:
+        state_code:
+        city_code:
+        supplier_type_code:
+        coordinates:
+
+    Returns:
+
+    """
+    function = assign_supplier_ids.__name__
+    try:
+        detail = {}
+        for index, coordinate_tuple in enumerate(coordinates):
+            lat, lng = coordinate_tuple
+            supplier_id = state_code + city_code + supplier_type_code + website_utils.get_random_pattern(size=3, chars=string.ascii_uppercase) + '_' + str(index)
+            detail[supplier_id] = {
+                'latitude': lat,
+                'longitude': lng
+            }
+        return detail
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def handle_society_detail(suppliers_dict, society_detail):
+    """
+
+    Args:
+        suppliers_dict:
+        society_detail:
+
+    Returns:
+
+    """
+    function = handle_society_detail.__name__
+    try:
+        if society_detail.get('flat_detail'):
+            supplier_ids = suppliers_dict.keys()
+            total_societies = len(supplier_ids)
+            total_flat_count = int(society_detail['total_flats'])
+            assert total_flat_count >= total_societies, 'total flat count {0} must be greater than total number of societies {1}'.format(total_flat_count, total_societies)
+
+            flat_type_dict = website_constants.flat_type_dict
+            total_flat_types = len(flat_type_dict.keys())
+            flats_per_society = total_flat_count/total_societies
+            flats_of_one_type_per_society = flats_per_society/total_flat_types
+
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
 

@@ -5,6 +5,7 @@ import django.apps
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import Permission
 from django.forms import model_to_dict
+from django.conf import settings
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions
@@ -18,7 +19,9 @@ from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDe
 import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils
-
+import errors
+import v0.ui.website.constants as website_constants
+import constants as v0_constants
 
 
 class PopulateContentTypeFields(APIView):
@@ -1589,4 +1592,74 @@ class PermissionsViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
-        
+
+
+class CreateSocietyTestData(APIView):
+    """
+    This is an API which creates 10 sample societies. it adds following information
+    the various inventories allowed in each society
+    and cost of each inventory for specific time.
+    It adds what kinds of flats are available in each society.
+    adds society type.
+    adds society size.
+    adds society location rating.
+    adds flat average rental per square fit.
+    adds flat sale cost per sqft.
+    adds number of tenants and number of total flats for each society
+    adds possession year
+    adds amenities
+    make sure some societies are standalone.
+    """
+
+    def post(self, request):
+        class_name = self.__class__.__name__
+        """
+        Creates random N societies. Useful for testing the front end with low data volume.
+        Args:
+            request:
+        Returns:
+        """
+        try:
+            city_name = request.data['city_name']
+            radius = float(request.data['radius'])
+            city_code = request.data['city_code']
+            society_count = int(request.data['society_count'])
+            society_detail = request.data.get('supplier_detail')
+            default_database_name = settings.DATABASES['default']['NAME']
+            result = {}
+            society_list = []
+
+            if default_database_name != v0_constants.database_name:
+                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+
+            geo_code_instance = v0_utils.get_geo_code_instance(city_name)
+            if not geo_code_instance:
+                return ui_utils.handle_response(class_name, data=errors.NO_GEOCODE_INSTANCE_FOUND.format(city_name))
+            state_code = geo_code_instance.state
+            city_lat, city_long = geo_code_instance.latlng
+
+            if society_count < 4:
+                coordinates = v0_utils.generate_coordinates_in_quadrant(society_count, city_lat, city_long, radius)
+            else:
+                society_per_quadrant = society_count/4
+                remainder = society_count % 4
+                coordinates = v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, city_lat, city_long, radius, v0_constants.first_quadrant_code)
+                coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, city_lat, city_long, radius, v0_constants.second_quadrant_code))
+                coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, city_lat, city_long, radius, v0_constants.third_quadrant_code))
+                coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant + remainder, city_lat, city_long, radius, v0_constants.fourth_quadrant_code))
+
+            suppliers_dict = v0_utils.assign_supplier_ids(state_code, city_code, website_constants.society, coordinates)
+            for society_id, detail in suppliers_dict.iteritems():
+                detail['supplier_id'] = society_id
+                detail['society_latitude'] = detail['latitude']
+                detail['society_longitude'] = detail['longitude']
+                detail['society_name'] = society_id
+                del detail['latitude']
+                del detail['longitude']
+                society_list.append(SupplierTypeSociety(**detail))
+            SupplierTypeSociety.objects.all().delete()
+            SupplierTypeSociety.objects.bulk_create(society_list)
+            result['count'] = len(society_list)
+            return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)

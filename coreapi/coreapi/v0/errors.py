@@ -46,3 +46,6 @@ NO_TOWER_ASSIGNED_ERROR = "There is no tower assigned to this inventory {0} with
 NO_IMAGES_FOR_THIS_PROPOSAL_MESSAGE = "There are no images in our system for this proposal {0}"
 TASK_NOT_DONE_YET_ERROR = "This task with id {0} is not successfull yet"
 PATH_DOES_NOT_EXIST = "This path {0} doesnt not exist"
+
+NO_GEOCODE_INSTANCE_FOUND = 'We did not get a geo code instance for this address {0}'
+INCORRECT_DATABASE_NAME_ERROR = 'The database name in settings file \'{0}\' does not matches the custom defined database name \'{1}\' '

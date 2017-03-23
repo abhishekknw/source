@@ -25,3 +25,12 @@ valid_amenities = {
     'PA': 'PLAY AREA',
     'SP': 'SWIMMING POOL'
 }
+
+# quadrant code
+first_quadrant_code = '1'
+second_quadrant_code = '2'
+third_quadrant_code = '3'
+fourth_quadrant_code = '4'
+
+# custom database name
+database_name = 'custom_api_database'
