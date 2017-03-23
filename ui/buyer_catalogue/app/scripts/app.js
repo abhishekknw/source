@@ -8,7 +8,7 @@
  *
  * Main module of the application.
  */
-  var APIBaseUrl = 'http://localhost:8000/';
+  var APIBaseUrl = 'http://localhost:8108/';
 
 angular.module('Authentication', []);
 angular
@@ -275,10 +275,10 @@ angular
 
          // redirect to login page if not logged in
          $rootScope.globals.currentUser = AuthService.UserInfo();
-         if ($location.path() == '/guestHomePage') {
-           $location.path("/guestHomePage");
-         }else if (!$rootScope.globals.currentUser) {
+         if (!$rootScope.globals.currentUser) {
            $location.path('/login');
+         }else if ($rootScope.globals.currentUser && $location.path() == '/guestHomePage') {
+           $location.path("/guestHomePage");
          }else if ($rootScope.globals.currentUser && $location.path() == '/logout'){
            AuthService.Logout();
            $location.path("/login");
