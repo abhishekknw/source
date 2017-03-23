@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="modules/common/header/nav-bar.tmpl.css"/>
+<link rel="stylesheet" href="modules/common/header/menu-bar-tmpl.css"/>
 <body id="top">
 <div class="navbar-wrapper2 navbar-fixed-top" style="height: 45px;">
   <div class="container">
@@ -13,8 +14,92 @@
           <li><a href="/#/logout">Logout</a></li>
         </ul>
         </li>
+        <li class="dropdown active">
+        <div style="margin-left:25px;margin-top:20px;" ng-hide="isGuestUser">
+          <span class="glyphicon glyphicon-menu-hamburger" ng-click="getMenu()" data-toggle="modal" data-target="#menuModal"></span>
+        </div>
+      </li>
+
       </ul>
+
     </div>
   </div>
 </div>
 </body>
+
+
+<!-- modal -->
+	<div class="modal right fade" id="menuModal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<!-- <div class="modal-content"> -->
+				<!-- <div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="myModalLabel2">Right Sidebar</h4>
+				</div> -->
+
+				<!-- <div class="modal-body"> -->
+
+          <div  class="container-fluid">
+            <div class="row">
+                <div class="col-sm-5">
+                    <div class="nav-side-menu">
+                        <div class="brand">Menu</div>
+                        <i class="fa fa-bars fa-2x toggle-btn"></i>
+                        <div class="menu-list">
+                            <ul id="menu-content" class="menu-content collapse out">
+                                <li ng-class="{active: isActive('/manageCampaign/create')}">
+                                  <a ng-href="/#/manageCampaign/create" class="lipadding" ng-click="closeModal()">
+                                    <i class="fa fa-tasks fa-lg"></i>Create Business</a>
+                                </li>
+                                <li ng-class="{active: isActive('/OpsDashBoard')}">
+                                  <a ng-href="/#/OpsDashBoard" class=" lipadding" ng-click="closeModal()">
+                                    <i class="fa fa-dashboard fa-lg"></i>OpsDashBoard</a>
+                               </li>
+                               <li data-toggle="collapse" data-target="#new" class="collapsed">
+                                 <a class="dropdown-toggle" data-toggle="dropdown" ng-href="#"><i class="fa fa-th fa-lg"></i>Leads <span class="caret"></span></a>
+                                 <ul class="sub-menu collapse" id="new">
+                                   <li><a href="/#/manageCampaign/shortlisted" data-toggle="tab" ng-click="closeModal()">Shortlisted</a></li>
+                                   <li><a href="/#/manageCampaign/requested" data-toggle="tab" ng-click="closeModal()">Requested</a></li>
+                                   <li><a href="/#/manageCampaign/finalized" data-toggle="tab" ng-click="closeModal()">Finalized</a></li>
+                                 </ul><!-- end of dropdown menu -->
+                               </li>
+                               <li ng-class="{ active: isActive('/#/manageCampaign/finalize')}">
+                                 <a ng-href="/#/manageCampaign/finalize" class = "lipadding" ng-click="closeModal()">
+                                   <i class="fa fa-list fa-lg"></i>Finalize Campaigns</a>
+                               </li>
+                               <li ng-class="{ active: isActive('/#/manageCampaign/finalize')}">
+                                 <a ng-href="/#/manageCampaign/finalize" class = "lipadding" ng-click="closeModal()">
+                                   <i class="fa fa-list fa-lg"></i>Upcoming Campaigns</a>
+                               </li>
+                       				<li ng-class="{ active: isActive('/#/manageCampaign/release')}">
+                                <a ng-href="/#/manageCampaign/release" class = "lipadding" ng-click="closeModal()">
+                                  <i class="fa fa-list fa-lg"></i>Release Details</a>
+                              </li>
+                               <li ng-class="{ active: isActive('/society/{{societyId}}/basicPricing')}">
+                                 <a ng-href="#/manageCampaign/ongoingcampaign" class = "lipadding" ng-click="closeModal()">
+                                   <i class="fa fa-list fa-lg"></i>Ongoing Campaigns</a>
+                               </li>
+                               <li ng-class="{ active: isActive('/society/{{societyId}}/standeeBanners')}">
+                                 <a ng-href="#/society/{{societyId}}/standeeBanners" class = "lipadding" ng-click="closeModal()">
+                                   <i class="fa fa-list fa-lg"></i>Completed Campaigns</a>
+                               </li>
+                               <li ng-class="{ active: isActive('/society/{{societyId}}/stalls')}">
+                                 <a ng-href="#/society/{{societyId}}/stalls" class = "lipadding" ng-click="closeModal()">
+                                   <i class="fa fa-list fa-lg"></i>Booked Campaigns</a>
+                               </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        <!-- </div> -->
+
+
+				</div>
+			<!-- </div> -->
+      <!-- modal-content -->
+		<!-- </div> -->
+    <!-- modal-dialog -->
+	</div><!-- modal -->
+</div>
