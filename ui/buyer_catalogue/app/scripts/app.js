@@ -210,7 +210,7 @@ angular
            templateUrl : 'modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.html',
            ncyBreadcrumb: {
              label:'ReleasePlan',
-             parent : 'OpsDashBoard'
+             parent : 'CampaignList'
            }
        })
       .state('OpsDashBoard',{
@@ -222,6 +222,16 @@ angular
              parent : 'manageCampaign.create'
            }
        })
+       .state('CampaignList',{
+            url : '/CampaignList',
+            controller : 'CampaignListCtrl',
+            templateUrl : 'modules/pages/DashBoard/CampaignList/campaignlist.tmpl.html',
+            ncyBreadcrumb: {
+              label:'CampaignList',
+              parent : 'OpsDashBoard'
+            }
+        })
+
       .state('manageUsers',{
            url : '/manageUser',
            controller : 'userCtrl',
@@ -242,7 +252,7 @@ angular
             templateUrl : 'modules/pages/operations/opsExecutionPlan/opsExecutionPlan.tmpl.html',
             ncyBreadcrumb: {
               label:'ExecutionPlan',
-              parent : 'OpsDashBoard'
+              parent : 'CampaignList'
             }
       })
       .state('guestHomePage',{

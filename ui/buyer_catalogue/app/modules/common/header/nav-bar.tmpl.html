@@ -87,6 +87,10 @@
                                  <a ng-href="#/society/{{societyId}}/stalls" class = "lipadding" ng-click="closeModal()">
                                    <i class="fa fa-list fa-lg"></i>Booked Campaigns</a>
                                </li>
+                               <li ng-class="{ active: isActive('/society/{{societyId}}/stalls')}">
+                                 <a ng-href="#/CampaignList" class = "lipadding" ng-click="closeModal()">
+                                   <i class="fa fa-list fa-lg"></i>All Campaigns</a>
+                               </li>
                             </ul>
                         </div>
                     </div>

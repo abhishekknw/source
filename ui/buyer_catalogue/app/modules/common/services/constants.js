@@ -18,6 +18,7 @@ angular
     warning : 'warning',
     errorMsg : 'Error Occured',
     server_connection_error : 'Server is down, Please Try again',
+
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
     //mapview
@@ -40,6 +41,9 @@ angular
     assign_user_error : 'Some error occured in asigning proposal to user',
     accept_proposal_error : 'Error occured while converting proposal to campaign',
     decline_proposal_error : 'Error occured while declining campaign, Please ensure that you are declining campaign which is not on hold',
+    emptyProposalMsg : 'No Proposal Found',
+    //campaignList
+    emptyCampaignList : 'No Campaigns Found',
     //releaseplan
     updateData_success : 'Data updated successfully',
     updateData_error : 'Error occured while saving data',

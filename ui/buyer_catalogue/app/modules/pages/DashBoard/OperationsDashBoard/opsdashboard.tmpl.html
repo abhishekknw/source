@@ -5,6 +5,9 @@
 </br></br></br>
 <!-- <back-Button></back-Button> -->
 <div class="breadcrumb" ncy-breadcrumb></div>
+<div style="margin-left:auto;margin-right:150px;width:8%">
+  <button class="btn btn-primary active notify" style="text-align:right" ng-click="goToCampaignList()">List Campaigns</button>
+</div>
 <h3 ng-hide="hideData" style = "margin-left: 460px; margin-top: 60px;">Machadalo Operations Dashboard</h3>
 <div class="container" ng-hide="hideData">
   <div class="row">
@@ -12,7 +15,7 @@
       <table class="table table-fixed table-bordered" style="text-align: center;">
         <thead>
           <tr>
-            <th ng-repeat="header in headings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
+            <th ng-repeat="header in headings" style="text-align: center;">{{header.header}}</th>
           </tr>
         </thead>
         <tbody>
@@ -47,40 +50,6 @@
   </div>
 </div>
 
-<!-- Start: Displaying table of converted campaigns -->
-<span uib-tooltip="List of all Campaigns" class = "campaign-list">Campaign List</span>
-<div class="container">
-  <div class="row">
-    <div class=" table-responsive panel panel-default">
-      <table class="table table-fixed table-bordered" style="text-align: center;">
-        <thead>
-          <tr>
-            <th ng-repeat="header in campaignHeadings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="proposal in campaignData">
-            <td class="col-md-1">{{proposal.campaign.proposal_id}}</td>
-            <td class="col-md-2">{{proposal.campaign.name}}</td>
-            <td class="col-md-2">{{proposal.assigned_to.username}}</td>
-            <td class="col-md-2"></td>
-            <td class="col-md-2">{{proposal.campaign.tentative_start_date|limitTo:10}}</td>
-            <td class="col-md-2">{{proposal.campaign.tentative_end_date|limitTo:10}}</td>
-            <td class="col-md-2">
-              <a ng-click="getDetails(proposal.campaign.proposal_id)"> Details </a>
-            </td>
-            <td class="col-md-2">
-              <a ng-click="getExecutionDetails(proposal.campaign.proposal_id)"> Details </a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-<div><footer-bar></footer-bar></div>
-
-<!--End: Displaying table of converted campaigns -->
 
 <!-- Start: Code for reason specifying modal-->
 <div id="declineModal" class="modal fade">
@@ -110,7 +79,7 @@
         <div class = "modal-body" style = "height: 300px;">
         <label>Please enter the reason in below box why this proposal is on hold</label>
           <textarea name="reason" id="onHoldReason" class="form-control" ng-model="reason"></textarea>
-          <button class="btn btn-danger active notify" ng-click="sendNotification()" ng-loading="loadSpinner">Notify</button>
+          <button class="btn btn-danger active notify" ng-click="sendNotification()" ng-disabled="!reason.length > 0" ng-loading="loadSpinner">Notify</button>
         </div>
       </div>
     </div>
@@ -141,3 +110,4 @@
   </div>
 </div>
 <!-- End: Code for assgining campaign -->
+<div><footer-bar></footer-bar></div>
