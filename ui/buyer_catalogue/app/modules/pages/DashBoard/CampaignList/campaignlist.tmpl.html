@@ -4,6 +4,7 @@
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 <br><br><br>
 <div class="breadcrumb" ncy-breadcrumb></div>
+<body>
 <div ng-show="isEmpty" style="text-align:center">{{msg}}</div>
 <!-- Start: Displaying table of converted campaigns -->
 <h3 style="text-align:center" ng-show="!isEmpty">Campaign List</h3>
@@ -36,6 +37,7 @@
     </div>
   </div>
 </div>
-<div class="navbar navbar-fixed-bottom"><footer-bar></footer-bar></div>
-
 <!--End: Displaying table of converted campaigns -->
+<div class="push"></div>
+<footer-bar></footer-bar>
+</body>

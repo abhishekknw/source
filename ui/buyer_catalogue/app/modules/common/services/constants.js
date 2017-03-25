@@ -18,6 +18,7 @@ angular
     warning : 'warning',
     errorMsg : 'Error Occured',
     server_connection_error : 'Server is down, Please Try again',
+    emptyResponse : 'No results Found',
 
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',

@@ -51,7 +51,7 @@
                                   <a ng-href="/#/manageCampaign/create" class="lipadding" ng-click="closeModal()">
                                     <i class="fa fa-tasks fa-lg"></i>Create Business</a>
                                 </li>
-                                <li ng-class="{active: isActive('/OpsDashBoard')}">
+                                <li ng-class="{active: isActive('/OpsDashBoard')}" ng-if="!isAgency">
                                   <a ng-href="/#/OpsDashBoard" class=" lipadding" ng-click="closeModal()">
                                     <i class="fa fa-dashboard fa-lg"></i>OpsDashBoard</a>
                                </li>

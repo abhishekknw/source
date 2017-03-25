@@ -6,8 +6,8 @@
   <div class="breadcrumb col-md-4" ncy-breadcrumb></div>
   <div ng-loading="loading"></div> <!--For displaying loading icon-->
   <div class = "container">
-    <div class="page-header">
-      <h3 style="color:#337ab7;">Summary</h3>
+    <div class="page-header" style="text-align:center">
+      <h3 style="color:#337ab7;">Summary for {{proposal.name}}</h3>
     </div>
       <div class="row">
         <div class="panel panel-default">
@@ -36,21 +36,22 @@
           </div>
          </div>
       </div>
+      <div style="text-align:right;"><button class="btn btn-primary" ng-if="isParentProposal == 'true'" ng-click="editInitialProposal(proposal.proposal_id)">Edit Proposal</button></div>
+      <div class="col-md-3"><label>Select Advertising Location:</label>
+        <select class="form-control" style="width:50%;"ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
+          <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
+        </select>
+      </div>
   </div>
 </form>
-<div class = "invoiceButton"><a class="labels"ng-if="isParentProposal == 'true'" href="" ng-click="editInitialProposal(proposal.proposal_id)"><b>Edit Proposal</b></a></div>
-<div class="col-md-3" style="margin-left:83px;"><label>Select Advertising Location:</label>
-  <select ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
-    <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
-  </select>
-</div>
 <!-- Start: Display supplier details for selected center-->
 <div class = "container page-panel"  ng-if="current_center_id">
   <div class = "row">
     <div ng-if="current_center_data.filters.society_allowed">
-      <div class = "col-md-2"><label class = "society-heading" ng-click="isSociety=!isSociety">Society Details</label></div>
-      <div class="table-responsive" style="width: 800px; height: 450px">
-       <h5 class="panel-heading head" ng-click="isSociety=!isSociety"><b>Shortlisted Society Details</b></h5>
+      <div><label class="society-heading" style="padding-left:50px" ng-click="isSociety=!isSociety">Society Details</label></div>
+      <div uib-collapse="! isSociety" ng-if="current_center_data.suppliers['RS'].length == 0"><label style="padding-left:250px;font-size:24px">{{errorMsg}}<label></div>
+      <div class="table-responsive" ng-if="current_center_data.suppliers['RS'].length > 0">
+       <h5 class="panel-heading head" style="text-align:center" uib-collapse="! isSociety"><b>Shortlisted Society Details</b></h5>
         <div uib-collapse="! isSociety">
           <table class="table table-bordered table-responsive society">
             <thead>
@@ -91,7 +92,7 @@
             </tbody>
           </table>
         </div><!-- uib collapse div ends here-->
-        <h5 class="panel-heading head" ng-click="isSociety=!isSociety"><b>Details of Removed Societies</b></h5>
+        <h5 class="panel-heading head" style="text-align:center" uib-collapse="! isSociety"><b>Details of Removed Societies</b></h5>
         <div uib-collapse="! isSociety">
           <table class="table table-bordered society">
            <thead>
@@ -174,4 +175,4 @@
 </div>
 <!--End: Code for Invoice Modal Window -->
 
-<div style="margin-top:160px;"><footer-bar></footer-bar></div>
+<div style="margin-top:100px;"><footer-bar></footer-bar></div>

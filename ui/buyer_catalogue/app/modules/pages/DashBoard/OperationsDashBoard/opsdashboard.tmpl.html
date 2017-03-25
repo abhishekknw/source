@@ -5,11 +5,13 @@
 </br></br></br>
 <!-- <back-Button></back-Button> -->
 <div class="breadcrumb" ncy-breadcrumb></div>
+<body>
 <div style="margin-left:auto;margin-right:150px;width:8%">
   <button class="btn btn-primary active notify" style="text-align:right" ng-click="goToCampaignList()">List Campaigns</button>
 </div>
-<h3 ng-hide="hideData" style = "margin-left: 460px; margin-top: 60px;">Machadalo Operations Dashboard</h3>
-<div class="container" ng-hide="hideData">
+<div ng-show="!isEmpty">{{msg}}</div>
+<h3 ng-hide="hideData || isEmpty" style = "margin-left: 460px; margin-top: 60px;">Machadalo Operations Dashboard</h3>
+<div class="container" ng-hide="hideData || isEmpty">
   <div class="row">
     <div class=" table-responsive panel panel-default">
       <table class="table table-fixed table-bordered" style="text-align: center;">
@@ -49,7 +51,9 @@
     </div>
   </div>
 </div>
-
+<div class="push"></div>
+<footer-bar></footer-bar>
+</body>
 
 <!-- Start: Code for reason specifying modal-->
 <div id="declineModal" class="modal fade">
@@ -110,4 +114,3 @@
   </div>
 </div>
 <!-- End: Code for assgining campaign -->
-<div><footer-bar></footer-bar></div>

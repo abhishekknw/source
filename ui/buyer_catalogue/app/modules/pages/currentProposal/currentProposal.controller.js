@@ -8,6 +8,7 @@ angular.module('catalogueApp')
       $scope.isParentProposal = $window.localStorage.parentProposal;// send proposal_id in service
       $scope.campaign_start_date;
       $scope.campaign_end_date;
+      $scope.errorMsg = constants.emptyResponse;
       //code added to show or not details based on permissions
       $scope.user_code = $window.localStorage.user_code;
       if($scope.user_code == 'agency')
