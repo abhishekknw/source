@@ -9,6 +9,9 @@ th{
     text-align: center;
   	color: #fff;
 }
+td{
+  text-align: center;
+}
 body{
 	background: #f2f2f2;
 	font-family: Source Sans Pro;
@@ -51,7 +54,7 @@ body{
 }
 .invoiceButton{
 	text-align:right;
-	margin-right:300px;
+	margin-right:125px;
 	margin-top: 10px
 }
 .breadcrumb{
