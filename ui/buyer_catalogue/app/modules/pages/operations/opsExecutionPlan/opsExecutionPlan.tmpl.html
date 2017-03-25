@@ -35,7 +35,7 @@
     </div>
   </div>
   <div class = "col-md-12" style="text-align:right">
-    <button class="btn btn-danger active notify"  data-target = "#reAssignModal" data-toggle = "modal">ReAssign</button>
+    <button class="btn btn-danger active notify"  data-target = "#reAssignModal" data-toggle = "modal" ng-disabled="!reAssign">ReAssign</button>
     <button class="btn btn-danger active notify" ng-click="getSummary()">Summary</button>
     <button class="btn btn-danger active notify" ng-click="downloadImages()" ng-disabled="buttonDisable">Download</button>
   </div>
@@ -159,3 +159,4 @@
     </div>
   </div>
 </div>
+<div class="navbar-fixed-bottom"><footer-bar></footer-bar></div>

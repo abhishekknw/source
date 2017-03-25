@@ -3,6 +3,7 @@ angular.module('catalogueApp')
     ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare','constants','$timeout',
     function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare,constants,$timeout) {
       $scope.campaign_id = $stateParams.proposal_id;
+      $scope.reAssign = false;
       var sleepTime = 0;
       $scope.headings = [
         {header : 'Supplier Id'},
@@ -50,7 +51,6 @@ angular.module('catalogueApp')
         	.then(function onSuccess(response){
         		$scope.campaignData = response.data.data;
             createList();
-            console.log('vidhi', $scope.campaignData);
             if($scope.campaignData.length == 0)
               $scope.hideData = false;//change to true doing for testing
                 $scope.loading = response.data;
@@ -63,7 +63,6 @@ angular.module('catalogueApp')
         var getUsersList = function(){
           commonDataShare.getUsersList()
             .then(function onSuccess(response){
-              console.log(response);
               $scope.userList = response.data.data;
             })
             .catch(function onError(response){
@@ -158,9 +157,13 @@ angular.module('catalogueApp')
         }else {
           delete $scope.reAssignActivityList[inventory.id];
         }
+        if(Object.keys($scope.reAssignActivityList).length == 0){
+          $scope.reAssign = false;
+        }else {
+            $scope.reAssign = true;
+        }
       }
       var reAssignActivityData = function(){
-        console.log($scope.reAssignActivityList);
         angular.forEach($scope.reAssignActivityList, function(activity, assignId){
           $scope.reAssignActivityList[assignId]['reassigned_activity_date'] = commonDataShare.formatDate($scope.activity_date);
           $scope.reAssignActivityList[assignId]['assigned_to'] = $scope.userCode;
@@ -175,11 +178,13 @@ angular.module('catalogueApp')
           $scope.campaignDataList = [];
           getOpsExecutionImageDetails();
           $('#reAssignModal').modal('hide');
+          $scope.reAssign = false;
           swal(constants.name,constants.reAssign_success,constants.success);
 
         })
-        .then(function onError(response){
+        .catch(function onError(response){
           $('#reAssignModal').modal('hide');
+          $scope.reAssign = false;
           swal(constants.name,constants.reAssign_error,constants.error);
           console.log(response);
         });
@@ -188,7 +193,6 @@ angular.module('catalogueApp')
       $scope.buttonDisable = true;
       opsExecutionPlanService.downloadImages($stateParams.proposal_id)
       .then(function onSuccess(response){
-        console.log(response);
         $scope.taskId = response.data.data;
         downloadInProgress();
       }).catch(function onError(response){
@@ -198,7 +202,6 @@ angular.module('catalogueApp')
     function downloadInProgress(){
       opsExecutionPlanService.downloadInProgress($scope.taskId)
       .then(function onSuccess(response){
-        console.log(response);
         // $scope.progress = response.progress+"%";
         sleepTime = 2 * sleepTime + 5000;
         if(response.data.data.ready != true){
@@ -207,7 +210,6 @@ angular.module('catalogueApp')
         else if(response.data.data.status == true){
           opsExecutionPlanService.finishDownload($scope.taskId,$stateParams.proposal_id)
           .then(function onSuccess(response){
-            console.log(response);
              $window.open(response.data.data, '_blank');
              $scope.buttonDisable = false;
           }).catch(function onError(response){

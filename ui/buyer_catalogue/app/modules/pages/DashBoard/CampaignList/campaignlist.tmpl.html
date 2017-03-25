@@ -1,0 +1,41 @@
+<link rel="stylesheet" href="modules/pages/DashBoard/CampaignList/campaignlist.tmpl.css"/>
+<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
+<div><nav-bar></nav-bar></div>
+<div ng-loading="loading"></div> <!--For displaying loading icon-->
+<br><br><br>
+<div class="breadcrumb" ncy-breadcrumb></div>
+<div ng-show="isEmpty" style="text-align:center">{{msg}}</div>
+<!-- Start: Displaying table of converted campaigns -->
+<h3 style="text-align:center" ng-show="!isEmpty">Campaign List</h3>
+<div class="container" ng-show="!isEmpty">
+  <div class="row">
+    <div class=" table-responsive panel panel-default">
+      <table class="table table-fixed table-bordered" style="text-align: center;">
+        <thead>
+          <tr>
+            <th ng-repeat="header in campaignHeadings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="proposal in campaignData">
+            <td class="col-md-1">{{proposal.campaign.proposal_id}}</td>
+            <td class="col-md-2">{{proposal.campaign.name}}</td>
+            <td class="col-md-2">{{proposal.assigned_to.username}}</td>
+            <td class="col-md-2"></td>
+            <td class="col-md-2">{{proposal.campaign.tentative_start_date|limitTo:10}}</td>
+            <td class="col-md-2">{{proposal.campaign.tentative_end_date|limitTo:10}}</td>
+            <td class="col-md-2">
+              <a ng-click="getDetails(proposal.campaign.proposal_id)"> Details </a>
+            </td>
+            <td class="col-md-2">
+              <a ng-click="getExecutionDetails(proposal.campaign.proposal_id)"> Details </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="navbar navbar-fixed-bottom"><footer-bar></footer-bar></div>
+
+<!--End: Displaying table of converted campaigns -->

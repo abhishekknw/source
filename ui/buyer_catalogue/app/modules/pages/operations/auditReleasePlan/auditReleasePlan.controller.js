@@ -78,8 +78,8 @@ angular.module('catalogueApp')
           setDataToModel($scope.releaseDetails.shortlisted_suppliers);
               $scope.loading = response.data;
       	})
-      	.then(function onError(response){
-      		console.log("error occured", response.status);
+      	.catch(function onError(response){
+      		console.log("error occured", response);
       	});
       }
       // getCampaignReleaseDetails();

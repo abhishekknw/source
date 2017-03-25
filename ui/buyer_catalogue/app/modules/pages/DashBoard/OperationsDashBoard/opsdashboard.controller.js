@@ -4,7 +4,7 @@ angular.module('catalogueApp')
 
     function ($scope, $rootScope, $window, $location, opsDashBoardService, commonDataShare,constants) {
     	$scope.proposals = [];
-      $scope.reason;
+      $scope.reason = null;
       $scope.bucket_url = constants.aws_bucket_url;
       //for loading spinner
       $scope.loadSpinner = true;
@@ -26,34 +26,11 @@ angular.module('catalogueApp')
         {header : 'Download Proposal'}
       ];
 
-      $scope.campaignHeadings = [
-        {header : 'Campaign Id'},
-        {header : 'Campaign Name'},
-        {header : 'Assgined To '},
-        {header : 'Assigned Date'},
-        {header : 'Start Date'},
-        {header : 'End Date'},
-        {header : 'View Release Details'},
-        {header : 'View Execution Details'}
-      ];
-
   var getProposalDetails = function(){
     opsDashBoardService.getProposalDetails()
     	.then(function onSuccess(response){
     		$scope.proposals = response.data.data;
         $scope.loading = response.data;
-    	})
-    	.catch(function onError(response){
-    		console.log("error occured", response);
-        swal(constants.name,constants.errorMsg,constants.error);
-    	});
-    }
-
-  var getCampaignDetails = function(){
-    opsDashBoardService.getCampaignDetails($rootScope.globals.currentUser.user_id)
-    	.then(function onSuccess(response){
-        console.log(response);
-    		$scope.campaignData = response.data.data;
     	})
     	.catch(function onError(response){
     		console.log("error occured", response);
@@ -74,7 +51,6 @@ angular.module('catalogueApp')
     }
     var init = function(){
       getProposalDetails();
-      getCampaignDetails();
       getUsersList();
     }
     //Call init function TO Load reuired data initially..
@@ -128,6 +104,7 @@ angular.module('catalogueApp')
               }
     	      })
           .catch(function(response){
+            getProposalDetails();
             $scope.loadSpinner = true;
             swal(constants.name,constants.accept_proposal_error,constants.error);
     	  	    console.log("error occured", status);
@@ -144,6 +121,7 @@ angular.module('catalogueApp')
               console.table(response);
     	})
           .catch(function onError(response){
+            getProposalDetails();
             swal(constants.name,constants.decline_proposal_error,constants.error);
     	  	    console.log("error occured", status);
     	});
@@ -164,7 +142,6 @@ angular.module('catalogueApp')
               console.table(response);
               $('#assignModal').modal('hide');
               swal(constants.name,constants.assign_user_success,constants.success);
-              getCampaignDetails();
     	})
           .catch(function onError(response){
             $('#assignModal').modal('hide');
@@ -172,10 +149,7 @@ angular.module('catalogueApp')
     	  	    console.log("error occured", status);
     	});
     }
-    $scope.getDetails = function(proposal_id){
-      $location.path('/' + proposal_id + '/releasePlan');
-    }
-    $scope.getExecutionDetails = function(proposal_id){
-      $location.path('/' + proposal_id + '/opsExecutionPlan');
+    $scope.goToCampaignList = function(){
+     $location.path("/CampaignList");
     }
 }]);//Controller function ends here

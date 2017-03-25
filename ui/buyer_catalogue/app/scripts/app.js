@@ -8,7 +8,7 @@
  *
  * Main module of the application.
  */
-  var APIBaseUrl = 'http://localhost:8000/';
+  var APIBaseUrl = 'http://localhost:8108/';
 
 angular.module('Authentication', []);
 angular
@@ -210,7 +210,7 @@ angular
            templateUrl : 'modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.html',
            ncyBreadcrumb: {
              label:'ReleasePlan',
-             parent : 'OpsDashBoard'
+             parent : 'CampaignList'
            }
        })
       .state('OpsDashBoard',{
@@ -222,6 +222,16 @@ angular
              parent : 'manageCampaign.create'
            }
        })
+       .state('CampaignList',{
+            url : '/CampaignList',
+            controller : 'CampaignListCtrl',
+            templateUrl : 'modules/pages/DashBoard/CampaignList/campaignlist.tmpl.html',
+            ncyBreadcrumb: {
+              label:'CampaignList',
+              parent : 'OpsDashBoard'
+            }
+        })
+
       .state('manageUsers',{
            url : '/manageUser',
            controller : 'userCtrl',
@@ -242,7 +252,7 @@ angular
             templateUrl : 'modules/pages/operations/opsExecutionPlan/opsExecutionPlan.tmpl.html',
             ncyBreadcrumb: {
               label:'ExecutionPlan',
-              parent : 'OpsDashBoard'
+              parent : 'CampaignList'
             }
       })
       .state('guestHomePage',{
@@ -275,10 +285,10 @@ angular
 
          // redirect to login page if not logged in
          $rootScope.globals.currentUser = AuthService.UserInfo();
-         if ($location.path() == '/guestHomePage') {
-           $location.path("/guestHomePage");
-         }else if (!$rootScope.globals.currentUser) {
+         if (!$rootScope.globals.currentUser) {
            $location.path('/login');
+         }else if ($rootScope.globals.currentUser && $location.path() == '/guestHomePage') {
+           $location.path("/guestHomePage");
          }else if ($rootScope.globals.currentUser && $location.path() == '/logout'){
            AuthService.Logout();
            $location.path("/login");

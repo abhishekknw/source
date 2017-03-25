@@ -122,7 +122,7 @@ angular.module('catalogueApp')
       .then(function onSuccess(response){
         swal(constants.name,constants.updateData_success,constants.success);
       })
-      .then(function onError(response){
+      .catch(function onError(response){
         swal(constants.name,constants.updateData_error,constants.error);
         console.log("error occured", response.status);
       });
