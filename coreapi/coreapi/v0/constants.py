@@ -60,3 +60,10 @@ default_possession_year_range = [2000, 2017]
 default_percentage_range_of_tenants_to_flat = [0, 100]
 default_flat_avg_rental_persqft_range = [0, 2000]
 default_flat_sale_cost_persqft_range = [0, 3000]
+
+
+# inventory constants
+default_poster_per_tower = 6
+default_standee_per_tower = 3
+default_stall_per_society = 1
+default_flier_frequency_per_society = 4

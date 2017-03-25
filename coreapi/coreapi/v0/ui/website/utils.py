@@ -1674,8 +1674,10 @@ def suppliers_within_radius(data):
             # space to store the suppliers
             'suppliers': []
         }
+
         # todo: think of better way of separating this logic. looks ugly right now
         if center_id:
+            center_id = int(center_id)
             # the queries will change if center_id is provided because we want to process
             # for this center only.
             if not data['radius'] or not data['latitude'] or not data['longitude']:
@@ -1714,7 +1716,7 @@ def suppliers_within_radius(data):
             return ui_utils.handle_response(function_name, data='Not found any centers in database against {0}'.format(proposal_id))
 
         for data in supplier_type_codes_list:
-            center_id = data['center']
+            center_id = int(data['center'])
             code = data['supplier_type_code']
             supplier_codes_dict[center_id].add(code)
 
@@ -1729,7 +1731,6 @@ def suppliers_within_radius(data):
 
         # prepare result dict
         result = {center_id: {} for center_id in center_id_list}
-
         for center in serializer.data:
             response = handle_single_center(center, result)
             if not response.data['status']:
@@ -2566,7 +2567,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
                         query |= current_query
                     else:
                         query = current_query
-                supplier_ids = models.FlatType.objects.select_related('society').filter(query).values_list('society__supplier_id')
+                supplier_ids = models.FlatType.objects.select_related('society').filter(query).values_list('object_id', flat=True)
                 specific_filters_query &= Q(supplier_id__in=supplier_ids)
 
         if supplier_type_code == website_constants.corporate:
