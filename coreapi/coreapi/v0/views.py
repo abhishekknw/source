@@ -13,9 +13,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
-from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer
+from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer
 from rest_framework.decorators import detail_route, list_route
-from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions
+from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, BusinessSubTypes
 import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils
@@ -1614,7 +1614,7 @@ class CreateSocietyTestData(APIView):
     def post(self, request):
         class_name = self.__class__.__name__
         """
-        Creates random N societies. Useful for testing the front end with low data volume.
+        Creates random N societies over M centers.  Useful for testing the front end with low data volume.
         Args:
             request:
         Returns:
@@ -1623,32 +1623,39 @@ class CreateSocietyTestData(APIView):
             city_name = request.data['city_name']
             radius = float(request.data['radius'])
             city_code = request.data['city_code']
-            society_count = int(request.data['society_count'])
-            society_detail = request.data.get('supplier_detail')
+            centers = request.data['centers']
+            total_society_count = int(request.data['society_count'])
+            society_detail = request.data.get('society_detail')
             default_database_name = settings.DATABASES['default']['NAME']
             result = {}
             society_list = []
 
             if default_database_name != v0_constants.database_name:
                 return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+            # make the list of addresses by combining city name with center names
+            addresses = [city_name + ',' + center_name for center_name in centers]
+            SupplierTypeSociety.objects.all().delete()  # delete all societies before proceeding
+            society_count = total_society_count/len(addresses)  # societies per address
+            coordinates = []
+            for address in addresses:
+                geo_code_instance = v0_utils.get_geo_code_instance(address)
+                if not geo_code_instance:
+                    return ui_utils.handle_response(class_name, data=errors.NO_GEOCODE_INSTANCE_FOUND.format(address))
+                location_lat, location_long = geo_code_instance.latlng
+                # location_lat, location_long are coordinates of origin.
+                if society_count < 4:
+                    coordinates = v0_utils.generate_coordinates_in_quadrant(society_count, location_lat, location_long, radius)
+                else:
+                    society_per_quadrant = society_count/4
+                    remainder = society_count % 4
+                    coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, location_lat, location_long, radius, v0_constants.first_quadrant_code))
+                    coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, location_lat, location_long, radius, v0_constants.second_quadrant_code))
+                    coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, location_lat, location_long, radius, v0_constants.third_quadrant_code))
+                    coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant + remainder, location_lat, location_long, radius, v0_constants.fourth_quadrant_code))
+                result[address] = society_count
 
-            geo_code_instance = v0_utils.get_geo_code_instance(city_name)
-            if not geo_code_instance:
-                return ui_utils.handle_response(class_name, data=errors.NO_GEOCODE_INSTANCE_FOUND.format(city_name))
-            state_code = geo_code_instance.state
-            city_lat, city_long = geo_code_instance.latlng
+            suppliers_dict = v0_utils.assign_supplier_ids(city_code, website_constants.society, coordinates)
 
-            if society_count < 4:
-                coordinates = v0_utils.generate_coordinates_in_quadrant(society_count, city_lat, city_long, radius)
-            else:
-                society_per_quadrant = society_count/4
-                remainder = society_count % 4
-                coordinates = v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, city_lat, city_long, radius, v0_constants.first_quadrant_code)
-                coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, city_lat, city_long, radius, v0_constants.second_quadrant_code))
-                coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, city_lat, city_long, radius, v0_constants.third_quadrant_code))
-                coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant + remainder, city_lat, city_long, radius, v0_constants.fourth_quadrant_code))
-
-            suppliers_dict = v0_utils.assign_supplier_ids(state_code, city_code, website_constants.society, coordinates)
             for society_id, detail in suppliers_dict.iteritems():
                 detail['supplier_id'] = society_id
                 detail['society_latitude'] = detail['latitude']
@@ -1657,9 +1664,66 @@ class CreateSocietyTestData(APIView):
                 del detail['latitude']
                 del detail['longitude']
                 society_list.append(SupplierTypeSociety(**detail))
-            SupplierTypeSociety.objects.all().delete()
             SupplierTypeSociety.objects.bulk_create(society_list)
-            result['count'] = len(society_list)
+            v0_utils.handle_society_detail(suppliers_dict, society_detail)
+            result['total_count'] = len(society_list)
             return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class CreateBusinessTypeSubType(APIView):
+    """
+    Creates BusinessType and their SubTypes in the System. Deletes Previous, if any.
+    """
+
+    def post(self, request):
+        """
+        API to create Business Type and SubTypes
+        The SubType Instances cannot be collected at the time of collecting Type instances because SubTypes depend on respective
+        Type instances. Hence first we create Type instances and then create SubType instances.
+        Args:
+            request: JSON for business type and subtypes
+
+        Returns: The created instances
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            business_type_instances = []  # to store actual objects of BusinessType
+            business_sub_type_data = []  # to store data in list of dict form for BusinessSubType
+            business_type_code_list = []  # to store list of all codes of BusinessType. Later used to fetch objects of BusinessType
+            business_sub_type_instances = []  # to store actual instances of BusinessSubType.
+
+            for business_type, detail in request.data.iteritems():
+
+                business_type_code = detail['code']
+                business_type_code_list.append(business_type_code)
+
+                business_type_instances.append(BusinessTypes(business_type=business_type, business_type_code=business_type_code))
+                for sub_type_dict in detail['subtypes']:
+                    data = {
+                        'business_sub_type': sub_type_dict['name'],
+                        'business_sub_type_code': sub_type_dict['code'],
+                        'business_type_code': business_type_code
+                    }
+                    business_sub_type_data.append(data)
+
+            # create Type instances here
+            BusinessTypes.objects.all().delete()
+            BusinessTypes.objects.bulk_create(business_type_instances)
+            business_type_instances = BusinessTypes.objects.filter(business_type_code__in=business_type_code_list)
+            # map from code to type instances so that we can fetch type instance from knowing the code itself.
+            business_type_instances_map = {instance.business_type_code: instance for instance in business_type_instances}
+
+            # now create SubType instances
+            for sub_type_data in business_sub_type_data:
+                sub_type_data['business_type'] = business_type_instances_map[sub_type_data['business_type_code']]
+                del sub_type_data['business_type_code']
+                business_sub_type_instances.append(BusinessSubTypes(**sub_type_data))
+            BusinessSubTypes.objects.all().delete()
+            BusinessSubTypes.objects.bulk_create(business_sub_type_instances)
+            serializer = BusinessTypeSubTypeReadOnlySerializer(business_type_instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
