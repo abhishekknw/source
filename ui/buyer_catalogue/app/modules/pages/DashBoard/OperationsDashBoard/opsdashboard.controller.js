@@ -29,10 +29,18 @@ angular.module('catalogueApp')
   var getProposalDetails = function(){
     opsDashBoardService.getProposalDetails()
     	.then(function onSuccess(response){
+        console.log(response);
     		$scope.proposals = response.data.data;
+        if(response.data.data == null){
+          $scope.isEmpty = true;
+          $scope.msg = constants.emptyProposalMsg;
+        }else {
+          $scope.isEmpty = false;
+        }
         $scope.loading = response.data;
     	})
     	.catch(function onError(response){
+        $scope.isEmpty = true;
     		console.log("error occured", response);
         swal(constants.name,constants.errorMsg,constants.error);
     	});

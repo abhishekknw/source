@@ -8,6 +8,8 @@ angular.module('machadaloCommon')
                 $scope.showData =true;
               if($scope.user_code == 'guestUser')
                 $scope.isGuestUser = true;
+              if($scope.user_code == 'agency')
+                $scope.isAgency = true;
                 // Do some stuff
               $scope.closeModal = function(){
                 $('#menuModal').modal('hide');
