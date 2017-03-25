@@ -476,3 +476,11 @@ class ProposalMetricsSerializer(ModelSerializer):
 class PermissionSerializer(ModelSerializer):
     class Meta:
         model = Permission
+
+
+class BusinessTypeSubTypeReadOnlySerializer(ModelSerializer):
+    subtypes = BusinessSubTypesSerializer(source='business_subtypes', many=True)
+
+    class Meta:
+        model = BusinessTypes
+

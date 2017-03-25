@@ -12,6 +12,7 @@ import v0.constants as v0_constants
 import models as v0_models
 import v0.ui.website.utils as website_utils
 import v0.ui.website.constants as website_constants
+from bulk_update.helper import bulk_update
 
 
 def do_each_model(myModel, supplier_model, content_type):
@@ -146,7 +147,7 @@ def generate_coordinates_in_quadrant(count, origin_lat, origin_long, radius,  qu
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def assign_supplier_ids(state_code, city_code, supplier_type_code,  coordinates):
+def assign_supplier_ids(city_code, supplier_type_code,  coordinates):
     """
     returns a dict containing a unique supplier_id for each of the coordinate in coordinates
     Args:
@@ -163,7 +164,7 @@ def assign_supplier_ids(state_code, city_code, supplier_type_code,  coordinates)
         detail = {}
         for index, coordinate_tuple in enumerate(coordinates):
             lat, lng = coordinate_tuple
-            supplier_id = state_code + city_code + supplier_type_code + website_utils.get_random_pattern(size=3, chars=string.ascii_uppercase) + '_' + str(index)
+            supplier_id = city_code + supplier_type_code + website_utils.get_random_pattern(size=3, chars=string.ascii_uppercase) + '_' + str(index)
             detail[supplier_id] = {
                 'latitude': lat,
                 'longitude': lng
@@ -173,29 +174,196 @@ def assign_supplier_ids(state_code, city_code, supplier_type_code,  coordinates)
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def handle_society_detail(suppliers_dict, society_detail):
+def handle_society_flat_detail(flat_detail, suppliers_dict, content_type):
     """
-
-    Args:
-        suppliers_dict:
-        society_detail:
 
     Returns:
 
     """
-    function = handle_society_detail.__name__
+    function = handle_society_flat_detail.__name__
     try:
-        if society_detail.get('flat_detail'):
-            supplier_ids = suppliers_dict.keys()
-            total_societies = len(supplier_ids)
-            total_flat_count = int(society_detail['total_flats'])
-            assert total_flat_count >= total_societies, 'total flat count {0} must be greater than total number of societies {1}'.format(total_flat_count, total_societies)
+        supplier_ids = suppliers_dict.keys()
+        flat_type_dict = website_constants.flat_type_dict
+        flat_instances = []
+        for society_id in supplier_ids:
+            total_flat_count = 0
+            for flat_type_code, flat_type_value in flat_type_dict.iteritems():
+                count_range = flat_detail['detail'][flat_type_code] if flat_detail.get(flat_type_code) else [0, v0_constants.flat_type_default_params[flat_type_code]['count']]
+                size_range = flat_detail['detail'][flat_type_code] if flat_detail.get(flat_type_code) else [0, v0_constants.flat_type_default_params[flat_type_code]['size']]
+                assert count_range[0] <= count_range[1], "Invalid Count Range"
+                assert size_range[0] <= size_range[1], "Invalid Size Range"
+                data = {
+                    'flat_type': flat_type_value,
+                    'object_id': society_id,
+                    'content_type': content_type,
+                    'flat_count': random.uniform(int(count_range[0]), int(count_range[1])),
+                    'size_builtup_area': random.uniform(float(size_range[0]), float(size_range[1]))
+                }
+                total_flat_count += data['flat_count']
+                flat_instances.append(v0_models.FlatType(**data))
+            suppliers_dict[society_id]['flat_count'] = total_flat_count
+        v0_models.FlatType.objects.all().delete()
+        v0_models.FlatType.objects.bulk_create(flat_instances)
+        return True
+    except Exception as e:
+        raise Exception(e, ui_utils.get_system_error(e))
 
-            flat_type_dict = website_constants.flat_type_dict
-            total_flat_types = len(flat_type_dict.keys())
-            flats_per_society = total_flat_count/total_societies
-            flats_of_one_type_per_society = flats_per_society/total_flat_types
 
+def handle_tower_details(tower_detail, suppliers_dict, content_type):
+    """
+    Args:
+        tower_detail:
+        suppliers_dict:
+        content_type:
+
+    Returns: True if creates zero or more instances of Tower successfully. False otherwise.
+
+    """
+    function = handle_tower_details.__name__
+    try:
+        if not tower_detail or (not suppliers_dict) or (not content_type):
+            return False
+        tower_range = tower_detail['count'] if tower_detail.get('count') else [1, v0_constants.default_tower_range]
+        assert tower_range[0] <= tower_range[1], "Invalid Tower Range"
+        supplier_ids = suppliers_dict.keys()
+        tower_instances = []
+        for supplier_id, detail in suppliers_dict.iteritems():
+            total_tower_count = random.randint(int(tower_range[0]), int(tower_range[1]))
+            for tower_number in range(total_tower_count):
+                data = {
+                    'object_id': supplier_id,
+                    'content_type': content_type,
+                    'tower_name': v0_constants.default_tower_base_name + str(tower_number),
+                }
+                tower_instances.append(v0_models.SocietyTower(**data))
+            suppliers_dict[supplier_id]['tower_count'] = total_tower_count
+        v0_models.SocietyTower.objects.all().delete()
+        v0_models.SocietyTower.objects.bulk_create(tower_instances)
+        return True
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
+
+def handle_supplier_amenities(amenities, suppliers_dict, content_type):
+    """
+    Assigns Amenities to suppliers.
+    Args:
+        amenities:
+        suppliers_dict:
+        content_type:
+
+    Returns:
+
+    """
+    function = handle_supplier_amenities.__name__
+    try:
+        if not amenities or (not suppliers_dict) or (not content_type):
+            return False
+        supplier_ids = suppliers_dict.keys()
+        v0_models.SupplierAmenitiesMap.objects.all().delete()
+        amenities = v0_models.Amenity.objects.filter(code__in=amenities)
+        if not amenities:
+            return False
+        amenities_map = {amenity.code: amenity for amenity in amenities}
+        supplier_amenity_objects = []
+        # assign a random count of amenity to each supplier
+        for supplier_id in supplier_ids:
+            amenity_count = random.randint(1, len(amenities))
+            for index in range(amenity_count):
+                data = {
+                    'content_type': content_type,
+                    'object_id': supplier_id,
+                    'amenity': amenities_map[amenities[random.randint(0, len(amenities)-1)]]
+                }
+                supplier_amenity_objects.append(v0_models.SupplierAmenitiesMap(**data))
+        v0_models.SupplierAmenitiesMap.objects.all().delete()
+        v0_models.SupplierAmenitiesMap.objects.bulk_create(supplier_amenity_objects)
+        return True
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def handle_society_detail(suppliers_dict, society_detail):
+    """
+
+    Args:
+        suppliers_dict: supplier_id --> supplier_detail mapping
+        society_detail: The dict holding society_detail information such as Flat detail, Inventories information etc
+
+    Returns: True on success. True meaning flat details were added and societies being updated.
+
+    """
+    function = handle_society_detail.__name__
+    try:
+        if not suppliers_dict or (not society_detail):
+            return False
+
+        supplier_ids = suppliers_dict.keys()
+        societies = v0_models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+        response = ui_utils.get_content_type(website_constants.society)
+        if not response.data['status']:
+            return response
+        content_type = response.data['data']
+
+        if society_detail.get('flat_detail'):
+            flat_detail = society_detail['flat_detail']
+            handle_society_flat_detail(flat_detail, suppliers_dict, content_type)
+            #  set the remaining params if present
+            for society in societies:
+                society.flat_count = suppliers_dict[society.supplier_id].get('flat_count')
+
+        if society_detail.get('tower_detail'):
+            tower_detail = society_detail['tower_detail']
+            handle_tower_details(tower_detail, suppliers_dict, content_type)
+            #  set the remaining params if present
+            for society in societies:
+                society.tower_count = suppliers_dict[society.supplier_id].get('tower_count')
+
+        if society_detail.get('amenities'):
+            amenities = society_detail['amenities']
+            handle_supplier_amenities(amenities, suppliers_dict, content_type)
+
+        if society_detail.get('direct_society_details'):
+
+            direct_society_detail_key = 'direct_society_details'
+            society_type_list = society_detail[direct_society_detail_key]['society_type'] if society_detail[direct_society_detail_key].get('society_type') else website_constants.quality_dict.keys()
+            society_location_type_list = society_detail[direct_society_detail_key]['society_location'] if society_detail[direct_society_detail_key].get('society_location') else website_constants.locality_dict.keys()
+            society_size_list = society_detail[direct_society_detail_key]['society_size'] if society_detail[direct_society_detail_key].get('society_size') else website_constants.quantity_dict.keys()
+            possession_year_range = society_detail[direct_society_detail_key]['possession_year'] if society_detail[direct_society_detail_key].get('possession_year') else v0_constants.default_possession_year_range
+            flat_avg_rental_persqft_range = society_detail[direct_society_detail_key]['flat_avg_rental_persqft'] if society_detail[direct_society_detail_key].get('flat_avg_rental_persqft') else v0_constants.default_flat_avg_rental_persqft_range
+            flat_sale_cost_persqft_range = society_detail[direct_society_detail_key]['flat_sale_cost_persqft'] if society_detail[direct_society_detail_key].get('flat_sale_cost_persqft') else v0_constants.default_flat_sale_cost_persqft_range
+            percentage_range_of_tenants_to_flat = society_detail['direct_society_details']['percentage_range_of_tenants_to_flat'] if society_detail[direct_society_detail_key].get('percentage_range_of_tenants_to_flat') else v0_constants.default_percentage_range_of_tenants_to_flat
+
+            assert percentage_range_of_tenants_to_flat[0] <= percentage_range_of_tenants_to_flat[1], "First Value must be less than Second Value."
+            assert possession_year_range[0] <= possession_year_range[1], "Invalid Possession Year Range"
+            assert flat_avg_rental_persqft_range[0] <= flat_avg_rental_persqft_range[1], "Flat Average rental Invalid Range"
+            assert flat_sale_cost_persqft_range[0] <= flat_sale_cost_persqft_range[1], "Flat Average Sale Cost Invalid Range"
+
+            for society in societies:
+                society.society_type_quality = website_constants.quality_dict[society_type_list[random.randint(0, len(society_type_list)-1)]]
+                society.society_location_type = website_constants.locality_dict[society_location_type_list[random.randint(0, len(society_location_type_list)-1)]]
+                society.society_type_quantity = website_constants.quantity_dict[society_size_list[random.randint(0, len(society_size_list)-1)]]
+                society.age_of_society = random.randint(possession_year_range[0], possession_year_range[1])
+                society.total_tenant_flat_count = int((random.uniform(percentage_range_of_tenants_to_flat[0], percentage_range_of_tenants_to_flat[1]) * society.flat_count)/100)
+                society.flat_avg_rental_persqft = random.randint(flat_avg_rental_persqft_range[0], flat_avg_rental_persqft_range[1])
+                society.flat_sale_cost_persqft = random.randint(flat_sale_cost_persqft_range[0], flat_sale_cost_persqft_range[1])
+
+        bulk_update(societies)
+        return True
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def handle_basic_data(city_name, city_code):
+    """
+    Args:
+        city_name:
+        city_code:
+
+    Returns:
+    """
+    function = handle_basic_data.__name__
+    try:
+        pass
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))

@@ -1232,6 +1232,7 @@ class BusinessInfo(BaseModel):
     class Meta:
         db_table = 'business_info'
 
+
 class BusinessTypes(BaseModel):
     id              = models.AutoField(db_column='ID', primary_key=True)
     business_type   = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
@@ -1799,6 +1800,7 @@ class CitySubArea(models.Model):
         db_table = 'city_area_subarea'
         unique_together = (('area_code','subarea_code'),)
 
+
 class SupplierTypeCode(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=20, null=True)
@@ -1807,6 +1809,7 @@ class SupplierTypeCode(models.Model):
     class Meta:
 
         db_table = 'supplier_type_code'
+
 
 class FlatTypeCode(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
