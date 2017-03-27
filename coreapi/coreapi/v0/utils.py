@@ -1,6 +1,7 @@
 from types import *
 import random
 import string
+from uuid import uuid4
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
@@ -119,29 +120,34 @@ def generate_coordinates_in_quadrant(count, origin_lat, origin_long, radius,  qu
         assert type(origin_lat) is FloatType, 'latitude is not float type'
         assert type(origin_long) is FloatType, 'longitude is not float type'
 
-        coordinates = []
+        coordinates_list = []
+        delta_dict = website_utils.get_delta_latitude_longitude(radius, origin_lat)
+
+        delta_latitude = delta_dict['delta_latitude']
+        delta_longitude = delta_dict['delta_longitude']
+
         if quadrant_code == v0_constants.first_quadrant_code:
             for i in range(count):
-                random_lat = origin_lat + random.uniform(0, radius)
-                random_long = origin_long + random.uniform(0, radius)
-                coordinates.append((random_lat, random_long))
+                random_lat = origin_lat + random.uniform(0, delta_latitude)
+                random_long = origin_long + random.uniform(0, delta_longitude)
+                coordinates_list.append((random_lat, random_long))
         elif quadrant_code == v0_constants.second_quadrant_code:
             for i in range(count):
-                random_lat = origin_lat - random.uniform(0, radius)
-                random_long = origin_long + random.uniform(0, radius)
-                coordinates.append((random_lat, random_long))
+                random_lat = origin_lat - random.uniform(0, delta_latitude)
+                random_long = origin_long + random.uniform(0, delta_longitude)
+                coordinates_list.append((random_lat, random_long))
         elif quadrant_code == v0_constants.third_quadrant_code:
             for i in range(count):
-                random_lat = origin_lat - random.uniform(0, radius)
-                random_long = origin_long - random.uniform(0, radius)
-                coordinates.append((random_lat, random_long))
+                random_lat = origin_lat - random.uniform(0, delta_latitude)
+                random_long = origin_long - random.uniform(0, delta_longitude)
+                coordinates_list.append((random_lat, random_long))
         else:
             for i in range(count):
                 random_lat = origin_lat + random.uniform(0, radius)
                 random_long = origin_long - random.uniform(0, radius)
-                coordinates.append((random_lat, random_long))
+                coordinates_list.append((random_lat, random_long))
 
-        return coordinates
+        return coordinates_list
 
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -283,6 +289,123 @@ def handle_supplier_amenities(amenities, suppliers_dict, content_type):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
+def make_inventory_id(inventory_code, supplier_type_code):
+    """
+    returns a unique inventory id
+    Args:
+        inventory_code:
+        supplier_type_code:
+
+    Returns:
+    """
+    function = make_inventory_id.__name__
+    try:
+        return inventory_code + supplier_type_code + str(uuid4())[-7:]
+
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def handle_supplier_inventory_detail(inventory_detail, supplier_ids, content_type):
+    """
+    handles inventory detail
+    must be called after societies and towers are filled up
+    Args:
+        inventory_detail:
+        supplier_ids:
+        content_type:
+
+    Returns:
+    """
+    function = handle_supplier_inventory_detail.__name__
+    try:
+        if not inventory_detail or (not supplier_ids) or (not content_type):
+            return False
+        inventories_allowed = inventory_detail['inventories_allowed']
+        society_instances_map = v0_models.SupplierTypeSociety.objects.in_bulk(supplier_ids)
+        tower_instances = v0_models.SocietyTower.objects.filter(object_id__in=supplier_ids, content_type=content_type)
+        tower_instances_map = {}
+        # each society will have list of towers
+        for tower_instance in tower_instances:
+            if not tower_instances_map.get(tower_instance.object_id):
+                tower_instances_map[tower_instance.object_id] = []
+            tower_instances_map[tower_instance.object_id].append(tower_instance)
+
+        inv_summary_objects = []
+        poster_objects = []  # depends on towers
+        standee_objects = []  # depends on towers
+        stall_objects = []  # independent of towers
+        flier_objects = []  # independent of towers
+
+        for supplier_id in supplier_ids:
+            inv_summary_data = {
+                'object_id': supplier_id,
+                'content_type': content_type
+            }
+            for inv_code in inventories_allowed:
+                inv_summary_data[website_constants.inventory_dict[inv_code]]= True
+                tower_count = society_instances_map[supplier_id].tower_count
+
+                for index in range(tower_count):  # handle inventories which directly depend on towers
+                    if inv_code == website_constants.inventory_name_to_code['poster']:
+                        for poster_index in range(v0_constants.default_poster_per_tower):
+                            data = {
+                                'adinventory_id': make_inventory_id(inv_code, website_constants.society),
+                                'tower': tower_instances_map[supplier_id][index],
+                                'content_type': content_type,
+                                'object_id': supplier_id
+                            }
+                            poster_objects.append(v0_models.PosterInventory(**data))
+                    elif inv_code == website_constants.inventory_name_to_code['standee']:
+                        for standee_index in range(v0_constants.default_standee_per_tower):
+                            data = {
+                                'adinventory_id': make_inventory_id(inv_code, website_constants.society),
+                                'tower': tower_instances_map[supplier_id][index],
+                                'content_type': content_type,
+                                'object_id': supplier_id
+                            }
+                            standee_objects.append(v0_models.StandeeInventory(**data))
+
+                # handle inventories which do not depend on towers
+                if inv_code == website_constants.inventory_name_to_code['stall']:
+                    for stall_index in range(v0_constants.default_stall_per_society):
+                        data = {
+                            'adinventory_id': make_inventory_id(inv_code, website_constants.society),
+                            'content_type': content_type,
+                            'object_id': supplier_id
+                        }
+                        stall_objects.append(v0_models.StallInventory(**data))
+
+                elif inv_code == website_constants.inventory_name_to_code['flier']:
+                    for flier_frequency in range(v0_constants.default_flier_frequency_per_society):
+                        data = {
+                            'adinventory_id': make_inventory_id(inv_code, website_constants.society),
+                            'content_type': content_type,
+                            'object_id': supplier_id
+                        }
+                        flier_objects.append(v0_models.FlyerInventory(**data))
+                    inv_summary_data['flier_frequency'] = v0_constants.default_flier_frequency_per_society
+
+            inv_summary_objects.append(v0_models.InventorySummary(**inv_summary_data))
+
+        v0_models.InventorySummary.objects.all().delete()
+        v0_models.InventorySummary.objects.bulk_create(inv_summary_objects)
+
+        v0_models.PosterInventory.objects.all().delete()
+        v0_models.FlyerInventory.objects.all().delete()
+        v0_models.StallInventory.objects.all().delete()
+        v0_models.StandeeInventory.objects.all().delete()
+
+        v0_models.PosterInventory.objects.bulk_create(poster_objects)
+        v0_models.StandeeInventory.objects.bulk_create(standee_objects)
+        v0_models.StallInventory.objects.bulk_create(stall_objects)
+        v0_models.FlyerInventory.objects.bulk_create(flier_objects)
+
+        return True
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
 def handle_society_detail(suppliers_dict, society_detail):
     """
 
@@ -354,16 +477,72 @@ def handle_society_detail(suppliers_dict, society_detail):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def handle_basic_data(city_name, city_code):
+def handle_inventory_pricing(supplier_ids, content_type, price_dict):
     """
+    sets pricing for each inventory type
     Args:
-        city_name:
-        city_code:
-
+        supplier_ids:
+        content_type:
+        price_dict:  A dict of prices of all inventory kinds
     Returns:
     """
-    function = handle_basic_data.__name__
+    function = handle_inventory_pricing.__name__
     try:
-        pass
+        inventory_summary_instances = v0_models.InventorySummary.objects.filter(object_id__in=supplier_ids, content_type=content_type)
+        inventory_summary_instance_map = {instance.object_id: instance for instance in inventory_summary_instances}
+
+        price_mapping_instances = []
+        for supplier_id in supplier_ids:
+            inventory_summary_instance = inventory_summary_instance_map[supplier_id]
+            if inventory_summary_instance.poster_allowed_nb:
+                price_mapping_instances.append(create_price_mapping_instances(supplier_id, content_type, website_constants.poster, website_constants.default_poster_type, website_constants.default_poster_duration_type, price_dict))
+
+            if inventory_summary_instance.standee_allowed:
+                price_mapping_instances.append(create_price_mapping_instances(supplier_id, content_type, website_constants.standee, website_constants.default_standee_type, website_constants.default_poster_duration_type, price_dict))
+
+            if inventory_summary_instance.stall_allowed:
+                price_mapping_instances.append(create_price_mapping_instances(supplier_id, content_type, website_constants.stall, website_constants.default_stall_type, website_constants.default_stall_duration_type, price_dict))
+
+            if inventory_summary_instance.flier_allowed:
+                price_mapping_instances.append(create_price_mapping_instances(supplier_id, content_type, website_constants.flier, website_constants.default_flier_type, website_constants.default_flier_duration_type, price_dict))
+        v0_models.PriceMappingDefault.objects.all().delete()
+        v0_models.PriceMappingDefault.objects.bulk_create(price_mapping_instances)
+        return True
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
+
+
+def create_price_mapping_instances(supplier_id, content_type,  inventory_name, inventory_type, inventory_duration_type, price_dict):
+    """
+
+    Args:
+        supplier_id:
+        inventory_name:
+        inventory_type:
+        inventory_duration_type:
+        price_dict:
+        content_type
+
+    Returns:
+
+    """
+    function = create_price_mapping_instances.__name__
+    try:
+        ad_inventory_instance = v0_models.AdInventoryType.objects.get(adinventory_name=inventory_name, adinventory_type=inventory_type)
+        duration_type_instance = v0_models.DurationType.objects.get(duration_name=inventory_duration_type)
+        data = {
+            'adinventory_type': ad_inventory_instance,
+            'duration_type': duration_type_instance,
+            'supplier_price': random.randint(price_dict[inventory_name][0], price_dict[inventory_name][1]),
+            'business_price': 0,
+            'object_id': supplier_id,
+            'content_type': content_type
+        }
+        return v0_models.PriceMappingDefault(**data)
+    except Exception as e:
+        import pdb
+        pdb.set_trace()
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+

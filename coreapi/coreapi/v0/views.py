@@ -15,7 +15,8 @@ from rest_framework import status, viewsets
 
 from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer
 from rest_framework.decorators import detail_route, list_route
-from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, BusinessSubTypes
+from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, BusinessSubTypes, AdInventoryType, DurationType
+from v0.models import AD_INVENTORY_CHOICES
 import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils
@@ -1727,3 +1728,87 @@ class CreateBusinessTypeSubType(APIView):
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class CreateAdInventoryTypeDurationType(APIView):
+    """
+    Creates AdInventory and Duration objects if not present in the database.
+    """
+    def post(self, request):
+        """
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            # for simplicity i have every combination
+            for duration_code, duration_value in website_constants.duration_dict.iteritems():
+                DurationType.objects.get_or_create(duration_name=duration_value)
+            for inventory_tuple in AD_INVENTORY_CHOICES:
+                for ad_inventory_type_code, ad_inventory_type_value in website_constants.type_dict.iteritems():
+                    AdInventoryType.objects.get_or_create(adinventory_name=inventory_tuple[0], adinventory_type=ad_inventory_type_value)
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class AssignInventories(APIView):
+    """
+    Assigns inventories to all societies in the table. If already assigned, deletes them first and then re-assigns.
+    Must be run after societies are created
+    """
+    def post(self, request):
+        """
+
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            inventory_detail = request.data['inventory_detail']
+            suppliers = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
+            if not suppliers:
+                raise Exception("NO societies in the database yet. Add them first and then hit this API.")
+            response = ui_utils.get_content_type(website_constants.society)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
+            v0_utils.handle_supplier_inventory_detail(inventory_detail, suppliers, content_type)
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class SetInventoryPricing(APIView):
+    """
+    sets prices to various inventories assigned
+    """
+
+    def post(self, request):
+        """
+
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_ids = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
+            response = ui_utils.get_content_type(website_constants.society)
+            if not response.data['status']:
+                return response
+            content_type = response.data['data']
+            v0_utils.handle_inventory_pricing(supplier_ids, content_type, request.data)
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+

@@ -80,7 +80,11 @@ urlpatterns = patterns('',
     url(r'^populate-content-types/$', views.PopulateContentTypeFields.as_view()),
     url(r'^set-user-to-master-user/$', views.SetUserToMasterUser.as_view()),
     url(r'^create-society-test-data/$', views.CreateSocietyTestData.as_view()),
-    url(r'^create-business-type-subtypes/$', views.CreateBusinessTypeSubType.as_view())
+    url(r'^create-business-type-subtypes/$', views.CreateBusinessTypeSubType.as_view()),
+    url(r'^create-adinventory-duration-types/$', views.CreateAdInventoryTypeDurationType.as_view()),
+    url(r'^assign-inventories/$', views.AssignInventories.as_view()),
+    url(r'^set-inventory-pricing/$', views.SetInventoryPricing.as_view())
+
 
 )
 
