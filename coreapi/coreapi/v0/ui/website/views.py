@@ -2931,6 +2931,13 @@ class ProposalViewSet(viewsets.ViewSet):
                 'longitude': longitude,
                 'user': request.user
             }
+
+            # update center's radius here. This is being updated so that when next time get_spaces is called, radius is reflected in front end
+            if center_id:
+                instance = models.ProposalCenterMapping.objects.get(id=int(center_id))
+                instance.radius = float(radius)
+                instance.save()
+
             response = website_utils.suppliers_within_radius(data)
             if not response.data['status']:
                 return response
@@ -3722,14 +3729,15 @@ class AssignCampaign(APIView):
 
             assigned_objects = models.CampaignAssignment.objects.filter(**query)
 
+            campaigns = []
             # check each one of them weather they are campaign or not
             for assign_object in assigned_objects:
                 response = website_utils.is_campaign(assign_object.campaign)
-                if not response.data['status']:
-                    return response
+                if response.data['status']:
+                    campaigns.append(assign_object)
                     # assign statuses to each of the campaigns.
 
-            serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
+            serializer = website_serializers.CampaignAssignmentSerializerReadOnly(campaigns, many=True)
 
             for data in serializer.data:
                 proposal_start_date = parse_datetime(data['campaign']['tentative_start_date'])
