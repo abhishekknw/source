@@ -31,7 +31,7 @@ angular.module('catalogueApp')
     	.then(function onSuccess(response){
         console.log(response);
     		$scope.proposals = response.data.data;
-        if(response.data.data == null){
+        if($scope.proposals.length == 0){
           $scope.isEmpty = true;
           $scope.msg = constants.emptyProposalMsg;
         }else {

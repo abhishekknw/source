@@ -5,11 +5,10 @@
 </br></br></br>
 <!-- <back-Button></back-Button> -->
 <div class="breadcrumb" ncy-breadcrumb></div>
-<body>
 <div style="margin-left:auto;margin-right:150px;width:8%">
   <button class="btn btn-primary active notify" style="text-align:right" ng-click="goToCampaignList()">List Campaigns</button>
 </div>
-<div ng-show="!isEmpty">{{msg}}</div>
+<div ng-show="isEmpty" style="font-size:24px;text-align:center;"><span>{{msg}}</span></div>
 <h3 ng-hide="hideData || isEmpty" style = "margin-left: 460px; margin-top: 60px;">Machadalo Operations Dashboard</h3>
 <div class="container" ng-hide="hideData || isEmpty">
   <div class="row">
@@ -31,7 +30,7 @@
             <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
             <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
             <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
-            <td class="col-md-2">
+            <td class="col-md-2" style="text-align:left">
               <div class="radio">
                      <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)"  data-toggle="modal" ng-loading="loadSpinner">Accept</label>
               </div>
@@ -51,10 +50,6 @@
     </div>
   </div>
 </div>
-<div class="push"></div>
-<footer-bar></footer-bar>
-</body>
-
 <!-- Start: Code for reason specifying modal-->
 <div id="declineModal" class="modal fade">
   <div class="modal-dialog">
@@ -114,3 +109,4 @@
   </div>
 </div>
 <!-- End: Code for assgining campaign -->
+<div ng-class="{footer1:proposals.length == 0}"><footer-bar></footer-bar></div>

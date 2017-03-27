@@ -1,6 +1,3 @@
-* {
-    margin: 0;
-}
 th{
   	background: #808080;
     text-align: center;
@@ -10,19 +7,7 @@ body{
 	background: #f2f2f2;
 	font-family: Source Sans Pro;
 	color: #707070;
-  height: 100%;
-  margin: 0;
 }
-.container {
-    min-height: 100%;
-    height: auto !important;
-    height: 100%;
-    margin: 0 auto -342px; /* the bottom margin is the negative value of the footer's height */
-}
-.footer, .push {
-    height: 342px; /* .push must be the same height as .footer */
-}
-
 
 .notify{
 	margin-top: 15px;
@@ -37,4 +22,7 @@ body{
 	margin-left: auto;
 	margin-right: auto;
 	background-color: transparent;
+}
+.footer1{
+  margin-top: 360px;
 }
