@@ -24,7 +24,7 @@ from django.http import Http404
 from django.core.mail import EmailMessage
 from django.utils import timezone
 from django.conf import settings
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.forms.models import model_to_dict
 from django.db import connection
 
@@ -1809,13 +1809,13 @@ def construct_proposal_response(proposal_id, user):
 
 def add_inventory_summary_details(supplier_list, inventory_summary_objects_mapping, supplier_type_code, shortlisted=True, status=True):
     """
-    This function adds detals from inventory summary table for al the suppliers in
+    This function adds details from inventory summary table for all the suppliers in
     supplier_list. 
 
     Args: 
         supplier_list:  [{supplier_id: 123, ..}, { }, { }  ] type structure in which 
-        each item is a dict containing details of only one supplier. 
-
+        each item is a dict containing details of only one supplier.
+        supplier_type_code: a code to identify a supplier
         inventory_summary_objects_mapping: { 
               supplier_id_1: inv_summ_object_1, supplier_id_2: inv_summ_object_2 
             } type structure in which the right inv_object is put against supplier_id 
@@ -1827,52 +1827,102 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
     """
     function = add_inventory_summary_details.__name__
     try:
+        content_type = ui_utils.fetch_content_type(supplier_type_code)
+        supplier_ids = [supplier_dict['supplier_id'] for supplier_dict in supplier_list]
+        price_mapping_default_map, ad_inventory_map, duration_map = make_handy_price_mapping_default_duration_adinventory_type(supplier_ids, content_type)
+        inventory_count_map = get_inventory_count(supplier_ids, content_type)
+
         for supplier in supplier_list:
-            supplier_inventory_obj = inventory_summary_objects_mapping.get(supplier['supplier_id'])
+            supplier_inventory_obj = inventory_summary_objects_mapping[supplier['supplier_id']]
             supplier['shortlisted'] = shortlisted
             supplier['buffer_status'] = False
             # status is set to a constant initially only if the param status is true
             if status:
                 supplier['status'] = website_constants.status
 
-            # do not calculate prices if no inventory summary object exist
-            # todo: involves one database hit within handle_inventory_pricing() function.
-            #  improve it later if code is slow.
-            if supplier_inventory_obj:
-                if supplier_inventory_obj.poster_allowed_nb or supplier_inventory_obj.poster_allowed_lift:
-                    supplier['total_poster_count'] = supplier_inventory_obj.total_poster_count
-                    response = handle_inventory_pricing('poster_a4', 'campaign_weekly', supplier['supplier_id'], supplier_type_code)
-                    if not response.data['status']:
-                        return response
-                    supplier['poster_price'] = response.data['data']
-
-                if supplier_inventory_obj.standee_allowed:
-                    supplier['total_standee_count'] = supplier_inventory_obj.total_standee_count
-                    response = handle_inventory_pricing('standee_small', 'campaign_weekly', supplier['supplier_id'], supplier_type_code)
-                    if not response.data['status']:
-                        return response
-                    supplier['standee_price'] = response.data['data']
-
-                if supplier_inventory_obj.stall_allowed:
-                    supplier['total_stall_count'] = supplier_inventory_obj.total_stall_count
-                    response = handle_inventory_pricing('stall_small', 'unit_daily', supplier['supplier_id'], supplier_type_code)
-                    if not response.data['status']:
-                        return response
-                    supplier['stall_price'] = response.data['data']
-                    response = handle_inventory_pricing('car_display_standard', 'unit_daily', supplier['supplier_id'], supplier_type_code)
-                    if not response.data['status']:
-                        return response
-                    supplier['car_display_price'] = response.data['data']
-
-                if supplier_inventory_obj.flier_allowed:
+            allowed_inventory_codes = get_inventories_allowed(supplier_inventory_obj)
+            for inventory_code in allowed_inventory_codes:
+                inventory_name = website_constants.inventory_code_to_name[inventory_code].lower()
+                if inventory_name == website_constants.flier.lower():
                     supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
-                    response = handle_inventory_pricing('flier_door_to_door', 'unit_daily', supplier['supplier_id'], supplier_type_code)
-                    if not response.data['status']:
-                        return response
-                    supplier['flier_price'] = response.data['data']
-        return ui_utils.handle_response(function, data=supplier_list, success=True)    
+                else:
+                    db_key = 'total_' + inventory_name + '_count'
+                    # set count from inventory summary if available. if not set count calculated previously from actual inventory tables
+                    if supplier_inventory_obj.__dict__[db_key]:
+                        supplier[db_key] = supplier_inventory_obj.__dict__[db_key]
+                    else:
+                        supplier[db_key] = inventory_count_map[supplier['supplier_id']][inventory_code]
+
+                ad_inventory_instance = ad_inventory_map[website_constants.inventory_type_duration_dict_list[inventory_code][0], website_constants.inventory_type_duration_dict_list[inventory_code][1]]
+                duration_instance = duration_map[website_constants.inventory_type_duration_dict_list[inventory_code][2]]
+                supplier[inventory_name + '_price'] = price_mapping_default_map[ad_inventory_instance.id, duration_instance.id, supplier['supplier_id'], content_type.id]['supplier_price']
+                supplier[inventory_name + '_duration'] = duration_instance.duration_name
+        return supplier_list
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def get_inventories_allowed(inventory_summary_instance):
+    """
+
+    Args:
+        inventory_summary_instance:
+
+    Returns:
+
+    """
+    function = get_inventories_allowed.__name__
+
+    try:
+        inventory_code_list = []
+        if inventory_summary_instance.poster_allowed_nb or inventory_summary_instance.poster_allowed_lift:
+            inventory_code_list.append(website_constants.inventory_name_to_code['poster'])
+        if inventory_summary_instance.stall_allowed:
+            inventory_code_list.append(website_constants.inventory_name_to_code['stall'])
+        if inventory_summary_instance.standee_allowed:
+            inventory_code_list.append(website_constants.inventory_name_to_code['standee'])
+        if inventory_summary_instance.flier_allowed:
+            inventory_code_list.append(website_constants.inventory_name_to_code['flier'])
+        if inventory_summary_instance.car_display_allowed:
+            inventory_code_list.append(website_constants.inventory_name_to_code['car_display'])
+        return inventory_code_list
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def make_handy_price_mapping_default_duration_adinventory_type(supplier_ids, content_type):
+    """
+
+    Returns:
+
+    """
+    function = make_handy_price_mapping_default_duration_adinventory_type.__name__
+    try:
+        price_mapping_instances_map = {}
+        ad_inventory_instance_map = {}
+        duration_instance_map = {}
+        pmd_objects = models.PriceMappingDefault.objects.filter(object_id__in=supplier_ids, content_type=content_type).values('adinventory_type', 'duration_type', 'object_id', 'content_type', 'supplier_price', 'business_price')
+        for instance in pmd_objects:
+            try:
+                reference = price_mapping_instances_map[instance['adinventory_type'], instance['duration_type'], instance['object_id'], instance['content_type']]
+            except KeyError:
+                price_mapping_instances_map[instance['adinventory_type'], instance['duration_type'], instance['object_id'], instance['content_type']] = instance
+
+        for ad_inventory_instance in models.AdInventoryType.objects.all():
+            try:
+                reference = ad_inventory_instance_map[ad_inventory_instance.adinventory_name, ad_inventory_instance.adinventory_type]
+            except KeyError:
+                ad_inventory_instance_map[ad_inventory_instance.adinventory_name, ad_inventory_instance.adinventory_type] = ad_inventory_instance
+
+        for duration_instance in models.DurationType.objects.all():
+            try:
+                reference = duration_instance_map[duration_instance.duration_name]
+            except KeyError:
+                duration_instance_map[duration_instance.duration_name] = duration_instance
+
+        return price_mapping_instances_map, ad_inventory_instance_map, duration_instance_map
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, inventory_summary_objects_mapping=None):
@@ -1881,6 +1931,7 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
     Args:
         supplier_type_code_list: ['RS', 'CP', 'GY']
         shortlisted_suppliers:  a list of object id's
+        inventory_summary_objects_mapping: a map of object_id --> inv sum instance
 
     Returns: { RS: [], CP: [], GY: [] } a dict containing each type of suppliers in the list
 
@@ -1918,20 +1969,13 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
             result[code] = serializer.data
             # proceed only when shortlisted_suppliers is non empty and inv_summ_object_map exist !
             if shortlisted_suppliers and inventory_summary_objects_mapping:
-                response = add_inventory_summary_details(serializer.data, inventory_summary_objects_mapping, code, False, False)
-                if not response.data['status']:
-                    return response
-                result[code] = serializer.data
+                result[code] = add_inventory_summary_details(serializer.data, inventory_summary_objects_mapping, code, False, False)
             # convert society_keys to common supplier keys to access easily at frontEnd
-            response = manipulate_object_key_values(result[code], supplier_type_code=code)
-            if not response.data['status']:
-                return response
-            result[code] = response.data['data']
+            result[code] = manipulate_object_key_values(result[code], supplier_type_code=code)
 
-        # return the result
-        return ui_utils.handle_response(function, data=result, success=True)
+        return result
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def proposal_shortlisted_spaces(data):
@@ -1948,15 +1992,10 @@ def proposal_shortlisted_spaces(data):
 
         # fetch all shortlisted suppliers object id's for this proposal
         shortlisted_suppliers = models.ShortlistedSpaces.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).select_related('content_object').values()
-
-        response = manipulate_object_key_values(shortlisted_suppliers)
-        if not response.data['status']:
-            return response
-
-        shortlisted_suppliers = response.data['data']
+        shortlisted_suppliers = manipulate_object_key_values(shortlisted_suppliers)
 
         # collect all supplier_id's 
-        supplier_ids = [supplier['object_id'] for supplier in shortlisted_suppliers ]
+        supplier_ids = [supplier['object_id'] for supplier in shortlisted_suppliers]
 
         # fetch all inventory_summary objects related to each one of suppliers
         inventory_summary_objects = models.InventorySummary.objects.filter_user_related_objects(user=user, object_id__in=supplier_ids)
@@ -1965,17 +2004,17 @@ def proposal_shortlisted_spaces(data):
         inventory_summary_objects_mapping = {inv_sum_object.object_id: inv_sum_object for inv_sum_object in inventory_summary_objects}
 
         shortlisted_suppliers_centerwise = {}
-         
+
         # populate the dict with object_id's now
         for supplier in shortlisted_suppliers:
 
             center_id = supplier['center_id']
             if not shortlisted_suppliers_centerwise.get(center_id):
-               shortlisted_suppliers_centerwise[center_id ] = []
+                shortlisted_suppliers_centerwise[center_id] = []
 
-            shortlisted_suppliers_centerwise[center_id].append(supplier) 
+            shortlisted_suppliers_centerwise[center_id].append(supplier)
 
-        # construction of proposal response is isolated
+            # construction of proposal response is isolated
         response = construct_proposal_response(proposal_id, user)
         if not response.data['status']:
             return response
@@ -1984,7 +2023,7 @@ def proposal_shortlisted_spaces(data):
         centers = response.data['data']
 
         # collect all center_codes against each center_id
-        center_id_list = [ center['id'] for center in centers ]
+        center_id_list = [center['id'] for center in centers]
         response = add_filters(proposal_id, center_id_list)
         if not response.data['status']:
             return response
@@ -1997,18 +2036,13 @@ def proposal_shortlisted_spaces(data):
 
         # add extra information in each center object
         for center in centers:
-            # empty dict to store intermediate result
-            center_result = {}
-            # add shortlisted suppliers for codes available for this center
-            response = add_shortlisted_suppliers(center['codes'], shortlisted_suppliers_centerwise.get(center['id']), inventory_summary_objects_mapping)
-            if not response.data['status']:
-                return response
-
-            center_result['suppliers'] = response.data['data']
-            center_result['center'] = center
-
-            # add filter information in suppliers_meta
-            center_result['suppliers_meta'] = filter_data[center['id']]['suppliers_meta']
+            # dict to store intermediate result
+            center_result = {
+                # add shortlisted suppliers for codes available for this center
+                'suppliers': add_shortlisted_suppliers(center['codes'], shortlisted_suppliers_centerwise.get(center['id']), inventory_summary_objects_mapping),
+                'center': center,
+                'suppliers_meta': filter_data[center['id']]['suppliers_meta'],
+            }
             result[center['id']] = center_result
 
         return ui_utils.handle_response(function, data=result, success=True)
@@ -2837,6 +2871,42 @@ def save_area_subarea(result):
         return ui_utils.handle_response(function, exception_object=e)
 
 
+def get_inventory_count(supplier_ids, content_type, inventory_summary_objects=None):
+    """
+    Args:
+        supplier_ids:
+        content_type:
+        inventory_summary_objects
+    Returns: a dict of all inventory counts allowed for each supplier
+
+    """
+    function = get_inventory_count.__name__
+    try:
+        # if we get inventory summary objects as param, we need to return total counts which are stored in here. will be removed in future.
+        if inventory_summary_objects:
+            return inventory_summary_objects.aggregate(posters=Sum('total_poster_count'), standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
+        # else we need to calculate the counts per supplier by counting each row in each inventory tables
+        all_inventory_codes = website_constants.inventories_with_object_id_fields
+        inventory_models = {}
+        for code in all_inventory_codes:
+            inventory_content_type = ui_utils.fetch_content_type(code)
+            model = apps.get_model(settings.APP_NAME, inventory_content_type.model)
+            inventory_models[code] = model
+        result = {}
+        count_query_result = {}
+        for inventory_code, model in inventory_models.iteritems():
+            count_query_result[inventory_code] = {detail['object_id']: detail['count'] for detail in model.objects.filter(object_id__in=supplier_ids, content_type=content_type).values('object_id').annotate(count=Count('adinventory_id'))}
+
+        for supplier_id in supplier_ids:
+            if not result.get(supplier_id):
+                result[supplier_id] = {}
+            for code in all_inventory_codes:
+                result[supplier_id][code] = count_query_result[code][supplier_id]
+        return result
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
 def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinates):
     """
     Args:
@@ -2845,42 +2915,34 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
         supplier_type_code: CP, RS
         coordinates: a dict containing radius, lat, long information.
 
-    Returns:
+    Returns: list of suppliers with pricing set, count of inventories
     """
+
     function = set_pricing_temproray.__name__
-    # fetch all inventory_summary objects related to each one of suppliers
-    inventory_summary_objects = models.InventorySummary.objects.get_supplier_type_specific_objects(
-        {'supplier_type_code': supplier_type_code}, supplier_ids)
-    # generate a mapping from object_id to inv_summ_object in a dict so that right object can be fetched up
-    inventory_summary_objects_mapping = {inv_summary_object.object_id: inv_summary_object for inv_summary_object in
-                                         inventory_summary_objects}
-    radius = float(coordinates['radius'])
-    latitude = float(coordinates['latitude'])
-    longitude = float(coordinates['longitude'])
-
-    # container to hold final suppliers
-    result = []
-
     try:
-        
-        response = manipulate_object_key_values(suppliers, supplier_type_code=supplier_type_code)
-        if not response.data['status']:
-            return response
-        suppliers = response.data['data']
+        # fetch all inventory_summary objects related to each one of suppliers
+        content_type = ui_utils.fetch_content_type(supplier_type_code)
+        inventory_summary_objects = models.InventorySummary.objects.filter(object_id__in=supplier_ids, content_type=content_type)
+        # generate a mapping from object_id to inv_summ_object in a dict so that right object can be fetched up
+        inventory_summary_objects_mapping = {inv_summary_object.object_id: inv_summary_object for inv_summary_object in inventory_summary_objects}
+        suppliers_inventory_count = get_inventory_count(supplier_ids, content_type, inventory_summary_objects)
+
+        radius = float(coordinates['radius'])
+        latitude = float(coordinates['latitude'])
+        longitude = float(coordinates['longitude'])
+
+        # container to hold final suppliers
+        result = []
+        suppliers = manipulate_object_key_values(suppliers, supplier_type_code=supplier_type_code)
 
         for supplier in suppliers:
             # include only those suppliers that lie within the circle of radius given
             if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
                 result.append(supplier)
-
-        response = add_inventory_summary_details(result, inventory_summary_objects_mapping, supplier_type_code, status=True)
-        if not response.data['status']:
-            return response
-        result = response.data['data']
-
-        return ui_utils.handle_response(function, data=result, success=True)
+        result = add_inventory_summary_details(result, inventory_summary_objects_mapping, supplier_type_code, status=True)
+        return result, suppliers_inventory_count
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code, business_price=0):
@@ -2895,7 +2957,6 @@ def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code
     Returns: price for the inventory, for this inventory type and this duration
     """
     function = handle_inventory_pricing.__name__
-    price_mapping = None
     try:
         response = ui_utils.get_content_type(supplier_type_code)
         if not response.data['data']:
@@ -2904,15 +2965,12 @@ def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code
         adinventory_type_dict = ui_utils.adinventory_func()
         duration_type_dict = ui_utils.duration_type_func()
         price_mappings = PriceMappingDefault.objects.filter(adinventory_type=adinventory_type_dict[inv_type], duration_type=duration_type_dict[dur_type], object_id=supplier_id, content_type=content_type)
-        if not price_mapping:
+        if not price_mappings:
             return ui_utils.handle_response(function, data=0, success=True)
         price_mapping = price_mappings[0]
         price_mapping.business_price = business_price
         price_mapping.save()
-        return ui_utils.handle_response(function, data=price_mapping.business_price, success=True)
-    except Http404 as e:
-        # if price_mapping_default object is not found, return 0 as price
-        return ui_utils.handle_response(function, data=0, success=True)
+        return ui_utils.handle_response(function, data=price_mapping.supplier_price, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -3305,10 +3363,9 @@ def manipulate_object_key_values(suppliers, supplier_type_code=website_constants
                 # set extra key, value sent in kwargs
                 for key, item in kwargs.iteritems():
                     supplier[key] = item
-
-        return ui_utils.handle_response(function, data=suppliers, success=True)
+        return suppliers
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def setup_generic_export(data, user, proposal_id):
@@ -3882,10 +3939,7 @@ def map_objects_ids_to_objects(mapping):
             model_name = content_type_object.model
             # we need to change the keys when we encounter a society
             if model_name == website_constants.society_model_name:
-                response = manipulate_object_key_values(supplier_objects)
-                if not response.data['status']:
-                    return
-                supplier_objects = response.data['data']
+                supplier_objects = manipulate_object_key_values(supplier_objects)
 
             # map the extra supplier_specific attributes to content_type, supplier_id
             for supplier in supplier_objects:

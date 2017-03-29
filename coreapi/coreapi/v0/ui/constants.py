@@ -36,9 +36,19 @@ tower_count_attribute_mapping = {
 
 # codes to model names
 codes_to_model_names = {
-                'RS': 'SupplierTypeSociety', 'CP': 'SupplierTypeCorporate','GY': 'SupplierTypeGym',
-                'SA': 'SupplierTypeSalon', 'BS': 'SupplierTypeBusShelter', 'STALL': 'StallInventory',
-                'STANDEE': 'StandeeInventory', 'FLIER': 'FlyerInventory', 'POSTER': 'PosterInventory'
+                'RS': 'SupplierTypeSociety',
+                'CP': 'SupplierTypeCorporate',
+                'GY': 'SupplierTypeGym',
+                'SA': 'SupplierTypeSalon',
+                'BS': 'SupplierTypeBusShelter',
+                'STALL': 'StallInventory',
+                'STANDEE': 'StandeeInventory',
+                'FLIER': 'FlyerInventory',
+                'POSTER': 'PosterInventory',
+                'SL': 'StallInventory',
+                'ST': 'StandeeInventory',
+                'FL': 'FlyerInventory',
+                'PO': 'PosterInventory'
          }
 # model to codes
 model_to_codes = {

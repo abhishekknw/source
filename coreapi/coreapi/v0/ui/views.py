@@ -629,11 +629,7 @@ class SocietyList(APIView):
 
             serializer = SupplierTypeSocietySerializer(societies, many=True)
             # societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
-
-            response = website_utils.manipulate_object_key_values(serializer.data)
-            if not response.data['status']:
-                return response
-            suppliers = response.data['data']
+            suppliers = website_utils.manipulate_object_key_values(serializer.data)
             societies_with_images = ui_utils.get_supplier_image(suppliers, ui_constants.society_name)
             data = {
                 'count': len(societies_with_images),

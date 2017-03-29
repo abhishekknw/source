@@ -491,35 +491,33 @@ def handle_inventory_pricing(supplier_ids, content_type, price_dict):
         inventory_summary_instances = v0_models.InventorySummary.objects.filter(object_id__in=supplier_ids, content_type=content_type)
         inventory_summary_instance_map = {instance.object_id: instance for instance in inventory_summary_instances}
 
-        price_mapping_instances = []
+        price_mapping_instances_list = []
         for supplier_id in supplier_ids:
             inventory_summary_instance = inventory_summary_instance_map[supplier_id]
             if inventory_summary_instance.poster_allowed_nb:
-                price_mapping_instances.append(create_price_mapping_instances(supplier_id, content_type, website_constants.poster, website_constants.default_poster_type, website_constants.default_poster_duration_type, price_dict))
+                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, website_constants.poster,   price_dict))
 
             if inventory_summary_instance.standee_allowed:
-                price_mapping_instances.append(create_price_mapping_instances(supplier_id, content_type, website_constants.standee, website_constants.default_standee_type, website_constants.default_poster_duration_type, price_dict))
+                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, website_constants.standee,  price_dict))
 
             if inventory_summary_instance.stall_allowed:
-                price_mapping_instances.append(create_price_mapping_instances(supplier_id, content_type, website_constants.stall, website_constants.default_stall_type, website_constants.default_stall_duration_type, price_dict))
+                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, website_constants.stall,  price_dict))
 
             if inventory_summary_instance.flier_allowed:
-                price_mapping_instances.append(create_price_mapping_instances(supplier_id, content_type, website_constants.flier, website_constants.default_flier_type, website_constants.default_flier_duration_type, price_dict))
+                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, website_constants.flier,  price_dict))
         v0_models.PriceMappingDefault.objects.all().delete()
-        v0_models.PriceMappingDefault.objects.bulk_create(price_mapping_instances)
+        v0_models.PriceMappingDefault.objects.bulk_create(price_mapping_instances_list)
         return True
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def create_price_mapping_instances(supplier_id, content_type,  inventory_name, inventory_type, inventory_duration_type, price_dict):
+def create_price_mapping_instances(supplier_id, content_type,  inventory_name, price_dict):
     """
-
+    sets supplier price for the incoming inventory
     Args:
         supplier_id:
         inventory_name:
-        inventory_type:
-        inventory_duration_type:
         price_dict:
         content_type
 
@@ -528,20 +526,22 @@ def create_price_mapping_instances(supplier_id, content_type,  inventory_name, i
     """
     function = create_price_mapping_instances.__name__
     try:
-        ad_inventory_instance = v0_models.AdInventoryType.objects.get(adinventory_name=inventory_name, adinventory_type=inventory_type)
-        duration_type_instance = v0_models.DurationType.objects.get(duration_name=inventory_duration_type)
-        data = {
-            'adinventory_type': ad_inventory_instance,
-            'duration_type': duration_type_instance,
-            'supplier_price': random.randint(price_dict[inventory_name][0], price_dict[inventory_name][1]),
-            'business_price': 0,
-            'object_id': supplier_id,
-            'content_type': content_type
-        }
-        return v0_models.PriceMappingDefault(**data)
+        ad_inventory_instances = v0_models.AdInventoryType.objects.filter(adinventory_name=inventory_name)
+        duration_type_instances = v0_models.DurationType.objects.all()
+        pmd_instances = []
+        for ad_inventory_instance in ad_inventory_instances:
+            for duration_type_instance in duration_type_instances:
+                data = {
+                    'adinventory_type': ad_inventory_instance,
+                    'duration_type': duration_type_instance,
+                    'supplier_price': random.randint(price_dict[inventory_name][0], price_dict[inventory_name][1]),
+                    'business_price': 0,
+                    'object_id': supplier_id,
+                    'content_type': content_type
+                }
+                pmd_instances.append(v0_models.PriceMappingDefault(**data))
+        return pmd_instances
     except Exception as e:
-        import pdb
-        pdb.set_trace()
         raise Exception(function, ui_utils.get_system_error(e))
 
 

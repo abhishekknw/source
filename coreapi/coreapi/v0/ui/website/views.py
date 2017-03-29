@@ -1163,7 +1163,7 @@ class FilteredSuppliers(APIView):
             common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model or a few other models.
             inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
             specific_filters = request.data.get('specific_filters')  # maps to specific supplier table
-            proposal_id = request.data.get('proposal_id')
+            proposal_id = request.data['proposal_id']
             center_id = request.data.get('center_id')
             amenities = request.data.get('amenities')
             is_standalone_society = request.data.get('is_standalone_society')
@@ -1218,20 +1218,21 @@ class FilteredSuppliers(APIView):
             # if both available, find the intersection. basically it's another way of doing AND query.
             # the following conditions are use case dependent. The checking is done on the basis of 
             # query length. an empty query length means that query didn't contain any thing in it.
+
             if inventory_type_query.__len__() and specific_filters_query.__len__():
-                final_suppliers_list = specific_filters_suppliers.intersection(inventory_type_query_suppliers)
+                final_suppliers_id_list = specific_filters_suppliers.intersection(inventory_type_query_suppliers)
             # if only inventory suppliers available, set it. Take the UNION in this case.
             elif inventory_type_query.__len__():
-                final_suppliers_list = inventory_type_query_suppliers
+                final_suppliers_id_list = inventory_type_query_suppliers
             # if only specific suppliers available, set it. Take the UNION in this case.
             elif specific_filters_query.__len__():
-                final_suppliers_list = specific_filters_suppliers
+                final_suppliers_id_list = specific_filters_suppliers
             # if nobody is available, set it to master supplier list
             else:
-                final_suppliers_list = master_suppliers_list
+                final_suppliers_id_list = master_suppliers_list
 
             # when the final supplier list is prepared. we need to take intersection with master list.
-            final_suppliers_list = final_suppliers_list.intersection(master_suppliers_list)
+            final_suppliers_id_list = final_suppliers_id_list.intersection(master_suppliers_list)
 
             # check for amenities here
             if amenities:
@@ -1239,28 +1240,28 @@ class FilteredSuppliers(APIView):
                 if not response.data['status']:
                     return response
                 amenities_suppliers = response.data['data']
-                final_suppliers_list = final_suppliers_list.intersection(amenities_suppliers)
+                final_suppliers_id_list = final_suppliers_id_list.intersection(amenities_suppliers)
 
             # check for society ratio of tenants to flats
             if supplier_type_code == website_constants.society and ratio_of_tenants_to_flats:
                 response = website_utils.get_societies_within_tenants_flat_ratio(float(ratio_of_tenants_to_flats['min']), float(ratio_of_tenants_to_flats['max']))
                 if not response.data['status']:
                     return response
-                final_suppliers_list = final_suppliers_list.intersection(response.data['data'])
+                final_suppliers_id_list = final_suppliers_id_list.intersection(response.data['data'])
 
             # check for standalone societies
             if supplier_type_code == website_constants.society and is_standalone_society:
                 response = website_utils.get_standalone_societies()
                 if not response.data['status']:
                     return response
-                final_suppliers_list = final_suppliers_list.intersection(response.data['data'])
+                final_suppliers_id_list = final_suppliers_id_list.intersection(response.data['data'])
 
             result = {}
 
             # query now for real objects for supplier_id in the list
-            suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_list)
+            filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list)
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
-            serializer = supplier_serializer(suppliers, many=True)
+            serializer = supplier_serializer(filtered_suppliers, many=True)
 
             # to include only those suppliers that lie within radius, we need to send coordinates
             coordinates = {
@@ -1268,22 +1269,8 @@ class FilteredSuppliers(APIView):
                 'latitude': common_filters['latitude'],
                 'longitude': common_filters['longitude']
             }
-            # the following function sets the pricing as before and it's temprorary.
-            response = website_utils.set_pricing_temproray(serializer.data, final_suppliers_list, supplier_type_code, coordinates)
-            if not response.data['status']:
-                return response
-            suppliers = response.data['data']
-
-            # because some suppliers can be outside the given radius, we need to recalculate list of 
-            # supplier_id's. 
-            final_suppliers_list = [supplier['supplier_id'] for supplier in suppliers]
-
-            # calculate total aggregate count
-
-            suppliers_inventory_count = InventorySummary.objects.filter(object_id__in=final_suppliers_list, content_type=content_type).aggregate(posters=Sum('total_poster_count'), \
-                                                                                                    standees=Sum('total_standee_count'),
-                                                                                                    stalls=Sum('total_stall_count'),
-                                                                                                    fliers=Sum('flier_frequency'))
+            # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final value
+            total_suppliers = serializer.data
 
             # adding earlier saved shortlisted suppliers in the results.
             if proposal_id and center_id:
@@ -1293,17 +1280,24 @@ class FilteredSuppliers(APIView):
                 shortlisted_supplier_result = response.data['data']
                 if shortlisted_supplier_result.get(center_id):
                     shortlisted_suppliers = shortlisted_supplier_result[center_id].get(supplier_type_code)
-                    response = website_utils.union_suppliers(suppliers, shortlisted_suppliers)
+                    response = website_utils.union_suppliers(total_suppliers, shortlisted_suppliers)
                     if not response.data['status']:
                         return response
-                    suppliers = response.data['data'].values()
+                    total_suppliers = response.data['data'].values()
+
+            # because some suppliers can be outside the given radius, we need to recalculate list of
+            # supplier_id's.
+            final_suppliers_id_list = [supplier['supplier_id'] for supplier in total_suppliers]
+
+            # the following function sets the pricing as before and it's temprorary.
+            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers, final_suppliers_id_list, supplier_type_code, coordinates)
 
             # construct the response and return
             result['business_name'] = business_name
             result['suppliers'] = {}
             result['suppliers_meta'] = {}
 
-            result['suppliers'][supplier_type_code] = suppliers
+            result['suppliers'][supplier_type_code] = total_suppliers
 
             result['suppliers_meta'][supplier_type_code] = {}
 
@@ -3311,11 +3305,7 @@ class SupplierSearch(APIView):
             suppliers = model.objects.filter(search_query)
             serializer_class = ui_utils.get_serializer(supplier_type_code)
             serializer = serializer_class(suppliers, many=True)
-
-            response = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code,  **{'status': website_constants.status})
-            if not response.data['status']:
-                return response
-            suppliers = response.data['data']
+            suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code,  **{'status': website_constants.status})
 
             return ui_utils.handle_response(class_name, data=suppliers, success=True)
         except ObjectDoesNotExist as e:
@@ -4293,11 +4283,7 @@ class SupplierDetails(APIView):
         try:
             supplier_id = request.query_params['supplier_id']
             supplier_type_code = request.query_params['supplier_type_code']
-
-            response = ui_utils.get_content_type(supplier_type_code)
-            if not response.data['status']:
-                return response
-            content_type = response.data['data']
+            content_type = ui_utils.fetch_content_type(supplier_type_code)
      
             supplier_model = ContentType.objects.get(pk=content_type.id).model
             model = get_model(settings.APP_NAME,supplier_model)
@@ -4305,11 +4291,7 @@ class SupplierDetails(APIView):
             supplier_object = model.objects.get(supplier_id=supplier_id)
 
             data = model_to_dict(supplier_object)
-
-            response = website_utils.manipulate_object_key_values([data])
-            if not response.data['status']:
-                return response
-            data = response.data['data'][0]
+            data = website_utils.manipulate_object_key_values([data])[0]
 
             return ui_utils.handle_response(class_name, data=data, success=True)
 

@@ -235,7 +235,7 @@ class PriceMappingDefault(BaseModel):
     business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE', null=True, blank=True)
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, null=True)
-    object_id = models.CharField(max_length=12, null=True)
+    object_id = models.CharField(db_index=True, max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
     class Meta:
@@ -330,6 +330,7 @@ class FlierThroughLobbyInfo(models.Model):
     class Meta:
 
         db_table = 'flier_through_lobby_info'
+
 
 class LiftDetails(models.Model):
 

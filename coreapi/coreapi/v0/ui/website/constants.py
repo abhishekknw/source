@@ -1,5 +1,17 @@
 from coreapi.settings import BASE_DIR
 
+# all inventory codes
+poster_inventory_code = 'PO'
+standee_inventory_code = 'ST'
+stall_inventory_code = 'SL'
+flier_inventory_code = 'FL'
+car_display_inventory_code = 'CD'
+
+# all supplier codes
+society_code = 'RS'
+corporate_code = 'CP'
+
+
 supplier_keys = [
 
     'city', 'city_code', 'society_locality', 'area_code', 'society_subarea', 'subarea_code', 'supplier_type', 'supplier_code', 'society_name'
@@ -42,7 +54,7 @@ inventorylist = {
     },
     'FL': {
         'HEADER': ['Flier count', 'Flier Price', 'Flier Duration', 'Flier Price Factor', 'Flier Business Price'],
-        'DATA': ['flier_count', 'flier_price', 'flier_duration', 'flier_price_factor', 'flier_business_price']
+        'DATA': ['flier_frequency', 'flier_price', 'flier_duration', 'flier_price_factor', 'flier_business_price']
     },
     'SL': {
         'HEADER': ['Stall Count', 'Stall Price', 'Stall Duration', 'Stall Price Factor', 'Stall Business Price'],
@@ -168,7 +180,8 @@ inventory_name_to_code = {
     'poster': 'PO',
     'stall': 'SL',
     'flier': 'FL',
-    'standee': 'ST'
+    'standee': 'ST',
+    'car_display': 'CD'
 }
 
 # a mapping from table names to serializers
@@ -452,6 +465,15 @@ inventory_type_duration_dict = {
     'FL': {'name': 'FLIER', 'type_duration': [{'type': 'door_to_door', 'duration': 'unit_daily'}, ]},
 }
 
+# this is used in setting pricing when FilteredSuppliers API is hit
+inventory_type_duration_dict_list = {
+    'PO': ['POSTER', 'A4', 'Campaign Weekly'],
+    'ST': ['STANDEE', 'Small', 'Campaign Weekly'],
+    'SL': ['STALL', 'Small', 'Unit Daily'],
+    'FL': ['FLIER', 'Door-to-Door', 'Unit Daily'],
+    'CD': ['CAR DISPLAY', 'Standard', 'Campaign Weekly']
+}
+
 # this dict maps keys directly to db values. do not change 
 duration_dict = {
     'campaign_weekly': 'Campaign Weekly',
@@ -537,6 +559,7 @@ poster = 'POSTER'
 standee = 'STANDEE'
 stall = 'STALL'
 flier = 'FLIER'
+car_display = 'CAR DISPLAY'
 
 
 # to identify unique supplier types
@@ -662,3 +685,16 @@ standalone_society_config = {
 
 # random pattern length
 pattern_length = 6
+
+
+# inventory_code to name
+inventory_code_to_name = {
+    'PO': poster,
+    'SL': stall,
+    'FL': flier,
+    'ST': standee,
+    'CD': car_display
+}
+
+# inventories which  have a model and object_id, content_type fields
+inventories_with_object_id_fields = [poster_inventory_code, standee_inventory_code, flier_inventory_code, stall_inventory_code]

@@ -594,6 +594,7 @@ def get_tower_count(supplier_object, supplier_type_code):
 
 def get_content_type(code):
     """
+    deprecated in favor of fetch_content_type.
     Args:
         code: supplier_type_code
 
@@ -610,6 +611,26 @@ def get_content_type(code):
         return handle_response(function, data=content_type, success=True)
     except Exception as e:
         return handle_response(function, exception_object=e)
+
+
+def fetch_content_type(code):
+    """
+    Use this instead of get_content_type. it does not return a Response. straight content type
+    Args:
+        code:
+
+    Returns: Content type instance
+    """
+    function = fetch_content_type.__name__
+    try:
+        if not code:
+            raise Exception('No code provided')
+        ContentType = apps.get_model('contenttypes', 'ContentType')
+        load_model = get_model(code)
+        content_type = ContentType.objects.get_for_model(load_model)
+        return content_type
+    except Exception as e:
+        raise Exception(function, get_system_error(e))
 
 
 def get_content_types(codes):
@@ -669,12 +690,13 @@ def get_model(supplier_type_code):
     Returns: loads the right model from supplier_type_code
 
     """
+    function = get_model.__name__
     try:
         suppliers = ui_constants.codes_to_model_names
         load_model = apps.get_model('v0', suppliers[supplier_type_code])
         return load_model
     except Exception as e:
-        return None
+        raise Exception(function, get_system_error(e))
 
 
 def get_serializer(query):
