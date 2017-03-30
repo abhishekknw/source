@@ -32,7 +32,7 @@ angular.module('catalogueApp')
    }
 
    opsExecutionPlanService.downloadInProgress = function(taskId){
-     var url = url_base + "task/is-task-successfull/" + taskId + "/";
+     var url = url_base + "task/is-group-task-successfull/" + taskId + "/";
      return machadaloHttp.get(url);
    }
 

@@ -33,6 +33,10 @@ angular
     save_proposal_success : 'Your proposal is saved successfully',
     supplier_status_error : 'Sorry, There is some error in saving supplier status',
     amenity_error : 'Error in getting Amenities',
+    client_email_error : 'Error occured while sending Email to Client',
+    bdhead_email_error : 'Error occured while sending Email to BDHead',
+    upload_error : 'error occured while uploading file',
+    deletefile_error : 'Error occured, File not deleted',
     //auditReleasePlan
     positive_number_error : 'Enter Positive Number Only',
     //opsDashboard
@@ -69,6 +73,7 @@ angular
     createUser_success : 'Successfully Created',
     //guestPage
     location_error : 'Please enter accurate location',
+
 
 
   });

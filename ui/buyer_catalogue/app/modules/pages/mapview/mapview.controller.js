@@ -1479,6 +1479,17 @@ if($scope.user_code == 'guestUser')
                   'Authorization' : 'JWT ' + $rootScope.globals.currentUser.token
               }
          }).then(function onSuccess(response){
+           $scope.clientId = response.data.data.logged_in_user_async_id;
+           $scope.bdHeadId = response.data.data.bd_head_async_id;
+           $scope.uploadId = response.data.data.upload_to_amazon_async_id;
+           $scope.proposalFileName = response.data.data.file_name;
+           mapViewService.getUserDetails($rootScope.globals.currentUser.user_id)
+            .then(function onSuccess(response){
+              $scope.isSuperUser = response.data.data.is_superuser;
+              sendEmailToClient();
+              sendEmailToBDHead();
+              uploadToAmazon();
+            })
            $scope.hideSpinner = true;
            swal(constants.name,constants.request_proposal_success,constants.success);
               $scope.checkFileExport = false;
@@ -1489,7 +1500,73 @@ if($scope.user_code == 'guestUser')
          });
        }catch(error){
          $scope.hideSpinner = true;
-         console.log(error.message);
+       }
+     }
+     var sendEmailToClient = function(){
+       mapViewService.sendEmailToClient($scope.clientId)
+       .then(function onSuccess(response){
+         if(response.data.data.ready != true){
+            $timeout(sendEmailToClient,5000); // This will perform async
+         }
+         else if(response.data.data.status == true){
+           $scope.emailToClient = true;
+           deleteFile();
+         }
+       }).catch(function onError(response){
+         if($scope.isSuperUser == true)
+          swal(constants.name,constants.client_email_error,constants.error);
+       });
+     }
+
+
+     var sendEmailToBDHead = function(){
+       mapViewService.sendEmailToBDHead($scope.bdHeadId)
+       .then(function onSuccess(response){
+         if(response.data.data.ready != true){
+            $timeout(sendEmailToBDHead,6000); // This will perform async
+         }
+         else if(response.data.data.status == true){
+           $scope.emailToBDHead = true;
+           deleteFile();
+         }
+       }).catch(function onError(response){
+         if($scope.isSuperUser == true)
+          swal(constants.name,constants.bdhead_email_error,constants.error);
+       });
+     }
+     var uploadToAmazon = function(){
+       mapViewService.uploadToAmazon($scope.uploadId)
+       .then(function onSuccess(response){
+         if(response.data.data.ready != true){
+            $timeout(uploadToAmazon,7000); // This will perform async
+         }
+         else if(response.data.data.status == true){
+          //  console.log("success");
+          $scope.uploadToAmazon = true;
+          deleteFile();
+         }
+       }).catch(function onError(response){
+         if($scope.isSuperUser == true)
+          swal(constants.name,constants.upload_error,constants.error);
+       });
+     }
+
+     var deleteFile = function(){
+       if($scope.emailToClient && $scope.emailToBDHead && $scope.uploadToAmazon){
+         var data = {
+           file_name : $scope.proposalFileName,
+         }
+         mapViewService.deleteFile(data)
+         .then(function onSuccess(response){
+           $scope.emailToClient = null;
+           $scope.emailToBDHead = null;
+           $scope.uploadToAmazon = null;
+          //  console.log(response);
+         }).catch(function onError(response){
+           if($scope.isSuperUser == true)
+            swal(constants.name,constants.deletefile_error,constants.error);
+          //  console.log(response);
+         });
        }
      }
 

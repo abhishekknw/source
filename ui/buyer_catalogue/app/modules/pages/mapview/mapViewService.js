@@ -128,5 +128,29 @@
       return machadaloHttp.get(url);
     }
 
+    mapViewService.sendEmailToClient = function(clientId){
+      var url = url_base + "task/is-individual-task-successfull/" + clientId + "/";
+      return machadaloHttp.get(url);
+    }
+
+    mapViewService.sendEmailToBDHead = function(bdHeadId){
+      var url = url_base + "task/is-individual-task-successfull/" + bdHeadId + "/";
+      return machadaloHttp.get(url);
+    }
+
+    mapViewService.uploadToAmazon = function(uploadId){
+      var url = url_base + "task/is-individual-task-successfull/" + uploadId + "/";
+      return machadaloHttp.get(url);
+    }
+
+    mapViewService.deleteFile = function(data){
+      var url = url_base + "delete-file-from-system/";
+      return machadaloHttp.post(url,data);
+    }
+
+    mapViewService.getUserDetails = function(userId){
+      var url = url_base_societyDetails + "user/" + userId + "/";
+      return machadaloHttp.get(url);
+    }
     return mapViewService;
 }]);
