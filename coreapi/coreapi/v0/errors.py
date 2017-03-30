@@ -49,3 +49,7 @@ PATH_DOES_NOT_EXIST = "This path {0} doesnt not exist"
 
 NO_GEOCODE_INSTANCE_FOUND = 'We did not get a geo code instance for this address {0}'
 INCORRECT_DATABASE_NAME_ERROR = 'The database name in settings file \'{0}\' does not matches the custom defined database name \'{1}\' '
+
+UPLOAD_AMAZON_SUCCESS = 'Upload to amazon successfull'
+
+DELETION_NOT_PERMITTED = 'The deletion of file with extension {0} is not permitted'

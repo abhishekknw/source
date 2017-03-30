@@ -72,8 +72,10 @@ urlpatterns = [
     url(r'^inventory-activity-date-user-reassignment/$', views.ReassignInventoryActivityDateUsers.as_view()),
     url(r'^get-users-list/$', views.UserList.as_view()),
     url(r'^bulk-download-images-amazon/$', views.BulkDownloadImagesAmazon.as_view()),
-    url(r'^task/is-task-successfull/(?P<task_id>.+)/$', views.IsTaskSuccessFull.as_view()),
+    url(r'^task/is-group-task-successfull/(?P<task_id>.+)/$', views.IsGroupTaskSuccessFull.as_view()),
+    url(r'^task/is-individual-task-successfull/(?P<task_id>.+)/$', views.IsIndividualTaskSuccessFull.as_view()),
     url(r'^proposal-images-path/$', views.ProposalImagesPath.as_view()),
+    url(r'^delete-file-from-system/$', views.DeleteFileFromSystem.as_view()),
 
 ]
 

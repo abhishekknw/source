@@ -698,3 +698,6 @@ inventory_code_to_name = {
 
 # inventories which  have a model and object_id, content_type fields
 inventories_with_object_id_fields = [poster_inventory_code, standee_inventory_code, flier_inventory_code, stall_inventory_code]
+
+# valid extensions to be eligible for deletion of files
+valid_extensions = ['xlsx']

@@ -32,7 +32,8 @@ from bulk_update.helper import bulk_update
 import boto
 import boto.s3
 from celery.task.sets import TaskSet, subtask
-from celery.result import GroupResult
+from celery.result import GroupResult, AsyncResult
+import tasks
 
 from rest_framework import permissions
 import openpyxl
@@ -456,10 +457,10 @@ class GetAccountProposalsAPIView(APIView):
 
         try:
             account = AccountInfo.objects.get(account_id=account_id)
-           
+
             proposals = ProposalInfo.objects.filter(account=account)
             proposal_serializer = ProposalInfoSerializer(proposals, many=True)
-        
+
             return Response(proposal_serializer.data, status=status.HTTP_200_OK)
         except ObjectDoesNotExist as e:
             return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
@@ -823,7 +824,7 @@ class SpacesOnCenterAPIView(APIView):
             # for society
             if space_mapping_object.society_allowed:
                 q = Q(society_latitude__lt=max_latitude) & Q(society_latitude__gt=min_latitude) & Q(society_longitude__lt=max_longitude) & Q(society_longitude__gt=min_longitude)
-                
+
                 societies_inventory = space_mapping_object.get_society_inventories()
                 societies_inventory_serializer = InventoryTypeSerializer(societies_inventory)
                 # applying filter on basis of inventory
@@ -833,7 +834,7 @@ class SpacesOnCenterAPIView(APIView):
                             q &= (Q(poster_allowed_nb=True) | Q(poster_allowed_lift=True))
                         elif societies_inventory.__dict__[param]:
                             q |= Q(**{param : True})
-                            
+
                     except KeyError:
                         pass
 
@@ -899,7 +900,7 @@ class SpacesOnCenterAPIView(APIView):
                 space_info_dict['societies_inventory'] = societies_inventory_serializer.data
                 space_info_dict['societies_count'] = societies_count
 
-            
+
             if space_mapping_object.corporate_allowed:
                 q = Q(latitude__lt=max_latitude) & Q(latitude__gt=min_latitude) & Q(longitude__lt=max_longitude) & Q(longitude__gt=min_longitude)
 
@@ -933,7 +934,7 @@ class SpacesOnCenterAPIView(APIView):
                                 corporate['total_stall_count'] = corporate_inventory_obj.total_stall_count
                                 corporate['stall_price'] = return_price(adinventory_type_dict, duration_type_dict, 'stall_small', 'unit_daily')
                                 corporate['car_display_price'] = return_price(adinventory_type_dict, duration_type_dict, 'car_display_standard', 'unit_daily')
-                            if corporate_inventory_obj.flier_allowed:     
+                            if corporate_inventory_obj.flier_allowed:
                                 corporate['flier_frequency'] = corporate_inventory_obj.flier_frequency
                                 corporate['filer_price'] = return_price(adinventory_type_dict, duration_type_dict, 'flier_door_to_door', 'unit_daily')
 
@@ -1023,7 +1024,7 @@ class SpacesOnCenterAPIView(APIView):
                         q &= Q(**{param : True})
                 except KeyError:
                     pass
-            # societies_temp1 = SupplierTypeSociety.objects.filter(p).values('supplier_id','society_latitude','society_longitude','society_zip')    
+            # societies_temp1 = SupplierTypeSociety.objects.filter(p).values('supplier_id','society_latitude','society_longitude','society_zip')
             societies_temp = SupplierTypeSociety.objects.filter(q).values('supplier_id','society_latitude','society_longitude','society_name','society_address1','society_subarea','society_location_type','tower_count','flat_count','society_type_quality')
             societies = []
             society_ids = []
@@ -1072,7 +1073,7 @@ class SpacesOnCenterAPIView(APIView):
             response['supplier_inventory_count'] = societies_inventory_count
             response['supplier_inventory'] = societies_inventory
             response['supplier_count'] = societies_count
-            # response['area_societies'] = societies_temp1 
+            # response['area_societies'] = societies_temp1
 
         if space_mappings['corporate_allowed']:
             pass
@@ -1216,7 +1217,7 @@ class FilteredSuppliers(APIView):
                 specific_filters_suppliers = set(list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id', flat=True)))
 
             # if both available, find the intersection. basically it's another way of doing AND query.
-            # the following conditions are use case dependent. The checking is done on the basis of 
+            # the following conditions are use case dependent. The checking is done on the basis of
             # query length. an empty query length means that query didn't contain any thing in it.
 
             if inventory_type_query.__len__() and specific_filters_query.__len__():
@@ -2484,7 +2485,7 @@ class ImportSupplierData(APIView):
 
                     center_object = result[center_id]
 
-                    # initialize the center_object  with necessary keys if not already                    
+                    # initialize the center_object  with necessary keys if not already
                     response = website_utils.initialize_keys(center_object, supplier_type_code)
                     if not response.data['status']:
                         return response
@@ -3033,7 +3034,7 @@ class ProposalViewSet(viewsets.ViewSet):
             center_id = request.data['center']['id']
             proposal = request.data['proposal']
             user = request.user
-            
+
             fixed_data = {
                 'center': center_id,
                 'proposal': proposal,
@@ -3434,13 +3435,10 @@ class SendMail(APIView):
             if my_file:
                 attachment = {
                     'file_name': file_name,
-                    'file_data':  my_file,
                     'mime_type': website_constants.mime['xlsx']
                 }
-            response = website_utils.send_email(email_data, attachment)
-            if not response.data['status']:
-                return response
-            return ui_utils.handle_response(class_name, data='Ok.Mail sent {0}'.format(response.data['data']), success=True)
+            task_id = tasks.send_email.delay(email_data, attachment).id
+            return ui_utils.handle_response(class_name, data={'task_id': task_id}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -3463,10 +3461,8 @@ class Mail(APIView):
                 'body': body
             }
             attachment = None
-            response = website_utils.send_email(email_data, attachment)
-            if not response.data['status']:
-                return response
-            return ui_utils.handle_response(class_name, data='Ok.Mail sent {0}'.format(response.data['data']), success=True)
+            task_id = tasks.send_email.delay(email_data, attachment).id
+            return ui_utils.handle_response(class_name, data={'task_id': task_id}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -3560,17 +3556,6 @@ class ProposalVersion(APIView):
             file_name = response.data['data']['name']
             my_file = response.data['data']['file']
 
-            # send mail to logged in user without attachment
-            email_data = {
-             'subject': website_constants.subjects['agency'],
-             'body': website_constants.bodys['agency'],
-             'to': [user.email]
-             }
-
-            response = website_utils.send_email(email_data)
-            if not response.data['status']:
-                return response
-
             bd_body = {
                 'user_name': request.user.first_name,
                 'business': business.name,
@@ -3591,24 +3576,35 @@ class ProposalVersion(APIView):
             }
 
             attachment = {
-                'file_data': my_file,
                 'file_name': file_name,
                 'mime_type': website_constants.mime['xlsx']
             }
 
             # send mail to Bd Head with attachment
-            response = website_utils.send_email(email_data, attachment=attachment)
-            if not response.data['status']:
-                return response
+            bd_head_async_id = tasks.send_email.delay(email_data, attachment=attachment).id
+
+            # send mail to logged in user without attachment
+            email_data = {
+             'subject': website_constants.subjects['agency'],
+             'body': website_constants.bodys['agency'],
+             'to': [user.email]
+             }
+
+            logged_in_user_async_id = tasks.send_email.delay(email_data).id
 
             # upload this shit to amazon
-            response = website_utils.upload_to_amazon(file_name)
+            upload_to_amazon_aync_id = tasks.upload_to_amazon.delay(file_name).id
             if not response.data['status']:
                 return response
 
-            # remove the file name
-            os.remove(file_name)
-            return ui_utils.handle_response(class_name, data='success', success=True)
+            # prepare to send back async ids
+            data = {
+                'logged_in_user_async_id': logged_in_user_async_id,
+                'bd_head_async_id': bd_head_async_id,
+                'upload_to_amazon_async_id': upload_to_amazon_aync_id,
+                'file_name': file_name
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -4284,7 +4280,7 @@ class SupplierDetails(APIView):
             supplier_id = request.query_params['supplier_id']
             supplier_type_code = request.query_params['supplier_type_code']
             content_type = ui_utils.fetch_content_type(supplier_type_code)
-     
+
             supplier_model = ContentType.objects.get(pk=content_type.id).model
             model = get_model(settings.APP_NAME,supplier_model)
 
@@ -4507,7 +4503,7 @@ class BulkInsertInventoryActivityImage(APIView):
         Args:
             request: request data that holds info to be updated
 
-        Returns: 
+        Returns:
 
         """
         class_name = self.__class__.__name__
@@ -4860,7 +4856,7 @@ class BulkDownloadImagesAmazon(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
-class IsTaskSuccessFull(APIView):
+class IsGroupTaskSuccessFull(APIView):
     """
     checks the status of the task
     """
@@ -4871,6 +4867,46 @@ class IsTaskSuccessFull(APIView):
             result = GroupResult.restore(task_id)
             # 'ready' means have all subtask completed ? 'status' means all substask were successful ?
             return ui_utils.handle_response(class_name, data={'ready': result.ready(), 'status': result.successful()}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class IsIndividualTaskSuccessFull(APIView):
+    """
+    checks individual tasks weather they are successfull or not
+    """
+    def get(self, request, task_id):
+        class_name = self.__class__.__name__
+        try:
+            result = AsyncResult(task_id)
+            return ui_utils.handle_response(class_name, data={'ready': result.ready(), 'status': result.successful()}, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class DeleteFileFromSystem(APIView):
+    """
+    deletes a given file from system
+    """
+
+    def delete(self, request):
+        """
+
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            file_name = request.data['file_name']
+            file_extension = file_name.split('.')[1]
+            if file_extension not in website_constants.valid_extensions:
+                raise Exception(class_name, errors.DELETION_NOT_PERMITTED.format(file_extension))
+            os.remove(os.path.join(settings.BASE_DIR, file_name))
+            return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 

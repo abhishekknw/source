@@ -21,7 +21,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.shortcuts import get_object_or_404
 from django.http import Http404
-from django.core.mail import EmailMessage
 from django.utils import timezone
 from django.conf import settings
 from django.db.models import Count, Sum
@@ -36,7 +35,6 @@ import geocoder
 from openpyxl import Workbook
 import boto
 import boto.s3
-from boto.s3.key import Key
 from bulk_update.helper import bulk_update
 from celery import group
 from celery.task.sets import TaskSet, subtask
@@ -49,7 +47,7 @@ import v0.ui.utils as ui_utils
 import serializers
 from v0 import errors
 import v0.constants as v0_constants
-from tasks import bulk_download_from_amazon_per_supplier
+import tasks
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -3054,10 +3052,10 @@ def send_excel_file(file_name):
             excel.close()
         else:
             # return response
-            return ui_utils.handle_response(function, data='File does not exist on disk')
-        return ui_utils.handle_response(function, data=out_content, success=True)
+            raise Exception(function, 'File does not exist on disk')
+        return out_content
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def save_price_mapping_default(supplier_id, supplier_type_code, row):
@@ -3108,31 +3106,6 @@ def delete_create_final_proposal_data(proposal_id):
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
         return  ui_utils.handle_response(function, exception_object=e)
-
-
-def send_email(email_data, attachment=None):
-    """
-    Args: dict having 'subject', 'body' and 'to' as keys.
-    Returns: success if mail is sent else failure
-    """
-    function = send_email.__name__
-    try:
-        # check if email_data contains the predefined keys
-        email_keys = email_data.keys()
-        for key in website_constants.valid_email_keys:
-            if key not in email_keys:
-                return ui_utils.handle_response(function, data='key {0} not found in the recieved structure'.format(key))
-        # construct the EmailMessage class
-        email = EmailMessage(email_data['subject'], email_data['body'], to=email_data['to'])
-        # attach attachment if available
-        if attachment:
-            email.attach(attachment['file_name'], attachment['file_data'], attachment['mime_type'])
-        delivered = email.send()
-        return ui_utils.handle_response(function, data=delivered, success=True)
-    except SMTPException as e:
-        return ui_utils.handle_response(function, exception_object=e)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
 
 
 def process_template(target_string, mapping):
@@ -3418,11 +3391,7 @@ def setup_generic_export(data, user, proposal_id):
             return response
         file_name = response.data['data']
         workbook.save(file_name)
-
-        response = send_excel_file(file_name)
-        if not response.data['status']:
-            return response
-        file_content = response.data['data']
+        file_content = send_excel_file(file_name)
         content_type = website_constants.mime['xlsx']
 
         # in order to provide custom headers in response in angular js, we need to set this header
@@ -3488,31 +3457,6 @@ def setup_create_final_proposal_post(data, user, proposal_id):
             models.Filters.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
 
             return ui_utils.handle_response(function, data='success', success=True)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
-
-
-def upload_to_amazon(file_name):
-    """
-    Args:
-        file_name: The file name
-    Returns: success in case file is uploaded, failure otherwise error
-    """
-    function = upload_to_amazon.__name__
-    try:
-        if not os.path.exists(file_name):
-            return ui_utils.handle_response(function, data='The file path {0} does not exists'.format(file_name))
-
-        bucket_name = settings.BUCKET_NAME
-        conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-        bucket = conn.get_bucket(bucket_name)
-
-        k = Key(bucket)
-        k.key = file_name
-        k.set_contents_from_filename(file_name)
-        k.make_public()
-
-        return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -5017,7 +4961,7 @@ def start_download_from_amazon(proposal_id, image_map):
         for supplier_key, image_name_list in image_map.iteritems():
             supplier_id = supplier_key.split('_')[0]  # supplier_id and content_type_id are joined by '_'. splitting and getting first value
             # call util function to download from amazon
-            sub_tasks.append(subtask(bulk_download_from_amazon_per_supplier, args=[path_to_master_dir + '/' + supplier_id, image_name_list]))
+            sub_tasks.append(subtask(tasks.bulk_download_from_amazon_per_supplier, args=[path_to_master_dir + '/' + supplier_id, image_name_list]))
 
         job = group(sub_tasks)
         result = job.apply_async()

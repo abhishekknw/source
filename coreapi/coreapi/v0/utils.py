@@ -543,6 +543,3 @@ def create_price_mapping_instances(supplier_id, content_type,  inventory_name, p
         return pmd_instances
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
-
-
-
