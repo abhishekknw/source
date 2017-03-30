@@ -4890,14 +4890,12 @@ class DeleteFileFromSystem(APIView):
     deletes a given file from system
     """
 
-    def delete(self, request):
+    def post(self, request):
         """
-
         Args:
             request:
 
         Returns:
-
         """
         class_name = self.__class__.__name__
         try:
