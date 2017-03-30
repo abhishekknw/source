@@ -139,7 +139,7 @@ class BaseUserSerializer(ModelSerializer):
 
     class Meta:
         model = BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'password', 'mobile')
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'password', 'mobile', 'is_superuser')
         extra_kwargs = {
             'password': {'write_only': True}
         }
