@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.contrib.auth.models import Group, Permission
 
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
@@ -14,6 +15,16 @@ from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping
 import v0.models as models
 import constants as website_constants
 import utils as website_utils
+
+
+class GroupSerializer(ModelSerializer):
+    class Meta:
+        model = Group
+
+
+class PermissionsSerializer(ModelSerializer):
+    class Meta:
+        model = Permission
 
 
 class InventoryActivitySerializer(ModelSerializer):
@@ -94,6 +105,8 @@ class BaseUserSerializer(ModelSerializer):
     do that.
     When updating the BaseUser, we never update the password. There is a separate api for updating password.
     """
+    groups = GroupSerializer(read_only=True,  many=True)
+    user_permissions = PermissionsSerializer(read_only=True,  many=True)
 
     def create(self, validated_data):
         """
@@ -139,7 +152,7 @@ class BaseUserSerializer(ModelSerializer):
 
     class Meta:
         model = BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'password', 'mobile', 'is_superuser')
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'password', 'mobile', 'is_superuser', 'groups', 'user_permissions')
         extra_kwargs = {
             'password': {'write_only': True}
         }
