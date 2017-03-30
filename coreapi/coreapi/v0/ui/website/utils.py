@@ -1831,13 +1831,14 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
         inventory_count_map = get_inventory_count(supplier_ids, content_type)
 
         for supplier in supplier_list:
-            supplier_inventory_obj = inventory_summary_objects_mapping[supplier['supplier_id']]
+            supplier_inventory_obj = inventory_summary_objects_mapping.get(supplier['supplier_id'])
             supplier['shortlisted'] = shortlisted
             supplier['buffer_status'] = False
             # status is set to a constant initially only if the param status is true
             if status:
                 supplier['status'] = website_constants.status
-
+            if not supplier_inventory_obj:
+                continue
             allowed_inventory_codes = get_inventories_allowed(supplier_inventory_obj)
             for inventory_code in allowed_inventory_codes:
                 inventory_name = website_constants.inventory_code_to_name[inventory_code].lower()
