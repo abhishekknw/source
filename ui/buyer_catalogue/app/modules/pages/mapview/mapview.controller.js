@@ -1510,7 +1510,7 @@ if($scope.user_code == 'guestUser')
            deleteFile();
          }
        }).catch(function onError(response){
-         if($scope.isSuperUser == true)
+         if($scope.isSuperUser == 'true')
           swal(constants.name,constants.client_email_error,constants.error);
        });
      }
@@ -1527,7 +1527,7 @@ if($scope.user_code == 'guestUser')
            deleteFile();
          }
        }).catch(function onError(response){
-         if($scope.isSuperUser == true)
+         if($scope.isSuperUser == 'true')
           swal(constants.name,constants.bdhead_email_error,constants.error);
        });
      }
@@ -1543,7 +1543,7 @@ if($scope.user_code == 'guestUser')
           deleteFile();
          }
        }).catch(function onError(response){
-         if($scope.isSuperUser == true)
+         if($scope.isSuperUser == 'true')
           swal(constants.name,constants.upload_error,constants.error);
        });
      }
@@ -1560,7 +1560,7 @@ if($scope.user_code == 'guestUser')
            $scope.uploadToAmazon = null;
           //  console.log(response);
          }).catch(function onError(response){
-           if($scope.isSuperUser == true)
+           if($scope.isSuperUser == 'true')
             swal(constants.name,constants.deletefile_error,constants.error);
           //  console.log(response);
          });
