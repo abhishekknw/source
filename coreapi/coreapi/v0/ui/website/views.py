@@ -3622,6 +3622,8 @@ class AssignCampaign(APIView):
         """
         class_name = self.__class__.__name__
         try:
+
+
             assigned_by = request.user
 
             campaign_id = request.data['campaign_id']
@@ -3683,10 +3685,11 @@ class AssignCampaign(APIView):
             }
           ]
         }
-        Handles three cases :
+        Handles four  cases :
         Fetches campaigns assigned by a user only
         Fetches campaigns assigned to a particular user only
         Fetches campaigns assigned by a user to a particular user.
+        Fetches all campaigns in the database if the requesting user is superuser
         """
         class_name = self.__class__.__name__
 
@@ -3695,23 +3698,26 @@ class AssignCampaign(APIView):
 
             if assigned_by.is_anonymous():
                 return ui_utils.handle_response(class_name, data='Anonymous users can\'t have any campaigns assigned')
-
             query = {}
-            # this field determined weather to include 'assigned_by' in query or not
-            is_assigned_by = int(request.query_params['include_assigned_by'])
-
-            # to field  must be present  if is_assigned_by is False.
-            if not is_assigned_by:
-                # 'to' must be present. There should be something to query !
-                to = request.query_params['to']
+            if int(request.query_params['fetch_all']) and request.user.is_superuser:
+                # set query to empty dict. we need to fetch all Campaign objects
+                query = {}
             else:
-                # if is_assigned_by is False, try to get to, but assigned_by field must be set to request.user
-                to = request.query_params.get('to')
-                query['assigned_by'] = request.user
+                # this field determined weather to include 'assigned_by' in query or not
+                is_assigned_by = int(request.query_params['include_assigned_by'])
 
-            # if you found to field, fetch the object from BaseUser table.
-            if to:
-                query['assigned_to'] = models.BaseUser.objects.get(id=to)
+                # to field  must be present  if is_assigned_by is False.
+                if not is_assigned_by:
+                    # 'to' must be present. There should be something to query !
+                    to = request.query_params['to']
+                else:
+                    # if is_assigned_by is False, try to get to, but assigned_by field must be set to request.user
+                    to = request.query_params.get('to')
+                    query['assigned_by'] = request.user
+
+                # if you found to field, fetch the object from BaseUser table.
+                if to:
+                    query['assigned_to'] = models.BaseUser.objects.get(id=to)
 
             assigned_objects = models.CampaignAssignment.objects.filter(**query)
 
