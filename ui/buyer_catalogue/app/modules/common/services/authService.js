@@ -3,8 +3,8 @@
 angular.module('Authentication')
 
 .factory('AuthService',
-    ['$http', '$location', '$rootScope', '$window', '$timeout',
-    function ($http, $location, $rootScope, $window, $timeout) {
+    ['$http', '$location', '$rootScope', '$window', '$timeout','commonDataShare',
+    function ($http, $location, $rootScope, $window, $timeout, commonDataShare) {
 
         var authService = {};
         var storageCredentials = 'machadalo-credentials';
@@ -25,6 +25,16 @@ angular.module('Authentication')
                       authService.SetCredentials(response.data);
                       response.data.logged_in = true;
                       callback(response.data);
+                      commonDataShare.getUserDetails($rootScope.globals.currentUser.user_id)
+                      .then(function onSuccess(response){
+                        console.log(response);
+                        if(response.data.data.is_superuser == true)
+                          $window.localStorage.isSuperUser = true;
+                        else
+                          $window.localStorage.isSuperUser = false;
+                      }).catch(function onError(response){
+                        console.log(response);
+                      });
                    }
                    else {
                       response.data.logged_in = false;

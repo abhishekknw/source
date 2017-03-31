@@ -1483,13 +1483,10 @@ if($scope.user_code == 'guestUser')
            $scope.bdHeadId = response.data.data.bd_head_async_id;
            $scope.uploadId = response.data.data.upload_to_amazon_async_id;
            $scope.proposalFileName = response.data.data.file_name;
-           mapViewService.getUserDetails($rootScope.globals.currentUser.user_id)
-            .then(function onSuccess(response){
-              $scope.isSuperUser = response.data.data.is_superuser;
-              sendEmailToClient();
-              sendEmailToBDHead();
-              uploadToAmazon();
-            })
+            $scope.isSuperUser = $window.localStorage.is_Superuser;
+            sendEmailToClient();
+            sendEmailToBDHead();
+            uploadToAmazon();
            $scope.hideSpinner = true;
            swal(constants.name,constants.request_proposal_success,constants.success);
               $scope.checkFileExport = false;

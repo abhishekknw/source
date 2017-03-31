@@ -13,24 +13,48 @@ angular.module('catalogueApp')
         {header : 'View Release Details'},
         {header : 'View Execution Details'}
       ];
-
+      $scope.is_Superuser = $window.localStorage.isSuperUser;
       var getCampaignDetails = function(){
-        campaignListService.getCampaignDetails($rootScope.globals.currentUser.user_id)
-        	.then(function onSuccess(response){
+        if($scope.is_Superuser == true){
+          var fetch_all = '1';
+          campaignListService.getAllCampaignDetails(fetch_all)
+          .then(function onSuccess(response){
             console.log(response);
-        		$scope.campaignData = response.data.data;
+            $scope.campaignData = response.data.data;
             if($scope.campaignData.length == 0){
               $scope.isEmpty = true;
               $scope.msg = constants.emptyCampaignList;
             }
             $scope.loading = response.data;
-        	})
-        	.catch(function onError(response){
+          })
+          .catch(function onError(response){
             $scope.isEmpty = true;
             $scope.loading = response;
-        		console.log("error occured", response);
+            console.log("error occured", response);
             swal(constants.name,constants.errorMsg,constants.error);
-        	});
+          });
+        }else {
+          var assigned_by = '0';
+          var fetch_all = '0';
+          var userId = $rootScope.globals.currentUser.user_id;
+          campaignListService.getCampaignDetails(assigned_by,userId,fetch_all)
+            .then(function onSuccess(response){
+              console.log(response);
+              $scope.campaignData = response.data.data;
+              if($scope.campaignData.length == 0){
+                $scope.isEmpty = true;
+                $scope.msg = constants.emptyCampaignList;
+              }
+              $scope.loading = response.data;
+            })
+            .catch(function onError(response){
+              $scope.isEmpty = true;
+              $scope.loading = response;
+              console.log("error occured", response);
+              swal(constants.name,constants.errorMsg,constants.error);
+            });
+        }
+
         }
 
         var getUsersList = function(){
