@@ -4736,6 +4736,7 @@ class AssignInventoryActivityDateUsers(APIView):
                 for date, user in assignment_data['date_user_assignments'].iteritems():
                     users.add(long(user))
             user_map = models.BaseUser.objects.in_bulk(users)
+            inventory_activity_assignment_objects = []
 
             # now assign for each shortlisted inventory detail id
             for shortlisted_inv_detail_id in shortlisted_inventory_detail_ids:
@@ -4753,12 +4754,20 @@ class AssignInventoryActivityDateUsers(APIView):
                             shortlisted_inventory_details = shortlisted_inventory_detail_map[shortlisted_inv_detail_id],
                             activity_type=activity_type
                         )
-
                     for date, user in assignment_data['date_user_assignments'].iteritems():
-                        inv_act_assignment, is_created = models.InventoryActivityAssignment.objects.get_or_create(inventory_activity=inventory_activity_instance, activity_date=ui_utils.get_aware_datetime_from_string(date))
-                        inv_act_assignment.assigned_to = user_map[long(user)]
-                        inv_act_assignment.save()
+                        # if it's AUDIT, you keep on creating objects
+                        if inventory_activity_instance.activity_type == models.INVENTORY_ACTIVITY_TYPES[2][0]:
+                            inv_act_assignment, is_created = models.InventoryActivityAssignment.objects.get_or_create(inventory_activity=inventory_activity_instance, activity_date=ui_utils.get_aware_datetime_from_string(date))
+                        else:
+                            # if it's Release/Closure, you only create once instance against release.
+                            inv_act_assignment, is_created = models.InventoryActivityAssignment.objects.get_or_create(inventory_activity=inventory_activity_instance)
+                            inv_act_assignment.activity_date = ui_utils.get_aware_datetime_from_string(date)
 
+                        inv_act_assignment.assigned_to = user_map[long(user)]
+                        inv_act_assignment.assigned_by = request.user
+                        inventory_activity_assignment_objects.append(inv_act_assignment)
+
+            bulk_update(inventory_activity_assignment_objects)
             return ui_utils.handle_response(class_name, data='successfully assigned', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
