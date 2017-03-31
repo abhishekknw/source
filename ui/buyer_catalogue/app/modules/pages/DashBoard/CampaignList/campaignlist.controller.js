@@ -15,7 +15,7 @@ angular.module('catalogueApp')
       ];
       $scope.is_Superuser = $window.localStorage.isSuperUser;
       var getCampaignDetails = function(){
-        if($scope.is_Superuser == true){
+        if($scope.is_Superuser == 'true'){
           var fetch_all = '1';
           campaignListService.getAllCampaignDetails(fetch_all)
           .then(function onSuccess(response){

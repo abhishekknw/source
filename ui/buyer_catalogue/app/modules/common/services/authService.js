@@ -29,9 +29,9 @@ angular.module('Authentication')
                       .then(function onSuccess(response){
                         console.log(response);
                         if(response.data.data.is_superuser == true)
-                          $window.localStorage.isSuperUser = true;
+                          $window.localStorage.isSuperUser = 'true';
                         else
-                          $window.localStorage.isSuperUser = false;
+                          $window.localStorage.isSuperUser = 'false';
                       }).catch(function onError(response){
                         console.log(response);
                       });
