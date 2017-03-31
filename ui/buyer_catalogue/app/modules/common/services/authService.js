@@ -27,7 +27,6 @@ angular.module('Authentication')
                       callback(response.data);
                       commonDataShare.getUserDetails($rootScope.globals.currentUser.user_id)
                       .then(function onSuccess(response){
-                        console.log(response);
                         if(response.data.data.is_superuser == true)
                           $window.localStorage.isSuperUser = 'true';
                         else

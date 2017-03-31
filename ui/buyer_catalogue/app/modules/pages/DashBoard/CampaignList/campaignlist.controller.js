@@ -6,7 +6,8 @@ angular.module('catalogueApp')
       $scope.campaignHeadings = [
         {header : 'Campaign Id'},
         {header : 'Campaign Name'},
-        {header : 'Assgined To '},
+        {header : 'Assgined To'},
+        {header : 'Assgined By'},
         {header : 'Assigned Date'},
         {header : 'Start Date'},
         {header : 'End Date'},
@@ -19,7 +20,6 @@ angular.module('catalogueApp')
           var fetch_all = '1';
           campaignListService.getAllCampaignDetails(fetch_all)
           .then(function onSuccess(response){
-            console.log(response);
             $scope.campaignData = response.data.data;
             if($scope.campaignData.length == 0){
               $scope.isEmpty = true;
@@ -39,7 +39,6 @@ angular.module('catalogueApp')
           var userId = $rootScope.globals.currentUser.user_id;
           campaignListService.getCampaignDetails(assigned_by,userId,fetch_all)
             .then(function onSuccess(response){
-              console.log(response);
               $scope.campaignData = response.data.data;
               if($scope.campaignData.length == 0){
                 $scope.isEmpty = true;
@@ -60,7 +59,6 @@ angular.module('catalogueApp')
         var getUsersList = function(){
           commonDataShare.getUsersList()
             .then(function onSuccess(response){
-              console.log(response);
           		$scope.userList = response.data.data;
           	})
           	.catch(function onError(response){
