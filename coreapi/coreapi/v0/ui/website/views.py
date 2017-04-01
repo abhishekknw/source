@@ -1163,12 +1163,14 @@ class FilteredSuppliers(APIView):
 
             common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model or a few other models.
             inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
-            specific_filters = request.data.get('specific_filters')  # maps to specific supplier table
+            priority_index_filters = request.data.get('specific_filters')  # maps to specific supplier table and are used in calculation of priority index
             proposal_id = request.data['proposal_id']
             center_id = request.data.get('center_id')
-            amenities = request.data.get('amenities')
+            amenities = request.data.get('amenities')  # Todo : to be moved to PI function
             is_standalone_society = request.data.get('is_standalone_society')
-            ratio_of_tenants_to_flats = request.data.get('ratio_of_tenants_to_flats')  # cannot be handled  under specific society filters because it involves operation of two columns in database which cannot be generalized to a query.
+
+            # cannot be handled  under specific society filters because it involves operation of two columns in database which cannot be generalized to a query.
+
             # To get business name
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             business_name = proposal.account.business.name
@@ -1187,8 +1189,6 @@ class FilteredSuppliers(APIView):
                 return response
             common_filters_query = response.data['data']
 
-            # container to store specific_filters type of suppliers
-            specific_filters_suppliers = []
             # container to store inventory filters type of suppliers
             inventory_type_query_suppliers = []
             # this is the main list. if no filter is selected this is what is returned by default
@@ -1206,56 +1206,21 @@ class FilteredSuppliers(APIView):
                 inventory_type_query &= Q(content_type=content_type)
                 inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
 
-            # fetch specific_filters suppliers
-            response = website_utils.handle_specific_filters(specific_filters, supplier_type_code)
-            if not response.data['status']:
-                return response
-            specific_filters_query = response.data['data']
-            # if indeed there was something in the query
-
-            if specific_filters_query.__len__():
-                specific_filters_suppliers = set(list(supplier_model.objects.filter(specific_filters_query).values_list('supplier_id', flat=True)))
-
-            # if both available, find the intersection. basically it's another way of doing AND query.
-            # the following conditions are use case dependent. The checking is done on the basis of
-            # query length. an empty query length means that query didn't contain any thing in it.
-
-            if inventory_type_query.__len__() and specific_filters_query.__len__():
-                final_suppliers_id_list = specific_filters_suppliers.intersection(inventory_type_query_suppliers)
-            # if only inventory suppliers available, set it. Take the UNION in this case.
-            elif inventory_type_query.__len__():
+            # if inventory query was non zero in length, set final_suppliers_id_list to inventory_type_query_suppliers.
+            if inventory_type_query.__len__():
                 final_suppliers_id_list = inventory_type_query_suppliers
-            # if only specific suppliers available, set it. Take the UNION in this case.
-            elif specific_filters_query.__len__():
-                final_suppliers_id_list = specific_filters_suppliers
-            # if nobody is available, set it to master supplier list
             else:
                 final_suppliers_id_list = master_suppliers_list
 
             # when the final supplier list is prepared. we need to take intersection with master list.
             final_suppliers_id_list = final_suppliers_id_list.intersection(master_suppliers_list)
 
-            # check for amenities here
-            if amenities:
-                response = website_utils.get_amenities_suppliers(supplier_type_code, amenities)
-                if not response.data['status']:
-                    return response
-                amenities_suppliers = response.data['data']
-                final_suppliers_id_list = final_suppliers_id_list.intersection(amenities_suppliers)
-
-            # check for society ratio of tenants to flats
-            if supplier_type_code == website_constants.society and ratio_of_tenants_to_flats:
-                response = website_utils.get_societies_within_tenants_flat_ratio(float(ratio_of_tenants_to_flats['min']), float(ratio_of_tenants_to_flats['max']))
-                if not response.data['status']:
-                    return response
-                final_suppliers_id_list = final_suppliers_id_list.intersection(response.data['data'])
-
             # check for standalone societies
             if supplier_type_code == website_constants.society and is_standalone_society:
-                response = website_utils.get_standalone_societies()
-                if not response.data['status']:
-                    return response
-                final_suppliers_id_list = final_suppliers_id_list.intersection(response.data['data'])
+                final_suppliers_id_list = final_suppliers_id_list.intersection(website_utils.get_standalone_societies())
+
+            unique_supplier_ids, pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters)
+            final_suppliers_id_list.union(unique_supplier_ids)
 
             result = {}
 
@@ -1290,8 +1255,13 @@ class FilteredSuppliers(APIView):
             # supplier_id's.
             final_suppliers_id_list = [supplier['supplier_id'] for supplier in total_suppliers]
 
+            # set PI for those suppliers which are not in pi_index_map to zero.
+            for supplier_id in final_suppliers_id_list:
+                if not pi_index_map.get(supplier_id):
+                    pi_index_map[supplier_id] = 0
+
             # the following function sets the pricing as before and it's temprorary.
-            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers, final_suppliers_id_list, supplier_type_code, coordinates)
+            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers, final_suppliers_id_list, supplier_type_code, coordinates, pi_index_map)
 
             # construct the response and return
             result['business_name'] = business_name

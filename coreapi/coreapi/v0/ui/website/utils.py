@@ -2562,46 +2562,12 @@ def handle_specific_filters(specific_filters, supplier_type_code):
 
             database_field = master_specific_filters.get(received_filter)
 
-            # if filter_value is of type Dict, we assume it's for specifying min, max range of specific db filed value.
             if database_field:
                 # do things only when you get a db field
                 if not specific_filters_query:
-                    if type(filter_value) == DictType:
-                        specific_filters_query = Q(**{database_field + '__gte': filter_value['min'],database_field + '__lte': filter_value['max']})
-                    else:
-                        specific_filters_query = Q(**{database_field:filter_value})
+                    specific_filters_query = Q(**{database_field:filter_value})
                 else:
-                    if type(filter_value) == DictType:
-                        specific_filters_query &= Q(**{database_field + '__gte': filter_value['min'], database_field + '__lte': filter_value['max']})
-                    else:
-                        specific_filters_query &= Q(**{database_field: filter_value})
-
-        # do if else check on supplier type code to include things particular to that supplier. Things which
-        # cannot be mapped to a particular supplier and vary from supplier to supplier
-        if supplier_type_code == website_constants.society:
-            if specific_filters.get('flat_type'):
-                query = Q()
-                for flat_code, detail in specific_filters['flat_type'].iteritems():
-
-                    flat_code_value = website_constants.flat_type_dict[flat_code]
-                    query_dict = {'flat_type': flat_code_value}
-
-                    if detail.get('count'):
-                        query_dict['flat_count__gte'] = int(detail['count']['min'])
-                        query_dict['flat_count__lte'] = int(detail['count']['max'])
-
-                    if detail.get('size'):
-                        query_dict['size_builtup_area__gte'] = float(detail['size']['min'])
-                        query_dict['size_builtup_area__lte'] = float(detail['size']['max'])
-
-                    current_query = Q(**query_dict)
-
-                    if query:
-                        query |= current_query
-                    else:
-                        query = current_query
-                supplier_ids = models.FlatType.objects.select_related('society').filter(query).values_list('object_id', flat=True)
-                specific_filters_query &= Q(supplier_id__in=supplier_ids)
+                    specific_filters_query &= Q(**{database_field: filter_value})
 
         if supplier_type_code == website_constants.corporate:
             # well, we can receive a multiple dicts for employee counts. each describing min and max employee counts.
@@ -2621,25 +2587,63 @@ def handle_specific_filters(specific_filters, supplier_type_code):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def is_fulltext_index(model_name, column_name, index_type):
+def handle_priority_index_filters(supplier_type_code, pi_filters_map):
     """
-    Args:
-        model_name: table name
-        column_name: column name
-        index_type: 'FULLTEXT'
 
-    Returns: True if columnn of table has a FullText index, False otherwise
+    Returns:
 
     """
-    function = is_fulltext_index.__name__
+    function = handle_priority_index_filters.__name__
     try:
-        table_name = model_name._meta.db_table
-        raw_query_set = model_name.objects.raw(
-            'show index from {0} where column_name={1} and index_type={2}'.format(table_name, column_name, index_type))
-        answer = True if raw_query_set else False
-        return ui_utils.handle_response(fclassclassclaunction, data=answer, success=True)
+        total_supplier_ids = []
+        pi_index_map = {}
+        # do if else check on supplier type code to include things particular to that supplier. Things which
+        # cannot be mapped to a particular supplier and vary from supplier to supplier
+        # handle filters of type min_max here
+        for filter_name, db_value in website_constants.pi_range_filters[supplier_type_code].iteritems():
+            if pi_filters_map.get(filter_name):
+                min_value = pi_filters_map[filter_name]['min']
+                max_value = pi_filters_map[filter_name]['max']
+                query = {db_value + '__gte': min_value, db_value + '__lte': max_value}
+                total_supplier_ids.extend(models.SupplierTypeSociety.objects.filter(Q(**query)).values_list('supplier_id', flat=True))
+
+        if supplier_type_code == website_constants.society:
+            if pi_filters_map.get('flat_type'):
+                query = Q()
+                for flat_code, detail in pi_filters_map['flat_type'].iteritems():
+
+                    flat_code_value = website_constants.flat_type_dict[flat_code]
+                    query_dict = {'flat_type': flat_code_value}
+
+                    if detail.get('count'):
+                        query_dict['flat_count__gte'] = int(detail['count']['min'])
+                        query_dict['flat_count__lte'] = int(detail['count']['max'])
+
+                    if detail.get('size'):
+                        query_dict['size_builtup_area__gte'] = float(detail['size']['min'])
+                        query_dict['size_builtup_area__lte'] = float(detail['size']['max'])
+
+                    current_query = Q(**query_dict)
+
+                    if query:
+                        query |= current_query
+                    else:
+                        query = current_query
+
+                total_supplier_ids.extend(models.FlatType.objects.select_related('society').filter(query).values_list('object_id', flat=True))
+
+            if pi_filters_map.get('ratio_of_tenants_to_flats'):
+                # check for society ratio of tenants to flats
+                ratio_of_tenants_to_flats = pi_filters_map['ratio_of_tenants_to_flats']
+                total_supplier_ids.extend(get_societies_within_tenants_flat_ratio(float(ratio_of_tenants_to_flats['min']), float(ratio_of_tenants_to_flats['max'])))
+
+            # calculate the unique supplier_ids. if this is equal to total_supplier_ids, the PI of each supplier will be just 1
+        unique_supplier_ids = set(total_supplier_ids)
+        for supplier_id in unique_supplier_ids:
+            pi_index_map[supplier_id] = total_supplier_ids.count(supplier_id) # the PI is just frequency of each supplier_id in the list
+        return unique_supplier_ids, pi_index_map
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def initialize_area_subarea(result, index):
@@ -2906,13 +2910,14 @@ def get_inventory_count(supplier_ids, content_type, inventory_summary_objects=No
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinates):
+def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinates, priority_index_map):
     """
     Args:
         suppliers: a list of supplier dicts
         supplier_ids: a list of supplier id's
         supplier_type_code: CP, RS
         coordinates: a dict containing radius, lat, long information.
+        priority_index_map: a map of ids to PI.
 
     Returns: list of suppliers with pricing set, count of inventories
     """
@@ -2938,6 +2943,7 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
             # include only those suppliers that lie within the circle of radius given
             if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
                 result.append(supplier)
+                supplier['priority_index'] = priority_index_map[supplier['supplier_id']]
         result = add_inventory_summary_details(result, inventory_summary_objects_mapping, supplier_type_code, status=True)
         return result, suppliers_inventory_count
     except Exception as e:
@@ -4646,12 +4652,11 @@ def get_amenities_suppliers(supplier_type_code, amenities):
             return response
         content_type = response.data['data']
 
-        supplier_ids = models.SupplierAmenitiesMap.objects.filter(content_type=content_type, amenity__code__in=amenities).values_list('object_id', flat=True)
-
-        return ui_utils.handle_response(function, data=supplier_ids, success=True)
+        supplier_amenity_count_list = models.SupplierAmenitiesMap.objects.filter(content_type=content_type, amenity__code__in=amenities).values('object_id').annotate(amenity_count=Count('amenity'))
+        return supplier_amenity_count_list
 
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 def save_amenities_for_supplier(supplier_type_code, supplier_id, amenities):
     """
@@ -4886,9 +4891,9 @@ def get_societies_within_tenants_flat_ratio(min_ratio, max_ratio):
     try:
         supplier_ids = models.SupplierTypeSociety.objects.annotate(ratio=ExpressionWrapper(
             F('total_tenant_flat_count')/F('flat_count'), output_field=FloatField())).filter(ratio__gte=min_ratio, ratio__lte=max_ratio).values_list('supplier_id', flat=True)
-        return ui_utils.handle_response(function, data=supplier_ids, success=True)
+        return supplier_ids
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def get_standalone_societies():
@@ -4917,10 +4922,9 @@ def get_standalone_societies():
         for society_id, detail in societies_map.iteritems():
             if is_society_standalone(detail):
                 standalone_society_ids.append(society_id)
-
-        return ui_utils.handle_response(function, data=standalone_society_ids, success=True)
+        return standalone_society_ids
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def is_society_standalone(instance_detail):

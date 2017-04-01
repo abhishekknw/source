@@ -355,6 +355,13 @@ supplier_filters = {
         'building_count': 'building_count',
     },
     'RS': {
+    }
+}
+
+# pi filters which come in range fashion. These filters are used in PI calculation
+pi_range_filters = {
+
+    'RS': {
         'flat_avg_rental_persqft': 'flat_avg_rental_persqft',
         'flat_sale_cost_persqft': 'flat_sale_cost_persqft',
         'possession_year': 'age_of_society'
@@ -701,3 +708,6 @@ inventories_with_object_id_fields = [poster_inventory_code, standee_inventory_co
 
 # valid extensions to be eligible for deletion of files
 valid_extensions = ['xlsx']
+
+# amenity count threshold
+amenity_count_threshold = 3
