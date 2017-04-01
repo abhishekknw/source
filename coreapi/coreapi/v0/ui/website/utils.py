@@ -2596,7 +2596,7 @@ def handle_priority_index_filters(supplier_type_code, pi_filters_map):
     function = handle_priority_index_filters.__name__
     try:
         if not supplier_type_code or not pi_filters_map:
-            raise Exception(function, 'Supplier Type code or/and pi_filters_map cannot be None')
+            raise Exception('Supplier Type code or/and pi_filters_map cannot be None')
 
         total_supplier_ids = []
         pi_index_map = {}
