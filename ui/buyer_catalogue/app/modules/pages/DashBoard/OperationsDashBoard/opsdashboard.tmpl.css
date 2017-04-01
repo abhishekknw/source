@@ -23,6 +23,6 @@ body{
 	margin-right: auto;
 	background-color: transparent;
 }
-.footer1{
-  margin-top: 360px;
+.content{
+  min-height: 350px;
 }

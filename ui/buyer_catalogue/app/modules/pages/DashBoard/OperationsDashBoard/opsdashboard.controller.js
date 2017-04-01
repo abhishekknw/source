@@ -41,6 +41,7 @@ angular.module('catalogueApp')
     	})
     	.catch(function onError(response){
         $scope.isEmpty = true;
+        $scope.loading = response;
     		console.log("error occured", response);
         swal(constants.name,constants.errorMsg,constants.error);
     	});

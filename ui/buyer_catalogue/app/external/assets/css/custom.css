@@ -1397,7 +1397,7 @@ button:hover.next2   img {width:14px;height:18px; display:block; background:url(
 .footerbg3 a:hover{color:#ff0000; text-decoration:none;}
 
 .footer{text-align:center;color:#999; font-size:14px;}
-.footer a{color:#ff0000; font-size:14px; font-weight:normal;   -webkit-transition:.3s;-moz-transition:.3s;transition:.3s}
+.footer a{font-size:14px; font-weight:normal;   -webkit-transition:.3s;-moz-transition:.3s;transition:.3s}
 .footer a:hover{color:#72BF66; font-size:14px; font-weight:normal; text-decoration:none;}
 
 .scont{text-align:left;color:#999; font-size:14px;}
