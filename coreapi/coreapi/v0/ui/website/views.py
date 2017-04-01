@@ -1163,7 +1163,7 @@ class FilteredSuppliers(APIView):
 
             common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model or a few other models.
             inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
-            priority_index_filters = request.data.get('specific_filters')  # maps to specific supplier table and are used in calculation of priority index
+            priority_index_filters = request.data.get('priority_index_filters')  # maps to specific supplier table and are used in calculation of priority index
             proposal_id = request.data['proposal_id']
             center_id = request.data.get('center_id')
             amenities = request.data.get('amenities')  # Todo : to be moved to PI function
