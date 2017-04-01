@@ -908,25 +908,25 @@ if($scope.user_code == 'guestUser')
   //           quantity : [],
   //         },
   //         inventory_filters : [],
-  //         proirity_index_filters : {
+  //         priority_index_filters : {
   //           flat_type : [],
   //         },
   //         amenities:[],
   //       };
   //       if($scope.flat_avg_rental_persqft_flag == true){
-  //         filters.proirity_index_filters['flat_avg_rental_persqft'] = $scope.center_data[i].RS_filters.flat_avg_rental_persqft;
+  //         filters.priority_index_filters['flat_avg_rental_persqft'] = $scope.center_data[i].RS_filters.flat_avg_rental_persqft;
   //       }
   //       if($scope.flat_sale_cost_persqft_flag == true){
-  //         filters.proirity_index_filters['flat_sale_cost_persqft'] = $scope.center_data[i].RS_filters.flat_sale_cost_persqft;
+  //         filters.priority_index_filters['flat_sale_cost_persqft'] = $scope.center_data[i].RS_filters.flat_sale_cost_persqft;
   //       }
   //       if($scope.center_data[i].RS_filters.flat_avg_rental_persqft.max == 0){
-  //         delete filters.proirity_index_filters['flat_avg_rental_persqft'];
+  //         delete filters.priority_index_filters['flat_avg_rental_persqft'];
   //       }
   //       if($scope.center_data[i].RS_filters.flat_sale_cost_persqft.max == 0){
-  //         delete filters.proirity_index_filters['flat_sale_cost_persqft'];
+  //         delete filters.priority_index_filters['flat_sale_cost_persqft'];
   //       }
   //       makeFilters($scope.center_data[i].RS_filters.inventory,filters.inventory_filters);
-  //       makeFilters($scope.center_data[i].RS_filters.flat_type,filters.proirity_index_filters.flat_type);
+  //       makeFilters($scope.center_data[i].RS_filters.flat_type,filters.priority_index_filters.flat_type);
   //       makeFilters($scope.center_data[i].RS_filters.quality_type,filters.common_filters.quality);
   //       makeFilters($scope.center_data[i].RS_filters.locality_rating,filters.common_filters.locality);
   //       makeFilters($scope.center_data[i].RS_filters.quantity_type,filters.common_filters.quantity);
@@ -964,35 +964,35 @@ if($scope.user_code == 'guestUser')
           quantity : [],
         },
         inventory_filters : [],
-        proirity_index_filters : {
+        priority_index_filters : {
           flat_type : {},
           amenities : [],
         },
       };
       if($scope.current_center.RS_filters.flat_avg_rental_persqft.max != $scope.current_center.RS_filters.flat_avg_rental_persqft.options.floor){
-        filters.proirity_index_filters['flat_avg_rental_persqft'] = $scope.current_center.RS_filters.flat_avg_rental_persqft;
+        filters.priority_index_filters['flat_avg_rental_persqft'] = $scope.current_center.RS_filters.flat_avg_rental_persqft;
       }
       if($scope.current_center.RS_filters.flat_sale_cost_persqft.max != $scope.current_center.RS_filters.flat_sale_cost_persqft.options.floor){
-        filters.proirity_index_filters['flat_sale_cost_persqft'] = $scope.current_center.RS_filters.flat_sale_cost_persqft;
+        filters.priority_index_filters['flat_sale_cost_persqft'] = $scope.current_center.RS_filters.flat_sale_cost_persqft;
       }
       if($scope.current_center.RS_filters.ratio_of_tenants_to_flats.max != $scope.current_center.RS_filters.ratio_of_tenants_to_flats.options.floor){
-        filters.proirity_index_filters['ratio_of_tenants_to_flats'] = {};
-        filters.proirity_index_filters['ratio_of_tenants_to_flats']['min'] = $scope.current_center.RS_filters.ratio_of_tenants_to_flats.min/100;
-        filters.proirity_index_filters['ratio_of_tenants_to_flats']['max'] = $scope.current_center.RS_filters.ratio_of_tenants_to_flats.max/100;
+        filters.priority_index_filters['ratio_of_tenants_to_flats'] = {};
+        filters.priority_index_filters['ratio_of_tenants_to_flats']['min'] = $scope.current_center.RS_filters.ratio_of_tenants_to_flats.min/100;
+        filters.priority_index_filters['ratio_of_tenants_to_flats']['max'] = $scope.current_center.RS_filters.ratio_of_tenants_to_flats.max/100;
       }
       if($scope.current_center.RS_filters.possession_year.max != $scope.current_center.RS_filters.possession_year.options.floor){
-        filters.proirity_index_filters['possession_year'] = $scope.current_center.RS_filters.possession_year;
+        filters.priority_index_filters['possession_year'] = $scope.current_center.RS_filters.possession_year;
       }
       if($scope.is_standalone_society.selected == true){
         filters['is_standalone_society'] = true;
       }
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
-      // makeFilters($scope.current_center.RS_filters.flat_type,filters.proirity_index_filters.flat_type);
+      // makeFilters($scope.current_center.RS_filters.flat_type,filters.priority_index_filters.flat_type);
       makeFilters($scope.current_center.RS_filters.quality_type,filters.common_filters.quality);
       makeFilters($scope.current_center.RS_filters.locality_rating,filters.common_filters.locality);
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
-      makeFilters($scope.current_center.RS_filters.amenities,filters.proirity_index_filters.amenities);
-      makeFlatTypeFilters($scope.current_center.RS_filters.flat_type,filters.proirity_index_filters.flat_type);
+      makeFilters($scope.current_center.RS_filters.amenities,filters.priority_index_filters.amenities);
+      makeFlatTypeFilters($scope.current_center.RS_filters.flat_type,filters.priority_index_filters.flat_type);
       console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
@@ -1030,18 +1030,18 @@ if($scope.user_code == 'guestUser')
                 quantity : [],
               },
               inventory_filters : [],
-              proirity_index_filters : {
+              priority_index_filters : {
                 // real_estate_allowed : $scope.real_estate_allowed,
                 employees_count : [],
               },
             };
             makeFilters($scope.center_data[i].CP_filters.inventory,filters.inventory_filters);
-            makeFilters($scope.center_data[i].CP_filters.employee_count,filters.proirity_index_filters.employees_count);
+            makeFilters($scope.center_data[i].CP_filters.employee_count,filters.priority_index_filters.employees_count);
             makeFilters($scope.center_data[i].CP_filters.quality_type,filters.common_filters.quality);
             makeFilters($scope.center_data[i].CP_filters.locality_rating,filters.common_filters.locality);
             makeFilters($scope.center_data[i].CP_filters.quantity_type,filters.common_filters.quantity);
             if($scope.real_estate_allowed == true)
-              filters.proirity_index_filters.real_estate_allowed = true;
+              filters.priority_index_filters.real_estate_allowed = true;
             $scope.checkFilters = true;
             promises.push(mapViewService.getFilterSuppliers(filters));
 
@@ -1074,18 +1074,18 @@ if($scope.user_code == 'guestUser')
             quantity : [],
           },
           inventory_filters : [],
-          proirity_index_filters : {
+          priority_index_filters : {
             // real_estate_allowed : $scope.real_estate_allowed,
             employees_count : [],
           },
         };
         makeFilters($scope.current_center.CP_filters.inventory,filters.inventory_filters);
-        makeFilters($scope.current_center.CP_filters.employee_count,filters.proirity_index_filters.employees_count);
+        makeFilters($scope.current_center.CP_filters.employee_count,filters.priority_index_filters.employees_count);
         makeFilters($scope.current_center.CP_filters.quality_type,filters.common_filters.quality);
         makeFilters($scope.current_center.CP_filters.locality_rating,filters.common_filters.locality);
         makeFilters($scope.current_center.CP_filters.quantity_type,filters.common_filters.quantity);
         if($scope.real_estate_allowed == true)
-          filters.proirity_index_filters.real_estate_allowed = true;
+          filters.priority_index_filters.real_estate_allowed = true;
         filterSupplierData(filters.supplier_type_code,filters);
       }
     }catch(error){
