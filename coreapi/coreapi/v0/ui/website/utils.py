@@ -386,6 +386,9 @@ def space_on_circle(latitude, longitude, radius, space_lat, space_lng):
     Returns: weather the supplier coordinates actually lie within a circle drawn with  given radius  ? The center
     coordinates being latitude, longitude in the params. The function uses simple pythagoras theorem to test this.
     """
+    # if any of the param is False, we return False. 
+    if not latitude or (not longitude) or (not radius) or (not space_lat) or (not space_lng):
+        return False
     return (space_lat - latitude)**2 + (space_lng - longitude)**2 <= (radius/110.574)**2
 
 
@@ -1846,15 +1849,29 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
                 else:
                     db_key = 'total_' + inventory_name + '_count'
                     # set count from inventory summary if available. if not set count calculated previously from actual inventory tables
-                    if supplier_inventory_obj and supplier_inventory_obj.__dict__[db_key]:
-                        supplier[db_key] = supplier_inventory_obj.__dict__[db_key]
+                    if supplier_inventory_obj:
+                        try:
+                            supplier[db_key] = supplier_inventory_obj.__dict__[db_key]
+                        except KeyError:
+                            supplier[db_key] = website_constants.default_inventory_count
                     else:
-                        supplier[db_key] = inventory_count_map[supplier['supplier_id']][inventory_code]
+                        try:
+                            supplier[db_key] = inventory_count_map[supplier['supplier_id']][inventory_code]
+                        except KeyError:
+                            supplier[db_key] = website_constants.default_inventory_count
 
                 ad_inventory_instance = ad_inventory_map[website_constants.inventory_type_duration_dict_list[inventory_code][0], website_constants.inventory_type_duration_dict_list[inventory_code][1]]
                 duration_instance = duration_map[website_constants.inventory_type_duration_dict_list[inventory_code][2]]
-                supplier[inventory_name + '_price'] = price_mapping_default_map[ad_inventory_instance.id, duration_instance.id, supplier['supplier_id'], content_type.id]['supplier_price']
-                supplier[inventory_name + '_duration'] = duration_instance.duration_name
+                try:
+                    supplier[inventory_name + '_price'] = price_mapping_default_map[ad_inventory_instance.id, duration_instance.id, supplier['supplier_id'], content_type.id]['supplier_price']
+                except KeyError:
+                    supplier[inventory_name + '_price'] = website_constants.default_inventory_price
+                try:
+                    supplier[inventory_name + '_duration'] = duration_instance.duration_name
+                except KeyError:
+                    supplier[inventory_name + '_duration'] = website_constants.default_inventory_duration
+
+
         return supplier_list
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -1872,6 +1889,8 @@ def get_inventories_allowed(inventory_summary_instance):
     function = get_inventories_allowed.__name__
 
     try:
+        if not inventory_summary_instance:
+            return []
         inventory_code_list = []
         if inventory_summary_instance.poster_allowed_nb or inventory_summary_instance.poster_allowed_lift:
             inventory_code_list.append(website_constants.inventory_name_to_code['poster'])
@@ -2906,7 +2925,10 @@ def get_inventory_count(supplier_ids, content_type, inventory_summary_objects=No
             if not result.get(supplier_id):
                 result[supplier_id] = {}
             for code in all_inventory_codes:
-                result[supplier_id][code] = count_query_result[code][supplier_id]
+                try:
+                    result[supplier_id][code] = count_query_result[code][supplier_id]
+                except KeyError:
+                    result[supplier_id][code] = website_constants.default_inventory_count
         return result
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))

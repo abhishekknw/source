@@ -589,7 +589,7 @@ bodys = {
 
 # default emails
 emails = {
-    'bd_head': 'nikhil.singh@machadalo.com'
+    'bd_head': 'yogesh.mhetre@machadalo.com'
 }
 
 # default status of each inventory is defined here. The reason i didn't chose a boolean value is because may be in
@@ -711,3 +711,9 @@ valid_extensions = ['xlsx']
 
 # amenity count threshold
 amenity_count_threshold = 3
+
+# defaults if these doesn't exist in the database
+default_inventory_count = -1
+default_inventory_price = -1
+default_inventory_duration = 'NOT AVAILABLE'
+
