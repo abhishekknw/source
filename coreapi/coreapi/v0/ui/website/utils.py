@@ -3210,11 +3210,8 @@ def add_shortlisted_suppliers_get_spaces(proposal_id, user, data):
                 center_id = supplier_dict['center']['id']
 
                 if result.get(center_id) and result[center_id].get(code):
-                    response = union_suppliers(supplier_dict['suppliers'][code], result[center_id][code])
-                    if not response.data['status']:
-                        return response
                     # set it to union of two sets.
-                    supplier_dict['suppliers'][code] = response.data['data'].values()
+                    supplier_dict['suppliers'][code] = union_suppliers(supplier_dict['suppliers'][code], result[center_id][code]).values()
 
         return ui_utils.handle_response(function, data=data, success=True)
     except Exception as e:
@@ -3233,7 +3230,6 @@ def union_suppliers(first_supplier_list, second_supplier_list):
     """
     function = union_suppliers.__name__
     try:
-
         first_supplier_list_ids = set()
         second_supplier_list_ids = set()
         first_supplier_mapping = {}
