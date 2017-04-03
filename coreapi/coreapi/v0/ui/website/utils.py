@@ -1837,17 +1837,16 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
             # status is set to a constant initially only if the param status is true
             if status:
                 supplier['status'] = website_constants.status
-            if not supplier_inventory_obj:
-                continue
+
             allowed_inventory_codes = get_inventories_allowed(supplier_inventory_obj)
             for inventory_code in allowed_inventory_codes:
                 inventory_name = website_constants.inventory_code_to_name[inventory_code].lower()
-                if inventory_name == website_constants.flier.lower():
+                if supplier_inventory_obj and inventory_name == website_constants.flier.lower():
                     supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
                 else:
                     db_key = 'total_' + inventory_name + '_count'
                     # set count from inventory summary if available. if not set count calculated previously from actual inventory tables
-                    if supplier_inventory_obj.__dict__[db_key]:
+                    if supplier_inventory_obj and supplier_inventory_obj.__dict__[db_key]:
                         supplier[db_key] = supplier_inventory_obj.__dict__[db_key]
                     else:
                         supplier[db_key] = inventory_count_map[supplier['supplier_id']][inventory_code]
