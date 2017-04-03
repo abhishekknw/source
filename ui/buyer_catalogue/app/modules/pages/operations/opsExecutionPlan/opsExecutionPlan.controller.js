@@ -128,7 +128,7 @@ angular.module('catalogueApp')
       }
       $scope.getSupplierDetails = function(supplier){
         $scope.supplierData = [];
-        var supplierId = supplier.shortlisted_inventory_details.shortlisted_supplier.object_id;
+        var supplierId = supplier.supplier_id;
         var supplier_type_code = 'RS';
         opsExecutionPlanService.getSuppierDetails(supplierId,supplier_type_code)
         	.success(function(response, status){
@@ -179,12 +179,14 @@ angular.module('catalogueApp')
           getOpsExecutionImageDetails();
           $('#reAssignModal').modal('hide');
           $scope.reAssign = false;
+          $scope.reAssignActivityList = [];
           swal(constants.name,constants.reAssign_success,constants.success);
 
         })
         .catch(function onError(response){
           $('#reAssignModal').modal('hide');
           $scope.reAssign = false;
+          $scope.reAssignActivityList = [];
           swal(constants.name,constants.reAssign_error,constants.error);
           console.log(response);
         });
@@ -197,6 +199,7 @@ angular.module('catalogueApp')
         downloadInProgress();
       }).catch(function onError(response){
         console.log("Error occured", response.status);
+        $scope.buttonDisable = false;
       })
     }
     function downloadInProgress(){
@@ -213,7 +216,7 @@ angular.module('catalogueApp')
              $window.open(response.data.data, '_blank');
              $scope.buttonDisable = false;
           }).catch(function onError(response){
-            console.log(response);
+            $scope.buttonDisable = false;
           });
         }
         else {
@@ -221,6 +224,8 @@ angular.module('catalogueApp')
         }
       }).catch(function onError(response){
         console.log(response);
+        $scope.buttonDisable = false;
+        swal(constants.name,constants.no_image_error,constants.error);
       });
     }
 }]);
