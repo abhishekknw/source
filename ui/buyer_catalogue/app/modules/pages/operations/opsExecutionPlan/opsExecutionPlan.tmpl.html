@@ -19,7 +19,7 @@
         </thead>
         <tbody>
           <tr ng-repeat="inventory in campaignDataList">
-            <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(supplier)">{{inventory.supplier_id}}</a></td>
+            <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(inventory)">{{inventory.supplier_id}}</a></td>
             <td class="col-md-1">{{inventory.inv_id}}</td>
             <td class="col-md-2">{{inventory.inv_type}}</td>
             <td class="col-md-2" ng-if="inventory.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(inventory.images)">View Image</a></td>
