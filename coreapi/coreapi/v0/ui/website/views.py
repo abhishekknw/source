@@ -1239,21 +1239,13 @@ class FilteredSuppliers(APIView):
             total_suppliers = serializer.data
 
             # adding earlier saved shortlisted suppliers in the results.
-            if proposal_id and center_id:
-                response = website_utils.get_shortlisted_suppliers(proposal_id, request.user)
-                if not response.data['status']:
-                    return response
-                shortlisted_supplier_result = response.data['data']
-                if shortlisted_supplier_result.get(center_id):
-                    shortlisted_suppliers = shortlisted_supplier_result[center_id].get(supplier_type_code)
-                    response = website_utils.union_suppliers(total_suppliers, shortlisted_suppliers)
-                    if not response.data['status']:
-                        return response
-                    total_suppliers = response.data['data'].values()
+            if proposal_id:
+                shortlisted_suppliers = website_utils.get_shortlisted_suppliers_map(proposal_id, content_type)
+                total_suppliers = website_utils.union_suppliers(total_suppliers, shortlisted_suppliers.values())
 
             # because some suppliers can be outside the given radius, we need to recalculate list of
             # supplier_id's.
-            final_suppliers_id_list = [supplier['supplier_id'] for supplier in total_suppliers]
+            final_suppliers_id_list = total_suppliers.keys()
 
             # set PI for those suppliers which are not in pi_index_map to zero.
             for supplier_id in final_suppliers_id_list:
@@ -1261,7 +1253,7 @@ class FilteredSuppliers(APIView):
                     pi_index_map[supplier_id] = 0
 
             # the following function sets the pricing as before and it's temprorary.
-            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers, final_suppliers_id_list, supplier_type_code, coordinates, pi_index_map)
+            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, pi_index_map)
 
             # construct the response and return
             result['business_name'] = business_name

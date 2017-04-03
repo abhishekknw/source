@@ -560,6 +560,7 @@ status = 'X'
 shortlisted = 'S'
 removed = 'R'
 buffer = 'B'
+valid_statuses = [shortlisted, removed, buffer]
 
 # name of inventories as in db
 poster = 'POSTER'

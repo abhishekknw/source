@@ -1646,9 +1646,9 @@ def merge_two_dicts(x, y):
         for key, value in y.iteritems():
             if key not in x_keys:
                 x[key] = value
-        return ui_utils.handle_response(function, data=x, success=True)
+        return x
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def suppliers_within_radius(data):
@@ -1837,23 +1837,34 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
             supplier_inventory_obj = inventory_summary_objects_mapping.get(supplier['supplier_id'])
             supplier['shortlisted'] = shortlisted
             supplier['buffer_status'] = False
-            # status is set to a constant initially only if the param status is true
-            if status:
+            # status is set to True.
+            if not supplier.get('status'):
                 supplier['status'] = website_constants.status
 
             allowed_inventory_codes = get_inventories_allowed(supplier_inventory_obj)
             for inventory_code in allowed_inventory_codes:
                 inventory_name = website_constants.inventory_code_to_name[inventory_code].lower()
-                if supplier_inventory_obj and inventory_name == website_constants.flier.lower():
-                    supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency
+                if inventory_name == website_constants.flier.lower():
+                    supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency if supplier_inventory_obj else website_constants.default_inventory_count
                 else:
                     db_key = 'total_' + inventory_name + '_count'
                     # set count from inventory summary if available. if not set count calculated previously from actual inventory tables
                     if supplier_inventory_obj:
                         try:
-                            supplier[db_key] = supplier_inventory_obj.__dict__[db_key]
+                            total_inventory_count = supplier_inventory_obj.__dict__[db_key]
+                            # if there is no count, we try to set count from individual table of the inventory
+                            if not total_inventory_count:
+                                try:
+                                    supplier[db_key] = inventory_count_map[supplier['supplier_id']][inventory_code]
+                                except KeyError:
+                                    supplier[db_key] = website_constants.default_inventory_count
+                            # else, set the default value from inventory summary
+                            else:
+                                supplier[db_key] = total_inventory_count
+                        # if the 'total_inventory_count' isn't present as a key, set to default count
                         except KeyError:
                             supplier[db_key] = website_constants.default_inventory_count
+                    # if no inventory summary we try to set by individual inventory table
                     else:
                         try:
                             supplier[db_key] = inventory_count_map[supplier['supplier_id']][inventory_code]
@@ -1870,7 +1881,6 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
                     supplier[inventory_name + '_duration'] = duration_instance.duration_name
                 except KeyError:
                     supplier[inventory_name + '_duration'] = website_constants.default_inventory_duration
-
 
         return supplier_list
     except Exception as e:
@@ -2300,12 +2310,8 @@ def make_export_final_response(result, data):
                     supplier_info_dict = response.data['data']
 
                     # merge the two dicts
-                    response = merge_two_dicts(center_info_dict, supplier_info_dict)
-                    if not response.data['status']:
-                        return response
-
                     # final object ( dict ). it contains center information as well as suppliers specific information
-                    final_supplier_dict = response.data['data']
+                    final_supplier_dict = merge_two_dicts(center_info_dict, supplier_info_dict)
 
                     # add _price_per_flat information to the final_dict received.
                     response = get_union_inventory_price_per_flat(final_supplier_dict, unique_inv_codes, index)
@@ -3238,13 +3244,13 @@ def union_suppliers(first_supplier_list, second_supplier_list):
 
         if second_supplier_list:
             for supplier in second_supplier_list:
-                supplier_id = supplier['supplier_id']
+                supplier_id = supplier['supplier_id'] if supplier.get('supplier_id') else supplier['object_id']
                 second_supplier_list_ids.add(supplier_id)
                 second_supplier_mapping[supplier_id] = supplier
 
         if first_supplier_list:
             for supplier in first_supplier_list:
-                supplier_id = supplier['supplier_id']
+                supplier_id = supplier['supplier_id'] if supplier.get('supplier_id') else supplier['object_id']
                 first_supplier_list_ids.add(supplier_id)
                 first_supplier_mapping[supplier_id] = supplier
                 supplier['status'] = website_constants.status
@@ -3261,10 +3267,43 @@ def union_suppliers(first_supplier_list, second_supplier_list):
 
             if supplier_id in suppliers_not_in_second_set:
                 result[supplier_id]['status'] = website_constants.status
-
-        return ui_utils.handle_response(function, data=result, success=True)
+            result[supplier_id]['supplier_id'] = supplier_id
+        return result
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def get_shortlisted_suppliers_map(proposal_id, content_type):
+    """
+
+    Args:
+        proposal_id:
+        content_type:
+
+    Returns:
+
+    """
+    function = get_shortlisted_suppliers_map.__name__
+    try:
+        # fetch the class from content type
+        model_class = apps.get_model(settings.APP_NAME, content_type.model)
+        # fetch the shortlisted supplier instances ( object_id, status only )
+        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id, content_type=content_type).values('object_id', 'status')
+        shortlisted_ids = []
+        shortlisted_suppliers_map = {}
+        # prepare a map from id --> ss because later we will need to fetch it
+        for instance_dict in shortlisted_suppliers:
+            supplier_id = instance_dict['object_id']
+            shortlisted_suppliers_map[supplier_id] = instance_dict
+            shortlisted_ids.append(supplier_id)
+        instances = model_class.objects.filter(supplier_id__in=shortlisted_ids).values()
+        result = {}
+        for instance in instances:
+            supplier_id = instance['supplier_id']
+            result[supplier_id] = merge_two_dicts(instance, shortlisted_suppliers_map[supplier_id])
+        return result
+    except Exception as e:
+        raise Exception (function, ui_utils.get_system_error(e))
 
 
 def get_shortlisted_suppliers(proposal_id, user):
@@ -3286,8 +3325,9 @@ def get_shortlisted_suppliers(proposal_id, user):
     """
     function = get_shortlisted_suppliers.__name__
     try:
+
         # fetch the right shortlisted space instances
-        shortlisted_spaces = models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).values()
+        shortlisted_spaces = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).values()
 
         # to store supplier id against each supplier_type_code
         shortlisted_spaces_content_type_wise = {}
@@ -3919,10 +3959,7 @@ def map_objects_ids_to_objects(mapping):
             # map the extra supplier_specific attributes to content_type, supplier_id
             for supplier in supplier_objects:
                 extra_data = {'area': supplier['area'], 'name': supplier['name'], 'subarea': supplier['subarea']}
-                response = merge_two_dicts(supplier, extra_data)
-                if not response.data['status']:
-                    return response
-                output[content_type_id, supplier['supplier_id']] = response.data['data']
+                output[content_type_id, supplier['supplier_id']] = merge_two_dicts(supplier, extra_data)
         return ui_utils.handle_response(function, data=output, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
