@@ -273,8 +273,14 @@ if($scope.user_code == 'guestUser')
        try{
         $scope.posterMapImpressions = $scope.flat_count*4*7*2;
         $scope.standeeMapImpression = $scope.flat_count*4*7*2;
-        $scope.stallMapImpression = $scope.flat_count*4*2;
-        $scope.flierMapImpressions = $scope.flat_count * 4*1;
+        if($scope.stall_count !=0 || $scope.stall_count)
+          $scope.stallMapImpression = $scope.flat_count*4*2;
+        else
+          $scope.stallMapImpression = 0;
+        if($scope.standee_count != 0 || $scope.standee_count)
+          $scope.flierMapImpressions = $scope.flat_count * 4*1;
+        else
+          $scope.flierMapImpressions = 0;
       }catch(error){
         console.log(error.message);
       }
@@ -339,8 +345,14 @@ if($scope.user_code == 'guestUser')
 
       $scope.flierGridImpressions = $scope.total_flat_count *4*1;
       $scope.posterGridImpressions = $scope.total_flat_count *4*7*2;
-      $scope.standeeGridImpression = $scope.total_flat_count *4*7*2;
-      $scope.stallGridImpression = $scope.total_flat_count *4*2;
+      if($scope.total_stalls != 0 || $scope.total_stalls)
+        $scope.stallGridImpression = $scope.total_flat_count *4*2;
+      else
+        $scope.stallGridImpression = 0;
+      if($scope.total_standees != 0 || $scope.total_standees)
+        $scope.standeeGridImpression = $scope.total_flat_count *4*7*2;
+      else
+        $scope.standeeGridImpression = 0;
     }catch(error){
       console.log(error.message);
     }
