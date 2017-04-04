@@ -252,14 +252,19 @@ if($scope.user_code == 'guestUser')
        if($scope.current_center.suppliers_meta != null){
          if($scope.current_center.suppliers_meta['RS'] != undefined){
            if($scope.current_center.suppliers_meta['RS'].inventory_count != null){
-             $scope.stall_count += $scope.current_center.suppliers_meta['RS'].inventory_count.stalls;
-             $scope.standee_count += $scope.current_center.suppliers_meta['RS'].inventory_count.standees;
+              if($scope.current_center.suppliers_meta['RS'].inventory_count.stalls != null)
+                $scope.stall_count += $scope.current_center.suppliers_meta['RS'].inventory_count.stalls;
+              if($scope.current_center.suppliers_meta['RS'].inventory_count.standees != null)
+                $scope.standee_count += $scope.current_center.suppliers_meta['RS'].inventory_count.standees;
            }
          }
+         // not being used yet
          if($scope.current_center.suppliers_meta['CP'] != undefined){
            if($scope.current_center.suppliers_meta['CP'].inventory_count != null){
-             $scope.stall_count += $scope.current_center.suppliers_meta['CP'].inventory_count.stalls;
-             $scope.standee_count += $scope.current_center.suppliers_meta['CP'].inventory_count.standees;
+            if($scope.current_center.suppliers_meta['CP'].inventory_count.stalls != null)
+              $scope.stall_count1 += $scope.current_center.suppliers_meta['CP'].inventory_count.stalls;
+            if($scope.current_center.suppliers_meta['CP'].inventory_count.standees != null)
+              $scope.standee_count1 += $scope.current_center.suppliers_meta['CP'].inventory_count.standees;
            }
          }
        }
@@ -272,15 +277,15 @@ if($scope.user_code == 'guestUser')
       var mapViewImpressions = function(){
        try{
         $scope.posterMapImpressions = $scope.flat_count*4*7*2;
-        $scope.standeeMapImpression = $scope.flat_count*4*7*2;
+        $scope.flierMapImpressions = $scope.flat_count*4*1;
         if($scope.stall_count !=0 || $scope.stall_count)
           $scope.stallMapImpression = $scope.flat_count*4*2;
         else
           $scope.stallMapImpression = 0;
         if($scope.standee_count != 0 || $scope.standee_count)
-          $scope.flierMapImpressions = $scope.flat_count * 4*1;
+          $scope.standeeMapImpression = $scope.flat_count * 4*7*2;
         else
-          $scope.flierMapImpressions = 0;
+          $scope.standeeMapImpression = 0;
       }catch(error){
         console.log(error.message);
       }
