@@ -3527,14 +3527,14 @@ def setup_create_final_proposal_post(data, user, proposal_id):
             now_time = timezone.now()
 
             # delete previous  shortlisted suppliers and save new
-            models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).delete()
+            models.ShortlistedSpaces.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).delete()
             models.ShortlistedSpaces.objects.bulk_create(total_shortlisted_suppliers_list)
-            models.ShortlistedSpaces.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time,updated_at=now_time)
+            models.ShortlistedSpaces.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).update(created_at=now_time,updated_at=now_time)
 
             # delete previous and save new selected filters and update date
-            models.Filters.objects.filter(user=user, proposal_id=proposal_id).delete()
+            models.Filters.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).delete()
             models.Filters.objects.bulk_create(filter_data)
-            models.Filters.objects.filter(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
+            models.Filters.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
 
             return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:

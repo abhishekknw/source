@@ -3781,9 +3781,12 @@ class CampaignSuppliersInventoryList(APIView):
             # by website
             assigned_to = request.query_params.get('assigned_to')
             proposal_id = request.query_params.get('proposal_id')
+            do_not_query_by_date = request.query_params.get('do_not_query_by_date')
 
             # constructs a Q object based on current date and delta d days defined in constants
-            assigned_date_range_query = website_utils.construct_date_range_query('activity_date')
+            assigned_date_range_query = Q()
+            if not do_not_query_by_date:
+                assigned_date_range_query = website_utils.construct_date_range_query('activity_date')
 
             proposal_query = Q()
             if proposal_id:
@@ -4780,7 +4783,7 @@ class BulkDownloadImagesAmazon(APIView):
                 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type'
             )
             if not inventory_images:
-                return ui_utils.handle_response(class_name, data=errors.NO_IMAGES_FOR_THIS_PROPOSAL_MESSAGE.format(proposal_id), success=True)
+                return ui_utils.handle_response(class_name, data=errors.NO_IMAGES_FOR_THIS_PROPOSAL_MESSAGE.format(proposal_id))
 
             # store images per supplier_id, content_type
             image_map = {}
