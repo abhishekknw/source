@@ -1166,14 +1166,13 @@ class FilteredSuppliers(APIView):
             priority_index_filters = request.data.get('priority_index_filters')  # maps to specific supplier table and are used in calculation of priority index
             proposal_id = request.data['proposal_id']
             center_id = request.data.get('center_id')
-            amenities = request.data.get('amenities')  # Todo : to be moved to PI function
-            is_standalone_society = request.data.get('is_standalone_society')
 
             # cannot be handled  under specific society filters because it involves operation of two columns in database which cannot be generalized to a query.
 
             # To get business name
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             business_name = proposal.account.business.name
+
 
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
@@ -1215,13 +1214,6 @@ class FilteredSuppliers(APIView):
             # when the final supplier list is prepared. we need to take intersection with master list.
             final_suppliers_id_list = final_suppliers_id_list.intersection(master_suppliers_list)
 
-            # check for standalone societies
-            if supplier_type_code == website_constants.society and is_standalone_society:
-                final_suppliers_id_list = final_suppliers_id_list.intersection(website_utils.get_standalone_societies())
-
-            unique_supplier_ids, pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters)
-            final_suppliers_id_list.union(unique_supplier_ids)
-
             result = {}
 
             # query now for real objects for supplier_id in the list
@@ -1239,18 +1231,15 @@ class FilteredSuppliers(APIView):
             total_suppliers = serializer.data
 
             # adding earlier saved shortlisted suppliers in the results.
-            if proposal_id:
-                shortlisted_suppliers = website_utils.get_shortlisted_suppliers_map(proposal_id, content_type)
-                total_suppliers = website_utils.union_suppliers(total_suppliers, shortlisted_suppliers.values())
+            shortlisted_suppliers = website_utils.get_shortlisted_suppliers_map(proposal_id, content_type)
+            total_suppliers = website_utils.union_suppliers(total_suppliers, shortlisted_suppliers.values())
 
             # because some suppliers can be outside the given radius, we need to recalculate list of
             # supplier_id's.
             final_suppliers_id_list = total_suppliers.keys()
 
-            # set PI for those suppliers which are not in pi_index_map to zero.
-            for supplier_id in final_suppliers_id_list:
-                if not pi_index_map.get(supplier_id):
-                    pi_index_map[supplier_id] = 0
+            # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
+            pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
 
             # the following function sets the pricing as before and it's temprorary.
             total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, pi_index_map)
@@ -4412,28 +4401,6 @@ class SupplierAmenity(APIView):
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
-
-    # def post(self, request):
-    #     """
-    #     Args:
-    #         request:
-    #     Returns:
-    #     """
-    #     class_name = self.__class__.__name__
-    #     try:
-    #         supplier_id = request.data['supplier_id']
-    #         supplier_type_code = request.data['supplier_type_code']
-    #         amenity_id = request.data['amenity_id']
-
-    #         response = ui_utils.get_content_type(supplier_type_code)
-    #         if not response.data['status']:
-    #             return response
-    #         content_type = response.data['data']
-
-    #         models.SupplierAmenitiesMap.objects.get_or_create(object_id=supplier_id, content_type=content_type, amenity_id=amenity_id)
-    #         return ui_utils.handle_response(class_name, data='success', success=True)
-    #     except Exception as e:
-    #         return ui_utils.handle_response(class_name, exception_object=e)
 
     def post(self, request):
         """

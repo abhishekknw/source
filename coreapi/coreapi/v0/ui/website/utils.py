@@ -2611,7 +2611,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def handle_priority_index_filters(supplier_type_code, pi_filters_map):
+def handle_priority_index_filters(supplier_type_code, pi_filters_map, final_suppliers_id_list):
     """
 
     Returns:
@@ -2619,22 +2619,36 @@ def handle_priority_index_filters(supplier_type_code, pi_filters_map):
     """
     function = handle_priority_index_filters.__name__
     try:
-        if not supplier_type_code or not pi_filters_map:
-            raise Exception('Supplier Type code or/and pi_filters_map cannot be None')
+        if not supplier_type_code or not pi_filters_map or not final_suppliers_id_list:
+            return {}
+
+        content_type = ui_utils.fetch_content_type(supplier_type_code)
+        supplier_model = apps.get_model(settings.APP_NAME, content_type.model)
 
         total_supplier_ids = []
         pi_index_map = {}
         # do if else check on supplier type code to include things particular to that supplier. Things which
         # cannot be mapped to a particular supplier and vary from supplier to supplier
-        # handle filters of type min_max here
+        # handle filters of type min_max here. min max type filters are always there for PI.
         for filter_name, db_value in website_constants.pi_range_filters[supplier_type_code].iteritems():
             if pi_filters_map.get(filter_name):
                 min_value = pi_filters_map[filter_name]['min']
                 max_value = pi_filters_map[filter_name]['max']
-                query = {db_value + '__gte': min_value, db_value + '__lte': max_value}
-                total_supplier_ids.extend(models.SupplierTypeSociety.objects.filter(Q(**query)).values_list('supplier_id', flat=True))
+                query = {db_value + '__gte': min_value, db_value + '__lte': max_value, 'supplier_id__in': final_suppliers_id_list}
+                total_supplier_ids.extend(supplier_model.objects.filter(Q(**query)).values_list('supplier_id', flat=True))
+
+        # handle amenities here
+        if pi_filters_map.get('amenities'):
+            amenities = pi_filters_map['amenities']
+            total_supplier_ids.extend(models.SupplierAmenitiesMap.objects.filter(content_type=content_type, amenity__code__in=amenities, object_id__in=final_suppliers_id_list).values('object_id').annotate(count=Count('amenity')).filter(count__gte=website_constants.amenity_count_threshold).values_list('object_id', flat=True))
 
         if supplier_type_code == website_constants.society:
+
+            # check for standalone societies
+            if pi_filters_map.get('is_standalone_society'):
+                query = Q(supplier_id__in=final_suppliers_id_list)
+                total_supplier_ids.extend(get_standalone_societies(query))
+
             if pi_filters_map.get('flat_type'):
                 query = Q()
                 for flat_code, detail in pi_filters_map['flat_type'].iteritems():
@@ -2656,19 +2670,18 @@ def handle_priority_index_filters(supplier_type_code, pi_filters_map):
                         query |= current_query
                     else:
                         query = current_query
-
-                total_supplier_ids.extend(models.FlatType.objects.select_related('society').filter(query).values_list('object_id', flat=True))
+                total_supplier_ids.extend(models.FlatType.objects.filter(content_type=content_type, object_id__in=final_suppliers_id_list).filter(query).values_list('object_id', flat=True))
 
             if pi_filters_map.get('ratio_of_tenants_to_flats'):
                 # check for society ratio of tenants to flats
-                ratio_of_tenants_to_flats = pi_filters_map['ratio_of_tenants_to_flats']
-                total_supplier_ids.extend(get_societies_within_tenants_flat_ratio(float(ratio_of_tenants_to_flats['min']), float(ratio_of_tenants_to_flats['max'])))
 
-            # calculate the unique supplier_ids. if this is equal to total_supplier_ids, the PI of each supplier will be just 1
-        unique_supplier_ids = set(total_supplier_ids)
-        for supplier_id in unique_supplier_ids:
+                ratio_of_tenants_to_flats = pi_filters_map['ratio_of_tenants_to_flats']
+                query = Q(supplier_id__in=final_suppliers_id_list)
+                total_supplier_ids.extend(get_societies_within_tenants_flat_ratio(float(ratio_of_tenants_to_flats['min']), float(ratio_of_tenants_to_flats['max']), query))
+
+        for supplier_id in final_suppliers_id_list:
             pi_index_map[supplier_id] = total_supplier_ids.count(supplier_id) # the PI is just frequency of each supplier_id in the list
-        return unique_supplier_ids, pi_index_map
+        return pi_index_map
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
@@ -3235,8 +3248,8 @@ def union_suppliers(first_supplier_list, second_supplier_list):
         first_supplier_mapping = {}
         second_supplier_mapping = {}
 
-        if not second_supplier_list and not first_supplier_list:
-            return ui_utils.handle_response(function, data={}, success=True)
+        if not second_supplier_list and (not first_supplier_list):
+            return {}
 
         if second_supplier_list:
             for supplier in second_supplier_list:
@@ -4715,6 +4728,7 @@ def get_amenities_suppliers(supplier_type_code, amenities):
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
+
 def save_amenities_for_supplier(supplier_type_code, supplier_id, amenities):
     """
     save amenities for supplier
@@ -4729,7 +4743,6 @@ def save_amenities_for_supplier(supplier_type_code, supplier_id, amenities):
         if not response.data['status']:
             return response
         content_type = response.data['data']
-
         #container to store amenities for supplier
         total_amenities = []
         amenity_ids = [ amenity['id']  for amenity in amenities]
@@ -4933,27 +4946,28 @@ def insert_release_closure_dates(inventory_release_closure_list):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def get_societies_within_tenants_flat_ratio(min_ratio, max_ratio):
+def get_societies_within_tenants_flat_ratio(min_ratio, max_ratio, query=Q()):
     """
     filters  societies by calculating a ratio of tenant to flat and ensuring the ratio within a range of
     min max.
     Args:
         min_ratio: min value
         max_ratio: max_value
+        query: a custom query if any
 
     Returns: filtered supplier ids
 
     """
     function = get_societies_within_tenants_flat_ratio.__name__
     try:
-        supplier_ids = models.SupplierTypeSociety.objects.annotate(ratio=ExpressionWrapper(
+        supplier_ids = models.SupplierTypeSociety.objects.filter(query).annotate(ratio=ExpressionWrapper(
             F('total_tenant_flat_count')/F('flat_count'), output_field=FloatField())).filter(ratio__gte=min_ratio, ratio__lte=max_ratio).values_list('supplier_id', flat=True)
         return supplier_ids
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def get_standalone_societies():
+def get_standalone_societies(query=Q()):
     """
     Returns: returns a list of societies that are standalone
 
@@ -4966,7 +4980,7 @@ def get_standalone_societies():
         content_type = response.data['data']
         amenities = models.SupplierAmenitiesMap.objects.filter(content_type=content_type).values('object_id').annotate(amenity_count=Count('id'))
         amenities_map = {amenity['object_id']: amenity['amenity_count'] for amenity in amenities}
-        societies = models.SupplierTypeSociety.objects.all().values('supplier_id', 'tower_count', 'flat_count')
+        societies = models.SupplierTypeSociety.objects.filter(query).values('supplier_id', 'tower_count', 'flat_count')
         societies_map = {
             society['supplier_id']:
                              {

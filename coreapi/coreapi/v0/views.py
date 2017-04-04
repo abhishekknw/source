@@ -1,3 +1,5 @@
+import random
+
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 from django.apps import apps
@@ -15,7 +17,8 @@ from rest_framework import status, viewsets
 
 from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer
 from rest_framework.decorators import detail_route, list_route
-from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, BusinessSubTypes, AdInventoryType, DurationType
+from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, BusinessSubTypes, AdInventoryType, DurationType, \
+    Amenity, SupplierAmenitiesMap
 from v0.models import AD_INVENTORY_CHOICES
 import utils as v0_utils
 from constants import model_names
@@ -1691,6 +1694,11 @@ class CreateBusinessTypeSubType(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            default_database_name = settings.DATABASES['default']['NAME']
+
+            if default_database_name != v0_constants.database_name:
+                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+
             business_type_instances = []  # to store actual objects of BusinessType
             business_sub_type_data = []  # to store data in list of dict form for BusinessSubType
             business_type_code_list = []  # to store list of all codes of BusinessType. Later used to fetch objects of BusinessType
@@ -1744,6 +1752,11 @@ class CreateAdInventoryTypeDurationType(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            default_database_name = settings.DATABASES['default']['NAME']
+
+            if default_database_name != v0_constants.database_name:
+                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+
             # for simplicity i have every combination
             for duration_code, duration_value in website_constants.duration_dict.iteritems():
                 DurationType.objects.get_or_create(duration_name=duration_value)
@@ -1771,6 +1784,11 @@ class AssignInventories(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            default_database_name = settings.DATABASES['default']['NAME']
+
+            if default_database_name != v0_constants.database_name:
+                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+
             inventory_detail = request.data['inventory_detail']
             suppliers = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
             if not suppliers:
@@ -1801,6 +1819,11 @@ class SetInventoryPricing(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            default_database_name = settings.DATABASES['default']['NAME']
+
+            if default_database_name != v0_constants.database_name:
+                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+
             supplier_ids = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
             response = ui_utils.get_content_type(website_constants.society)
             if not response.data['status']:
@@ -1812,3 +1835,54 @@ class SetInventoryPricing(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
+class PopulateAmenities(APIView):
+    """
+    randomly assigns amenities to random suppliers
+    """
+    def post(self, request):
+        """
+        Args:
+            request: requires  { 'amenity_data': { 'code': "GY", 'name' : "GYM" }, 'supplier_type_code': "RS" }
+        Returns: creates amenities in the system given in amenity_data and assigns each supplier a random set of amenities between 0 and total amenity count
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            default_database_name = settings.DATABASES['default']['NAME']
+
+            if default_database_name != v0_constants.database_name:
+                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+
+            supplier_type_code = request.data['supplier_type_code']
+            content_type = ui_utils.fetch_content_type(supplier_type_code)
+            supplier_model = apps.get_model(settings.APP_NAME, content_type.model)
+            # make amenities only if amenity_data is provided
+            if request.data.get('amenity_data'):
+
+                amenity_data = request.data['amenity_data']
+
+                amenity_instances = []
+                for code, name in amenity_data.iteritems():
+                    amenity_instances.append(Amenity(**{'code': code, 'name': name}))
+
+                Amenity.objects.all().delete()
+                Amenity.objects.bulk_create(amenity_instances)
+
+            amenity_instances = list(Amenity.objects.all())
+            amenity_instance_count = len(amenity_instances)
+
+            supplier_ids = supplier_model.objects.all().values_list('supplier_id', flat=True)
+            supplier_amenity_instances = []
+
+            for supplier_id in supplier_ids:
+                count_of_amenity_to_be_assigned = random.randint(0, amenity_instance_count) # assign anywhere between zero to max amenity count
+                for sub_index in range(count_of_amenity_to_be_assigned):
+                    amenity = amenity_instances[sub_index]
+                    supplier_amenity_instances.append(SupplierAmenitiesMap(content_type=content_type, amenity=amenity, object_id=supplier_id))
+
+            SupplierAmenitiesMap.objects.all().delete()
+            SupplierAmenitiesMap.objects.bulk_create(supplier_amenity_instances)
+
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)

@@ -83,9 +83,8 @@ urlpatterns = patterns('',
     url(r'^create-business-type-subtypes/$', views.CreateBusinessTypeSubType.as_view()),
     url(r'^create-adinventory-duration-types/$', views.CreateAdInventoryTypeDurationType.as_view()),
     url(r'^assign-inventories/$', views.AssignInventories.as_view()),
-    url(r'^set-inventory-pricing/$', views.SetInventoryPricing.as_view())
-
-
+    url(r'^set-inventory-pricing/$', views.SetInventoryPricing.as_view()),
+    url(r'^populate-amenities/$', views.PopulateAmenities.as_view())
 )
 
 # adding urls for Permission View Set
