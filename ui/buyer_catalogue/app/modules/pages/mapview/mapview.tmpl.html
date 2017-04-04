@@ -289,10 +289,10 @@
             <!-- <th class = "col-md-4">Locality Rating</th> -->
             <th class = "col-md-4">Machadalo Index</th>
             <th class = "col-md-4">Priority Index</th>
-            <th class="center-align" ng-if="current_center.filters_meta['RS'].inv_poster">Poster Count</th>
-            <th class="center-align" ng-if="current_center.filters_meta['RS'].inv_standee">Standee Count</th>
-            <th class="center-align" ng-if="current_center.filters_meta['RS'].inv_stall">Stall Count</th>
-            <th class="center-align" ng-if="current_center.filters_meta['RS'].inv_flier">Flyer Count</th>
+            <th class="center-align" ng-if="inventoryHeaders.poster">Poster Count</th>
+            <th class="center-align" ng-if="inventoryHeaders.standee">Standee Count</th>
+            <th class="center-align" ng-if="inventoryHeaders.stall">Stall Count</th>
+            <th class="center-align" ng-if="inventoryHeaders.flier">Flyer Count</th>
             <th class = "col-md-4">Shortlist/Buffer</th>
           </tr>
         </thead>
@@ -310,12 +310,16 @@
             <td>{{supplier.machadalo_index}}</td>
             <td>{{supplier.priority_index}}</td>
             <td ng-if="center.filters_meta['RS'].inv_poster">{{supplier.tower_count}}</td>
+            <td ng-if="!center.filters_meta['RS'].inv_poster && inventoryHeaders.poster">NA</td>
             <!-- <td ng-if="inv_poster">{{society.poster_price}}</td>-->
             <td ng-if="center.filters_meta['RS'].inv_standee">{{supplier.total_standee_count}}</td>
+            <td ng-if="!center.filters_meta['RS'].inv_standee && inventoryHeaders.standee">NA</td>
             <!-- <td ng-if="inv_standee">{{society.standee_price}}</td> -->
             <td ng-if="center.filters_meta['RS'].inv_stall">{{supplier.total_stall_count}}</td>
+            <td ng-if="!center.filters_meta['RS'].inv_stall && inventoryHeaders.stall">NA</td>
             <!-- <td ng-if="inv_stall">{{society.stall_price}}</td> -->
             <td ng-if="center.filters_meta['RS'].inv_flier">{{supplier.flat_count}}</td>
+            <td ng-if="!center.filters_meta['RS'].inv_flier && inventoryHeaders.flier">NA</td>
 
             <!--End: code added to change status   -->
             <td class="col-md-2">
