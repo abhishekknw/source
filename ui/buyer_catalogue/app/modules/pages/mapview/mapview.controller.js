@@ -467,6 +467,12 @@ if($scope.user_code == 'guestUser')
               inv_stall : 0,
               inv_flier : 0,
             };
+            $scope.inventory_headers = {
+              poster : false,
+              standee : false,
+              stall : false,
+              flier : false,
+            };
             //Start: api call to get amenity filters from database
               mapViewService.getAmenityFilters()
               .then(function onSuccess(response, status) {
@@ -847,24 +853,32 @@ if($scope.user_code == 'guestUser')
        $scope.showSocieties = function(){
               $scope.show_societies = !$scope.show_societies
        }
-      var toggleInventoryFilters = function(center,value,code){
+      var toggleInventoryFilters = function(current_center,value,code){
        try{
         if(value){
-          center.filters_meta[code] = angular.copy($scope.inventory_filters);
-          for(var i=0;i<center.RS_filters.inventory.length;i++){
-            if(center.RS_filters.inventory[i].code.indexOf('PO') > -1 && center.RS_filters.inventory[i].selected == true){
-              center.filters_meta[code].inv_poster++;
+          $scope.inventoryHeaders = angular.copy($scope.inventory_headers);
+          for(var center = 0; center < $scope.center_data.length; center++){
+            $scope.center_data[center].filters_meta[code] = angular.copy($scope.inventory_filters);
+              for(var i=0;i<$scope.center_data[center].RS_filters.inventory.length;i++){
+                if($scope.center_data[center].RS_filters.inventory[i].code.indexOf('PO') > -1 && $scope.center_data[center].RS_filters.inventory[i].selected == true){
+                  $scope.center_data[center].filters_meta[code].inv_poster++;
+                  $scope.inventoryHeaders.poster = true;
+                }
+                if($scope.center_data[center].RS_filters.inventory[i].code.indexOf('ST') > -1 && $scope.center_data[center].RS_filters.inventory[i].selected == true){
+                  $scope.center_data[center].filters_meta[code].inv_standee++;
+                  $scope.inventoryHeaders.standee = true;
+                }
+                if($scope.center_data[center].RS_filters.inventory[i].code.indexOf('SL') > -1 && $scope.center_data[center].RS_filters.inventory[i].selected == true){
+                  $scope.center_data[center].filters_meta[code].inv_stall++;
+                  $scope.inventoryHeaders.stall = true;
+                }
+                if($scope.center_data[center].RS_filters.inventory[i].code.indexOf('FL') > -1 && $scope.center_data[center].RS_filters.inventory[i].selected == true){
+                  $scope.center_data[center].filters_meta[code].inv_flier++;
+                  $scope.inventoryHeaders.flier = true;
+                }
+              }
             }
-            if(center.RS_filters.inventory[i].code.indexOf('ST') > -1 && center.RS_filters.inventory[i].selected == true){
-              center.filters_meta[code].inv_standee++;
-            }
-            if(center.RS_filters.inventory[i].code.indexOf('SL') > -1 && center.RS_filters.inventory[i].selected == true){
-              center.filters_meta[code].inv_stall++;
-            }
-            if(center.RS_filters.inventory[i].code.indexOf('FL') > -1 && center.RS_filters.inventory[i].selected == true){
-              center.filters_meta[code].inv_flier++;
-            }
-          }
+          console.log($scope.inventoryHeaders);
       }
     }catch(error){
       console.log(error.message);
