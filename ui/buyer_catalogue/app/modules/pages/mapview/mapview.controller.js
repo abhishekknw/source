@@ -998,7 +998,7 @@ if($scope.user_code == 'guestUser')
         filters.priority_index_filters['possession_year'] = $scope.current_center.RS_filters.possession_year;
       }
       if($scope.is_standalone_society.selected == true){
-        filters['is_standalone_society'] = true;
+        filters.priority_index_filters['is_standalone_society'] = true;
       }
       makeFilters($scope.current_center.RS_filters.inventory,filters.inventory_filters);
       // makeFilters($scope.current_center.RS_filters.flat_type,filters.priority_index_filters.flat_type);
