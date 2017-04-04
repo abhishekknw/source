@@ -199,6 +199,7 @@ angular.module('catalogueApp')
         downloadInProgress();
       }).catch(function onError(response){
         console.log("Error occured", response.status);
+        swal(constants.name,response.data.data.general_error,constants.error);
         $scope.buttonDisable = false;
       })
     }
@@ -225,7 +226,6 @@ angular.module('catalogueApp')
       }).catch(function onError(response){
         console.log(response);
         $scope.buttonDisable = false;
-        swal(constants.name,constants.no_image_error,constants.error);
       });
     }
 }]);

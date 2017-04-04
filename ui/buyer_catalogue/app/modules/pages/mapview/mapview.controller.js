@@ -1182,6 +1182,7 @@ if($scope.user_code == 'guestUser')
           $scope.checkFilters = true;
           mapViewService.getFilterSuppliers(supplier_filters)
                 .then(function onSuccess(response, status){
+                console.log(response);
                     response.data.data.center = $scope.current_center.center;
                     $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.data.suppliers[code];
                     if($scope.center_data[$scope.current_center_index].suppliers_meta){

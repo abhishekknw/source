@@ -7,7 +7,7 @@ angular.module('catalogueApp')
    var opsExecutionPlanService = {};
 
    opsExecutionPlanService.getOpsExecutionImageDetails = function(proposal_id){
-        var url = url_base + "campaigns-suppliers-inventory-list/" + "?proposal_id=" + proposal_id;
+        var url = url_base + "campaigns-suppliers-inventory-list/" + "?proposal_id=" + proposal_id +  "&do_not_query_by_date=" + 1;
      return machadaloHttp.get(url);
    }
 
