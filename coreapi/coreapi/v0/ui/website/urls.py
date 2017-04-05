@@ -76,6 +76,7 @@ urlpatterns = [
     url(r'^task/is-individual-task-successfull/(?P<task_id>.+)/$', views.IsIndividualTaskSuccessFull.as_view()),
     url(r'^proposal-images-path/$', views.ProposalImagesPath.as_view()),
     url(r'^delete-file-from-system/$', views.DeleteFileFromSystem.as_view()),
+    url(r'^child-proposals/(?P<proposal_id>[A-Z_a-z0-9-]+)/$', views.ChildProposals.as_view()),
 
 ]
 

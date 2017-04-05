@@ -1237,7 +1237,7 @@ def save_center_data(proposal_data, user):
             return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def save_shortlisted_suppliers(suppliers, fixed_data, user):
+def save_shortlisted_suppliers(suppliers, fixed_data):
     """
     Args:
         suppliers: a list of suppliers
@@ -1274,7 +1274,6 @@ def save_shortlisted_suppliers(suppliers, fixed_data, user):
                 'center': center,
                 'proposal': proposal,
                 'supplier_code': code,
-                'user': user,
                 'status': supplier['status'],
                 'campaign_status': campaign_status,
                 'phase': phase
@@ -1285,7 +1284,7 @@ def save_shortlisted_suppliers(suppliers, fixed_data, user):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def fetch_final_proposal_data(proposal_data, unique_supplier_codes, user):
+def fetch_final_proposal_data(proposal_data, unique_supplier_codes):
     """
     The request is in form:
         [
@@ -1346,7 +1345,7 @@ def fetch_final_proposal_data(proposal_data, unique_supplier_codes, user):
             fixed_data['content_type'] = content_type
 
             # save data of shortlisted suppliers
-            response = save_shortlisted_suppliers(suppliers, fixed_data, user)
+            response = save_shortlisted_suppliers(suppliers, fixed_data)
             if not response.data['status']:
                 return response
             total_shortlisted_suppliers_list.extend(response.data['data'])
@@ -1355,7 +1354,7 @@ def fetch_final_proposal_data(proposal_data, unique_supplier_codes, user):
             suppliers_meta = proposal_data.get('suppliers_meta')
             # check if any filters available for this partcular supplier type
             if suppliers_meta and suppliers_meta.get(code):
-                response = save_filter_data(suppliers_meta, fixed_data, user)
+                response = save_filter_data(suppliers_meta, fixed_data)
                 if not response.data['status']:
                     return response
 
@@ -1370,7 +1369,7 @@ def fetch_final_proposal_data(proposal_data, unique_supplier_codes, user):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def save_filter_data(suppliers_meta, fixed_data, user):
+def save_filter_data(suppliers_meta, fixed_data):
     """
     Args:
         inventories_selected: the list of inventories which are selected
@@ -1403,7 +1402,6 @@ def save_filter_data(suppliers_meta, fixed_data, user):
                         'filter_name': filter_name,
                         'filter_code': inventory_code,
                         'is_checked': True,
-                        'user': user
                     }
                     filter_object = models.Filters(**data)
                     selected_filters_list.append(filter_object)
@@ -1663,10 +1661,9 @@ def suppliers_within_radius(data):
     """
     function_name = suppliers_within_radius.__name__
     try:
-        user = data['user']
         proposal_id = data['proposal_id']
         center_id = data['center_id']
-        proposal = models.ProposalInfo.objects.get_user_related_object(user=user, proposal_id=proposal_id)
+        proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
         business_name = proposal.account.business.name
 
         master_result = {
@@ -1691,20 +1688,20 @@ def suppliers_within_radius(data):
             serializer.data[0]['latitude'] = data['latitude']
             serializer.data[0]['longitude'] = data['longitude']
 
-            proposal_center_objects = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user=user, center_id=center_id)
+            proposal_center_objects = models.ProposalCenterSuppliers.objects.filter(center_id=center_id)
             supplier_type_codes_list = proposal_center_objects.select_related('center').values('center', 'supplier_type_code')
 
             # define center_id_list to be used later
             center_id_list = [center_id]
         else:
-            proposal_center_objects = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user=user, proposal_id=proposal_id)
+            proposal_center_objects = models.ProposalCenterSuppliers.objects.filter(proposal_id=proposal_id)
             supplier_type_codes_list = proposal_center_objects.select_related('center').values('center', 'supplier_type_code')
 
             # fetch the mapped centers. This centers    were saved when CreateInitialproposal was hit.
             center_id_list = [data['center'] for data in supplier_type_codes_list]
 
             # query the center objects
-            centers = models.ProposalCenterMapping.objects.filter_user_related_objects(user=user, proposal_id=proposal_id, id__in=center_id_list)
+            centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id, id__in=center_id_list)
             # centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id, id__in=center_id_list)
             serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
 
@@ -1775,7 +1772,7 @@ def child_proposals(data):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def construct_proposal_response(proposal_id, user):
+def construct_proposal_response(proposal_id):
     """
     Args:
         proposal_id: proposal_id for which response structure is built
@@ -1786,12 +1783,12 @@ def construct_proposal_response(proposal_id, user):
     """
     function_name = construct_proposal_response.__name__
     try:
-        supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
+        supplier_type_codes_list = models.ProposalCenterSuppliers.objects.filter(proposal_id=proposal_id).select_related('center').values('center', 'supplier_type_code')
         # fetch the mapped centers. This centers were saved when CreateInitialProposal was hit.
         center_id_list = [data['center'] for data in supplier_type_codes_list]
 
         # query the center objects
-        centers = models.ProposalCenterMapping.objects.filter_user_related_objects(user=user, proposal_id=proposal_id, id__in=center_id_list)
+        centers = models.ProposalCenterMapping.objects.filter(proposal_id=proposal_id, id__in=center_id_list)
         serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
         supplier_codes_dict = {center['id']: [] for center in serializer.data}
         for data in supplier_type_codes_list:
@@ -2014,18 +2011,17 @@ def proposal_shortlisted_spaces(data):
     """
     function = proposal_shortlisted_spaces.__name__
     try:
-        user = data['user']
         proposal_id = data['proposal_id']
 
         # fetch all shortlisted suppliers object id's for this proposal
-        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).select_related('content_object').values()
+        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).select_related('content_object').values()
         shortlisted_suppliers = manipulate_object_key_values(shortlisted_suppliers)
 
         # collect all supplier_id's 
         supplier_ids = [supplier['object_id'] for supplier in shortlisted_suppliers]
 
         # fetch all inventory_summary objects related to each one of suppliers
-        inventory_summary_objects = models.InventorySummary.objects.filter_user_related_objects(user=user, object_id__in=supplier_ids)
+        inventory_summary_objects = models.InventorySummary.objects.filter(object_id__in=supplier_ids)
 
         # generate a mapping from object_id to inv_summ_object in a dict so that right object can be fetched up
         inventory_summary_objects_mapping = {inv_sum_object.object_id: inv_sum_object for inv_sum_object in inventory_summary_objects}
@@ -2041,8 +2037,8 @@ def proposal_shortlisted_spaces(data):
 
             shortlisted_suppliers_centerwise[center_id].append(supplier)
 
-            # construction of proposal response is isolated
-        response = construct_proposal_response(proposal_id, user)
+        # construction of proposal response is isolated
+        response = construct_proposal_response(proposal_id)
         if not response.data['status']:
             return response
 
@@ -3491,18 +3487,16 @@ def setup_generic_export(data, user, proposal_id):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def setup_create_final_proposal_post(data, user, proposal_id):
+def setup_create_final_proposal_post(data, proposal_id):
     """
     Args:
         data: Request data
-        user: User instance
         proposal_id: Proposal_id
 
     Returns: Success in case success returns.
     """
     function = setup_create_final_proposal_post.__name__
     try:
-
         # get the supplier type codes available in the request
         response = unique_supplier_type_codes(data)
         if not response.data['status']:
@@ -3517,7 +3511,7 @@ def setup_create_final_proposal_post(data, user, proposal_id):
 
             for proposal_data in data:
                 proposal_data['proposal_id'] = proposal_id
-                response = fetch_final_proposal_data(proposal_data, unique_supplier_codes, user)
+                response = fetch_final_proposal_data(proposal_data, unique_supplier_codes)
                 if not response.data['status']:
                     return response
                 result = response.data['data']
@@ -3527,14 +3521,14 @@ def setup_create_final_proposal_post(data, user, proposal_id):
             now_time = timezone.now()
 
             # delete previous  shortlisted suppliers and save new
-            models.ShortlistedSpaces.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).delete()
+            models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
             models.ShortlistedSpaces.objects.bulk_create(total_shortlisted_suppliers_list)
-            models.ShortlistedSpaces.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).update(created_at=now_time,updated_at=now_time)
+            models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).update(created_at=now_time,updated_at=now_time)
 
             # delete previous and save new selected filters and update date
-            models.Filters.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).delete()
+            models.Filters.objects.filter(proposal_id=proposal_id).delete()
             models.Filters.objects.bulk_create(filter_data)
-            models.Filters.objects.filter_user_related_objects(user=user, proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
+            models.Filters.objects.filter(proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
 
             return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
@@ -4877,7 +4871,7 @@ def dict_fetch_all(cursor):
             for row in cursor.fetchall()
         ]
     except Exception as e:
-        raise (e, function)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def construct_date_range_query(database_field):
@@ -4895,7 +4889,7 @@ def construct_date_range_query(database_field):
         second_query = Q(**{database_field + '__lte': current_date + timezone.timedelta(days=website_constants.delta_days)})
         return first_query & second_query
     except Exception as e:
-        raise (e, function)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def insert_release_closure_dates(inventory_release_closure_list):

@@ -718,3 +718,5 @@ default_inventory_count = -1
 default_inventory_price = -1
 default_inventory_duration = 'NOT AVAILABLE'
 
+# default string for ASSIGNED TO NONE
+default_assigned_to_string = 'ASSIGNED TO NONE'

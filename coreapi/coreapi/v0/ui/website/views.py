@@ -2651,20 +2651,20 @@ class CreateFinalProposal(APIView):
     information we have all the suppliers shortlisted, all the Filters and all.
 
     """
-    # permission_classes = (v0_permissions.IsGeneralBdUser, )
+
+    permission_classes = (v0_permissions.IsProposalAuthenticated, )
 
     def post(self, request, proposal_id):
         """
         Args:
             request: request data
             proposal_id: proposal_id to be updated
-            author: nikhil
 
         Returns: success if data is saved successfully.
         """
         class_name = self.__class__.__name__
         try:
-            return website_utils.setup_create_final_proposal_post(request.data, request.user, proposal_id)
+            return website_utils.setup_create_final_proposal_post(request.data, proposal_id)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -2678,6 +2678,7 @@ class CreateFinalProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
+
             supplier_type_code = request.data['supplier_type_code']
 
             content_type_response = ui_utils.get_content_type(supplier_type_code)
@@ -2686,7 +2687,6 @@ class CreateFinalProposal(APIView):
             content_type = content_type_response.data['data']
 
             data = {
-                'user': request.user,
                 'center_id': request.data['center_id'],
                 'proposal_id': proposal_id,
                 'object_id': request.data['supplier_id'],
@@ -2702,6 +2702,37 @@ class CreateFinalProposal(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
+class ChildProposals(APIView):
+    """
+    Fetches child proposals of a given proposal. if the given proposal is string '0', all the parent proposals are fetched.
+    """
+    def get(self, request, proposal_id=None):
+
+        """
+        Fetches all proposals who have parent = pk
+        Args:
+            request: request param
+            pk: parent pk value. if pk == '0',this means we need to fetch all proposals whose parent is NULL.
+            proposal_id: Proposal id
+        Returns:
+        """
+        class_name = self.__class__.__name__
+        try:
+            account_id = request.query_params.get('account_id')
+            account_id = account_id if account_id != '0' else None
+            data = {
+                'parent': proposal_id if proposal_id != '0' else None,
+                'user': request.user,
+                'account_id': account_id
+            }
+            response = website_utils.child_proposals(data)
+            if not response:
+                return response
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
 class ProposalViewSet(viewsets.ViewSet):
     """
     A ViewSet handling various operations related to ProposalModel.
@@ -2709,7 +2740,7 @@ class ProposalViewSet(viewsets.ViewSet):
     are related to Proposal domain. so keeping them at one place makes sense.
     """
     parser_classes = (JSONParser, FormParser)
-    # permission_classes = (v0_permissions.IsGeneralBdUser,)
+    permission_classes = (v0_permissions.IsProposalAuthenticated, )
 
     def retrieve(self, request, pk=None):
         """
@@ -2790,7 +2821,7 @@ class ProposalViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            response = website_utils.construct_proposal_response(pk, request.user)
+            response = website_utils.construct_proposal_response(pk)
             if not response.data['status']:
                 return response
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
@@ -2875,7 +2906,6 @@ class ProposalViewSet(viewsets.ViewSet):
                 'radius': radius,
                 'latitude': latitude,
                 'longitude': longitude,
-                'user': request.user
             }
 
             # update center's radius here. This is being updated so that when next time get_spaces is called, radius is reflected in front end
@@ -2892,33 +2922,6 @@ class ProposalViewSet(viewsets.ViewSet):
             if not response.data['status']:
                 return response
 
-            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    @detail_route(methods=['GET'])
-    def child_proposals(self, request, pk=None):
-        """
-        Fetches all proposals who have parent = pk
-        Args:
-            request: request param
-            pk: parent pk value. if pk == '0',this means we need to fetch all proposals whose parent is NULL.
-
-        Returns:
-
-        """
-        class_name = self.__class__.__name__
-        try:
-            account_id = request.query_params.get('account_id')
-            account_id = account_id if account_id!= '0' else None
-            data = {
-                'parent': pk if pk != '0' else None,
-                'user': request.user,
-                'account_id': account_id
-            }
-            response = website_utils.child_proposals(data)
-            if not response:
-                return response
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -2984,7 +2987,6 @@ class ProposalViewSet(viewsets.ViewSet):
         try:
             center_id = request.data['center']['id']
             proposal = request.data['proposal']
-            user = request.user
 
             fixed_data = {
                 'center': center_id,
@@ -3000,7 +3002,7 @@ class ProposalViewSet(viewsets.ViewSet):
                 fixed_data['content_type'] = content_type
                 fixed_data['supplier_code'] = code
 
-                response = website_utils.save_shortlisted_suppliers(request.data['suppliers'][code], fixed_data, user)
+                response = website_utils.save_shortlisted_suppliers(request.data['suppliers'][code], fixed_data)
                 if not response.data['status']:
                     return response
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
@@ -3445,6 +3447,8 @@ class ProposalVersion(APIView):
     6. sends mail to BD head.
     7. Generates excel sheet and send's it as attachment in the mail to BD head.
     """
+    permission_classes = (v0_permissions.IsProposalAuthenticated, )
+
     def post(self, request, proposal_id):
         """
         Args:
@@ -3495,11 +3499,11 @@ class ProposalVersion(APIView):
                 # change the proposal_id variable here
                 proposal_id = new_proposal_id
 
-            response = website_utils.setup_create_final_proposal_post(data, request.user, proposal_id)
+            # call create Final Proposal first
+            response = website_utils.setup_create_final_proposal_post(data, proposal_id)
             if not response.data['status']:
                 return response
 
-            # call create Final Proposal first
             response = website_utils.setup_generic_export(data, request.user, proposal_id)
             if not response.data['status']:
                 return response
@@ -3783,6 +3787,9 @@ class CampaignSuppliersInventoryList(APIView):
             proposal_id = request.query_params.get('proposal_id')
             do_not_query_by_date = request.query_params.get('do_not_query_by_date')
 
+            all_users = models.BaseUser.objects.all().values('id', 'username')
+            user_map = {detail['id']: detail['username'] for detail in all_users}
+
             # constructs a Q object based on current date and delta d days defined in constants
             assigned_date_range_query = Q()
             if not do_not_query_by_date:
@@ -3802,7 +3809,7 @@ class CampaignSuppliersInventoryList(APIView):
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
                 filter(assigned_date_range_query, proposal_query, assigned_to_query).values(
 
-                'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type',
+                'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type', 'assigned_to',
                 'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
                 'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
                 'inventory_activity__shortlisted_inventory_details',
@@ -3827,6 +3834,7 @@ class CampaignSuppliersInventoryList(APIView):
                 proposal_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id']
                 supplier_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id']
                 supplier_content_type_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type']
+                assigned_to = content['assigned_to']
 
                 result['shortlisted_suppliers'][shortlisted_space_id] = {
                     'proposal_id': proposal_id,
@@ -3882,7 +3890,8 @@ class CampaignSuppliersInventoryList(APIView):
                 result['inventory_activity_assignment'][inventory_activity_assignment_id] = {
                     'activity_date': activity_date.date() if activity_date else None,
                     'reassigned_activity_date': reassigned_activity_date.date() if reassigned_activity_date else None,
-                    'inventory_activity_id': inventory_activity_id
+                    'inventory_activity_id': inventory_activity_id,
+                    'assigned_to': user_map[assigned_to] if assigned_to else website_constants.default_assigned_to_string
                 }
 
             # after the result is prepared, here we collect images data

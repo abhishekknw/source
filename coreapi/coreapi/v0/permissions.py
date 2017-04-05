@@ -1,7 +1,8 @@
 from rest_framework import permissions
 import v0.utils as v0_utils
-
-
+import v0.models as models
+from django.core.exceptions import ObjectDoesNotExist
+from types import *
 
 class IsOwnerOrManager(permissions.BasePermission):
     """
@@ -73,3 +74,37 @@ class IsGeneralBdUser(permissions.BasePermission):
         user = request.user
         return v0_utils.get_group_permission(user, 'general_bd_user')
 
+
+class IsProposalAuthenticated(permissions.BasePermission):
+    """
+    takes the proposal_id and user. checks weather the user is authorized to work on this proposal or not
+    """
+
+    def has_permission(self, request, view):
+        try:
+            user = request.user
+            # if it's superuser, we return True. The superuser can take any action
+            if user.is_superuser:
+                return True
+            try:
+                proposal_id = ''
+                keys = ['pk', 'proposal_id']
+                if type(request.data) == DictType:
+                    proposal_id = request.data.get('proposal_id')
+                for key in keys:
+                    proposal_id = view.kwargs.get(key)
+                    if proposal_id:
+                        break
+                if not proposal_id:
+                    return False
+            except KeyError:
+                return False
+            try:
+                # if it's not super user, we check weather the proposal was created by this user only. We only grant
+                # CRUD operations on the proposal only if it's been created by the user who is requesting the operations.
+                models.ProposalInfo.objects.get(user=user, proposal_id=proposal_id)
+                return True
+            except ObjectDoesNotExist:
+                return False
+        except Exception as e:
+            raise Exception("Error in Authenticating this user for the proposal")
