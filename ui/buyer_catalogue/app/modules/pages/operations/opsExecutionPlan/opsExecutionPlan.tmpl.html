@@ -26,8 +26,8 @@
               <td ng-if="inventory.images.length == 0"><label>No Image<label></td>
             <td class="col-md-2">{{inventory.act_name}}</td>
             <td class="col-md-2">{{inventory.act_date|limitTo:10}}</td>
+            <td class="col-md-2">{{inventory.assigned_to}}</td>
             <td class="col-md-2"> <input type="checkbox" ng-model="inventory.status" ng-value="true" ng-click="addActivity($index,inventory)"></td>
-            <td class="col-md-2">{{inventory.reAssigner_user}}</td>
             <td class="col-md-2">{{inventory.reAssign_date}}</td>
           </tr>
         </tbody>
