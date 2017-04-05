@@ -36,5 +36,10 @@
       return machadaloHttp.post(url,data);
     }
 
+    opsDashBoard.sendMailInProgress = function(taskId){
+      var url = url_base  + "task/is-individual-task-successfull/" + taskId + "/";
+      return machadaloHttp.get(url);
+    }
+
     return opsDashBoard;
 }]);

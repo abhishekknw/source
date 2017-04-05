@@ -64,7 +64,7 @@
         <div class = "modal-body" style = "height: 300px;">
         <label>Please enter the reason in below box why this proposal can't be converted to campaign</label>
           <textarea name="reason" id="onDeclineReason" class="form-control" ng-model="reason"></textarea>
-          <button class="btn btn-danger active notify" ng-click="sendNotification()" ng-loading="loadSpinner">Notify</button>
+          <button class="btn btn-danger active notify" ng-click="sendNotification()" ng-disabled="!reason.length > 0" ng-loading="loadSpinner">Notify</button>
         </div>
       </div>
     </div>

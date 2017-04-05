@@ -1,8 +1,8 @@
 angular.module('catalogueApp')
 
-.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService','commonDataShare','constants',
+.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService','commonDataShare','constants','$timeout',
 
-    function ($scope, $rootScope, $window, $location, opsDashBoardService, commonDataShare,constants) {
+    function ($scope, $rootScope, $window, $location, opsDashBoardService, commonDataShare,constants,$timeout) {
     	$scope.proposals = [];
       $scope.reason = null;
       $scope.bucket_url = constants.aws_bucket_url;
@@ -74,12 +74,9 @@ angular.module('catalogueApp')
       };
       opsDashBoardService.sendMail(email_Data)
       .then(function onSuccess(response){
-        // alert('BD team has been notified');
-        $scope.loadSpinner = true;
-        $('#onHoldModal').modal('hide');
-        $('#declineModal').modal('hide');
-
-        swal(constants.name,constants.onhold_success,constants.success);
+        console.log(response);
+        $scope.taskId = response.data.data.task_id;
+        sendMailInProgress();
     	})
     	.catch(function onError(response){
         $scope.loadSpinner = true;
@@ -89,6 +86,29 @@ angular.module('catalogueApp')
     		console.log("error occured", response);
     	});
       $scope.reason = "";
+   }
+   var sendMailInProgress = function(){
+     opsDashBoardService.sendMailInProgress($scope.taskId)
+     .then(function onSuccess(response){
+       if(response.data.data.ready != true){
+          $timeout(sendMailInProgress,constants.sleepTime); // This will perform async
+       }
+       else if(response.data.data.status == true){
+         $scope.loadSpinner = true;
+         $('#onHoldModal').modal('hide');
+         $('#declineModal').modal('hide');
+
+         swal(constants.name,constants.onhold_success,constants.success);
+       }
+       else {
+         swal(constants.name,constants.email_error,constants.error);
+       }
+     }).catch(function onError(response){
+       $scope.loadSpinner = true;
+       $('#onHoldModal').modal('hide');
+       $('#declineModal').modal('hide');
+       swal(constants.name,constants.email_error,constants.error);
+     });
    }
 
     $scope.updateCampaign = function(proposal){
