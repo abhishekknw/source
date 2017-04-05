@@ -41,6 +41,7 @@ angular.module('catalogueApp')
         formatYear: 'yy',
         startingDay: 1
       };
+      $scope.today = new Date();
 
       // $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
       $scope.formats = ['yyyy-MM-dd'];
@@ -180,14 +181,14 @@ angular.module('catalogueApp')
           getOpsExecutionImageDetails();
           $('#reAssignModal').modal('hide');
           $scope.reAssign = false;
-          $scope.reAssignActivityList = [];
+          $scope.reAssignActivityList = {};
           swal(constants.name,constants.reAssign_success,constants.success);
 
         })
         .catch(function onError(response){
           $('#reAssignModal').modal('hide');
           $scope.reAssign = false;
-          $scope.reAssignActivityList = [];
+          $scope.reAssignActivityList = {};
           swal(constants.name,constants.reAssign_error,constants.error);
           console.log(response);
         });
@@ -210,7 +211,7 @@ angular.module('catalogueApp')
         // $scope.progress = response.progress+"%";
         sleepTime = 2 * sleepTime + 5000;
         if(response.data.data.ready != true){
-           $timeout(downloadInProgress,10000); // This will perform async
+           $timeout(downloadInProgress,sleepTime); // This will perform async
         }
         else if(response.data.data.status == true){
           opsExecutionPlanService.finishDownload($scope.taskId,$stateParams.proposal_id)
