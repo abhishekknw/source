@@ -47,6 +47,8 @@ angular
     accept_proposal_error : 'Error occured while converting proposal to campaign',
     decline_proposal_error : 'Error occured while declining campaign, Please ensure that you are declining campaign which is not on hold',
     emptyProposalMsg : 'No Proposals Found',
+    email_error : 'Error while sending Email, Try Again',
+    sleepTime : '3000',
     //campaignList
     emptyCampaignList : 'No Campaigns Found',
     //releaseplan
