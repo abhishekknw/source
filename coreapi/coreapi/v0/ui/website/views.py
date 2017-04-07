@@ -1227,12 +1227,12 @@ class FilteredSuppliers(APIView):
                 'latitude': common_filters['latitude'],
                 'longitude': common_filters['longitude']
             }
-            # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final value
-            total_suppliers = serializer.data
+            # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final list
+            initial_suppliers = website_utils.get_suppliers_within_circle(serializer.data, coordinates, supplier_type_code)
 
             # adding earlier saved shortlisted suppliers in the results.
             shortlisted_suppliers = website_utils.get_shortlisted_suppliers_map(proposal_id, content_type)
-            total_suppliers = website_utils.union_suppliers(total_suppliers, shortlisted_suppliers.values())
+            total_suppliers = website_utils.union_suppliers(initial_suppliers, shortlisted_suppliers.values())
 
             # because some suppliers can be outside the given radius, we need to recalculate list of
             # supplier_id's.
@@ -1243,6 +1243,9 @@ class FilteredSuppliers(APIView):
 
             # the following function sets the pricing as before and it's temprorary.
             total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, pi_index_map)
+
+            # before returning final result. change some keys of society to common keys we have defined.
+            total_suppliers = website_utils.manipulate_object_key_values(total_suppliers, supplier_type_code=supplier_type_code)
 
             # construct the response and return
             result['business_name'] = business_name
