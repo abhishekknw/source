@@ -5047,3 +5047,62 @@ def get_random_pattern(size=website_constants.pattern_length, chars=string.ascii
         return ''.join(random.choice(chars) for _ in range(size))
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
+
+
+def expand_supplier_id(supplier_id):
+    """
+    expands supplier id into it's constituents
+    Args:
+        supplier_id:
+
+    Returns:
+
+    """
+    function = expand_supplier_id.__name__
+    try:
+        # MUM AE BN RS KML
+        data = {
+            'city_code': supplier_id[0:3],
+            'area_code': supplier_id[3:5],
+            'subarea_code': supplier_id[5:7],
+            'supplier_type_code': supplier_id[7:9],
+            'supplier_code': supplier_id[9:12]
+        }
+        return data
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def generate_supplier_basic_sheet_mail(data):
+    """
+
+    Args:
+        data:
+
+    Returns:
+
+    """
+    function = generate_supplier_basic_sheet_mail.__name__
+    try:
+
+        workbook = Workbook()
+        sheet_name = data['sheet_name']
+        headers = data['headers']
+
+        # create a new sheet for each supplier type
+        ws = workbook.create_sheet(index=0, title=sheet_name)
+
+        # set the heading
+        ws.append(headers)
+
+        for supplier_object in data['suppliers']:
+            ws.append([supplier_object[key] for key in data['data_keys']])
+        file_name = os.path.join(settings.BASE_DIR, website_constants.all_supplier_data_file_name)
+        workbook.save(file_name)
+        return file_name
+
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+
