@@ -91,15 +91,14 @@ DATABASES = {
     },
 
     'default': {
-        'NAME':'machadalo',
+        'NAME':'mdtestnew',
          'ENGINE': 'django.db.backends.mysql',
-         'HOST': 'localhost',
-         'USER': 'root',
-         'PASSWORD': 'root',
+         'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+         'USER': 'mdtest',
+         'PASSWORD': 'mdtestmachadalo',
       }
 
     }
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
@@ -195,13 +194,13 @@ JWT_AUTH = {
       'JWT_VERIFY_EXPIRATION': False,
       }
 
-BASE_URL = 'http://localhost:8000/'
+BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST_USER = 'bd@machadalo.com'
+EMAIL_HOST_PASSWORD = 'vijaikirti@bdjune'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER
@@ -233,7 +232,7 @@ APP_NAME = 'v0'
 
 # CELERY STUFF
 
-BROKER_URL = 'redis://localhost:6379'
+BROKER_URL = 'redis://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com:6379'
 CELERY_IMPORTS = ['v0.ui.website.tasks']
 
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
