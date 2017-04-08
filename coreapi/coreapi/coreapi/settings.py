@@ -84,21 +84,33 @@ WSGI_APPLICATION = 'coreapi.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 
-DATABASES = {
-    'sqlite': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    },
-
-    'default': {
-        'NAME':'mdtestnew',
-         'ENGINE': 'django.db.backends.mysql',
-         'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-         'USER': 'mdtest',
-         'PASSWORD': 'mdtestmachadalo',
-      }
+if 'RDS_HOSTNAME' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ['RDS_DB_NAME'],
+            'USER': os.environ['RDS_USERNAME'],
+            'PASSWORD': os.environ['RDS_PASSWORD'],
+            'HOST': os.environ['RDS_HOSTNAME'],
+            'PORT': os.environ['RDS_PORT'],
+        }
+    }
+else:
+    DATABASES = {
+        'sqlite': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        },
+        'default': {
+            'NAME': 'mdtest',
+            'ENGINE': 'django.db.backends.mysql',
+            'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+            'USER': 'mdtest',
+            'PASSWORD': 'mdtestmachadalo',
+        }
 
     }
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
