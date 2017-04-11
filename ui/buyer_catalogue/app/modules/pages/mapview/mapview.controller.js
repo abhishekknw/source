@@ -5,6 +5,7 @@ angular.module('catalogueApp')
 // $scope.map is just for that purpose --> Set it according to your needs.
 // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
 $scope.map = { zoom: 9,bounds: {},center: {latitude: 19.119,longitude: 73.48,}};
+$scope.supplier_map = { zoom: 9,bounds: {},center: {latitude: 19.119,longitude: 73.48,}};
 $scope.options = { scrollwheel: false, mapTypeControl: true,
     mapTypeControlOptions: {
       style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
@@ -1742,8 +1743,11 @@ $scope.getSocietyDetails = function(supplier,center,index){
   $scope.supplier_type_code = "RS";
   mapViewService.getSociety(supplier_id,$scope.supplier_type_code)
    .then(function onSuccess(response) {
+     console.log(response);
+     setSocietyLocationOnMap(response.data.data.supplier_data);
      $scope.myInterval=300;
      $scope.society_images = response.data.data.supplier_images;
+     $scope.amenities = response.data.data.amenities;
      $scope.society = supplier;
     //  $scope.society = response.data.supplier_data;
      //$rootScope.societyname = response.society_data.society_name;
@@ -1785,9 +1789,17 @@ $scope.getSocietyDetails = function(supplier,center,index){
 
   mapViewService.get_inventory_summary(supplier_id, $scope.supplier_type_code)
   .then(function onSuccess(response){
-    $scope.inventoryDetails = response.data;
-     $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);
-     $scope.model = response.data;
+    console.log(response);
+    $scope.societyDetails = true;
+    if('inventory' in response.data){
+      $scope.inventoryDetails = response.data.inventory;
+       $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);
+       $scope.model = response.data.inventory;
+       $scope.inventories_allowed = response.data.inventories_allowed_codes;
+       $scope.show_inventory = true;
+     }
+  }).catch(function onError(response){
+    console.log("error",response);
   });
 }//End of function getSocietyDetails
   function estimatedResidents (flatcount){
@@ -1895,6 +1907,22 @@ $scope.getSocietyDetails = function(supplier,center,index){
     $scope.updateSupplierStatus($scope.society,$scope.center,code);
   }
   //End:code added for shortlist societies
+  //start: to display inventory tabs based on availibility of inventory in supplier
+  $scope.inventory_codes = {
+    poster : 'PO',
+    standee : 'ST',
+    stall : 'SL',
+    flier : 'FL',
+    cardisplay : 'CD',
+  }
+  $scope.isAllowed = function(inventory){
+    if($scope.inventories_allowed.indexOf(inventory) >= 0)
+      return true;
+    else
+      return false;
+  }
+  //start: to display inventory tabs based on availibility of inventory in supplier
+
   //Start:For adding shortlisted society
   // if($rootScope.campaignId){
   //   $scope.shortlistThis = function(id) {
@@ -1923,5 +1951,65 @@ $(".modal-fullscreen").on('show.bs.modal', function () {
 $(".modal-fullscreen").on('hidden.bs.modal', function () {
   $(".modal-backdrop").addClass("modal-backdrop-fullscreen");
 });
+//start: map start
+var setSocietyLocationOnMap = function(supplier){
+  var mapOptions = {
+       center:new google.maps.LatLng(0,0),
+      //  zoom:13
+       mapTypeId: google.maps.MapTypeId.ROADMAP
+    }
+    var map = new google.maps.Map(document.getElementById("supplierMap"),mapOptions);
+
+    var marker = new google.maps.Marker({
+       position: new google.maps.LatLng(supplier.society_latitude, supplier.society_longitude),
+       map: map,
+       mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+
+
+    var latlngbounds = new google.maps.LatLngBounds();
+    latlngbounds.extend(marker.position);
+    // map.setCenter(latlngbounds.getCenter());
+    map.fitBounds(latlngbounds);
+    //  map.setZoom(15);
+    // map.setCenter(marker.getPosition());
+
+    google.maps.event.addListenerOnce(map, 'bounds_changed', function(event) {
+      //  map.setCenter(marker.getPosition());
+        if (this.getZoom()){
+            this.setZoom(16);
+        }
+      });
+
+      google.maps.event.addListenerOnce(map, 'idle', function() {
+        google.maps.event.trigger(map, 'resize');
+      });
+      // map.panToBounds(latlngbounds);
+
+    // bounds.extend(new google.maps.LatLngBounds(19.088291, 72.442383));
+    // map.fitBounds(bounds);
+
+  }
+//end: map end
+  //start: event on close societydetails modal
+  $('#societyDetails').on('hidden.bs.modal', function () {
+    $scope.inventories_allowed = [];
+    $scope.show_inventory = false;
+    $scope.societyDetails = true;
+  })
+  //end: event on close societydetails modal
+  //start: for amenity icons
+  var amenityIcons = {
+    GY :'icons/ic_gym.png',
+    SP : 'icons/swim.png',
+    PA : 'icons/ic_playing area.png',
+    OA : 'icons/ic_open_space_area.png',
+    GA : 'icons/ic_open_space_area.png',
+
+  }
+  $scope.getAmenityIcon = function(amenity){
+    return amenityIcons[amenity];
+  }
+  //end: for amenity icons
 
 });
