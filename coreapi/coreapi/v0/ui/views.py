@@ -9,7 +9,7 @@ from django.contrib.contenttypes import generic
 from django.db import IntegrityError
 from django.db import transaction
 from django.db.models import Q
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
@@ -53,141 +53,8 @@ from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas, BaseUs
 from constants import keys, decision
 import constants as ui_constants
 from website.utils import save_price_mapping_default
-from website.serializers import BaseUserSerializer, GuestUserSerializer
 import v0.models as models
 import v0.errors as errors
-
-
-class UserViewSet(viewsets.ViewSet):
-    """
-    A View set for handling all the user related logic
-    """
-    authentication_classes = [] 
-    permission_classes = []
-
-    def retrieve(self, request, pk=None):
-        """
-        The API is only used to fetch one User object by user id.
-        Args:
-            request: The request body
-            pk: The pk of BaseUser table
-
-        Returns: a User object
-        """
-        class_name = self.__class__.__name__
-        try:
-            user = BaseUser.objects.get(pk=pk)
-            serializer = BaseUserSerializer(user)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    def update(self, request, pk=None):
-        """
-        API used to update one single user. The API does not update a password for a user, though you have to
-        provide password in the request body. There is a separate api for updating password of the user.
-        Args:
-            request: A request body
-            pk: pk value
-
-        Returns: updated one object
-
-        """
-        class_name = self.__class__.__name__
-        try:
-            user = BaseUser.objects.get(pk=pk)
-            serializer = BaseUserSerializer(user, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    def create(self, request):
-        """
-        Create one single user
-        Args:
-            request:  Request body
-
-        Returns: created user
-        """
-        class_name = self.__class__.__name__
-        try:
-            serializer = BaseUserSerializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    def list(self, request):
-        """
-        list all users in the system
-        Args:
-            request: The request body
-
-        Returns: list all users
-
-        """
-        class_name = self.__class__.__name__
-        try:
-            users = BaseUser.objects.all()
-            serializer = BaseUserSerializer(users, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    def destroy(self, request, pk=None):
-        """
-        Deletes a single user
-        Args:
-            request: The Request body
-            pk: pk value
-
-        Returns: pk of object which got deleted
-
-        """
-        class_name = self.__class__.__name__
-        try:
-            BaseUser.objects.get(pk=pk).delete()
-            return ui_utils.handle_response(class_name, data=pk, success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    @detail_route(methods=['POST'])
-    def change_password(self, request, pk=None):
-        """
-        This API must be used only to change password of the user.
-        Args:
-            request: Request method
-            pk: pk value
-        Returns: changes the password of the BaseUser instance and returns a success message
-
-        """
-        class_name = self.__class__.__name__
-        try:
-            user = BaseUser.objects.get(pk=pk)
-            old_password = request.data['old_password']
-            new_password = request.data['new_password']
-            is_old_password_valid = user.check_password(old_password)
-            if is_old_password_valid:
-                user.set_password(new_password)
-                user.save()
-            else:
-                return ui_utils.handle_response(class_name, data='Your old_password does not match the password we have in our database')
-            return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class UsersProfilesAPIView(APIView):
@@ -2987,41 +2854,3 @@ class BusShelterSearchView(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
-
-class GuestUser(APIView):
-    """
-    creates a guest user with the details. The reason this api is written despite having a UserViewSet to manage users is
-    that, the post api will get or create user from username field. The ViewSet does not return the password. but we need
-    to in case of guest user.
-    """
-    authentication_classes = []  # we do not need authentication in this case
-    permission_classes = []  # we do not need authentication in this case
-
-    def post(self, request):
-        """
-        POST api creates a guest user. All guest users have code 99. The random password is also returned which makes possible
-        to authenticate this user later
-        """
-        class_name = self.__class__.__name__
-        try:
-            username = request.data['username']
-            mobile = request.data['mobile']
-            first_name = request.data['first_name']
-            user, is_created = models.BaseUser.objects.get_or_create(username=username)
-            password = website_utils.get_random_pattern()
-            user.set_password(password)
-            user.mobile = mobile
-            user.first_name = first_name
-            user.user_code = ui_constants.guest_user_code
-            user.save()
-            data = {
-                'id': user.id,
-                'first_name': user.first_name,
-                'mobile': user.mobile,
-                'user_code': user.user_code,
-                'password': password,
-                'username': user.username
-            }
-            return ui_utils.handle_response(class_name, data=data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)

@@ -73,12 +73,5 @@ urlpatterns = [
     url(r'^(?P<id>[A-Z_a-z0-9]+)/bus-shelter/$', views.BusShelter.as_view()),
 
     url(r'^supplier/(?P<id>[A-Z_a-z0-9]+)/image_details/$', views.SupplierImageDetails.as_view()),
-    url(r'^guest-user/$', views.GuestUser.as_view()),
 
 ]
-
-# include the user view set
-router = DefaultRouter()
-router.include_format_suffixes = False
-router.register(r'^user', views.UserViewSet, base_name='user')
-urlpatterns += router.urls

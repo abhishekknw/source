@@ -53,3 +53,5 @@ INCORRECT_DATABASE_NAME_ERROR = 'The database name in settings file \'{0}\' does
 UPLOAD_AMAZON_SUCCESS = 'Upload to amazon successfull'
 
 DELETION_NOT_PERMITTED = 'The deletion of file with extension {0} is not permitted'
+
+GROUP_DOES_NOT_EXIST = 'The group with name {0} does not exist in the database'

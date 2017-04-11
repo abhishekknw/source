@@ -4970,7 +4970,7 @@ class ExportAllSupplierData(APIView):
             file_name = website_utils.generate_supplier_basic_sheet_mail(data)
 
             email_data = {
-                'subject': website_constants.subjects['bd_head'],
+                'subject': 'The all society data of test server in  proper format',
                 'body': 'PFA data of all suppliers in the system with supplier_type_code {0}'.format(supplier_type_code),
                 'to': [website_constants.emails['bd_head']]
             }
