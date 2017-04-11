@@ -270,9 +270,9 @@
        <ui-gmap-markers models="center_marker" coords="'self'" icon="'icon'" options="'options'" doRebuildAll="true" click="onClick" events = "'events'">
         </ui-gmap-markers>
     </ui-gmap-google-map>
-        </div>
-      </div>
   </div>
+ </div>
+</div>
   <!-- Start: grid view -->
   <div class="col-md-4 table-responsive" ng-if="show_societies" style="width: 800px; height: 550px">
       <h2>Grid View</h2>
@@ -293,7 +293,7 @@
             <th class="center-align" ng-if="inventoryHeaders.standee">Standee Count</th>
             <th class="center-align" ng-if="inventoryHeaders.stall">Stall Count</th>
             <th class="center-align" ng-if="inventoryHeaders.flier">Flyer Count</th>
-            <th class = "col-md-4">Shortlist/Buffer</th>
+            <th class = "col-md-4">Finalize/Buffer</th>
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
@@ -324,7 +324,7 @@
             <!--End: code added to change status   -->
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,'RS')">Shortlist</label>
+                     <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,'RS')">Finalize</label>
               </div>
               <div class="radio">
                      <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,'RS')">Buffer</label>
@@ -354,7 +354,7 @@
             <th class="center-align" ng-if="inv_standee">Standee Count</th>
             <th class="center-align" ng-if="inv_stall">Stall Count</th>
             <th class="center-align" ng-if="inv_flier">Flyer Count</th>
-            <th class = "col-md-4">Shortlisted/Buffer</th>
+            <th class = "col-md-4">Finalize/Buffer</th>
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
@@ -379,7 +379,7 @@
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,'CP')">Shortlist</label>
+                     <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,'CP')">Finalize</label>
               </div>
               <div class="radio">
                      <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,'CP')">Buffer</label>
@@ -523,7 +523,7 @@
                     <td>{{supplier.subarea}}</td>
                     <td>
                       <div class="radio">
-                             <label><input type="radio" ng-model="supplier.status" value="S" ng-click="addMoreSuppliers(supplier,$index)">Shortlist</label>
+                             <label><input type="radio" ng-model="supplier.status" value="S" ng-click="addMoreSuppliers(supplier,$index)">Finalize</label>
                       </div>
                       <div class="radio">
                              <label><input type="radio" ng-model="supplier.status" value="B" ng-click="addMoreSuppliers(supplier,$index)">Buffer</label>
@@ -593,7 +593,7 @@
 				<div class="clearfix"></div><br>
 			  <div class="hpadding20  opensans">
           <!-- <button  style="width: 346px;height: 56px;font-size: 25px;color:gray;background-color: white;" class="btn btn-primary" ng-disabled="disable" ng-click = "shortlistThis(society.supplier_id)" ><span style="color:skyblue;" class="glyphicon glyphicon-plus"></span> Shortlist</button> -->
-          <button class="btn btn-danger active " ng-model="society.status" ng-disabled="society.status == 'S'" ng-click = "shortlistThis('S')">Shortlist</button>
+          <button class="btn btn-danger active " ng-model="society.status" ng-disabled="society.status == 'S'" ng-click = "shortlistThis('S')">Finalize</button>
           <button class="btn btn-danger active" ng-model="society.status" ng-disabled="society.status == 'B'" ng-click = "shortlistThis('B')">Buffer</button>
           <button class="btn btn-danger active " ng-model="society.status" ng-disabled="society.status == 'R'" ng-if="society.status == 'S' || society.status == 'B'" ng-click = "shortlistThis('R')">Remove</button>
           <div id="alert_placeholder" ></div>
@@ -608,13 +608,13 @@
     <div class = "container mt25 offset-0">
       <div class = "col-md-8 pagecontainer2 offset-0">
         <div class = "cstyle10"></div>
-        <ul class = "nav nav-tabs" id="myTab">
+        <ul class = "nav nav-tabs" id="myTab" ng-if = "societyDetails">
           <li class="active"><a data-toggle="tab" data-target="#info"><span><img src="icons/info.png"></img>&nbsp;</span><span class="hidetext">Info</span>&nbsp;</a></li>
-          <li  class=""><a data-toggle="tab" data-target="#posters"></span><span><img src="icons/poster.png"></img>&nbsp;</span><span class="hidetext">Poster</span>&nbsp;</a></li>
-          <li class=""><a data-toggle="tab" data-target="#standees"></span><span><img src="icons/stand.png"></img>&nbsp;</span><span class="hidetext">Standee</span>&nbsp;</a></li>
-          <li class=""><a data-toggle="tab" data-target="#stalls"></span><span><img src="icons/stall.png"></img>&nbsp;</span><span class="hidetext">Stall</span>&nbsp;</a></li>
-          <li  class=""><a data-toggle="tab" data-target="#cardisplays"></span><span><img src="icons/car.png"></img>&nbsp;</span><span class="hidetext">Car Display</span>&nbsp;</a></li>
-          <li class=""><a data-toggle="tab" data-target="#flier"></span><span><img src="icons/flier.png"></img>&nbsp;</span><span class="hidetext">Fliers</span>&nbsp;</a></li>
+          <li  class="" ng-if="isAllowed(inventory_codes.poster) && show_inventory"><a data-toggle="tab" data-target="#posters"></span><span><img src="icons/poster.png"></img>&nbsp;</span><span class="hidetext">Poster</span>&nbsp;</a></li>
+          <li class="" ng-if="isAllowed(inventory_codes.standee) && show_inventory"><a data-toggle="tab" data-target="#standees"></span><span><img src="icons/stand.png"></img>&nbsp;</span><span class="hidetext">Standee</span>&nbsp;</a></li>
+          <li class="" ng-if="isAllowed(inventory_codes.stall) && show_inventory"><a data-toggle="tab" data-target="#stalls"></span><span><img src="icons/stall.png"></img>&nbsp;</span><span class="hidetext">Stall</span>&nbsp;</a></li>
+          <li  class="" ng-if="isAllowed(inventory_codes.cardisplay) && show_inventory"><a data-toggle="tab" data-target="#cardisplays"></span><span><img src="icons/car.png"></img>&nbsp;</span><span class="hidetext">Car Display</span>&nbsp;</a></li>
+          <li class="" ng-if="isAllowed(inventory_codes.flier) && show_inventory"><a data-toggle="tab" data-target="#flier"></span><span><img src="icons/flier.png"></img>&nbsp;</span><span class="hidetext">Fliers</span>&nbsp;</a></li>
         </ul>
         <div class="tab-content4" style="font-face:boldFont">
           <div id="info" class="tab-pane fade active in">
@@ -1014,6 +1014,12 @@
   </div><br/>
   </div>
   <div class="col-md-4">
+    <!--start: map starts  -->
+    <h2>Mapview of Society</h2>
+       <div id = "supplierMap"></div>
+    <!--end: map ends  -->
+  </div>
+</div>
     <!-- <paginator-bar></paginator-bar>  -->
   </div>
 </div><!-- End: Inventory Details section -->

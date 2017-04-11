@@ -39,7 +39,7 @@ from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, 
                     CompanyFloorSerializer, CorporateBuildingGetSerializer, CorporateCompanySerializer, CorporateParkCompanySerializer, \
                     SupplierTypeSalonSerializer, SupplierTypeGymSerializer, FlyerInventorySerializer, SupplierTypeBusShelterSerializer
 
-from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory
+from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory,SupplierAmenitiesMap
 from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuilding, \
                     CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
@@ -301,6 +301,10 @@ class SupplierImageDetails(APIView):
             images = ImageMapping.objects.filter(object_id=id, content_type=content_type)
             image_serializer = ImageMappingSerializer(images, many=True)
             result['supplier_images'] = image_serializer.data
+
+            amenities = SupplierAmenitiesMap.objects.filter(object_id=id, content_type=content_type)
+            amenity_serializer = SupplierAmenitiesMapSerializer(amenities, many=True)
+            result['amenities'] = amenity_serializer.data
 
             return ui_utils.handle_response(class_name, data=result, success=True)
 
@@ -952,9 +956,14 @@ class InventorySummaryAPIView(APIView):
             inventory_object = InventorySummary.objects.get_supplier_type_specific_object(data, id)
             # End: code added and changed for getting supplier_type_code
             if not inventory_object:
-                return Response(data={'Inventory object does not exist for this supplier id {0}'.format(id)},
-                                status=status.HTTP_400_BAD_REQUEST)
-            return Response(model_to_dict(inventory_object), status=status.HTTP_200_OK)
+                return Response(data={},
+                                status=status.HTTP_200_OK)
+            result = {}
+            result['inventory'] = model_to_dict(inventory_object)
+            inventory_allowed_codes = website_utils.get_inventories_allowed(inventory_object)
+            result['inventories_allowed_codes'] = inventory_allowed_codes
+
+            return Response(data=result, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -2654,7 +2663,6 @@ class saveBasicSalonDetailsAPIView(APIView):
             return Response(status=404)
         except SupplierTypeSalon.MultipleObjectsReturned:
             return Response(status=406)
-
 
     def post(self, request,id,format=None):
         error = {}
