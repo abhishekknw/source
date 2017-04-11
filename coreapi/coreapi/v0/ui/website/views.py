@@ -1227,12 +1227,12 @@ class FilteredSuppliers(APIView):
                 'latitude': common_filters['latitude'],
                 'longitude': common_filters['longitude']
             }
-            # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final value
-            total_suppliers = serializer.data
+            # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final list
+            initial_suppliers = website_utils.get_suppliers_within_circle(serializer.data, coordinates, supplier_type_code)
 
             # adding earlier saved shortlisted suppliers in the results.
             shortlisted_suppliers = website_utils.get_shortlisted_suppliers_map(proposal_id, content_type)
-            total_suppliers = website_utils.union_suppliers(total_suppliers, shortlisted_suppliers.values())
+            total_suppliers = website_utils.union_suppliers(initial_suppliers, shortlisted_suppliers.values())
 
             # because some suppliers can be outside the given radius, we need to recalculate list of
             # supplier_id's.
@@ -1243,6 +1243,9 @@ class FilteredSuppliers(APIView):
 
             # the following function sets the pricing as before and it's temprorary.
             total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, pi_index_map)
+
+            # before returning final result. change some keys of society to common keys we have defined.
+            total_suppliers = website_utils.manipulate_object_key_values(total_suppliers, supplier_type_code=supplier_type_code)
 
             # construct the response and return
             result['business_name'] = business_name
@@ -4891,5 +4894,95 @@ class ProposalImagesPath(APIView):
             # we should remove the original folder as it will consume space.
             shutil.rmtree(path_to_master_dir)
             return ui_utils.handle_response(class_name, data=file_url, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ExportAllSupplierData(APIView):
+    """
+    Export's all supplier data into sheet and mail it to bd head
+    """
+    def get(self, request):
+        class_name = self.__class__.__name__
+        try:
+            supplier_type_code = request.query_params['supplier_type_code']
+            model_class = ui_utils.get_model(supplier_type_code)
+            if supplier_type_code == website_constants.society:
+                model_instances = model_class.objects.all().values('supplier_id', 'society_name')
+            else:
+                model_instances = model_class.objects.all().values('supplier_id', 'name')
+
+            area_codes = set()
+            subarea_codes = set()
+            city_codes = set()
+
+            for instance_dict in model_instances:
+
+                supplier_id = instance_dict['supplier_id']
+                supplier_id_breakup = website_utils.expand_supplier_id(supplier_id)
+
+                area_codes.add(supplier_id_breakup['area_code'])
+                city_codes.add(supplier_id_breakup['city_code'])
+                subarea_codes.add(supplier_id_breakup['subarea_code'])
+                instance_dict['supplier_id_breakup'] = supplier_id_breakup
+
+            city_instances = models.City.objects.filter(city_code__in=city_codes)
+            area_instances = models.CityArea.objects.filter(area_code__in=area_codes)
+            subarea_instances = models.CitySubArea.objects.filter(subarea_code__in=subarea_codes)
+
+            city_instance_map = {city.city_code: city for city in city_instances}
+            area_instance_map = {area.area_code: area for area in area_instances}
+            subarea_instance_map = {subarea.subarea_code: subarea for subarea in subarea_instances}
+
+            result = []
+
+            for instance_dict in model_instances:
+
+                supplier_dict_breakup = instance_dict['supplier_id_breakup']
+                supplier_id = instance_dict['supplier_id']
+                supplier_name = instance_dict['society_name'] if instance_dict.get('society_name') else instance_dict['name']
+                supplier_code = supplier_dict_breakup['supplier_code']
+
+                city_instance = city_instance_map.get(supplier_dict_breakup['city_code'])
+                area_instance = area_instance_map.get(supplier_dict_breakup['area_code'])
+                subarea_instance = subarea_instance_map.get(supplier_dict_breakup['subarea_code'])
+
+                result.append({
+
+                    'city_name': city_instance.city_name if city_instance else website_constants.not_in_db_special_code,
+                    'city_code': city_instance.city_code if city_instance else website_constants.not_in_db_special_code,
+                    'area_name': area_instance.label if area_instance else website_constants.not_in_db_special_code,
+                    'area_code': area_instance.area_code if area_instance else website_constants.not_in_db_special_code,
+                    'subarea_name': subarea_instance.subarea_name if subarea_instance else website_constants.not_in_db_special_code,
+                    'subarea_code': subarea_instance.subarea_code if subarea_instance else website_constants.not_in_db_special_code ,
+                    'supplier_id': supplier_id,
+                    'supplier_name': supplier_name,
+                    'supplier_code': supplier_code,
+                    'supplier_type_code': supplier_type_code
+                })
+
+            data = {
+                'sheet_name': website_constants.code_to_sheet_names[supplier_type_code],
+                'headers': website_constants.basic_supplier_export_headers,
+                'data_keys': website_constants.basic_supplier_data_keys,
+                'suppliers': result
+            }
+            file_name = website_utils.generate_supplier_basic_sheet_mail(data)
+
+            email_data = {
+                'subject': website_constants.subjects['bd_head'],
+                'body': 'PFA data of all suppliers in the system with supplier_type_code {0}'.format(supplier_type_code),
+                'to': [website_constants.emails['bd_head']]
+            }
+
+            attachment = {
+                'file_name': file_name,
+                'mime_type': website_constants.mime['xlsx']
+            }
+
+            # send mail to Bd Head with attachment
+            bd_head_async_id = tasks.send_email.delay(email_data, attachment=attachment).id
+            return ui_utils.handle_response(class_name, data=bd_head_async_id, success=True)
+
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)

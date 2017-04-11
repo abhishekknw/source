@@ -2963,28 +2963,72 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
 
     function = set_pricing_temproray.__name__
     try:
+        # todo: remove this function . redudant code. directly call add_inventory_summary_details
         # fetch all inventory_summary objects related to each one of suppliers
         content_type = ui_utils.fetch_content_type(supplier_type_code)
         inventory_summary_objects = models.InventorySummary.objects.filter(object_id__in=supplier_ids, content_type=content_type)
         # generate a mapping from object_id to inv_summ_object in a dict so that right object can be fetched up
         inventory_summary_objects_mapping = {inv_summary_object.object_id: inv_summary_object for inv_summary_object in inventory_summary_objects}
         suppliers_inventory_count = get_inventory_count(supplier_ids, content_type, inventory_summary_objects)
+        # add the PI indexes
+        for supplier in suppliers:
+            supplier['priority_index'] = priority_index_map[supplier['supplier_id']]
+        result = add_inventory_summary_details(suppliers, inventory_summary_objects_mapping, supplier_type_code, status=True)
+        return result, suppliers_inventory_count
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
 
+
+def get_dict_value(my_dict, possible_keys):
+    """
+
+    Args:
+        my_dict:
+        possible_keys:
+
+    Returns:
+
+    """
+    function  = get_dict_value.__name__
+    try:
+        value = None
+        for key in possible_keys:
+            try:
+               value = my_dict[key]
+            except KeyError:
+                pass
+        return value
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def get_suppliers_within_circle(suppliers, coordinates, supplier_type_code):
+    """
+    list of supplier dicts
+    Args:
+        suppliers:
+        coordinates: radius, latitude, longitude
+        supplier_type_code:
+
+    Returns:
+
+    """
+    function = get_suppliers_within_circle.__name__
+    try:
         radius = float(coordinates['radius'])
         latitude = float(coordinates['latitude'])
         longitude = float(coordinates['longitude'])
 
         # container to hold final suppliers
         result = []
-        suppliers = manipulate_object_key_values(suppliers, supplier_type_code=supplier_type_code)
 
         for supplier in suppliers:
             # include only those suppliers that lie within the circle of radius given
-            if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
+            supplier_latitude  = get_dict_value(supplier, ['society_latitude', 'latitude'])
+            supplier_longitude = get_dict_value(supplier, ['society_longitude', 'longitude'])
+            if space_on_circle(latitude, longitude, radius, supplier_latitude, supplier_longitude):
                 result.append(supplier)
-                supplier['priority_index'] = priority_index_map[supplier['supplier_id']]
-        result = add_inventory_summary_details(result, inventory_summary_objects_mapping, supplier_type_code, status=True)
-        return result, suppliers_inventory_count
+        return result
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
@@ -5047,3 +5091,62 @@ def get_random_pattern(size=website_constants.pattern_length, chars=string.ascii
         return ''.join(random.choice(chars) for _ in range(size))
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
+
+
+def expand_supplier_id(supplier_id):
+    """
+    expands supplier id into it's constituents
+    Args:
+        supplier_id:
+
+    Returns:
+
+    """
+    function = expand_supplier_id.__name__
+    try:
+        # MUM AE BN RS KML
+        data = {
+            'city_code': supplier_id[0:3],
+            'area_code': supplier_id[3:5],
+            'subarea_code': supplier_id[5:7],
+            'supplier_type_code': supplier_id[7:9],
+            'supplier_code': supplier_id[9:12]
+        }
+        return data
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def generate_supplier_basic_sheet_mail(data):
+    """
+
+    Args:
+        data:
+
+    Returns:
+
+    """
+    function = generate_supplier_basic_sheet_mail.__name__
+    try:
+
+        workbook = Workbook()
+        sheet_name = data['sheet_name']
+        headers = data['headers']
+
+        # create a new sheet for each supplier type
+        ws = workbook.create_sheet(index=0, title=sheet_name)
+
+        # set the heading
+        ws.append(headers)
+
+        for supplier_object in data['suppliers']:
+            ws.append([supplier_object[key] for key in data['data_keys']])
+        file_name = os.path.join(settings.BASE_DIR, website_constants.all_supplier_data_file_name)
+        workbook.save(file_name)
+        return file_name
+
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+

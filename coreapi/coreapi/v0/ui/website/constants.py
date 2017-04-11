@@ -26,6 +26,10 @@ supplier_keys = [
     'count_15_25', 'count_25_60', 'count_60above', 'society_weekly_off',
 ]
 
+basic_supplier_export_headers = ['City', 'City Code', 'Area', 'Area Code', 'Sub Area', 'Sub Area Code', 'SupplierType', 'SupplierCode', 'SupplierName', 'supplier_id']
+basic_supplier_data_keys = ['city_name', 'city_code', 'area_name', 'area_code', 'subarea_name', 'subarea_code', 'supplier_type_code', 'supplier_code',  'supplier_name', 'supplier_id']
+
+
 corporate_keys = [
 
     'city', 'city_code', 'area', 'area_code', 'subarea', 'subarea_code', 'supplier_type', 'supplier_code', 'name', 'address1', \
@@ -326,6 +330,12 @@ sheet_names_to_codes = {
     'Gym details': 'GY'
 }
 
+# code to sheet names
+code_to_sheet_names = {
+    'RS': 'Society Details',
+    'CP': 'Corporate Park Details',
+    'GY': 'Gym details'
+}
 
 # supplier keys which you want to be included in the sheet in specific order. do not change this order.
 # header keys must be in sync with these keys. The following keys will be queried  in db of respective
@@ -590,7 +600,7 @@ bodys = {
 
 # default emails
 emails = {
-    'bd_head': 'yogesh.mhetre@machadalo.com'
+    'bd_head': 'nikhil.singh@machadalo.com'
 }
 
 # default status of each inventory is defined here. The reason i didn't chose a boolean value is because may be in
@@ -720,3 +730,9 @@ default_inventory_duration = 'NOT AVAILABLE'
 
 # default string for ASSIGNED TO NONE
 default_assigned_to_string = 'ASSIGNED TO NONE'
+
+# default code for city, area, subarea if not in database
+not_in_db_special_code = 'XXXX'
+
+# name of file which is generated when all_supplier_data is hit
+all_supplier_data_file_name = 'files/all_supplier_data.xlsx'
