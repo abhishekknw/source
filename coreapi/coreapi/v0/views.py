@@ -8,6 +8,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import Permission, Group
 from django.forms import model_to_dict
 from django.conf import settings
+from bulk_update.helper import bulk_update
+
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions
@@ -2166,5 +2168,67 @@ class GuestUser(APIView):
                 'username': user.username
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class SetParams(APIView):
+    """
+    updates societies  fields and sets correct values for built_up area for flats.
+
+    """
+
+    def get(self, request):
+        """
+
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            all_societies = SupplierTypeSociety.objects.all()
+            supplier_ids = [supplier.supplier_id for supplier in all_societies]
+            supplier_map = {supplier_instance.supplier_id: supplier_instance for supplier_instance in all_societies}
+            content_type = ui_utils.fetch_content_type('RS')
+            flat_objects = FlatType.objects.filter(object_id__in=supplier_ids, content_type=content_type)
+
+            result = {}
+            for flat_instance in flat_objects:
+                supplier_id = flat_instance.object_id
+                flat_type = flat_instance.flat_type
+
+                if not flat_instance.size_builtup_area:
+                    flat_instance.size_builtup_area = flat_instance.size_carpet_area if flat_instance.size_carpet_area else 0
+
+                flat_instance.size_carpet_area = flat_instance.size_builtup_area / 1.2
+
+                if not result.get(supplier_id):
+                    result[supplier_id] = {}
+
+                result[supplier_id][flat_type] = {
+                    'flat_count': flat_instance.flat_count if flat_instance.flat_count else 0,
+                    'flat_rent': flat_instance.flat_rent if flat_instance.flat_rent else 0,
+                    'flat_area': flat_instance.size_builtup_area if flat_instance.size_builtup_area else 0,
+                }
+            # update the flat objects first
+            bulk_update(flat_objects)
+
+            for supplier_id, flat_detail in result.iteritems():
+                total_rent = 0
+                total_area = 0.0
+                for flat_type, flat_detail in result[supplier_id].iteritems():
+                    total_rent += (int(flat_detail['flat_count']) * int(flat_detail['flat_rent']))
+                    total_area += float(flat_detail['flat_area'])
+                if not total_area:
+                    supplier_map[supplier_id].flat_avg_rental_persqft = 0
+                else:
+                    supplier_map[supplier_id].flat_avg_rental_persqft = int(total_rent / total_area)
+
+            # now update the society objects
+            bulk_update(supplier_map.values())
+            return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
