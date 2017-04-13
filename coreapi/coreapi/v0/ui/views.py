@@ -44,6 +44,7 @@ from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySum
                     CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
 from v0.ui.serializers import SocietyListSerializer
+from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
 
 # project imports
 import utils as ui_utils
