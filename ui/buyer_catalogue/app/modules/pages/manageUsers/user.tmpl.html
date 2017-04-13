@@ -1,8 +1,8 @@
-<link rel="stylesheet" href="modules/pages/manageUsers/user.tmpl.css"/>
-<div><nav-bar></nav-bar></div>
+<!-- <link rel="stylesheet" href="modules/pages/manageUsers/user.tmpl.css"/>
+<div><nav-bar></nav-bar></div> -->
 <!-- <h3 style="margin-left: 460px; margin-top: 60px;">Manage Users </h3> -->
 <!-- Google Fonts -->
-<link href='https://fonts.googleapis.com/css?family=Passion+One' rel='stylesheet' type='text/css'>
+<!-- <link href='https://fonts.googleapis.com/css?family=Passion+One' rel='stylesheet' type='text/css'>
 <link href='https://fonts.googleapis.com/css?family=Oxygen' rel='stylesheet' type='text/css'>
 
 <div class="container">
@@ -50,12 +50,9 @@
         </div>
 
         <div class="form-group">
-          <label for="confirm" class="cols-sm-2 control-label">User Code</label>
-          <div class="cols-sm-10">
-            <select class = "selectpicker form-control" ng-model="model.user_code" required>
-              <option value="">Select User Type</option>
-              <option  ng-repeat="option in options" value="{{option.id}}" style="color: black;" required>{{option.usercode}}</option>
-            </select>
+          <label for="confirm" class="cols-sm-2 control-label">User Group</label>
+          <div class="cols-sm-10" ng-repeat = "userGroup in userGroups">
+            <input type = "checkbox" class = "form-control" ng-click="manageGroup()" ng-model="userGroup.name" required>{{userGroup.name}}
           </div>
         </div>
 
@@ -85,4 +82,210 @@
       </form>
     </div>
   </div>
+</div> -->
+
+
+<!--Dashboard start  -->
+<link rel="stylesheet" href="modules/pages/manageUsers/user.tmpl.css"/>
+<!-- Google Fonts -->
+<link href='https://fonts.googleapis.com/css?family=Passion+One' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Oxygen' rel='stylesheet' type='text/css'>
+
+<link rel="stylesheet" href="modules/common/header/menu-bar-tmpl.css"/>
+<div><nav-bar></nav-bar></div>
+
+<div  class="container-fluid">
+  <div class="row">
+      <div class="col-sm-5">
+          <div class="nav-side-menu" style="width:20%">
+              <div class="brand">Menu</div>
+              <i class="fa fa-bars fa-2x toggle-btn"></i>
+              <div class="menu-list">
+                  <ul id="menu-content" class="menu-content collapse out">
+                      <li ng-class="{active: isActive('/manageCampaign/create')}">
+                        <a class="lipadding" ng-click="getContent(contentItem.createUser)">
+                          <i class="fa fa-tasks fa-lg"></i>Create User</a>
+                      </li>
+                      <li ng-class="{active: isActive('/OpsDashBoard')}">
+                        <a class=" lipadding" ng-click="getContent(contentItem.createGroup)">
+                          <i class="fa fa-dashboard fa-lg"></i>Create Group</a>
+                     </li>
+                     <li data-toggle="collapse" data-target="#new" class="collapsed">
+                       <a class="dropdown-toggle" data-toggle="dropdown" ng-href="#"><i class="fa fa-th fa-lg"></i>Leads <span class="caret"></span></a>
+                       <ul class="sub-menu collapse" id="new">
+                         <li><a href="/#/manageCampaign/shortlisted" data-toggle="tab" ng-click="closeModal()">Shortlisted</a></li>
+                         <li><a href="/#/manageCampaign/requested" data-toggle="tab" ng-click="closeModal()">Requested</a></li>
+                         <li><a href="/#/manageCampaign/finalized" data-toggle="tab" ng-click="closeModal()">Finalized</a></li>
+                       </ul><!-- end of dropdown menu -->
+                     </li>
+                     <li ng-class="{ active: isActive('/#/manageCampaign/finalize')}">
+                       <a ng-href="/#/manageCampaign/finalize" class = "lipadding" ng-click="closeModal()">
+                         <i class="fa fa-list fa-lg"></i>Finalize Campaigns</a>
+                     </li>
+                     <li ng-class="{ active: isActive('/#/manageCampaign/finalize')}">
+                       <a ng-href="/#/manageCampaign/finalize" class = "lipadding" ng-click="closeModal()">
+                         <i class="fa fa-list fa-lg"></i>Upcoming Campaigns</a>
+                     </li>
+             				<li ng-class="{ active: isActive('/#/manageCampaign/release')}">
+                      <a ng-href="/#/manageCampaign/release" class = "lipadding" ng-click="closeModal()">
+                        <i class="fa fa-list fa-lg"></i>Release Details</a>
+                    </li>
+                     <li ng-class="{ active: isActive('/society/{{societyId}}/basicPricing')}">
+                       <a ng-href="#/manageCampaign/ongoingcampaign" class = "lipadding" ng-click="closeModal()">
+                         <i class="fa fa-list fa-lg"></i>Ongoing Campaigns</a>
+                     </li>
+                     <li ng-class="{ active: isActive('/society/{{societyId}}/standeeBanners')}">
+                       <a ng-href="#/society/{{societyId}}/standeeBanners" class = "lipadding" ng-click="closeModal()">
+                         <i class="fa fa-list fa-lg"></i>Completed Campaigns</a>
+                     </li>
+                     <li ng-class="{ active: isActive('/society/{{societyId}}/stalls')}">
+                       <a ng-href="#/society/{{societyId}}/stalls" class = "lipadding" ng-click="closeModal()">
+                         <i class="fa fa-list fa-lg"></i>Booked Campaigns</a>
+                     </li>
+                     <li ng-class="{ active: isActive('/society/{{societyId}}/stalls')}">
+                       <a ng-href="#/CampaignList" class = "lipadding" ng-click="closeModal()">
+                         <i class="fa fa-list fa-lg"></i>All Campaigns</a>
+                     </li>
+                  </ul>
+              </div>
+          </div>
+      </div>
+  </div>
 </div>
+<!--start: content  -->
+<div class="container" style="margin-left:30%;margin-top:5%;" ng-switch on="menuItem.name">
+  <div ng-switch-when='createUser' id="createUser" style="margin-right:50%">
+    <div>
+      <h3 class="createUser">Create New User</h3><hr>
+      <div class="row main">
+        <div class="main-login main-center">
+          <form class="" name="registerForm" method="post" ng-submit= "register()" role="form">
+            <div class="form-group">
+              <label for="name" class="cols-sm-2 control-label">First Name</label>
+              <div class="cols-sm-10">
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-user fa" aria-hidden="true"></i></span>
+                  <input type="text" class="form-control" name="firstname" id="firstname"  placeholder="Enter First Name" ng-model="model.first_name" required/>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="name" class="cols-sm-2 control-label">Last Name</label>
+              <div class="cols-sm-10">
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-user fa" aria-hidden="true"></i></span>
+                  <input type="text" class="form-control" name="lastname" id="lastname"  placeholder="Enter Last Name" ng-model="model.last_name"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="username" class="cols-sm-2 control-label">Username</label>
+              <div class="cols-sm-10">
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-users fa" aria-hidden="true"></i></span>
+                  <input type="text" class="form-control" name="username" id="username"  placeholder="Enter your Username" ng-model="model.username" required/>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email" class="cols-sm-2 control-label">Email Id</label>
+              <div class="cols-sm-10">
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-envelope fa" aria-hidden="true"></i></span>
+                  <input type="email" class="form-control" name="email" id="email"  placeholder="Enter Email"
+                  ng-model="model.email" required/>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="password" class="cols-sm-2 control-label">Password</label>
+              <div class="cols-sm-10">
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-lock fa-lg" aria-hidden="true"></i></span>
+                  <input type="password" class="form-control" name="password" id="password"  placeholder="Enter your Password" ng-model= "model.password" required/>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirm" class="cols-sm-2 control-label">Confirm Password</label>
+              <div class="cols-sm-10">
+                <div class="input-group">
+                  <span class="input-group-addon"><i class="fa fa-lock fa-lg" aria-hidden="true"></i></span>
+                  <input type="password" class="form-control" name="confirm" id="confirm"  placeholder="Confirm your Password" ng-model="model.confirm_password" ng-change="validatePassword()"required/>
+                </div>
+                <span ng-if="!isValid && model.confirm_password">{{passwordError}}</span>
+
+              </div>
+            </div>
+
+            <!--start: adding group  -->
+            <div class="dropdown dropdown-scroll dropup">
+              <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">Assign Group <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" style="width:300px;">
+                  <li role="presentation">
+                      <div class="input-group input-group-sm search-control">
+                         <span class="input-group-addon">
+                              <span class="glyphicon glyphicon-search"></span>
+                          </span>
+                          <input type="text" class="form-control" placeholder="Query" ng-model="query"></input>
+                      </div>
+                  </li>
+                  <li role="presentation" ng-repeat='group in permissionGroups | filter:query'>
+                    <input type="checkbox" ng-model="group.selected" ng-click="addGroups(group,$index)" style="margin-left:10px;"/>
+                    <a style="display:-webkit-inline-box;">{{group.name}}</a>
+                  </li>
+              </ul>
+            </div>
+            <!--end : adding group  -->
+            <div class="form-group ">
+              <ul class="">
+                  <li ng-repeat="group in selectedGroupList">{{group}}</li>
+              </ul>
+            </div>
+
+            <div class="form-group ">
+              <button type="submit" id="button" class="btn btn-primary btn-lg btn-block login-button" ng-disabled="!isValid">Create User</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div ng-switch-when='createGroup'>
+    <div><h3>Create New Group</h3></div></br></br>
+    <div class="dropdown dropdown-scroll col-md-6">
+      <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">Add Permission <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+          <li role="presentation">
+              <div class="input-group input-group-sm search-control">
+                 <span class="input-group-addon">
+                      <span class="glyphicon glyphicon-search"></span>
+                  </span>
+                  <input type="text" class="form-control" placeholder="Search Permission" ng-model="query"></input>
+              </div>
+          </li>
+          <li role="presentation" ng-repeat='permission in permissions | filter:query'>
+            <input type="checkbox" ng-model="permission.selected" ng-click="addPermission(permission,$index)" style="margin-left:10px;"/>
+            <a style="display:-webkit-inline-box;">{{permission.name}}</a>
+          </li>
+      </ul>
+      <input type="text" class="form-control" style="width:240px;" placeholder="Enter Group Name" ng-model="groupName.name"/>
+    </div>
+
+    <div class="col-md-4" ng-if="permissionList.length">
+      <h2>Permissions :</h2>
+      <ul class="dropdown-list">
+          <li ng-repeat="permission in permissionList">{{permission.name}}</li>
+      </ul>
+    </div>
+    <button ng-if="permissionList.length && groupName.name" class="btn btn-primary active fixedbutton" ng-click="createGroup()">Create Group</button>
+  </div>
+</div>
+<!--end: content  -->

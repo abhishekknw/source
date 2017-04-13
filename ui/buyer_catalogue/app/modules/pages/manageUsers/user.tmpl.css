@@ -12,19 +12,20 @@
 body, html{
      height: 100%;
   background-repeat: no-repeat;
-  /*background:url(https://i.ytimg.com/vi/4kfXjatgeEU/maxresdefault.jpg);*/
   font-family: 'Oxygen', sans-serif;
       background-size: cover;
+      overflow-x: hidden;
+      position: relative;
 }
 
 .main{
-  margin:50px 15px;
+  margin:10px 15px;
 }
 
-h1.title { 
+h1.title {
   font-size: 50px;
-  font-family: 'Passion One', cursive; 
-  font-weight: 400; 
+  font-family: 'Passion One', cursive;
+  font-weight: 400;
 }
 
 hr{
@@ -48,7 +49,7 @@ input::-webkit-input-placeholder {
 
 .main-login{
   background-color: #fff;
-    /* shadows and rounded borders */
+
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
     border-radius: 2px;
@@ -60,6 +61,7 @@ input::-webkit-input-placeholder {
 .form-control {
     height: auto!important;
 padding: 8px 12px !important;
+display:-webkit-inline-box;
 }
 .input-group {
     -webkit-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.21)!important;
@@ -113,4 +115,35 @@ span.input-group-addon i {
 .login-register{
   font-size: 11px;
   text-align: center;
+}
+
+/*css manually added for items*/
+.createUser{
+  text-align: center;
+  color: #009edf;
+  font-weight: bold;
+}
+/*css for permssion drop down*/
+.dropdown.dropdown-scroll .dropdown-menu {
+    max-height: 300px;
+    width: 460px;
+    overflow: auto;
+}
+.search-control {
+    padding: 5px 10px;
+}
+.dropdown-menu > li > a{
+  display: webkit-inline-box;
+}
+/*css for create group button*/
+.fixedbutton {
+    position: fixed;
+    bottom: 100px;
+    left: 32%;
+}
+.dropdown-list{
+  width: 70%;
+  overflow-y:scroll;
+  max-height:300px;
+
 }
