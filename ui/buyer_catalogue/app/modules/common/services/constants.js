@@ -74,6 +74,9 @@ angular
     business_error : 'Error occured in saving business details',
     //manage user
     createUser_success : 'Successfully Created',
+    create_group_success : 'Group Created Successfully',
+    create_group_error : 'Error Occured in creating group',
+    password_error : 'Must match to password',
     //guestPage
     location_error : 'Please enter accurate location',
 

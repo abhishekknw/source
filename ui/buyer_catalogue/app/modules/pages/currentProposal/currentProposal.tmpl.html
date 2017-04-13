@@ -36,7 +36,7 @@
           </div>
          </div>
       </div>
-      <div style="text-align:right;"><button class="btn btn-primary" ng-if="isParentProposal == 'true'" ng-click="editInitialProposal(proposal.proposal_id)">Edit Proposal</button></div>
+      <div style="text-align:right;"><button class="btn btn-primary" ng-if="isParentProposal == 'true'" ng-disabled="isUploaded" ng-click="editInitialProposal(proposal.proposal_id)">Edit Proposal</button></div>
       <div class="col-md-3"><label>Select Advertising Location:</label>
         <select class="form-control" style="width:50%;"ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
           <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
@@ -79,13 +79,13 @@
                 <td>
                   <!-- <a ng-href="" ng-model="supplier.status" ng-if="supplier.status == 'S'" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Buffer</a> -->
                   <div class="radio">
-                         <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Shortlist</label>
+                         <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')" ng-disabled="isUploaded">Shortlist</label>
                   </div>
                   <div class="radio">
-                         <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Buffer</label>
+                         <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')" ng-disabled="isUploaded">Buffer</label>
                   </div>
                   <div class="radio">
-                         <label><input type="radio" ng-model="supplier.status" value="R" ng-change="updateSupplierStatus(supplier,current_center_data,'RS')">Remove</label>
+                         <label><input type="radio" ng-model="supplier.status" value="R" ng-change="updateSupplierStatus(supplier,current_center_data,'RS')" ng-disabled="isUploaded">Remove</label>
                   </div>
                 </td>
               </tr>
@@ -116,10 +116,10 @@
                <td ng-if="current_center_data.societyFilters.inv_flier">{{supplier.flat_count}}</td>
                <td>
                  <div class="radio">
-                        <label><input type="radio" ng-model="supplier.status" value="S" ng-change="updateSupplierStatus(supplier,current_center_data,'RS')">Shortlist</label>
+                        <label><input type="radio" ng-model="supplier.status" value="S" ng-change="updateSupplierStatus(supplier,current_center_data,'RS')" ng-disabled="isUploaded">Shortlist</label>
                  </div>
                  <div class="radio" ng-if="supplier.status != 'X'">
-                        <label><input type="radio" ng-model="supplier.status" value="R" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Remove</label>
+                        <label><input type="radio" ng-model="supplier.status" value="R" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')" ng-disabled="isUploaded">Remove</label>
                  </div>
                </td>
              </tr>

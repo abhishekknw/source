@@ -44,6 +44,7 @@ from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySum
                     CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
 from v0.ui.serializers import SocietyListSerializer
+from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
 
 # project imports
 import utils as ui_utils
@@ -55,6 +56,7 @@ import constants as ui_constants
 from website.utils import save_price_mapping_default
 import v0.models as models
 import v0.errors as errors
+import v0.ui.website.constants as website_constants
 
 
 class UsersProfilesAPIView(APIView):
@@ -804,6 +806,7 @@ class FlatTypeAPIView(APIView):
         den = 0.0
         totalFlats = 0
         flag = True
+        content_type = ui_utils.fetch_content_type(website_constants.society_code)
         if request.data['flat_details_available']:
             for key in request.data['flat_details']:
                 if 'size_builtup_area' in key and 'flat_rent' in key and key['size_builtup_area'] > 0 and key['flat_rent'] > 0:
@@ -844,7 +847,7 @@ class FlatTypeAPIView(APIView):
             else:
                 serializer = FlatTypeSerializer(data=key)
             if serializer.is_valid():
-                serializer.save(society=society)
+                serializer.save(society=society,content_type=content_type,object_id=society.supplier_id)
             else:
                 return Response(serializer.errors, status=400)
 
