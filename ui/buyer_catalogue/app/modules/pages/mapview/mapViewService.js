@@ -6,6 +6,7 @@
     var url_base = 'v0/ui/website/';
     var mapViewService = {};
     var url_base_societyDetails ='v0/ui/';
+    var url_base_user = 'v0/';
 
     mapViewService.getSpaces = function(proposal_id){
         var url = url_base + "proposal/"+ proposal_id + "/get_spaces/";
@@ -149,7 +150,7 @@
     }
 
     mapViewService.getUserDetails = function(userId){
-      var url = url_base_societyDetails + "user/" + userId + "/";
+      var url = url_base_user + "user/" + userId + "/";
       return machadaloHttp.get(url);
     }
     return mapViewService;

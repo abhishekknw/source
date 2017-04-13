@@ -375,7 +375,7 @@ if($scope.user_code == 'guestUser')
                 max: 0,
                 options: {
                     floor: 0,
-                    ceil: 100,
+                    ceil: 1000,
                     step: 1,
                     noSwitching: true,
                 }
@@ -458,6 +458,19 @@ if($scope.user_code == 'guestUser')
                 {name : 'Large',        code : 'LA',    selected : false},
                 {name : 'Very Large',   code : 'VL',    selected : false},
             ];
+            $scope.flat_size_by_flat_type = {
+              '1R'    : 1000,
+              '1B'    : 1500,
+              '1-5B'  : 2000,
+              '2B'    : 2500,
+              '2-5B'  : 3000,
+              '3B'    : 4000,
+              '4B'    : 7000,
+              '5B'    : 10000,
+              'PH'    : 15000,
+              'RH'    : 20000,
+              'DP'    : 10000,
+            };
             $scope.society_flat_type = [
                 {name : '1 RK',         code : '1R',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
                 {name : '1 BHK',        code : '1B',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
@@ -465,12 +478,11 @@ if($scope.user_code == 'guestUser')
                 {name : '2 BHK',        code : '2B',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
                 {name : '2.5 BHK',      code : '2-5B',    selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
                 {name : '3 BHK',        code : '3B',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
-                {name : '3.5 BHK',      code : '3-5B',    selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
                 {name : '4 BHK',        code : '4B',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
                 {name : '5 BHK',        code : '5B',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
                 {name : 'PENT HOUSE',   code : 'PH',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
-                {name : 'ROW HOUSE',    code : 'RH',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
                 {name : 'DUPLEX',       code : 'DP',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
+                {name : 'ROW HOUSE',    code : 'RH',      selected : false,  flat_count:angular.copy($scope.flat_count), flat_size:angular.copy($scope.flat_size)},
             ];
             $scope.employee_count = [
               {name:'0-1000',     code : {min:'0',      max:'1000'},   selected:false},
@@ -491,6 +503,10 @@ if($scope.user_code == 'guestUser')
               stall : false,
               flier : false,
             };
+            //set flat sizes
+            angular.forEach($scope.society_flat_type,function(flat_type){
+              flat_type.flat_size.options.ceil = $scope.flat = $scope.flat_size_by_flat_type[flat_type.code];              
+            });
             //Start: api call to get amenity filters from database
               mapViewService.getAmenityFilters()
               .then(function onSuccess(response, status) {
