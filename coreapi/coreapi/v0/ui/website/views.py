@@ -1173,7 +1173,6 @@ class FilteredSuppliers(APIView):
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             business_name = proposal.account.business.name
 
-
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
             response = ui_utils.get_content_type(supplier_type_code)
@@ -1241,8 +1240,10 @@ class FilteredSuppliers(APIView):
             # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
             pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
 
+            supplier_id_to_pi_map = {supplier_id: detail['total_priority_index'] for supplier_id, detail in pi_index_map.iteritems()}
+
             # the following function sets the pricing as before and it's temprorary.
-            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, pi_index_map)
+            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, supplier_id_to_pi_map)
 
             # before returning final result. change some keys of society to common keys we have defined.
             total_suppliers = website_utils.manipulate_object_key_values(total_suppliers, supplier_type_code=supplier_type_code)
@@ -1258,6 +1259,8 @@ class FilteredSuppliers(APIView):
 
             result['suppliers_meta'][supplier_type_code]['count'] = 0
             result['suppliers_meta'][supplier_type_code]['inventory_count'] = suppliers_inventory_count
+            # send explanation separately
+            result['suppliers_meta'][supplier_type_code]['pi_index_explanation'] = pi_index_map
 
             return ui_utils.handle_response(class_name, data=result, success=True)
 
