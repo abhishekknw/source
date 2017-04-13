@@ -13,7 +13,7 @@ angular.module('catalogueApp')
    }
 
    commonDataShare.getUsersList = function(){
-     var url = url_base_user  + "get-users-list/";
+     var url = url_base  + "get-users-list/";
      return machadaloHttp.get(url);
    }
 
@@ -29,7 +29,7 @@ angular.module('catalogueApp')
    }
 
    commonDataShare.getUserDetails = function(userId){
-     var url = url_base1 + "user/" + userId + "/";
+     var url = url_base_user + "user/" + userId + "/";
      return machadaloHttp.get(url);
    }
 
