@@ -2621,62 +2621,127 @@ def handle_priority_index_filters(supplier_type_code, pi_filters_map, final_supp
         content_type = ui_utils.fetch_content_type(supplier_type_code)
         supplier_model = apps.get_model(settings.APP_NAME, content_type.model)
 
-        total_supplier_ids = []
         pi_index_map = {}
+        # give space for the two keys initially
+        for supplier_id in final_suppliers_id_list:
+            pi_index_map[supplier_id] = {
+                'total_priority_index': 0,
+                'detail': {}
+            }
+            for filter_name, filter_value in pi_filters_map.iteritems():
+                pi_index_map[supplier_id]['detail'][filter_name] = {
+                       'query': filter_value,
+                       'explanation': {},
+                       'assigned_pi': 0
+                }
+
         # do if else check on supplier type code to include things particular to that supplier. Things which
         # cannot be mapped to a particular supplier and vary from supplier to supplier
         # handle filters of type min_max here. min max type filters are always there for PI.
+        queryset = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list)
         for filter_name, db_value in website_constants.pi_range_filters[supplier_type_code].iteritems():
             if pi_filters_map.get(filter_name):
-                min_value = pi_filters_map[filter_name]['min']
-                max_value = pi_filters_map[filter_name]['max']
-                query = {db_value + '__gte': min_value, db_value + '__lte': max_value, 'supplier_id__in': final_suppliers_id_list}
-                total_supplier_ids.extend(supplier_model.objects.filter(Q(**query)).values_list('supplier_id', flat=True))
+                min_value = float(pi_filters_map[filter_name]['min'])
+                max_value = float(pi_filters_map[filter_name]['max'])
+
+                # didn't issue the query of __gte and  __lte because i want to capture details of all suppliers who
+                # didn't qualify for this query. this goes as part of explanation of PI
+                suppliers_db_map = {item['supplier_id']: item[db_value] for item in queryset.values('supplier_id', db_value)}
+
+                for supplier_id in final_suppliers_id_list:
+                    db_value_result = suppliers_db_map.get(supplier_id)
+                    if not db_value_result:
+                        db_value_result = -1
+
+                    # increment PI only when this supplier qualifies for the query.
+                    if min_value <= float(db_value_result) <= max_value:
+                        pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi'] = 1
+
+                    # need to record what the query was, what was the output for all the suppliers
+                    pi_index_map[supplier_id]['total_priority_index'] += pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi']
+                    pi_index_map[supplier_id]['detail'][filter_name]['explanation'] = {filter_name: db_value_result}
 
         # handle amenities here
         if pi_filters_map.get('amenities'):
-            amenities = pi_filters_map['amenities']
-            total_supplier_ids.extend(models.SupplierAmenitiesMap.objects.filter(content_type=content_type, amenity__code__in=amenities, object_id__in=final_suppliers_id_list).values('object_id').annotate(count=Count('amenity')).filter(count__gte=website_constants.amenity_count_threshold).values_list('object_id', flat=True))
+            filter_name = 'amenities'
+
+            queryset = models.SupplierAmenitiesMap.objects.filter(content_type=content_type, object_id__in=final_suppliers_id_list).values('object_id').annotate(count=Count('amenity'))
+            queryset_map = {item['object_id']: item['count'] for item in queryset}
+
+            # if amenity query is issued from front end, all suppliers should have 'amenities' as filter name in 'detail' dict
+            for supplier_id in final_suppliers_id_list:
+
+                amenity_count = queryset_map.get(supplier_id) # set zero to amenity_count if we do not find amenity for this current supplier
+                if not amenity_count:
+                    amenity_count = 0
+                # if else check to assign PI of 1 in case the supplier passes the amenity threshold
+                if amenity_count >= website_constants.amenity_count_threshold:
+                    pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi'] = 1
+
+                pi_index_map[supplier_id]['detail'][filter_name]['explanation'] = {'supplier_amenity_count':  amenity_count, 'amenity_threshold': website_constants.amenity_count_threshold}
+                pi_index_map[supplier_id]['total_priority_index'] += pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi']
 
         if supplier_type_code == website_constants.society:
 
             # check for standalone societies
             if pi_filters_map.get('is_standalone_society'):
+                filter_name = 'is_standalone_society'
                 query = Q(supplier_id__in=final_suppliers_id_list)
-                total_supplier_ids.extend(get_standalone_societies(query))
+                standalone_supplier_detail = get_standalone_societies(query)
+                for supplier_id  in final_suppliers_id_list:
+                    detail = standalone_supplier_detail.get(supplier_id)
+                    if not detail:
+                        detail = {}
+                    if is_society_standalone(detail):
+                        pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi'] = 1
+                    pi_index_map[supplier_id]['detail'][filter_name]['explanation'] = detail
+                    pi_index_map[supplier_id]['total_priority_index'] += pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi']
 
             if pi_filters_map.get('flat_type'):
-                query = Q()
-                for flat_code, detail in pi_filters_map['flat_type'].iteritems():
+                filter_name = 'flat_type'
+                queryset = models.FlatType.objects.filter(content_type=content_type, object_id__in=final_suppliers_id_list)
+                flat_result = {}
+                for item in queryset:
+                    if not flat_result.get(item.object_id):
+                        flat_result[item.object_id] = {}
 
-                    flat_code_value = website_constants.flat_type_dict[flat_code]
-                    query_dict = {'flat_type': flat_code_value}
+                    flat_result[item.object_id][item.flat_type] = {
+                        'flat_count': item.flat_count,
+                        'flat_size': item.size_builtup_area
+                    }
 
-                    if detail.get('count'):
-                        query_dict['flat_count__gte'] = int(detail['count']['min'])
-                        query_dict['flat_count__lte'] = int(detail['count']['max'])
-
-                    if detail.get('size'):
-                        query_dict['size_builtup_area__gte'] = float(detail['size']['min'])
-                        query_dict['size_builtup_area__lte'] = float(detail['size']['max'])
-
-                    current_query = Q(**query_dict)
-
-                    if query:
-                        query |= current_query
-                    else:
-                        query = current_query
-                total_supplier_ids.extend(models.FlatType.objects.filter(content_type=content_type, object_id__in=final_suppliers_id_list).filter(query).values_list('object_id', flat=True))
+                for supplier_id in final_suppliers_id_list:
+                    flat_details = flat_result.get(supplier_id)
+                    if flat_details:
+                        for flat_code, detail in pi_filters_map['flat_type'].iteritems():
+                            flat_code_value = website_constants.flat_type_dict[flat_code]
+                            single_flat_detail = flat_details.get(flat_code_value)
+                            if flat_code_value in flat_details.keys():
+                                pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi'] += 1
+                            if single_flat_detail and detail.get('count') and int(detail['count']['min']) <= single_flat_detail['flat_count'] <= int(detail['count']['max']):
+                                pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi'] += 1
+                            if single_flat_detail and detail.get('size') and float(detail['size']['min']) <= single_flat_detail['flat_size'] <= float(detail['size']['max']):
+                                pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi'] += 1
+                    pi_index_map[supplier_id]['detail'][filter_name]['explanation'] = flat_details if flat_details else {}
+                    pi_index_map[supplier_id]['total_priority_index'] += pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi']
 
             if pi_filters_map.get('ratio_of_tenants_to_flats'):
                 # check for society ratio of tenants to flats
-
+                filter_name = 'ratio_of_tenants_to_flats'
                 ratio_of_tenants_to_flats = pi_filters_map['ratio_of_tenants_to_flats']
-                query = Q(supplier_id__in=final_suppliers_id_list)
-                total_supplier_ids.extend(get_societies_within_tenants_flat_ratio(float(ratio_of_tenants_to_flats['min']), float(ratio_of_tenants_to_flats['max']), query))
+                supplier_ratio_details = models.SupplierTypeSociety.objects.filter(supplier_id__in=final_suppliers_id_list).values('supplier_id').annotate(ratio=ExpressionWrapper(
+                    F('total_tenant_flat_count') / F('flat_count'), output_field=FloatField()))
+                supplier_ratio_details_map =  {item['supplier_id']: item['ratio']for item in supplier_ratio_details}
+                for supplier_id in final_suppliers_id_list:
+                    ratio = supplier_ratio_details_map.get(supplier_id)
+                    if not ratio:
+                        ratio = 0.0
+                    if float(ratio_of_tenants_to_flats['min']) <= ratio <= float(ratio_of_tenants_to_flats['max']):
+                        pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi'] = 1
 
-        for supplier_id in final_suppliers_id_list:
-            pi_index_map[supplier_id] = total_supplier_ids.count(supplier_id) # the PI is just frequency of each supplier_id in the list
+                    pi_index_map[supplier_id]['detail'][filter_name]['explanation'] = ratio
+                    pi_index_map[supplier_id]['total_priority_index'] += pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi']
+
         return pi_index_map
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -5027,11 +5092,7 @@ def get_standalone_societies(query=Q()):
                                  'amenity_count': amenities_map.get(society['supplier_id'])
 
                              } for society in societies}
-        standalone_society_ids = []
-        for society_id, detail in societies_map.iteritems():
-            if is_society_standalone(detail):
-                standalone_society_ids.append(society_id)
-        return standalone_society_ids
+        return societies_map
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
@@ -5046,6 +5107,9 @@ def is_society_standalone(instance_detail):
     """
     function = is_society_standalone.__name__
     try:
+        if not instance_detail:
+            return False
+
         if instance_detail['tower_count'] <= website_constants.standalone_society_config['tower_count'] and instance_detail['flat_count'] <= website_constants.standalone_society_config['flat_count'] and  instance_detail['amenity_count'] <= website_constants.standalone_society_config['amenity_count']:
                     return True
         return False
