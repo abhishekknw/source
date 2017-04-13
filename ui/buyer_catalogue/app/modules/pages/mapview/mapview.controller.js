@@ -405,7 +405,7 @@ if($scope.user_code == 'guestUser')
                 max: 0,
                 options: {
                     floor: 0,
-                    ceil: 10000,
+                    ceil: 100000,
                     step: 1,
                     noSwitching: true,
                 }
