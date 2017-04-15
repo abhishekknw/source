@@ -152,5 +152,11 @@
       var url = url_base_societyDetails + "user/" + userId + "/";
       return machadaloHttp.get(url);
     }
+
+    mapViewService.proposalVersion = function(parentProposalId, proposalData) {
+      // http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/v0/ui/website/TESTTEST7c947/proposal-version/
+      var url = url_base + parentProposalId + "/proposal-version/"
+      return machadaloHttp.post(url, proposalData);
+    }
     return mapViewService;
 }]);

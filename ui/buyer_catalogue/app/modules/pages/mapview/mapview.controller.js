@@ -1503,7 +1503,28 @@ if($scope.user_code == 'guestUser')
            centers:$scope.center_data,
            is_proposal_version_created:$window.localStorage.isSavedProposal,
          };
-         $http({
+         console.log("sending proposal version API call");
+         mapViewService.proposalVersion(parent_proposal_id, proposal_data)
+           .then(  function onSuccess(response) {
+                  $scope.clientId = response.data.data.logged_in_user_async_id;
+                  $scope.bdHeadId = response.data.data.bd_head_async_id;
+                  $scope.uploadId = response.data.data.upload_to_amazon_async_id;
+                  $scope.proposalFileName = response.data.data.file_name;
+                  $scope.isSuperUser = $window.localStorage.is_Superuser;
+                  sendEmailToClient();
+                  sendEmailToBDHead();
+                  uploadToAmazon();
+                  $scope.hideSpinner = true;
+                  swal(constants.name,constants.request_proposal_success,constants.success);
+                  $scope.checkFileExport = false;
+           }).catch(function onError(response){
+              console.log("Error occurred in fetching response");
+              console.log(response);
+              $scope.hideSpinner = true;
+              swal(constants.name,constants.request_proposal_error,constants.error);
+              $scope.checkFileExport = false;
+         });
+       /*  $http({
               url: constants.base_url + constants.url_base + parent_proposal_id + '/proposal-version/',
               method: 'POST',
               data: proposal_data, //this is your json data string
@@ -1527,7 +1548,8 @@ if($scope.user_code == 'guestUser')
            $scope.hideSpinner = true;
               swal(constants.name,constants.request_proposal_error,constants.error);
               $scope.checkFileExport = false;
-         });
+         });*/
+
        }catch(error){
          $scope.hideSpinner = true;
        }
