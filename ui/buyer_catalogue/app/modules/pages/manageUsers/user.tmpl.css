@@ -12,10 +12,15 @@
 body, html{
      height: 100%;
   background-repeat: no-repeat;
-  font-family: 'Oxygen', sans-serif;
-      background-size: cover;
-      overflow-x: hidden;
+  /*font-family: 'Oxygen', sans-serif;*/
+      /*background-size: cover;*/
+      overflow: auto;
       position: relative;
+
+      background: #f2f2f2;
+    	font-family: Source Sans Pro;
+    	color: #707070;
+    	padding-bottom: 10px;
 }
 
 .main{
@@ -143,7 +148,27 @@ span.input-group-addon i {
 }
 .dropdown-list{
   width: 70%;
-  overflow-y:scroll;
+  overflow:auto;
   max-height:300px;
 
+}
+
+th{
+  	background: #808080;
+    text-align: center;
+  	color: #fff;
+}
+td{
+    text-align: center;
+}
+table{
+  width: 400px;
+}
+/*for edit user form*/
+.form-user{
+  width: 30%;
+  margin-right:  230px;
+}
+h3{
+  color: #337ab7;
 }
