@@ -22,7 +22,7 @@ angular.module('machadaloPages')
       {header : 'Groups'},
     ];
     $scope.groupHeaders = [
-      {header : 'name'},
+      {header : 'Name of Group'},
     ]
       //To get permission list
       userService.getAllUserPermissions()
@@ -289,7 +289,7 @@ angular.module('machadaloPages')
       console.log(group);
       swal({
          title: constants.warn_user_msg,
-         text: constants.delete_confirm_user,
+         text: constants.delete_confirm_group,
          type: constants.warning,
          showCancelButton: true,
          confirmButtonClass: constants.btn_success,

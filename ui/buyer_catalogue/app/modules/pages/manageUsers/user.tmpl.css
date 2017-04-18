@@ -11,11 +11,12 @@
 }
 body, html{
      height: 100%;
+     width: 100%;
   background-repeat: no-repeat;
   /*font-family: 'Oxygen', sans-serif;*/
       /*background-size: cover;*/
       overflow: auto;
-      position: relative;
+      position: fixed;
 
       background: #f2f2f2;
     	font-family: Source Sans Pro;
@@ -162,7 +163,8 @@ td{
     text-align: center;
 }
 table{
-  width: 400px;
+  width: 100px;
+  /*position: fixed;*/
 }
 /*for edit user form*/
 .form-user{
@@ -171,4 +173,10 @@ table{
 }
 h3{
   color: #337ab7;
+}
+.user-table{
+  width: 300px;
+}
+.group-table{
+  width: 500px;
 }
