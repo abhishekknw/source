@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
-from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, BaseUserSerializer
+from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, BaseUserSerializer, BaseUserUpdateSerializer
 from rest_framework.decorators import detail_route, list_route
 from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, BusinessSubTypes, AdInventoryType, DurationType, \
     Amenity, SupplierAmenitiesMap
@@ -1896,8 +1896,8 @@ class UserViewSet(viewsets.ViewSet):
     """
     A View set for handling all the user related logic
     """
-    authentication_classes = []
-    permission_classes = []
+    # authentication_classes = []
+    # permission_classes = []
 
     def retrieve(self, request, pk=None):
         """
@@ -1931,9 +1931,9 @@ class UserViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            user = BaseUser.objects.get(pk=pk)
+            user = BaseUser.objects.get(pk=pk)            
             groups = Group.objects.filter(name__in=request.data.get('groups'))
-            serializer = BaseUserSerializer(user, data=request.data)
+            serializer = BaseUserUpdateSerializer(user, data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
                 for instance in groups:

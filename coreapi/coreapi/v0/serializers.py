@@ -518,6 +518,7 @@ class BaseUserSerializer(ModelSerializer):
         Returns: sets the password of the user when it's created.
 
         """
+
         # get the password
         password = validated_data['password']
         # delete it from the validated_data because we do not want to save it as raw password
@@ -530,6 +531,18 @@ class BaseUserSerializer(ModelSerializer):
         # return
         return user
 
+    
+    class Meta:
+        model = models.BaseUser
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'password', 'is_superuser', 'groups', 'user_permissions')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+class BaseUserUpdateSerializer(ModelSerializer):
+    """
+
+    """
     def update(self, instance, validated_data):
         """
         Args:
@@ -537,25 +550,20 @@ class BaseUserSerializer(ModelSerializer):
             validated_data: a dict having data to be updated
         Returns: an updated instance
         """
-        # need to check weather the old password matches the password already in the database
-        password = validated_data['password']
-        is_old_password_valid = instance.check_password(password)
-        if not is_old_password_valid:
-            # raise exception if password is not valid
-            raise Exception('The password we have for this user does not match the password you provided')
-        # we do not want to save password when we update the instance hence delete it.
-        del validated_data['password']
-        # save remaining attributes
+        # if password provided, then update the password
+        password = validated_data.get('password')
+        if password:
+            instance.set_password(password)
+            del validated_data['password']
+      
         for key, value in validated_data.iteritems():
             setattr(instance, key, value)
+
         instance.save()
         # return the updated instance
         return instance
 
     class Meta:
         model = models.BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'password', 'mobile', 'is_superuser', 'groups', 'user_permissions')
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
-
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile','is_superuser', 'groups', 'user_permissions')
+       

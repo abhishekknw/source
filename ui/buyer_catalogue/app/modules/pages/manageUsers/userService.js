@@ -31,6 +31,31 @@ angular.module('machadaloPages')
       return machadaloHttp.post(url,data);
     }
 
+    userService.getAllUsers = function(){
+      var url = url_base_user + "user/";
+      return machadaloHttp.get(url);
+    }
+
+    userService.updateUserDetails = function(id,data){
+      console.log(data);
+      var url = url_base_user + "user/" + id + "/";
+      return machadaloHttp.put(url,data);
+    }
+
+    userService.deleteUser = function(id){
+      var url = url_base_user + "user/" + id + "/";
+      return  machadaloHttp.delete(url);
+    }
+
+    userService.updateGroupDetails = function(id,data){
+      var url = url_base_user + "group/" + id + "/";
+      return machadaloHttp.put(url,data)
+    }
+
+    userService.deleteGroup = function(id){
+      var url = url_base_user + "group/" + id + "/";
+      return machadaloHttp.delete(url);
+    }
 
   return userService;
 }]);

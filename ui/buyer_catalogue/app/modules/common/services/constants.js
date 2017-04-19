@@ -19,12 +19,14 @@ angular
     errorMsg : 'Error Occured',
     server_connection_error : 'Server is down, Please Try again',
     emptyResponse : 'No results Found',
+    btn_success : 'btn-success',
+    warn_user_msg : 'Are You Sure?',
+    save_success : 'Saved successfully',
+    save_error : 'Some error occured, Data not saved',
 
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
     //mapview
-    save_success : 'Saved successfully',
-    save_error : 'Some error occured, Data not saved',
     importfile_error : 'Please select correct file',
     uploadfile_success : 'File Uploaded successfully',
     uploadfile_error  : 'Error occured, Please check your internet connection and Try again',
@@ -77,6 +79,10 @@ angular
     create_group_success : 'Group Created Successfully',
     create_group_error : 'Error Occured in creating group',
     password_error : 'Must match to password',
+    delete_confirm_user : 'Do you really want to delete this user?',
+    delete_confirm : 'Yes! Delete it!',
+    delete_confirm_group : 'Do you really want to delete this Group?',
+
     //guestPage
     location_error : 'Please enter accurate location',
 
