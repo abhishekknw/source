@@ -113,11 +113,12 @@ def save_basic_supplier_details(supplier_type_code, data):
         return handle_response(function_name, exception_object=e)
 
 
-def get_supplier_id(request, data):
+def get_supplier_id(request, data, state_name=ui_constants.state_name, state_code=ui_constants.state_code):
     """
     :param request: request parameter
     :param data: dict containing valid keys . Note the keys should be 'city', 'area', sub_area', 'supplier_type' ,
     'supplier_code' for this to work
+
     :return:  Response in which data has a key 'supplier_id' containing supplier_id
     """
     function = get_supplier_id.__name__
@@ -125,8 +126,6 @@ def get_supplier_id(request, data):
     error = 'You might want to double check the state name {0} and state code {1} defined in ui constants'.format(ui_constants.state_name, ui_constants.state_code)
     try:
         try:
-            state_name = ui_constants.state_name
-            state_code = ui_constants.state_code
             state_object = v0.models.State.objects.get(state_name=state_name, state_code=state_code)
             city_object = v0.models.City.objects.get(city_code=data.get('city_code'), state_code=state_object)
             area_object = v0.models.CityArea.objects.get(area_code=data.get('area_code'), city_code=city_object)
@@ -141,14 +140,14 @@ def get_supplier_id(request, data):
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
             'supplier_type'] + data[
                           'supplier_code']
-        return handle_response(function, data=supplier_id, success=True)
+        return supplier_id
 
     except KeyError as e:
-        return handle_response(function, exception_object=e)
+        raise Exception(function, get_system_error(e))
     except ObjectDoesNotExist as e:
-        return handle_response(function, data=error, exception_object=e)
+        raise Exception(function, get_system_error(e))
     except Exception as e:
-        return handle_response(function, data=error, exception_object=e)
+        raise Exception(function, get_system_error(e))
 
     
 def make_supplier_data(data):

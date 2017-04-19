@@ -5213,4 +5213,465 @@ def generate_supplier_basic_sheet_mail(data):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
+def validate_society_headers(supplier_type_code, row, data_import_type):
+    """
+    Returns: True means the headers defined in constants exactly match the headers defined in sheet.
+    """
+    function = validate_society_headers.__name__
+    try:
+        lowercase_sheet_header_list_with_underscores = ['_'.join(field.value.lower().split(' ')) for field in row]
+        supplier_headers_per_import_type = website_constants.supplier_headers[data_import_type]
+        basic_headers = supplier_headers_per_import_type['basic_data']
+        supplier_specific_headers = supplier_headers_per_import_type['supplier_specific'][supplier_type_code]
+        amenity_headers = supplier_headers_per_import_type['amenities']
+        event_headers = supplier_headers_per_import_type['events']
+        flat_headers = supplier_headers_per_import_type['flats']
+        all_header_list = basic_headers + supplier_specific_headers + amenity_headers + event_headers + flat_headers
+        for current_header in all_header_list:
+            lookup_key = '_'.join(current_header.lower().split(' '))
+            if lookup_key not in lowercase_sheet_header_list_with_underscores:
+                raise Exception(function, errors.HEADER_NOT_PRESENT_IN_SHEET.format(current_header, lookup_key))
+        return True
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def collect_supplier_common_data(result, supplier_type_code, supplier_id, row_dict, data_import_type):
+    """
+
+    Args:
+        result:
+        supplier_type_code:
+        row_dict:
+        supplier_id:
+        data_import_type
+
+    Returns: popuates 'common_data' key of result dict
+
+    """
+    function = collect_supplier_common_data.__name__
+    try:
+        common_data_key = 'common_data'
+        basic_headers = website_constants.supplier_headers[data_import_type]['basic_data']
+        supplier_specific_headers = website_constants.supplier_headers[data_import_type]['supplier_specific'][supplier_type_code]
+        common_headers = ['_'.join(field.lower().split(' ')) for field in basic_headers + supplier_specific_headers]
+        for key in common_headers:
+            result[supplier_id][common_data_key][key] = row_dict.get(key)
+        return result
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def collect_amenity_data(result, supplier_id, row_dict):
+    """
+
+    Args:
+        result:
+        supplier_id:
+        row_dict:
+
+    Returns:
+
+    """
+    function = collect_amenity_data.__name__
+    try:
+        valid_amenities = website_constants.valid_amenities.keys()
+        positive_amenities_list = []
+        negative_amenity_list = []
+        for amenity in valid_amenities:
+
+            key = 'amenity_' + '_'.join(amenity.lower().split(' ')) + '_present'
+            if not row_dict[key]:
+                continue
+            if row_dict[key].lower() in [item.lower() for item in website_constants.positive]:
+                positive_amenities_list.append(amenity)
+            elif row_dict[key].lower() in [item.lower() for item in website_constants.negative]:
+                negative_amenity_list.append(amenity)
+            else:
+                pass
+
+        result[supplier_id]['amenities']['positive']['names'] = positive_amenities_list
+        result[supplier_id]['amenities']['negative']['names'] = negative_amenity_list
+
+        return result
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def collect_events_data(result, supplier_id, row_dict):
+    """
+
+    Args:
+        result:
+        supplier_id:
+        row_dict:
+
+    Returns:
+
+    """
+    function = collect_events_data.__name__
+    try:
+        valid_events = website_constants.valid_events
+        positive_events = []
+        negative_events = []
+        for event in valid_events:
+            key = 'event_' + '_'.join(event.lower().split(' '))
+            if not row_dict[key]:
+                continue
+            if row_dict[key].lower() in [item.lower() for item in website_constants.positive]:
+                positive_events.append(event)
+            elif row_dict[key].lower() in [item.lower() for item in website_constants.negative]:
+                negative_events.append(event)
+            else:
+                pass
+
+        result[supplier_id]['events']['positive']['names'] = positive_events
+        result[supplier_id]['events']['negative']['names'] = negative_events
+
+        return result
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def collect_flat_data(result, supplier_id, row_dict):
+    """
+
+    Args:
+        result:
+        supplier_id:
+        row_dict:
+
+    Returns:
+
+    """
+    function = collect_flat_data.__name__
+    try:
+        all_flat_types = website_constants.flat_type_dict.values()
+        for flat_type in all_flat_types:
+            flat_key = '_'.join(flat_type.lower().split(' '))
+            key = 'flat_' + flat_key + '_present'
+            if not row_dict[key]:
+                continue
+            if row_dict[key].lower() in [item.lower() for item in website_constants.positive]:
+                count_key = flat_key + '_count'
+                size_key = flat_key + '_size'
+                rent_key = flat_key + '_rent'
+                if not row_dict[count_key] or not row_dict[size_key] or not row_dict[rent_key]:
+                    raise Exception(function, errors.COUNT_SIZE_RENT_VALUE_NOT_PRESENT.format(count_key, size_key, rent_key, supplier_id))
+                result[supplier_id]['flats']['positive'][flat_type] = {
+                    'count': row_dict[count_key],
+                    'size': row_dict[size_key],
+                    'rent': row_dict[rent_key]
+                }
+            elif row_dict[key].lower() in [item.lower() for item in website_constants.negative]:
+                result[supplier_id]['flats']['negative'][flat_type] = {}
+            else:
+                pass
+
+        return result
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def handle_supplier_data_from_sheet(result, supplier_instance_map, content_type, supplier_type_code):
+    """
+    updates, creates or deletes required instances as per the case for each supplier.
+    Args:
+        result: a dict having all the data that is to be handled into database.
+        supplier_instance_map: a map of supplier_id --> instance.
+        content_type: The content type of this supplier.
+        supplier_type_code:
+        cases handled:
+           amenities, Flats, events.
+    Returns: a dict showing summary of counts of each distinct type of object created, updated or deleted.
+    """
+    function = handle_supplier_data_from_sheet.__name__
+    try:
+        # define required variables.
+        supplier_instance_list = []
+        supplier_amenity_instance_list = []
+        positive_events = []
+        negative_events = []
+        positive_created_flats = []
+        negative_flats = []
+        negative_amenity_instances = []
+        positive_updated_flats = []
+        tower_instance_list = []
+
+        event_instance_map = {}
+        supplier_amenity_instances_map = {}
+        flat_instance_map = {}
+
+        amenities = models.Amenity.objects.all()
+        amenity_map = {amenity.name: amenity for amenity in amenities}
+        supplier_ids = result.keys()
+
+        # prepare a map of key --> instance. This is required to fetch the instance once we know the key. key is different for
+        # different types of instance.
+        supplier_amenity_instances = models.SupplierAmenitiesMap.objects.filter(object_id__in=supplier_ids, content_type=content_type)
+        for instance in supplier_amenity_instances:
+            key = (instance.object_id, instance.content_type, instance.amenity)
+            try:
+                ref = supplier_amenity_instances_map[key]
+            except KeyError:
+                supplier_amenity_instances_map[key] = instance
+
+        event_instances = models.Events.objects.filter(object_id__in=supplier_ids, content_type=content_type)
+        for instance in event_instances:
+            key = (instance.event_name, instance.object_id, instance.content_type)
+            try:
+                ref = event_instance_map[key]
+            except KeyError:
+                event_instance_map[key] = instance
+
+        flat_instances = models.FlatType.objects.filter(object_id__in=supplier_ids, content_type=content_type)
+        for instance in flat_instances:
+            key = (instance.flat_type, instance.object_id, instance.content_type)
+            try:
+                ref = flat_instance_map[key]
+            except KeyError:
+                flat_instance_map[key] = instance
+
+        # collect actual tower count by looking into society tower table
+        tower_counts_list = models.SocietyTower.objects.filter(object_id__in=supplier_ids, content_type=content_type).values('object_id').annotate(count=Count('tower_id'))
+        tower_count_map = {item['object_id']: item['count'] for item in tower_counts_list}
+
+        # once the maps are prepared we loop over each supplier and collect the required objects on the fly.
+        # we update, create or delete in bulk outside of the loop.
+        for supplier_id, detail in result.iteritems():
+            instance = supplier_instance_map[supplier_id]
+
+            # get additional tower instance to be added if any first before setting new attributes
+            tower_created_list = handle_society_towers(instance, detail, tower_count_map,  content_type)
+            if tower_created_list:
+                tower_instance_list.extend(tower_created_list)
+
+            instance = handle_supplier_common_attributes(instance, detail, supplier_type_code)
+            supplier_instance_list.append(instance)
+
+            positive_instances, negative_instances = handle_amenities(supplier_id, result, amenity_map, supplier_amenity_instances_map, content_type)
+            if positive_instances:
+                supplier_amenity_instance_list.extend(positive_instances)
+            if negative_instances:
+                negative_amenity_instances.extend(negative_instances)
+
+            positive_instances, negative_instances = handle_events(supplier_id, result, event_instance_map, content_type)
+            if positive_instances:
+                positive_events.extend(positive_instances)
+            if negative_instances:
+                negative_events.extend(negative_instances)
+
+            positive_created_instances, positive_updated_instances, negative_instances = handle_flats(supplier_id, result, flat_instance_map, content_type)
+            if positive_created_instances:
+                positive_created_flats.extend(positive_created_instances)
+            if positive_updated_instances:
+                positive_updated_flats.extend(positive_updated_instances)
+            if negative_instances:
+                negative_flats.extend(negative_instances)
+
+        bulk_update(supplier_instance_list)
+        bulk_update(positive_updated_flats)
+
+        models.SupplierAmenitiesMap.objects.bulk_create(supplier_amenity_instance_list)
+        models.Events.objects.bulk_create(positive_events)
+        models.FlatType.objects.bulk_create(positive_created_flats)
+        models.SocietyTower.objects.bulk_create(tower_instance_list)
+
+        for instance in negative_amenity_instances:
+            instance.delete()
+        for instance in negative_events:
+            instance.delete()
+        for instance in negative_flats:
+            instance.delete()
+
+        debug = {
+
+                'total_suppliers_updated': len(supplier_instance_list),
+                'total_supplier_amenity_instance_created': len(supplier_amenity_instance_list),
+                'total_supplier_amenity_instance_deleted': len(negative_amenity_instances),
+                'total_events_created': len(positive_events),
+                'total_events_deleted': len(negative_events),
+                'total_flats_created': len(positive_created_flats),
+                'total_flats_updated': len(positive_updated_flats),
+                'total_flats_deleted': len(negative_flats),
+                'total_towers_created': len(tower_instance_list)
+        }
+        return debug
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def handle_society_towers(instance, detail, tower_count_map, content_type):
+    """
+    Args:
+        instance:
+        detail:
+        content_type:
+        tower_count_map:
+
+    Returns:
+
+    """
+    function = handle_society_towers.__name__
+    try:
+        positive_towers = []
+        given_tower_count = detail['common_data']['tower_count']
+
+        if not given_tower_count:
+            return []
+
+        given_tower_count = int(given_tower_count)
+
+        # if we don't find the instance pk, the current tower count is zero
+        current_tower_count = tower_count_map.get(instance.pk, 0)
+
+        if given_tower_count == current_tower_count:
+            return []
+
+        if given_tower_count > current_tower_count:
+            extra_towers = given_tower_count - current_tower_count
+            for i in range(extra_towers):
+                positive_towers.append(models.SocietyTower(object_id=instance.pk, content_type=content_type))
+
+        return positive_towers
+    except Exception as e:
+
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def handle_supplier_common_attributes(instance, detail, supplier_type_code):
+    """
+    instance:  the supplier instance
+    detail: a dict having details to be set to this instance
+
+    Returns: updated instance
+
+    """
+    function = handle_supplier_common_attributes.__name__
+    try:
+        common_data_key = 'common_data'
+        if supplier_type_code == website_constants.society_code:
+
+            for society_db_field, input_key in website_constants.society_db_field_to_input_field_map.iteritems():
+                if not detail[common_data_key][input_key]:
+                    continue
+                setattr(instance, society_db_field, detail[common_data_key][input_key])
+        else:
+            raise Exception(function, 'Not implemented for supplier type code {0}'.format(supplier_type_code))
+
+        return instance
+
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def handle_flats(supplier_id, result, flat_map, content_type):
+    """
+    Args:
+        supplier_id:
+        flat_map:
+        content_type:
+        result:
+
+    Returns: instances which are to be updated, instances which will be created and instances which will be deleted.
+
+    """
+    function = handle_flats.__name__
+    try:
+        positive_updated_instances = []
+        positive_created_instances = []
+        negative_flat_instances = []
+        positive_flat_dict = result[supplier_id]['flats']['positive']
+        negative_flat_dict = result[supplier_id]['flats']['negative']
+        for flat_type, detail in positive_flat_dict.iteritems():
+            try:
+                instance = flat_map[flat_type, supplier_id, content_type]
+                instance.flat_count = detail['count']
+                instance.size_builtup_area = detail['size']
+                instance.flat_rent = detail['rent']
+                positive_updated_instances.append(instance)
+            except KeyError:
+                positive_created_instances.append(models.FlatType(flat_type=flat_type, flat_count=detail['count'], flat_rent=detail['rent'], size_builtup_area=detail['size'], object_id=supplier_id, content_type=content_type))
+
+        for flat_type in negative_flat_dict.keys():
+            try:
+                instance = flat_map[flat_type, supplier_id, content_type]
+                negative_flat_instances.append(instance)
+            except KeyError:
+                pass
+
+        return positive_created_instances, positive_updated_instances, negative_flat_instances
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def handle_events(supplier_id, result, events_map,  content_type):
+    """
+
+    Args:
+        supplier_id:
+        result:
+        content_type:
+        events_map:
+
+    Returns: instances which will be created, instances which will be deleted
+
+    """
+    function = handle_events.__name__
+    try:
+        positive_events = result[supplier_id]['events']['positive']['names']
+        negative_events = result[supplier_id]['events']['negative']['names']
+        pos_event_list = []
+        neg_events_list = []
+        for event in positive_events:
+            try:
+                ref = events_map[event, supplier_id, content_type]
+                # if positive event is there already, don't do anything.
+            except KeyError:
+                # else create the event
+                pos_event_list.append(models.Events(object_id=supplier_id, content_type=content_type, event_name=event))
+        for event in negative_events:
+            try:
+                # if negative event is there already, it  will be deleted.
+                ref = events_map[event, supplier_id, content_type]
+                neg_events_list.append(ref)
+            except KeyError:
+                pass
+        return pos_event_list, neg_events_list
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def handle_amenities(supplier_id, result, amenity_map, supplier_amenity_instances_map,  content_type):
+    """
+
+    Args:
+        supplier_id:
+        result:
+        amenity_map:
+        supplier_amenity_instances_map:
+        content_type:
+
+    Returns: instances which will be created, instances which will be deleted.
+
+    """
+    function = handle_amenities.__name__
+    try:
+        supplier_amenity_instances = []
+        positive_amenities = result[supplier_id]['amenities']['positive']['names']
+        negative_amenities = result[supplier_id]['amenities']['negative']['names']
+        negative_amenity_instances = []
+        for amenity_name in positive_amenities + negative_amenities:
+            amenity_instance = amenity_map.get(amenity_name)
+            if amenity_instance:
+                key = (supplier_id, content_type, amenity_instance)
+                try:
+                    ref = supplier_amenity_instances_map[key]
+                    if amenity_name in negative_amenities:
+                        negative_amenity_instances.append(ref)
+                except KeyError:
+                    supplier_amenity_instances.append(models.SupplierAmenitiesMap(content_type=content_type, object_id=supplier_id, amenity=amenity_instance))
+        return supplier_amenity_instances, negative_amenity_instances
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
 
