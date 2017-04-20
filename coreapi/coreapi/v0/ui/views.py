@@ -248,11 +248,7 @@ class GenerateSupplierIdAPIView(APIView):
             if not ui_utils.check_city_level_permission(user, supplier_type_code, city_code, ui_constants.permission_type_create):
                 return ui_utils.handle_response(class_name, errors.SUPPLIER_CITY_NO_CREATE_PERMISSION_ERROR.format(supplier_type_code, city_code))
 
-            response = ui_utils.get_supplier_id(request, data)
-            if not response.data['status']:
-                return response
-
-            data['supplier_id'] = response.data['data']
+            data['supplier_id'] = ui_utils.get_supplier_id(request, data)
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
 
@@ -913,11 +909,7 @@ class ImportSummaryData(APIView):
                         'supplier_code': data['supplier_code']
                     }
 
-                    response = ui_utils.get_supplier_id(request, supplier_id_data)
-                    if not response.data['status']:
-                        return response
-
-                    data['supplier_id'] = response.data['data']
+                    data['supplier_id'] = ui_utils.get_supplier_id(request, supplier_id_data)
                     data['supplier_type_code'] = 'RS'
 
                     # save pricing information in price_mapping_default table
@@ -925,17 +917,12 @@ class ImportSummaryData(APIView):
                     if not response.data['status']:
                         return response
 
-                    url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
-                    url = BASE_URL + url[1:]
-                    headers = {
-                        'Content-Type': 'application/json',
-                        'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-                    }
-                    response = requests.post(url, json.dumps(data), headers=headers)
-                    if response.status_code != status.HTTP_200_OK:
-                        #return ui_utils.handle_response(class_name, data=response.json())
-                        error_list.append(str(data['supplier_id']) + ' ' +  str(response.json()))
-                        continue
+                    request = InventoryPricingAPIView.as_view()
+
+                    view = InventorySummaryAPIView.as_view()
+                    response = view(data, {'id': data['supplier_id']})
+                    if not response.data['status']:
+                        error_list.append(response.data['data'])
 
             source_file.close()
             return ui_utils.handle_response(class_name, data=error_list, success=True)
@@ -1116,8 +1103,7 @@ class InventorySummaryAPIView(APIView):
                 if 'id' in request.data:
                     flag1 = False
                     if request.data.get('flier_allowed'):
-                        if request.data.get('flier_frequency') and inventory_object.flier_frequency < request.data.get(
-                                'flier_frequency'):
+                        if request.data.get('flier_frequency') and inventory_object.flier_frequency < request.data.get('flier_frequency'):
                             if not inventory_object.flier_frequency:
                                 ui_utils.save_flyer_locations(0, request.data.get('flier_frequency'), supplier_object, supplier_type_code)
                             else:
@@ -1328,6 +1314,28 @@ class InventorySummaryAPIView(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
         except Exception as e:
             return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+
+class PostInventorySummary(APIView):
+    """
+
+    """
+    def post(self, request):
+        """
+
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+
+            pass
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
 
 
 class BasicPricingAPIView(APIView):
@@ -2013,12 +2021,9 @@ class EventAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
-        '''if request.data['event_details_available']:
-            if request.data['events_count_per_year'] != len(request.data['event_details']):
-                return Response({'message':'No of Events entered does not match event count'},status=400)
-        '''
+        content_type = ui_utils.fetch_content_type(website_constants.society_code)
+
         for key in request.data['event_details']:
             if 'event_id' in key:
                 item = Events.objects.get(pk=key['event_id'])
@@ -2026,7 +2031,7 @@ class EventAPIView(APIView):
             else:
                 serializer = EventsSerializer(data=key)
             if serializer.is_valid():
-                serializer.save(supplier=society)
+                serializer.save(supplier=society, object_id=id, content_type=content_type)
             else:
                 return Response(serializer.errors, status=400)
 
@@ -2044,7 +2049,6 @@ class EventAPIView(APIView):
             serializer.save(supplier=society)
         else:
             return Response(serializer.errors, status=400)
-
 
         return Response(serializer.data, status=201)
 

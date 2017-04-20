@@ -86,7 +86,8 @@ urlpatterns = patterns('',
     url(r'^set-inventory-pricing/$', views.SetInventoryPricing.as_view()),
     url(r'^populate-amenities/$', views.PopulateAmenities.as_view()),
     url(r'^guest-user/$', views.GuestUser.as_view()),
-)
+    url(r'^set-params/$', views.SetParams.as_view()),
+    )
 
 # adding urls for Permission View Set
 router = DefaultRouter()

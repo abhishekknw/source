@@ -604,6 +604,7 @@ class SocietyMajorEvents(BaseModel):
     NewYear = models.BooleanField(db_column='NewYear', default=False)
     past_major_events = models.IntegerField(db_column='PAST_MAJOR_EVENTS', blank=True, null=True)
 
+
 class Events(models.Model):
     event_id = models.AutoField(db_column='EVENT_ID', primary_key=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='events', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
@@ -914,6 +915,8 @@ class SupplierTypeSociety(BaseModel):
     count_15_25 = models.IntegerField(db_column='COUNT_15-25', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
     count_25_60 = models.IntegerField(db_column='COUNT_25-60', blank=True, null=True)  # Field name made lowercase. Field renamed to remove unsuitable characters.
     count_60above = models.IntegerField(db_column='count_60above', blank=True, null=True)  # Field name made lowercase.
+    age_group_0_6 = models.IntegerField(blank=True, default=0)
+    age_group_7_18 = models.IntegerField(blank=True, default=0)
     flat_type_count = models.IntegerField(db_column='FLAT_TYPE_COUNT', blank=True, null=True)  # Field name made lowercase.
     flat_avg_size = models.IntegerField(db_column='FLAT_AVG_SIZE', blank=True, null=True)  # Field name made lowercase.
     flat_avg_rental_persqft = models.IntegerField(db_column='FLAT_AVG_RENTAL_PERSQFT', blank=True, null=True)  # Field name made lowercase.

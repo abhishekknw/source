@@ -17,6 +17,7 @@ from django.forms.models import model_to_dict
 from django.db.models import get_model
 from django.utils.dateparse import parse_datetime
 
+
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -2154,13 +2155,7 @@ class ImportSocietyData(APIView):
                             'supplier_code': data['supplier_code']
                         }
 
-                        response = get_supplier_id(request, supplier_id_data)
-                        # this method of handing error code will  change in future
-                        if response.status_code == status.HTTP_200_OK:
-                            data['supplier_id'] = response.data['data']
-                        else:
-                            return response
-
+                        data['supplier_id'] = get_supplier_id(request, supplier_id_data)
                         (society_object, value) = SupplierTypeSociety.objects.get_or_create(supplier_id=data['supplier_id'])
                         data['society_location_type'] = subarea_object.locality_rating
                         #data['society_state'] = 'Maharashtra'Uttar Pradesh
@@ -2190,6 +2185,133 @@ class ImportSocietyData(APIView):
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
         except KeyError as e:
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ImportSupplierDataFromSheet(APIView):
+    """
+    The API tries to read a given sheet in a fixed format and updates the database with data in the sheet. This is used
+    to enter data into the system from sheet. Currently Society data is supported, but the API is made generic.
+    Please ensure following things before using this API:
+       1. Events are defined in website/constants.py. The event name should match with event names in headers.
+       2. Amenities are already defined in database and their names must match with amenity names used in the headers.
+       3. Check once the Flats constants defined and the headers. Both should match.
+    NOTE:
+        1.The API will not consider the item if it's marked 'NO' or 'N'. it will delete the appropriate item from the system if
+        it's already present.
+        2. The suppliers if not present in the system are created. if already created, they are updated.
+        3. In response of the API, you can get to know how many suppliers were possible to be processed, how many of them
+        got successfully created, how many were updated, how many were invalid because of issue in the row etc.
+        4. An idea of positive or negative objects is introduced. Any object which has 'No' or 'N' in the sheet is qualified
+        as negative. Only delete operation, if applicable is applied on such objects. Update and create operations are applied
+        on positive objects.
+
+    """
+    def post(self, request):
+        """
+        Args:
+            request:
+
+        Returns:
+
+            collect the basic society data in 'basic_data' key
+            collect flat data in 'flats' key
+            collect amenity data in 'amenities' key
+            collect events data in  'events' key
+            collect inventories and there pricing  data in 'inventories' key
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            source_file = request.data['file']
+            state_code = request.data['state_code']
+            wb = openpyxl.load_workbook(source_file)
+            ws = wb.get_sheet_by_name('supplier_data')
+            supplier_type_code = request.data['supplier_type_code']
+            data_import_type = request.data['data_import_type']
+
+            # collects invalid row indexes
+            invalid_rows_detail = {}
+            possible_suppliers = 0
+
+            # will store all the info of society
+            result = {}
+            state_instance = models.State.objects.get(state_code=state_code)
+            city_codes = models.City.objects.filter(state_code=state_instance).values_list('city_code', flat=True)
+            area_codes = models.CityArea.objects.filter(city_code__city_code__in=city_codes).values_list('area_code', flat=True)
+            subarea_codes = models.CitySubArea.objects.filter(area_code__area_code__in=area_codes).values_list('subarea_code', flat=True)
+
+            # put debugging information here
+            invalid_rows_detail['city_codes'] = city_codes
+            invalid_rows_detail['area_codes'] = area_codes
+            invalid_rows_detail['subarea_codes'] = subarea_codes
+            invalid_rows_detail['detail'] = {}
+
+            # iterate through all rows and populate result array
+            for index, row in enumerate(ws.iter_rows()):
+                if index == 0:
+                    website_utils.validate_society_headers(supplier_type_code, row, data_import_type)
+                    continue
+
+                possible_suppliers += 1
+
+                row_response = website_utils.get_mapped_row(ws, row)
+                if not row_response.data['status']:
+                    return row_response
+                row_dict = row_response.data['data']
+
+                if row_dict['city_code'] not in city_codes:
+                    invalid_rows_detail['detail'][index + 1] = row_dict['city_code'] + '  not in city_codes'
+                    continue
+                if row_dict['area_code'] not in area_codes:
+                    invalid_rows_detail['detail'][index + 1] = row_dict['area_code'] + '  not in city_codes'
+                    continue
+                if row_dict['sub_area_code'] not in subarea_codes:
+                    invalid_rows_detail['detail'][index + 1] = row_dict['sub_area_code'] + '  not in sub area codes'
+                    continue
+
+                supplier_id = row_dict['city_code'] + row_dict['area_code'] + row_dict['sub_area_code']  + supplier_type_code + row_dict['supplier_code']
+
+                if not result.get(supplier_id):
+                    result[supplier_id] = {
+                        'common_data': {'state_name': state_code},
+                        'flats': {'positive': {}, 'negative': {}},
+                        'amenities': {'positive': {}, 'negative': {}},
+                        'events': {'positive': {}, 'negative': {}},
+                        'inventories': {'positive': {}, 'negative': {}}
+                    }
+                result = website_utils.collect_supplier_common_data(result, supplier_type_code, supplier_id, row_dict, data_import_type)
+                result = website_utils.collect_amenity_data(result, supplier_id, row_dict)
+                result = website_utils.collect_events_data(result, supplier_id, row_dict)
+                result = website_utils.collect_flat_data(result, supplier_id, row_dict)
+
+            input_supplier_ids = set(result.keys())
+            if not input_supplier_ids:
+                return ui_utils.handle_response(class_name, data='System did not get any suppliers from sheet to work upon')
+
+            model = ui_utils.get_model(supplier_type_code)
+            content_type = ui_utils.fetch_content_type(supplier_type_code)
+            already_existing_supplier_ids = set(model.objects.filter(supplier_id__in=input_supplier_ids).values_list('supplier_id', flat=True))
+            new_supplier_ids = input_supplier_ids.difference(already_existing_supplier_ids)
+
+            # create the supplier first here
+            model.objects.bulk_create(model(**{'supplier_id': supplier_id}) for supplier_id in new_supplier_ids)
+
+            supplier_instance_map = model.objects.in_bulk(input_supplier_ids)
+            summary = website_utils.handle_supplier_data_from_sheet(result, supplier_instance_map, content_type, supplier_type_code)
+
+            data = {
+                'total_new_suppliers_made': len(new_supplier_ids),
+                'total_valid_suppliers': len(input_supplier_ids),
+                'total_invalid_suppliers': len(invalid_rows_detail['detail'].keys()),
+                'total_existing_suppliers_out_of_valid_suppliers': len(already_existing_supplier_ids),
+                'total_possible_suppliers': possible_suppliers,
+                'invalid_row_detail': invalid_rows_detail,
+                'summary': summary
+            }
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -3170,13 +3292,7 @@ class ImportContactDetails(APIView):
                         data['country_code'] = website_constants.COUNTRY_CODE
 
                         try:
-                            response = get_supplier_id(request, data)
-                            # this method of handing error code will  change in future
-                            if response.status_code == status.HTTP_200_OK:
-                                data['supplier_id'] = response.data['data']
-                            else:
-                                return response
-
+                            data['supplier_id'] = get_supplier_id(request, data)
                             society_object = SupplierTypeSociety.objects.get(supplier_id=data['supplier_id'])
                             data['spoc'] = False
                             data['supplier'] = society_object
@@ -4123,12 +4239,7 @@ class ImportCorporateData(APIView):
                             'supplier_code': data['supplier_code']
                         }
 
-                        response = get_supplier_id(request, supplier_id_data)
-                        # this method of handing error code will  change in future
-                        if response.status_code == status.HTTP_200_OK:
-                            data['supplier_id'] = response.data['data']
-                        else:
-                            return response
+                        data['supplier_id'] = get_supplier_id(request, supplier_id_data)
 
                         (corporate_object, value) = SupplierTypeCorporate.objects.get_or_create(supplier_id=data['supplier_id'])
 

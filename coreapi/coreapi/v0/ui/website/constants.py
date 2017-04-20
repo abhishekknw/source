@@ -11,6 +11,9 @@ car_display_inventory_code = 'CD'
 society_code = 'RS'
 corporate_code = 'CP'
 
+# yes or no
+positive = ['Yes', 'Y', '1']
+negative = ['No', 'N', '0']
 
 supplier_keys = [
 
@@ -27,20 +30,19 @@ supplier_keys = [
 ]
 
 basic_supplier_export_headers = ['City', 'City Code', 'Area', 'Area Code', 'Sub Area', 'Sub Area Code', 'SupplierType', 'SupplierCode', 'SupplierName', 'supplier_id']
-basic_supplier_data_keys = ['city_name', 'city_code', 'area_name', 'area_code', 'subarea_name', 'subarea_code', 'supplier_type_code', 'supplier_code',  'supplier_name', 'supplier_id']
-
+basic_supplier_data_keys = ['city_name', 'city_code', 'area_name', 'area_code', 'subarea_name', 'subarea_code', 'supplier_type_code', 'supplier_code', 'supplier_name', 'supplier_id']
 
 corporate_keys = [
 
     'city', 'city_code', 'area', 'area_code', 'subarea', 'subarea_code', 'supplier_type', 'supplier_code', 'name', 'address1', \
     'address2', 'zipcode', 'latitude', 'longitude', 'corporate_type', 'industry_segment', 'building_count', 'floorperbuilding_count', \
-    'totallift_count', 'locality_rating' , 'quality_rating', 'quantity_rating' , 'totalemployees_count', 'isrealestateallowed', \
+    'totallift_count', 'locality_rating', 'quality_rating', 'quantity_rating', 'totalemployees_count', 'isrealestateallowed', \
     'averagerent', 'commoncafeteria', 'bank_account_name', 'bank_name', 'ifsc_code', 'account_number'
 
 ]
 
 proposal_header_keys = [
-    'Center Name','Center Proposal Id', 'Center Id', 'Space Mapping Id', 'Inventory Type Id', 'Supplier Id', 'Supplier Name', 'Supplier Sub Area', 'Supplier Type', 'Supplier Tower Count', \
+    'Center Name', 'Center Proposal Id', 'Center Id', 'Space Mapping Id', 'Inventory Type Id', 'Supplier Id', 'Supplier Name', 'Supplier Sub Area', 'Supplier Type', 'Supplier Tower Count', \
     'Supplier Flat Count',
 ]
 
@@ -65,12 +67,12 @@ inventorylist = {
         'DATA': ['total_stall_count', 'stall_price', 'stall_duration', 'stall_price_factor', 'stall_business_price']
     },
     'CD': {
-        'HEADER': ['Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor', 'Car Business Price' ],
+        'HEADER': ['Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor', 'Car Business Price'],
         'DATA': ['car_display', 'car_display_price', 'car_display_duration', 'car_display_price_factor', 'car_business_price']
     },
     'RS': {
-        'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA','SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT', 'STATUS'],
-        'DATA': ['supplier_id', 'name', 'subarea', 'quality_rating', 'tower_count', 'flat_count', 'status' ]
+        'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA', 'SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT', 'STATUS'],
+        'DATA': ['supplier_id', 'name', 'subarea', 'quality_rating', 'tower_count', 'flat_count', 'status']
     },
     'CP': {
         'HEADER': ['SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA', 'STATUS'],
@@ -109,7 +111,7 @@ price_per_flat = {
     'ST': ['standee_price_per_flat', 'standee_price'],
     'CD': ['car_display_price_per_flat', 'car_display_price'],
     'SL': ['stall_price_per_flat', 'stall_price'],
-    'FL': ['flier_price_per_flat', 'filer_price'], #todo: change the spelling from filer to flier once fixed
+    'FL': ['flier_price_per_flat', 'filer_price'],  # todo: change the spelling from filer to flier once fixed
 }
 
 # supplier_code_filter_params = {
@@ -135,7 +137,7 @@ price_per_flat = {
 import_master_keys = ['societies_inventory', 'societies_inventory_count', 'societies', 'center', 'societies_count']
 
 society_inventory_keys = [
-     'space_mapping', 'id',
+    'space_mapping', 'id',
 ]
 
 societies_header_to_field_mapping = {
@@ -153,7 +155,7 @@ import_center_keys = [
 
 inventories_keys = {'BANNER': 'banner_allowed', 'POSTER': 'poster_allowed', 'FLIER': 'flier_allowed',
 
-               'STANDEE':'standee_allowed', 'STALL': 'stall_allowed'}
+                    'STANDEE': 'standee_allowed', 'STALL': 'stall_allowed'}
 
 index_of_center_id = 0
 
@@ -167,7 +169,7 @@ header_to_field_mapping = {
 inventory_fields = ['poster_count', 'stall_count', 'flier_count', 'standee_count', 'poster_price', 'stall_price', 'flier_price', 'standee_price']
 
 # this list is used to know if a particular inventory was really present in the sheet
-is_inventory_available = ['poster_count', 'stall_count', 'standee_count','flier_count']
+is_inventory_available = ['poster_count', 'stall_count', 'standee_count', 'flier_count']
 
 # this dict uses items of is_inventory_available list to get corresponding model names
 # BASE_NAME is available so that once we know what inventories are  in the sheet we can construct other inventory
@@ -199,7 +201,6 @@ table_to_serializer = {
     'proposal_metrics': 'ProposalMetricsSerializer',
     'proposal_master_cost': 'ProposalMasterCostSerializer'
 }
-
 
 # predefined keys in data dict for Offline pricing. we need to make spaces for diff kinds of data
 # the following data structure is a dict with keys as model names. values are a list of columns and some other details
@@ -249,18 +250,18 @@ offline_pricing_data = {
     ],
     'proposal_metrics': [
 
-        {'match_term': 'Societies Covered ', 'col_name': 'metric_name', 'specific': {'code': 'RS',  }, 'value': 0},
+        {'match_term': 'Societies Covered ', 'col_name': 'metric_name', 'specific': {'code': 'RS',}, 'value': 0},
         {'match_term': 'Corporate Parks Covered', 'col_name': 'metric_name', 'specific': {'code': 'CP'}, 'value': 0},
 
         {'match_term': 'Total Society Impressions', 'col_name': 'metric_name', 'specific': {'code': 'RS'}, 'value': 0},
-        {'match_term': 'Total Corporates Impressions', 'col_name': 'metric_name', 'specific': {'code': 'CP',},'value': 0},
+        {'match_term': 'Total Corporates Impressions', 'col_name': 'metric_name', 'specific': {'code': 'CP',}, 'value': 0},
 
         {'match_term': 'Average Cost per Corporate', 'col_name': 'metric_name', 'specific': {'code': 'CP'}, 'value': 0},
         {'match_term': 'Average Cost per Society', 'col_name': 'metric_name', 'specific': {'code': 'RS'}, 'value': 0},
         {'match_term': 'Average Cost per Gym', 'col_name': 'metric_name', 'specific': {'code': 'GY'}, 'value': 0},
         {'match_term': 'Average Cost per Salon', 'col_name': 'metric_name', 'specific': {'code': 'SA'}, 'value': 0},
 
-        {'match_term': 'Estimated Flat Covered', 'col_name': 'metric_name', 'specific': {'code': 'RS', }, 'value': 0},
+        {'match_term': 'Estimated Flat Covered', 'col_name': 'metric_name', 'specific': {'code': 'RS',}, 'value': 0},
         {'match_term': 'Estimated Tower Covered', 'col_name': 'metric_name', 'specific': {'code': 'CP'}, 'value': 0},
         {'match_term': 'Estimated Residents', 'col_name': 'metric_name', 'specific': {'code': 'RS'}, 'value': 0},
         {'match_term': 'Estimated Employess', 'col_name': 'metric_name', 'specific': {'code': 'CP'}, 'value': 0},
@@ -272,14 +273,13 @@ offline_pricing_data = {
 # models whose only one object exists in the sheet and data is made up of  content of  many rows
 one_obect_models = ['ideation_design_cost', 'logistic_operations_cost', 'event_staffing_cost', 'data_sciences_cost', 'printing_cost', ]
 
-
 # set the column index in the sheet that determines the values for Offline prricing
 value_index = 1
 comment_index = 2
 metric_model = 'proposal_metrics'
 
 # information of center to be sent back in get-spaces api
-get_spaces_api_center_keys = [ 'id', 'name', 'proposal', 'latitude', 'longitude' ]
+get_spaces_api_center_keys = ['id', 'name', 'proposal', 'latitude', 'longitude']
 
 # in order to display data we need common keys. This mapping is for society uncommon keys map to common ketys.
 society_common_keys = {
@@ -299,18 +299,17 @@ society_common_keys = {
     'society_type_quality': 'quality_rating',
 }
 
-
 # export master data. each key represents a list of list. each list in that list forms a row in the sheet
 master_data = {
     'RS': {
-           'sheet_name': 'Shortlisted Spaces Details',
-           'headers': [],
-           'data': []
-           },
+        'sheet_name': 'Shortlisted Spaces Details',
+        'headers': [],
+        'data': []
+    },
     'CP': {
-           'sheet_name': 'Corporate Park Details',
-           'headers': [],
-           'data': []
+        'sheet_name': 'Corporate Park Details',
+        'headers': [],
+        'data': []
     },
 }
 
@@ -343,7 +342,7 @@ code_to_sheet_names = {
 
 export_supplier_database_keys = {
     'RS': ['id', 'proposal', 'center_name', 'supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ],
-    'CP': ['id', 'proposal', 'center_name',  'supplier_id', 'name', 'subarea']
+    'CP': ['id', 'proposal', 'center_name', 'supplier_id', 'name', 'subarea']
 }
 
 # these HEADER keys are specific to the supplier. the sequence and count of HEADER keys must match with sequence
@@ -426,6 +425,23 @@ flat_type_dict = {
     'RH': 'ROW HOUSE',
     'DP': 'DUPLEX'
 }
+
+flat_type_name_to_code = {
+
+    '1 RK': '1R',
+    '1 BHK': '1B',
+    '1.5 BHK': '1-5B',
+    '2 BHK': '2B',
+    '2.5 BHK': '2-5B',
+    '3 BHK': '3B',
+    '3.5 BHK': '3-5B',
+    '4 BHK': '4B',
+    '5 BHK': '5B',
+    'PENT HOUSE': 'PH',
+    'ROW HOUSE': 'RH',
+    'DUPLEX': 'DP'
+
+}
 # currently some db columns which mean the same are named differently in society and other suppliers. hence in order to
 # to reduce code, this is a mapping for each type of supplier, from the term we get from front end to the term
 # that is there in db as a column
@@ -436,21 +452,21 @@ query_dict = {
                      },
         'quality': {'query': 'society_type_quality__in',
                     'dict': quality_dict
-                   },
+                    },
         'locality': {'query': 'society_location_type__in',
                      'dict': locality_dict
-                    }
+                     }
     },
     'CP': {
         'quantity': {'query': 'quantity_rating__in',
                      'dict': quantity_dict,
-                    },
+                     },
         'quality': {'query': 'quality_rating__in',
                     'dict': quality_dict
-                   },
+                    },
         'locality': {'query': 'locality_rating__in',
                      'dict': locality_dict
-                    }
+                     }
     }
 }
 # searching fields per supplier
@@ -470,15 +486,15 @@ search_fields = {
 inventory_duration_dict = {
     'PO': {'name': 'POSTER', 'type_duration': [{'type': 'poster_a4', 'duration': 'campaign_weekly'}]},
     'ST': {'name': 'STANDEE', 'type_duration': [{'type': 'standee_small', 'duration': 'campaign_weekly'}]},
-    'SL': {'name': 'STALL',   'type_duration':  [{'type': 'stall_small', 'duration': 'unit_daily'}]},
+    'SL': {'name': 'STALL', 'type_duration': [{'type': 'stall_small', 'duration': 'unit_daily'}]},
     'FL': {'name': 'FLIER', 'type_duration': [{'type': 'flier_door_to_door', 'duration': 'unit_daily'}, ]},
-    'CD': {'name': 'CAR DISPLAY', 'tye_duration':  [{'type': 'car_display_price', 'duration': 'unit_daily'}]}
+    'CD': {'name': 'CAR DISPLAY', 'tye_duration': [{'type': 'car_display_price', 'duration': 'unit_daily'}]}
 }
 
 inventory_type_duration_dict = {
     'PO': {'name': 'POSTER', 'type_duration': [{'type': 'a4', 'duration': 'campaign_weekly'}]},
     'ST': {'name': 'STANDEE', 'type_duration': [{'type': 'small', 'duration': 'campaign_weekly'}]},
-    'SL': {'name': 'STALL',   'type_duration':  [{'type': 'small', 'duration': 'unit_daily'}]},
+    'SL': {'name': 'STALL', 'type_duration': [{'type': 'small', 'duration': 'unit_daily'}]},
     'FL': {'name': 'FLIER', 'type_duration': [{'type': 'door_to_door', 'duration': 'unit_daily'}, ]},
 }
 
@@ -497,13 +513,13 @@ duration_dict = {
     'campaign_monthly': 'Campaign Monthly',
     'unit_weekly': 'Unit Weekly',
     'unit_monthly': 'Unit Monthly',
-    'unit_daily':  'Unit Daily',
+    'unit_daily': 'Unit Daily',
     'two_days': '2 Days'
 }
 # this dict maps keys directly to db values. do not change 
 type_dict = {
-    'a4': 'A4', 
-    'a3': 'A3', 
+    'a4': 'A4',
+    'a3': 'A3',
     'small': 'Small',
     'medium': 'Medium',
     'large': 'Large',
@@ -515,7 +531,6 @@ type_dict = {
     'mail_box': 'Mailbox',
     'lobby': 'Lobby'
 }
-
 
 # format to be used in datetime
 datetime_format = '%d-%m-%Y %H-%M-%S'
@@ -555,15 +570,15 @@ email = {
 
 # filter types
 filter_type = {
-    'RS': ['inventory_type_selected','quality_type','quantity_type','locality_rating','flat_type'],
-    'CP': ['inventory_type_selected','quality_type','quantity_type','locality_rating','employee_count'],
+    'RS': ['inventory_type_selected', 'quality_type', 'quantity_type', 'locality_rating', 'flat_type'],
+    'CP': ['inventory_type_selected', 'quality_type', 'quantity_type', 'locality_rating', 'employee_count'],
 }
-#to store employee_count
+# to store employee_count
 employee_count_codes = {
-    0    : 'SM',
-    1000 : 'MD',
-    3000 : 'LA',
-    6000 : 'VL',
+    0: 'SM',
+    1000: 'MD',
+    3000: 'LA',
+    6000: 'VL',
 }
 # status of suppliers which are in get_spaces(), not in
 status = 'X'
@@ -578,7 +593,6 @@ standee = 'STANDEE'
 stall = 'STALL'
 flier = 'FLIER'
 car_display = 'CAR DISPLAY'
-
 
 # to identify unique supplier types
 society = 'RS'
@@ -608,7 +622,6 @@ emails = {
 inventory_status = 'F'  # F stands for free or available.
 inventory_booked_status = 'B'
 
-
 # shortlisted inventory details keys
 shortlisted_inventory_detail_keys = ['inventory_price', 'inventory_count', 'factor', 'ad_inventory_type', 'ad_inventory_duration']
 
@@ -616,7 +629,7 @@ shortlisted_inventory_detail_keys = ['inventory_price', 'inventory_count', 'fact
 society_model_name = 'suppliertypesociety'
 
 # stall_settings
-default_stall_type  = 'Small'
+default_stall_type = 'Small'
 default_stall_duration_type = 'Unit Daily'
 default_stall_allocation_interval = 1
 default_stall_assignment_frequency = 1
@@ -653,8 +666,8 @@ proposal_on_hold = 'POH'
 
 # different mode of payments
 payment_method = {
-    'cash':'CASH',
-    'neft':'NEFT',
+    'cash': 'CASH',
+    'neft': 'NEFT',
     'cheque': 'CHEQUE'
 }
 
@@ -704,7 +717,6 @@ standalone_society_config = {
 # random pattern length
 pattern_length = 6
 
-
 # inventory_code to name
 inventory_code_to_name = {
     'PO': poster,
@@ -736,3 +748,104 @@ not_in_db_special_code = 'XXXX'
 
 # name of file which is generated when all_supplier_data is hit
 all_supplier_data_file_name = 'files/all_supplier_data.xlsx'
+
+# new supplier header names
+supplier_headers = {
+
+    'base-data': {
+
+        'basic_data': [
+            'city', 'city_code', 'area', 'area_code', 'sub area', 'sub area code', 'supplier type', 'supplier code', 'supplier name',
+            'address1', 'address2', 'zip code', 'latitude', 'longitude', 'possession year', 'locality rating', 'quality rating', 'quantity rating',
+        ],
+
+        'supplier_specific': {
+            'RS': [
+                   'tower count', 'flat count', 'vacant flat count', 'service class population', 'working women count', 'average household occupants', 'bachelor tenants allowed', 'car count', 'luxury car count',
+                   'age group 0 to 6', 'age group 7 to 18', 'above 60', 'society weekly off', 'pets allowed',
+                   'number of rented flats', 'number of flats rented to bachelors'
+                   ]
+        },
+
+        'amenities': ['Amenity Swimming Pool Present', 'Amenity Play Area Present', 'Amenity Garden Present', 'Amenity Gym Present', 'Amenity Open Area Present', 'Amenity Parking Area Present'],
+
+        'events': ['Event Holi', 'event deewali', 'event Independence day', 'event republic day', 'event christmas'],
+
+        'flats': ['Flat 1 RK present', '1 RK Count', '1 RK size', '1 RK Rent',
+                  'Flat 1 BHK present', '1 BHK Count', '1 BHK size', '1 BHK Rent',
+                  'Flat 1.5 BHK present', '1.5 BHK count', '1.5 BHK size', '1.5 BHK Rent',
+                  'Flat 2 BHK present', '2 BHK count', '2 BHK size', '2 BHK rent',
+                  'Flat 2.5 BHK present', '2.5 BHK count', '2.5 BHK size', '2.5 BHK rent',
+                  'Flat 3 BHK present', '3 BHK count', '3 BHK size', '3 BHK rent',
+                  'Flat 3.5 BHK present', '3.5 BHK count', '3.5 BHK size', '3.5 BHK rent',
+                  'Flat 4 BHK present', '4 BHK count', '4 BHK size', '4 BHK rent',
+                  'Flat 4.5 BHK present', '4.5 BHK count', '4.5 BHK size', '4.5 BHK rent',
+                  'Flat 5 BHK present', '5 BHK count', '5 BHK size', '5 BHK rent',
+                  'Flat Pent House present', 'Pent house count', 'pent house size', 'pent house rent',
+                  'FLat Row house present', 'row house count', 'row house size', 'row house rent',
+                  'Flat duplex present', 'duplex count', 'duplex size', 'duplex rent'
+                  ]
+    },
+
+    'inventory-pricing-data': {
+        'basic-data-headers': ['city', 'city_code', 'area', 'area_code', 'sub area', 'sub area code', 'supplier type', 'supplier code', 'supplier name'],
+
+        'inventory-pricing-data-headers': [
+
+            'Poster Allowed On Notice Board', 	'A4 Allowed', 	'A3 Allowed', 	'Notice Board Count',
+            'Campaign Price of Posters on Notice Board per Week', 'Price Confidence for NB', 'Poster Allowed in Lift',
+            'Total No of lifts',	'Total Posters on all lifts',
+            'Campaign Price of Posters in Lift per Week',	'Price Confidence for lift',
+            'Number of Posters/Tower', 	'Standee Allowed in Society',	'Small Standee', 	'Medium Standee',
+            'Standee count',	'Campaign Price of Standees/Week',	'Standee Price Confidence',	'Number of Standees/Tower',
+            'Stalls Allowed', 	'Canopy/Small Allowed',	'Campaign Price of Stall/day(Canopy/Small)',	'Price confidence of Canopy/Small',
+            'Stall	Large Allowed',	'Campaign Price of Large/day',	'Price confidence of Large Stall',	'Car Displayed Allowed',
+            'Standard Car Display Allowed',	'Campaign Price of Standard Car display',	'Price confidence of Standard Car display',
+            'Preimum Car Display Allowed',	'Campaign Price of Premium Car display',	'Price confidence of Premium Car display',
+            'Number of Stalls/Car Display Allowed Per Day',	'Flier Distribution Allowed',	'Mailbox Allowed',
+            'Door-to-Door Allowed', 'At Lobby(Through Watchman) Allowed', 	'Frequency of Flier Distribution/Month', 	'Campaign Price of Flier/Day',	'Flier Price Confidence'
+        ]
+
+    }
+}
+
+valid_amenities = {
+    'Gym': 'GY',
+    'Swimming pool': 'SP',
+    'Garden': 'GA',
+    'Open Area': 'OA',
+    'Play Area': 'PA',
+    'Parking Area': 'PAR'
+}
+
+valid_events = ['Holi', 'Deewali', 'Republic Day', 'Independence Day', 'Christmas']
+
+society_db_field_to_input_field_map = {
+    'supplier_code': 'supplier_code',
+    'society_address1': 'address1',
+    'society_name': 'supplier_name',
+    'society_city': 'city',
+    'society_subarea': 'sub_area',
+    'society_address2': 'address2',
+    'society_state': 'state_name',
+    'society_latitude': 'latitude',
+    'society_longitude': 'longitude',
+    'society_type_quantity': 'quantity_rating',
+    'society_type_quality': 'quality_rating',
+    'society_locality': 'locality_rating',
+    'age_of_society': 'possession_year',
+    'tower_count': 'tower_count',
+    'flat_count': 'flat_count',
+    'vacant_flat_count': 'vacant_flat_count',
+    'service_household_count': 'service_class_population',
+    'working_women_count': 'working_women_count',
+    'avg_household_occupants': 'average_household_occupants',
+    'bachelor_tenants_allowed': 'bachelor_tenants_allowed',
+    'cars_count':'car_count',
+    'luxury_cars_count': 'luxury_car_count',
+    'society_weekly_off': 'society_weekly_off',
+    'age_group_0_6': 'age_group_0_to_6',
+    'age_group_7_18': 'age_group_7_to_18',
+    'total_tenant_flat_count': 'number_of_rented_flats'
+
+}

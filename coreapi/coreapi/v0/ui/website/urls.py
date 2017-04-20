@@ -78,6 +78,7 @@ urlpatterns = [
     url(r'^delete-file-from-system/$', views.DeleteFileFromSystem.as_view()),
     url(r'^child-proposals/(?P<proposal_id>[A-Z_a-z0-9-]+)/$', views.ChildProposals.as_view()),
     url(r'^export-all-supplier_data/$', views.ExportAllSupplierData.as_view()),
+    url(r'^import-supplier-data-from-sheet/$', views.ImportSupplierDataFromSheet.as_view()),
 
 ]
 
