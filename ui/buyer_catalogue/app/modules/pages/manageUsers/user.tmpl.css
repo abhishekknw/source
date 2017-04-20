@@ -132,7 +132,7 @@ span.input-group-addon i {
 /*css for permssion drop down*/
 .dropdown.dropdown-scroll .dropdown-menu {
     max-height: 300px;
-    width: 460px;
+    width: 360px;
     overflow: auto;
 }
 .search-control {
@@ -174,9 +174,10 @@ table{
 h3{
   color: #337ab7;
 }
-.user-table{
-  width: 300px;
+.groupInput{
+  width: 200px;
+  padding-left: 30px;
 }
-.group-table{
-  width: 500px;
+.list-permission{
+  margin-right: 60px;
 }

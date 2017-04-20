@@ -7,6 +7,7 @@ angular.module('machadaloPages')
      $scope.permissionList = [];
      $scope.groupName = {};
      $scope.selectedGroupList = [];
+     $scope.permissionsDict = [];
      $scope.passwordError = constants.password_error;
      $scope.options = [
         {usercode : 'BD', id : '01'},
@@ -27,11 +28,14 @@ angular.module('machadaloPages')
       //To get permission list
       userService.getAllUserPermissions()
       .then(function onSuccess(response){
-        console.log(response);
-        $scope.permissions = response.data.data;
-        addMoreFieldsToPermission();
-        })
-        .catch(function onError(response){
+          console.log(response);
+          $scope.permissions = response.data.data;
+          addMoreFieldsToPermission();
+          angular.forEach($scope.permissions, function(permission){
+            $scope.permissionsDict[permission.id] = permission;
+          })
+          console.log($scope.permissionsDict);
+        }).catch(function onError(response){
             console.log("error occured");
         });
 
@@ -104,6 +108,8 @@ angular.module('machadaloPages')
             editUserInfo(data);
             break;
           case $scope.contentItem.editGroup:
+            $scope.permissionList = [];
+            addMoreFieldsToPermission();
             $scope.menuItem.name = $scope.contentItem.createGroup;
             editGroupDetails(data);
             break;
@@ -230,7 +236,7 @@ angular.module('machadaloPages')
     $scope.deleteUser = function(user){
       swal({
          title: constants.warn_user_msg,
-         text: constants.delete_confirm_msg,
+         text: constants.delete_confirm_user,
          type: constants.warning,
          showCancelButton: true,
          confirmButtonClass: constants.btn_success,
@@ -255,12 +261,13 @@ angular.module('machadaloPages')
       $scope.groupId = group.id;
       $scope.isEditGroup = true;
       $scope.groupName.name = group.name;
+      console.log($scope.permissionsDict);
       angular.forEach(group.permissions, function(permission){
+        console.log(permission);
         console.log($scope.permissionGroups);
-        $scope.permissions[permission].selected = true;
-        $scope.permissionList.push($scope.permissions[permission]);
+        $scope.permissionsDict[permission].selected = true;
+        $scope.permissionList.push($scope.permissionsDict[permission]);
         console.log($scope.permissionList);
-
       })
     }
     $scope.updateGroupDetails = function(){
