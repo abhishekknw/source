@@ -45,6 +45,55 @@ if($scope.user_code == 'agency')
   $scope.hideData = true;
 if($scope.user_code == 'guestUser')
   $scope.isGuestUser = true;
+
+//supplier status
+var supplierStatus = {
+  finalized   : 'S',
+  shortlisted : 'X',
+  buffered    : 'B',
+  removed     : 'R',
+}
+var supplierFilters = {
+  RS : 'RS_filters',
+  CP :  'CP_filters',
+}
+$scope.supplierCode = {
+  society : 'RS',
+  corporate : 'CP',
+}
+var impressions = {
+  poster  : 0,
+  standee : 0,
+  stall   : 0,
+  flier   : 0,
+}
+var summaryCounts = {
+  count         : 0,
+  flat_count    : 0,
+  tower_count   : 0,
+  poster_count  : 0,
+  flier_count   : 0,
+  standee_count : 0,
+  stall_count   : 0,
+  impressions   : angular.copy(impressions),
+}
+var summarySupplierStatus = {
+  count       : 0,
+  flat_count  : 0,
+  tower_count : 0,
+  finalized   : angular.copy(summaryCounts),
+  shortlisted : angular.copy(summaryCounts),
+  buffered    : {count : 0},
+  removed     : {count:  0},
+}
+var inventoryTypes = {
+  poster  : 'PO',
+  standee : 'ST',
+  stall   : 'SL',
+  flier   : 'FL',
+}
+$scope.gridViewSummary = {};
+
 //getting business_name and business_type from localStorage
 // $scope.businessData = JSON.parse($window.localStorage.business);
 // $scope.business_name = $scope.businessData.name;
@@ -247,7 +296,7 @@ if($scope.user_code == 'guestUser')
       }
     //End: mapview basic summary
     //Start: mapview filter summary required after applying filters
-     var mapViewFiltersSummary = function(){
+     var mapViewFiltersSummary = function(supplier_code){
       try{
        $scope.stall_count = 0, $scope.standee_count = 0;
        if($scope.current_center.suppliers_meta != null){
@@ -292,6 +341,153 @@ if($scope.user_code == 'guestUser')
       }
     }
     //End: impressions on mapview
+    //start:summary for mapview
+      var getSummary = function(supplier_code,center){
+        console.log($scope.center_data);
+        console.log(center);
+        center.summary_meta[supplier_code] = angular.copy(summarySupplierStatus);
+        //supplier count calculated
+        center.summary_meta[supplier_code].count = center.suppliers[supplier_code].length;
+        angular.forEach(center.suppliers[supplier_code], function(supplier){
+          //flat and tower count for societies
+          if(supplier_code == $scope.supplierCode.society){
+            center.summary_meta[supplier_code].flat_count += supplier.flat_count;
+            center.summary_meta[supplier_code].tower_count += supplier.tower_count;
+          }
+          //count of suppliers finalized
+          if(supplier.status == supplierStatus.finalized){
+            center.summary_meta[supplier_code].finalized.count += 1;
+            if(supplier_code == $scope.supplierCode.society){              
+              center.summary_meta[supplier_code].finalized.flat_count += supplier.flat_count;
+              center.summary_meta[supplier_code].finalized.tower_count += supplier.tower_count;
+              center.summary_meta[supplier_code].finalized.poster_count += supplier.tower_count;
+              center.summary_meta[supplier_code].finalized.flier_count += supplier.flat_count;
+              if(supplier.total_standee_count >= 0)
+                center.summary_meta[supplier_code].finalized.standee_count += supplier.total_standee_count;
+              if(supplier.total_stall_count >= 0)
+                center.summary_meta[supplier_code].finalized.stall_count += supplier.total_stall_count;
+            }
+            if(supplier_code == $scope.supplierCode.corporate){
+              console.log("summary");
+            }
+          }
+          if(supplier.status == supplierStatus.shortlisted){
+            center.summary_meta[supplier_code].shortlisted.impressions = angular.copy(impressions);
+            center.summary_meta[supplier_code].shortlisted.count += 1;
+            if(supplier_code == $scope.supplierCode.society){
+              center.summary_meta[supplier_code].shortlisted.flat_count += supplier.flat_count;
+              center.summary_meta[supplier_code].shortlisted.tower_count += supplier.tower_count;
+              center.summary_meta[supplier_code].shortlisted.poster_count += supplier.tower_count;
+              center.summary_meta[supplier_code].shortlisted.flier_count += supplier.flat_count;
+              if(supplier.total_standee_count >= 0 && supplier.total_stall_count)
+                center.summary_meta[supplier_code].shortlisted.standee_count += supplier.total_standee_count;
+              if(supplier.total_stall_count >= 0 && supplier.total_stall_count)
+                center.summary_meta[supplier_code].shortlisted.stall_count += supplier.total_stall_count;
+            if(supplier_code == $scope.supplierCode.corporate){
+            }
+              console.log("summary");
+            }
+          }
+          if(supplier.status == supplierStatus.buffered){
+            center.summary_meta[supplier_code].buffered.count += 1;
+          }
+          if(supplier.status == supplierStatus.removed){
+            center.summary_meta[supplier_code].removed.count += 1;
+          }
+        });
+        getImpressions(supplier_code,center);
+        console.log($scope.center_data);
+      }
+    // end mapview summary
+    //start: gridview summary
+    var getComprehinsiveSummary = function(supplier_code){
+      $scope.gridViewSummary[supplier_code] = angular.copy(summarySupplierStatus);
+      console.log($scope.gridViewSummary,$scope.center_data);
+      for(var i=0;i<$scope.center_data.length; i++){
+        $scope.center_data[i].summary_meta[supplier_code].count = $scope.center_data[i].suppliers[supplier_code].length;
+        if(Object.keys($scope.center_data[i].summary_meta).length > 0){
+          $scope.gridViewSummary[supplier_code].finalized.count += $scope.center_data[i].summary_meta[supplier_code].finalized.count;
+          $scope.gridViewSummary[supplier_code].shortlisted.count += $scope.center_data[i].summary_meta[supplier_code].shortlisted.count;
+          $scope.gridViewSummary[supplier_code].buffered.count += $scope.center_data[i].summary_meta[supplier_code].buffered.count;
+          $scope.gridViewSummary[supplier_code].removed.count += $scope.center_data[i].summary_meta[supplier_code].removed.count;
+          if(supplier_code == $scope.supplierCode.society){
+            $scope.gridViewSummary[supplier_code].flat_count += $scope.center_data[i].summary_meta[supplier_code].flat_count;
+            $scope.gridViewSummary[supplier_code].tower_count += $scope.center_data[i].summary_meta[supplier_code].tower_count;
+            $scope.gridViewSummary[supplier_code].finalized.flat_count += $scope.center_data[i].summary_meta[supplier_code].finalized.flat_count;
+            if($scope.center_data[i].inventory_meta[supplier_code].has(inventoryTypes.poster)){
+              $scope.gridViewSummary[supplier_code].finalized.poster_count += $scope.center_data[i].summary_meta[supplier_code].finalized.poster_count;
+            }
+            if($scope.center_data[i].inventory_meta[supplier_code].has(inventoryTypes.flier)){
+              $scope.gridViewSummary[supplier_code].finalized.flier_count += $scope.center_data[i].summary_meta[supplier_code].finalized.flier_count;
+            }
+            if($scope.center_data[i].inventory_meta[supplier_code].has(inventoryTypes.standee)){
+              $scope.gridViewSummary[supplier_code].finalized.standee_count += $scope.center_data[i].summary_meta[supplier_code].finalized.standee_count;
+            }
+            if($scope.center_data[i].inventory_meta[supplier_code].has(inventoryTypes.stall))
+              $scope.gridViewSummary[supplier_code].finalized.stall_count += $scope.center_data[i].summary_meta[supplier_code].finalized.stall_count;
+
+              $scope.gridViewSummary[supplier_code].shortlisted.flat_count += $scope.center_data[i].summary_meta[supplier_code].shortlisted.flat_count;
+              $scope.gridViewSummary[supplier_code].shortlisted.tower_count += $scope.center_data[i].summary_meta[supplier_code].shortlisted.tower_count;
+              if($scope.center_data[i].inventory_meta[supplier_code].has(inventoryTypes.poster)){
+                $scope.gridViewSummary[supplier_code].shortlisted.poster_count += $scope.center_data[i].summary_meta[supplier_code].shortlisted.poster_count;
+              }
+              if($scope.center_data[i].inventory_meta[supplier_code].has(inventoryTypes.flier)){
+                $scope.gridViewSummary[supplier_code].shortlisted.flier_count += $scope.center_data[i].summary_meta[supplier_code].shortlisted.flier_count;
+              }
+              if($scope.center_data[i].inventory_meta[supplier_code].has(inventoryTypes.standee))
+                $scope.gridViewSummary[supplier_code].shortlisted.standee_count += $scope.center_data[i].summary_meta[supplier_code].shortlisted.standee_count;
+              if($scope.center_data[i].inventory_meta[supplier_code].has(inventoryTypes.stall))
+                $scope.gridViewSummary[supplier_code].shortlisted.stall_count += $scope.center_data[i].summary_meta[supplier_code].shortlisted.stall_count;
+          }
+        }
+      }
+      getComprehinsiveImpressions(supplier_code);
+      console.log($scope.gridViewSummary,$scope.center_data);
+    }
+    //End: gridview summary
+    var getImpressions = function(supplier_code,center){
+      console.log("hello");
+      console.log(center);
+      var supplier = center.summary_meta[supplier_code];
+      var finalized_flat_count = supplier.finalized.flat_count;
+      var shortlisted_flat_count = supplier.shortlisted.flat_count;
+      supplier.finalized.impressions.poster = finalized_flat_count *4*7*2;
+      supplier.finalized.impressions.flier = finalized_flat_count *4*1;
+      if(supplier.finalized.standee_count != 0)
+        supplier.finalized.impressions.standee = finalized_flat_count *4*7*2;
+      if(supplier.finalized.standee_count != 0)
+        supplier.finalized.impressions.stall = finalized_flat_count *4*2;
+
+      //for shortlisted suppliers
+      supplier.shortlisted.impressions.poster = shortlisted_flat_count *4*7*2;
+      supplier.shortlisted.impressions.flier = shortlisted_flat_count *4*1;;
+      if(supplier.shortlisted.standee_count != 0)
+        supplier.shortlisted.impressions.standee = shortlisted_flat_count *4*7*2;
+      if(supplier.shortlisted.standee_count != 0)
+        supplier.shortlisted.impressions.stall = shortlisted_flat_count *4*2;
+    }
+    var getComprehinsiveImpressions = function(supplier_code){
+      console.log($scope.gridViewSummary);
+        var summary = $scope.gridViewSummary[supplier_code];
+        if(summary.finalized.poster_count > 0)
+          summary.finalized.impressions.poster = summary.finalized.flat_count *4*7*2;
+        if(summary.finalized.flier_count > 0)
+          summary.finalized.impressions.flier = summary.finalized.flat_count *4*1;
+        if(summary.finalized.standee_count > 0)
+          summary.finalized.impressions.standee = summary.finalized.flat_count *4*7*2;
+        if(summary.finalized.stall_count > 0)
+          summary.finalized.impressions.stall = summary.finalized.flat_count *4*2;
+
+        //shortlisted
+        summary.shortlisted.impressions.poster = summary.shortlisted.flat_count *4*7*2;
+        summary.shortlisted.impressions.flier = summary.shortlisted.flat_count *4*1;
+        if(summary.shortlisted.standee_count > 0)
+          summary.shortlisted.impressions.standee = summary.shortlisted.flat_count *4*7*2;
+        if(summary.shortlisted.stall_count > 0)
+          summary.shortlisted.impressions.stall = summary.shortlisted.flat_count *4*2;
+
+      console.log("compr_summa",$scope.gridViewSummary);
+    }
     //Start: collectng all centers suppliers data in one varible for RS,CP..etc
       var suppliersData = function(){
        try{
@@ -505,7 +701,7 @@ if($scope.user_code == 'guestUser')
             };
             //set flat sizes
             angular.forEach($scope.society_flat_type,function(flat_type){
-              flat_type.flat_size.options.ceil = $scope.flat = $scope.flat_size_by_flat_type[flat_type.code];              
+              flat_type.flat_size.options.ceil = $scope.flat = $scope.flat_size_by_flat_type[flat_type.code];
             });
             //Start: api call to get amenity filters from database
               mapViewService.getAmenityFilters()
@@ -565,20 +761,27 @@ if($scope.user_code == 'guestUser')
 
         center.suppliers_allowed = {};
         center.filters_meta = {};
+        center.inventory_meta = {};
+        center.summary_meta = {};
         $scope.extraSuppliersData[center_id] = {};
-       if(center.suppliers['RS'] != undefined){
-         $scope.extraSuppliersData[center_id]['RS'] = [];
+       if(center.suppliers[$scope.supplierCode.society] != undefined){
+        //  center.summary_meta[$scope.supplierCode.society] = angular.copy(summarySupplierStatus);
+         center.inventory_meta[$scope.supplierCode.society] = new Set();
+         $scope.extraSuppliersData[center_id][$scope.supplierCode.society] = [];
          center.suppliers_allowed.society_allowed = true;
-         $scope.unique_suppliers.add('RS');
+         $scope.unique_suppliers.add($scope.supplierCode.society);
          center.suppliers_allowed['society_show'] = true;
          center.RS_filters = angular.copy($scope.RS_filters);
         //  center.suppliers_meta = {};
          $scope.supplier_centers_list.RS.push(center_id);
          //added to show selected filter on mapview summary
-         center.filters_meta['RS'] = {};
-         center.filters_meta['RS'] = angular.copy($scope.inventory_filters);
+         center.filters_meta[$scope.supplierCode.society] = {};
+         center.filters_meta[$scope.supplierCode.society] = angular.copy($scope.inventory_filters);
+         getSummary($scope.supplierCode.society,center);
        }
-       if(center.suppliers['CP'] != undefined){
+       if(center.suppliers[$scope.supplierCode.corporate] != undefined){
+        //  center.summary_meta[$scope.supplierCode.corporate] = angular.copy(summarySupplierStatus);
+         center.inventory_meta[$scope.supplierCode.corporate] = new Set();
          $scope.extraSuppliersData[center_id]['CP'] = [];
         center.suppliers_allowed['corporate_allowed'] =  true;
         $scope.unique_suppliers.add('CP');
@@ -591,6 +794,7 @@ if($scope.user_code == 'guestUser')
      });
      //Start : code added to display filter panel for all centers on gridview
      if($scope.unique_suppliers.has('RS')){
+       console.log("hello");
         $scope.gridView_RS_filters = angular.copy($scope.RS_filters);
         $scope.society_show = true;
         $scope.society_allowed_gridview = true;
@@ -651,6 +855,7 @@ if($scope.user_code == 'guestUser')
                   suppliersData();
                   gridViewBasicSummary();
                   gridViewFilterSummary();
+                  getComprehinsiveSummary($scope.supplierCode.society);
 
                   for(var i=0;i<$scope.center_data.length; i++)
                     $scope.initial_center_changed.push(false);
@@ -728,6 +933,8 @@ if($scope.user_code == 'guestUser')
                   mapViewBasicSummary();
                   suppliersData();
                   gridViewBasicSummary();
+                  if($scope.unique_suppliers.has($scope.supplierCode.society))
+                    getComprehinsiveSummary($scope.supplierCode.society);
                   // gridView_Summary();
                   for(var i=0;i<$scope.center_data.length; i++){
                     $scope.initial_center_changed.push(false);
@@ -928,6 +1135,22 @@ if($scope.user_code == 'guestUser')
           filter_array[i].selected = false;
         }
       }
+
+  //start: set of inventory codes, which helpes to store unique inventories
+  var setInventoryTypeCodes = function(supplier_code){
+    console.log($scope.current_center[supplierFilters[supplier_code]]);
+    $scope.current_center.inventory_meta[supplier_code] = new Set();
+    angular.forEach($scope.current_center[supplierFilters[supplier_code]].inventory, function(filter){
+      if(filter.selected == true){
+        var invCodes = filter.code.match(/.{1,2}/g);
+        for(var i=0; i< invCodes.length; i++){
+          $scope.current_center.inventory_meta[supplier_code].add(invCodes[i]);
+        }
+      }
+    });
+  }
+  //End: set of inventory codes, which helpes to store unique inventories
+
   //Start:code for society filters
   $scope.societyFilters = function(value){
     //Start : Code added to filter multiple centers on gridview
@@ -999,6 +1222,7 @@ if($scope.user_code == 'guestUser')
   // else{
     // $scope.gridView_RS_filters = angular.copy($scope.current_center.RS_filters);
     toggleInventoryFilters($scope.current_center,value,'RS');
+    setInventoryTypeCodes($scope.supplierCode.society);
       var filters = {
         'supplier_type_code' : 'RS',
         proposal_id : $scope.proposal_id_temp,
@@ -1222,6 +1446,8 @@ if($scope.user_code == 'guestUser')
                     gridViewBasicSummary();
                     gridViewFilterSummary();
                     gridViewImpressions();
+                    getSummary(code,$scope.current_center);
+                    getComprehinsiveSummary('RS');
                     $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
                     $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
                     $scope.checkFilters = false;
@@ -1695,7 +1921,8 @@ if($scope.user_code == 'guestUser')
       };
       mapViewService.updateSupplierStatus($scope.proposal_id_temp,data)
         .then(function onSuccess(response, status){
-
+          getSummary(code,center);
+          getComprehinsiveSummary(code);
         }).catch(function onError(response, status){
           swal(constants.name,constants.supplier_status_error,constants.error);
       });

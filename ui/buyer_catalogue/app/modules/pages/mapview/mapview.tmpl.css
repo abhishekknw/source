@@ -180,3 +180,7 @@ opacity: .5;
 .breadcrumb{
 	background-color: transparent;
 }
+/*on summary*/
+.panelSubHeader{
+  color: initial;
+}
