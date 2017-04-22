@@ -2944,31 +2944,50 @@ def save_area_subarea(result):
     function = save_area_subarea.__name__
     try:
         total_new_objects_created = 0
+
+        state_objects = []
+        city_objects = []
+        area_objects = []
+        subarea_objects = []
+
         with transaction.atomic():
             for data in result:
                 # make state
-                state_object, is_created = models.State.objects.get_or_create(**data['state'])
+                state_object, is_created = models.State.objects.get_or_create(state_code=data['state']['state_code'])
                 if is_created:
                     total_new_objects_created += 1
 
-                data['city']['state_code'] = state_object
+                state_object.state_name = data['state']['state_name']
+                state_objects.append(state_object)
+
                 # make city
-                city_object, is_created = models.City.objects.get_or_create(**data['city'])
+                city_object, is_created = models.City.objects.get_or_create(city_code=data['city']['city_code'], state_code=state_object)
                 if is_created:
                     total_new_objects_created += 1
 
-                data['area']['city_code'] = city_object
+                city_object.city_name = data['city']['city_name']
+                city_objects.append(city_object)
 
                 # make area
-                area, is_created = models.CityArea.objects.get_or_create(**data['area'])
+                area, is_created = models.CityArea.objects.get_or_create(area_code=data['area']['area_code'], city_code=city_object)
                 if is_created:
                     total_new_objects_created += 1
+                area.label = data['area']['label']
 
-                data['subarea']['area_code'] = area
+                area_objects.append(area)
+
                 # make subarea
-                subarea, is_created = models.CitySubArea.objects.get_or_create(**data['subarea'])
+                subarea, is_created = models.CitySubArea.objects.get_or_create(subarea_code=data['subarea']['subarea_code'], area_code=area)
                 if is_created:
                     total_new_objects_created += 1
+                subarea.subarea_name = data['subarea']['subarea_name']
+
+                subarea_objects.append(subarea)
+
+            bulk_update(state_objects)
+            bulk_update(city_objects)
+            bulk_update(area_objects)
+            bulk_update(subarea_objects)
 
             return ui_utils.handle_response(function, data=total_new_objects_created, success=True)
     except Exception as e:
@@ -5219,7 +5238,7 @@ def validate_society_headers(supplier_type_code, row, data_import_type):
     """
     function = validate_society_headers.__name__
     try:
-        lowercase_sheet_header_list_with_underscores = ['_'.join(field.value.lower().split(' ')) for field in row]
+        lowercase_sheet_header_list_with_underscores = ['_'.join(field.value.lower().split(' ')) for field in row if field.value]
         supplier_headers_per_import_type = website_constants.supplier_headers[data_import_type]
         basic_headers = supplier_headers_per_import_type['basic_data']
         supplier_specific_headers = supplier_headers_per_import_type['supplier_specific'][supplier_type_code]

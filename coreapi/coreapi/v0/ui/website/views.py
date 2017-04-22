@@ -2248,6 +2248,8 @@ class ImportSupplierDataFromSheet(APIView):
             invalid_rows_detail['subarea_codes'] = subarea_codes
             invalid_rows_detail['detail'] = {}
 
+            base_headers = ['city', 'city_code', 'area', 'area_code', 'sub_area', 'sub_area_code',  'supplier_code', 'supplier_name']
+
             # iterate through all rows and populate result array
             for index, row in enumerate(ws.iter_rows()):
                 if index == 0:
@@ -2261,17 +2263,27 @@ class ImportSupplierDataFromSheet(APIView):
                     return row_response
                 row_dict = row_response.data['data']
 
+                # check for basic headers presence
+                check = False
+                for valid_header in base_headers:
+                    if not row_dict[valid_header]:
+                        invalid_rows_detail['detail'][index + 1] = '{0} not present in this row'.format(valid_header)
+                        check = True
+
+                if check:
+                    continue
+
                 if row_dict['city_code'] not in city_codes:
                     invalid_rows_detail['detail'][index + 1] = row_dict['city_code'] + '  not in city_codes'
                     continue
                 if row_dict['area_code'] not in area_codes:
-                    invalid_rows_detail['detail'][index + 1] = row_dict['area_code'] + '  not in city_codes'
+                    invalid_rows_detail['detail'][index + 1] = row_dict['area_code'] + '  not in area codes'
                     continue
                 if row_dict['sub_area_code'] not in subarea_codes:
                     invalid_rows_detail['detail'][index + 1] = row_dict['sub_area_code'] + '  not in sub area codes'
                     continue
 
-                supplier_id = row_dict['city_code'] + row_dict['area_code'] + row_dict['sub_area_code']  + supplier_type_code + row_dict['supplier_code']
+                supplier_id = row_dict['city_code'] + row_dict['area_code'] + row_dict['sub_area_code'] + supplier_type_code + row_dict['supplier_code']
 
                 if not result.get(supplier_id):
                     result[supplier_id] = {
@@ -2308,6 +2320,8 @@ class ImportSupplierDataFromSheet(APIView):
                 'total_existing_suppliers_out_of_valid_suppliers': len(already_existing_supplier_ids),
                 'total_possible_suppliers': possible_suppliers,
                 'invalid_row_detail': invalid_rows_detail,
+                'new_suppliers_created': new_supplier_ids,
+                'already_existing_suppliers_from_this_sheet': already_existing_supplier_ids,
                 'summary': summary
             }
 
@@ -3412,8 +3426,8 @@ class ImportAreaSubArea(APIView):
         class_name = self.__class__.__name__
         try:
             # fetch the file from files dir
-            my_file = open(BASE_DIR + '/files/new_area_subarea.xlsx', 'rb')
-            wb = openpyxl.load_workbook(my_file)
+            source_file = request.data['file']
+            wb = openpyxl.load_workbook(source_file)
             ws = wb.get_sheet_by_name('new_area_sheet')
 
             result = []

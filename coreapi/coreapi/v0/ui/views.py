@@ -18,6 +18,7 @@ from django.contrib.auth import authenticate, login
 # third party imports
 import requests
 from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets
 from rest_framework.decorators import detail_route,list_route
 from rest_framework import status
 from rest_framework.response import Response
@@ -2868,4 +2869,118 @@ class BusShelterSearchView(APIView):
             return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class EventViewSet(viewsets.ViewSet):
+    """
+    Event View Set
+    """
+
+    def list(self, request):
+        """
+        Lists all events
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_id = request.query_params['supplier_id']
+            supplier_type_code = request.query_params['supplier_type_code']
+            content_type = ui_utils.fetch_content_type(supplier_type_code)
+            events = models.Events.objects.filter(object_id=supplier_id, content_type=content_type)
+            serializer = EventsSerializer(events, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e :
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def retrieve(self, request, pk=None):
+        """
+
+        Args:
+            request:
+            pk:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            serializer = EventsSerializer(models.Events.objects.get(pk=pk))
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def update(self, request, pk=None):
+        """
+        updates a single event object
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            event = models.Events.objects.get(pk=pk)
+            serializer = EventsSerializer(event, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def create(self, request):
+        """
+        creates a single event
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            event_name = request.data['event_name']
+            supplier_id = request.data['supplier_id']
+            supplier_type_code = request.data['supplier_type_code']
+            supplier_class = ui_utils.get_model(supplier_type_code)
+
+            # see if the supplier actually exist
+            supplier_class.objects.get(pk=supplier_id)
+
+            event, is_created = models.Events.objects.get_or_create(event_name=event_name, object_id=supplier_id, content_type=ui_utils.fetch_content_type(supplier_type_code))
+            data = request.data.copy()
+            # remove this keys as serializer would throw error if they don't match with db fields
+            data.pop('event_name')
+            data.pop('supplier_id')
+            data.pop('supplier_type_code')
+            serializer = EventsSerializer(event, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def destroy(self, request, pk=None):
+        """
+        deletes an event object
+        Args:
+            request:
+            pk:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            models.Events.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=pk, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
 
