@@ -2237,15 +2237,13 @@ class ImportSupplierDataFromSheet(APIView):
 
             # will store all the info of society
             result = {}
+            supplier_id_per_row = {}
             state_instance = models.State.objects.get(state_code=state_code)
             city_codes = models.City.objects.filter(state_code=state_instance).values_list('city_code', flat=True)
             area_codes = models.CityArea.objects.filter(city_code__city_code__in=city_codes).values_list('area_code', flat=True)
             subarea_codes = models.CitySubArea.objects.filter(area_code__area_code__in=area_codes).values_list('subarea_code', flat=True)
 
             # put debugging information here
-            invalid_rows_detail['city_codes'] = city_codes
-            invalid_rows_detail['area_codes'] = area_codes
-            invalid_rows_detail['subarea_codes'] = subarea_codes
             invalid_rows_detail['detail'] = {}
 
             base_headers = ['city', 'city_code', 'area', 'area_code', 'sub_area', 'sub_area_code',  'supplier_code', 'supplier_name']
@@ -2257,6 +2255,7 @@ class ImportSupplierDataFromSheet(APIView):
                     continue
 
                 possible_suppliers += 1
+                supplier_id_per_row[index] = ''
 
                 row_response = website_utils.get_mapped_row(ws, row)
                 if not row_response.data['status']:
@@ -2283,28 +2282,35 @@ class ImportSupplierDataFromSheet(APIView):
                     invalid_rows_detail['detail'][index + 1] = row_dict['sub_area_code'] + '  not in sub area codes'
                     continue
 
-                supplier_id = row_dict['city_code'] + row_dict['area_code'] + row_dict['sub_area_code'] + supplier_type_code + row_dict['supplier_code']
+                supplier_id = row_dict['city_code'].strip() + row_dict['area_code'].strip() + row_dict['sub_area_code'].strip() + supplier_type_code.strip() + row_dict['supplier_code'].strip()
+                supplier_id_per_row[index] = supplier_id
 
-                if not result.get(supplier_id):
-                    result[supplier_id] = {
-                        'common_data': {'state_name': state_code},
-                        'flats': {'positive': {}, 'negative': {}},
-                        'amenities': {'positive': {}, 'negative': {}},
-                        'events': {'positive': {}, 'negative': {}},
-                        'inventories': {'positive': {}, 'negative': {}}
-                    }
+                if supplier_id in result.keys():
+                    invalid_rows_detail['detail'][index + 1] = '{0} supplier_id is duplicated in the sheet'.format(supplier_id)
+                    continue
+
+                result[supplier_id] = {
+                    'common_data': {'state_name': state_code},
+                    'flats': {'positive': {}, 'negative': {}},
+                    'amenities': {'positive': {}, 'negative': {}},
+                    'events': {'positive': {}, 'negative': {}},
+                    'inventories': {'positive': {}, 'negative': {}}
+                }
                 result = website_utils.collect_supplier_common_data(result, supplier_type_code, supplier_id, row_dict, data_import_type)
                 result = website_utils.collect_amenity_data(result, supplier_id, row_dict)
                 result = website_utils.collect_events_data(result, supplier_id, row_dict)
                 result = website_utils.collect_flat_data(result, supplier_id, row_dict)
 
             input_supplier_ids = set(result.keys())
+
             if not input_supplier_ids:
                 return ui_utils.handle_response(class_name, data='System did not get any suppliers from sheet to work upon')
 
             model = ui_utils.get_model(supplier_type_code)
             content_type = ui_utils.fetch_content_type(supplier_type_code)
             already_existing_supplier_ids = set(model.objects.filter(supplier_id__in=input_supplier_ids).values_list('supplier_id', flat=True))
+            already_existing_supplier_count = len(already_existing_supplier_ids)
+
             new_supplier_ids = input_supplier_ids.difference(already_existing_supplier_ids)
 
             # create the supplier first here
@@ -2317,12 +2323,15 @@ class ImportSupplierDataFromSheet(APIView):
                 'total_new_suppliers_made': len(new_supplier_ids),
                 'total_valid_suppliers': len(input_supplier_ids),
                 'total_invalid_suppliers': len(invalid_rows_detail['detail'].keys()),
-                'total_existing_suppliers_out_of_valid_suppliers': len(already_existing_supplier_ids),
+                'total_existing_suppliers_out_of_valid_suppliers': already_existing_supplier_count,
                 'total_possible_suppliers': possible_suppliers,
                 'invalid_row_detail': invalid_rows_detail,
                 'new_suppliers_created': new_supplier_ids,
                 'already_existing_suppliers_from_this_sheet': already_existing_supplier_ids,
-                'summary': summary
+                'summary': summary,
+                'supplier_id_per_row': supplier_id_per_row,
+                'total_suppliers_in_sheet': len(supplier_id_per_row.keys())
+
             }
 
             return ui_utils.handle_response(class_name, data=data, success=True)

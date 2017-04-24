@@ -5455,9 +5455,12 @@ def handle_supplier_data_from_sheet(result, supplier_instance_map, content_type,
         tower_counts_list = models.SocietyTower.objects.filter(object_id__in=supplier_ids, content_type=content_type).values('object_id').annotate(count=Count('tower_id'))
         tower_count_map = {item['object_id']: item['count'] for item in tower_counts_list}
 
+        supplier_id = ''
+
         # once the maps are prepared we loop over each supplier and collect the required objects on the fly.
         # we update, create or delete in bulk outside of the loop.
         for supplier_id, detail in result.iteritems():
+
             instance = supplier_instance_map[supplier_id]
 
             # get additional tower instance to be added if any first before setting new attributes
@@ -5488,6 +5491,7 @@ def handle_supplier_data_from_sheet(result, supplier_instance_map, content_type,
             if negative_instances:
                 negative_flats.extend(negative_instances)
 
+        # bulk update suppliers and flats
         bulk_update(supplier_instance_list)
         bulk_update(positive_updated_flats)
 
