@@ -56,6 +56,10 @@ angular.module('machadaloPages')
       var url = url_base_user + "group/" + id + "/";
       return machadaloHttp.delete(url);
     }
+    userService.changePassword = function(id,data){
+      var url = url_base_user + "user/" + id + "/change_password/";
+      return machadaloHttp.post(url,data);
+    }
 
   return userService;
 }]);

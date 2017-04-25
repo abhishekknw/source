@@ -8,6 +8,7 @@ angular.module('machadaloPages')
      $scope.groupName = {};
      $scope.selectedGroupList = [];
      $scope.permissionsDict = [];
+     $scope.userInfo = {};
      $scope.passwordError = constants.password_error;
      $scope.options = [
         {usercode : 'BD', id : '01'},
@@ -21,9 +22,14 @@ angular.module('machadaloPages')
       {header : 'Email Id'},
       {header : 'Username'},
       {header : 'Groups'},
+      {header : 'Edit'},
+      {header : 'Delete'},
+      {header : 'Change Password'},
     ];
     $scope.groupHeaders = [
       {header : 'Name of Group'},
+      {header : 'Edit'},
+      {header : 'Delete'},
     ]
       //To get permission list
       userService.getAllUserPermissions()
@@ -314,5 +320,34 @@ angular.module('machadaloPages')
       });
     }
     //end : delete group code
+    //start : change password
+    $scope.setPasswordDetails = function(user){
+      console.log(user);
+      $scope.userInfo = user;
+    }
+    $scope.checkPassword = function(password,confirm_password){
+      console.log(password,confirm_password);
+      if(password == confirm_password)
+          $scope.passwordValid = true;
+      else
+          $scope.passwordValid = false;
+    }
+
+    $scope.changePassword = function(){
+      var data = {
+        password : $scope.userInfo.password,
+      }
+      userService.changePassword($scope.userInfo.id,data)
+      .then(function onSuccess(response){
+        console.log(response);
+        $scope.userInfo = {};
+        $('#passwordModal').modal('hide');
+        swal(constants.name,constants.changePassword_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+        swal(constants.name,constants.errorMsg,constants.error);
+      });
+    }
+    //end : change password
 
    }]);//end of controller
