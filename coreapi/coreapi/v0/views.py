@@ -1891,13 +1891,12 @@ class PopulateAmenities(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
-
 class UserViewSet(viewsets.ViewSet):
     """
     A View set for handling all the user related logic
     """
-    # authentication_classes = []
-    # permission_classes = []
+    authentication_classes = []
+    permission_classes = []
 
     def retrieve(self, request, pk=None):
         """

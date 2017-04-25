@@ -26,6 +26,7 @@ from django.conf import settings
 from django.db.models import Count, Sum
 from django.forms.models import model_to_dict
 from django.db import connection
+from django.core.cache import cache
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -48,6 +49,7 @@ import serializers
 from v0 import errors
 import v0.constants as v0_constants
 import tasks
+import v0.utils
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -2688,7 +2690,7 @@ def handle_priority_index_filters(supplier_type_code, pi_filters_map, final_supp
                 filter_name = 'is_standalone_society'
                 query = Q(supplier_id__in=final_suppliers_id_list)
                 standalone_supplier_detail = get_standalone_societies(query)
-                for supplier_id  in final_suppliers_id_list:
+                for supplier_id in final_suppliers_id_list:
                     detail = standalone_supplier_detail.get(supplier_id)
                     if not detail:
                         detail = {}
@@ -2731,7 +2733,7 @@ def handle_priority_index_filters(supplier_type_code, pi_filters_map, final_supp
                 ratio_of_tenants_to_flats = pi_filters_map['ratio_of_tenants_to_flats']
                 supplier_ratio_details = models.SupplierTypeSociety.objects.filter(supplier_id__in=final_suppliers_id_list).values('supplier_id').annotate(ratio=ExpressionWrapper(
                     F('total_tenant_flat_count') / F('flat_count'), output_field=FloatField()))
-                supplier_ratio_details_map =  {item['supplier_id']: item['ratio']for item in supplier_ratio_details}
+                supplier_ratio_details_map = {item['supplier_id']: item['ratio']for item in supplier_ratio_details}
                 for supplier_id in final_suppliers_id_list:
                     ratio = supplier_ratio_details_map.get(supplier_id)
                     if not ratio:
@@ -3725,12 +3727,20 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
     """
     function = prepare_shortlisted_spaces_and_inventories.__name__
     try:
-        proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-
-        shortlisted_spaces = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id)
-
         # the result
         result = {}
+
+        proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+
+        cache_key = v0.utils.create_cache_key(function, proposal_id)
+        cache_value = cache.get(cache_key)
+        if cache_value:
+            shortlisted_spaces = cache_value
+        else:
+            shortlisted_spaces = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id)
+            cache.set(cache_key, shortlisted_spaces)
+
+        shortlisted_space_ids = [instance.pk for instance in shortlisted_spaces] # need to create key for cache
 
         # set the campaign data
         proposal_serializer = serializers.ProposalInfoSerializer(proposal)
@@ -3740,33 +3750,61 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         response = get_objects_per_content_type(shortlisted_spaces.values())
         if not response.data['status']:
             return response
-        content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
+        content_type_supplier_id_map, content_type_id_set, supplier_id_set = response.data['data']
 
         # converts the ids store in previous step to actual objects and adds additional information which is
-        #  supplier specific  like area, name, subarea etc.
-        response = map_objects_ids_to_objects(content_type_supplier_id_map)
-        if not response.data['status']:
-            return response
+        # supplier specific  like area, name, subarea etc.
+        # cache set up 1
+        cache_key = v0.utils.create_cache_key(function, content_type_supplier_id_map)
+        if cache.get(cache_key):
+            supplier_specific_info = cache.get(cache_key)
+        else:
+            response = map_objects_ids_to_objects(content_type_supplier_id_map)
+            if not response.data['status']:
+                return response
+            cache.set(cache_key, response.data['data'])
+            # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
+            # information for that supplier
+            supplier_specific_info = response.data['data']
 
-        # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
-        # information for that supplier
-        supplier_specific_info = response.data['data']
+        # cache setup 2
+        cache_key = v0.utils.create_cache_key(function, get_contact_information.__name__,  content_type_id_set, supplier_id_set)
+        cache_value = cache.get(cache_key)
+        if cache_value:
+            contact_object_per_content_type_per_supplier = cache_value
+        else:
+            response = get_contact_information(content_type_id_set, supplier_id_set)
+            if not response.data['status']:
+                return response
+            contact_object_per_content_type_per_supplier = response.data['data']
+            cache.set(cache_key, contact_object_per_content_type_per_supplier)
 
-        response = get_contact_information(content_type_set, supplier_id_set)
-        if not response.data['status']:
-            return response
-        contact_object_per_content_type_per_supplier = response.data['data']
+        # cache setup 3
+        cache_key = v0.utils.create_cache_key(function, get_supplier_price_information.__name__, content_type_id_set, supplier_id_set)
+        cache_value = cache.get(cache_key)
+        if cache_value:
+            supplier_price_per_content_type_per_supplier = cache_value
+        else:
+            response = get_supplier_price_information(content_type_id_set, supplier_id_set)
+            if not response.data['status']:
+                return response
+            supplier_price_per_content_type_per_supplier = response.data['data']
+            cache.set(cache_key, supplier_price_per_content_type_per_supplier)
 
-        response = get_supplier_price_information(content_type_set, supplier_id_set)
-        if not response.data['status']:
-            return response
-        supplier_price_per_content_type_per_supplier = response.data['data']
+        # fetch from cache if present. else make a call and save in cache.
+        # cache setup 4
+        cache_key = v0.utils.create_cache_key(function, shortlisted_space_ids)
+        if cache.get(cache_key):
+            shortlisted_suppliers_list = cache.get(cache_key)
+        else:
+            shortlisted_suppliers_serializer = serializers.ShortlistedSpacesSerializerReadOnly(shortlisted_spaces, many=True)
+            cache.set(cache_key, shortlisted_suppliers_serializer.data)
+            shortlisted_suppliers_list = shortlisted_suppliers_serializer.data
 
-        shortlisted_suppliers_serializer = serializers.ShortlistedSpacesSerializerReadOnly(shortlisted_spaces, many=True)
-        result['shortlisted_suppliers'] = shortlisted_suppliers_serializer.data
+        result['shortlisted_suppliers'] = shortlisted_suppliers_list
 
         # put the extra supplier specific info like name, area, subarea in the final result.
-        for supplier in shortlisted_suppliers_serializer.data:
+        for supplier in shortlisted_suppliers_list:
 
             supplier_content_type_id = supplier['content_type']
             supplier_id = supplier['object_id']
@@ -4015,19 +4053,43 @@ def get_supplier_price_information(content_type_id_set, supplier_id_set):
     """
     function = get_supplier_price_information.__name__
     try:
-        price_objects = models.PriceMappingDefault.objects.filter(content_type__id__in=content_type_id_set, object_id__in=supplier_id_set)
+        price_objects = models.PriceMappingDefault.objects.filter(content_type__id__in=content_type_id_set, object_id__in=supplier_id_set).select_related('adinventory_type', 'duration_type').values(
+            'id',
+            'adinventory_type__id',
+            'adinventory_type__adinventory_name',
+            'adinventory_type__adinventory_type',
+            'duration_type__id',
+            'duration_type__duration_name',
+            'duration_type__days_count',
+            'supplier_price',
+            'business_price',
+            'content_type',
+            'object_id',
+        )
         price_objects_per_content_type_per_supplier = {}
         for price in price_objects:
-            object_id = price.object_id
-            content_type_object = price.content_type_id
+            object_id = price['object_id']
+            content_type_id = price['content_type']
             try:
-                reference = price_objects_per_content_type_per_supplier[content_type_object, object_id]
+                reference = price_objects_per_content_type_per_supplier[content_type_id, object_id]
             except KeyError:
-                price_objects_per_content_type_per_supplier[content_type_object, object_id] = []
-                reference = price_objects_per_content_type_per_supplier[content_type_object, object_id]
+                price_objects_per_content_type_per_supplier[content_type_id, object_id] = []
+                reference = price_objects_per_content_type_per_supplier[content_type_id, object_id]
 
-            serializer = serializers.PriceMappingDefaultSerializerReadOnly(price)
-            reference.append(serializer.data)
+            data = {
+                'inventory_type': {'id': price['adinventory_type__id'], 'adinventory_name': price['adinventory_type__adinventory_name'], 'adinventory_type': price['adinventory_type__adinventory_type']},
+                'inventory_duration': {'id': price['duration_type__id'], 'duration_name': price['duration_type__duration_name'], 'days_count': price['duration_type__days_count']}
+            }
+
+            del price['adinventory_type__id']
+            del price['adinventory_type__adinventory_name']
+            del price['adinventory_type__adinventory_type']
+            del price['duration_type__id']
+            del price['duration_type__duration_name']
+            del price['duration_type__days_count']
+
+            price = merge_two_dicts(price, data)
+            reference.append(price)
         return ui_utils.handle_response(function, data=price_objects_per_content_type_per_supplier, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
