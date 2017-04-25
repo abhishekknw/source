@@ -2018,6 +2018,7 @@ class UserViewSet(viewsets.ViewSet):
             user = BaseUser.objects.get(pk=pk)
             new_password = request.data['password']
             user.set_password(new_password)
+            user.save()
             return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
