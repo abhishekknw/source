@@ -3731,16 +3731,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         result = {}
 
         proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-
-        cache_key = v0.utils.create_cache_key(function, proposal_id)
-        cache_value = cache.get(cache_key)
-        if cache_value:
-            shortlisted_spaces = cache_value
-        else:
-            shortlisted_spaces = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id)
-            cache.set(cache_key, shortlisted_spaces)
-
-        shortlisted_space_ids = [instance.pk for instance in shortlisted_spaces] # need to create key for cache
+        shortlisted_spaces = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id)
 
         # set the campaign data
         proposal_serializer = serializers.ProposalInfoSerializer(proposal)
@@ -3754,53 +3745,26 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
 
         # converts the ids store in previous step to actual objects and adds additional information which is
         # supplier specific  like area, name, subarea etc.
-        # cache set up 1
-        cache_key = v0.utils.create_cache_key(function, content_type_supplier_id_map)
-        if cache.get(cache_key):
-            supplier_specific_info = cache.get(cache_key)
-        else:
-            response = map_objects_ids_to_objects(content_type_supplier_id_map)
-            if not response.data['status']:
-                return response
-            cache.set(cache_key, response.data['data'])
-            # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
-            # information for that supplier
-            supplier_specific_info = response.data['data']
 
-        # cache setup 2
-        cache_key = v0.utils.create_cache_key(function, get_contact_information.__name__,  content_type_id_set, supplier_id_set)
-        cache_value = cache.get(cache_key)
-        if cache_value:
-            contact_object_per_content_type_per_supplier = cache_value
-        else:
-            response = get_contact_information(content_type_id_set, supplier_id_set)
-            if not response.data['status']:
-                return response
-            contact_object_per_content_type_per_supplier = response.data['data']
-            cache.set(cache_key, contact_object_per_content_type_per_supplier)
+        response = map_objects_ids_to_objects(content_type_supplier_id_map)
+        if not response.data['status']:
+            return response
+        # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
+        # information for that supplier
+        supplier_specific_info = response.data['data']
 
-        # cache setup 3
-        cache_key = v0.utils.create_cache_key(function, get_supplier_price_information.__name__, content_type_id_set, supplier_id_set)
-        cache_value = cache.get(cache_key)
-        if cache_value:
-            supplier_price_per_content_type_per_supplier = cache_value
-        else:
-            response = get_supplier_price_information(content_type_id_set, supplier_id_set)
-            if not response.data['status']:
-                return response
-            supplier_price_per_content_type_per_supplier = response.data['data']
-            cache.set(cache_key, supplier_price_per_content_type_per_supplier)
+        response = get_contact_information(content_type_id_set, supplier_id_set)
+        if not response.data['status']:
+            return response
+        contact_object_per_content_type_per_supplier = response.data['data']
 
-        # fetch from cache if present. else make a call and save in cache.
-        # cache setup 4
-        cache_key = v0.utils.create_cache_key(function, shortlisted_space_ids)
-        if cache.get(cache_key):
-            shortlisted_suppliers_list = cache.get(cache_key)
-        else:
-            shortlisted_suppliers_serializer = serializers.ShortlistedSpacesSerializerReadOnly(shortlisted_spaces, many=True)
-            cache.set(cache_key, shortlisted_suppliers_serializer.data)
-            shortlisted_suppliers_list = shortlisted_suppliers_serializer.data
+        response = get_supplier_price_information(content_type_id_set, supplier_id_set)
+        if not response.data['status']:
+            return response
+        supplier_price_per_content_type_per_supplier = response.data['data']
 
+        shortlisted_suppliers_serializer = serializers.ShortlistedSpacesSerializerReadOnly(shortlisted_spaces, many=True)
+        shortlisted_suppliers_list = shortlisted_suppliers_serializer.data
         result['shortlisted_suppliers'] = shortlisted_suppliers_list
 
         # put the extra supplier specific info like name, area, subarea in the final result.

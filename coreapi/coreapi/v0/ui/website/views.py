@@ -3895,12 +3895,22 @@ class CampaignInventory(APIView):
             if not response.data['status']:
                 return response
 
-            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
-            if not response.data['status']:
-                return response
+            cache_key = v0_utils.create_cache_key(class_name, campaign_id)
+            cache_value = cache.get(cache_key)
+            if cache_value:
+                print "cache hit on campaign id \n"
+                return ui_utils.handle_response(class_name, data=cache_value, success=True)
+            else:
+                print "cache miss on campaign id \n"
+                response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
+                if not response.data['status']:
+                    return response
+                cache.set(cache_key, response.data['data'])
+                return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
-            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
+            import pdb
+            pdb.set_trace()
             return ui_utils.handle_response(class_name, exception_object=e)
 
     def put(self, request, campaign_id):
@@ -3921,8 +3931,11 @@ class CampaignInventory(APIView):
             if not response.data['status']:
                 return response
 
-            data = request.data
+            # clear the cache if it's a PUT request
+            cache_key = v0_utils.create_cache_key(class_name, campaign_id)
+            cache.delete(cache_key)
 
+            data = request.data
             response = website_utils.handle_update_campaign_inventories(request.user, data)
             if not response.data['status']:
                 return response
