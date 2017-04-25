@@ -2016,14 +2016,8 @@ class UserViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             user = BaseUser.objects.get(pk=pk)
-            old_password = request.data['old_password']
-            new_password = request.data['new_password']
-            is_old_password_valid = user.check_password(old_password)
-            if is_old_password_valid:
-                user.set_password(new_password)
-                user.save()
-            else:
-                return ui_utils.handle_response(class_name, data='Your old_password does not match the password we have in our database')
+            new_password = request.data['password']
+            user.set_password(new_password)
             return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
