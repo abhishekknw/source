@@ -2,6 +2,9 @@ from types import *
 import random
 import string
 from uuid import uuid4
+from types import *
+import json
+import hashlib
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
@@ -543,3 +546,28 @@ def create_price_mapping_instances(supplier_id, content_type,  inventory_name, p
         return pmd_instances
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
+
+
+def create_cache_key(module_name, *args):
+    """
+    creates a cache key. each cache key is prefixed by module_name.
+    Args:
+        module_name: name of function or module name
+        *args: list of arguments
+
+    Returns: returns the cache key
+
+    """
+    function = create_cache_key.__name__
+    try:
+        final_string = ''
+        for item in args:
+            try:
+                final_string += json.dumps(item)
+            except TypeError:
+                final_string += str(item)
+        return module_name + '_' + hashlib.sha1(final_string).hexdigest()
+    except Exception as e:
+        raise Exception(e, function)
+
+

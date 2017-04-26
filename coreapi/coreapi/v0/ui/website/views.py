@@ -4,6 +4,7 @@ import json
 import datetime
 import os
 import shutil
+import hashlib
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
@@ -16,7 +17,7 @@ from django.utils import timezone
 from django.forms.models import model_to_dict
 from django.db.models import get_model
 from django.utils.dateparse import parse_datetime
-
+from django.core.cache import cache
 
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
@@ -1153,7 +1154,9 @@ class FilteredSuppliers(APIView):
                 }
             }
         }
-
+        caching is done for three types of filters: for common filters, for inventory filters and for pi index filters.
+        we are using hashlib.md5() or sha1() to get a hex digest to use it as a key. this is because the key in cache doest not
+        allow spaces or underscores chars.
         """
         class_name = self.__class__.__name__
         try:
@@ -1169,7 +1172,6 @@ class FilteredSuppliers(APIView):
             center_id = request.data.get('center_id')
 
             # cannot be handled  under specific society filters because it involves operation of two columns in database which cannot be generalized to a query.
-
             # To get business name
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             business_name = proposal.account.business.name
@@ -1190,9 +1192,14 @@ class FilteredSuppliers(APIView):
 
             # container to store inventory filters type of suppliers
             inventory_type_query_suppliers = []
-            # this is the main list. if no filter is selected this is what is returned by default
 
-            master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+            # this is the main list. if no filter is selected this is what is returned by default
+            cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, common_filters_query)
+            if cache.get(cache_key):
+                master_suppliers_list = cache.get(cache_key)
+            else:
+                master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+                cache.set(cache_key, master_suppliers_list)
 
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
@@ -1203,7 +1210,12 @@ class FilteredSuppliers(APIView):
 
             if inventory_type_query.__len__():
                 inventory_type_query &= Q(content_type=content_type)
-                inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
+                cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, inventory_type_query)
+                if cache.get(cache_key):
+                    inventory_type_query_suppliers = cache.get(cache_key)
+                else:
+                    inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
+                    cache.set(cache_key, inventory_type_query_suppliers)
 
             # if inventory query was non zero in length, set final_suppliers_id_list to inventory_type_query_suppliers.
             if inventory_type_query.__len__():
@@ -1217,7 +1229,13 @@ class FilteredSuppliers(APIView):
             result = {}
 
             # query now for real objects for supplier_id in the list
-            filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list)
+            cache_key = v0_utils.create_cache_key(class_name, final_suppliers_id_list)
+            if cache.get(cache_key):
+                filtered_suppliers = cache.get(cache_key)
+            else:
+                filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list)
+                cache.set(cache_key, filtered_suppliers)
+
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
             serializer = supplier_serializer(filtered_suppliers, many=True)
 
@@ -1227,6 +1245,7 @@ class FilteredSuppliers(APIView):
                 'latitude': common_filters['latitude'],
                 'longitude': common_filters['longitude']
             }
+
             # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final list
             initial_suppliers = website_utils.get_suppliers_within_circle(serializer.data, coordinates, supplier_type_code)
 
@@ -1238,8 +1257,13 @@ class FilteredSuppliers(APIView):
             # supplier_id's.
             final_suppliers_id_list = total_suppliers.keys()
 
-            # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
-            pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
+            cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
+            if cache.get(cache_key):
+                pi_index_map = cache.get(cache_key)
+            else:
+                # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
+                pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
+                cache.set(cache_key, pi_index_map)
 
             supplier_id_to_pi_map = {supplier_id: detail['total_priority_index'] for supplier_id, detail in pi_index_map.iteritems()}
 
@@ -3871,12 +3895,22 @@ class CampaignInventory(APIView):
             if not response.data['status']:
                 return response
 
-            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
-            if not response.data['status']:
-                return response
+            cache_key = v0_utils.create_cache_key(class_name, campaign_id)
+            cache_value = cache.get(cache_key)
+            if cache_value:
+                print "cache hit on campaign id \n"
+                return ui_utils.handle_response(class_name, data=cache_value, success=True)
+            else:
+                print "cache miss on campaign id \n"
+                response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
+                if not response.data['status']:
+                    return response
+                cache.set(cache_key, response.data['data'])
+                return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
-            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
+            import pdb
+            pdb.set_trace()
             return ui_utils.handle_response(class_name, exception_object=e)
 
     def put(self, request, campaign_id):
@@ -3897,8 +3931,11 @@ class CampaignInventory(APIView):
             if not response.data['status']:
                 return response
 
-            data = request.data
+            # clear the cache if it's a PUT request
+            cache_key = v0_utils.create_cache_key(class_name, campaign_id)
+            cache.delete(cache_key)
 
+            data = request.data
             response = website_utils.handle_update_campaign_inventories(request.user, data)
             if not response.data['status']:
                 return response
@@ -3948,24 +3985,29 @@ class CampaignSuppliersInventoryList(APIView):
             if assigned_to:
                 assigned_to_query = Q(assigned_to_id=long(assigned_to))
 
-            # we do a huge query to fetch everything we need at once.
-            inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
-                select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
-                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
-                filter(assigned_date_range_query, proposal_query, assigned_to_query).values(
+            cache_key = v0_utils.create_cache_key(class_name, assigned_date_range_query, proposal_query, assigned_to_query)
+            if cache.get(cache_key):
+                inv_act_assignment_objects = cache.get(cache_key)
+            else:
+                # we do a huge query to fetch everything we need at once.
+                inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
+                    select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
+                                   'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
+                    filter(assigned_date_range_query, proposal_query, assigned_to_query).values(
 
-                'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type', 'assigned_to',
-                'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
-                'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
-                'inventory_activity__shortlisted_inventory_details',
-                'inventory_activity__shortlisted_inventory_details__inventory_id',
-                'inventory_activity__shortlisted_inventory_details__inventory_content_type',
-                'inventory_activity__shortlisted_inventory_details__comment',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
-            )
+                    'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type', 'assigned_to',
+                    'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
+                    'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
+                    'inventory_activity__shortlisted_inventory_details',
+                    'inventory_activity__shortlisted_inventory_details__inventory_id',
+                    'inventory_activity__shortlisted_inventory_details__inventory_content_type',
+                    'inventory_activity__shortlisted_inventory_details__comment',
+                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
+                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
+                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
+                )
+                cache.set(cache_key, inv_act_assignment_objects)
 
             total_shortlisted_spaces_list = []  # this is required to fetch supplier details later
             inv_act_assignment_ids = set()  # this is required to fetch images data later
