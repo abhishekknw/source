@@ -77,7 +77,7 @@ angular.module('machadaloPages')
         $scope.selectedGroupList = [];
         $scope.model = {};
         addMoreFieldsToGroup();
-        swal(constants.name,constants.createUser,constants.success);
+        swal(constants.name,constants.createUser_success,constants.success);
         // alert("Successfully Created");
         })
         .catch(function onError(response){

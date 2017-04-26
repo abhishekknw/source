@@ -200,7 +200,7 @@
             <td class="col-md-1"> {{user.last_name}} </td>
             <td class="col-md-2"> {{user.email}} </td>
             <td class="col-md-2"> {{user.username}} </td>
-            <td class="col-md-2"> <li style="text-align:left" ng-repeat="group in user.groups">{{group.name}} </li></td>
+            <td class="col-md-2"> <li style="text-align:left" ng-repeat="group in user.groups"><a ng-click="getContent(contentItem.editGroup,group)">{{group.name}} </a></li></td>
             <td class="col-md-1" ><a data-toggle="tooltip" title="Edit" ng-click="getContent(contentItem.editUser,user)">
               <span class="glyphicon glyphicon-edit"></span></a></td>
             <td class="col-md-1">
