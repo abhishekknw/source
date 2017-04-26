@@ -141,30 +141,42 @@
         </div>
       </div>
     </div>
-
   </div>
   <div ng-switch-when='createGroup'>
-    <div ng-if="!isEditGroup"><h3>Create New Group</h3></div></br></br>
-    <div ng-if="isEditGroup"><h3>Edit Group :</h3></div></br></br>
-    <div class="dropdown dropdown-scroll col-md-6">
-      <input type="text" class="form-control groupInput" placeholder="Enter Group Name" ng-model="groupName.name"/>
-
-      <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">Add Permission <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-          <li role="presentation">
-              <div class="input-group input-group-sm search-control">
-                 <span class="input-group-addon">
-                      <span class="glyphicon glyphicon-search"></span>
-                  </span>
-                  <input type="text" class="form-control" placeholder="Search Permission" ng-model="query"></input>
-              </div>
-          </li>
-          <li role="presentation" ng-repeat='permission in permissionsDict.slice(1,permissionsDict.length) | filter:query'>
-            <input type="checkbox" ng-model="permission.selected" ng-click="addPermission(permission,$index)" style="margin-left:10px;"/>
-            <a style="display:-webkit-inline-box;">{{permission.name}}</a>
-          </li>
-      </ul>
+    <div style="margin-left:15px;" ng-if="!isEditGroup"><h3>Create New Group</h3></div></br></br>
+    <div style="margin-left:15px;" ng-if="isEditGroup"><h3>Edit Group :</h3></div></br></br>
+    <div class="col-md-6 form-horizontal model-body">
+      <div class="form-group">
+          <label class="col-md-4 control-label" style="text-align:left">Group Name</label>
+          <div class="col-md-3 controls">
+            <input type="text" class="form-control groupInput" placeholder="Enter Group Name" ng-model="groupName.name"/>
+          </div>
+      </div>
+      <div class="form-group">
+        <label class="col-md-4 control-label" style="text-align:left">Add Permissions</label>
+        <div class="dropdown dropdown-scroll col-md-6">
+          <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">Add Permission <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+              <li role="presentation">
+                  <div class="input-group input-group-sm search-control">
+                     <span class="input-group-addon">
+                          <span class="glyphicon glyphicon-search"></span>
+                      </span>
+                      <input type="text" class="form-control" placeholder="Search Permission" ng-model="query"></input>
+                  </div>
+              </li>
+              <li role="presentation" ng-repeat='permission in permissionsDict.slice(1,permissionsDict.length) | filter:query'>
+                <input type="checkbox" ng-model="permission.selected" ng-click="addPermission(permission,$index)" style="margin-left:10px;"/>
+                <a style="display:-webkit-inline-box;">{{permission.name}}</a>
+              </li>
+          </ul>
+        </div>
+      </div></br></br>
+      <div class="col-md-2 form-group">
+        <button ng-if="permissionList.length && groupName.name && !isEditGroup" class="btn btn-primary active" ng-click="createGroup()">Create Group</button>
+        <button ng-if="permissionList.length && groupName.name && isEditGroup" class="btn btn-primary active" ng-click="updateGroupDetails()">Update</button>
+      </div>
     </div>
 
     <div class="col-md-4 list-permission" ng-if="permissionList.length">
@@ -173,14 +185,12 @@
           <li ng-repeat="permission in permissionList">{{permission.name}}</li>
       </ul>
     </div>
-    <button ng-if="permissionList.length && groupName.name && !isEditGroup" class="btn btn-primary active fixedbutton" ng-click="createGroup()">Create Group</button>
-    <button ng-if="permissionList.length && groupName.name && isEditGroup" class="btn btn-primary active fixedbutton" ng-click="updateGroupDetails()">Update</button>
   </div>
   <!--start: users list  -->
   <div ng-switch-when='viewUsers' id="viewUsers">
-    <div class="table">
-      <h3 style="text-align:center">List of Users</h3>
-      <table class="table table-responsive table-bordered">
+    <h3 style="text-align:center">List of Users</h3>
+    <div class="table-responsive">
+      <table class="table table-bordered">
         <th ng-repeat="header in userInfoHeaders">
           {{header.header}}
         </th>
@@ -260,7 +270,7 @@
   <div ng-switch-when='viewGroups' id="viewGroups">
     <div class="">
       <h3 class="col-md-7" style="text-align:center">List of Groups</h3></br>
-      <table class="table-responsive table-bordered" style="width:60%">
+      <table class="table-responsive table-bordered table" style="width:60%">
         <th ng-repeat="header in groupHeaders">
           {{header.header}}
         </th>

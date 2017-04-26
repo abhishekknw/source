@@ -163,8 +163,8 @@ td{
     text-align: center;
 }
 table{
-  width: 100px;
-  /*position: fixed;*/
+  /*width: 200px;*/
+
 }
 /*for edit user form*/
 .form-user{
@@ -175,7 +175,7 @@ h3{
   color: #337ab7;
 }
 .groupInput{
-  width: 200px;
+  width: 130px;
   padding-left: 30px;
 }
 .list-permission{
@@ -193,4 +193,7 @@ h3{
   transform: translate(-50%, -50%);
   width: 40%;
   height: 50%;
+}
+.control-label{
+  text-align: left;
 }
