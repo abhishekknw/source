@@ -1456,6 +1456,7 @@ class BasicPricingAPIView(APIView):
     def get(self, request, id, format=None):
         response = {}
         try:
+
             # get the supplier_type_code
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
             # supplier_type_code = request.data.get('supplier_type_code')
@@ -1480,11 +1481,14 @@ class BasicPricingAPIView(APIView):
             tower_count = towercount_response.data['data']
 
             for basic_item, basic_select_item in zip(basic_prices, selected_prices):
+
                 basic_item['supplier'] = basic_select_item.__dict__['_supplier_cache'].__dict__ if basic_select_item.__dict__['_supplier_cache'] else None
                 basic_item['adinventory_type'] = basic_select_item.__dict__['_adinventory_type_cache'].__dict__
-                basic_item['adinventory_type'].pop("_state", None)
                 basic_item['duration_type'] = basic_select_item.__dict__['_duration_type_cache'].__dict__
+
+                basic_item['adinventory_type'].pop("_state", None)
                 basic_item['duration_type'].pop("_state", None)
+                basic_item['supplier'].pop("_state", None)
 
             response['tower_count'] = tower_count
             response['prices'] = basic_prices
