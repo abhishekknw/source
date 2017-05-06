@@ -1486,9 +1486,12 @@ class BasicPricingAPIView(APIView):
                 basic_item['adinventory_type'] = basic_select_item.__dict__['_adinventory_type_cache'].__dict__
                 basic_item['duration_type'] = basic_select_item.__dict__['_duration_type_cache'].__dict__
 
-                basic_item['adinventory_type'].pop("_state", None)
-                basic_item['duration_type'].pop("_state", None)
-                basic_item['supplier'].pop("_state", None)
+                if basic_item['adinventory_type']:
+                    basic_item['adinventory_type'].pop("_state", None)
+                if basic_item['duration_type']:
+                    basic_item['duration_type'].pop("_state", None)
+                if basic_item['supplier']:
+                    basic_item['supplier'].pop("_state", None)
 
             response['tower_count'] = tower_count
             response['prices'] = basic_prices
