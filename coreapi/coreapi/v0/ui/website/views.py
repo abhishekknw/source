@@ -1173,7 +1173,6 @@ class FilteredSuppliers(APIView):
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             business_name = proposal.account.business.name
 
-
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
             response = ui_utils.get_content_type(supplier_type_code)
@@ -1230,8 +1229,8 @@ class FilteredSuppliers(APIView):
             # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final list
             initial_suppliers = website_utils.get_suppliers_within_circle(serializer.data, coordinates, supplier_type_code)
 
-            # adding earlier saved shortlisted suppliers in the results.
-            shortlisted_suppliers = website_utils.get_shortlisted_suppliers_map(proposal_id, content_type)
+            # adding earlier saved shortlisted suppliers in the results for this center only
+            shortlisted_suppliers = website_utils.get_shortlisted_suppliers_map(proposal_id, content_type, center_id)
             total_suppliers = website_utils.union_suppliers(initial_suppliers, shortlisted_suppliers.values())
 
             # because some suppliers can be outside the given radius, we need to recalculate list of
@@ -2463,6 +2462,7 @@ class ImportSupplierData(APIView):
             # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
             # once data is prepared for all sheets,  we hit the url. if it creates problems in future, me might change
             # it.
+
             url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
             url = BASE_URL + url[1:]
 
@@ -3790,6 +3790,7 @@ class CampaignSuppliersInventoryList(APIView):
             proposal_id = request.query_params.get('proposal_id')
             do_not_query_by_date = request.query_params.get('do_not_query_by_date')
 
+
             all_users = models.BaseUser.objects.all().values('id', 'username')
             user_map = {detail['id']: detail['username'] for detail in all_users}
 
@@ -3963,6 +3964,7 @@ class ProposalToCampaign(APIView):
         """
         class_name = self.__class__.__name__
         try:
+
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
 
             if not proposal.invoice_number:

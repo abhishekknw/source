@@ -604,8 +604,10 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
             # now map the inventory details
             for index, shortlisted_inventory_detail in enumerate(center['shortlisted_inventory_details']):
 
+                # this dict is filled up with data and collected into output array which is sent for assignment
                 shortlisted_inventory_detail_object = {
-                    'user': user
+                    'user': user,
+                    'center': center_id
                 }
 
                 # copy supplier_id, inventory_price, inventory_count as it is from the current object
@@ -629,9 +631,6 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
 
                 supplier_type_codes.add(supplier_type_code)
                 output.append(shortlisted_inventory_detail_object)
-
-            # we do not want to send this to other API, so we will rather delete it
-            # del center['shortlisted_inventory_details']
 
         response = make_inventory_assignments(proposal_id, output, supplier_type_codes)
         if not response.data['status']:
@@ -1190,7 +1189,6 @@ def save_center_data(proposal_data, user):
     try:
         # get the proposal_id
         proposal_id = proposal_data['proposal_id']
-
         with transaction.atomic():
             # for all centers
             for center_info in proposal_data['centers']:
@@ -2273,6 +2271,7 @@ def make_export_final_response(result, data):
     """
     function = make_export_final_response.__name__
     try:
+
         for center in data:
 
             response = construct_single_supplier_row(center['center'], website_constants.center_keys)
@@ -3322,7 +3321,7 @@ def union_suppliers(first_supplier_list, second_supplier_list):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def get_shortlisted_suppliers_map(proposal_id, content_type):
+def get_shortlisted_suppliers_map(proposal_id, content_type, center_id):
     """
 
     Args:
@@ -3337,7 +3336,7 @@ def get_shortlisted_suppliers_map(proposal_id, content_type):
         # fetch the class from content type
         model_class = apps.get_model(settings.APP_NAME, content_type.model)
         # fetch the shortlisted supplier instances ( object_id, status only )
-        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id, content_type=content_type).values('object_id', 'status')
+        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id, content_type=content_type, center_id=center_id).values('object_id', 'status')
         shortlisted_ids = []
         shortlisted_suppliers_map = {}
         # prepare a map from id --> ss because later we will need to fetch it
@@ -4113,7 +4112,7 @@ def get_shortlisted_supplier_mapping(proposal_id):
         # make shortlisted_spaces mapping of (content_type, object_id) ----> ss object
         shortlisted_spaces_mapping = {}
         for ss in shortlisted_spaces:
-            shortlisted_spaces_mapping[ss.content_type, ss.object_id] = ss
+            shortlisted_spaces_mapping[ss.content_type, ss.object_id,  ss.center_id] = ss
 
         return ui_utils.handle_response(function, data=shortlisted_spaces_mapping, success=True)
 
@@ -4146,12 +4145,13 @@ def get_shortlisted_inventory_mapping(proposal_id):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_bucket(inventory_name, master_sorted_list_inventories):
+def prepare_bucket(inventory_name, master_sorted_list_inventories, supplier_ids):
     """
     Prepares the bucket for this inventory
     Args:
         inventory_name: Inventory name
         master_sorted_list_inventories: a list of inventory ids sorted by their assigned proposal count
+        supplier_ids: list of supplier ids
     Returns:
     """
     function = prepare_bucket.__name__
@@ -4169,7 +4169,7 @@ def prepare_bucket(inventory_name, master_sorted_list_inventories):
 
         model_name = inventory_content_type.model
         model_class = apps.get_model(settings.APP_NAME, model_name)
-        inventories = model_class.objects.all()
+        inventories = model_class.objects.filter(object_id__in=supplier_ids)
 
         # fetch only the ids here.
         inventory_ids = [inv.adinventory_id for inv in inventories]
@@ -4507,6 +4507,7 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
             supplier_type_code = inventory['supplier_type_code']
             supplier_id = inventory['supplier_id']
             content_type = content_types[supplier_type_code]
+            center_id = inventory['center']
 
             inventory_names.add(inventory['inventory_name'])
             supplier_type_codes.add(inventory['supplier_type_code'])
@@ -4515,7 +4516,7 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
             if not suppliers_per_inventory_map.get(inventory_name):
                 suppliers_per_inventory_map[inventory_name] = []
 
-            suppliers_per_inventory_map[inventory_name].append((content_type, supplier_id))
+            suppliers_per_inventory_map[inventory_name].append((content_type, supplier_id, center_id))
 
         # this has to be an atomic transaction
         with transaction.atomic():
@@ -4523,7 +4524,7 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
             response = get_shortlisted_supplier_mapping(proposal_id)
             if not response.data['status']:
                 return response
-            # this is a mapping of content_type, supplier_id --> ss object. Useful when SID object is created.
+            # this is a mapping of content_type, supplier_id, center_id --> ss object. Useful when SID object is created.
             shortlisted_suppliers_mapping = response.data['data']
 
             response = get_shortlisted_inventory_mapping(proposal_id)
@@ -4549,8 +4550,8 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
                     return response
                 inventory_content_type = response.data['data']
 
-                # prepare the bucket for this stall.
-                response = prepare_bucket(inventory_name, master_sorted_list_inventories)
+                # prepare the bucket for this inventory
+                response = prepare_bucket(inventory_name, master_sorted_list_inventories, supplier_ids)
                 if not response.data['status']:
                     return response
 
@@ -4571,7 +4572,7 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
                 # the inventory to that supplier.
                 for supplier_tuple in suppliers_per_inventory_map[inventory_name]:
 
-                    if supplier_tuple in valid_suppliers:
+                    if (supplier_tuple[0], supplier_tuple[1]) in valid_suppliers:
 
                         if supplier_tuple not in shortlisted_suppliers_mapping.keys():
                             return ui_utils.handle_response(function, data='This supplier is not shortlisted yet {0}'.format(supplier_tuple[1]))
@@ -4702,7 +4703,7 @@ def book_inventories(current_inventories_map, already_inventories_map):
 
             inv_obj.release_date = release_date
             inv_obj.closure_date = closure_date
-
+            # todo: removing date checking logic for now. even if dates overlap we book it anyway. Insert the logic when required in future
             # if this inventory is not found in already_booked_inventories map, book this inventory.
             try:
                 already_book_inv_map_reference = already_inventories_map[inv_tuple]
@@ -4723,6 +4724,7 @@ def book_inventories(current_inventories_map, already_inventories_map):
                         is_overlapped = True
                         inv_errors.append(errors.DATES_OVERLAP_ERROR.format(inv_obj.inventory_id, release_date, closure_date, target_release_date, target_closure_date, target_proposal_id))
 
+                is_overlapped = False  # remove this line when you need to book by dates
                 # if the inv does not overlaps with any of the pre booked versions of it, we book it.
                 if not is_overlapped:
                     # we collect this info as we have to insert RD and CD for this inventory later
