@@ -590,7 +590,7 @@ bodys = {
 
 # default emails
 emails = {
-    'bd_head': 'bd@machadalo.com'
+    'bd_head': 'nikhil.singh@machadalo.com'
 }
 
 # default status of each inventory is defined here. The reason i didn't chose a boolean value is because may be in
