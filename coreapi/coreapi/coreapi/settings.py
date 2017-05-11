@@ -98,6 +98,22 @@ DATABASES = {
         }
 }
 
+
+# DATABASES = {
+#         'sqlite': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#         },
+#         'default': {
+#             'NAME': 'mdtestnew',
+#             'ENGINE': 'django.db.backends.mysql',
+#             'HOST': 'localhost',
+#             'USER': 'root',
+#             'PASSWORD': 'root',
+#         }
+# }
+#
+
 #
 # if 'RDS_HOSTNAME' in os.environ:
 #     DATABASES = {
@@ -223,6 +239,8 @@ JWT_AUTH = {
       }
 
 BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
+# BASE_URL = 'http://localhost:8000/'
+
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
