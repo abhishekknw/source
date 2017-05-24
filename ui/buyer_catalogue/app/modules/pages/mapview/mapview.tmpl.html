@@ -41,7 +41,7 @@
       <hr>
        <!--Start: Filter Section on mapview-->
       <form id = "filterPanelForm">
-       <div class = "filterPanel" ng-show = "current_center.suppliers_allowed.society_show">
+       <div class = "filterPanel" ng-show = "current_center.suppliers_allowed.society_show" style="border-bottom: 5px solid gray">
         <input type = "checkbox"  ng-model="current_center.suppliers_allowed.society_allowed" ng-click="spaceSupplier('RS',current_center.suppliers_allowed.society_allowed)"/>
           <span class = "filterPanelHeader space-type" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
 
@@ -111,7 +111,7 @@
             <input type = "checkbox"  ng-model="is_standalone_society.selected" ng-disabled = "checkFilters" ng-click="societyFilters()">
             <span style="color:crimson">Standalone Society
             </span>
-          </div>
+          </div>          
           </div>
         </div>
         <div class = "filterPanel" ng-if = "current_center.suppliers_allowed.corporate_show">
