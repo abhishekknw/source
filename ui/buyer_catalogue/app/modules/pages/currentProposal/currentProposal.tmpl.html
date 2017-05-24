@@ -3,9 +3,9 @@
 <div><nav-bar></nav-bar></div>
 <form name="proposalDetails" ng-hide="showEdit" class = "proposal-panel">
   <!-- <back-Button style="text-align:left"></back-Button> -->
-  <div class="breadcrumb col-md-4" ncy-breadcrumb></div>
   <div ng-loading="loading"></div> <!--For displaying loading icon-->
   <div class = "container">
+    <div class="breadcrumb" ncy-breadcrumb></div>
     <div class="page-header" style="text-align:center">
       <h3 style="color:#337ab7;">Summary for {{proposal.name}}</h3>
     </div>

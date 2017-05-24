@@ -13,6 +13,7 @@
   margin-left: auto;
   margin-right: auto;
 	background-color: transparent;
+  font-size : x-large;
 }
 th{
   	background: #808080;
@@ -26,4 +27,5 @@ body{
 }
 .footer1{
   margin-top: 235px;
+  font-size : x-large;
 }

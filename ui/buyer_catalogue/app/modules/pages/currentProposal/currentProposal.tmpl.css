@@ -59,6 +59,7 @@ body{
 }
 .breadcrumb{
 	background-color: transparent;
+  font-size : x-large;
 }
 .page-header{
   width: 50%;

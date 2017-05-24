@@ -45,8 +45,9 @@
 	margin-right: auto;
 }
 .breadcrumb{
-	width:50%;
+	width:200%;
 	margin-left: auto;
 	margin-right: auto;
 	background-color: transparent;
+	font-size : x-large;
 }
