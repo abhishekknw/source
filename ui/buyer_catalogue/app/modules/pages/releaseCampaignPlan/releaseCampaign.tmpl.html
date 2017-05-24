@@ -4,7 +4,7 @@
 <div ng-loading="loading"></div>
 </br></br></br>
 <!-- <back-Button></back-Button> -->
-<div ncy-breadcrumb></div>
+<div class="breadcrumb" ncy-breadcrumb></div>
 <h3 style = "margin-left: 460px; margin-top: 70px;">Campaign Release and Audit Plan</h3>
   <div class = "container">
       <div class="row">
@@ -31,6 +31,9 @@
             <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.object_id}})</td>
             <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.area}}</td>
             <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.subarea}}</td>
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.buffered">{{buffered}}</td>
+            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.removed">{{removed}}</td>
             <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
             <td class="col-md-1" ng-if="key=='NA'">{{key}}</td>
             <td class="col-md-1" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)"><b>{{key}}</b></a></td>

@@ -20,6 +20,12 @@ angular
     errorMsg : 'Error Occured',
     server_connection_error : 'Server is down, Please Try again',
     emptyResponse : 'No results Found',
+    shortlisted : 'Shortlisted',
+    removed : 'Removed',
+    buffered : 'Buffered',
+    statusCode_shortlisted : 'S',
+    statusCode_buffered : 'B',
+    statusCode_removed : 'R',
 
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',

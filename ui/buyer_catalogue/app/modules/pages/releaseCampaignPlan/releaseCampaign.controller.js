@@ -8,6 +8,7 @@ angular.module('catalogueApp')
         {header : 'Supplier Name'},
         {header : 'Area'},
         {header : 'Sub Area'},
+        {header : 'Status'},
         // {header : 'Supplier ID'},
         {header : 'Inventory Type'},
         {header : 'Inventory Count'},
@@ -40,6 +41,14 @@ angular.module('catalogueApp')
     {header : 'IFSC Code'},
     {header : 'Account Number'},
   ];
+  $scope.shortlisted = constants.shortlisted;
+  $scope.buffered = constants.buffered;
+  $scope.removed = constants.removed;
+  $scope.statusCode = {
+    shortlisted : constants.statusCode_shortlisted,
+    buffered : constants.statusCode_buffered,
+    removed : constants.statusCode_removed,
+  }
     $scope.clear = function() {
         $scope.dt = null;
       };
