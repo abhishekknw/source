@@ -10,8 +10,8 @@ angular.module('catalogueApp')
 		{name:"Corporate Parks", code:"CP", selected:"false"},
 	];
 	$scope.proposalheaders = [
-        {header : 'Advertising Location'},
-        {header : 'Address'},
+        {header : 'Advertising Area'},
+        {header : 'Location Address'},
         {header : 'City'},
         {header : 'Area'},
         {header : 'SubArea'},
@@ -147,43 +147,84 @@ angular.module('catalogueApp')
   }
 	var convertPincodeToString = function(centers){
 		for(var i=0;i<centers.length; i++){
-			centers[i].center.pincode = centers[i].center.pincode.toString();
-		}
+			if(centers[i].center.pincode)
+				centers[i].center.pincode = centers[i].center.pincode.toString();
+			else
+				centers[i].center.pincode = '';
+			}
 	}
 	$scope.submit = function(){
-		$scope.loadingSpinner = false;
-    var status = checkSupplierCode();
-    if(status >= 0){
-		$scope.model.account_id = $window.localStorage.account_id;
-		$scope.model.business_id = $window.localStorage.business_id;
-		$scope.model.parent = $window.localStorage.proposal_id;
-		$scope.requestData = angular.copy($scope.model);
-		convertPincodeToString($scope.requestData.centers);
-		// call backend to save only if all the latitudes are found
-			createProposalService.saveInitialProposal($stateParams.account_id, $scope.requestData)
-			.then(function onSuccess(response){
-				$scope.errormsg = undefined;
-				$scope.proposal_id = response.data.data;
-				$scope.checkProposal = false;
-				createProposalService.setProposalId($scope.proposal_id);
-        $window.localStorage.isSavedProposal = false;
-        $window.localStorage.parent_proposal_id = $scope.proposal_id;
-				$location.path('/' + response.data.data + '/mapview');
-			})
-			.catch(function onError(response){
+	    var status = checkSupplierCode();
+	    if(status >= 0){
+			$scope.model.account_id = $window.localStorage.account_id;
+			$scope.model.business_id = $window.localStorage.business_id;
+			$scope.model.parent = $window.localStorage.proposal_id;
+			$scope.requestData = angular.copy($scope.model);
+			console.log($scope.requestData);
+			convertPincodeToString($scope.requestData.centers);
+			// call backend to save only if all the latitudes are found
+			if($scope.requestData.centers.length > 1){
+				$scope.loadingSpinner = false;
+				createProposalService.saveInitialProposal($stateParams.account_id, $scope.requestData)
+				.then(function onSuccess(response){
+					$scope.errormsg = undefined;
+					$scope.proposal_id = response.data.data;
+					$scope.checkProposal = false;
+					createProposalService.setProposalId($scope.proposal_id);
+	        $window.localStorage.isSavedProposal = false;
+	        $window.localStorage.parent_proposal_id = $scope.proposal_id;
+					$location.path('/' + response.data.data + '/mapview');
+				})
+				.catch(function onError(response){
+					$scope.loadingSpinner = true;
+					swal(constants.name,constants.geo_location_error,constants.error);
+					console.log("Error");
+					if(typeof(response) != typeof(12)){
+						console.log("response is ", response);
+						$scope.errormsg = response.message;
+						// $scope.model.centers = new Array();
+						// $scope.addCenter();
+					}
+				});
+			}else {
+				swal({
+					 title: 'Are you sure ?',
+					 text: constants.center_warning,
+					 type: constants.warning,
+					 showCancelButton: true,
+					 confirmButtonClass: "btn-success",
+					 confirmButtonText: "Yes, Continue!",
+					 closeOnConfirm: true
+				 },
+				 function(){
+					 $scope.loadingSpinner = false;
+					 createProposalService.saveInitialProposal($stateParams.account_id, $scope.requestData)
+		 			.then(function onSuccess(response){
+		 				$scope.errormsg = undefined;
+		 				$scope.proposal_id = response.data.data;
+		 				$scope.checkProposal = false;
+		 				createProposalService.setProposalId($scope.proposal_id);
+		         $window.localStorage.isSavedProposal = false;
+		         $window.localStorage.parent_proposal_id = $scope.proposal_id;
+		 				$location.path('/' + response.data.data + '/mapview');
+		 			})
+		 			.catch(function onError(response){
+		 				$scope.loadingSpinner = true;
+		 				swal(constants.name,constants.geo_location_error,constants.error);
+		 				console.log("Error");
+		 				if(typeof(response) != typeof(12)){
+		 					console.log("response is ", response);
+		 					$scope.errormsg = response.message;
+		 					// $scope.model.centers = new Array();
+		 					// $scope.addCenter();
+		 				}
+		 			});
+				 })
+			}
+	    }
+	    else {
+	      alert("Please Provide Space Type");
 				$scope.loadingSpinner = true;
-				swal(constants.name,constants.geo_location_error,constants.error);
-				console.log("Error");
-				if(typeof(response) != typeof(12)){
-					console.log("response is ", response);
-					$scope.errormsg = response.message;
-					// $scope.model.centers = new Array();
-					// $scope.addCenter();
-				}
-			});
-    }
-    else {
-      alert("Please Provide Space Type");
-    }
-	}
+	    }
+		}
 });

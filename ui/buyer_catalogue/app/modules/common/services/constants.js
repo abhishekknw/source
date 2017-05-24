@@ -23,6 +23,7 @@ angular
 
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
+    center_warning : 'Do you want to create only one center ?',
     //mapview
     save_success : 'Saved successfully',
     save_error : 'Some error occured, Data not saved',
