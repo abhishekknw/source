@@ -113,7 +113,7 @@
             <table class="table table-hover" ng-show="account_proposals.length != 0">
               <thead>
                 <tr>
-                  <th class="col-md-2 table-heading">Proposal Id</th>
+                  <th class="col-md-2 table-heading">Proposal Name</th>
                   <th class="col-md-2 table-heading">Created By</th>
                   <th class="col-md-2 table-heading">Created Date</th>
                   <th class="col-md-2 table-heading">Edited By</th>
@@ -123,7 +123,7 @@
               </thead>
               <tbody>
                 <tr ng-repeat="proposal in account_proposals">
-                  <td>{{proposal.proposal_id}}</td>
+                  <td>{{proposal.name}}</td>
                   <td>Vidhi</td><!-- {{proposal.created_by}} -->
                   <td>{{proposal.created_on | limitTo:10}}</td>
                   <td>Vidhi</td><!-- {{proposal.updated_by}} -->
