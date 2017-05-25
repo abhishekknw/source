@@ -28,18 +28,18 @@
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.object_id}})</td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.area}}</td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.subarea}}</td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.buffered">{{buffered}}</td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.removed">{{removed}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.object_id}})</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.area}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.subarea}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.buffered">{{buffered}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.removed">{{removed}}</td>
             <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
-            <td class="col-md-1" ng-if="key=='NA'">{{key}}</td>
-            <td class="col-md-1" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)"><b>{{key}}</b></a></td>
-            <td class="col-md-1">{{filter.total_count}}</td>
-            <td class="col-md-1">{{filter.supplier_price}}</td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.total_inventory_supplier_price}}</td>
+            <td class="" ng-if="key=='NA'">{{key}}</td>
+            <td class="" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)"><b>{{key}}</b></a></td>
+            <td class="">{{filter.total_count}}</td>
+            <td class="">{{filter.supplier_price}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.total_inventory_supplier_price}}</td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="priceform">
               <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width" min="0">
               <span class="error" ng-show="priceform.price.$error.min">{{positiveNoError}}</span>
@@ -49,12 +49,12 @@
                 <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
               </select>
             </td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
+            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
               <input type="number" name="phase" class="form-control spacing" ng-model="supplier.phase" min="1">
               <span class="error" ng-show="phaseform.phase.$error.min">{{positiveNoError}}</span>
             </td>
             <!--mode of payment  -->
-            <td class="col-md-1" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
+            <td class="" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <div class="radio">
                      <label><input type="radio" ng-model="supplier.payment_method" value="NEFT" ng-click="updateSupplierStatus()">NEFT</label>
               </div>
@@ -68,11 +68,11 @@
                 <a data-target="#paymentModal" data-toggle="modal" ng-click="setPayment(supplier)"><b>Details</b></a>
               </div>
             </td>
-            <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">
+            <td class="" rowspan="{{key.length}}" ng-show="$first">
               <a class="" data-target="#contactModal" data-toggle="modal" ng-click="setContact(supplier)"><b>View Contact Details</b></a>
             </td>
             <!--for payment status  -->
-            <td class="col-md-1" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
+            <td class="" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <div class="radio">
                      <label><input type="radio" ng-model="supplier.payment_status" value="PD" ng-click="updateSupplierStatus()">Paid</label>
               </div>
