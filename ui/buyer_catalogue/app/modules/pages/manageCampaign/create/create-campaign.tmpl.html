@@ -129,7 +129,15 @@
                   <td>Vidhi</td><!-- {{proposal.updated_by}} -->
                   <td>{{proposal.updated_on | limitTo:10}}</td>
                   <td>
-                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">Edit</button>
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">
+                      <span ng-if="!isUploaded">Edit</span>
+                      <span ng-if="isUploaded">View</span>
+                    </button>
+                  </td>
+                  <td ng-if="!isUploaded">
+                    <button class="btn btn-danger active" ng-click="showProposalDetails(proposal.proposal_id)">
+                      Replicate
+                    </button>
                   </td>
                   <td>
                     <button ng-hide="hideData" class="btn btn-danger active" ngf-select="upload($file,proposal.proposal_id)" ng-loading="uploadfile">Upload</button>

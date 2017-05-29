@@ -53,3 +53,9 @@ INCORRECT_DATABASE_NAME_ERROR = 'The database name in settings file \'{0}\' does
 UPLOAD_AMAZON_SUCCESS = 'Upload to amazon successfull'
 
 DELETION_NOT_PERMITTED = 'The deletion of file with extension {0} is not permitted'
+
+GROUP_DOES_NOT_EXIST = 'The group with name {0} does not exist in the database'
+
+HEADER_NOT_PRESENT_IN_SHEET = 'The header with name {0} not present in sheet header list. lookup key is {1}'
+
+COUNT_SIZE_RENT_VALUE_NOT_PRESENT = 'One or more of following values {0}, {1}, {2} is not provided for this supplier {3}'

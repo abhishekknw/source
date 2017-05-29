@@ -4,6 +4,7 @@ import json
 import datetime
 import os
 import shutil
+import hashlib
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.urlresolvers import reverse
@@ -16,6 +17,7 @@ from django.utils import timezone
 from django.forms.models import model_to_dict
 from django.db.models import get_model
 from django.utils.dateparse import parse_datetime
+from django.core.cache import cache
 
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework.pagination import PageNumberPagination
@@ -1152,7 +1154,9 @@ class FilteredSuppliers(APIView):
                 }
             }
         }
-
+        caching is done for three types of filters: for common filters, for inventory filters and for pi index filters.
+        we are using hashlib.md5() or sha1() to get a hex digest to use it as a key. this is because the key in cache doest not
+        allow spaces or underscores chars.
         """
         class_name = self.__class__.__name__
         try:
@@ -1168,7 +1172,6 @@ class FilteredSuppliers(APIView):
             center_id = request.data.get('center_id')
 
             # cannot be handled  under specific society filters because it involves operation of two columns in database which cannot be generalized to a query.
-
             # To get business name
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             business_name = proposal.account.business.name
@@ -1189,9 +1192,14 @@ class FilteredSuppliers(APIView):
 
             # container to store inventory filters type of suppliers
             inventory_type_query_suppliers = []
-            # this is the main list. if no filter is selected this is what is returned by default
 
-            master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+            # this is the main list. if no filter is selected this is what is returned by default
+            cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, common_filters_query)
+            if cache.get(cache_key):
+                master_suppliers_list = cache.get(cache_key)
+            else:
+                master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+                cache.set(cache_key, master_suppliers_list)
 
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
@@ -1202,7 +1210,12 @@ class FilteredSuppliers(APIView):
 
             if inventory_type_query.__len__():
                 inventory_type_query &= Q(content_type=content_type)
-                inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
+                cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, inventory_type_query)
+                if cache.get(cache_key):
+                    inventory_type_query_suppliers = cache.get(cache_key)
+                else:
+                    inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
+                    cache.set(cache_key, inventory_type_query_suppliers)
 
             # if inventory query was non zero in length, set final_suppliers_id_list to inventory_type_query_suppliers.
             if inventory_type_query.__len__():
@@ -1216,7 +1229,13 @@ class FilteredSuppliers(APIView):
             result = {}
 
             # query now for real objects for supplier_id in the list
-            filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list)
+            cache_key = v0_utils.create_cache_key(class_name, final_suppliers_id_list)
+            if cache.get(cache_key):
+                filtered_suppliers = cache.get(cache_key)
+            else:
+                filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list)
+                cache.set(cache_key, filtered_suppliers)
+
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
             serializer = supplier_serializer(filtered_suppliers, many=True)
 
@@ -1226,6 +1245,7 @@ class FilteredSuppliers(APIView):
                 'latitude': common_filters['latitude'],
                 'longitude': common_filters['longitude']
             }
+
             # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final list
             initial_suppliers = website_utils.get_suppliers_within_circle(serializer.data, coordinates, supplier_type_code)
 
@@ -1237,11 +1257,18 @@ class FilteredSuppliers(APIView):
             # supplier_id's.
             final_suppliers_id_list = total_suppliers.keys()
 
-            # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
-            pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
+            cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
+            if cache.get(cache_key):
+                pi_index_map = cache.get(cache_key)
+            else:
+                # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
+                pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
+                cache.set(cache_key, pi_index_map)
+
+            supplier_id_to_pi_map = {supplier_id: detail['total_priority_index'] for supplier_id, detail in pi_index_map.iteritems()}
 
             # the following function sets the pricing as before and it's temprorary.
-            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, pi_index_map)
+            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, supplier_id_to_pi_map)
 
             # before returning final result. change some keys of society to common keys we have defined.
             total_suppliers = website_utils.manipulate_object_key_values(total_suppliers, supplier_type_code=supplier_type_code)
@@ -1257,6 +1284,8 @@ class FilteredSuppliers(APIView):
 
             result['suppliers_meta'][supplier_type_code]['count'] = 0
             result['suppliers_meta'][supplier_type_code]['inventory_count'] = suppliers_inventory_count
+            # send explanation separately
+            result['suppliers_meta'][supplier_type_code]['pi_index_explanation'] = pi_index_map
 
             return ui_utils.handle_response(class_name, data=result, success=True)
 
@@ -2150,13 +2179,7 @@ class ImportSocietyData(APIView):
                             'supplier_code': data['supplier_code']
                         }
 
-                        response = get_supplier_id(request, supplier_id_data)
-                        # this method of handing error code will  change in future
-                        if response.status_code == status.HTTP_200_OK:
-                            data['supplier_id'] = response.data['data']
-                        else:
-                            return response
-
+                        data['supplier_id'] = get_supplier_id(request, supplier_id_data)
                         (society_object, value) = SupplierTypeSociety.objects.get_or_create(supplier_id=data['supplier_id'])
                         data['society_location_type'] = subarea_object.locality_rating
                         #data['society_state'] = 'Maharashtra'Uttar Pradesh
@@ -2186,6 +2209,156 @@ class ImportSocietyData(APIView):
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
         except KeyError as e:
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ImportSupplierDataFromSheet(APIView):
+    """
+    The API tries to read a given sheet in a fixed format and updates the database with data in the sheet. This is used
+    to enter data into the system from sheet. Currently Society data is supported, but the API is made generic.
+    Please ensure following things before using this API:
+       1. Events are defined in website/constants.py. The event name should match with event names in headers.
+       2. Amenities are already defined in database and their names must match with amenity names used in the headers.
+       3. Check once the Flats constants defined and the headers. Both should match.
+    NOTE:
+        1.The API will not consider the item if it's marked 'NO' or 'N'. it will delete the appropriate item from the system if
+        it's already present.
+        2. The suppliers if not present in the system are created. if already created, they are updated.
+        3. In response of the API, you can get to know how many suppliers were possible to be processed, how many of them
+        got successfully created, how many were updated, how many were invalid because of issue in the row etc.
+        4. An idea of positive or negative objects is introduced. Any object which has 'No' or 'N' in the sheet is qualified
+        as negative. Only delete operation, if applicable is applied on such objects. Update and create operations are applied
+        on positive objects.
+
+    """
+    def post(self, request):
+        """
+        Args:
+            request:
+
+        Returns:
+
+            collect the basic society data in 'basic_data' key
+            collect flat data in 'flats' key
+            collect amenity data in 'amenities' key
+            collect events data in  'events' key
+            collect inventories and there pricing  data in 'inventories' key
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            source_file = request.data['file']
+            state_code = request.data['state_code']
+            wb = openpyxl.load_workbook(source_file)
+            ws = wb.get_sheet_by_name('supplier_data')
+            supplier_type_code = request.data['supplier_type_code']
+            data_import_type = request.data['data_import_type']
+
+            # collects invalid row indexes
+            invalid_rows_detail = {}
+            possible_suppliers = 0
+
+            # will store all the info of society
+            result = {}
+            supplier_id_per_row = {}
+            state_instance = models.State.objects.get(state_code=state_code)
+            city_codes = models.City.objects.filter(state_code=state_instance).values_list('city_code', flat=True)
+            area_codes = models.CityArea.objects.filter(city_code__city_code__in=city_codes).values_list('area_code', flat=True)
+            subarea_codes = models.CitySubArea.objects.filter(area_code__area_code__in=area_codes).values_list('subarea_code', flat=True)
+
+            # put debugging information here
+            invalid_rows_detail['detail'] = {}
+
+            base_headers = ['city', 'city_code', 'area', 'area_code', 'sub_area', 'sub_area_code',  'supplier_code', 'supplier_name']
+
+            # iterate through all rows and populate result array
+            for index, row in enumerate(ws.iter_rows()):
+                if index == 0:
+                    website_utils.validate_society_headers(supplier_type_code, row, data_import_type)
+                    continue
+
+                possible_suppliers += 1
+                supplier_id_per_row[index] = ''
+
+                row_response = website_utils.get_mapped_row(ws, row)
+                if not row_response.data['status']:
+                    return row_response
+                row_dict = row_response.data['data']
+
+                # check for basic headers presence
+                check = False
+                for valid_header in base_headers:
+                    if not row_dict[valid_header]:
+                        invalid_rows_detail['detail'][index + 1] = '{0} not present in this row'.format(valid_header)
+                        check = True
+
+                if check:
+                    continue
+
+                if row_dict['city_code'] not in city_codes:
+                    invalid_rows_detail['detail'][index + 1] = row_dict['city_code'] + '  not in city_codes'
+                    continue
+                if row_dict['area_code'] not in area_codes:
+                    invalid_rows_detail['detail'][index + 1] = row_dict['area_code'] + '  not in area codes'
+                    continue
+                if row_dict['sub_area_code'] not in subarea_codes:
+                    invalid_rows_detail['detail'][index + 1] = row_dict['sub_area_code'] + '  not in sub area codes'
+                    continue
+
+                supplier_id = row_dict['city_code'].strip() + row_dict['area_code'].strip() + row_dict['sub_area_code'].strip() + supplier_type_code.strip() + row_dict['supplier_code'].strip()
+                supplier_id_per_row[index] = supplier_id
+
+                if supplier_id in result.keys():
+                    invalid_rows_detail['detail'][index + 1] = '{0} supplier_id is duplicated in the sheet'.format(supplier_id)
+                    continue
+
+                result[supplier_id] = {
+                    'common_data': {'state_name': state_code},
+                    'flats': {'positive': {}, 'negative': {}},
+                    'amenities': {'positive': {}, 'negative': {}},
+                    'events': {'positive': {}, 'negative': {}},
+                    'inventories': {'positive': {}, 'negative': {}}
+                }
+                result = website_utils.collect_supplier_common_data(result, supplier_type_code, supplier_id, row_dict, data_import_type)
+                result = website_utils.collect_amenity_data(result, supplier_id, row_dict)
+                result = website_utils.collect_events_data(result, supplier_id, row_dict)
+                result = website_utils.collect_flat_data(result, supplier_id, row_dict)
+
+            input_supplier_ids = set(result.keys())
+
+            if not input_supplier_ids:
+                return ui_utils.handle_response(class_name, data='System did not get any suppliers from sheet to work upon')
+
+            model = ui_utils.get_model(supplier_type_code)
+            content_type = ui_utils.fetch_content_type(supplier_type_code)
+            already_existing_supplier_ids = set(model.objects.filter(supplier_id__in=input_supplier_ids).values_list('supplier_id', flat=True))
+            already_existing_supplier_count = len(already_existing_supplier_ids)
+
+            new_supplier_ids = input_supplier_ids.difference(already_existing_supplier_ids)
+
+            # create the supplier first here
+            model.objects.bulk_create(model(**{'supplier_id': supplier_id}) for supplier_id in new_supplier_ids)
+
+            supplier_instance_map = model.objects.in_bulk(input_supplier_ids)
+            summary = website_utils.handle_supplier_data_from_sheet(result, supplier_instance_map, content_type, supplier_type_code)
+
+            data = {
+                'total_new_suppliers_made': len(new_supplier_ids),
+                'total_valid_suppliers': len(input_supplier_ids),
+                'total_invalid_suppliers': len(invalid_rows_detail['detail'].keys()),
+                'total_existing_suppliers_out_of_valid_suppliers': already_existing_supplier_count,
+                'total_possible_suppliers': possible_suppliers,
+                'invalid_row_detail': invalid_rows_detail,
+                'new_suppliers_created': new_supplier_ids,
+                'already_existing_suppliers_from_this_sheet': already_existing_supplier_ids,
+                'summary': summary,
+                'supplier_id_per_row': supplier_id_per_row,
+                'total_suppliers_in_sheet': len(supplier_id_per_row.keys())
+
+            }
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
 
@@ -3167,13 +3340,7 @@ class ImportContactDetails(APIView):
                         data['country_code'] = website_constants.COUNTRY_CODE
 
                         try:
-                            response = get_supplier_id(request, data)
-                            # this method of handing error code will  change in future
-                            if response.status_code == status.HTTP_200_OK:
-                                data['supplier_id'] = response.data['data']
-                            else:
-                                return response
-
+                            data['supplier_id'] = get_supplier_id(request, data)
                             society_object = SupplierTypeSociety.objects.get(supplier_id=data['supplier_id'])
                             data['spoc'] = False
                             data['supplier'] = society_object
@@ -3293,8 +3460,8 @@ class ImportAreaSubArea(APIView):
         class_name = self.__class__.__name__
         try:
             # fetch the file from files dir
-            my_file = open(BASE_DIR + '/files/new_area_subarea.xlsx', 'rb')
-            wb = openpyxl.load_workbook(my_file)
+            source_file = request.data['file']
+            wb = openpyxl.load_workbook(source_file)
             ws = wb.get_sheet_by_name('new_area_sheet')
 
             result = []
@@ -3729,12 +3896,22 @@ class CampaignInventory(APIView):
             if not response.data['status']:
                 return response
 
-            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
-            if not response.data['status']:
-                return response
+            cache_key = v0_utils.create_cache_key(class_name, campaign_id)
+            cache_value = cache.get(cache_key)
+            if cache_value:
+                print "cache hit on campaign id \n"
+                return ui_utils.handle_response(class_name, data=cache_value, success=True)
+            else:
+                print "cache miss on campaign id \n"
+                response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
+                if not response.data['status']:
+                    return response
+                cache.set(cache_key, response.data['data'])
+                return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
-            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
+            import pdb
+            pdb.set_trace()
             return ui_utils.handle_response(class_name, exception_object=e)
 
     def put(self, request, campaign_id):
@@ -3755,8 +3932,11 @@ class CampaignInventory(APIView):
             if not response.data['status']:
                 return response
 
-            data = request.data
+            # clear the cache if it's a PUT request
+            cache_key = v0_utils.create_cache_key(class_name, campaign_id)
+            cache.delete(cache_key)
 
+            data = request.data
             response = website_utils.handle_update_campaign_inventories(request.user, data)
             if not response.data['status']:
                 return response
@@ -3807,24 +3987,29 @@ class CampaignSuppliersInventoryList(APIView):
             if assigned_to:
                 assigned_to_query = Q(assigned_to_id=long(assigned_to))
 
-            # we do a huge query to fetch everything we need at once.
-            inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
-                select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
-                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
-                filter(assigned_date_range_query, proposal_query, assigned_to_query).values(
+            cache_key = v0_utils.create_cache_key(class_name, assigned_date_range_query, proposal_query, assigned_to_query)
+            if cache.get(cache_key):
+                inv_act_assignment_objects = cache.get(cache_key)
+            else:
+                # we do a huge query to fetch everything we need at once.
+                inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
+                    select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
+                                   'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
+                    filter(assigned_date_range_query, proposal_query, assigned_to_query).values(
 
-                'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type', 'assigned_to',
-                'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
-                'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
-                'inventory_activity__shortlisted_inventory_details',
-                'inventory_activity__shortlisted_inventory_details__inventory_id',
-                'inventory_activity__shortlisted_inventory_details__inventory_content_type',
-                'inventory_activity__shortlisted_inventory_details__comment',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
-            )
+                    'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type', 'assigned_to',
+                    'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
+                    'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
+                    'inventory_activity__shortlisted_inventory_details',
+                    'inventory_activity__shortlisted_inventory_details__inventory_id',
+                    'inventory_activity__shortlisted_inventory_details__inventory_content_type',
+                    'inventory_activity__shortlisted_inventory_details__comment',
+                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
+                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
+                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
+                )
+                cache.set(cache_key, inv_act_assignment_objects)
 
             total_shortlisted_spaces_list = []  # this is required to fetch supplier details later
             inv_act_assignment_ids = set()  # this is required to fetch images data later
@@ -4122,12 +4307,7 @@ class ImportCorporateData(APIView):
                             'supplier_code': data['supplier_code']
                         }
 
-                        response = get_supplier_id(request, supplier_id_data)
-                        # this method of handing error code will  change in future
-                        if response.status_code == status.HTTP_200_OK:
-                            data['supplier_id'] = response.data['data']
-                        else:
-                            return response
+                        data['supplier_id'] = get_supplier_id(request, supplier_id_data)
 
                         (corporate_object, value) = SupplierTypeCorporate.objects.get_or_create(supplier_id=data['supplier_id'])
 
@@ -4896,5 +5076,95 @@ class ProposalImagesPath(APIView):
             # we should remove the original folder as it will consume space.
             shutil.rmtree(path_to_master_dir)
             return ui_utils.handle_response(class_name, data=file_url, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class ExportAllSupplierData(APIView):
+    """
+    Export's all supplier data into sheet and mail it to bd head
+    """
+    def get(self, request):
+        class_name = self.__class__.__name__
+        try:
+            supplier_type_code = request.query_params['supplier_type_code']
+            model_class = ui_utils.get_model(supplier_type_code)
+            if supplier_type_code == website_constants.society:
+                model_instances = model_class.objects.all().values('supplier_id', 'society_name')
+            else:
+                model_instances = model_class.objects.all().values('supplier_id', 'name')
+
+            area_codes = set()
+            subarea_codes = set()
+            city_codes = set()
+
+            for instance_dict in model_instances:
+
+                supplier_id = instance_dict['supplier_id']
+                supplier_id_breakup = website_utils.expand_supplier_id(supplier_id)
+
+                area_codes.add(supplier_id_breakup['area_code'])
+                city_codes.add(supplier_id_breakup['city_code'])
+                subarea_codes.add(supplier_id_breakup['subarea_code'])
+                instance_dict['supplier_id_breakup'] = supplier_id_breakup
+
+            city_instances = models.City.objects.filter(city_code__in=city_codes)
+            area_instances = models.CityArea.objects.filter(area_code__in=area_codes)
+            subarea_instances = models.CitySubArea.objects.filter(subarea_code__in=subarea_codes)
+
+            city_instance_map = {city.city_code: city for city in city_instances}
+            area_instance_map = {area.area_code: area for area in area_instances}
+            subarea_instance_map = {subarea.subarea_code: subarea for subarea in subarea_instances}
+
+            result = []
+
+            for instance_dict in model_instances:
+
+                supplier_dict_breakup = instance_dict['supplier_id_breakup']
+                supplier_id = instance_dict['supplier_id']
+                supplier_name = instance_dict['society_name'] if instance_dict.get('society_name') else instance_dict['name']
+                supplier_code = supplier_dict_breakup['supplier_code']
+
+                city_instance = city_instance_map.get(supplier_dict_breakup['city_code'])
+                area_instance = area_instance_map.get(supplier_dict_breakup['area_code'])
+                subarea_instance = subarea_instance_map.get(supplier_dict_breakup['subarea_code'])
+
+                result.append({
+
+                    'city_name': city_instance.city_name if city_instance else website_constants.not_in_db_special_code,
+                    'city_code': city_instance.city_code if city_instance else website_constants.not_in_db_special_code,
+                    'area_name': area_instance.label if area_instance else website_constants.not_in_db_special_code,
+                    'area_code': area_instance.area_code if area_instance else website_constants.not_in_db_special_code,
+                    'subarea_name': subarea_instance.subarea_name if subarea_instance else website_constants.not_in_db_special_code,
+                    'subarea_code': subarea_instance.subarea_code if subarea_instance else website_constants.not_in_db_special_code ,
+                    'supplier_id': supplier_id,
+                    'supplier_name': supplier_name,
+                    'supplier_code': supplier_code,
+                    'supplier_type_code': supplier_type_code
+                })
+
+            data = {
+                'sheet_name': website_constants.code_to_sheet_names[supplier_type_code],
+                'headers': website_constants.basic_supplier_export_headers,
+                'data_keys': website_constants.basic_supplier_data_keys,
+                'suppliers': result
+            }
+            file_name = website_utils.generate_supplier_basic_sheet_mail(data)
+
+            email_data = {
+                'subject': 'The all society data of test server in  proper format',
+                'body': 'PFA data of all suppliers in the system with supplier_type_code {0}'.format(supplier_type_code),
+                'to': [website_constants.emails['bd_head']]
+            }
+
+            attachment = {
+                'file_name': file_name,
+                'mime_type': website_constants.mime['xlsx']
+            }
+
+            # send mail to Bd Head with attachment
+            bd_head_async_id = tasks.send_email.delay(email_data, attachment=attachment).id
+            return ui_utils.handle_response(class_name, data=bd_head_async_id, success=True)
+
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)

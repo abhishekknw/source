@@ -67,3 +67,6 @@ default_poster_per_tower = 6
 default_standee_per_tower = 3
 default_stall_per_society = 1
 default_flier_frequency_per_society = 4
+
+# Guest User code
+guest_user_code = '99'

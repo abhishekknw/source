@@ -4,19 +4,19 @@
 </div>
 <div class="hpadding20">
 	 <div class="col-md-4 offset-0">
-			 <div class="sctext left margtop15 grey" style="color:#0fa491;"><span>{{society.flat_count}}</span><br>
+			 <div class="sctext left margtop15 grey" style="color:#0fa491;"><span>{{society.flat_count||'NA'}}</span><br>
 					<label style="font-size:15px;" class="grey">No.of Flats </label>
 			 </div>
 			 <div class="clearfix"></div>
 	 </div>
 	 <div class="col-md-4 offset-0">
-		 <div class="sctext left margtop15"  style="color:#0fa491;">{{society.flat_type_count}} <br>
+		 <div class="sctext left margtop15"  style="color:#0fa491;">{{society.flat_type_count||'NA'}} <br>
 				<label style="font-size:15px;"class="grey">Types of Flat</label>
 		 </div>
 		 <div class="clearfix"></div>
 	 </div>
 	 <div class="col-md-4 offset-0">
-			 <div class="sctext left margtop15" style="color:#0fa491;">{{society.flat_avg_size}}<br>
+			 <div class="sctext left margtop15" style="color:#0fa491;">{{society.flat_avg_size||'NA'}}<br>
 					<label style="font-size:15px;" class="grey">Avg flat/carpet area</label>
 			 </div>
 			 <div class="clearfix"></div>
@@ -24,21 +24,33 @@
 	 <div class="clearfix"></div>
 	 <br/>
 </div>
+<!--  -->
 <div class="hpadding20">
 	 <div class="col-md-4 offset-0">
-		 <div class="sctext left margtop15" style="color:#0fa491;"><span>{{residentCount.residents}}</span><br>
+		 <div class="sctext left margtop15" style="color:#0fa491;"><span>{{society.age_of_society||'NA'}}</span><br>
+			 <label style="font-size:15px;" class="grey">Possession Year</label>
+		 </div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="clearfix"></div>
+	<br/>
+</div>
+<!-- end -->
+<div class="hpadding20">
+	 <div class="col-md-4 offset-0">
+		 <div class="sctext left margtop15" style="color:#0fa491;"><span>{{residentCount.residents||NA}}</span><br>
 			 <label style="font-size:15px;" class="grey">Estimated residents</label>
 		 </div>
 		<div class="clearfix"></div>
 	</div>
 	<div class="col-md-4 offset-0">
-		 <div class="sctext left margtop15" style="color:#0fa491;">{{society.tower_count}}<br>
+		 <div class="sctext left margtop15" style="color:#0fa491;">{{society.tower_count||'NA'}}<br>
 				<label style="font-size:15px;" class="grey">No.of Towers</label>
 		 </div>
 		 <div class="clearfix"></div>
 	</div>
 	<div class="col-md-4 offset-0">
-	 <div class="sctext left margtop15" style="color:#0fa491;">{{society.average_rent}}<br>
+	 <div class="sctext left margtop15" style="color:#0fa491;">{{society.average_rent||'NA'}}<br>
 		 <label style="font-size:15px;" class="grey">Avg rent/sq.ft</label>
 	 </div>
 	 <div class="clearfix"></div>
@@ -108,6 +120,22 @@
 	</div>
 </div>-->
 <!--<div d="map-canvas"></div>Map End-->
+<!--start: amenities  -->
+<div class="hpadding20">
+	 <div class="line4"></div>
+		 <span class="opensans dark size16 bold">Amenities</span><br><br>
+</div>
+<div class="hpadding20" ng-if="societyDetails" ng-repeat="amenity in amenities">
+	 <div class="col-md-4 offset-2">
+		 <div class="sctext left margtop15 grey">
+			 <img ng-src="{{getAmenityIcon(amenity.amenity.code)}}"/>&nbsp;{{amenity.amenity.name}}
+	 	</div>
+	 	<div class="clearfix"></div>
+	</div>
+</div>
+<div ng-if="!amenities.length" style="text-align:center"><label style="font-size:15px;" class="grey">No Amenities Available</label></div>
+<br/><br/><br/>
+<!--end: amenities  -->
  <!--Preferences Start-->
 	 <div class="hpadding20">
 			<div class="line4"></div>

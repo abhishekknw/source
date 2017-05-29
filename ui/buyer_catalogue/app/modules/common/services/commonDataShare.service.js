@@ -6,6 +6,7 @@ angular.module('catalogueApp')
   var commonDataShare = {};
   var url_base = 'v0/ui/website/';
   var url_base1 = 'v0/ui/'
+  var url_base_user = 'v0/'
 
    commonDataShare.showMessage = function(msg){
      alert(msg);
@@ -28,7 +29,7 @@ angular.module('catalogueApp')
    }
 
    commonDataShare.getUserDetails = function(userId){
-     var url = url_base1 + "user/" + userId + "/";
+     var url = url_base_user + "user/" + userId + "/";
      return machadaloHttp.get(url);
    }
 

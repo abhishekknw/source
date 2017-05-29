@@ -9,7 +9,7 @@ from django.contrib.contenttypes import generic
 from django.db import IntegrityError
 from django.db import transaction
 from django.db.models import Q
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
@@ -18,6 +18,7 @@ from django.contrib.auth import authenticate, login
 # third party imports
 import requests
 from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets
 from rest_framework.decorators import detail_route,list_route
 from rest_framework import status
 from rest_framework.response import Response
@@ -39,11 +40,12 @@ from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, 
                     CompanyFloorSerializer, CorporateBuildingGetSerializer, CorporateCompanySerializer, CorporateParkCompanySerializer, \
                     SupplierTypeSalonSerializer, SupplierTypeGymSerializer, FlyerInventorySerializer, SupplierTypeBusShelterSerializer
 
-from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory
+from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory,SupplierAmenitiesMap
 from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuilding, \
                     CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
 from v0.ui.serializers import SocietyListSerializer
+from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
 
 # project imports
 import utils as ui_utils
@@ -53,141 +55,9 @@ from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas, BaseUs
 from constants import keys, decision
 import constants as ui_constants
 from website.utils import save_price_mapping_default
-from website.serializers import BaseUserSerializer, GuestUserSerializer
 import v0.models as models
 import v0.errors as errors
-
-
-class UserViewSet(viewsets.ViewSet):
-    """
-    A View set for handling all the user related logic
-    """
-    authentication_classes = [] 
-    permission_classes = []
-
-    def retrieve(self, request, pk=None):
-        """
-        The API is only used to fetch one User object by user id.
-        Args:
-            request: The request body
-            pk: The pk of BaseUser table
-
-        Returns: a User object
-        """
-        class_name = self.__class__.__name__
-        try:
-            user = BaseUser.objects.get(pk=pk)
-            serializer = BaseUserSerializer(user)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    def update(self, request, pk=None):
-        """
-        API used to update one single user. The API does not update a password for a user, though you have to
-        provide password in the request body. There is a separate api for updating password of the user.
-        Args:
-            request: A request body
-            pk: pk value
-
-        Returns: updated one object
-
-        """
-        class_name = self.__class__.__name__
-        try:
-            user = BaseUser.objects.get(pk=pk)
-            serializer = BaseUserSerializer(user, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    def create(self, request):
-        """
-        Create one single user
-        Args:
-            request:  Request body
-
-        Returns: created user
-        """
-        class_name = self.__class__.__name__
-        try:
-            serializer = BaseUserSerializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    def list(self, request):
-        """
-        list all users in the system
-        Args:
-            request: The request body
-
-        Returns: list all users
-
-        """
-        class_name = self.__class__.__name__
-        try:
-            users = BaseUser.objects.all()
-            serializer = BaseUserSerializer(users, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    def destroy(self, request, pk=None):
-        """
-        Deletes a single user
-        Args:
-            request: The Request body
-            pk: pk value
-
-        Returns: pk of object which got deleted
-
-        """
-        class_name = self.__class__.__name__
-        try:
-            BaseUser.objects.get(pk=pk).delete()
-            return ui_utils.handle_response(class_name, data=pk, success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
-
-    @detail_route(methods=['POST'])
-    def change_password(self, request, pk=None):
-        """
-        This API must be used only to change password of the user.
-        Args:
-            request: Request method
-            pk: pk value
-        Returns: changes the password of the BaseUser instance and returns a success message
-
-        """
-        class_name = self.__class__.__name__
-        try:
-            user = BaseUser.objects.get(pk=pk)
-            old_password = request.data['old_password']
-            new_password = request.data['new_password']
-            is_old_password_valid = user.check_password(old_password)
-            if is_old_password_valid:
-                user.set_password(new_password)
-                user.save()
-            else:
-                return ui_utils.handle_response(class_name, data='Your old_password does not match the password we have in our database')
-            return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+import v0.ui.website.constants as website_constants
 
 
 class UsersProfilesAPIView(APIView):
@@ -379,11 +249,7 @@ class GenerateSupplierIdAPIView(APIView):
             if not ui_utils.check_city_level_permission(user, supplier_type_code, city_code, ui_constants.permission_type_create):
                 return ui_utils.handle_response(class_name, errors.SUPPLIER_CITY_NO_CREATE_PERMISSION_ERROR.format(supplier_type_code, city_code))
 
-            response = ui_utils.get_supplier_id(request, data)
-            if not response.data['status']:
-                return response
-
-            data['supplier_id'] = response.data['data']
+            data['supplier_id'] = ui_utils.get_supplier_id(request, data)
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
 
@@ -434,6 +300,10 @@ class SupplierImageDetails(APIView):
             images = ImageMapping.objects.filter(object_id=id, content_type=content_type)
             image_serializer = ImageMappingSerializer(images, many=True)
             result['supplier_images'] = image_serializer.data
+
+            amenities = SupplierAmenitiesMap.objects.filter(object_id=id, content_type=content_type)
+            amenity_serializer = SupplierAmenitiesMapSerializer(amenities, many=True)
+            result['amenities'] = amenity_serializer.data
 
             return ui_utils.handle_response(class_name, data=result, success=True)
 
@@ -933,6 +803,7 @@ class FlatTypeAPIView(APIView):
         den = 0.0
         totalFlats = 0
         flag = True
+        content_type = ui_utils.fetch_content_type(website_constants.society_code)
         if request.data['flat_details_available']:
             for key in request.data['flat_details']:
                 if 'size_builtup_area' in key and 'flat_rent' in key and key['size_builtup_area'] > 0 and key['flat_rent'] > 0:
@@ -973,7 +844,7 @@ class FlatTypeAPIView(APIView):
             else:
                 serializer = FlatTypeSerializer(data=key)
             if serializer.is_valid():
-                serializer.save(society=society)
+                serializer.save(society=society,content_type=content_type,object_id=society.supplier_id)
             else:
                 return Response(serializer.errors, status=400)
 
@@ -1039,11 +910,7 @@ class ImportSummaryData(APIView):
                         'supplier_code': data['supplier_code']
                     }
 
-                    response = ui_utils.get_supplier_id(request, supplier_id_data)
-                    if not response.data['status']:
-                        return response
-
-                    data['supplier_id'] = response.data['data']
+                    data['supplier_id'] = ui_utils.get_supplier_id(request, supplier_id_data)
                     data['supplier_type_code'] = 'RS'
 
                     # save pricing information in price_mapping_default table
@@ -1051,17 +918,12 @@ class ImportSummaryData(APIView):
                     if not response.data['status']:
                         return response
 
-                    url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
-                    url = BASE_URL + url[1:]
-                    headers = {
-                        'Content-Type': 'application/json',
-                        'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-                    }
-                    response = requests.post(url, json.dumps(data), headers=headers)
-                    if response.status_code != status.HTTP_200_OK:
-                        #return ui_utils.handle_response(class_name, data=response.json())
-                        error_list.append(str(data['supplier_id']) + ' ' +  str(response.json()))
-                        continue
+                    request = InventoryPricingAPIView.as_view()
+
+                    view = InventorySummaryAPIView.as_view()
+                    response = view(data, {'id': data['supplier_id']})
+                    if not response.data['status']:
+                        error_list.append(response.data['data'])
 
             source_file.close()
             return ui_utils.handle_response(class_name, data=error_list, success=True)
@@ -1085,9 +947,14 @@ class InventorySummaryAPIView(APIView):
             inventory_object = InventorySummary.objects.get_supplier_type_specific_object(data, id)
             # End: code added and changed for getting supplier_type_code
             if not inventory_object:
-                return Response(data={'Inventory object does not exist for this supplier id {0}'.format(id)},
-                                status=status.HTTP_400_BAD_REQUEST)
-            return Response(model_to_dict(inventory_object), status=status.HTTP_200_OK)
+                return Response(data={},
+                                status=status.HTTP_200_OK)
+            result = {}
+            result['inventory'] = model_to_dict(inventory_object)
+            inventory_allowed_codes = website_utils.get_inventories_allowed(inventory_object)
+            result['inventories_allowed_codes'] = inventory_allowed_codes
+
+            return Response(data=result, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1237,8 +1104,7 @@ class InventorySummaryAPIView(APIView):
                 if 'id' in request.data:
                     flag1 = False
                     if request.data.get('flier_allowed'):
-                        if request.data.get('flier_frequency') and inventory_object.flier_frequency < request.data.get(
-                                'flier_frequency'):
+                        if request.data.get('flier_frequency') and inventory_object.flier_frequency < request.data.get('flier_frequency'):
                             if not inventory_object.flier_frequency:
                                 ui_utils.save_flyer_locations(0, request.data.get('flier_frequency'), supplier_object, supplier_type_code)
                             else:
@@ -1449,6 +1315,28 @@ class InventorySummaryAPIView(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
         except Exception as e:
             return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+
+class PostInventorySummary(APIView):
+    """
+
+    """
+    def post(self, request):
+        """
+
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+
+            pass
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
 
 
 class BasicPricingAPIView(APIView):
@@ -2141,12 +2029,9 @@ class EventAPIView(APIView):
             return Response(status=404)
 
     def post(self, request, id, format=None):
-        ##print request.data
         society=SupplierTypeSociety.objects.get(pk=id)
-        '''if request.data['event_details_available']:
-            if request.data['events_count_per_year'] != len(request.data['event_details']):
-                return Response({'message':'No of Events entered does not match event count'},status=400)
-        '''
+        content_type = ui_utils.fetch_content_type(website_constants.society_code)
+
         for key in request.data['event_details']:
             if 'event_id' in key:
                 item = Events.objects.get(pk=key['event_id'])
@@ -2154,7 +2039,7 @@ class EventAPIView(APIView):
             else:
                 serializer = EventsSerializer(data=key)
             if serializer.is_valid():
-                serializer.save(supplier=society)
+                serializer.save(supplier=society, object_id=id, content_type=content_type)
             else:
                 return Response(serializer.errors, status=400)
 
@@ -2172,7 +2057,6 @@ class EventAPIView(APIView):
             serializer.save(supplier=society)
         else:
             return Response(serializer.errors, status=400)
-
 
         return Response(serializer.data, status=201)
 
@@ -2795,7 +2679,6 @@ class saveBasicSalonDetailsAPIView(APIView):
         except SupplierTypeSalon.MultipleObjectsReturned:
             return Response(status=406)
 
-
     def post(self, request,id,format=None):
         error = {}
         if 'supplier_id' in request.data:
@@ -2995,40 +2878,116 @@ class BusShelterSearchView(APIView):
             return ui_utils.handle_response(class_name, exception_object=e)
 
 
-class GuestUser(APIView):
+class EventViewSet(viewsets.ViewSet):
     """
-    creates a guest user with the details. The reason this api is written despite having a UserViewSet to manage users is
-    that, the post api will get or create user from username field. The ViewSet does not return the password. but we need
-    to in case of guest user.
+    Event View Set
     """
-    authentication_classes = []  # we do not need authentication in this case
-    permission_classes = []  # we do not need authentication in this case
 
-    def post(self, request):
+    def list(self, request):
         """
-        POST api creates a guest user. All guest users have code 99. The random password is also returned which makes possible
-        to authenticate this user later
+        Lists all events
+        Args:
+            request:
+
+        Returns:
+
         """
         class_name = self.__class__.__name__
         try:
-            username = request.data['username']
-            mobile = request.data['mobile']
-            first_name = request.data['first_name']
-            user, is_created = models.BaseUser.objects.get_or_create(username=username)
-            password = website_utils.get_random_pattern()
-            user.set_password(password)
-            user.mobile = mobile
-            user.first_name = first_name
-            user.user_code = ui_constants.guest_user_code
-            user.save()
-            data = {
-                'id': user.id,
-                'first_name': user.first_name,
-                'mobile': user.mobile,
-                'user_code': user.user_code,
-                'password': password,
-                'username': user.username
-            }
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            supplier_id = request.query_params['supplier_id']
+            supplier_type_code = request.query_params['supplier_type_code']
+            content_type = ui_utils.fetch_content_type(supplier_type_code)
+            events = models.Events.objects.filter(object_id=supplier_id, content_type=content_type)
+            serializer = EventsSerializer(events, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e :
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def retrieve(self, request, pk=None):
+        """
+
+        Args:
+            request:
+            pk:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            serializer = EventsSerializer(models.Events.objects.get(pk=pk))
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
+
+    def update(self, request, pk=None):
+        """
+        updates a single event object
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            event = models.Events.objects.get(pk=pk)
+            serializer = EventsSerializer(event, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def create(self, request):
+        """
+        creates a single event
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            event_name = request.data['event_name']
+            supplier_id = request.data['supplier_id']
+            supplier_type_code = request.data['supplier_type_code']
+            supplier_class = ui_utils.get_model(supplier_type_code)
+
+            # see if the supplier actually exist
+            supplier_class.objects.get(pk=supplier_id)
+
+            event, is_created = models.Events.objects.get_or_create(event_name=event_name, object_id=supplier_id, content_type=ui_utils.fetch_content_type(supplier_type_code))
+            data = request.data.copy()
+            # remove this keys as serializer would throw error if they don't match with db fields
+            data.pop('event_name')
+            data.pop('supplier_id')
+            data.pop('supplier_type_code')
+            serializer = EventsSerializer(event, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def destroy(self, request, pk=None):
+        """
+        deletes an event object
+        Args:
+            request:
+            pk:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            models.Events.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=pk, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+

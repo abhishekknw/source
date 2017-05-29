@@ -278,7 +278,7 @@ APP_NAME = 'v0'
 
 # CELERY STUFF
 
-BROKER_URL = 'redis://localhost:6379'
+BROKER_URL = 'redis://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com:6379'
 CELERY_IMPORTS = ['v0.ui.website.tasks']
 
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'

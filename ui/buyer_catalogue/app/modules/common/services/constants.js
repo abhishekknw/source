@@ -20,6 +20,10 @@ angular
     errorMsg : 'Error Occured',
     server_connection_error : 'Server is down, Please Try again',
     emptyResponse : 'No results Found',
+    btn_success : 'btn-success',
+    warn_user_msg : 'Are You Sure?',
+    save_success : 'Saved successfully',
+    save_error : 'Some error occured, Data not saved',
     shortlisted : 'Shortlisted',
     removed : 'Removed',
     buffered : 'Buffered',
@@ -31,6 +35,7 @@ angular
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
     center_warning : 'Do you want to create only one center ?',
     //mapview
+    importfile_error : 'Please select correct file',
     save_success : 'Saved successfully',
     save_error : 'Some error occured, Data not saved',
     importfile_error : 'Some error occurred while importing file.',
@@ -82,6 +87,14 @@ angular
     business_error : 'Error occured in saving business details',
     //manage user
     createUser_success : 'Successfully Created',
+    create_group_success : 'Group Created Successfully',
+    create_group_error : 'Error Occured in creating group',
+    password_error : 'Must match to password',
+    delete_confirm_user : 'Do you really want to delete this user?',
+    delete_confirm : 'Yes! Delete it!',
+    delete_confirm_group : 'Do you really want to delete this Group?',
+    changePassword_success : 'Password changed Successfully',
+
     //guestPage
     location_error : 'Please enter accurate location',
 

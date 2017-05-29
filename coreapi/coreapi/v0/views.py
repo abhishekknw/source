@@ -5,9 +5,11 @@ from django.shortcuts import get_object_or_404
 from django.apps import apps
 import django.apps
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, Group
 from django.forms import model_to_dict
 from django.conf import settings
+from bulk_update.helper import bulk_update
+
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions
@@ -15,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
-from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer
+from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, BaseUserSerializer, BaseUserUpdateSerializer
 from rest_framework.decorators import detail_route, list_route
 from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, BusinessSubTypes, AdInventoryType, DurationType, \
     Amenity, SupplierAmenitiesMap
@@ -26,6 +28,7 @@ import v0.ui.utils as ui_utils
 import errors
 import v0.ui.website.constants as website_constants
 import constants as v0_constants
+import v0.ui.website.utils as website_utils
 
 
 class PopulateContentTypeFields(APIView):
@@ -1883,6 +1886,343 @@ class PopulateAmenities(APIView):
             SupplierAmenitiesMap.objects.all().delete()
             SupplierAmenitiesMap.objects.bulk_create(supplier_amenity_instances)
 
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class UserViewSet(viewsets.ViewSet):
+    """
+    A View set for handling all the user related logic
+    """
+    authentication_classes = []
+    permission_classes = []
+
+    def retrieve(self, request, pk=None):
+        """
+        The API is only used to fetch one User object by user id.
+        Args:
+            request: The request body
+            pk: The pk of BaseUser table
+
+        Returns: a User object
+        """
+        class_name = self.__class__.__name__
+        try:
+            user = BaseUser.objects.get(pk=pk)
+            serializer = BaseUserSerializer(user)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def update(self, request, pk=None):
+        """
+        API used to update one single user. The API does not update a password for a user, though you have to
+        provide password in the request body. There is a separate api for updating password of the user.
+        Args:
+            request: A request body
+            pk: pk value
+
+        Returns: updated one object
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            user = BaseUser.objects.get(pk=pk)            
+            groups = Group.objects.filter(name__in=request.data.get('groups'))
+            serializer = BaseUserUpdateSerializer(user, data=request.data)
+            if serializer.is_valid():
+                user = serializer.save()
+                for instance in groups:
+                    user.groups.add(instance)
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def create(self, request):
+        """
+        Create one single user
+        Args:
+            request:  Request body
+
+        Returns: created user
+        """
+        class_name = self.__class__.__name__
+        try:
+            # fetch all groups objects
+            group_instances = Group.objects.filter(name__in=request.data.get('groups'))
+            serializer = BaseUserSerializer(data=request.data)
+            if serializer.is_valid():
+                user = serializer.save()
+                for instance in group_instances:
+                    user.groups.add(instance)
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def list(self, request):
+        """
+        list all users in the system
+        Args:
+            request: The request body
+
+        Returns: list all users
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            users = BaseUser.objects.all()
+            serializer = BaseUserSerializer(users, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def destroy(self, request, pk=None):
+        """
+        Deletes a single user
+        Args:
+            request: The Request body
+            pk: pk value
+
+        Returns: pk of object which got deleted
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            BaseUser.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=pk, success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    @detail_route(methods=['POST'])
+    def change_password(self, request, pk=None):
+        """
+        This API must be used only to change password of the user.
+        Args:
+            request: Request method
+            pk: pk value
+        Returns: changes the password of the BaseUser instance and returns a success message
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            user = BaseUser.objects.get(pk=pk)
+            new_password = request.data['password']
+            user.set_password(new_password)
+            user.save()
+            return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class GroupViewSet(viewsets.ViewSet):
+    """
+    View set around groups
+    """
+    def list(self, request):
+        """
+        Lists all the groups
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            groups = Group.objects.all()
+            serializer = GroupSerializer(groups, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def retrieve(self, request, pk=None):
+        """
+
+        Args:
+            request:
+            pk:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            group = Group.objects.get(pk=pk)
+            serializer = GroupSerializer(group)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def update(self, request, pk=None):
+        """
+
+        Args:
+            request:
+            pk:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            group = Group.objects.get(pk=pk)
+            serializer = GroupSerializer(group, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def create(self, request):
+        """
+
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            # fetch all groups objects
+            serializer = GroupSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+    def destroy(self, request, pk=None):
+        """
+        Deletes a single group
+        Args:
+            request: The Request body
+            pk: pk value
+
+        Returns: pk of object which got deleted
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            Group.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=pk, success=True)
+        except ObjectDoesNotExist as e:
+            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class GuestUser(APIView):
+    """
+    creates a guest user with the details. The reason this api is written despite having a UserViewSet to manage users is
+    that, the post api will get or create user from username field. The ViewSet does not return the password. but we need
+    to in case of guest user.
+    """
+    authentication_classes = []  # we do not need authentication in this case
+    permission_classes = []  # we do not need authentication in this case
+
+    def post(self, request):
+        """
+        POST api creates a guest user. All guest users have code 99. The random password is also returned which makes possible
+        to authenticate this user later
+        """
+        class_name = self.__class__.__name__
+        try:
+            username = request.data['username']
+            mobile = request.data['mobile']
+            first_name = request.data['first_name']
+            user, is_created = BaseUser.objects.get_or_create(username=username)
+            password = website_utils.get_random_pattern()
+            user.set_password(password)
+            user.mobile = mobile
+            user.first_name = first_name
+            user.user_code = v0_constants.guest_user_code
+            user.save()
+            data = {
+                'id': user.id,
+                'first_name': user.first_name,
+                'mobile': user.mobile,
+                'user_code': user.user_code,
+                'password': password,
+                'username': user.username
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e)
+
+
+class SetParams(APIView):
+    """
+    updates societies  fields and sets correct values for built_up area for flats.
+
+    """
+
+    def get(self, request):
+        """
+
+        Args:
+            request:
+
+        Returns:
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            all_societies = SupplierTypeSociety.objects.all()
+            supplier_ids = [supplier.supplier_id for supplier in all_societies]
+            supplier_map = {supplier_instance.supplier_id: supplier_instance for supplier_instance in all_societies}
+            content_type = ui_utils.fetch_content_type('RS')
+            flat_objects = FlatType.objects.filter(object_id__in=supplier_ids, content_type=content_type)
+
+            result = {}
+            for flat_instance in flat_objects:
+                supplier_id = flat_instance.object_id
+                flat_type = flat_instance.flat_type
+
+                if not flat_instance.size_builtup_area:
+                    flat_instance.size_builtup_area = flat_instance.size_carpet_area if flat_instance.size_carpet_area else 0
+
+                flat_instance.size_carpet_area = flat_instance.size_builtup_area / 1.2
+
+                if not result.get(supplier_id):
+                    result[supplier_id] = {}
+
+                result[supplier_id][flat_type] = {
+                    'flat_count': flat_instance.flat_count if flat_instance.flat_count else 0,
+                    'flat_rent': flat_instance.flat_rent if flat_instance.flat_rent else 0,
+                    'flat_area': flat_instance.size_builtup_area if flat_instance.size_builtup_area else 0,
+                }
+            # update the flat objects first
+            bulk_update(flat_objects)
+
+            for supplier_id, flat_detail in result.iteritems():
+                total_rent = 0
+                total_area = 0.0
+                for flat_type, flat_detail in result[supplier_id].iteritems():
+                    total_rent += (int(flat_detail['flat_count']) * int(flat_detail['flat_rent']))
+                    total_area += float(flat_detail['flat_area'])
+                if not total_area:
+                    supplier_map[supplier_id].flat_avg_rental_persqft = 0
+                else:
+                    supplier_map[supplier_id].flat_avg_rental_persqft = int(total_rent / total_area)
+
+            # now update the society objects
+            bulk_update(supplier_map.values())
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)

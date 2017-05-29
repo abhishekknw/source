@@ -84,11 +84,15 @@ urlpatterns = patterns('',
     url(r'^create-adinventory-duration-types/$', views.CreateAdInventoryTypeDurationType.as_view()),
     url(r'^assign-inventories/$', views.AssignInventories.as_view()),
     url(r'^set-inventory-pricing/$', views.SetInventoryPricing.as_view()),
-    url(r'^populate-amenities/$', views.PopulateAmenities.as_view())
-)
+    url(r'^populate-amenities/$', views.PopulateAmenities.as_view()),
+    url(r'^guest-user/$', views.GuestUser.as_view()),
+    url(r'^set-params/$', views.SetParams.as_view()),
+    )
 
 # adding urls for Permission View Set
 router = DefaultRouter()
 router.include_format_suffixes = False
 router.register(r'permission', views.PermissionsViewSet, base_name='permission')
+router.register(r'^user', views.UserViewSet, base_name='user')
+router.register(r'^group', views.GroupViewSet, base_name='group')
 urlpatterns += router.urls
