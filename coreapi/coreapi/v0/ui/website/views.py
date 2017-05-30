@@ -1195,6 +1195,9 @@ class FilteredSuppliers(APIView):
 
             # this is the main list. if no filter is selected this is what is returned by default
             cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, common_filters_query)
+            cache_key = None
+
+
             if cache.get(cache_key):
                 master_suppliers_list = cache.get(cache_key)
             else:
@@ -1208,9 +1211,11 @@ class FilteredSuppliers(APIView):
                 return response
             inventory_type_query = response.data['data']
 
+
             if inventory_type_query.__len__():
                 inventory_type_query &= Q(content_type=content_type)
                 cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, inventory_type_query)
+                cache_key = None
                 if cache.get(cache_key):
                     inventory_type_query_suppliers = cache.get(cache_key)
                 else:
@@ -1230,6 +1235,7 @@ class FilteredSuppliers(APIView):
 
             # query now for real objects for supplier_id in the list
             cache_key = v0_utils.create_cache_key(class_name, final_suppliers_id_list)
+            cache_key = None
             if cache.get(cache_key):
                 filtered_suppliers = cache.get(cache_key)
             else:
@@ -1258,6 +1264,7 @@ class FilteredSuppliers(APIView):
             final_suppliers_id_list = total_suppliers.keys()
 
             cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
+            cache_key = None
             if cache.get(cache_key):
                 pi_index_map = cache.get(cache_key)
             else:
@@ -3899,16 +3906,11 @@ class CampaignInventory(APIView):
             cache_key = v0_utils.create_cache_key(class_name, campaign_id)
             cache_value = cache.get(cache_key)
             cache_value = None
-            if cache_value:
-                print "cache hit on campaign id \n"
-                return ui_utils.handle_response(class_name, data=cache_value, success=True)
-            else:
-                print "cache miss on campaign id \n"
-                response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
-                if not response.data['status']:
-                    return response
-                cache.set(cache_key, response.data['data'])
-                return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
+            if not response.data['status']:
+                return response
+            cache.set(cache_key, response.data['data'])
+            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
@@ -3968,8 +3970,6 @@ class CampaignSuppliersInventoryList(APIView):
             assigned_to = request.query_params.get('assigned_to')
             proposal_id = request.query_params.get('proposal_id')
             do_not_query_by_date = request.query_params.get('do_not_query_by_date')
-
-
             all_users = models.BaseUser.objects.all().values('id', 'username')
             user_map = {detail['id']: detail['username'] for detail in all_users}
 
@@ -3987,28 +3987,25 @@ class CampaignSuppliersInventoryList(APIView):
                 assigned_to_query = Q(assigned_to_id=long(assigned_to))
 
             cache_key = v0_utils.create_cache_key(class_name, assigned_date_range_query, proposal_query, assigned_to_query)
-            if cache.get(cache_key):
-                inv_act_assignment_objects = cache.get(cache_key)
-            else:
-                # we do a huge query to fetch everything we need at once.
-                inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
-                    select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
-                                   'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
-                    filter(assigned_date_range_query, proposal_query, assigned_to_query).values(
 
-                    'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type', 'assigned_to',
-                    'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
-                    'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
-                    'inventory_activity__shortlisted_inventory_details',
-                    'inventory_activity__shortlisted_inventory_details__inventory_id',
-                    'inventory_activity__shortlisted_inventory_details__inventory_content_type',
-                    'inventory_activity__shortlisted_inventory_details__comment',
-                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
-                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
-                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
-                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
-                )
-                cache.set(cache_key, inv_act_assignment_objects)
+            # we do a huge query to fetch everything we need at once.
+            inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
+                select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
+                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
+                filter(assigned_date_range_query, proposal_query, assigned_to_query).values(
+
+                'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity', 'inventory_activity__activity_type', 'assigned_to',
+                'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
+                'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
+                'inventory_activity__shortlisted_inventory_details',
+                'inventory_activity__shortlisted_inventory_details__inventory_id',
+                'inventory_activity__shortlisted_inventory_details__inventory_content_type',
+                'inventory_activity__shortlisted_inventory_details__comment',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
+            )
 
             total_shortlisted_spaces_list = []  # this is required to fetch supplier details later
             inv_act_assignment_ids = set()  # this is required to fetch images data later
