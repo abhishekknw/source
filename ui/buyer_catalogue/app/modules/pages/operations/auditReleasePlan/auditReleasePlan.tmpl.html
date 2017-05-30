@@ -32,7 +32,7 @@
               <button  class="btn btn-info" ng-disabled="invIdList.length == 0 || isDisable(rowIndex)" data-target="#manageDatesModal" data-toggle="modal" data-backdrop="static" ng-click="getActivityDates(supplier)">Manage Date</button>
             </div><br>
             <div>
-              <a  class="" data-target="#showDatesModal" data-toggle="modal" ng-click="showActivityDates(filter.detail)">View Dates</a>
+              <button  class="btn" data-target="#showDatesModal" data-toggle="modal" ng-click="showActivityDates(filter.detail)" ng-disabled="savingDates">View Dates</button>
             </div>
             </td>
             <td class="col-md-8">

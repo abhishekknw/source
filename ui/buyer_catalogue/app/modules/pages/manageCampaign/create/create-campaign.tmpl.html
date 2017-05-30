@@ -22,7 +22,7 @@
                 </select>
             </span>
           </div>
-            <div class="col-md-4">
+            <div class="col-md-4" ng-if="campaignAccessAllowed">
               <label for="new">Create New Business</label>
               <input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
             </div>
@@ -101,7 +101,7 @@
                 </tr>
               </tbody>
             </table>
-            <button class="btn btn-danger" ng-click="addNewAccount()">Add New Account</button>
+            <button class="btn btn-danger" ng-click="addNewAccount()" ng-if="campaignAccessAllowed">Add New Account</button>
           </div>
         </div>
       </form>
@@ -134,11 +134,11 @@
                       <span ng-if="isUploaded">View</span>
                     </button>
                   </td>
-                  <td ng-if="!isUploaded">
+                  <!-- <td ng-if="!isUploaded">
                     <button class="btn btn-danger active" ng-click="showProposalDetails(proposal.proposal_id)">
                       Replicate
                     </button>
-                  </td>
+                  </td> -->
                   <td>
                     <button ng-hide="hideData" class="btn btn-danger active" ngf-select="upload($file,proposal.proposal_id)" ng-loading="uploadfile">Upload</button>
                   </td>
@@ -148,7 +148,7 @@
                 </tr>
               </tbody>
             </table>
-            <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)">Create New Proposal</button>
+            <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" ng-if="campaignAccessAllowed">Create New Proposal</button>
             <span class="show-error" ng-show="error">Please select an account</span>
           </div>
         </div>

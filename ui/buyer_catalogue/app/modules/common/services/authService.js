@@ -7,10 +7,12 @@ angular.module('Authentication')
     function ($http, $location, $rootScope, $window, $timeout, commonDataShare) {
 
         var authService = {};
+        var userInfo = {};
         var storageCredentials = 'machadalo-credentials';
         var storagePermissions = 'machadalo-permissions';
         var apiHost = APIBaseUrl;
         var permissions = {};
+        var userData = {};
         var user_codes = {
           '0' : 'root',
           '03': 'agency',
@@ -20,13 +22,17 @@ angular.module('Authentication')
         authService.Login = function (username, password, callback) {
             $http.post(apiHost + 'api-token-auth/', { username: username, password: password })
                 .then(function onSuccess(response) {
+                  console.log(response);
                   $window.localStorage.user_code = user_codes[response.data.user_code];
                    if (response.data.token) {
+                     userData = response.data;
                       authService.SetCredentials(response.data);
                       response.data.logged_in = true;
                       callback(response.data);
                       commonDataShare.getUserDetails($rootScope.globals.currentUser.user_id)
                       .then(function onSuccess(response){
+                        $window.localStorage.userInfo = JSON.stringify(response.data.data);
+                        $rootScope.globals.userInfo = JSON.parse($window.localStorage.userInfo);                        
                         if(response.data.data.is_superuser == true)
                           $window.localStorage.isSuperUser = 'true';
                         else
@@ -115,9 +121,13 @@ angular.module('Authentication')
               if (json) {
                  try {
                     $rootScope.globals.currentUser = JSON.parse(json);
+                    if($window.localStorage.userInfo){
+                      $rootScope.globals.userInfo = JSON.parse($window.localStorage.userInfo);
+                    }
                     return $rootScope.globals.currentUser;
                  }
                  catch (e) {
+                   console.log("dsfsafsafsafsa",e);
                     authService.ClearCredentials();
                  }
               }

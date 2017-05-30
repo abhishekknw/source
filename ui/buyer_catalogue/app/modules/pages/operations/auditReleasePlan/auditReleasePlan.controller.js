@@ -73,7 +73,7 @@ angular.module('catalogueApp')
       function getCampaignReleaseDetails(){
       auditReleasePlanService.getCampaignReleaseDetails($scope.campaign_id)
       	.then(function onSuccess(response){
-          console.log(response);
+          console.log("get values",response);
       		$scope.releaseDetails = response.data.data;
           setDataToModel($scope.releaseDetails.shortlisted_suppliers);
               $scope.loading = response.data;
@@ -242,16 +242,19 @@ angular.module('catalogueApp')
       inventory.splice(index,1);
     }
     $scope.saveActivityDates = function(){
+      $scope.savingDates = true;
       //below function creates complex request structure for data
       editActivityDates();
       auditReleasePlanService.saveActivityDetails($scope.requestaActivityData)
       .then(function onSuccess(response){
         getCampaignReleaseDetails();
         $scope.resetData();
+        $scope.savingDates = false;
         $('#manageDatesModal').modal('hide');
         swal(constants.name,constants.inventory_date_success,constants.success);
       })
       .catch(function onError(response){
+        $scope.savingDates = false;
         $('#manageDatesModal').modal('hide');
         swal(constants.name,constants.inventory_date_error,constants.error);
         console.log("error occured", response.status);

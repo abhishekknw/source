@@ -50,7 +50,7 @@
               </select>
             </td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
-              <input type="number" name="phase" class="form-control spacing" ng-model="supplier.phase" min="1" style="width:70px;">
+              <input type="number" name="phase" class="form-control spacing" ng-model="supplier.phase" min="1" style="width:70px;" ng-disabled="supplier.booking_status != 'BK'">
               <span class="error" ng-show="phaseform.phase.$error.min">{{positiveNoError}}</span>
             </td>
             <!--mode of payment  -->

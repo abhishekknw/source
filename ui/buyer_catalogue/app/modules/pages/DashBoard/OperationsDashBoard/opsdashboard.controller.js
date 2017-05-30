@@ -40,6 +40,8 @@ angular.module('catalogueApp')
         $scope.loading = response.data;
     	})
     	.catch(function onError(response){
+        if(response.status == 403)
+          $location.path('/forbidden');
         $scope.isEmpty = true;
         $scope.loading = response;
     		console.log("error occured", response);

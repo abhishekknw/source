@@ -14,6 +14,7 @@ angular.module('catalogueApp')
         {header : 'View Release Details'},
         {header : 'View Execution Details'}
       ];
+      
       $scope.is_Superuser = $window.localStorage.isSuperUser;
       var getCampaignDetails = function(){
         if($scope.is_Superuser == 'true'){
