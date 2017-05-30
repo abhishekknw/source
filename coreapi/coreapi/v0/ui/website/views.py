@@ -3898,6 +3898,7 @@ class CampaignInventory(APIView):
 
             cache_key = v0_utils.create_cache_key(class_name, campaign_id)
             cache_value = cache.get(cache_key)
+            cache_value = None
             if cache_value:
                 print "cache hit on campaign id \n"
                 return ui_utils.handle_response(class_name, data=cache_value, success=True)
@@ -3910,8 +3911,6 @@ class CampaignInventory(APIView):
                 return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
         except Exception as e:
-            import pdb
-            pdb.set_trace()
             return ui_utils.handle_response(class_name, exception_object=e)
 
     def put(self, request, campaign_id):
