@@ -4165,6 +4165,7 @@ class ProposalToCampaign(APIView):
             if response.data['status']:
                 return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id))
 
+            # these are the current inventories assigned. These are inventories assigned to this proposal when sheet was imported.
             current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
 
             if not current_assigned_inventories:
@@ -4176,57 +4177,66 @@ class ProposalToCampaign(APIView):
                 inv_tuple = (inv.inventory_content_type, inv.inventory_id)
                 current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
 
-            # get all the proposals which are campaign and which overlap with the current campaign
-            response = website_utils.get_overlapping_campaigns(proposal)
-            if not response.data['status']:
-                return response
-            overlapping_campaigns = response.data['data']
-
-            if not overlapping_campaigns:
-                # currently we have no choice but to book all inventories the same proposal_start and end date
-                # this can be made smarter when we know for how many days a particular inventory  is allowed in a
-                # supplier this will help in automatically determining R.D and C.D.
-                inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
-                response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
-                if not response.data['status']:
-                    return response
-                proposal.campaign_state = website_constants.proposal_converted_to_campaign
-                proposal.save()
-                return ui_utils.handle_response(class_name,data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
-
-            already_booked_inventories = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal__in=overlapping_campaigns)
-            already_booked_inventories_map = {}
-
-            for inv in already_booked_inventories:
-                inv_tuple = (inv.inventory_content_type, inv.inventory_id)
-                target_tuple = (inv.release_date, inv.closure_date, inv.shortlisted_spaces.proposal_id)
-                try:
-                    reference = already_booked_inventories_map[inv_tuple]
-                except KeyError:
-                    already_booked_inventories_map[inv_tuple] = []
-                    reference = already_booked_inventories_map[inv_tuple]
-                reference.append(target_tuple)
-
-            response = website_utils.book_inventories(current_assigned_inventories_map, already_booked_inventories_map)
-            if not response.data['status']:
-                return response
-            booked_inventories, inventory_release_closure_list, inv_error_list = response.data['data']
-
-            # if there is something in error list then one or more inventories overlapped with already running campaigns
-            # we do not convert a proposal into campaign in this case
-            if inv_error_list:
-                return ui_utils.handle_response(class_name, data=errors.CANNOT_CONVERT_TO_CAMPAIGN_ERROR.format(proposal_id, inv_error_list))
-
-            # insert the RD and CD dates for each inventory
+            # currently set the R.D and C.D of all inventories to proposal's start and end date.
+            inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
             response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
             if not response.data['status']:
                 return response
-
-            bulk_update(booked_inventories)
             proposal.campaign_state = website_constants.proposal_converted_to_campaign
             proposal.save()
-
             return ui_utils.handle_response(class_name, data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
+
+            # # get all the proposals which are campaign and which overlap with the current campaign
+            # response = website_utils.get_overlapping_campaigns(proposal)
+            # if not response.data['status']:
+            #     return response
+            # overlapping_campaigns = response.data['data']
+            #
+            # if not overlapping_campaigns:
+            #     # currently we have no choice but to book all inventories the same proposal_start and end date
+            #     # this can be made smarter when we know for how many days a particular inventory  is allowed in a
+            #     # supplier this will help in automatically determining R.D and C.D.
+            #     inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
+            #     response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
+            #     if not response.data['status']:
+            #         return response
+            #     proposal.campaign_state = website_constants.proposal_converted_to_campaign
+            #     proposal.save()
+            #     return ui_utils.handle_response(class_name,data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
+            #
+            # already_booked_inventories = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal__in=overlapping_campaigns)
+            # already_booked_inventories_map = {}
+            #
+            # for inv in already_booked_inventories:
+            #     inv_tuple = (inv.inventory_content_type, inv.inventory_id)
+            #     target_tuple = (inv.release_date, inv.closure_date, inv.shortlisted_spaces.proposal_id)
+            #     try:
+            #         reference = already_booked_inventories_map[inv_tuple]
+            #     except KeyError:
+            #         already_booked_inventories_map[inv_tuple] = []
+            #         reference = already_booked_inventories_map[inv_tuple]
+            #     reference.append(target_tuple)
+            #
+            # response = website_utils.book_inventories(current_assigned_inventories_map, already_booked_inventories_map)
+            # if not response.data['status']:
+            #     return response
+            # booked_inventories, inventory_release_closure_list, inv_error_list = response.data['data']
+            #
+            # # if there is something in error list then one or more inventories overlapped with already running campaigns
+            # # we do not convert a proposal into campaign in this case
+            # if inv_error_list:
+            #     return ui_utils.handle_response(class_name, data=errors.CANNOT_CONVERT_TO_CAMPAIGN_ERROR.format(proposal_id, inv_error_list))
+            #
+            # # insert the RD and CD dates for each inventory
+            # response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
+            # if not response.data['status']:
+            #     return response
+            #
+            # bulk_update(booked_inventories)
+            # proposal.campaign_state = website_constants.proposal_converted_to_campaign
+            # proposal.save()
+            #
+            # return ui_utils.handle_response(class_name, data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e)
