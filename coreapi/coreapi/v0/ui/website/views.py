@@ -1194,16 +1194,15 @@ class FilteredSuppliers(APIView):
             inventory_type_query_suppliers = []
 
             # this is the main list. if no filter is selected this is what is returned by default
-            cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, common_filters_query)
-            cache_key = None
-
-
-            if cache.get(cache_key):
-                master_suppliers_list = cache.get(cache_key)
-            else:
-                master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
-                cache.set(cache_key, master_suppliers_list)
-
+            # cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, common_filters_query)
+            # cache_key = None
+            #
+            #
+            # if cache.get(cache_key):
+            #     master_suppliers_list = cache.get(cache_key)
+            # else:
+            master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+            # cache.set(cache_key, master_suppliers_list)
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
             response = website_utils.handle_inventory_filters(inventory_filters)
@@ -1211,16 +1210,18 @@ class FilteredSuppliers(APIView):
                 return response
             inventory_type_query = response.data['data']
 
-
             if inventory_type_query.__len__():
+
                 inventory_type_query &= Q(content_type=content_type)
-                cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, inventory_type_query)
-                cache_key = None
-                if cache.get(cache_key):
-                    inventory_type_query_suppliers = cache.get(cache_key)
-                else:
-                    inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
-                    cache.set(cache_key, inventory_type_query_suppliers)
+
+                # cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, inventory_type_query)
+                # cache_key = None
+                # if cache.get(cache_key):
+                #     inventory_type_query_suppliers = cache.get(cache_key)
+                # else:
+                #
+                inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
+                # cache.set(cache_key, inventory_type_query_suppliers)
 
             # if inventory query was non zero in length, set final_suppliers_id_list to inventory_type_query_suppliers.
             if inventory_type_query.__len__():
@@ -1235,13 +1236,14 @@ class FilteredSuppliers(APIView):
 
             # query now for real objects for supplier_id in the list
             cache_key = v0_utils.create_cache_key(class_name, final_suppliers_id_list)
-            cache_key = None
-            if cache.get(cache_key):
-                filtered_suppliers = cache.get(cache_key)
-            else:
-                filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list)
-                cache.set(cache_key, filtered_suppliers)
+            # if cache.get(cache_key):
+            #     import pdb
+            #     pdb.set_trace()
+            #     filtered_suppliers = cache.get(cache_key)
+            #
+            filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list)
 
+            # cache.set(cache_key, filtered_suppliers)
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
             serializer = supplier_serializer(filtered_suppliers, many=True)
 
@@ -1263,14 +1265,15 @@ class FilteredSuppliers(APIView):
             # supplier_id's.
             final_suppliers_id_list = total_suppliers.keys()
 
-            cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
-            cache_key = None
-            if cache.get(cache_key):
-                pi_index_map = cache.get(cache_key)
-            else:
-                # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
-                pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
-                cache.set(cache_key, pi_index_map)
+            # cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
+            # cache_key = None
+            # if cache.get(cache_key):
+            #     pi_index_map = cache.get(cache_key)
+            # else:
+            #     # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
+            pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
+
+            # cache.set(cache_key, pi_index_map)
 
             supplier_id_to_pi_map = {supplier_id: detail['total_priority_index'] for supplier_id, detail in pi_index_map.iteritems()}
 
@@ -3902,14 +3905,14 @@ class CampaignInventory(APIView):
             response = website_utils.is_campaign(proposal)
             if not response.data['status']:
                 return response
-
-            cache_key = v0_utils.create_cache_key(class_name, campaign_id)
-            cache_value = cache.get(cache_key)
-            cache_value = None
+            #
+            # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
+            # cache_value = cache.get(cache_key)
+            # cache_value = None
             response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
             if not response.data['status']:
                 return response
-            cache.set(cache_key, response.data['data'])
+            # cache.set(cache_key, response.data['data'])
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
         except Exception as e:
@@ -3934,8 +3937,8 @@ class CampaignInventory(APIView):
                 return response
 
             # clear the cache if it's a PUT request
-            cache_key = v0_utils.create_cache_key(class_name, campaign_id)
-            cache.delete(cache_key)
+            # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
+            # cache.delete(cache_key)
 
             data = request.data
             response = website_utils.handle_update_campaign_inventories(request.user, data)
