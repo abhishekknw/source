@@ -1284,16 +1284,23 @@ class FilteredSuppliers(APIView):
             total_suppliers = website_utils.manipulate_object_key_values(total_suppliers, supplier_type_code=supplier_type_code)
 
             # construct the response and return
-            result['business_name'] = business_name
-            result['suppliers'] = {}
-            result['suppliers_meta'] = {}
 
+            # set the business name
+            result['business_name'] = business_name
+
+            # use this to show what kind of pricing we are using to fetch from pmd table for each kind of inventory
+            result['inventory_pricing_meta'] = website_constants.inventory_type_duration_dict_list
+
+            # set total suppliers
+            result['suppliers'] = {}
             result['suppliers'][supplier_type_code] = total_suppliers
 
+            # set meta info about suppliers
+            result['suppliers_meta'] = {}
             result['suppliers_meta'][supplier_type_code] = {}
-
             result['suppliers_meta'][supplier_type_code]['count'] = 0
             result['suppliers_meta'][supplier_type_code]['inventory_count'] = suppliers_inventory_count
+
             # send explanation separately
             result['suppliers_meta'][supplier_type_code]['pi_index_explanation'] = pi_index_map
 

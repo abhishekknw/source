@@ -330,7 +330,7 @@ def return_price(adinventory_type_dict, duration_type_dict, inv_type, dur_type):
     price_mapping = PriceMappingDefault.objects.filter(adinventory_type=adinventory_type_dict[inv_type],
                                                        duration_type=duration_type_dict[dur_type])
     if price_mapping:
-        return price_mapping[0].business_price
+        return price_mapping[0].actual_supplier_price
     return 0
 
 
@@ -1871,7 +1871,7 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
                 ad_inventory_instance = ad_inventory_map[website_constants.inventory_type_duration_dict_list[inventory_code][0], website_constants.inventory_type_duration_dict_list[inventory_code][1]]
                 duration_instance = duration_map[website_constants.inventory_type_duration_dict_list[inventory_code][2]]
                 try:
-                    supplier[inventory_name + '_price'] = price_mapping_default_map[ad_inventory_instance.id, duration_instance.id, supplier['supplier_id'], content_type.id]['supplier_price']
+                    supplier[inventory_name + '_price'] = price_mapping_default_map[ad_inventory_instance.id, duration_instance.id, supplier['supplier_id'], content_type.id]['actual_supplier_price']
                 except KeyError:
                     supplier[inventory_name + '_price'] = website_constants.default_inventory_price
                 try:
@@ -1925,7 +1925,7 @@ def make_handy_price_mapping_default_duration_adinventory_type(supplier_ids, con
         price_mapping_instances_map = {}
         ad_inventory_instance_map = {}
         duration_instance_map = {}
-        pmd_objects = models.PriceMappingDefault.objects.filter(object_id__in=supplier_ids, content_type=content_type).values('adinventory_type', 'duration_type', 'object_id', 'content_type', 'supplier_price', 'business_price')
+        pmd_objects = models.PriceMappingDefault.objects.filter(object_id__in=supplier_ids, content_type=content_type).values('adinventory_type', 'duration_type', 'object_id', 'content_type', 'suggested_supplier_price', 'actual_supplier_price')
         for instance in pmd_objects:
             try:
                 reference = price_mapping_instances_map[instance['adinventory_type'], instance['duration_type'], instance['object_id'], instance['content_type']]
@@ -2876,7 +2876,7 @@ def get_inventory_pricing(supplier_type_code, inventory_names, inventory_types, 
        supplier_content_type = ui_utils.get_content_type(supplier_type_code)
        adinventory_type_objects = models.AdInventoryType.objects.filter(adinventory_name__in=inventory_names, adinventory_type__in=inventory_types)
        duration_type_objects = models.DurationType.objects.filter(duration_name__in=inventory_durations)
-       inventory_prices = models.PriceMappingDefault.objects.prefetch_related('content_object').filter(content_type=supplier_content_type).values('object_id', 'business_price', 'adinventory_type__name', 'adinventory_type__type', 'duration__type__name' ).filter(adinventory_type__in=adinventory_type_objects, duration_type__in=duration_type_objects)
+       inventory_prices = models.PriceMappingDefault.objects.prefetch_related('content_object').filter(content_type=supplier_content_type).values('object_id', 'actual_supplier_price', 'adinventory_type__name', 'adinventory_type__type', 'duration__type__name' ).filter(adinventory_type__in=adinventory_type_objects, duration_type__in=duration_type_objects)
 
        return ui_utils.handle_response(function, data=inventory_prices, success=True)
     except Exception as e:
@@ -3118,14 +3118,14 @@ def get_suppliers_within_circle(suppliers, coordinates, supplier_type_code):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code, business_price=0):
+def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code, actual_supplier_price=0):
     """
     Args:
         inv_type: type of inventory
         dur_type: duration
         supplier_id: The supplier_id for which price needs to be returned
         supplier_type_code: The supplier_type_code.
-        business_price: The price if given is set to newly created price_mapping_default object.
+        actual_supplier_price: The price if given is set to newly created price_mapping_default object.
 
     Returns: price for the inventory, for this inventory type and this duration
     """
@@ -3141,7 +3141,7 @@ def handle_inventory_pricing(inv_type, dur_type, supplier_id, supplier_type_code
         if not price_mappings:
             return ui_utils.handle_response(function, data=0, success=True)
         price_mapping = price_mappings[0]
-        price_mapping.business_price = business_price
+        price_mapping.actual_supplier_price = actual_supplier_price
         price_mapping.save()
         return ui_utils.handle_response(function, data=price_mapping.supplier_price, success=True)
     except Exception as e:
@@ -3256,7 +3256,7 @@ def save_price_mapping_default(supplier_id, supplier_type_code, row):
                 else:
                     price = int(row[inventory[2]])  # at index 2 we have inventory_pricing index.
                 # todo: one db hit in each loop. improve if code slows down in future
-                response = handle_inventory_pricing(inventory_type, inventory_duration, supplier_id, supplier_type_code, business_price=price)
+                response = handle_inventory_pricing(inventory_type, inventory_duration, supplier_id, supplier_type_code, actual_supplier_price=price)
                 if not response.data['status']:
                     return response
             # done. return success.
@@ -3985,7 +3985,7 @@ def add_total_price_per_inventory_per_supplier(price_mapping_default_inventories
 
         for pmd in price_mapping_default_inventories:
             inventory_name = pmd['inventory_type']['adinventory_name']
-            inventory_supplier_price = pmd['supplier_price'] if pmd['supplier_price'] else 0
+            inventory_supplier_price = pmd['actual_supplier_price'] if pmd['actual_supplier_price'] else 0
             if not pmd_inv_to_supplier_price_map.get(inventory_name):
                 pmd_inventory_names.add(inventory_name)
                 pmd_inv_to_supplier_price_map[inventory_name] = inventory_supplier_price
@@ -3997,10 +3997,10 @@ def add_total_price_per_inventory_per_supplier(price_mapping_default_inventories
 
             if not result.get(inventory_name):
                 result[inventory_name] = {}
-                result[inventory_name]['supplier_price'] = pmd_inv_to_supplier_price_map[inventory_name] if pmd_inv_to_supplier_price_map.get(inventory_name) else 0
+                result[inventory_name]['actual_supplier_price'] = pmd_inv_to_supplier_price_map[inventory_name] if pmd_inv_to_supplier_price_map.get(inventory_name) else 0
                 result[inventory_name]['detail'] = []
                 result[inventory_name]['total_count'] = 0
-                total_price += float(result[inventory_name]['supplier_price'])
+                total_price += float(result[inventory_name]['actual_supplier_price'])
 
             result[inventory_name]['detail'].append(inventory)
             result[inventory_name]['total_count'] += 1
@@ -4024,8 +4024,8 @@ def get_supplier_price_information(content_type_id_set, supplier_id_set):
             'duration_type__id',
             'duration_type__duration_name',
             'duration_type__days_count',
-            'supplier_price',
-            'business_price',
+            'suggested_supplier_price',
+            'actual_supplier_price',
             'content_type',
             'object_id',
         )

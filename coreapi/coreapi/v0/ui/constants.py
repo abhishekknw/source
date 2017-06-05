@@ -80,5 +80,7 @@ permission_type_update = 'update'
 permission_type_delete = 'delete'
 
 
-
+# default prices
+default_actual_supplier_price = 0
+default_suggested_supplier_price = 0
 

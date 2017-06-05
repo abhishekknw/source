@@ -537,8 +537,8 @@ def create_price_mapping_instances(supplier_id, content_type,  inventory_name, p
                 data = {
                     'adinventory_type': ad_inventory_instance,
                     'duration_type': duration_type_instance,
-                    'supplier_price': random.randint(price_dict[inventory_name][0], price_dict[inventory_name][1]),
-                    'business_price': 0,
+                    'actual_supplier_price': random.randint(price_dict[inventory_name][0], price_dict[inventory_name][1]),
+                    'suggested_supplier_price': 0,
                     'object_id': supplier_id,
                     'content_type': content_type
                 }
