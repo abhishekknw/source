@@ -52,8 +52,16 @@ codes_to_model_names = {
          }
 # model to codes
 model_to_codes = {
-    'SupplierTypeSociety': 'RS', 'SupplierTypeCorporate': 'CP', 'SupplierTypeGym': 'GY', 'SupplierTypeSalon': 'SA', 'SupplierTypeBusShelter': 'BS',
-    'StallInventory': 'SL', 'StandeeInventory': 'ST', 'FlyerInventory': 'FL', 'PO': 'PosterInventory'
+    'SupplierTypeSociety': 'RS',
+    'SupplierTypeCorporate': 'CP',
+    'SupplierTypeGym': 'GY',
+    'SupplierTypeSalon': 'SA',
+    'SupplierTypeBusShelter': 'BS',
+    'StallInventory': 'SL',
+    'StandeeInventory': 'ST',
+    'FlyerInventory': 'FL',
+    'PO': 'PosterInventory',
+    'PosterInventory': 'PO'
 }
 
 # default state and state codes. used to fetch state object in various import api's.

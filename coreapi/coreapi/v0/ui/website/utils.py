@@ -634,13 +634,88 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
                 supplier_type_codes.add(supplier_type_code)
                 output.append(shortlisted_inventory_detail_object)
 
+        # make the inventories assigned to suppliers
         response = make_inventory_assignments(proposal_id, output, supplier_type_codes)
         if not response.data['status']:
             return response
 
+        # update the data in sipd instances created for this proposal.
+        update_shortlisted_inventory_pricing_data(proposal_id, output)
+
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def update_shortlisted_inventory_pricing_data(proposal_id, output):
+    """
+
+    Args:
+        proposal_id:
+        output:
+
+    Returns: after the inventories have been assigned, next job is to save the  things like business_price, factor of each inventory.
+
+    """
+    function = update_shortlisted_inventory_pricing_data.__name__
+    try:
+        shortlisted_inventory_pricing_instances = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal_id=proposal_id)
+        # get the distinct inventoy names
+        inventory_names = set([detail['inventory_name'] for detail in output])
+
+        # get the content types
+        response = ui_utils.get_content_types(inventory_names)
+        if not response.data['status']:
+            raise Exception(function, response.data['data'])
+        inventory_content_type_map = response.data['data']
+
+        inventory_content_type_name_map = {}
+
+        # reverse map content_type ---> name. Required to make the sipd_instances_per_inventory_map dict
+        for code, inv_content_type in inventory_content_type_map.iteritems():
+            inventory_content_type_name_map[inv_content_type] = code
+
+        # create a map of (supplier_id, inventory_name) ---> [ list of sipd objects ]. All such objects will have same factor and business price as of now.
+        sipd_instances_per_inventory_map = {}
+        for instance in shortlisted_inventory_pricing_instances:
+            inventory_name = inventory_content_type_name_map[instance.inventory_content_type]
+            key = (instance.shortlisted_spaces.object_id, website_constants.inventory_code_to_name[inventory_name])
+            try:
+                reference = sipd_instances_per_inventory_map[key]
+                reference.append(instance)
+            except KeyError:
+                sipd_instances_per_inventory_map[key] = []
+                sipd_instances_per_inventory_map[key].append(instance)
+
+        # create a (supplier_id, inventory_name) -->  { factor, buisness_price } map for output list. This combination will
+        # yeild a dict. because currently inventory type, duration is fixed, inventory name implies a default type and duration.
+        output_map = {}
+        for detail in output:
+            key = (detail['supplier_id'], detail['inventory_name'])
+            try:
+                reference = output_map[key]
+                if reference:
+                    raise Exception('Duplicate supplier present in sheet. Kindly fix that and re upload the sheet. The duplicate supplier id is {0}'.format(detail['supplier_id']))
+            except KeyError:
+                output_map[key] = {
+                    'factor': detail['factor'],
+                    'inventory_price': detail['inventory_price']
+                }
+        # container for holding sipd instances
+        sipd_instances_updated = []
+        for key, sipd_instances in sipd_instances_per_inventory_map.iteritems():
+            try:
+                data = output_map[key]
+                for instance in sipd_instances:
+                    instance.factor = data['factor']
+                    instance.inventory_price = data['inventory_price']
+                    sipd_instances_updated.append(instance)
+            except KeyError:
+                # this means that this supplier was not assigned this inventory. It can be the case if the supplier does not allow that kind of inventory.
+                pass
+        bulk_update(sipd_instances_updated)
+    except Exception as e:
+        raise Exception(function,  ui_utils.get_system_error(e))
 
 
 def get_center_id_list(ws, index_of_center_id):
@@ -4567,7 +4642,7 @@ def assign_inventories(bucket_list_per_supplier_per_inventory, shortlisted_suppl
                         'inventory_content_type': inventory_general_data['inventory_content_type'],
                         'ad_inventory_type': inventory_general_data['ad_inventory_type'],
                         'ad_inventory_duration': inventory_general_data['ad_inventory_duration'],
-                        'shortlisted_spaces': shortlisted_supplier
+                        'shortlisted_spaces': shortlisted_supplier,
                     }
                     final_objects.append(models.ShortlistedInventoryPricingDetails(**data))
                     count +=1
