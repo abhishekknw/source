@@ -4532,7 +4532,7 @@ def prepare_bucket_per_inventory(inventory_content_type, inventory_name,  list_o
         elif inventory_name == website_constants.flier:
             # because all inventories for a supplier must be assigned to a proposal. We know that flier can only have
             # a bucket number as zero.
-            assignment_frequency = bucket_id_to_max_frequency[0]
+            assignment_frequency = website_constants.default_flier_assignment_frequency
 
         buckets = {}
         inventory_name = inventory_content_type.model

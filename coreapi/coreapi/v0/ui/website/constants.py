@@ -652,6 +652,7 @@ default_poster_assignment_frequency = 1
 # Flier configs
 default_flier_type = 'Mailbox'
 default_flier_duration_type = 'Unit Daily'
+default_flier_assignment_frequency = 1
 
 # class names. change them when class name changes.
 stall_class_name = 'StallInventory'
