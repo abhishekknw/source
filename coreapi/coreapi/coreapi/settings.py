@@ -289,3 +289,6 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Africa/Nairobi'
+
+# sends mail to developer about errors in api if this is true. usually set it to true  when deploying.
+TEST_DEPLOYED = True

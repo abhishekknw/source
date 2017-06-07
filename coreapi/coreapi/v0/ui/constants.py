@@ -80,5 +80,5 @@ permission_type_update = 'update'
 permission_type_delete = 'delete'
 
 
-
+api_error_mail_to = 'nikhil.singh@machadalo.com'
 

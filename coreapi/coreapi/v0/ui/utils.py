@@ -19,7 +19,9 @@ from django.conf import settings
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import is_aware, make_aware
 from django.utils import timezone
+from django.core.mail import EmailMessage
 
+from smtplib import SMTPException
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -51,8 +53,19 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
         data = {
             'general_error': data,
             'system_error': get_system_error(exception_object),
-            'culprit_module': object_name
+            'culprit_module': object_name,
         }
+        # if the code is deployed on test server, send the mail to developer if any API fails with stack trace.
+        if settings.TEST_DEPLOYED:
+            subject = 'Test server error occurred in an api'
+            body = data
+            to = ui_constants.api_error_mail_to
+            email_data = {
+                'subject': subject,
+                'body': body,
+                'to': to
+            }
+            send_email(email_data)
         return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'status': True, 'data': data}, headers=headers, content_type=content_type,  status=status.HTTP_200_OK)
@@ -856,3 +869,28 @@ def get_date_string_from_datetime(datetime_instance, required_format="%Y-%m-%d")
         raise Exception(e, function)
 
 
+# a version is also present in  tasks.py file. But that version sends mail through celery. This version directly sends mail.
+def send_email(email_data, attachment=None):
+    """
+    Args: dict having 'subject', 'body' and 'to' as keys.
+    Returns: success if mail is sent else failure
+    """
+    function = send_email.__name__
+    try:
+        # check if email_data contains the predefined keys
+        email_keys = email_data.keys()
+        for key in ['body', 'subject', 'to']:
+            if key not in email_keys:
+                raise Exception(function,'key {0} not found in the recieved structure'.format(key))
+        # construct the EmailMessage class
+        email = EmailMessage(email_data['subject'], email_data['body'], to=email_data['to'])
+        # attach attachment if available
+        if attachment:
+            file_to_send = open(attachment['file_name'], 'r')
+            email.attach(attachment['file_name'], file_to_send.read(), attachment['mime_type'])
+            file_to_send.close()
+        return email.send()
+    except SMTPException as e:
+        raise Exception(function, "Error " + get_system_error(e))
+    except Exception as e:
+        raise Exception(function, "Error " + get_system_error(e))
