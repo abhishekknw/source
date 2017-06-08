@@ -106,7 +106,7 @@ class BusinessAPIListView(APIView):
             serializer = BusinessInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     #the delete api is not being used
     def delete(self, request, id, format=None):
@@ -150,7 +150,7 @@ class BusinessAccounts(APIView):
             }
             return Response(response, status=200)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class Accounts(APIView):
@@ -164,7 +164,7 @@ class Accounts(APIView):
             serializer = AccountInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class AccountAPIView(APIView):
@@ -186,7 +186,7 @@ class AccountAPIView(APIView):
             data = {'account': account_serializer.data, 'business': business_serializer.data}
             return Response(data, status=200)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class BusinessContacts(APIView):
@@ -422,7 +422,7 @@ class AccountContacts(APIView):
                 response['contacts'] = contacts_serializer.data
             return Response(response, status=200)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def generate_account_id(self, account_name, business_id, lower=False):
         business_code = business_id[-4:]
@@ -1300,7 +1300,7 @@ class FilteredSuppliers(APIView):
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class FilteredSuppliersAPIView(APIView):
@@ -2220,7 +2220,7 @@ class ImportSocietyData(APIView):
         except KeyError as e:
             return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ImportSupplierDataFromSheet(APIView):
@@ -2370,7 +2370,7 @@ class ImportSupplierDataFromSheet(APIView):
 
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ExportData(APIView):
@@ -2523,7 +2523,7 @@ class GenericExportData(APIView):
         try:
             return website_utils.setup_generic_export(request.data, request.user, proposal_id)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ImportSupplierData(APIView):
@@ -2693,7 +2693,7 @@ class ImportSupplierData(APIView):
 
             return Response({'status': True, 'data': file_name}, status=status.HTTP_200_OK)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ImportProposalCostData(APIView):
@@ -2750,7 +2750,7 @@ class ImportProposalCostData(APIView):
                                                 success=
                                                 True)
             except Exception as e:
-                return ui_utils.handle_response(class_name, exception_object=e)
+                return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CreateInitialProposal(APIView):
@@ -2813,7 +2813,7 @@ class CreateInitialProposal(APIView):
                 proposal_id = proposal_data['proposal_id']
                 return ui_utils.handle_response(class_name, data=proposal_id, success=True)
         except Exception as e:
-             return ui_utils.handle_response(class_name, exception_object=e)
+             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CreateFinalProposal(APIView):
@@ -2852,7 +2852,7 @@ class CreateFinalProposal(APIView):
         try:
             return website_utils.setup_create_final_proposal_post(request.data, proposal_id)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def put(self, request, proposal_id):
         """
@@ -2885,7 +2885,7 @@ class CreateFinalProposal(APIView):
             obj.save()
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ChildProposals(APIView):
@@ -2916,7 +2916,7 @@ class ChildProposals(APIView):
                 return response
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ProposalViewSet(viewsets.ViewSet):
@@ -2945,7 +2945,7 @@ class ProposalViewSet(viewsets.ViewSet):
             serializer = ProposalInfoSerializer(proposal)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def update(self, request, pk=None):
         """
@@ -2968,7 +2968,7 @@ class ProposalViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @detail_route(methods=['GET'])
     def proposal_centers(self, request, pk=None):
@@ -3012,7 +3012,7 @@ class ProposalViewSet(viewsets.ViewSet):
                 return response
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @list_route()
     def invoice_proposals(self, request):
@@ -3039,7 +3039,7 @@ class ProposalViewSet(viewsets.ViewSet):
             file_serializer = website_serializers.GenericExportFileSerializerReadOnly(final_file_objects, many=True)
             return ui_utils.handle_response(class_name, data=file_serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @detail_route(methods=['POST'])
     def get_spaces(self, request, pk=None):
@@ -3110,7 +3110,7 @@ class ProposalViewSet(viewsets.ViewSet):
 
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @detail_route(methods=['GET'])
     def shortlisted_suppliers(self, request, pk=None):
@@ -3145,7 +3145,7 @@ class ProposalViewSet(viewsets.ViewSet):
                 return response
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @detail_route(methods=['PUT'])
     def shortlisted_suppliers_status(self, request, pk=None):
@@ -3193,7 +3193,7 @@ class ProposalViewSet(viewsets.ViewSet):
                     return response
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class InitialProposalAPIView(APIView):
@@ -3361,9 +3361,9 @@ class ImportContactDetails(APIView):
                             # print it for universe satisfaction that something is going on !
                             print '{0} supplier contact done'.format(data['supplier_id'])
                         except ObjectDoesNotExist as e:
-                            return ui_utils.handle_response(class_name, exception_object=e)
+                            return ui_utils.handle_response(class_name, exception_object=e, request=request)
                         except Exception as e:
-                            return ui_utils.handle_response(class_name, exception_object=e)
+                            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
             finally:
                 file.close()
@@ -3406,7 +3406,7 @@ class ImportCampaignLeads(APIView):
                 result.append(response.data['data'])
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class SupplierSearch(APIView):
@@ -3443,9 +3443,9 @@ class SupplierSearch(APIView):
 
             return ui_utils.handle_response(class_name, data=suppliers, success=True)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ImportAreaSubArea(APIView):
@@ -3525,7 +3525,7 @@ class ImportAreaSubArea(APIView):
 
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e,request=request)
 
 
 class SendMail(APIView):
@@ -3573,7 +3573,7 @@ class SendMail(APIView):
             task_id = tasks.send_email.delay(email_data, attachment).id
             return ui_utils.handle_response(class_name, data={'task_id': task_id}, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class Mail(APIView):
@@ -3597,7 +3597,7 @@ class Mail(APIView):
             task_id = tasks.send_email.delay(email_data, attachment).id
             return ui_utils.handle_response(class_name, data={'task_id': task_id}, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class Business(APIView):
@@ -3613,7 +3613,7 @@ class Business(APIView):
             serializer = v0_serializers.AccountSerializer(result)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ProposalVersion(APIView):
@@ -3741,7 +3741,7 @@ class ProposalVersion(APIView):
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class AssignCampaign(APIView):
@@ -3787,9 +3787,9 @@ class AssignCampaign(APIView):
             return ui_utils.handle_response(class_name, data='success', success=True)
 
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def get(self, request):
         """
@@ -3876,11 +3876,11 @@ class AssignCampaign(APIView):
 
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except KeyError as e:
-            return ui_utils.handle_response(class_name, data='key Error', exception_object=e)
+            return ui_utils.handle_response(class_name, data='key Error', exception_object=e, request=request)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CampaignInventory(APIView):
@@ -3916,7 +3916,7 @@ class CampaignInventory(APIView):
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e,request=request)
 
     def put(self, request, campaign_id):
         """
@@ -3947,7 +3947,7 @@ class CampaignInventory(APIView):
 
             return ui_utils.handle_response(class_name, data='successfully updated', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CampaignSuppliersInventoryList(APIView):
@@ -4129,7 +4129,7 @@ class CampaignSuppliersInventoryList(APIView):
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ProposalToCampaign(APIView):
@@ -4238,7 +4238,7 @@ class ProposalToCampaign(APIView):
             # return ui_utils.handle_response(class_name, data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CampaignToProposal(APIView):
@@ -4269,7 +4269,7 @@ class CampaignToProposal(APIView):
 
             return ui_utils.handle_response(class_name, data=errors.REVERT_CAMPAIGN_TO_PROPOSAL.format(campaign_id, website_constants.proposal_not_converted_to_campaign), success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ImportCorporateData(APIView):
@@ -4341,11 +4341,11 @@ class ImportCorporateData(APIView):
             source_file.close()
             return Response(data="success", status=status.HTTP_200_OK)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+            return ui_utils.handle_response(class_name, data=e.args, exception_object=e, request=request)
         except KeyError as e:
-            return ui_utils.handle_response(class_name, data=e.args, exception_object=e)
+            return ui_utils.handle_response(class_name, data=e.args, exception_object=e, request=request)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class InventoryActivityImage(APIView):
@@ -4404,7 +4404,7 @@ class InventoryActivityImage(APIView):
             return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def delete(self, request):
         """
@@ -4422,7 +4422,7 @@ class InventoryActivityImage(APIView):
             models.InventoryActivityImage.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data=pk, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class SupplierDetails(APIView):
@@ -4455,7 +4455,7 @@ class SupplierDetails(APIView):
             return ui_utils.handle_response(class_name, data=data, success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def put(self, request):
         """
@@ -4489,7 +4489,7 @@ class SupplierDetails(APIView):
             return ui_utils.handle_response(class_name, data=model_to_dict(supplier_object), success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class GenerateInventoryActivitySummary(APIView):
@@ -4527,7 +4527,7 @@ class GenerateInventoryActivitySummary(APIView):
 
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class Amenity(APIView):
@@ -4557,7 +4557,7 @@ class Amenity(APIView):
 
             return ui_utils.handle_response(class_name, data=model_to_dict(amenity), success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class GetAllAmenities(APIView):
@@ -4579,7 +4579,7 @@ class GetAllAmenities(APIView):
             serializer = website_serializers.AmenitySerializer(amenities, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class SupplierAmenity(APIView):
@@ -4606,7 +4606,7 @@ class SupplierAmenity(APIView):
             serializer = website_serializers.SupplierAmenitiesMapSerializer(amenities, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def post(self, request):
         """
@@ -4626,7 +4626,7 @@ class SupplierAmenity(APIView):
             return ui_utils.handle_response(class_name, data='success', success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class BulkInsertInventoryActivityImage(APIView):
@@ -4739,7 +4739,7 @@ class BulkInsertInventoryActivityImage(APIView):
             models.InventoryActivityImage.objects.bulk_create(inv_image_objects)
             return ui_utils.handle_response(class_name, data='success. {0} objects created'.format(len(inv_image_objects)), success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class InventoryActivityAssignment(APIView):
@@ -4794,7 +4794,7 @@ class InventoryActivityAssignment(APIView):
             serializer = website_serializers.InventoryActivityAssignmentSerializer(inv_assignment_objects, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def put(self, request):
         """
@@ -4813,7 +4813,7 @@ class InventoryActivityAssignment(APIView):
             instance = models.InventoryActivityAssignment.objects.get(id=inv_act_assignment_id)
             return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def get(self, request):
         """
@@ -4828,7 +4828,7 @@ class InventoryActivityAssignment(APIView):
             serializer = website_serializers.InventoryActivityAssignmentSerializerReadOnly(inventory_activity_assignment_object)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class AssignInventoryActivityDateUsers(APIView):
@@ -4905,7 +4905,7 @@ class AssignInventoryActivityDateUsers(APIView):
             bulk_update(inventory_activity_assignment_objects)
             return ui_utils.handle_response(class_name, data='successfully assigned', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ReassignInventoryActivityDateUsers(APIView):
@@ -4938,7 +4938,7 @@ class ReassignInventoryActivityDateUsers(APIView):
             bulk_update(inventory_activity_assignment_objects)
             return ui_utils.handle_response(class_name, data='successfully reassigned', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class UserList(APIView):
@@ -4958,7 +4958,7 @@ class UserList(APIView):
             user_serializer = website_serializers.BaseUserSerializer(users, many=True)
             return ui_utils.handle_response(class_name, data=user_serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class BulkDownloadImagesAmazon(APIView):
@@ -5003,7 +5003,7 @@ class BulkDownloadImagesAmazon(APIView):
             result = website_utils.start_download_from_amazon(proposal_id, json.dumps(image_map))
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class IsGroupTaskSuccessFull(APIView):
@@ -5018,7 +5018,7 @@ class IsGroupTaskSuccessFull(APIView):
             # 'ready' means have all subtask completed ? 'status' means all substask were successful ?
             return ui_utils.handle_response(class_name, data={'ready': result.ready(), 'status': result.successful()}, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class IsIndividualTaskSuccessFull(APIView):
@@ -5032,7 +5032,7 @@ class IsIndividualTaskSuccessFull(APIView):
             return ui_utils.handle_response(class_name, data={'ready': result.ready(), 'status': result.successful()}, success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class DeleteFileFromSystem(APIView):
@@ -5056,7 +5056,7 @@ class DeleteFileFromSystem(APIView):
             os.remove(os.path.join(settings.BASE_DIR, file_name))
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ProposalImagesPath(APIView):
@@ -5086,7 +5086,7 @@ class ProposalImagesPath(APIView):
             shutil.rmtree(path_to_master_dir)
             return ui_utils.handle_response(class_name, data=file_url, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ExportAllSupplierData(APIView):
@@ -5176,4 +5176,4 @@ class ExportAllSupplierData(APIView):
             return ui_utils.handle_response(class_name, data=bd_head_async_id, success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)

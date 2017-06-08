@@ -66,7 +66,8 @@ class PopulateContentTypeFields(APIView):
                     return response
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class SetUserToMasterUser(APIView):
     """
@@ -89,9 +90,9 @@ class SetUserToMasterUser(APIView):
                     model.objects.all().update(user=master_user)
             return ui_utils.handle_response(class_name, data='succesfully updated all users of all modes to master user', success=True)        
         except ObjectDoesNotExist as e:
-          return ui_utils.handle_response(class_name, exception_object=e)            
+          return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except Exception as e:
-          return ui_utils.handle_response(class_name, exception_object=e)
+          return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 class BannerInventoryAPIView(APIView):
 
@@ -1446,7 +1447,7 @@ class PermissionsViewSet(viewsets.ViewSet):
             serializer = PermissionSerializer(queryset, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def retrieve(self, request, pk=None):
         """
@@ -1465,7 +1466,7 @@ class PermissionsViewSet(viewsets.ViewSet):
             serializer = PermissionSerializer(permission)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def create(self, request):
         """
@@ -1485,7 +1486,7 @@ class PermissionsViewSet(viewsets.ViewSet):
             permission = Permission.objects.create(codename=codename, name=name, content_type=content_type)
             return ui_utils.handle_response(class_name, data=model_to_dict(permission), success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def update(self, request, pk=None):
         """
@@ -1503,7 +1504,7 @@ class PermissionsViewSet(viewsets.ViewSet):
             serializer = PermissionSerializer(permission)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def destroy(self, request, pk=None):
         """
@@ -1520,7 +1521,7 @@ class PermissionsViewSet(viewsets.ViewSet):
             Permission.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data='successfully deleted {0}'.format(pk),  success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @detail_route(methods=['post'])
     def assign_permission(self, request, pk=None):
@@ -1540,7 +1541,7 @@ class PermissionsViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data='Permission added successfully', success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @list_route(methods=['GET'])
     def get_user_permissions(self, request):
@@ -1560,7 +1561,7 @@ class PermissionsViewSet(viewsets.ViewSet):
             serializer = PermissionSerializer(user_permissions, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @detail_route(methods=['POST'])
     def remove_user_permission(self, request, pk=None):
@@ -1579,7 +1580,7 @@ class PermissionsViewSet(viewsets.ViewSet):
             user.user_permissions.remove(permission)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @list_route(methods=['POST'])
     def remove_all_user_permissions(self, request):
@@ -1598,7 +1599,7 @@ class PermissionsViewSet(viewsets.ViewSet):
             user.user_permissions.clear()
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CreateSocietyTestData(APIView):
@@ -1676,7 +1677,7 @@ class CreateSocietyTestData(APIView):
             result['total_count'] = len(society_list)
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CreateBusinessTypeSubType(APIView):
@@ -1738,7 +1739,7 @@ class CreateBusinessTypeSubType(APIView):
             serializer = BusinessTypeSubTypeReadOnlySerializer(business_type_instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CreateAdInventoryTypeDurationType(APIView):
@@ -1768,7 +1769,7 @@ class CreateAdInventoryTypeDurationType(APIView):
                     AdInventoryType.objects.get_or_create(adinventory_name=inventory_tuple[0], adinventory_type=ad_inventory_type_value)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class AssignInventories(APIView):
@@ -1803,7 +1804,7 @@ class AssignInventories(APIView):
             v0_utils.handle_supplier_inventory_detail(inventory_detail, suppliers, content_type)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class SetInventoryPricing(APIView):
@@ -1835,7 +1836,7 @@ class SetInventoryPricing(APIView):
             v0_utils.handle_inventory_pricing(supplier_ids, content_type, request.data)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class PopulateAmenities(APIView):
@@ -1888,7 +1889,7 @@ class PopulateAmenities(APIView):
 
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class UserViewSet(viewsets.ViewSet):
@@ -1915,7 +1916,7 @@ class UserViewSet(viewsets.ViewSet):
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def update(self, request, pk=None):
         """
@@ -1942,7 +1943,7 @@ class UserViewSet(viewsets.ViewSet):
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def create(self, request):
         """
@@ -1964,7 +1965,7 @@ class UserViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def list(self, request):
         """
@@ -1981,7 +1982,7 @@ class UserViewSet(viewsets.ViewSet):
             serializer = BaseUserSerializer(users, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def destroy(self, request, pk=None):
         """
@@ -2000,7 +2001,7 @@ class UserViewSet(viewsets.ViewSet):
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @detail_route(methods=['POST'])
     def change_password(self, request, pk=None):
@@ -2022,7 +2023,7 @@ class UserViewSet(viewsets.ViewSet):
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class GroupViewSet(viewsets.ViewSet):
@@ -2044,7 +2045,7 @@ class GroupViewSet(viewsets.ViewSet):
             serializer = GroupSerializer(groups, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def retrieve(self, request, pk=None):
         """
@@ -2064,7 +2065,7 @@ class GroupViewSet(viewsets.ViewSet):
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def update(self, request, pk=None):
         """
@@ -2085,7 +2086,7 @@ class GroupViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def create(self, request):
         """
@@ -2105,7 +2106,7 @@ class GroupViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def destroy(self, request, pk=None):
         """
@@ -2124,7 +2125,7 @@ class GroupViewSet(viewsets.ViewSet):
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class GuestUser(APIView):
@@ -2163,7 +2164,7 @@ class GuestUser(APIView):
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class SetParams(APIView):
@@ -2225,4 +2226,4 @@ class SetParams(APIView):
             bulk_update(supplier_map.values())
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
