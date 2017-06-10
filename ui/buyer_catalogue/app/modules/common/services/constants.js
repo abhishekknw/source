@@ -99,6 +99,9 @@ angular
     //guestPage
     location_error : 'Please enter accurate location',
 
+    //permissions
+    bd_manager : 'BD Manager',
+    campaign_manager : 'Campaign Manager',
 
 
   });

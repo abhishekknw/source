@@ -18,28 +18,15 @@ angular.module('Authentication')
           '03': 'agency',
           '99': 'guestUser',
         };
-
         authService.Login = function (username, password, callback) {
             $http.post(apiHost + 'api-token-auth/', { username: username, password: password })
                 .then(function onSuccess(response) {
-                  console.log(response);
                   $window.localStorage.user_code = user_codes[response.data.user_code];
                    if (response.data.token) {
                      userData = response.data;
                       authService.SetCredentials(response.data);
                       response.data.logged_in = true;
                       callback(response.data);
-                      commonDataShare.getUserDetails($rootScope.globals.currentUser.user_id)
-                      .then(function onSuccess(response){
-                        $window.localStorage.userInfo = JSON.stringify(response.data.data);
-                        $rootScope.globals.userInfo = JSON.parse($window.localStorage.userInfo);                        
-                        if(response.data.data.is_superuser == true)
-                          $window.localStorage.isSuperUser = 'true';
-                        else
-                          $window.localStorage.isSuperUser = 'false';
-                      }).catch(function onError(response){
-                        console.log(response);
-                      });
                    }
                    else {
                       response.data.logged_in = false;
@@ -54,6 +41,19 @@ angular.module('Authentication')
                    callback(response.data);
                 });
            };
+           //GET user data, groups assigned  and permissions
+           authService.getUserData = function(callback){
+             commonDataShare.getUserDetails($rootScope.globals.currentUser.user_id)
+              .then(function onSuccess(response){
+                 $window.localStorage.userInfo = JSON.stringify(response.data.data);
+                 $rootScope.globals.userInfo = JSON.parse($window.localStorage.userInfo);
+                 response.allowUser = true;
+                 callback(response.data);
+               }).catch(function onError(response){
+                 response.allowUser = false;
+                 callback(response.data);
+               });
+         }
 
         authService.logoutEvent = function (e) {
            var logging_out = true;
@@ -127,7 +127,6 @@ angular.module('Authentication')
                     return $rootScope.globals.currentUser;
                  }
                  catch (e) {
-                   console.log("dsfsafsafsafsa",e);
                     authService.ClearCredentials();
                  }
               }
@@ -144,6 +143,52 @@ angular.module('Authentication')
                $window.localStorage.removeItem(storageCredentials);
             }
         };
+
+
+        //code added to add permissions
+        authService.userHasPermission = function(permissions){
+         if(!authService.isAuthenticated()){
+
+             return false;
+         }
+         var found = false;
+         if($rootScope.globals.userInfo.is_superuser == true){
+           found = true;
+         }
+         else{
+           angular.forEach(permissions, function(permission, index){
+               angular.forEach($rootScope.globals.userInfo.groups, function(group){
+                 if(group.name == permission){
+                    found = true;
+                    return;
+                  }
+               })
+         });
+       }
+         return found;
+     };
+
+     //to check permission for views or pages
+     authService.checkPermissionForView = function(view) {
+
+
+       if (!view.requiresAuthentication) {
+           return true;
+       }
+       return userHasPermissionForView(view);
+     };
+
+     var userHasPermissionForView = function(view){
+        if(!authService.isAuthenticated()){
+            return false;
+        }
+        if(!view.permissions || !view.permissions.length){
+            return true;
+        }
+
+        return authService.userHasPermission(view.permissions);
+      };
+
 
         return authService;
     }])

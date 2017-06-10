@@ -1,24 +1,10 @@
 angular.module('machadaloPages')
 .controller('CreateCampaignCtrl',
-    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, constants, $timeout) {
+    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, constants, $timeout, AuthService, $state) {
 
-      //start:code added to show or hide details based on user permissions
-      $scope.user_code = $window.localStorage.user_code;
-      $scope.campaignAccessAllowed = true;
-      console.log($rootScope.globals.userInfo);
-      if($scope.user_code == 'agency')
-        $scope.hideData = true;
-
-        $timeout(function () {
-          angular.forEach($rootScope.globals.userInfo.groups, function(group){
-            if(group.name == constants.campaign_manager)
-              $scope.campaignAccessAllowed = false;
-          })
-       });
-      
-          // $scope.$apply();
-      console.log($scope.campaignAccessAllowed);
-
+      //start:code added to show or hide details based on user's group permissions
+      $scope.bd_manager = constants.bd_manager;
+      $scope.campaign_manager = constants.campaign_manager;
 
       //End:code added to show or hide details based on user permissions
       $scope.uploadfile = true; // added for loading spinner active/deactive

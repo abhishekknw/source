@@ -22,7 +22,7 @@
                 </select>
             </span>
           </div>
-            <div class="col-md-4" ng-if="campaignAccessAllowed">
+            <div class="col-md-4" permission="[bd_manager]"> 
               <label for="new">Create New Business</label>
               <input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
             </div>

@@ -9,17 +9,27 @@ angular.module('machadaloPages')
         angular.element("title").text("Login");
 
         $scope.login = function () {
-
+          $scope.loadingSpinner = true;
             AuthService.Login($scope.username, $scope.password, function(response) {
                 if(response.logged_in) {
-                    $location.path("/");
+                  var path = "/";
+                  AuthService.getUserData(function(response){
+                    angular.forEach(response.data.groups, function(group){
+                      if(group.name == constants.campaign_manager){
+                          path = "/CampaignList";
+                      }
+                    })
+                    $scope.loadingSpinner = false;
+                    $location.path(path);
+                  })
+
                 } else {
+                  $scope.loadingSpinner = false;
                     $scope.error = response.message;
                 }
             });
         };
         $scope.guestPage = function(){
-          console.log($scope.mobile_no);
           var userData = {
             first_name : $scope.name,
             email : $scope.email,
