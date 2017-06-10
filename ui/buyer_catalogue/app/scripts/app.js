@@ -8,8 +8,8 @@
  *
  * Main module of the application.
  */
-   var APIBaseUrl = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/';
-  //var APIBaseUrl = 'http://localhost:8000/';
+  //  var APIBaseUrl = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/';
+  var APIBaseUrl = 'http://localhost:8000/';
 
 angular.module('Authentication', []);
 angular
@@ -107,7 +107,7 @@ angular
       .state('login', {
           url : '/login',
           controller: 'LoginCtrl',
-          templateUrl: 'modules/pages/login/login.tmpl.html'
+          templateUrl: 'modules/pages/login/login.tmpl.html',
         })
       .state('manageCampaign', {
           url : '/manageCampaign',
@@ -115,15 +115,15 @@ angular
           templateUrl: 'modules/pages/manageCampaign/manage-campaign.tmpl.html',
           ncyBreadcrumb: {
             skip: true // Never display this state in breadcrumb.
-          }
+          },
         })
       .state('manageCampaign.create', {
           url : '/create',
           controller: 'CreateCampaignCtrl',
           templateUrl: 'modules/pages/manageCampaign/create/create-campaign.tmpl.html',
           ncyBreadcrumb: {
-            label: 'Home page'
-          }
+            label: 'Homepage'
+          },
         })
       .state('manageCampaign.createaccount', {
             url : '/createAccount',
@@ -133,7 +133,6 @@ angular
               label: 'Create Account',
               parent : 'manageCampaign.create'
             }
-
         })
       .state('manageCampaign.shortlisted', {
           url : '/shortlisted',
@@ -279,9 +278,11 @@ angular
             else if($window.localStorage.user_code == 'guestUser')
               return 'guestHomePage';
         }
+
        var whence = $location.path();
        $rootScope.$on('$locationChangeStart', function (event, next, current) {
          var whence = $location.path();
+
          console.log("location change start - Whence: " + whence);
 
          // redirect to login page if not logged in

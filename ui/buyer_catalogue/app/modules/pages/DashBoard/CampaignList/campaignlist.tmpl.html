@@ -3,9 +3,12 @@
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 <br><br><br>
-<div class="breadcrumb" ncy-breadcrumb></div>
+<div class="" permission = "[]">
+  <div class="breadcrumb" ncy-breadcrumb></div>
+</div>
+
 <body>
-<div ng-show="isEmpty" style="text-align:center">{{msg}}</div>
+<div ng-show="isEmpty" style="text-align:center;"><h2>{{msg}}</h2></div>
 <!-- Start: Displaying table of converted campaigns -->
 <h3 style="text-align:center" ng-show="!isEmpty">Campaign List</h3>
 <div class="content">
@@ -41,5 +44,5 @@
   </div>
 </div>
 <!--End: Displaying table of converted campaigns -->
-<footer-bar></footer-bar>
+<!-- <footer-bar></footer-bar> -->
 </body>
