@@ -19,7 +19,9 @@ from django.conf import settings
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import is_aware, make_aware
 from django.utils import timezone
+from django.core.mail import EmailMessage
 
+from smtplib import SMTPException
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -31,7 +33,7 @@ import v0.models as models
 import v0.errors as errors
 
 
-def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False):
+def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """
     Args:
         success: determines wether to send success or failure messages
@@ -40,6 +42,7 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
         exception_object: The exception object caught. an instance of Exception, KeyError etc.
         headers: the dict of headers
         content_type: The content_type.
+        request: The request param
 
         This method can later be used to log the errors.
 
@@ -51,8 +54,35 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
         data = {
             'general_error': data,
             'system_error': get_system_error(exception_object),
-            'culprit_module': object_name
+            'culprit_module': object_name,
         }
+        if request:
+            # fill the data with more information about request
+            data['request_data'] = request.data
+            data['request_url'] = request.build_absolute_uri()
+            data['request_method'] = request.META.get('REQUEST_METHOD')
+            data['django_settings_module'] = request.META.get('DJANGO_SETTINGS_MODULE')
+            data['http_origin'] = request.META.get('HTTP_ORIGIN')
+            data['virtual_env'] = request.META.get('VIRTUAL_ENV')
+            data['server_port'] = request.META.get('SERVER_PORT')
+            data['user'] = request.user.username if request.user else None
+
+        # if the code is deployed on test server, send the mail to developer if any API fails with stack trace.
+        if settings.TEST_DEPLOYED:
+            try:
+                subject = 'Error occurred in an api {0}'.format(request.build_absolute_uri())
+                body = data
+                to = ui_constants.api_error_mail_to
+                email_data = {
+                    'subject': subject,
+                    'body': json.dumps(body, indent=4, sort_keys=True),
+                    'to': (to,)
+                }
+                send_email(email_data)
+            except Exception as e:
+                # email sending failed. let it go.
+                pass
+
         return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'status': True, 'data': data}, headers=headers, content_type=content_type,  status=status.HTTP_200_OK)
@@ -847,3 +877,28 @@ def get_date_string_from_datetime(datetime_instance, required_format="%Y-%m-%d")
         raise Exception(e, function)
 
 
+# a version is also present in  tasks.py file. But that version sends mail through celery. This version directly sends mail.
+def send_email(email_data, attachment=None):
+    """
+    Args: dict having 'subject', 'body' and 'to' as keys.
+    Returns: success if mail is sent else failure
+    """
+    function = send_email.__name__
+    try:
+        # check if email_data contains the predefined keys
+        email_keys = email_data.keys()
+        for key in ['body', 'subject', 'to']:
+            if key not in email_keys:
+                raise Exception(function,'key {0} not found in the recieved structure'.format(key))
+        # construct the EmailMessage class
+        email = EmailMessage(email_data['subject'], email_data['body'], to=email_data['to'])
+        # attach attachment if available
+        if attachment:
+            file_to_send = open(attachment['file_name'], 'r')
+            email.attach(attachment['file_name'], file_to_send.read(), attachment['mime_type'])
+            file_to_send.close()
+        return email.send()
+    except SMTPException as e:
+        raise Exception(function, "Error " + get_system_error(e))
+    except Exception as e:
+        raise Exception(function, "Error " + get_system_error(e))

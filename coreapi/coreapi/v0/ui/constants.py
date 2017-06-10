@@ -88,6 +88,7 @@ permission_type_update = 'update'
 permission_type_delete = 'delete'
 
 
+api_error_mail_to = 'nikhil.singh@machadalo.com'
 # default prices
 default_actual_supplier_price = 0
 default_suggested_supplier_price = 0

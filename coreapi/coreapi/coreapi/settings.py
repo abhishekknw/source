@@ -278,9 +278,10 @@ APP_NAME = 'v0'
 
 # CELERY STUFF
 
-BROKER_URL = 'redis://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com:6379'
-CELERY_IMPORTS = ['v0.ui.website.tasks']
+# BROKER_URL = 'redis://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com:6379'
 
+BROKER_URL = 'redis://localhost:6379'
+CELERY_IMPORTS = ['v0.ui.website.tasks']
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 # CELERY_RESULT_BACKEND = 'redis://localhost:6379'
@@ -288,3 +289,6 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Africa/Nairobi'
+
+# sends mail to developer about errors in api if this is true. usually set it to true  when deploying.
+TEST_DEPLOYED = True

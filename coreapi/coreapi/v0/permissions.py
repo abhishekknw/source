@@ -107,4 +107,4 @@ class IsProposalAuthenticated(permissions.BasePermission):
             except ObjectDoesNotExist:
                 return False
         except Exception as e:
-            raise Exception("Error in Authenticating this user for the proposal")
+            raise Exception("Error in Authenticating this user for the proposal: {0}".format(e.args or e.message))

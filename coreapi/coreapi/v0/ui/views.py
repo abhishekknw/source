@@ -211,7 +211,7 @@ class GetLocationsAPIView(APIView):
                 serializer = CitySubAreaSerializer(items, many=True)
             return Response(serializer.data)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 class checkSupplierCodeAPIView(APIView):
     def get(self, request, code, format=None):
@@ -308,7 +308,7 @@ class SupplierImageDetails(APIView):
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class SocietyAPIView(APIView):
@@ -507,7 +507,7 @@ class SocietyList(APIView):
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CorporateAPIListView(APIView):
@@ -928,7 +928,7 @@ class ImportSummaryData(APIView):
             source_file.close()
             return ui_utils.handle_response(class_name, data=error_list, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class InventorySummaryAPIView(APIView):
@@ -1312,7 +1312,7 @@ class InventorySummaryAPIView(APIView):
                 else:
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except Exception as e:
             return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1335,7 +1335,7 @@ class PostInventorySummary(APIView):
             pass
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 
@@ -2198,7 +2198,7 @@ class ImageMappingAPIView(APIView):
 
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def post(self, request, id, format=None):
         '''
@@ -2224,7 +2224,7 @@ class ImageMappingAPIView(APIView):
             # return Response(serializer.data, status=201)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def put(self, request, id):
         """ 
@@ -2249,7 +2249,7 @@ class ImageMappingAPIView(APIView):
                 return ui_utils.handle_response(class_name, data=serializer.errors)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 def generate_location_tag(initial_tag, type, index):
@@ -2849,7 +2849,7 @@ class BusShelter(APIView):
         except SupplierTypeBusShelter.DoesNotExist as e:
             return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class BusShelterSearchView(APIView):
@@ -2875,7 +2875,7 @@ class BusShelterSearchView(APIView):
         except SupplierTypeBusShelter.DoesNotExist as e:
             return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class EventViewSet(viewsets.ViewSet):
@@ -2901,7 +2901,7 @@ class EventViewSet(viewsets.ViewSet):
             serializer = EventsSerializer(events, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e :
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def retrieve(self, request, pk=None):
         """
@@ -2918,7 +2918,7 @@ class EventViewSet(viewsets.ViewSet):
             serializer = EventsSerializer(models.Events.objects.get(pk=pk))
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def update(self, request, pk=None):
         """
@@ -2938,7 +2938,7 @@ class EventViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def create(self, request):
         """
@@ -2971,7 +2971,7 @@ class EventViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def destroy(self, request, pk=None):
         """
@@ -2988,6 +2988,6 @@ class EventViewSet(viewsets.ViewSet):
             models.Events.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data=pk, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
