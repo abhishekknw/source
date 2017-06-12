@@ -4,6 +4,10 @@ angular.module('catalogueApp')
     function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants) {
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
+  $scope.campaign_manager = constants.campaign_manager;
+  if($rootScope.globals.userInfo.is_superuser == true){
+    $scope.backButton = true;
+  }
  	$scope.headings = [
         {header : 'Supplier Name'},
         {header : 'Area'},
@@ -84,6 +88,7 @@ angular.module('catalogueApp')
             $scope.loading = response;
     	})
     	.catch(function onError(response){
+        console.log(response);
     		console.log("error occured", response.status);
     	});
 

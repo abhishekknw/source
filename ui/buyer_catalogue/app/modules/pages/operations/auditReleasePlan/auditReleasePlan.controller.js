@@ -3,6 +3,11 @@ angular.module('catalogueApp')
     ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare','constants',
     function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare, constants) {
       $scope.campaign_id = $stateParams.proposal_id;
+      $scope.bd_manager = constants.bd_manager;
+      $scope.campaign_manager = constants.campaign_manager;
+      if($rootScope.globals.userInfo.is_superuser == true){
+        $scope.backButton = true;
+      }
       $scope.headings = [
         {header : 'Phase'},
         {header : 'Inventory Type'},

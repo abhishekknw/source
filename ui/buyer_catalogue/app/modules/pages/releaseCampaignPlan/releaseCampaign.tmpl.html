@@ -3,7 +3,9 @@
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div>
 </br></br></br>
-<!-- <back-Button></back-Button> -->
+<div ng-if="!backButton" permission="[campaign_manager]">
+  <back-Button></back-Button>
+</div>
 <div class="" permission = "[]">
   <div class="breadcrumb" ncy-breadcrumb></div>
 </div>
@@ -198,4 +200,4 @@
 </div>
 <!--End: Code for inventory type Modal Window -->
 
-<!-- <div><footer-bar></footer-bar></div> 
+<!-- <div><footer-bar></footer-bar></div>

@@ -3,7 +3,9 @@
 <div><nav-bar></nav-bar></div>
 <!-- <div ng-loading="loading"></div> --> <!--For displaying loading icon-->
 </br></br></br>
-<!-- <back-Button></back-Button> -->
+<div ng-if="!backButton" permission="[campaign_manager]">
+  <back-Button></back-Button>
+</div>
 <div class="" permission = "[]">
   <div class="breadcrumb" ncy-breadcrumb></div>
 </div>

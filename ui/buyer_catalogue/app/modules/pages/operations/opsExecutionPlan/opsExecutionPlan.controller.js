@@ -5,6 +5,10 @@ angular.module('catalogueApp')
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.reAssign = false;
       var sleepTime = 0;
+      $scope.campaign_manager = constants.campaign_manager;
+      if($rootScope.globals.userInfo.is_superuser == true){
+        $scope.backButton = true;
+      }
       $scope.headings = [
         {header : 'Supplier Id'},
         {header : 'Inventory Id'},
