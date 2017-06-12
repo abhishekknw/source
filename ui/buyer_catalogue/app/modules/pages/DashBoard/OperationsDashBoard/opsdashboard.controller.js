@@ -23,6 +23,7 @@ angular.module('catalogueApp')
         {header : 'Start Date'},
         {header : 'End Date'},
         {header : 'Create Campaign'},
+        {header : 'Assigned To'},
         {header : 'Download Proposal'}
       ];
 

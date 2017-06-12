@@ -44,6 +44,12 @@
                        <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#onHoldModal" data-toggle="modal">OnHold</label>
                 </div>
               </td>
+              <td class="col-md-2" ng-if="proposal.proposal.campaign_state == 'PTC'">
+                {{proposal.assignment_detail.assigned_to}}
+              </td>
+              <td class="col-md-2" ng-if="proposal.proposal.campaign_state != 'PTC'">
+                NA
+              </td>
               <td class="col-md-2">
                 <a href="{{bucket_url}}{{proposal.file_name}}" Download> Download </a>
               </td>
