@@ -2,10 +2,12 @@
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
-</br></br></br>
-<!-- <div style="text-align:left"><back-Button></back-Button></div> -->
 <div class="" permission = "[]">
   <div class="breadcrumb" ncy-breadcrumb></div>
+</div>
+</br></br></br>
+<div ng-if="!backButton" permission="[campaign_manager]">
+  <back-Button></back-Button>
 </div>
 <h3 style="text-align:center">Audit / Release Plan Details</h3>
 <div class="container">
