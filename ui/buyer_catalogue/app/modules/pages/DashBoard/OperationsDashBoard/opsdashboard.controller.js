@@ -171,6 +171,7 @@ angular.module('catalogueApp')
       };
       opsDashBoardService.saveAssignment(data)
           .then(function onSuccess(response){
+            getProposalDetails();
               console.table(response);
               $('#assignModal').modal('hide');
               swal(constants.name,constants.assign_user_success,constants.success);
