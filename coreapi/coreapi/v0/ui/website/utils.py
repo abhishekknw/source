@@ -137,7 +137,6 @@ def insert_supplier_sheet(workbook, result):
     """
     function_name = insert_supplier_sheet.__name__
     try:
-
         for code, supplier_data in result.iteritems():
 
             # create a new sheet for each supplier type
@@ -1964,7 +1963,7 @@ def get_inventories_allowed(inventory_summary_instance):
 
     Args:
         inventory_summary_instance:
-
+    checks for  poster, stall, standee, flier, car display.
     Returns:
 
     """
@@ -2344,10 +2343,30 @@ def make_export_final_response(result, data):
         result: result dict where objects will be stored
         data: the entire request.data
     Returns:
-
+    MUMPOCVRSKAT
     """
     function = make_export_final_response.__name__
     try:
+        # collect unique supplier ids first
+        distinct_supplier_ids = set()
+        for center in data:
+            for code, supplier_object_list in center['suppliers'].iteritems():
+                for dict_object in supplier_object_list:
+                    distinct_supplier_ids.add(dict_object['supplier_id'])
+
+        # store inv summary instances supplier_code wise.
+        inventory_summary_map = {}
+        total_inventory_summary_instances = models.InventorySummary.objects.filter(object_id__in=distinct_supplier_ids)
+        for instance in total_inventory_summary_instances:
+            # taking advantage of the fact that a supplier id contains it's code in it. 'RS' is embedded in two characters [7:8]
+            code = instance.object_id[7:9]
+            supplier_id = instance.object_id
+
+            if not inventory_summary_map.get(code):
+                inventory_summary_map[code] = {}
+
+            if not inventory_summary_map[code].get(supplier_id):
+                inventory_summary_map[code][supplier_id] = instance
 
         for center in data:
 
@@ -2374,6 +2393,11 @@ def make_export_final_response(result, data):
 
                 for index, supplier_object in enumerate(supplier_object_list):
 
+                    supplier_id = supplier_object['supplier_id']
+                    try:
+                        supplier_object = set_is_inventory_allowed_parameter(supplier_object, inventory_summary_map[code][supplier_id], unique_inv_codes)
+                    except KeyError as e:
+                        raise Exception(function, ui_utils.get_system_error(e))
                     # obtain the dict containing non-center information
                     response = construct_single_supplier_row(supplier_object, result[code]['data_keys'])
                     if not response.data['status']:
@@ -2396,6 +2420,30 @@ def make_export_final_response(result, data):
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
+
+
+def set_is_inventory_allowed_parameter(supplier_dict, inv_summary_instance, unique_inventory_codes):
+    """
+
+    :param supplier_dict:
+    :param inv_summary_instance:
+    :param unique_inventory_codes:
+    :return: sets a key in supplier_dict for each inventory in unique_inventory_codes which tells weather that
+     inventory is allowed or not.
+    """
+    function = set_is_inventory_allowed_parameter.__name__
+    try:
+        allowed_inventory_codes = get_inventories_allowed(inv_summary_instance)
+        for code in unique_inventory_codes:
+            inventory_allowed_data_key = website_constants.inventory_code_to_name[code].lower() + '_allowed'
+            if code not in allowed_inventory_codes:
+                # this inventory is not allowed
+                supplier_dict[inventory_allowed_data_key] = 0
+            else:
+                supplier_dict[inventory_allowed_data_key] = 1
+        return supplier_dict
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e.args or e.message))
 
 
 def save_leads(row):

@@ -48,27 +48,27 @@ proposal_header_keys = [
 
 inventorylist = {
     'PO': {
-        'HEADER': ['Poster Count', 'Poster Price', 'Poster Duration', 'Poster Price Factor', 'Poster price per flat', 'Poster Business Price'],
-        'DATA': ['total_poster_count', 'poster_price', 'poster_duration', 'poster_price_factor',
+        'HEADER': ['Poster Allowed', 'Poster Count', 'Poster Price', 'Poster Price Factor', 'Poster price per flat', 'Poster Business Price'],
+        'DATA': ['poster_allowed', 'total_poster_count', 'poster_price', 'poster_price_factor',
                  'poster_price_per_flat', 'poster_business_price']
     },
     'ST': {
-        'HEADER': ['Standee Count', 'Standee Price', 'Standee Duration', 'Standee Price factor',
+        'HEADER': ['Standee Allowed',  'Standee Count', 'Standee Price', 'Standee Duration', 'Standee Price factor',
                    'Standee price per flat', 'Standee Business Price'],
-        'DATA': ['total_standee_count', 'standee_price', 'standee_duration', 'standee_price_factor',
+        'DATA': ['standee_allowed', 'total_standee_count', 'standee_price', 'standee_duration', 'standee_price_factor',
                  'standee_price_per_flat', 'standee_business_price']
     },
     'FL': {
-        'HEADER': ['Flier count', 'Flier Price', 'Flier Duration', 'Flier Price Factor', 'Flier Business Price'],
-        'DATA': ['flier_frequency', 'flier_price', 'flier_duration', 'flier_price_factor', 'flier_business_price']
+        'HEADER': ['Flier Allowed', 'Flier count', 'Flier Price', 'Flier Duration', 'Flier Price Factor', 'Flier Business Price'],
+        'DATA': ['flier_allowed', 'flier_frequency', 'flier_price', 'flier_duration', 'flier_price_factor', 'flier_business_price']
     },
     'SL': {
-        'HEADER': ['Stall Count', 'Stall Price', 'Stall Duration', 'Stall Price Factor', 'Stall Business Price'],
-        'DATA': ['total_stall_count', 'stall_price', 'stall_duration', 'stall_price_factor', 'stall_business_price']
+        'HEADER': ['Stall Allowed', 'Stall Count', 'Stall Price', 'Stall Duration', 'Stall Price Factor', 'Stall Business Price'],
+        'DATA': ['stall_allowed', 'total_stall_count', 'stall_price', 'stall_duration', 'stall_price_factor', 'stall_business_price']
     },
     'CD': {
-        'HEADER': ['Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor', 'Car Business Price'],
-        'DATA': ['car_display', 'car_display_price', 'car_display_duration', 'car_display_price_factor', 'car_business_price']
+        'HEADER': ['Car Display Allowed', 'Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor', 'Car Business Price'],
+        'DATA': ['car_display_allowed', 'car_display', 'car_display_price', 'car_display_duration', 'car_display_price_factor', 'car_business_price']
     },
     'RS': {
         'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA', 'SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT', 'STATUS'],
@@ -614,7 +614,7 @@ bodys = {
 
 # default emails
 emails = {
-    'bd_head': 'bd@machadalo.com'
+    'bd_head': 'bd@machadalo.com',
 }
 
 # default status of each inventory is defined here. The reason i didn't chose a boolean value is because may be in
