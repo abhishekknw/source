@@ -2285,6 +2285,25 @@ class GenericExportFileName(BaseModel):
     is_exported = models.BooleanField(default=True)
     objects = managers.GeneralManager()
 
+    @property
+    def calculate_assignment_detail(self):
+        """
+        This method is a property which just calculates to whom this proposal was being assigned while converting it to a
+        campaign. This can be used as a field in a serializer class.
+        """
+        try:
+            instance = CampaignAssignment.objects.get(campaign=self.proposal)
+            # can use caching here to avoid BaseUser calls.
+            return {
+                'assigned_by': BaseUser.objects.get(pk=instance.assigned_by.pk).username,
+                'assigned_to': BaseUser.objects.get(pk=instance.assigned_to.pk).username
+            }
+        except ObjectDoesNotExist:
+            return {
+                'assigned_by': 'Nobody',
+                'assigned_to': 'Nobody'
+            }
+
     class Meta:
         db_table = 'generic_export_file_name'
 
@@ -2295,7 +2314,9 @@ class CampaignAssignment(BaseModel):
     """
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_by')
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_to')
-    campaign = models.ForeignKey(ProposalInfo, null=True, blank=True)
+    campaign = models.OneToOneField(ProposalInfo, unique=True)
+    # possible primary key should be campaign_id
+
     class Meta:
         db_table = 'campaign_assignment'
 

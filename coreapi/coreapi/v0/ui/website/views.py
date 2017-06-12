@@ -3764,8 +3764,6 @@ class AssignCampaign(APIView):
         """
         class_name = self.__class__.__name__
         try:
-
-
             assigned_by = request.user
 
             campaign_id = request.data['campaign_id']
@@ -3788,8 +3786,11 @@ class AssignCampaign(APIView):
 
             # todo: check for dates also. you should not assign a past campaign to any user. left for later
 
-            # create the object
-            models.CampaignAssignment.objects.get_or_create(assigned_by=assigned_by, assigned_to=assigned_to, campaign=proposal)
+            # create the object.
+            instance, is_created = models.CampaignAssignment.objects.get_or_create(campaign=proposal)
+            instance.assigned_by = assigned_by
+            instance.assigned_to = assigned_to
+            instance.save()
 
             return ui_utils.handle_response(class_name, data='success', success=True)
 
@@ -4159,23 +4160,23 @@ class ProposalToCampaign(APIView):
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
 
             if not proposal.invoice_number:
-                return ui_utils.handle_response(class_name, data=errors.CAMPAIGN_NO_INVOICE_ERROR)
+                return ui_utils.handle_response(class_name, data=errors.CAMPAIGN_NO_INVOICE_ERROR, request=request)
 
             proposal_start_date = proposal.tentative_start_date
             proposal_end_date = proposal.tentative_end_date
 
             if not proposal_start_date or not proposal_end_date:
-                return ui_utils.handle_response(class_name, data=errors.NO_DATES_ERROR.format(proposal_id))
+                return ui_utils.handle_response(class_name, data=errors.NO_DATES_ERROR.format(proposal_id), request=request)
 
             response = website_utils.is_campaign(proposal)
             if response.data['status']:
-                return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id))
+                return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id), request=request)
 
             # these are the current inventories assigned. These are inventories assigned to this proposal when sheet was imported.
             current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
 
             if not current_assigned_inventories:
-                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORIES_ASSIGNED_ERROR.format(proposal_id))
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORIES_ASSIGNED_ERROR.format(proposal_id), request=request)
 
             current_assigned_inventories_map = {}
 
