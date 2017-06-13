@@ -22,7 +22,7 @@
                 </select>
             </span>
           </div>
-            <div class="col-md-4" permission="[bd_manager]"> 
+            <div class="col-md-4" permission="[bd_manager]">
               <label for="new">Create New Business</label>
               <input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
             </div>
@@ -101,7 +101,7 @@
                 </tr>
               </tbody>
             </table>
-            <button class="btn btn-danger" ng-click="addNewAccount()" ng-if="campaignAccessAllowed">Add New Account</button>
+            <button class="btn btn-danger" ng-click="addNewAccount()" permission = "[bd_manager]">Add New Account</button>
           </div>
         </div>
       </form>
@@ -148,7 +148,7 @@
                 </tr>
               </tbody>
             </table>
-            <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" ng-if="campaignAccessAllowed">Create New Proposal</button>
+            <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" permission = "[bd_manager]">Create New Proposal</button>
             <span class="show-error" ng-show="error">Please select an account</span>
           </div>
         </div>
