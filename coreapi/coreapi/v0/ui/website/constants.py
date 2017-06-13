@@ -67,8 +67,8 @@ inventorylist = {
         'DATA': ['stall_allowed', 'total_stall_count', 'stall_price', 'stall_duration', 'stall_price_factor', 'stall_business_price']
     },
     'CD': {
-        'HEADER': ['Car Display Allowed', 'Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor', 'Car Business Price'],
-        'DATA': ['car_display_allowed', 'car_display', 'car_display_price', 'car_display_duration', 'car_display_price_factor', 'car_business_price']
+        'HEADER': ['Car Display Allowed', 'Car Display Count', 'Car Display Price', 'Car Display Price Factor', 'Car Business Price'],
+        'DATA': ['car_display_allowed', 'car_display', 'car_display_price', 'car_display_price_factor', 'car_business_price']
     },
     'RS': {
         'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA', 'SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT', 'STATUS'],

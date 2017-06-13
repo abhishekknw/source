@@ -2435,7 +2435,7 @@ def set_is_inventory_allowed_parameter(supplier_dict, inv_summary_instance, uniq
     try:
         allowed_inventory_codes = get_inventories_allowed(inv_summary_instance)
         for code in unique_inventory_codes:
-            inventory_allowed_data_key = website_constants.inventory_code_to_name[code].lower() + '_allowed'
+            inventory_allowed_data_key = '_'.join(website_constants.inventory_code_to_name[code].lower().split()) + '_allowed'
             if code not in allowed_inventory_codes:
                 # this inventory is not allowed
                 supplier_dict[inventory_allowed_data_key] = 0
