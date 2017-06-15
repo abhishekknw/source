@@ -62,6 +62,7 @@ angular.module('catalogueApp')
         	})
         	.catch(function onError(response){
             $scope.hideData = true;
+            commonDataShare.showErrorMessage(response);
         		console.log("error occured", response);
         	});
         }
@@ -71,6 +72,7 @@ angular.module('catalogueApp')
               $scope.userList = response.data.data;
             })
             .catch(function onError(response){
+              commonDataShare.showErrorMessage(response);
               console.log("error occured", response);
             });
         }
@@ -152,6 +154,7 @@ angular.module('catalogueApp')
         })
         .catch(function onError(response){
           console.log(response);
+          commonDataShare.showErrorMessage(response);
         });
       }
       $scope.reAssignActivityList = {};
@@ -193,7 +196,8 @@ angular.module('catalogueApp')
           $('#reAssignModal').modal('hide');
           $scope.reAssign = false;
           $scope.reAssignActivityList = {};
-          swal(constants.name,constants.reAssign_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.reAssign_error,constants.error);
           console.log(response);
         });
       }
@@ -205,7 +209,8 @@ angular.module('catalogueApp')
         downloadInProgress();
       }).catch(function onError(response){
         console.log("Error occured", response.status);
-        swal(constants.name,response.data.data.general_error,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,response.data.data.general_error,constants.error);
         $scope.buttonDisable = false;
       })
     }
@@ -224,6 +229,7 @@ angular.module('catalogueApp')
              $scope.buttonDisable = false;
           }).catch(function onError(response){
             $scope.buttonDisable = false;
+            commonDataShare.showErrorMessage(response);
           });
         }
         else {
@@ -232,6 +238,7 @@ angular.module('catalogueApp')
       }).catch(function onError(response){
         console.log(response);
         $scope.buttonDisable = false;
+        commonDataShare.showErrorMessage(response);
       });
     }
 }]);

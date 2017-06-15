@@ -89,6 +89,7 @@ angular.module('catalogueApp')
     	})
     	.catch(function onError(response){
         console.log(response);
+        commonDataShare.showErrorMessage(response);
     		console.log("error occured", response.status);
     	});
 
@@ -137,7 +138,8 @@ angular.module('catalogueApp')
         swal(constants.name,constants.updateData_success,constants.success);
       })
       .catch(function onError(response){
-        swal(constants.name,constants.updateData_error,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,constants.updateData_error,constants.error);
         console.log("error occured", response.status);
       });
     }
