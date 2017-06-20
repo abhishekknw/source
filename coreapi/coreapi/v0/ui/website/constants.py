@@ -665,6 +665,9 @@ poster_class_name = 'PosterInventory'
 proposal_converted_to_campaign = 'PTC'
 proposal_not_converted_to_campaign = 'PNC'
 proposal_on_hold = 'POH'
+proposal_requested = 'PR'
+proposal_finalized = 'PF'
+
 
 # different mode of payments
 payment_method = {

@@ -2576,6 +2576,11 @@ class ImportSupplierData(APIView):
             # prepare a new name for this file and save it in the required table
             file_name =  website_utils.get_file_name(request.user, proposal_id, is_exported=False)
 
+            # fetch proposal instance and change it's status to 'finalized'.
+            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            proposal.campaign_state = website_constants.proposal_finalized
+            proposal.save()
+
             return Response({'status': True, 'data': file_name}, status=status.HTTP_200_OK)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -3536,6 +3541,7 @@ class ProposalVersion(APIView):
             account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
             business = models.BusinessInfo.objects.get(business_id=account.business.business_id)
 
+
             # if you don't provide this value, No proposal version is created.
             is_proposal_version_created = request.data['is_proposal_version_created'] if request.data.get('is_proposal_version_created') else False
             data = request.data['centers']
@@ -3608,6 +3614,9 @@ class ProposalVersion(APIView):
                 'file_name': file_name,
                 'stats': stats
             }
+            # change the status of the proposal to 'requested' once everything is okay.
+            proposal.campaign_state = website_constants.proposal_requested
+            proposal.save()
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
