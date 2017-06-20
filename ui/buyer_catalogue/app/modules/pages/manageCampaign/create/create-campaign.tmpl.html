@@ -130,8 +130,16 @@
                   <td>{{proposal.updated_on | limitTo:10}}</td>
                   <td>
                     <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">
-                      <span ng-if="!isUploaded">Edit</span>
-                      <span ng-if="isUploaded">View</span>
+                      <span>View on Map/Grid</span>
+                    </button>
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">
+                      <span>Requested</span>
+                    </button>
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">
+                      <span>Finalized</span>
+                    </button>
+                    <button class="btn btn-success detail-button" ng-click="showProposalDetails(proposal.proposal_id)">
+                      <span>Converted</span>
                     </button>
                   </td>
                   <!-- <td ng-if="!isUploaded">

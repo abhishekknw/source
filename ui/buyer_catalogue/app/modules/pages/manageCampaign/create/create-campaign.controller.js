@@ -89,7 +89,8 @@ angular.module('machadaloPages')
           $scope.busTypes = response.data;
         })
         .catch(function onError(response){
-          swal(constants.name,constants.errorMsg,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.errorMsg,constants.error);
         });
       $scope.getBusiness = function() {
         pagesService.getBusiness($scope.bsSelect)
@@ -121,7 +122,8 @@ angular.module('machadaloPages')
               //End: added to persit data after refresh
          })
          .catch(function onError(response){
-           swal(constants.name,constants.errorMsg,constants.error);
+           commonDataShare.showErrorMessage(response);
+          //  swal(constants.name,constants.errorMsg,constants.error);
          });
       };
 
@@ -142,7 +144,8 @@ angular.module('machadaloPages')
                     $scope.sub_types = response.data;
                   })
                   .catch(function onError(response){
-                    swal(constants.name,constants.errorMsg,constants.error);
+                    commonDataShare.showErrorMessage(response);
+                    // swal(constants.name,constants.errorMsg,constants.error);
                   });
             }
         }
@@ -168,7 +171,8 @@ angular.module('machadaloPages')
 	            $scope.businesses = response.data;
 	       })
          .catch(function onError(response){
-           swal(constants.name,constants.errorMsg,constants.error);
+           commonDataShare.showErrorMessage(response);
+          //  swal(constants.name,constants.errorMsg,constants.error);
          });
 	    };
 
@@ -226,7 +230,8 @@ angular.module('machadaloPages')
               $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
           })
           .catch(function onError(response){
-            swal(constants.name,constants.errorMsg,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.errorMsg,constants.error);
               if(typeof(response) == typeof([]))
                   $scope.proposal_error = response.error;
           });
@@ -279,7 +284,8 @@ angular.module('machadaloPages')
               $window.localStorage.business = JSON.stringify($scope.model.business);
             }
         }).catch(function onError(response){
-            swal(constants.name,constants.business_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.business_error,constants.error);
              if (typeof response != 'number'){
                $scope.thenMsg = undefined;
                $scope.errorMsg = response.message;
@@ -300,7 +306,8 @@ angular.module('machadaloPages')
             }).then(function (response) {
               uploadFileToAmazonServer(response.data.data,file);
             }).catch(function onError(response) {
-              swal(constants.name,constants.errorMsg,constants.error);
+              commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.errorMsg,constants.error);
               $scope.uploadfile = true;
               // commonDataShare.showMessage(constants.importfile_error);
             });
@@ -326,7 +333,8 @@ angular.module('machadaloPages')
                       // commonDataShare.showMessage(constants.uploadfile_success);
                  }).catch(function onError(response) {
                       $scope.uploadfile = true;
-                      swal(constants.name,constants.uploadfile_error,constants.error);
+                      commonDataShare.showErrorMessage(response);
+                      // swal(constants.name,constants.uploadfile_error,constants.error);
                       // commonDataShare.showMessage(constants.uploadfile_error);
                  });
            }

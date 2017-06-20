@@ -59,7 +59,8 @@ angular.module('machadaloPages')
              })
              .catch(function onError(response){
                  console.log("error occured");
-                 swal(constants.name,constants.errorMsg,constants.error);
+                 commonDataShare.showErrorMessage(response);
+                //  swal(constants.name,constants.errorMsg,constants.error);
                  // alert("Error Occured");
              });
         }

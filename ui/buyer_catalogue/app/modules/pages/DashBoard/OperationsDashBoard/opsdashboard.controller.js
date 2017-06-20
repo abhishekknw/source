@@ -43,10 +43,11 @@ angular.module('catalogueApp')
     	.catch(function onError(response){
         if(response.status == 403)
           $location.path('/forbidden');
+        commonDataShare.showErrorMessage(response);
         $scope.isEmpty = true;
         $scope.loading = response;
     		console.log("error occured", response);
-        swal(constants.name,constants.errorMsg,constants.error);
+        // swal(constants.name,constants.errorMsg,constants.error);
     	});
     }
 
@@ -58,7 +59,8 @@ angular.module('catalogueApp')
       	})
       	.catch(function onError(response){
       		console.log("error occured", response);
-          swal(constants.name,constants.errorMsg,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.errorMsg,constants.error);
       	});
     }
     var init = function(){
@@ -85,7 +87,8 @@ angular.module('catalogueApp')
         $scope.loadSpinner = true;
         $('#onHoldModal').modal('hide');
         $('#declineModal').modal('hide');
-        swal(constants.name,constants.onhold_error,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,constants.onhold_error,constants.error);
     		console.log("error occured", response);
     	});
       $scope.reason = "";
@@ -110,7 +113,8 @@ angular.module('catalogueApp')
        $scope.loadSpinner = true;
        $('#onHoldModal').modal('hide');
        $('#declineModal').modal('hide');
-       swal(constants.name,constants.email_error,constants.error);
+       commonDataShare.showErrorMessage(response);
+      //  swal(constants.name,constants.email_error,constants.error);
      });
    }
 
@@ -121,6 +125,7 @@ angular.module('catalogueApp')
     	})
     	.catch(function onError(response){
     		console.log("error occured", response);
+        commonDataShare.showErrorMessage(response);
     	});
     }
 
@@ -138,7 +143,8 @@ angular.module('catalogueApp')
           .catch(function(response){
             getProposalDetails();
             $scope.loadSpinner = true;
-            swal(constants.name,constants.accept_proposal_error,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.accept_proposal_error,constants.error);
     	  	    console.log("error occured", status);
               console.log(response);
     	});
@@ -153,8 +159,10 @@ angular.module('catalogueApp')
               console.table(response);
     	})
           .catch(function onError(response){
+            console.log(response);
             getProposalDetails();
-            swal(constants.name,constants.decline_proposal_error,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.decline_proposal_error,constants.error);
     	  	    console.log("error occured", status);
     	});
     }
@@ -178,7 +186,8 @@ angular.module('catalogueApp')
     	})
           .catch(function onError(response){
             $('#assignModal').modal('hide');
-            swal(constants.name,constants.assign_user_error,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.assign_user_error,constants.error);
     	  	    console.log("error occured", status);
     	});
     }

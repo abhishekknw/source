@@ -1,7 +1,7 @@
 'use strict';
 angular.module('catalogueApp')
-.factory('commonDataShare', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location', '$http',
- function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location, $http) {
+.factory('commonDataShare', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location', '$http','constants',
+ function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location, $http, constants) {
 
   var commonDataShare = {};
   var url_base = 'v0/ui/website/';
@@ -31,6 +31,17 @@ angular.module('catalogueApp')
    commonDataShare.getUserDetails = function(userId){
      var url = url_base_user + "user/" + userId + "/";
      return machadaloHttp.get(url);
+   }
+
+   commonDataShare.showErrorMessage = function(response){
+     if(constants.show_system && constants.show_general)
+        swal(constants.name, response.data.data.system_error+response.data.data.general_error, constants.error);
+     else if(constants.show_general)
+        swal(constants.name,response.data.data.general_error, constants.error);
+     else if(constants.show_system)
+        swal(constants.name, response.data.data.system_error, constants.error);
+     else
+        swal(constants.name, constants.errorMsg, constants.error);
    }
 
    return commonDataShare;

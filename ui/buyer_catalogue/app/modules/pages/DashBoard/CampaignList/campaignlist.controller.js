@@ -14,7 +14,7 @@ angular.module('catalogueApp')
         {header : 'View Release Details'},
         {header : 'View Execution Details'}
       ];
-      
+
       $scope.is_Superuser = $window.localStorage.isSuperUser;
       var getCampaignDetails = function(){
         if($scope.is_Superuser == 'true'){
@@ -32,7 +32,8 @@ angular.module('catalogueApp')
             $scope.isEmpty = true;
             $scope.loading = response;
             console.log("error occured", response);
-            swal(constants.name,constants.errorMsg,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.errorMsg,constants.error);
           });
         }else {
           var assigned_by = '0';
@@ -51,7 +52,8 @@ angular.module('catalogueApp')
               $scope.isEmpty = true;
               $scope.loading = response;
               console.log("error occured", response);
-              swal(constants.name,constants.errorMsg,constants.error);
+              commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.errorMsg,constants.error);
             });
         }
 
@@ -64,7 +66,8 @@ angular.module('catalogueApp')
           	})
           	.catch(function onError(response){
           		console.log("error occured", response);
-              swal(constants.name,constants.errorMsg,constants.error);
+              commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.errorMsg,constants.error);
           	});
         }
 

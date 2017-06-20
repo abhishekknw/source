@@ -56,16 +56,16 @@ angular.module('catalogueApp')
     		$scope.proposal = response.data.data;
     	})
     	.catch(function onError(response, status){
-        swal(constants.name,constants.errorMsg,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,constants.errorMsg,constants.error);
     		console.log("Error Occured");
     		if(typeof(response) == typeof([])){
-    			console.log("Error response is :", response);
     		}
     	});
 
       $scope.edit = function(){
         $scope.showEdit = true;
-      },
+      }
 
         // this service get the all shortlisted suppliers for this proposal
       currentProposalService.getShortlistedSuppliers($stateParams.proposal_id)
@@ -77,7 +77,8 @@ angular.module('catalogueApp')
           $scope.loading = response.data;
         })
         .catch(function onError(response, status){
-          swal(constants.name,constants.errorMsg,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.errorMsg,constants.error);
           console.log("Error Occured");
           if(typeof(response) == typeof([])){
             console.log("Error response is :", response);
@@ -152,7 +153,8 @@ angular.module('catalogueApp')
                 $window.location.reload();
         })
         .catch(function onError(response, status){
-          swal(constants.name,constants.errorMsg,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.errorMsg,constants.error);
           console.log("Error Occured");
         })
       }
@@ -169,7 +171,8 @@ angular.module('catalogueApp')
           .then(function onSuccess(response, status){
             // alert("Saved Successfully");
           }).catch(function onError(response, status){
-            swal(constants.name,constants.errorMsg,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.errorMsg,constants.error);
             // alert("Error Occured");
         });
       }
@@ -180,7 +183,8 @@ angular.module('catalogueApp')
                 $window.location.reload();
     		})
     		.catch(function onError(response, status){
-          swal(constants.name,constants.errorMsg,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.errorMsg,constants.error);
     			console.log("Error Occured");
     			if(typeof(response) == typeof([])){
 	    		console.log("Error response is :", response);
@@ -216,7 +220,8 @@ angular.module('catalogueApp')
                    console.log("success");
            })
            .catch(function onError(response, status){
-             swal("Error!",constants.invoice_error,constants.error);
+             commonDataShare.showErrorMessage(response);
+            //  swal("Error!",constants.invoice_error,constants.error);
              console.log("Error Occured");
          })
         });

@@ -268,7 +268,8 @@ $scope.gridViewSummary = {};
                       $scope.society_markers = [];
               })
               .catch(function onError(response, status){
-                swal(constants.name,constants.errorMsg,constants.error);
+                commonDataShare.showErrorMessage(response);
+                // swal(constants.name,constants.errorMsg,constants.error);
 
               });
             }catch(error){
@@ -357,7 +358,7 @@ $scope.gridViewSummary = {};
           //count of suppliers finalized
           if(supplier.status == supplierStatus.finalized){
             center.summary_meta[supplier_code].finalized.count += 1;
-            if(supplier_code == $scope.supplierCode.society){              
+            if(supplier_code == $scope.supplierCode.society){
               center.summary_meta[supplier_code].finalized.flat_count += supplier.flat_count;
               center.summary_meta[supplier_code].finalized.tower_count += supplier.tower_count;
               center.summary_meta[supplier_code].finalized.poster_count += supplier.tower_count;
@@ -708,8 +709,9 @@ $scope.gridViewSummary = {};
               .then(function onSuccess(response, status) {
                 $scope.amenities = response.data.data;
               })
-              .catch(function onError(response, status){
-                swal(constants.name,constants.amenity_error,constants.error);
+              .catch(function onError(response){
+                commonDataShare.showErrorMessage(response);
+                // swal(constants.name,constants.amenity_error,constants.error);
               });
             //End:   api call to get amenity filters from database
 
@@ -895,7 +897,8 @@ $scope.gridViewSummary = {};
               }
             })
               .catch(function onError(response, status){
-                swal(constants.name,constants.errorMsg,constants.error);
+                commonDataShare.showErrorMessage(response);
+                // swal(constants.name,constants.errorMsg,constants.error);
                 if(status == -1)
                   console.log(error.message);
               });
@@ -974,7 +977,8 @@ $scope.gridViewSummary = {};
                 }
               })
             .catch(function onError(response, status){
-              swal(constants.name,constants.errorMsg,constants.error);
+              commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.errorMsg,constants.error);
               if(status == -1)
                 console.log(constants.server_connection_error);
               $scope.get_spaces_error = response.message;
@@ -1453,7 +1457,8 @@ $scope.gridViewSummary = {};
                     $scope.checkFilters = false;
                 })
                 .catch(function onError(response, status){
-                  swal(constants.name,constants.errorMsg,constants.error);
+                  commonDataShare.showErrorMessage(response);
+                  // swal(constants.name,constants.errorMsg,constants.error);
                     console.log("Error Happened while filtering");
                     $scope.checkFilters = false;
                 });
@@ -1591,7 +1596,8 @@ $scope.gridViewSummary = {};
         })
         .catch(function onError(response, status){
             console.log("Error Happened while searching");
-            swal(constants.name,constants.errorMsg,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.errorMsg,constants.error);
         });
       }
       else {
@@ -1764,7 +1770,8 @@ $scope.gridViewSummary = {};
               console.log("Error occurred in fetching response");
               console.log(response);
               $scope.hideSpinner = true;
-              swal(constants.name,constants.request_proposal_error,constants.error);
+              commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.request_proposal_error,constants.error);
               $scope.checkFileExport = false;
          });
        /*  $http({
@@ -1808,8 +1815,8 @@ $scope.gridViewSummary = {};
            deleteFile();
          }
        }).catch(function onError(response){
-         if($scope.isSuperUser == 'true')
-          swal(constants.name,constants.client_email_error,constants.error);
+         commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.client_email_error,constants.error);
        });
      }
 
@@ -1825,8 +1832,8 @@ $scope.gridViewSummary = {};
            deleteFile();
          }
        }).catch(function onError(response){
-         if($scope.isSuperUser == 'true')
-          swal(constants.name,constants.bdhead_email_error,constants.error);
+         commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.bdhead_email_error,constants.error);
        });
      }
      var uploadToAmazon = function(){
@@ -1841,8 +1848,8 @@ $scope.gridViewSummary = {};
           deleteFile();
          }
        }).catch(function onError(response){
-         if($scope.isSuperUser == 'true')
-          swal(constants.name,constants.upload_error,constants.error);
+         commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.upload_error,constants.error);
        });
      }
 
@@ -1858,8 +1865,8 @@ $scope.gridViewSummary = {};
            $scope.uploadToAmazon = null;
           //  console.log(response);
          }).catch(function onError(response){
-           if($scope.isSuperUser == 'true')
-            swal(constants.name,constants.deletefile_error,constants.error);
+           commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.deletefile_error,constants.error);
           //  console.log(response);
          });
        }
@@ -1882,7 +1889,8 @@ $scope.gridViewSummary = {};
          }).then(function onSuccess(response){
               swal(constants.name,constants.uploadfile_success,constants.success);
          }).catch(function onError(response) {
-              swal(constants.name,constants.uploadfile_error,constants.error);
+           commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.uploadfile_error,constants.error);
          });
        }catch(error){
          $scope.hideSpinner = true;
@@ -1905,7 +1913,8 @@ $scope.gridViewSummary = {};
           $scope.hideSpinner = true;
         }).catch(function onError(response) {
           $scope.hideSpinner = true;
-            swal(constants.name,constants.importfile_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.importfile_error,constants.error);
         });
       }catch(error){
         $scope.hideSpinner = true;
@@ -1924,7 +1933,8 @@ $scope.gridViewSummary = {};
           // alert("Saved Successfully");
           swal(constants.name,constants.save_success,constants.success);
         }).catch(function(response, status){
-          swal(constants.name,constants.save_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.save_error,constants.error);
           // alert("Error Occured");
       });//
     }catch(error){
@@ -1946,7 +1956,8 @@ $scope.gridViewSummary = {};
           getSummary(code,center);
           getComprehinsiveSummary(code);
         }).catch(function onError(response, status){
-          swal(constants.name,constants.supplier_status_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.supplier_status_error,constants.error);
       });
     }catch(error){
       console.log(error.message);
@@ -2065,6 +2076,7 @@ $scope.getSocietyDetails = function(supplier,center,index){
      }
   }).catch(function onError(response){
     console.log("error",response);
+    commonDataShare.showErrorMessage(response);
   });
 }//End of function getSocietyDetails
   function estimatedResidents (flatcount){
@@ -2089,7 +2101,8 @@ $scope.getSocietyDetails = function(supplier,center,index){
 
      }).catch(function onError(response,status){
          console.log("error ",response.data.error);
-         swal(constants.name,constants.errorMsg,constants.error);
+         commonDataShare.showErrorMessage(response);
+        //  swal(constants.name,constants.errorMsg,constants.error);
      });
  }
 

@@ -103,5 +103,8 @@ angular
     bd_manager : 'BD Manager',
     campaign_manager : 'Campaign Manager',
 
+    //errorMsg
+    show_system : true,
+    show_general : true,
 
   });

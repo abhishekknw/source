@@ -262,6 +262,21 @@ angular
             ncyBreadcrumb: {
               label:'Homepage',
             }
+      })
+      .state('ongoingCampaigns',{
+            url : '/ongoingCampaigns',
+            controller : 'OngoingCampaignCtrl',
+            templateUrl : 'modules/pages/campaignStatus/ongoingCampaigns/ongoingCampaign.tmpl.html',
+      })
+      .state('upcomingCampaigns',{
+            url : '/upcomingCampaigns',
+            controller : 'UpcomingCampaignCtrl',
+            templateUrl : 'modules/pages/campaignStatus/upcomingCampaigns/upcomingCampaign.tmpl.html',
+      })
+      .state('completedCampaigns',{
+            url : '/completedCampaigns',
+            controller : 'CompletedCampaignCtrl',
+            templateUrl : 'modules/pages/campaignStatus/completedCampaigns/completedCampaign.tmpl.html',
       });
       //$qProvider.errorOnUnhandledRejections(false);
       $locationProvider.hashPrefix('');
