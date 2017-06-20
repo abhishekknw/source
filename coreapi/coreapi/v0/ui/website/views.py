@@ -4244,10 +4244,6 @@ class InventoryActivityImage(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            
-            import pdb
-            pdb.set_trace()
-
             shortlisted_inventory_detail_instance = models.ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_detail_id'])
             activity_date = request.data['activity_date']
             activity_type = request.data['activity_type']
