@@ -62,14 +62,12 @@ def get_union_keys_inventory_code(key_type, unique_inventory_codes):
     assert key_type is not None, 'key type should not be None'
     assert unique_inventory_codes is not None, 'inventory code  should not be None'
     assert type(inventorylist) is DictType, 'Inventory list is not dict type'
-
+    function = get_union_keys_inventory_code.__name__
     try:
-        response = Response(data={'status': True, 'data': ''}, status=status.HTTP_200_OK)
         # for each code in individual_codes union the data and return
-        response.data['data'] = [item for code in unique_inventory_codes for item in inventorylist.get(code)[key_type]]
-        return response
+        return [item for code in unique_inventory_codes for item in inventorylist.get(code)[key_type]]
     except Exception as e:
-        return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def getList(data, society_keys):
@@ -94,14 +92,15 @@ def get_unique_inventory_codes(inventory_array):
         inventory_array: array of inventory codes like PL, SL, PLSL.
     Returns: an array containing unique codes. Pl, PLSL would just give [ PL, SL]
     """
+    function = get_unique_inventory_codes.__name__
     try:
         # our codes are two letters long (individual)
         step = 2
         # generate individual codes from inventory_array
         individual_codes = [inventory_code[i:i + step] for inventory_code in inventory_array for i in range(0, len(inventory_code), step)]
-        return Response({'status': True, 'data': list(set(individual_codes))}, status=status.HTTP_200_OK)
+        return list(set(individual_codes))
     except Exception as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def get_union_inventory_price_per_flat(data, unique_inventory_codes, index):
@@ -123,9 +122,9 @@ def get_union_inventory_price_per_flat(data, unique_inventory_codes, index):
                 if not inventory_price:
                     inventory_price = 0.0
                 data[price_per_flat[code][0]] = inventory_price/(float(data['flat_count']))
-        return ui_utils.handle_response(function, data=data, success=True)
+        return data
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def insert_supplier_sheet(workbook, result):
@@ -146,18 +145,13 @@ def insert_supplier_sheet(workbook, result):
             ws.append(supplier_data['header_keys'])
 
             for supplier_object in supplier_data['objects']:
-                ws.append([ supplier_object[key] for key in supplier_data['data_keys']])
+                ws.append([supplier_object[key] for key in supplier_data['data_keys']])
 
         # we also need to add metric sheet as part of export
-        response = add_metric_sheet(workbook)
-        if not response.data['status']:
-            return response
-        workbook = response.data['data']
-
+        return add_metric_sheet(workbook)
         # return a workbook object
-        return ui_utils.handle_response(function_name, data=workbook, success=True)
     except Exception as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
+        raise Exception(function_name, ui_utils.get_system_error(e))
 
 
 def get_related_dict():
@@ -1507,10 +1501,9 @@ def create_proposal_id(business_id, account_id):
         account_letters = website_constants.account_letters
         # make the proposal id.
         proposal_id = business_id[:business_letters].upper() + account_id[:account_letters].upper() + (str(uuid.uuid4())[-website_constants.proposal_id_limit:])
-
-        return ui_utils.handle_response(function, data=proposal_id, success=True)
+        return proposal_id
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def get_coordinates(radius, latitude, longitude):
@@ -1879,6 +1872,67 @@ def construct_proposal_response(proposal_id):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
+def set_inventory_pricing(supplier_ids, supplier_type_code,  inventory_summary_map, stats):
+    """
+    :param supplier_ids:
+    :param supplier_type_code:
+    :param inventory_summary_map:
+    :return: returns a dict in which each supplier has inventory status of allowed and the price if allowed.
+    """
+
+    function = set_inventory_pricing.__name__
+    try:
+        # by default all inventory codes.
+        chosen_inventory_codes = ['PO', 'ST', 'CD', 'SL', 'FL']
+        content_type = ui_utils.fetch_content_type(supplier_type_code)
+        price_mapping_default_map, ad_inventory_map, duration_map = make_handy_price_mapping_default_duration_adinventory_type(supplier_ids, content_type)
+        suppliers_per_supplier_type_code = {}
+        for supplier_id in supplier_ids:
+            if not suppliers_per_supplier_type_code.get(supplier_id):
+                suppliers_per_supplier_type_code[supplier_id] = {}
+                for inv_code in chosen_inventory_codes:
+                    suppliers_per_supplier_type_code[supplier_id][inv_code] = {'allowed': False, 'price': None}
+            try:
+                inventory_codes_allowed = get_inventories_allowed(inventory_summary_map[supplier_id])
+            except KeyError:
+                # record this error and return in stats
+                stats['inventory_summary_no_instance_error'].add(supplier_id)
+                continue
+
+            for inv_code in inventory_codes_allowed:
+                suppliers_per_supplier_type_code[supplier_id][inv_code]['allowed'] = True
+                try:
+                    inventory_default_meta = website_constants.inventory_type_duration_dict_list[inv_code]
+                except KeyError:
+                    raise Exception('The supplier {0} does not have an entry into constants.' .format(supplier_id))
+                try:
+                    ad_inventory_instance = ad_inventory_map[inventory_default_meta[0], inventory_default_meta[1]]
+                    inventory_name = ad_inventory_instance.adinventory_name
+                    inventory_type = ad_inventory_instance.adinventory_type
+                    ad_inventory_id = ad_inventory_instance.id
+                except KeyError:
+                    raise Exception('The supplier {0} does not have ad_inventory type instance for {1}, {2}.'.format(supplier_id, inventory_default_meta[0], inventory_default_meta[1]))
+                try:
+                    duration_instance = duration_map[inventory_default_meta[2]]
+                    duration_name = duration_instance.duration_name
+                    duration_id = duration_instance.id
+                except KeyError:
+                    raise Exception('The supplier {0} does not have duration instance for {1}. '.format(supplier_id, inventory_default_meta[2]))
+                try:
+                    key = (ad_inventory_id, duration_id, supplier_id, content_type.id)
+                    price = price_mapping_default_map[key]
+                except KeyError:
+                    error_key = (inventory_name, inventory_type, duration_name, supplier_id)
+                    raise Exception('The price mapping default instance does not exist for this supplier. key {0} is not in the pmd map.  detail is {1}.   \n valid keys are {2}. '.format(key, error_key, price_mapping_default_map.keys()))
+                suppliers_per_supplier_type_code[supplier_id][inv_code]['price'] = price
+
+        return suppliers_per_supplier_type_code
+    except Exception as e:
+        import pdb
+        pdb.set_trace()
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
 def add_inventory_summary_details(supplier_list, inventory_summary_objects_mapping, supplier_type_code, shortlisted=True, status=True):
     """
     This function adds details from inventory summary table for all the suppliers in
@@ -1899,6 +1953,7 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
     """
     function = add_inventory_summary_details.__name__
     try:
+        statistics = {}
         content_type = ui_utils.fetch_content_type(supplier_type_code)
         supplier_ids = [supplier_dict['supplier_id'] for supplier_dict in supplier_list]
         price_mapping_default_map, ad_inventory_map, duration_map = make_handy_price_mapping_default_duration_adinventory_type(supplier_ids, content_type)
@@ -2216,9 +2271,9 @@ def unique_supplier_type_codes(data):
         for center in data:
             codes = center['suppliers'].keys()
             supplier_type_codes.extend(codes)
-        return ui_utils.handle_response(function_name, data=list(set(supplier_type_codes)), success=True)
+        return list(set(supplier_type_codes))
     except Exception as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
+        raise Exception(function_name, ui_utils.get_system_error(e))
 
 
 def extra_header_database_keys(supplier_type_codes, data, result):
@@ -2240,22 +2295,13 @@ def extra_header_database_keys(supplier_type_codes, data, result):
                 else:
                     inventory_codes = []
 
-                response = get_unique_inventory_codes(inventory_codes)
-                if not response.data['status']:
-                    return response
-                unique_inv_codes = response.data['data']
+                unique_inv_codes = get_unique_inventory_codes(inventory_codes)
 
                 # extend the header keys with header for supplier type codes
-                response = get_union_keys_inventory_code('HEADER', unique_inv_codes)
-                if not response.data['status']:
-                    return response
-                result[code]['header_keys'].extend(response.data['data'])
+                result[code]['header_keys'].extend(get_union_keys_inventory_code('HEADER', unique_inv_codes))
 
                 # extend the data keys with header for supplier type codes
-                response = get_union_keys_inventory_code('DATA', unique_inv_codes)
-                if not response.data['status']:
-                    return response
-                result[code]['data_keys'].extend(response.data['data'])
+                result[code]['data_keys'].extend(get_union_keys_inventory_code('DATA', unique_inv_codes))
 
             # remove duplicates for this supplier code. we hell can't use sets because that thing will destroy the order
             # of the keys which is important and the order must match
@@ -2265,10 +2311,9 @@ def extra_header_database_keys(supplier_type_codes, data, result):
             # set the counts for validation.
             result[code]['header_keys_count'] = len(result[code]['header_keys'])
             result[code]['data_keys_count'] = len(result[code]['data_keys'])
-
-        return ui_utils.handle_response(function, data=result, success=True)
+        return result
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def initialize_export_final_response(supplier_type_codes, result):
@@ -2290,33 +2335,21 @@ def initialize_export_final_response(supplier_type_codes, result):
             result[code]['sheet_name'] = sheet_name
 
             # set fixed headers for center
-            response = get_union_keys_inventory_code('HEADER', ['CENTER'])
-            if not response.data['status']:
-                return response
-            result[code]['header_keys'] = response.data['data']
+            result[code]['header_keys'] = get_union_keys_inventory_code('HEADER', ['CENTER'])
 
             # set fixed data keys for center
-            response = get_union_keys_inventory_code('DATA', ['CENTER'])
-            if not response.data['status']:
-                return response
-            result[code]['data_keys'] = response.data['data']
+            result[code]['data_keys'] = get_union_keys_inventory_code('DATA', ['CENTER'])
 
             # set fixed header keys for supplier
-            response = get_union_keys_inventory_code('HEADER', [code])
-            if not response.data['status']:
-                return response
-            result[code]['header_keys'].extend(response.data['data'])
+            result[code]['header_keys'].extend(get_union_keys_inventory_code('HEADER', [code]))
 
             # set fixed data keys for supplier
-            response = get_union_keys_inventory_code('DATA', [code])
-            if not response.data['status']:
-                return response
-            result[code]['data_keys'].extend(response.data['data'])
+            result[code]['data_keys'].extend(get_union_keys_inventory_code('DATA', [code]))
 
             result[code]['objects'] = []
-        return ui_utils.handle_response(function, data=result, success=True)
+        return result
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def construct_single_supplier_row(object, keys):
@@ -2331,51 +2364,27 @@ def construct_single_supplier_row(object, keys):
     function = construct_single_supplier_row.__name__
     try:
         result = {key: object.get(key) for key in keys}
-        return ui_utils.handle_response(function, data=result, success=True)
+        return result
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
-def make_export_final_response(result, data):
+def make_export_final_response(result, data, inventory_summary_map, supplier_inventory_pricing_map, stats):
     """
     This function populates the result with 'objects' per supplier_type_codes.
     Args:
         result: result dict where objects will be stored
         data: the entire request.data
+        inventory_summary_map: { 'RS' :  { 'S1' --->  inventory_summary_instance, ... } }
+        supplier_inventory_pricing_map: { 'S1' ---> { 'PO': { 'allowed': True, 'price': 5000 }, 'ST': { 'allowed': True, 'price': 2122 } }, 's2' --> ... }
     Returns:
-    MUMPOCVRSKAT
     """
     function = make_export_final_response.__name__
     try:
-        # collect unique supplier ids first
-        distinct_supplier_ids = set()
         for center in data:
-            for code, supplier_object_list in center['suppliers'].iteritems():
-                for dict_object in supplier_object_list:
-                    distinct_supplier_ids.add(dict_object['supplier_id'])
-
-        # store inv summary instances supplier_code wise.
-        inventory_summary_map = {}
-        total_inventory_summary_instances = models.InventorySummary.objects.filter(object_id__in=distinct_supplier_ids)
-        for instance in total_inventory_summary_instances:
-            # taking advantage of the fact that a supplier id contains it's code in it. 'RS' is embedded in two characters [7:8]
-            code = instance.object_id[7:9]
-            supplier_id = instance.object_id
-
-            if not inventory_summary_map.get(code):
-                inventory_summary_map[code] = {}
-
-            if not inventory_summary_map[code].get(supplier_id):
-                inventory_summary_map[code][supplier_id] = instance
-
-        for center in data:
-
-            response = construct_single_supplier_row(center['center'], website_constants.center_keys)
-            if not response.data['status']:
-                return response
 
             # obtain the dict containing centre information
-            center_info_dict = response.data['data'].copy()
+            center_info_dict = construct_single_supplier_row(center['center'], website_constants.center_keys).copy()
 
             for code, supplier_object_list in center['suppliers'].iteritems():
 
@@ -2383,67 +2392,86 @@ def make_export_final_response(result, data):
                 if center.get('suppliers_meta') and center.get('suppliers_meta').get(code):
                     inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
                 else:
+                    center_id = center['center']['id']
+                    center_error = 'This center with name {0} does not has any inventory selected. Hence No pricing data will be calculated'.format(center_id)
                     inventory_codes = []
+                    stats['center_error'].append(center_error)
 
                 # get union of inventory_codes. POST will become [PO, ST] etc.
-                response = get_unique_inventory_codes(inventory_codes)
-                if not response.data['status']:
-                    return response
-                unique_inv_codes = response.data['data']
-
+                unique_inv_codes = get_unique_inventory_codes(inventory_codes)
                 for index, supplier_object in enumerate(supplier_object_list):
 
                     supplier_id = supplier_object['supplier_id']
+                    # check weather inv summary instance exists for this supplier or not. we do not continue if it doesn't exist
                     try:
-                        supplier_object = set_is_inventory_allowed_parameter(supplier_object, inventory_summary_map[code][supplier_id], unique_inv_codes)
-                    except KeyError as e:
-                        raise Exception(function, ui_utils.get_system_error(e))
-                    # obtain the dict containing non-center information
-                    response = construct_single_supplier_row(supplier_object, result[code]['data_keys'])
-                    if not response.data['status']:
-                        return response
+                        inventory_summary_map[code][supplier_id]
+                    except KeyError:
+                        stats['inventory_summary_no_instance_error'].add(supplier_id)
+                        continue
+                    # this module inserts a few keys in supplier_object such as 'is_allowed' and 'pricing' keys for each inventory.
+                    is_error, detail = set_supplier_inventory_keys(supplier_object, inventory_summary_map[code][supplier_id], unique_inv_codes, supplier_inventory_pricing_map[supplier_id])
+                    if is_error:
+                        # collect the stats about an error
+                        supplier_id = detail[0]
+                        inventory_code = detail[1]
+                        if not stats['supplier_no_pricing_error'].get(supplier_id):
+                            stats['supplier_no_pricing_error'][supplier_id] = []
+                        key = tuple(website_constants.inventory_type_duration_dict_list[inventory_code])
+                        stats['supplier_no_pricing_error'][supplier_id].append(key)
+                        continue
 
-                    supplier_info_dict = response.data['data']
+                    # if no error, set supplier_object = detail
+                    supplier_object = detail.copy()
+
+                    # obtain the dict containing non-center information
+                    supplier_info_dict = construct_single_supplier_row(supplier_object, result[code]['data_keys'])
 
                     # merge the two dicts
                     # final object ( dict ). it contains center information as well as suppliers specific information
                     final_supplier_dict = merge_two_dicts(center_info_dict, supplier_info_dict)
 
                     # add _price_per_flat information to the final_dict received.
-                    response = get_union_inventory_price_per_flat(final_supplier_dict, unique_inv_codes, index)
-                    if not response.data['status']:
-                        return response
-
+                    response_data = get_union_inventory_price_per_flat(final_supplier_dict, unique_inv_codes, index)
                     # append it to the result
-                    result[code]['objects'].append(response.data['data'])
-
-        return ui_utils.handle_response(function, data=result, success=True)
+                    result[code]['objects'].append(response_data)
+        return result, stats
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
-def set_is_inventory_allowed_parameter(supplier_dict, inv_summary_instance, unique_inventory_codes):
+def set_supplier_inventory_keys(supplier_dict, inv_summary_instance, unique_inventory_codes, supplier_inventory_pricing_map):
     """
-
+     sets 'is_allowed' and '_price' for each inventory that is allowed in that supplier.
     :param supplier_dict:
     :param inv_summary_instance:
     :param unique_inventory_codes:
+    :param supplier_inventory_pricing_map: { 'PO': { 'allowed': 'True', 'price': {..contents of pmd } }, ... }
     :return: sets a key in supplier_dict for each inventory in unique_inventory_codes which tells weather that
      inventory is allowed or not.
+
     """
-    function = set_is_inventory_allowed_parameter.__name__
+    function = set_supplier_inventory_keys.__name__
     try:
         allowed_inventory_codes = get_inventories_allowed(inv_summary_instance)
         for code in unique_inventory_codes:
-            inventory_allowed_data_key = '_'.join(website_constants.inventory_code_to_name[code].lower().split()) + '_allowed'
+            inventory_key = '_'.join(website_constants.inventory_code_to_name[code].lower().split())
+            inventory_allowed_data_key = inventory_key + '_allowed'
+            inventory_pricing_key = inventory_key + '_price'
             if code not in allowed_inventory_codes:
                 # this inventory is not allowed
                 supplier_dict[inventory_allowed_data_key] = 0
             else:
                 supplier_dict[inventory_allowed_data_key] = 1
-        return supplier_dict
+                # set pricing only when it is allowed.
+                price = supplier_inventory_pricing_map[code]['price']['actual_supplier_price']
+                if not price:
+                    return True, (supplier_dict['supplier_id'], code)
+                supplier_dict[inventory_pricing_key] = price
+        return False, supplier_dict
     except Exception as e:
-        raise Exception(function, ui_utils.get_system_error(e.args or e.message))
+        import pdb
+        pdb.set_trace()
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def save_leads(row):
@@ -3306,9 +3334,9 @@ def get_file_name(user, proposal_id, is_exported=True):
             'is_exported': is_exported
         }
         models.GenericExportFileName.objects.get_or_create(**data)
-        return ui_utils.handle_response(function, data=file_name, success=True)
+        return file_name
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def add_metric_sheet(workbook):
@@ -3329,9 +3357,10 @@ def add_metric_sheet(workbook):
         for row in first_sheet.iter_rows():
             target_row_list = [cell.value for cell in row]
             target_sheet.append(target_row_list)
-        return ui_utils.handle_response(function, data=workbook, success=True)
+
+        return workbook
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def send_excel_file(file_name):
@@ -3418,10 +3447,9 @@ def process_template(target_string, mapping):
     try:
         template_string = Template(target_string)
         result_string = template_string.substitute(mapping)
-        return ui_utils.handle_response(function, data=result_string, success=True)
+        return result_string
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
-
+        raise Exception(function, ui_utils.get_system_error(e))
 
 def proposal_centers(proposal_id):
     """
@@ -3680,63 +3708,94 @@ def setup_generic_export(data, user, proposal_id):
     function = setup_generic_export.__name__
     try:
         workbook = Workbook()
+        total_suppliers_map = {}
+        # center_error occur when user has not selected any inventory for a center. This means for all suppliers
+        # in that center, no pricing data will be fetched and displayed.
+        # supplier_no_pricing_error happens when a particular inventory is allowed in a supplier but does not has pricing data available.
+        # inventory_summary_no_instance_error: This occur when there is no inv_summ_instance instance for a supplier. For this supplier, hence we cannot is_allowed parts.
+        stats = {'center_error': [], 'supplier_no_pricing_error': {}, 'inventory_summary_no_instance_error': set()}
 
         # get the supplier type codes available in the request
-        response = unique_supplier_type_codes(data)
-        if not response.data['status']:
-            return response
-        unique_supplier_codes = response.data['data']
+        unique_supplier_codes = unique_supplier_type_codes(data)
 
         result = {}
 
         # initialize the result = {} dict which will be used in inserting into sheet
-        response = initialize_export_final_response(unique_supplier_codes, result)
-        if not response.data['status']:
-            return response
-        result = response.data['data']
+        result = initialize_export_final_response(unique_supplier_codes, result)
 
         # collect all the extra header and database keys for all the supplier type codes and all inv codes in them
-        response = extra_header_database_keys(unique_supplier_codes, data, result)
-        if not response.data['status']:
-            return response
-        result = response.data['data']
+        result = extra_header_database_keys(unique_supplier_codes, data, result)
 
-        # make the call to generate data in the result
-        response = make_export_final_response(result, data)
-        if not response.data['status']:
-            return response
-        result = response.data['data']
+        # collect unique supplier ids first
+        distinct_supplier_ids = set()
+        for center in data:
+            for supplier_code, supplier_object_list in center['suppliers'].iteritems():
+                if not total_suppliers_map.get(supplier_code):
+                    total_suppliers_map[supplier_code] = []
+                for dict_object in supplier_object_list:
+                    total_suppliers_map[supplier_code].append(dict_object['supplier_id'])
+                    distinct_supplier_ids.add(dict_object['supplier_id'])
+
+        # store inv summary instances supplier_code wise.
+        total_inventory_summary_instances = models.InventorySummary.objects.filter(object_id__in=distinct_supplier_ids)
+
+        suppliers_without_inv_instances = []
+        # check weather we have inventory summary instances for all suppliers or not. if not we are not proceeding further.
+        inventory_summary_map = {instance.object_id: instance for instance in total_inventory_summary_instances}
+        for supplier_id in distinct_supplier_ids:
+            try:
+                inventory_summary_map[supplier_id]
+            except KeyError:
+                suppliers_without_inv_instances.append(supplier_id)
+        stats['inventory_summary_no_instance_error'] = set(suppliers_without_inv_instances)
+
+        # now rebuild the map code wise.
+        inventory_summary_map = {}
+        for instance in total_inventory_summary_instances:
+            # taking advantage of the fact that a supplier id contains it's code in it. 'RS' is embedded in two characters [7:8]
+            supplier_code = instance.object_id[7:9]
+            supplier_id = instance.object_id
+
+            if not inventory_summary_map.get(supplier_code):
+                inventory_summary_map[supplier_code] = {}
+
+            if not inventory_summary_map[supplier_code].get(supplier_id):
+                inventory_summary_map[supplier_code][supplier_id] = instance
+
+        # fetch  pricing information directly from database
+        supplier_pricing_map = {}
+        for supplier_code, detail in inventory_summary_map.iteritems():
+            # detail is inventory_summary mapping.
+            supplier_pricing_map = merge_two_dicts(set_inventory_pricing(total_suppliers_map[supplier_code], supplier_code, detail, stats), supplier_pricing_map)
+
+        # make the call to generate data in the result. center_error and supplier_no_pricing_error is logged in this function
+        result, stats = make_export_final_response(result, data, inventory_summary_map, supplier_pricing_map, stats)
 
         # print result
-        response = insert_supplier_sheet(workbook, result)
-        if not response.data['status']:
-            return response
-        workbook = response.data['data']
+        workbook = insert_supplier_sheet(workbook, result)
 
         # make a file name for this file
-        response = get_file_name(user, proposal_id)
-        if not response.data['status']:
-            return response
-        file_name = response.data['data']
+        file_name = get_file_name(user, proposal_id)
+
         workbook.save(file_name)
         file_content = send_excel_file(file_name)
         content_type = website_constants.mime['xlsx']
 
         # in order to provide custom headers in response in angular js, we need to set this header
         # first
-        headers = {
-            'Access-Control-Expose-Headers': "file_name, Content-Disposition"
+        # headers = {
+        #     'Access-Control-Expose-Headers': "file_name, Content-Disposition"
+        # }
+
+        return {
+            'local_path': os.path.join(settings.BASE_DIR, file_name),
+            'name': file_name,
+            'pricing_defaults': website_constants.inventory_type_duration_dict_list,
+            'stats': stats
         }
-        data = {
-            'file': file_content,
-            'name': file_name
-        }
-        response = ui_utils.handle_response(function, data=data, headers=headers, content_type=content_type,  success=True)
-        # attach some custom headers
-        response['Content-Disposition'] = 'attachment; filename=%s' % file_name
-        return response
+
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def setup_create_final_proposal_post(data, proposal_id):
@@ -3750,10 +3809,7 @@ def setup_create_final_proposal_post(data, proposal_id):
     function = setup_create_final_proposal_post.__name__
     try:
         # get the supplier type codes available in the request
-        response = unique_supplier_type_codes(data)
-        if not response.data['status']:
-            return response
-        unique_supplier_codes = response.data['data']
+        unique_supplier_codes = unique_supplier_type_codes(data)
 
         with transaction.atomic():
 
@@ -3782,9 +3838,9 @@ def setup_create_final_proposal_post(data, proposal_id):
             models.Filters.objects.bulk_create(filter_data)
             models.Filters.objects.filter(proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
 
-            return ui_utils.handle_response(function, data='success', success=True)
+            return True
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def print_bucket_content(bucket_name):
@@ -5164,7 +5220,8 @@ def construct_date_range_query(database_field):
     try:
         # The database field must be within delta days of the current date
         current_date = timezone.now().date()
-        first_query = Q(**{database_field + '__gte': current_date})
+        previous_date = current_date - timezone.timedelta(days=website_constants.delta_days)
+        first_query = Q(**{database_field + '__gte': previous_date})
         second_query = Q(**{database_field + '__lte': current_date + timezone.timedelta(days=website_constants.delta_days)})
         return first_query & second_query
     except Exception as e:

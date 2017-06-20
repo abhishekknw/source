@@ -2380,129 +2380,6 @@ class ImportSupplierDataFromSheet(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-class ExportData(APIView):
-    """
-     The request is in form:
-     [
-          {
-               center : { id : 1 , center_name: c1, ...   } ,
-               suppliers: [  'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
-               suppliers_meta: {
-                                  'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
-                                  'CP': { 'inventory_type_selected':  ['ST']
-               }
-          }
-     ]
-     Exports supplier data on grid view page.
-     The API is divided into two phases :
-     1. extension of Headers and DATA keys. This is because one or more inventory type selected map to more HEADER
-     and hence more DATA keys
-     2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
-    """
-
-    def post(self, request, proposal_id=None, format=None):
-        try:
-            wb = Workbook()
-
-            # ws = wb.active
-            ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
-
-            # iterating through centers in request.data array
-            for center in request.data:
-
-                supplier_codes = center['supplier_codes']
-
-                inventory_array = center['inventory_type_selected']
-
-                # get the unique codes by combining all the codes
-                response = website_utils.get_unique_inventory_codes(inventory_array)
-
-                if not response.data['status']:
-                    return response
-                unique_inventory_codes = response.data['data']
-
-                # get the union of HEADERS
-                response = website_utils.get_union_keys_inventory_code('HEADER', unique_inventory_codes)
-                if not response.data['status']:
-                    return response
-                extra_header_keys = response.data['data']
-
-                # get the union of DATA
-                response = website_utils.get_union_keys_inventory_code('DATA', unique_inventory_codes)
-                if not response.data['status']:
-                    return response
-                extra_supplier_keys = response.data['data']
-
-                # extend the society_keys
-                society_keys.extend(extra_supplier_keys)
-
-                # extend the proposal_header_keys
-                proposal_header_keys.extend(extra_header_keys)
-
-            # remove duplicates if any
-            proposal_header_keys = website_utils.remove_duplicates_preserver_order(proposal_header_keys)
-            society_keys = website_utils.remove_duplicates_preserver_order(society_keys)
-
-            # set the final headers in the sheet
-            for col in range(1):
-                ws.append(proposal_header_keys)
-
-            # populate sheet row by row. Number of rows will be equal to number of societies. 1 society = 1 row
-            master_list = []
-            # for all centers in request.data
-
-            for center in request.data:
-                # get the inventory_array containg all the codes selected for this center
-                inventory_array = center['inventory_type_selected']
-
-                # get the unique codes by combining all the codes
-                response = website_utils.get_unique_inventory_codes(inventory_array)
-                if not response.data['status']:
-                    return response
-                unique_inventory_codes = response.data['data']
-
-                # for all societies in societies array
-                for index, item in enumerate(center['suppliers']):
-
-                    # iterate over center_keys and make a partial row with data from center object
-                    center_list = []
-                    for key in center_keys:
-                        center_list.append(center['center'][key])
-
-                    # add space mapping id
-                    # center_list.append(center['center']['space_mappings']['id'])
-
-                    # add inventory type id
-                    # center_list.append(center['societies_inventory']['id'])
-
-                    # calculates inventory price per flat and  store the result in dict itself
-                    local_list = []
-
-                    # modify the dict with extra keys for pricing
-                    response = website_utils.get_union_inventory_price_per_flat(item, unique_inventory_codes, index)
-                    if not response.data['status']:
-                        return response
-                    item = response.data['data']
-
-                    # use the modified dict in the getList function that makes a list out of keys present in society_keys
-                    temp = website_utils.getList(item, society_keys)
-                    local_list.extend(temp)
-
-                    # append this list to center_list to make final row.
-                    center_list.extend(local_list)
-
-                    # add row to the sheet
-                    ws.append(center_list)
-
-            file_name = 'machadalo_{0}.xlsx'.format(str(datetime.datetime.now()))
-
-            wb.save(file_name)
-
-            return Response(data={"successs"})
-        except Exception as e:
-            return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
-
-
 class GenericExportData(APIView):
     """
         The request is in form:
@@ -2522,13 +2399,17 @@ class GenericExportData(APIView):
         and hence more DATA keys
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
         """
-    renderer_classes = (website_renderers.XlsxRenderer, )
+    # renderer_classes = (website_renderers.XlsxRenderer, )
     # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:
-            return website_utils.setup_generic_export(request.data, request.user, proposal_id)
+            data = website_utils.setup_generic_export(request.data, request.user, proposal_id)
+            response = ui_utils.handle_response(class_name, data=data, success=True)
+            # attach some custom headers
+            # response['Content-Disposition'] = 'attachment; filename=%s' % data['name']
+            return response
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -2693,10 +2574,7 @@ class ImportSupplierData(APIView):
                 return Response({'status': False, 'error in import-metric-data api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
 
             # prepare a new name for this file and save it in the required table
-            response = website_utils.get_file_name(request.user, proposal_id, is_exported=False)
-            if not response.data['status']:
-                return response
-            file_name = response.data['data']
+            file_name =  website_utils.get_file_name(request.user, proposal_id, is_exported=False)
 
             return Response({'status': True, 'data': file_name}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -2788,10 +2666,7 @@ class CreateInitialProposal(APIView):
                 account_id = account_id
 
                 # create a unique proposal id
-                response = website_utils.create_proposal_id(business_id, account_id)
-                if not response.data['status']:
-                    return response
-                proposal_data['proposal_id'] = response.data['data']
+                proposal_data['proposal_id'] = website_utils.create_proposal_id(business_id, account_id)
 
                 # get the account object. required for creating the proposal
                 account = AccountInfo.objects.get_user_related_object(user=user, account_id=account_id)
@@ -2857,7 +2732,8 @@ class CreateFinalProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            return website_utils.setup_create_final_proposal_post(request.data, proposal_id)
+            website_utils.setup_create_final_proposal_post(request.data, proposal_id)
+            return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -3559,12 +3435,8 @@ class SendMail(APIView):
                  'file': file_name
             }
             # call the function to perform the magic
-            response = website_utils.process_template(template_body, body_mapping)
-            if not response.data['status']:
-                return response
-
             # get the modified body
-            modified_body = response.data['data']
+            modified_body = website_utils.process_template(template_body, body_mapping)
 
             email_data = {
                 'subject': str(request.data['subject']),
@@ -3671,10 +3543,7 @@ class ProposalVersion(APIView):
             # if this variable is true, we will have to create a new proposal version.
             if is_proposal_version_created:
                 # create a unique proposal id
-                response = website_utils.create_proposal_id(business.business_id, account.account_id)
-                if not response.data['status']:
-                    return response
-                new_proposal_id = response.data['data']
+                new_proposal_id = website_utils.create_proposal_id(business.business_id, account.account_id)
 
                 # create new ProposalInfo object for this new proposal_id
                 proposal.pk = new_proposal_id
@@ -3687,16 +3556,13 @@ class ProposalVersion(APIView):
                 proposal_id = new_proposal_id
 
             # call create Final Proposal first
-            response = website_utils.setup_create_final_proposal_post(data, proposal_id)
-            if not response.data['status']:
-                return response
+            website_utils.setup_create_final_proposal_post(data, proposal_id)
 
-            response = website_utils.setup_generic_export(data, request.user, proposal_id)
-            if not response.data['status']:
-                return response
-
-            file_name = response.data['data']['name']
-            my_file = response.data['data']['file']
+            result = website_utils.setup_generic_export(data, request.user, proposal_id)
+            file_name = result['name']
+            stats = result['stats']
+            # todo : either we can check stats and if it's not empty we can throw error here and not allow sheet formation
+            # or we can allow sheet formation and let the user know that such errors have occurred. Fix when it's clear
 
             bd_body = {
                 'user_name': request.user.first_name,
@@ -3706,15 +3572,12 @@ class ProposalVersion(APIView):
                 'file_name': file_name
             }
 
-            response = website_utils.process_template(website_constants.bodys['bd_head'], bd_body)
-            if not response.data['status']:
-                return response
-            bd_body = response.data['data']
+            bd_body = website_utils.process_template(website_constants.bodys['bd_head'], bd_body)
 
             email_data = {
                 'subject': website_constants.subjects['bd_head'],
                 'body': bd_body,
-                'to': [website_constants.emails['bd_head']]
+                'to': [website_constants.emails['bd_head'], website_constants.emails['bd_user'], website_constants.emails['root_user'], website_constants.emails['developer']]
             }
 
             attachment = {
@@ -3736,15 +3599,14 @@ class ProposalVersion(APIView):
 
             # upload this shit to amazon
             upload_to_amazon_aync_id = tasks.upload_to_amazon.delay(file_name).id
-            if not response.data['status']:
-                return response
 
             # prepare to send back async ids
             data = {
                 'logged_in_user_async_id': logged_in_user_async_id,
                 'bd_head_async_id': bd_head_async_id,
                 'upload_to_amazon_async_id': upload_to_amazon_aync_id,
-                'file_name': file_name
+                'file_name': file_name,
+                'stats': stats
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
@@ -4371,6 +4233,9 @@ class InventoryActivityImage(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            
+            import pdb
+            pdb.set_trace()
 
             shortlisted_inventory_detail_instance = models.ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_detail_id'])
             activity_date = request.data['activity_date']
