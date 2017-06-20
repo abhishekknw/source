@@ -185,3 +185,6 @@ opacity: .5;
 .panelSubHeader{
   color: initial;
 }
+.filter-disable{
+    pointer-events:none;
+}

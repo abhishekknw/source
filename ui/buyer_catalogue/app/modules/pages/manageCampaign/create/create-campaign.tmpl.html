@@ -128,17 +128,21 @@
                   <td>{{proposal.created_on | limitTo:10}}</td>
                   <td>Vidhi</td><!-- {{proposal.updated_by}} -->
                   <td>{{proposal.updated_on | limitTo:10}}</td>
-                  <td>
-                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">
-                      <span>View on Map/Grid</span>
-                    </button>
-                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">
+                  <td ng-if="proposal.campaign_state == null">
+                    <button class="btn btn-danger detail-button" ng-click="goToMapView(proposal.proposal_id)">View on Map/Grid</button>
+                  </td>
+                  <td ng-if="proposal.campaign_state == proposalRequested">
+                    <button class="btn btn-danger detail-button" ng-click="showOnMapview(proposal.proposal_id)">
                       <span>Requested</span>
                     </button>
+                  </td>
+                  <td ng-if="proposal.campaign_state == proposalFinalized">
                     <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">
                       <span>Finalized</span>
                     </button>
-                    <button class="btn btn-success detail-button" ng-click="showProposalDetails(proposal.proposal_id)">
+                  </td>
+                  <td ng-if="proposal.campaign_state == proposalConverted">
+                    <button class="btn btn-success detail-button" ng-disabled="true">
                       <span>Converted</span>
                     </button>
                   </td>

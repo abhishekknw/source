@@ -39,6 +39,13 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   //for loading icon
   $scope.requestProposal = true;
 
+  if($window.localStorage.isReadOnly == 'true'){
+    $scope.isRequested = true;
+    $(document).ready(function(){
+        $("#filterPanelForm :input").prop("disabled", true);
+    });
+  }
+
 //code added to show or hide some details based on user permissions
 $scope.user_code = $window.localStorage.user_code;
 if($scope.user_code == 'agency')

@@ -86,6 +86,10 @@ angular
     business_success : 'Business Details saved successfully',
     business_error : 'Error occured in saving business details',
     campaign_manager : 'campaign_manager',
+    proposalMaking : 'PM',
+    proposalRequested : 'PR',
+    proposalFinalized : 'PF',
+    proposalConverted : 'PTC',
     //manage user
     createUser_success : 'Successfully Created',
     create_group_success : 'Group Created Successfully',
