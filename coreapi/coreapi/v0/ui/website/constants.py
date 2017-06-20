@@ -48,27 +48,25 @@ proposal_header_keys = [
 
 inventorylist = {
     'PO': {
-        'HEADER': ['Poster Count', 'Poster Price', 'Poster Duration', 'Poster Price Factor', 'Poster price per flat', 'Poster Business Price'],
-        'DATA': ['total_poster_count', 'poster_price', 'poster_duration', 'poster_price_factor',
-                 'poster_price_per_flat', 'poster_business_price']
+        'HEADER': ['Poster Allowed',  'Poster Price', 'Poster Price Factor', 'Poster price per flat', 'Poster Business Price'],
+        'DATA': ['poster_allowed', 'poster_price', 'poster_price_factor', 'poster_price_per_flat', 'poster_business_price']
     },
     'ST': {
-        'HEADER': ['Standee Count', 'Standee Price', 'Standee Duration', 'Standee Price factor',
-                   'Standee price per flat', 'Standee Business Price'],
-        'DATA': ['total_standee_count', 'standee_price', 'standee_duration', 'standee_price_factor',
+        'HEADER': ['Standee Allowed', 'Standee Price', 'Standee Price factor','Standee price per flat', 'Standee Business Price'],
+        'DATA': ['standee_allowed', 'standee_price',  'standee_price_factor',
                  'standee_price_per_flat', 'standee_business_price']
     },
     'FL': {
-        'HEADER': ['Flier count', 'Flier Price', 'Flier Duration', 'Flier Price Factor', 'Flier Business Price'],
-        'DATA': ['flier_frequency', 'flier_price', 'flier_duration', 'flier_price_factor', 'flier_business_price']
+        'HEADER': ['Flier Allowed', 'Flier Price',  'Flier Price Factor', 'Flier Business Price'],
+        'DATA': ['flier_allowed', 'flier_price',  'flier_price_factor', 'flier_business_price']
     },
     'SL': {
-        'HEADER': ['Stall Count', 'Stall Price', 'Stall Duration', 'Stall Price Factor', 'Stall Business Price'],
-        'DATA': ['total_stall_count', 'stall_price', 'stall_duration', 'stall_price_factor', 'stall_business_price']
+        'HEADER': ['Stall Allowed',  'Stall Price',  'Stall Price Factor', 'Stall Business Price'],
+        'DATA': ['stall_allowed', 'stall_price', 'stall_price_factor', 'stall_business_price']
     },
     'CD': {
-        'HEADER': ['Car Display Count', 'Car Display Price', 'Car Display Duration', 'Car Display Price Factor', 'Car Business Price'],
-        'DATA': ['car_display', 'car_display_price', 'car_display_duration', 'car_display_price_factor', 'car_business_price']
+        'HEADER': ['Car Display Allowed', 'Car Display Price', 'Car Display Price Factor', 'Car Business Price'],
+        'DATA': ['car_display_allowed', 'car_display_price', 'car_display_price_factor', 'car_business_price']
     },
     'RS': {
         'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA', 'SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT', 'STATUS'],
@@ -504,7 +502,7 @@ inventory_type_duration_dict_list = {
     'ST': ['STANDEE', 'Small', 'Campaign Weekly'],
     'SL': ['STALL', 'Small', 'Unit Daily'],
     'FL': ['FLIER', 'Door-to-Door', 'Unit Daily'],
-    'CD': ['CAR DISPLAY', 'Standard', 'Campaign Weekly']
+    'CD': ['CAR DISPLAY', 'Standard', 'Unit Daily']
 }
 
 # this dict maps keys directly to db values. do not change 
@@ -614,7 +612,10 @@ bodys = {
 
 # default emails
 emails = {
-    'bd_head': 'bd@machadalo.com'
+    'bd_head': 'bd@machadalo.com',
+    'bd_user': 'anmol.prabhu@machadalo.com',
+    'root_user': 'anupam@machadalo.com',
+    'developer': 'nikhil.singh@machadalo.com'
 }
 
 # default status of each inventory is defined here. The reason i didn't chose a boolean value is because may be in
@@ -664,6 +665,9 @@ poster_class_name = 'PosterInventory'
 proposal_converted_to_campaign = 'PTC'
 proposal_not_converted_to_campaign = 'PNC'
 proposal_on_hold = 'POH'
+proposal_requested = 'PR'
+proposal_finalized = 'PF'
+
 
 # different mode of payments
 payment_method = {
