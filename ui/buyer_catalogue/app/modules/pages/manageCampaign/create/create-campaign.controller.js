@@ -25,6 +25,10 @@ angular.module('machadaloPages')
         $scope.clear = function() {
         $scope.dt = null;
       };
+      $scope.proposalRequested = constants.proposalRequested;
+      $scope.proposalFinalized = constants.proposalFinalized;
+      $scope.proposalConverted = constants.proposalConverted;
+      $scope.proposalMaking = constants.proposalMaking;
       $scope.maxDate = new Date(2020, 5, 22);
       $scope.today = new Date();
       $scope.popup1 = false;
@@ -225,7 +229,7 @@ angular.module('machadaloPages')
 
           pagesService.getAccountProposal(sel_account_id)
           .then(function(response){
-            console.log(response);
+            console.log("proposal",response);
               $scope.account_proposals = response.data.data;
               $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
           })
@@ -352,6 +356,11 @@ angular.module('machadaloPages')
         //to navigate to mapview pages
         $scope.showOnMapview = function(proposalId){
           $window.localStorage.isReadOnly = 'true';
+          $location.path('/' + proposalId + '/mapview');
+        }
+        $scope.goToMapView = function(proposalId){
+          console.log(proposalId);
+          $window.localStorage.isReadOnly = 'false';
           $location.path('/' + proposalId + '/mapview');
         }
       // [TODO] implement this
