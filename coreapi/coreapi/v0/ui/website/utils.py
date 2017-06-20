@@ -1928,8 +1928,6 @@ def set_inventory_pricing(supplier_ids, supplier_type_code,  inventory_summary_m
 
         return suppliers_per_supplier_type_code
     except Exception as e:
-        import pdb
-        pdb.set_trace()
         raise Exception(function, ui_utils.get_system_error(e))
 
 
@@ -2469,8 +2467,6 @@ def set_supplier_inventory_keys(supplier_dict, inv_summary_instance, unique_inve
                 supplier_dict[inventory_pricing_key] = price
         return False, supplier_dict
     except Exception as e:
-        import pdb
-        pdb.set_trace()
         raise Exception(function, ui_utils.get_system_error(e))
 
 
@@ -3879,15 +3875,17 @@ def is_campaign(proposal):
 
         if proposal.campaign_state == website_constants.proposal_not_converted_to_campaign:
             return ui_utils.handle_response(function, data=errors.CAMPAIGN_NOT_APPROVED_ERROR)
-
-        if proposal.campaign_state == website_constants.proposal_on_hold:
-            return ui_utils.handle_response(function, data=errors.CAMPAIGN_ON_HOLD_ERROR)
+        # todo: removing check for on-hold as of now. any proposal must have been accepted before on holding it. A proposal on
+        # on hold means, a campaign was running but due to some reason, it's on hold. Still, that proposal_id was a campaign.
+        #
+        # if proposal.campaign_state == website_constants.proposal_on_hold:
+        #     return ui_utils.handle_response(function, data=errors.CAMPAIGN_ON_HOLD_ERROR)
 
         if not proposal.tentative_start_date or not proposal.tentative_end_date:
             return ui_utils.handle_response(function, data=errors.CAMPAIGN_NO_START_OR_END_DATE_ERROR.format(proposal.proposal_id))
 
-        if proposal.campaign_state != website_constants.proposal_converted_to_campaign:
-            return ui_utils.handle_response(function, data=errors.CAMPAIGN_INVALID_STATE_ERROR.format(proposal.campaign_state ,  website_constants.proposal_converted_to_campaign))
+        if (proposal.campaign_state != website_constants.proposal_converted_to_campaign) and (proposal.campaign_state != website_constants.proposal_on_hold):
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_INVALID_STATE_ERROR.format(proposal.campaign_state,  website_constants.proposal_converted_to_campaign, website_constants.proposal_on_hold))
 
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:

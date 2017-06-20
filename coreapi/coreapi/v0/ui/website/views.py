@@ -3734,11 +3734,11 @@ class AssignCampaign(APIView):
                     query['assigned_to'] = models.BaseUser.objects.get(id=to)
 
             assigned_objects = models.CampaignAssignment.objects.filter(**query)
-
             campaigns = []
             # check each one of them weather they are campaign or not
             for assign_object in assigned_objects:
                 response = website_utils.is_campaign(assign_object.campaign)
+                # if it is a campaign.
                 if response.data['status']:
                     campaigns.append(assign_object)
                     # assign statuses to each of the campaigns.
@@ -4013,7 +4013,7 @@ class CampaignSuppliersInventoryList(APIView):
 
 class ProposalToCampaign(APIView):
     """
-    tries to  book the assigned inventories to this proposal. if successfull, sets the campaign state to right state that
+    sets the campaign state to right state that
     marks this proposal a campaign.
     """
     def post(self, request, proposal_id):
@@ -4039,9 +4039,11 @@ class ProposalToCampaign(APIView):
             if not proposal_start_date or not proposal_end_date:
                 return ui_utils.handle_response(class_name, data=errors.NO_DATES_ERROR.format(proposal_id), request=request)
 
-            response = website_utils.is_campaign(proposal)
-            if response.data['status']:
-                return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id), request=request)
+            # todo: disabling this check. Now user can press accept as many times as required.
+            #
+            # response = website_utils.is_campaign(proposal)
+            # if response.data['status']:
+            #     return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id), request=request)
 
             # these are the current inventories assigned. These are inventories assigned to this proposal when sheet was imported.
             current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
