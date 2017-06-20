@@ -348,5 +348,11 @@ angular.module('machadaloPages')
         $scope.closeMenu = function(){
           $scope.menuItem = undefined;
         }
+
+        //to navigate to mapview pages
+        $scope.showOnMapview = function(proposalId){
+          $window.localStorage.isReadOnly = 'true';
+          $location.path('/' + proposalId + '/mapview');
+        }
       // [TODO] implement this
     });
