@@ -459,6 +459,7 @@
         <div>
          <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
          <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
+         <button class="btn btn-danger active"  ng-show="!show_societies" ng-click = "saveData()" ng-disabled="isRequested">Save</button>
        </div>
       </div>
       <!-- Start: Summary Section of Gridview-->
@@ -527,15 +528,15 @@
              </div>
           </div>
           <div>
-          <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
-          <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
-          <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested">Add Suppliers</button>
-          <button class="btn btn-danger active" ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport">
-            Request Proposal
-            </button>
-            <button class="btn btn-success" name="button" ng-disabled="isRequested">Requested</button>
-          <button class="btn btn-danger active" ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested">Save</button>
-          <button ng-hide="hideData || isGuestUser" class="btn btn-danger active" ngf-select="upload($file)" ng-disabled="isRequested">Upload</button>
+            <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
+            <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
+            <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested">Add Suppliers</button>
+            <button class="btn btn-danger active" ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport">
+              Request Proposal
+              </button>
+              <button class="btn btn-success" name="button" ng-disabled="isRequested" ng-if="isRequested">Requested</button>
+            <button class="btn btn-danger active"  ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested">Save</button>
+            <button ng-hide="hideData || isGuestUser" class="btn btn-danger active" ngf-select="upload($file)" ng-disabled="isRequested">Upload</button>
         </div>
         </div>
     </div><!-- row div ends here-->
