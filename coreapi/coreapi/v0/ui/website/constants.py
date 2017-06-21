@@ -29,8 +29,8 @@ supplier_keys = [
     'count_15_25', 'count_25_60', 'count_60above', 'society_weekly_off',
 ]
 
-basic_supplier_export_headers = ['City', 'City Code', 'Area', 'Area Code', 'Sub Area', 'Sub Area Code', 'SupplierType', 'SupplierCode', 'SupplierName', 'supplier_id']
-basic_supplier_data_keys = ['city_name', 'city_code', 'area_name', 'area_code', 'subarea_name', 'subarea_code', 'supplier_type_code', 'supplier_code', 'supplier_name', 'supplier_id']
+basic_supplier_export_headers = ['City', 'City Code', 'Area', 'Area Code', 'Sub Area', 'Sub Area Code', 'SupplierType', 'SupplierCode', 'SupplierName', 'supplier_id', 'Error']
+basic_supplier_data_keys = ['city_name', 'city_code', 'area_name', 'area_code', 'subarea_name', 'subarea_code', 'supplier_type_code', 'supplier_code', 'supplier_name', 'supplier_id', 'error']
 
 corporate_keys = [
 
@@ -853,4 +853,36 @@ society_db_field_to_input_field_map = {
     'age_group_7_18': 'age_group_7_to_18',
     'total_tenant_flat_count': 'number_of_rented_flats'
 
+}
+
+
+campaign_weekly = 'Campaign Weekly'
+campaign_monthly = 'Campaign Monthly'
+unit_weekly = 'Unit Weekly'
+unit_monthly = 'Unit Monthly'
+unit_daily = 'Unit Daily'
+two_days = '2 Days'
+unit_quaterly = 'Unit Quaterly'
+
+A4 = 'A4'
+A3 = 'A3'
+small = 'Small'
+large = 'Large'
+medium = 'Medium'
+canopy = 'Canopy'
+customize = 'Customize'
+standard = 'Standard'
+premium = 'Premium'
+door_to_door = 'Door-to-Door'
+mailbox = 'Mailbox'
+lobby = 'Lobby'
+
+allowed = 'allowed'
+
+price_mapping_default_headers = {
+    poster: [(allowed,), (A4, campaign_weekly), (A3, campaign_weekly), (A4, campaign_monthly), (A3, campaign_monthly), (A4, unit_weekly), (A3, unit_monthly)],
+    standee: [(allowed,), (small, campaign_weekly), (large, campaign_weekly)],
+    stall: [(allowed,), (canopy, unit_daily), (canopy, two_days), (small, unit_daily), (small, two_days), (large, unit_daily), (large, two_days), (customize, unit_daily), (customize, two_days)],
+    flier: [(allowed,), (door_to_door, unit_daily), (mailbox, unit_daily), (lobby, unit_daily)],
+    car_display: [(allowed,), (standard, unit_daily), (standard, two_days), (premium, unit_daily), (premium, two_days)]
 }

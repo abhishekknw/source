@@ -5429,7 +5429,7 @@ def generate_supplier_basic_sheet_mail(data):
         ws.append(headers)
 
         for supplier_object in data['suppliers']:
-            ws.append([supplier_object[key] for key in data['data_keys']])
+            ws.append([supplier_object.get(key) for key in data['data_keys']])
         file_name = os.path.join(settings.BASE_DIR, website_constants.all_supplier_data_file_name)
         workbook.save(file_name)
         return file_name
@@ -5901,6 +5901,58 @@ def handle_amenities(supplier_id, result, amenity_map, supplier_amenity_instance
                 except KeyError:
                     supplier_amenity_instances.append(models.SupplierAmenitiesMap(content_type=content_type, object_id=supplier_id, amenity=amenity_instance))
         return supplier_amenity_instances, negative_amenity_instances
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def get_inventory_summary_map(supplier_ids=None):
+    """
+    returns a simple inventory summary map
+    :return:
+    """
+    function = get_inventory_summary_map.__name__
+    try:
+        instances = models.InventorySummary.objects.filter_user_related_objects(object_id__in=supplier_ids)
+        inv_sum_map = {}
+        for instance in instances:
+            supplier_id = instance.object_id
+            if not inv_sum_map.get(supplier_id):
+                inv_sum_map[supplier_id] = instance
+            else:
+                raise Exception('duplicate inventory summary for supplier {0}'.format(supplier_id))
+        return inv_sum_map
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def get_price_mapping_map(supplier_ids=None):
+    """
+    returns a simple pmd map
+
+    :param supplier_ids:
+    :return:
+    """
+    function = get_price_mapping_map.__name__
+    try:
+        instances = models.PriceMappingDefault.objects.filter(object_id__in=supplier_ids)
+        pmd_map = {}
+        for instance in instances:
+            supplier_id = instance.object_id
+            if not pmd_map.get(supplier_id):
+                pmd_map[supplier_id] = []
+            pmd_map[supplier_id].append(instance)
+        return pmd_map
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def join_with_underscores(str, delim=' '):
+    """
+    breaks the string on delim and joins indiviudal parts with underscores
+    """
+    function = join_with_underscores.__name__
+    try:
+        return '_'.join(str.split(delim))
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
