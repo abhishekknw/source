@@ -1757,7 +1757,8 @@ $scope.gridViewSummary = {};
          saveSelectedFilters();
          var proposal_data = {
            centers:$scope.center_data,
-           is_proposal_version_created:$window.localStorage.isSavedProposal,
+          //  is_proposal_version_created:$window.localStorage.isSavedProposal,
+           is_proposal_version_created:false,
          };
          console.log("sending proposal version API call");
          mapViewService.proposalVersion(parent_proposal_id, proposal_data)
