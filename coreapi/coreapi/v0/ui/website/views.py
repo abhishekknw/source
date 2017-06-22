@@ -3541,13 +3541,13 @@ class ProposalVersion(APIView):
             account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
             business = models.BusinessInfo.objects.get(business_id=account.business.business_id)
 
-
             # if you don't provide this value, No proposal version is created.
             is_proposal_version_created = request.data['is_proposal_version_created'] if request.data.get('is_proposal_version_created') else False
             data = request.data['centers']
 
             # if this variable is true, we will have to create a new proposal version.
             if is_proposal_version_created:
+
                 # create a unique proposal id
                 new_proposal_id = website_utils.create_proposal_id(business.business_id, account.account_id)
 
@@ -3580,10 +3580,16 @@ class ProposalVersion(APIView):
 
             bd_body = website_utils.process_template(website_constants.bodys['bd_head'], bd_body)
 
+            # email_data = {
+            #     'subject': website_constants.subjects['bd_head'],
+            #     'body': bd_body,
+            #     'to': [website_constants.emails['bd_head'], website_constants.emails['bd_user'], website_constants.emails['root_user'], website_constants.emails['developer']]
+            # }
+            #
             email_data = {
                 'subject': website_constants.subjects['bd_head'],
                 'body': bd_body,
-                'to': [website_constants.emails['bd_head'], website_constants.emails['bd_user'], website_constants.emails['root_user'], website_constants.emails['developer']]
+                'to': [website_constants.emails['developer'], ]
             }
 
             attachment = {
@@ -3614,9 +3620,11 @@ class ProposalVersion(APIView):
                 'file_name': file_name,
                 'stats': stats
             }
-            # change the status of the proposal to 'requested' once everything is okay.
+            # change campaign state
             proposal.campaign_state = website_constants.proposal_requested
             proposal.save()
+
+            # change the status of the proposal to 'requested' once everything is okay.
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -4244,10 +4252,6 @@ class InventoryActivityImage(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            
-            import pdb
-            pdb.set_trace()
-
             shortlisted_inventory_detail_instance = models.ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_detail_id'])
             activity_date = request.data['activity_date']
             activity_type = request.data['activity_type']
@@ -4980,16 +4984,19 @@ class ExportAllSupplierData(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         try:
+            area_codes = set()
+            subarea_codes = set()
+            city_codes = set()
+            supplier_ids = set()
+            result = []
+            pricing_dict = {}
+
             supplier_type_code = request.query_params['supplier_type_code']
             model_class = ui_utils.get_model(supplier_type_code)
             if supplier_type_code == website_constants.society:
                 model_instances = model_class.objects.all().values('supplier_id', 'society_name')
             else:
                 model_instances = model_class.objects.all().values('supplier_id', 'name')
-
-            area_codes = set()
-            subarea_codes = set()
-            city_codes = set()
 
             for instance_dict in model_instances:
 
@@ -4999,6 +5006,7 @@ class ExportAllSupplierData(APIView):
                 area_codes.add(supplier_id_breakup['area_code'])
                 city_codes.add(supplier_id_breakup['city_code'])
                 subarea_codes.add(supplier_id_breakup['subarea_code'])
+                supplier_ids.add(supplier_id)
                 instance_dict['supplier_id_breakup'] = supplier_id_breakup
 
             city_instances = models.City.objects.filter(city_code__in=city_codes)
@@ -5009,7 +5017,48 @@ class ExportAllSupplierData(APIView):
             area_instance_map = {area.area_code: area for area in area_instances}
             subarea_instance_map = {subarea.subarea_code: subarea for subarea in subarea_instances}
 
-            result = []
+            price_mapping_instance_map = website_utils.get_price_mapping_map(supplier_ids)
+
+            inv_summary_map = website_utils.get_inventory_summary_map(supplier_ids)
+
+            # make pricing dict here
+            for supplier_id in supplier_ids:
+
+                pricing_dict[supplier_id] = {}
+                pricing_dict[supplier_id]['error'] = 'No Error'
+
+                try:
+                    inv_summary_instance = inv_summary_map[supplier_id]
+                except KeyError:
+                    pricing_dict[supplier_id]['error'] = 'No inventory summary instance for this supplier. Cannot determine which inventories are allowed or not allowed.'
+                    continue
+
+                try:
+                    price_instances = price_mapping_instance_map[supplier_id]
+                except KeyError:
+                    pricing_dict[supplier_id]['error'] = 'No pricing instance for this supplier'
+                    continue
+
+                # set all possible inventory_allowed fields to 0 first
+                for code, name in website_constants.inventory_code_to_name.iteritems():
+                    inv_name_key = website_utils.join_with_underscores(name).lower()
+                    pricing_dict[supplier_id][inv_name_key + '_' + 'allowed'] = 0
+
+                # for all inventory codes allowed.
+                for inv_code in website_utils.get_inventories_allowed(inv_summary_instance):
+                    inventory_name = website_constants.inventory_code_to_name[inv_code]
+                    inv_name_key = website_utils.join_with_underscores(inventory_name).lower()
+                    pricing_dict[supplier_id][inv_name_key + '_' + 'allowed'] = 1
+                    # for all pricing instances for this supplier
+                    for price_instance in price_instances:
+                        price_inventory_name = price_instance.adinventory_type.adinventory_name.upper()
+                        # proceed only if you find the inventory name in the instance.
+                        if inventory_name == price_inventory_name:
+                            inventory_meta_type = price_instance.adinventory_type.adinventory_type
+                            inventory_duration = price_instance.duration_type.duration_name
+                            str_key = inv_name_key + ' ' + inventory_meta_type.lower() + ' ' + inventory_duration.lower()
+                            key = website_utils.join_with_underscores(str_key)
+                            pricing_dict[supplier_id][key] = price_instance.actual_supplier_price
 
             for instance_dict in model_instances:
 
@@ -5022,7 +5071,7 @@ class ExportAllSupplierData(APIView):
                 area_instance = area_instance_map.get(supplier_dict_breakup['area_code'])
                 subarea_instance = subarea_instance_map.get(supplier_dict_breakup['subarea_code'])
 
-                result.append({
+                basic_data_dict = {
 
                     'city_name': city_instance.city_name if city_instance else website_constants.not_in_db_special_code,
                     'city_code': city_instance.city_code if city_instance else website_constants.not_in_db_special_code,
@@ -5034,12 +5083,29 @@ class ExportAllSupplierData(APIView):
                     'supplier_name': supplier_name,
                     'supplier_code': supplier_code,
                     'supplier_type_code': supplier_type_code
-                })
+                }
+                # set key, value from pricing_dict to basic_data_dict
+                for key, value in pricing_dict[supplier_id].iteritems():
+                    basic_data_dict[key] = value
+
+                result.append(basic_data_dict)
+
+            # add pricing headers to current headers.
+            headers = website_constants.basic_supplier_export_headers
+            data_keys = website_constants.basic_supplier_data_keys
+            for inventory_name, header_list in website_constants.price_mapping_default_headers.iteritems():
+                for header_tuple in header_list:
+
+                    inv_name_key = website_utils.join_with_underscores(inventory_name).lower()
+                    str_key = inv_name_key + ' '+ (' '.join(header_tuple)).lower()
+                    key = website_utils.join_with_underscores(str_key)
+                    headers.append(key)
+                    data_keys.append(key)
 
             data = {
                 'sheet_name': website_constants.code_to_sheet_names[supplier_type_code],
-                'headers': website_constants.basic_supplier_export_headers,
-                'data_keys': website_constants.basic_supplier_data_keys,
+                'headers': headers,
+                'data_keys': data_keys,
                 'suppliers': result
             }
             file_name = website_utils.generate_supplier_basic_sheet_mail(data)
@@ -5047,7 +5113,7 @@ class ExportAllSupplierData(APIView):
             email_data = {
                 'subject': 'The all society data of test server in  proper format',
                 'body': 'PFA data of all suppliers in the system with supplier_type_code {0}'.format(supplier_type_code),
-                'to': [website_constants.emails['bd_head']]
+                'to': [website_constants.emails['developer']]
             }
 
             attachment = {
@@ -5061,3 +5127,5 @@ class ExportAllSupplierData(APIView):
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+

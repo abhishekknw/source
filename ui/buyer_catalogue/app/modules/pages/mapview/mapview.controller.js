@@ -1761,7 +1761,7 @@ $scope.gridViewSummary = {};
            is_proposal_version_created:false,
          };
          console.log("sending proposal version API call");
-         mapViewService.proposalVersion(parent_proposal_id, proposal_data)
+         mapViewService.proposalVersion($stateParams.proposal_id, proposal_data)
            .then(  function onSuccess(response) {
                   $scope.clientId = response.data.data.logged_in_user_async_id;
                   $scope.bdHeadId = response.data.data.bd_head_async_id;
