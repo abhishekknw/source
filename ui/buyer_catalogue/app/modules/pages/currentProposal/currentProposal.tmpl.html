@@ -7,7 +7,7 @@
   <div class = "container">
     <div class="breadcrumb" ncy-breadcrumb></div>
     <div class="page-header" style="text-align:center">
-      <h3 style="color:#337ab7;">Summary for {{proposal.name}}</h3>
+      <h3 style="color:#337ab7;">Finalized Proposal for {{clientName}}</h3>
     </div>
       <div class="row">
         <div class="panel panel-default">
@@ -36,11 +36,18 @@
           </div>
          </div>
       </div>
-      <div style="text-align:right;"><button class="btn btn-primary" ng-if="isParentProposal == 'true'" ng-disabled="isUploaded" ng-click="editInitialProposal(proposal.proposal_id)">Edit Proposal</button></div>
+      <!-- <div style="text-align:right;"><button class="btn btn-primary" ng-if="isParentProposal == 'true'" ng-disabled="isUploaded" ng-click="editInitialProposal(proposal.proposal_id)">Edit Proposal</button></div> -->
       <div class="col-md-3"><label>Select Advertising Location:</label>
         <select class="form-control" style="width:50%;"ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
           <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
         </select>
+      </div>
+      <div class="col-md-6">
+      </div>
+      <div class="col-md-3">
+        <div class="invoiceButton" permission = "[]">
+          <button ng-hide="hideData" class="btn btn-danger" data-target="#invoiceModal" data-toggle="modal"><b>Enter Invoice Details</b></button>
+        </div>
       </div>
   </div>
 </form>
@@ -48,16 +55,18 @@
 <div class = "container page-panel"  ng-if="current_center_id">
   <div class = "row">
     <div ng-if="current_center_data.filters.society_allowed">
-      <div><label class="society-heading" style="padding-left:50px" ng-click="isSociety=!isSociety">Society Details</label></div>
+      <div><button class="society-heading btn btn-danger" style="margin-left:5px"ng-click="isSociety=!isSociety">Click Here For Society Details</button></div>
       <div uib-collapse="! isSociety" ng-if="current_center_data.suppliers['RS'].length == 0"><label style="padding-left:250px;font-size:24px">{{errorMsg}}<label></div>
       <div class="table-responsive" ng-if="current_center_data.suppliers['RS'].length > 0">
-       <h5 class="panel-heading head" style="text-align:center" uib-collapse="! isSociety"><b>Shortlisted Society Details</b></h5>
+       <h5 class="panel-heading head" style="text-align:center" uib-collapse="! isSociety"><b><h3>Society Details</h3></b></h5>
         <div uib-collapse="! isSociety">
-          <table class="table table-bordered table-responsive society">
+          <table class="table table-bordered  society" fixed-header>
             <thead>
               <tr>
-               <th class="col-md-1 table-heading">Center</th>
+               <th class="col-md-1 table-heading">Sr.No</th>
                <th class="col-md-1 table-heading">Society</th>
+               <th class="col-md-1 table-heading">Area</th>
+               <th class="col-md-1 table-heading">Sub Area</th>
                <th ng-if="current_center_data.societyFilters.inv_poster" class="col-md-1 table-heading">Poster Count</th>
                <th ng-if="current_center_data.societyFilters.inv_standee" class="col-md-1 table-heading">Standee Count</th>
                <th ng-if="current_center_data.societyFilters.inv_stall"  class="col-md-1 table-heading">Stall Count</th>
@@ -66,20 +75,24 @@
                <th class = "col-md-1">Action</th>
               </tr>
             </thead>
-            <tbody ng-repeat=" supplier in current_center_data.suppliers['RS']">
-              <tr ng-if="supplier.status != 'R'">
-                <td>{{current_center_data.center.center_name}}</td>
+            <tbody>
+              <tr ng-repeat=" supplier in current_center_data.suppliers['RS']">
+                <td>{{$index+1}}</td>
                 <td>{{supplier.name}}</td>
+                <td>{{supplier.area}}</td>
+                <td>{{supplier.subarea}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_poster">{{supplier.tower_count}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_standee">{{supplier.total_standee_count}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_stall">{{supplier.total_stall_count}}</td>
                 <td ng-if="current_center_data.societyFilters.inv_flier">{{supplier.flat_count}}</td>
+                <td ng-if="supplier.status == 'F'">Finalized</td>
                 <td ng-if="supplier.status == 'S'">Shortlisted</td>
                 <td ng-if="supplier.status == 'B'">Buffer</td>
+                <td ng-if="supplier.status == 'R'">Removed</td>
                 <td>
                   <!-- <a ng-href="" ng-model="supplier.status" ng-if="supplier.status == 'S'" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Buffer</a> -->
                   <div class="radio">
-                         <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')" ng-disabled="isUploaded">Shortlist</label>
+                         <label><input type="radio" ng-model="supplier.status" value="F" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')" ng-disabled="isUploaded">Finalize</label>
                   </div>
                   <div class="radio">
                          <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')" ng-disabled="isUploaded">Buffer</label>
@@ -92,11 +105,12 @@
             </tbody>
           </table>
         </div><!-- uib collapse div ends here-->
-        <h5 class="panel-heading head" style="text-align:center" uib-collapse="! isSociety"><b>Details of Removed Societies</b></h5>
-        <div uib-collapse="! isSociety">
+        <!-- <h5 class="panel-heading head" style="text-align:center" uib-collapse="! isSociety"><b>Details of Removed Societies</b></h5> -->
+        <!-- <div uib-collapse="! isSociety">
           <table class="table table-bordered society">
            <thead>
              <tr>
+               <th class="col-md-1 table-heading">Sr.No</th>
                <th class="col-md-2 table-heading">Center</th>
                <th class="col-md-3 table-heading">Society</th>
                <th ng-if="current_center_data.societyFilters.inv_poster" class="col-md-0 table-heading">Poster Count</th>
@@ -106,8 +120,9 @@
                <th class = "col-md-4">Action</th>
              </tr>
            </thead>
-           <tbody ng-repeat=" supplier in current_center_data.suppliers['RS']">
+           <tbody ng-repeat=" supplier in current_center_data.suppliers['RS'] track by $index">
              <tr ng-if="supplier.status == 'R'">
+               <td>{{$index+1}}</td>
                <td>{{current_center_data.center.center_name}}</td>
                <td>{{supplier.name}}</td>
                <td ng-if="current_center_data.societyFilters.inv_poster">{{supplier.tower_count}}</td>
@@ -125,15 +140,12 @@
              </tr>
            </tbody>
           </table>
-          </div>
+          </div> -->
       </div>
     </div>
   </div>
 </div>
 <!-- End: Display supplier details for selected center-->
-<div class="invoiceButton" permission = "[]">
-  <button ng-hide="hideData" class="btn btn-danger" data-target="#invoiceModal" data-toggle="modal"><b>Enter Invoice Details</b></button>
-</div>
 
 <!--Start: Code for Invoice Modal Window -->
 <div id="invoiceModal" class="modal fade">
@@ -175,4 +187,4 @@
 </div>
 <!--End: Code for Invoice Modal Window -->
 
-<div style="margin-top:100px;"><footer-bar></footer-bar></div>
+<!-- <div style="margin-top:100px;"><footer-bar></footer-bar></div> -->

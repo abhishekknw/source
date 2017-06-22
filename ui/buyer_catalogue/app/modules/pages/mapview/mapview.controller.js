@@ -55,7 +55,7 @@ if($scope.user_code == 'guestUser')
 
 //supplier status
 var supplierStatus = {
-  finalized   : 'S',
+  finalized   : 'F',
   shortlisted : 'X',
   buffered    : 'B',
   removed     : 'R',
@@ -133,7 +133,7 @@ $scope.gridViewSummary = {};
       function getIcon(supplier,key){
         if(supplier.status == 'X')
           $scope.status_color = "FFC433";//blue color for new suppliersFCFF33
-        if(supplier.status == 'S')
+        if(supplier.status == 'F')
           $scope.status_color = "00FF00";//green color for shortlisted suppliers
         if(supplier.status == 'R')
           $scope.status_color = "FF0000";//red color for removed suppliers
@@ -1726,7 +1726,7 @@ $scope.gridViewSummary = {};
        $scope.setSupplierStatus = function (supplier,value){
          try{
           if(supplier.buffer_status == false && value == 'B')
-              supplier.status = 'S';
+              supplier.status = 'F';
           else if(supplier.buffer_status == true && value != 'R')
             supplier.status = 'B';
           else

@@ -104,7 +104,7 @@ angular.module('machadaloPages')
               $rootScope.business_id = response.data.business.business_id;
               $window.localStorage.business_id = response.data.business.business_id;
               $rootScope.business_name = response.data.business.name;
-              $window.localStorage.business_id = response.data.business.name;
+              $window.localStorage.business_name = response.data.business.name;
               $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
               $scope.getSubTypes();
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
