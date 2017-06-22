@@ -5129,16 +5129,3 @@ class ExportAllSupplierData(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-class ExportAllSuppliersPricingData(APIView):
-    """
-
-    """
-    def get(self, request):
-        class_name = self.__class__.__name__
-        try:
-            pass
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-
-
