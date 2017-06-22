@@ -259,6 +259,8 @@ $scope.gridViewSummary = {};
                 for (var i = 0; i < current_center_keys.length; i++) {
                   var code = current_center_keys[i];
                   $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
+                  getSummary(code,$scope.current_center);
+
                 }
                 // End : Code changes to add response of suppliers
                   // gridView_Summary();
