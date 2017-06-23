@@ -50,6 +50,9 @@ angular
     bdhead_email_error : 'Error occured while sending Email to BDHead',
     upload_error : 'error occured while uploading file',
     deletefile_error : 'Error occured, File not deleted',
+    finalize : 'F',
+    buffer : 'B',
+    remove : 'R',
     //auditReleasePlan
     positive_number_error : 'Enter Positive Number Only',
     //opsDashboard

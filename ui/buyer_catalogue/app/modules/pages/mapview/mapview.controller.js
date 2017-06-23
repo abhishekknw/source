@@ -1,6 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare, constants) {
+    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare, constants, $filter) {
 // You have to initailise some value for the map center beforehand
 // $scope.map is just for that purpose --> Set it according to your needs.
 // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
@@ -99,6 +99,10 @@ var inventoryTypes = {
   stall   : 'SL',
   flier   : 'FL',
 }
+//supplier status
+$scope.finalize = constants.finalize;
+$scope.buffer = constants.buffer;
+$scope.remove = constants.remove;
 $scope.gridViewSummary = {};
 
 //getting business_name and business_type from localStorage
@@ -2299,5 +2303,18 @@ var setSocietyLocationOnMap = function(supplier){
     return amenityIcons[amenity];
   }
   //end: for amenity icons
-
+  $scope.getOrderBy = function(center_data,supplierCode,status){
+    $timeout(function () {
+      for (var i = 0; i < center_data.length; i++) {
+        var suppliers = [];
+         suppliers = angular.copy(center_data[i].suppliers[supplierCode]);
+        var sortedSupplierList = [], unsortedSupplierList = [];
+        var k = 0;
+        unsortedSupplierList = $filter('filter')(suppliers, {'status':'!'+status});
+        sortedSupplierList = $filter('filter')(suppliers, {'status':status});
+        Array.prototype.unshift.apply(unsortedSupplierList, sortedSupplierList);
+        center_data[i].suppliers[supplierCode] = angular.copy(unsortedSupplierList);
+      }
+    });    
+  }
 });

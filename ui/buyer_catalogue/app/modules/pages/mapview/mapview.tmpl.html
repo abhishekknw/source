@@ -293,7 +293,11 @@
             <th class="center-align" ng-if="inventoryHeaders.standee">Standee Count</th>
             <th class="center-align" ng-if="inventoryHeaders.stall">Stall Count</th>
             <th class="center-align" ng-if="inventoryHeaders.flier">Flyer Count</th>
-            <th class = "col-md-4">Finalize/Buffer</th>
+            <th class = "col-md-4">
+              <a ng-click="getOrderBy(center_data,supplierCode.society,finalize)"> Finalize </a>/
+              <a ng-click="getOrderBy(center_data,supplierCode.society,buffer)"> Buffer </a>/
+              <a ng-click="getOrderBy(center_data,supplierCode.society,remove)"> Remove </a>
+              </th>
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
