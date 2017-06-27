@@ -358,11 +358,17 @@ angular.module('machadaloPages')
           $window.localStorage.isReadOnly = 'true';
           $location.path('/' + proposalId + '/mapview');
         }
-        $scope.goToMapView = function(proposalId){
-          console.log(proposalId);
-          $window.localStorage.isReadOnly = 'false';
-          $location.path('/' + proposalId + '/mapview');
+        $scope.goToMapView = function(proposal){
+          if(proposal.campaign_state){
+            $window.localStorage.isReadOnly = 'true';
+            $location.path('/' + proposal.proposal_id + '/mapview');
+          }
+          else {
+            $window.localStorage.isReadOnly = 'false';
+            $location.path('/' + proposal.proposal_id + '/mapview');
+          }
         }
+
         $scope.getStoredData();
       // [TODO] implement this
     });
