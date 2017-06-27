@@ -1,6 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare, constants) {
+    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare, constants, $filter) {
 // You have to initailise some value for the map center beforehand
 // $scope.map is just for that purpose --> Set it according to your needs.
 // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
@@ -55,7 +55,7 @@ if($scope.user_code == 'guestUser')
 
 //supplier status
 var supplierStatus = {
-  finalized   : 'S',
+  finalized   : 'F',
   shortlisted : 'X',
   buffered    : 'B',
   removed     : 'R',
@@ -99,6 +99,10 @@ var inventoryTypes = {
   stall   : 'SL',
   flier   : 'FL',
 }
+//supplier status
+$scope.finalize = constants.finalize;
+$scope.buffer = constants.buffer;
+$scope.remove = constants.remove;
 $scope.gridViewSummary = {};
 
 //getting business_name and business_type from localStorage
@@ -133,7 +137,7 @@ $scope.gridViewSummary = {};
       function getIcon(supplier,key){
         if(supplier.status == 'X')
           $scope.status_color = "FFC433";//blue color for new suppliersFCFF33
-        if(supplier.status == 'S')
+        if(supplier.status == 'F')
           $scope.status_color = "00FF00";//green color for shortlisted suppliers
         if(supplier.status == 'R')
           $scope.status_color = "FF0000";//red color for removed suppliers
@@ -259,6 +263,8 @@ $scope.gridViewSummary = {};
                 for (var i = 0; i < current_center_keys.length; i++) {
                   var code = current_center_keys[i];
                   $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
+                  getSummary(code,$scope.current_center);
+
                 }
                 // End : Code changes to add response of suppliers
                   // gridView_Summary();
@@ -1726,7 +1732,7 @@ $scope.gridViewSummary = {};
        $scope.setSupplierStatus = function (supplier,value){
          try{
           if(supplier.buffer_status == false && value == 'B')
-              supplier.status = 'S';
+              supplier.status = 'F';
           else if(supplier.buffer_status == true && value != 'R')
             supplier.status = 'B';
           else
@@ -2297,5 +2303,18 @@ var setSocietyLocationOnMap = function(supplier){
     return amenityIcons[amenity];
   }
   //end: for amenity icons
-
+  $scope.getOrderBy = function(center_data,supplierCode,status){
+    $timeout(function () {
+      for (var i = 0; i < center_data.length; i++) {
+        var suppliers = [];
+         suppliers = angular.copy(center_data[i].suppliers[supplierCode]);
+        var sortedSupplierList = [], unsortedSupplierList = [];
+        var k = 0;
+        unsortedSupplierList = $filter('filter')(suppliers, {'status':'!'+status});
+        sortedSupplierList = $filter('filter')(suppliers, {'status':status});
+        Array.prototype.unshift.apply(unsortedSupplierList, sortedSupplierList);
+        center_data[i].suppliers[supplierCode] = angular.copy(unsortedSupplierList);
+      }
+    });    
+  }
 });

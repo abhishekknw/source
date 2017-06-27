@@ -293,7 +293,11 @@
             <th class="center-align" ng-if="inventoryHeaders.standee">Standee Count</th>
             <th class="center-align" ng-if="inventoryHeaders.stall">Stall Count</th>
             <th class="center-align" ng-if="inventoryHeaders.flier">Flyer Count</th>
-            <th class = "col-md-4">Finalize/Buffer</th>
+            <th class = "col-md-4">
+              <a ng-click="getOrderBy(center_data,supplierCode.society,finalize)"> Finalize </a>/
+              <a ng-click="getOrderBy(center_data,supplierCode.society,buffer)"> Buffer </a>/
+              <a ng-click="getOrderBy(center_data,supplierCode.society,remove)"> Remove </a>
+              </th>
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
@@ -324,7 +328,7 @@
             <!--End: code added to change status   -->
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,'RS')">Finalize</label>
+                     <label><input type="radio" ng-model="supplier.status" value="F" ng-click="updateSupplierStatus(supplier,center,'RS')">Finalize</label>
               </div>
               <div class="radio">
                      <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,'RS')">Buffer</label>
@@ -410,50 +414,61 @@
              <div ng-if = "current_center.suppliers_allowed.society_allowed" class = "nbCheckbox two-col">Tower Count:  {{current_center.summary_meta[supplierCode.society].tower_count}}</div>
             <!--added if condition below to display those inventories selected by user in sumarry section-->
             <hr>
-              <span class = "space filterPanelHeader">Finalized Count</span>
-                <div ng-if = "current_center.suppliers_allowed.society_allowed "class = "nbCheckbox two-col">Societies:  {{current_center.summary_meta[supplierCode.society].finalized.count}}</div>
-              </br></br>
-              <span class = "space panelSubHeader">Inventory Count</span>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_flier  && current_center.suppliers_allowed.society_allowed">Flyers: {{current_center.summary_meta[supplierCode.society].finalized.flier_count}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_poster > 0 && current_center.suppliers_allowed.society_allowed">Posters: {{current_center.summary_meta[supplierCode.society].finalized.poster_count}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{current_center.summary_meta[supplierCode.society].finalized.stall_count}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{current_center.summary_meta[supplierCode.society].finalized.standee_count}}</div>
-              </br></br>
-              <span class = "space panelSubHeader">Impressions</span>
-            </br>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_flier && current_center.suppliers_allowed.society_allowed">Flyers: {{current_center.summary_meta[supplierCode.society].finalized.impressions.flier}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_poster > 0 && current_center.suppliers_allowed.society_allowed">Posters: {{current_center.summary_meta[supplierCode.society].finalized.impressions.poster}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{current_center.summary_meta[supplierCode.society].finalized.impressions.stall}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{current_center.summary_meta[supplierCode.society].finalized.impressions.standee}}</div>
-              <!--for shortlisted  -->
-              <span class = "space filterPanelHeader">Shortlisted Count</span>
-                <div ng-if = "current_center.suppliers_allowed.society_allowed "class = "nbCheckbox two-col">Societies:  {{current_center.summary_meta[supplierCode.society].shortlisted.count}}</div>
-              </br></br>
-              <span class = "space panelSubHeader">Inventory Count</span>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_flier  && current_center.suppliers_allowed.society_allowed">Flyers: {{current_center.summary_meta[supplierCode.society].shortlisted.flier_count}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_poster > 0 && current_center.suppliers_allowed.society_allowed">Posters: {{current_center.summary_meta[supplierCode.society].shortlisted.poster_count}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{current_center.summary_meta[supplierCode.society].shortlisted.stall_count}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{current_center.summary_meta[supplierCode.society].shortlisted.standee_count}}</div>
-              </br></br>
-              <span class = "space panelSubHeader">Impressions</span>
-            </br>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_flier && current_center.suppliers_allowed.society_allowed">Flyers: {{current_center.summary_meta[supplierCode.society].shortlisted.impressions.flier}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_poster > 0 && current_center.suppliers_allowed.society_allowed">Posters: {{current_center.summary_meta[supplierCode.society].shortlisted.impressions.poster}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{current_center.summary_meta[supplierCode.society].shortlisted.impressions.stall}}</div>
-              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{current_center.summary_meta[supplierCode.society].shortlisted.impressions.standee}}</div>
-              <span class = "space filterPanelHeader">Buffered Count</span>
-                <div ng-if = "current_center.suppliers_allowed.society_allowed "class = "nbCheckbox two-col">Societies:  {{current_center.summary_meta[supplierCode.society].buffered.count}}</div>
-              </br>
-              <span class = "space filterPanelHeader">Removed Count</span>
-                <div ng-if = "current_center.suppliers_allowed.society_allowed "class = "nbCheckbox two-col">Societies:  {{current_center.summary_meta[supplierCode.society].removed.count}}</div>
-              </br></br>
-            <hr>
              <span class = "space filterPanelHeader">Total Number of Impressions</span>
              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_flier && current_center.suppliers_allowed.society_allowed">Flyers: {{flierMapImpressions}}</div>
              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_poster > 0 && current_center.suppliers_allowed.society_allowed">Posters: {{posterMapImpressions}}</div>
              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{stallMapImpression}}</div>
              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{standeeMapImpression}}</div>
             <hr>
+              <span class = "space filterPanelHeader">Finalized Count</span>
+                <div ng-if = "current_center.suppliers_allowed.society_allowed "class = "nbCheckbox two-col">Societies:  {{current_center.summary_meta[supplierCode.society].finalized.count}}</div>
+              </br>
+              <span class = "space panelSubHeader" ng-click="finalInv=!finalInv">Inventory Count<span class="caret"></span></span>
+              <div  uib-collapse="! finalInv">
+                <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_flier  && current_center.suppliers_allowed.society_allowed">Flyers: {{current_center.summary_meta[supplierCode.society].finalized.flier_count}}</div>
+                <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_poster > 0 && current_center.suppliers_allowed.society_allowed">Posters: {{current_center.summary_meta[supplierCode.society].finalized.poster_count}}</div>
+                <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{current_center.summary_meta[supplierCode.society].finalized.stall_count}}</div>
+                <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{current_center.summary_meta[supplierCode.society].finalized.standee_count}}</div>
+                </br>
+              </div>
+              <br>
+              <span class = "space panelSubHeader" ng-click="finalImpr=!finalImpr">Impressions<span class="caret"></span></span>
+            </br>
+                <div uib-collapse="!finalImpr">
+                  <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_flier && current_center.suppliers_allowed.society_allowed">Flyers: {{current_center.summary_meta[supplierCode.society].finalized.impressions.flier}}</div>
+                  <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_poster > 0 && current_center.suppliers_allowed.society_allowed">Posters: {{current_center.summary_meta[supplierCode.society].finalized.impressions.poster}}</div>
+                  <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{current_center.summary_meta[supplierCode.society].finalized.impressions.stall}}</div>
+                  <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{current_center.summary_meta[supplierCode.society].finalized.impressions.standee}}</div>
+                </div>
+              <!--for shortlisted  -->
+              <span class = "space filterPanelHeader">Shortlisted Count</span>
+                <div ng-if = "current_center.suppliers_allowed.society_allowed "class = "nbCheckbox two-col">Societies:  {{current_center.summary_meta[supplierCode.society].shortlisted.count}}</div>
+              </br>
+              <span class = "space panelSubHeader" ng-click="shortInv=!shortInv">Inventory Count<span class="caret"></span></span>
+              <div uib-collapse="!shortInv">
+                <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_flier  && current_center.suppliers_allowed.society_allowed">Flyers: {{current_center.summary_meta[supplierCode.society].shortlisted.flier_count}}</div>
+                <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_poster > 0 && current_center.suppliers_allowed.society_allowed">Posters: {{current_center.summary_meta[supplierCode.society].shortlisted.poster_count}}</div>
+                <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{current_center.summary_meta[supplierCode.society].shortlisted.stall_count}}</div>
+                <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{current_center.summary_meta[supplierCode.society].shortlisted.standee_count}}</div>
+              </div>
+
+              </br>
+              <span class = "space panelSubHeader" ng-click="shortImpr=!shortImpr">Impressions<span class="caret"></span></span>
+            </br>
+            <div uib-collapse="!shortImpr">
+              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_flier && current_center.suppliers_allowed.society_allowed">Flyers: {{current_center.summary_meta[supplierCode.society].shortlisted.impressions.flier}}</div>
+              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_poster > 0 && current_center.suppliers_allowed.society_allowed">Posters: {{current_center.summary_meta[supplierCode.society].shortlisted.impressions.poster}}</div>
+              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_stall && current_center.suppliers_allowed.society_allowed">Stalls: {{current_center.summary_meta[supplierCode.society].shortlisted.impressions.stall}}</div>
+              <div class = "nbCheckbox two-col" ng-if="current_center.filters_meta['RS'].inv_standee && current_center.suppliers_allowed.society_allowed">Standees: {{current_center.summary_meta[supplierCode.society].shortlisted.impressions.standee}}</div>
+            </div>
+
+              <span class = "space filterPanelHeader">Buffered Count</span>
+                <div ng-if = "current_center.suppliers_allowed.society_allowed "class = "nbCheckbox two-col">Societies:  {{current_center.summary_meta[supplierCode.society].buffered.count}}</div>
+              </br>
+              <span class = "space filterPanelHeader">Removed Count</span>
+                <div ng-if = "current_center.suppliers_allowed.society_allowed "class = "nbCheckbox two-col">Societies:  {{current_center.summary_meta[supplierCode.society].removed.count}}</div>
+              </br></br>
+
            </div>
         </div>
         <div>
@@ -476,37 +491,51 @@
                <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Tower Count:  {{total_tower_count}}</div>
               <!--added if condition below to display those inventories selected by user in sumarry section-->
               <hr>
+               <span class = "space filterPanelHeader">Total Number of Impressions</span>
+               <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.flier && society_allowed_gridview">Flyers: {{flierGridImpressions}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.poster && society_allowed_gridview">Posters: {{posterGridImpressions}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.stall && society_allowed_gridview">Stalls: {{stallGridImpression}}</div>
+               <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.standee && society_allowed_gridview">Standees: {{standeeGridImpression}}</div>
+              <hr>
               <span class = "space filterPanelHeader">Finalized Count</span>
               <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Societies:  {{gridViewSummary[supplierCode.society].finalized.count}}</div>
-            </br></br>
-                <span class = "space panelSubHeader">Inventory Count</span>
+            </br>
+                <span class = "space panelSubHeader" ng-click="finInv=!finInv">Inventory Count<span class="caret"></span></span>
+                <div uib-collapse="!finInv">
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.flier && society_allowed_gridview">Flyers: {{gridViewSummary[supplierCode.society].finalized.flier_count}}</div>
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.poster && society_allowed_gridview">Posters: {{gridViewSummary[supplierCode.society].finalized.poster_count}}</div>
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.stall && society_allowed_gridview">Stalls: {{gridViewSummary[supplierCode.society].finalized.stall_count}}</div>
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.standee  && society_allowed_gridview">Standees: {{gridViewSummary[supplierCode.society].finalized.standee_count}}</div>
-                </br></br>
-                <span class = "space panelSubHeader">Impressions</span></br>
+                </div>
+                </br>
+                <span class = "space panelSubHeader" ng-click="finImpr=!finImpr">Impressions<span class="caret"></span></span></br>
+                <div uib-collapse="!finImpr">
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.flier && society_allowed_gridview">Flyers: {{gridViewSummary[supplierCode.society].finalized.impressions.flier}}</div>
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.poster && society_allowed_gridview">Posters: {{gridViewSummary[supplierCode.society].finalized.impressions.poster}}</div>
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.stall && society_allowed_gridview">Stalls: {{gridViewSummary[supplierCode.society].finalized.impressions.stall}}</div>
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.standee && society_allowed_gridview">Standees: {{gridViewSummary[supplierCode.society].finalized.impressions.standee}}</div>
+                </div>
 
               <!--shortlisted supplier count  -->
               <span class = "space filterPanelHeader">Shortlisted Count</span>
               <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Societies:  {{gridViewSummary[supplierCode.society].shortlisted.count}}</div>
-            </br></br>
-                <span class = "space panelSubHeader">Inventory Count</span>
+            </br>
+                <span class = "space panelSubHeader" ng-click="shortlistedInv=!shortlistedInv">Inventory Count<span class="caret"></span></span>
+                <div uib-collapse="!shortlistedInv">
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.flier && society_allowed_gridview">Flyers: {{gridViewSummary[supplierCode.society].shortlisted.flier_count}}</div>
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.poster && society_allowed_gridview">Posters: {{gridViewSummary[supplierCode.society].shortlisted.poster_count}}</div>
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.stall && society_allowed_gridview">Stalls: {{gridViewSummary[supplierCode.society].shortlisted.stall_count}}</div>
                   <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.standee  && society_allowed_gridview">Standees: {{gridViewSummary[supplierCode.society].shortlisted.standee_count}}</div>
+                </div>
                 </br></br>
-                <span class = "space panelSubHeader">Impressions</span>
+                <span class = "space panelSubHeader" ng-click="shortlistedImpr=!shortlistedImpr">Impressions<span class="caret"></span></span>
               </br>
-                  <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.flier && society_allowed_gridview">Flyers: {{gridViewSummary[supplierCode.society].shortlisted.impressions.flier}}</div>
-                  <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.poster && society_allowed_gridview">Posters: {{gridViewSummary[supplierCode.society].shortlisted.impressions.poster}}</div>
-                  <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.stall && society_allowed_gridview">Stalls: {{gridViewSummary[supplierCode.society].shortlisted.impressions.stall}}</div>
-                  <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.standee && society_allowed_gridview">Standees: {{gridViewSummary[supplierCode.society].shortlisted.impressions.standee}}</div>
+              <div uib-collapse="!shortlistedImpr">
+                <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.flier && society_allowed_gridview">Flyers: {{gridViewSummary[supplierCode.society].shortlisted.impressions.flier}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.poster && society_allowed_gridview">Posters: {{gridViewSummary[supplierCode.society].shortlisted.impressions.poster}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.stall && society_allowed_gridview">Stalls: {{gridViewSummary[supplierCode.society].shortlisted.impressions.stall}}</div>
+                <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.standee && society_allowed_gridview">Standees: {{gridViewSummary[supplierCode.society].shortlisted.impressions.standee}}</div>
+              </div>
                 <span class = "space filterPanelHeader">Buffered Count</span>
                   <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Societies:  {{gridViewSummary[supplierCode.society].buffered.count}}</div>
                 <span class = "space filterPanelHeader">Removed Count</span>
@@ -517,12 +546,7 @@
                 <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.poster && society_allowed_gridview">Posters: {{total_tower_count}}</div>
                 <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.stall && society_allowed_gridview">Stalls: {{total_stalls}}</div>
                 <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.standee  && society_allowed_gridview">Standees: {{total_standees}}</div>
-              <hr>
-               <span class = "space filterPanelHeader">Total Number of Impressions</span>
-               <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.flier && society_allowed_gridview">Flyers: {{flierGridImpressions}}</div>
-               <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.poster && society_allowed_gridview">Posters: {{posterGridImpressions}}</div>
-               <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.stall && society_allowed_gridview">Stalls: {{stallGridImpression}}</div>
-               <div class = "nbCheckbox two-col" ng-if="inventoryHeaders.standee && society_allowed_gridview">Standees: {{standeeGridImpression}}</div>
+
               <hr>
                <!-- <span class = "space filterPanelHeader ">Total Price</span> -->
              </div>
