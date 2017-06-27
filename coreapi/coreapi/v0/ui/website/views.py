@@ -2530,26 +2530,10 @@ class ImportSupplierData(APIView):
                     # update the center dict in result with modified center_object
                     result[center_id] = center_object
 
-            # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
-            # once data is prepared for all sheets,  we hit the url. if it creates problems in future, me might change
-            # it.
+            # do not delete filters, but save whatever ShortlistedSpaces data
+            website_utils.setup_create_final_proposal_post(result.values(), proposal_id, delete_filter_data=False)
 
-            url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
-            url = BASE_URL + url[1:]
-
-            data = result.values()
-
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-             }
-
-            response = requests.post(url, json.dumps(data), headers=headers)
-
-            if response.status_code != status.HTTP_200_OK:
-                return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
-
-            # data for this supplier is made. populate the shortlisted_inventory_details table before hitting the urls
+            # # data for this supplier is made. populate the shortlisted_inventory_details table before hitting the urls
             response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
             if not response.data['status']:
                 return response

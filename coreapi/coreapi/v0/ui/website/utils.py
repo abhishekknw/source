@@ -3794,11 +3794,12 @@ def setup_generic_export(data, user, proposal_id):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def setup_create_final_proposal_post(data, proposal_id):
+def setup_create_final_proposal_post(data, proposal_id, delete_filter_data=True):
     """
     Args:
         data: Request data
         proposal_id: Proposal_id
+        delete_filter_data: weather to delete and recreate the filter or not
 
     Returns: Success in case success returns.
     """
@@ -3828,11 +3829,12 @@ def setup_create_final_proposal_post(data, proposal_id):
             models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
             models.ShortlistedSpaces.objects.bulk_create(total_shortlisted_suppliers_list)
             models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).update(created_at=now_time,updated_at=now_time)
-
-            # delete previous and save new selected filters and update date
-            models.Filters.objects.filter(proposal_id=proposal_id).delete()
-            models.Filters.objects.bulk_create(filter_data)
-            models.Filters.objects.filter(proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
+            # making this conditional because we delete filters and save new filters whenever request proposal is hit, but we should not delete filters when the sheet is imported.
+            if delete_filter_data:
+                # delete previous and save new selected filters and update date
+                models.Filters.objects.filter(proposal_id=proposal_id).delete()
+                models.Filters.objects.bulk_create(filter_data)
+                models.Filters.objects.filter(proposal_id=proposal_id).update(created_at=now_time, updated_at=now_time)
 
             return True
     except Exception as e:
@@ -5218,7 +5220,7 @@ def construct_date_range_query(database_field):
     try:
         # The database field must be within delta days of the current date
         current_date = timezone.now().date()
-        previous_date = current_date - timezone.timedelta(days=website_constants.delta_days)
+        previous_date = current_date - timezone.timedelta(days=7)
         first_query = Q(**{database_field + '__gte': previous_date})
         second_query = Q(**{database_field + '__lte': current_date + timezone.timedelta(days=website_constants.delta_days)})
         return first_query & second_query
