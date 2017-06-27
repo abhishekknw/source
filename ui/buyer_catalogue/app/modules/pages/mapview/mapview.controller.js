@@ -41,9 +41,6 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
 
   if($window.localStorage.isReadOnly == 'true'){
     $scope.isRequested = true;
-    $(document).ready(function(){
-        $("#filterPanelForm :input").prop("disabled", true);
-    });
   }
 
 //code added to show or hide some details based on user permissions
@@ -2315,6 +2312,6 @@ var setSocietyLocationOnMap = function(supplier){
         Array.prototype.unshift.apply(unsortedSupplierList, sortedSupplierList);
         center_data[i].suppliers[supplierCode] = angular.copy(unsortedSupplierList);
       }
-    });    
+    });
   }
 });

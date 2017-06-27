@@ -40,8 +40,9 @@
       </div>
       <hr>
        <!--Start: Filter Section on mapview-->
-      <form id = "filterPanelForm" ng-class="{'filter-disable':isRequested}">
+      <form id = "filterPanelForm">
        <div class = "filterPanel" ng-show = "current_center.suppliers_allowed.society_show" style="border-bottom: 5px solid gray">
+         <fieldset ng-disabled="isRequested">
         <input type = "checkbox"  ng-model="current_center.suppliers_allowed.society_allowed" ng-click="spaceSupplier('RS',current_center.suppliers_allowed.society_allowed)"/>
           <span class = "filterPanelHeader space-type" ng-click = "isCollapsed = !isCollapsed">Society Filters</span><br>
 
@@ -72,33 +73,33 @@
                 <div class="" ng-if="flat_type.selected == true">
                   <br>
                   <span class = "filterPanelHeader ">Flat count</span>
-                  <rzslider rz-slider-model="flat_type.flat_count.min" rz-slider-high="flat_type.flat_count.max"
+                  <rzslider ng-class="{'filter-disable':isRequested}" rz-slider-model="flat_type.flat_count.min" rz-slider-high="flat_type.flat_count.max"
                     rz-slider-options="flat_type.flat_count.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
                   </rzslider>
                   <span class = "filterPanelHeader ">Flat Size</span>
-                  <rzslider rz-slider-model="flat_type.flat_size.min" rz-slider-high="flat_type.flat_size.max"
+                  <rzslider ng-class="{'filter-disable':isRequested}" rz-slider-model="flat_type.flat_size.min" rz-slider-high="flat_type.flat_size.max"
                     rz-slider-options="flat_type.flat_size.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
                   </rzslider>
                 </div>
             </div>
           <hr>
           <span class = "filterPanelHeader ">Flat Average rental Per Sqft</span>
-          <rzslider rz-slider-model="current_center.RS_filters.flat_avg_rental_persqft.min" rz-slider-high="current_center.RS_filters.flat_avg_rental_persqft.max"
+          <rzslider ng-class="{'filter-disable':isRequested}" rz-slider-model="current_center.RS_filters.flat_avg_rental_persqft.min" rz-slider-high="current_center.RS_filters.flat_avg_rental_persqft.max"
             rz-slider-options="current_center.RS_filters.flat_avg_rental_persqft.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
           </rzslider>
           <hr>
           <span class = "filterPanelHeader ">Flat Sale Cost Per Sqft</span>
-          <rzslider rz-slider-model="current_center.RS_filters.flat_sale_cost_persqft.min" rz-slider-high="current_center.RS_filters.flat_sale_cost_persqft.max"
+          <rzslider ng-class="{'filter-disable':isRequested}" rz-slider-model="current_center.RS_filters.flat_sale_cost_persqft.min" rz-slider-high="current_center.RS_filters.flat_sale_cost_persqft.max"
             rz-slider-options="current_center.RS_filters.flat_sale_cost_persqft.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
           </rzslider>
           <hr>
           <span class = "filterPanelHeader ">Percentage of Tenants to Flats</span>
-          <rzslider rz-slider-model="current_center.RS_filters.ratio_of_tenants_to_flats.min" rz-slider-high="current_center.RS_filters.ratio_of_tenants_to_flats.max"
+          <rzslider ng-class="{'filter-disable':isRequested}" rz-slider-model="current_center.RS_filters.ratio_of_tenants_to_flats.min" rz-slider-high="current_center.RS_filters.ratio_of_tenants_to_flats.max"
             rz-slider-options="current_center.RS_filters.ratio_of_tenants_to_flats.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
           </rzslider>
           <hr>
           <span class = "filterPanelHeader ">Possession Year</span>
-          <rzslider rz-slider-model="current_center.RS_filters.possession_year.min" rz-slider-high="current_center.RS_filters.possession_year.max"
+          <rzslider ng-class="{'filter-disable':isRequested}" rz-slider-model="current_center.RS_filters.possession_year.min" rz-slider-high="current_center.RS_filters.possession_year.max"
             rz-slider-options="current_center.RS_filters.possession_year.options" ng-click="societyFilters()"  ng-disabled = "checkFilters">
           </rzslider>
           <hr>
@@ -113,6 +114,7 @@
             </span>
           </div>
           </div>
+           </fieldset>
         </div>
         <div class = "filterPanel" ng-if = "current_center.suppliers_allowed.corporate_show">
          <input type = "checkbox"  ng-model="current_center.suppliers_allowed.corporate_allowed"  ng-click="spaceSupplier('CP',current_center.suppliers_allowed.corporate_allowed)"/>
@@ -328,13 +330,13 @@
             <!--End: code added to change status   -->
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.status" value="F" ng-click="updateSupplierStatus(supplier,center,'RS')">Finalize</label>
+                     <label><input type="radio" ng-model="supplier.status" value="F" ng-click="updateSupplierStatus(supplier,center,'RS')" ng-disabled="isRequested">Finalize</label>
               </div>
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,'RS')">Buffer</label>
+                     <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,'RS')" ng-disabled="isRequested">Buffer</label>
               </div>
               <div class="radio" ng-if="supplier.status != 'X'">
-                     <label><input type="radio" ng-model="supplier.status" value="R" ng-click="updateSupplierStatus(supplier,center,'RS')">Remove</label>
+                     <label><input type="radio" ng-model="supplier.status" value="R" ng-click="updateSupplierStatus(supplier,center,'RS')" ng-disabled="isRequested">Remove</label>
               </div>
             </td>
             <!--End: code added to change status   -->
