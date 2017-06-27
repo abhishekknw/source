@@ -74,10 +74,11 @@ angular.module('machadaloPages')
             $scope.model.accounts = JSON.parse($window.localStorage.accounts);
             if($window.localStorage.sel_account_index >= 0){
               $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
+              $scope.getProposals($scope.sel_account_id,$window.localStorage.sel_account_index);
             }
           }
-          if($window.localStorage.account_proposals != null)
-            $scope.account_proposals = JSON.parse($window.localStorage.account_proposals);
+          // if($window.localStorage.account_proposals != null)
+          //   $scope.account_proposals = JSON.parse($window.localStorage.account_proposals);
           $scope.choice = "selected";
         }else {
           $scope.model.business = null;
@@ -85,7 +86,6 @@ angular.module('machadaloPages')
           $scope.account_proposals = null;
         }
       }
-      $scope.getStoredData();
       // End: for persisting values after refresh or back from other pages
 
       pagesService.loadBusinessTypes()
@@ -363,5 +363,6 @@ angular.module('machadaloPages')
           $window.localStorage.isReadOnly = 'false';
           $location.path('/' + proposalId + '/mapview');
         }
+        $scope.getStoredData();
       // [TODO] implement this
     });
