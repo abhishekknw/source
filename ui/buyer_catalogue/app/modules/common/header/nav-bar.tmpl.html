@@ -18,7 +18,7 @@
         </li>
         <li class="dropdown active">
         <div style="margin-left:25px;margin-top:20px;">
-          <span class="glyphicon glyphicon-menu-hamburger" ng-click="getMenu()" data-toggle="modal" data-target="#menuModal"></span>
+          <span class="glyphicon glyphicon-menu-hamburger" ng-click="getMenu()" data-toggle="modal" data-target="#menuModal">Menu</span>
         </div>
       </li>
 
@@ -56,6 +56,10 @@
                                 <li ng-class="{active: isActive('/OpsDashBoard')}" permission = "[]">
                                   <a ng-href="/#/OpsDashBoard" class=" lipadding" ng-click="closeModal()">
                                     <i class="fa fa-dashboard fa-lg"></i>OpsDashBoard</a>
+                               </li>
+                              <li ng-class="{active: isActive('/CampaignList')}" permission = "[campaign_manager]">
+                                  <a ng-href="/#/CampaignList" class=" lipadding" ng-click="closeModal()">
+                                    <i class="fa fa-dashboard fa-lg"></i>List Campaigns</a>
                                </li>
                                <li data-toggle="collapse" data-target="#new" class="collapsed" permissions="[campaign_manager]">
                                  <a class="dropdown-toggle" data-toggle="dropdown"  ng-click="closeModal()"><i class="fa fa-th fa-lg"></i>Campaign Status <span class="caret"></span></a>
