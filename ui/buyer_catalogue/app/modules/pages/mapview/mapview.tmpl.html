@@ -33,7 +33,8 @@
    <div class="col-md-2 search-bin" id="searchBinHolder">
     <div class="panel panel-info filterscroll ">
      <div class="panel-body" id="searchBody">
-      <span> Business Name : {{business_name}}</span>
+      <span><h4> Business Name : {{clientName}}</h4></span>
+      <span ng-if="proposalState"><h4> Proposal State : {{proposalState}}</h4></span>
       <div class="filterPanel ">
        <span class="filterHeader"> Filter your Search </span>
          <!-- <a class="btn btn-xs pull-right" style="border: 1px solid #e1e1e1;color: #707070;" ng-click="clearAllFilters()"> Reset filters</a> -->

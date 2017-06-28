@@ -42,7 +42,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   if($window.localStorage.isReadOnly == 'true'){
     $scope.isRequested = true;
   }
-
+$scope.proposalState = $window.localStorage.proposalState;
+$scope.clientName = $window.localStorage.business_name;
 //code added to show or hide some details based on user permissions
 $scope.user_code = $window.localStorage.user_code;
 if($scope.user_code == 'agency')

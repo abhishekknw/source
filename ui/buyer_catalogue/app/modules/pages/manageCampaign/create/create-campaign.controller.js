@@ -251,14 +251,17 @@ angular.module('machadaloPages')
           pagesService.setProposalAccountId(sel_account_id);
           $window.localStorage.proposal_id = 0;
           $window.localStorage.isSavedProposal = false;
+          $window.localStorage.isReadOnly = 'false';
+          $window.localStorage.proposalState = '';
           $location.path('/'+sel_account_id + '/createproposal');
         }
       }
 
-      $scope.showProposalDetails = function(proposal_id){
+      $scope.showProposalDetails = function(proposal){
         $window.localStorage.parentProposal = true;
-        $window.localStorage.parent_proposal_id = proposal_id;
-        $location.path('/' + proposal_id + '/showcurrentproposal');
+        $window.localStorage.proposalState = constants[proposal.campaign_state];
+        $window.localStorage.parent_proposal_id = proposal.proposal_id;
+        $location.path('/' + proposal.proposal_id + '/showcurrentproposal');
       }
 
       $scope.showHistory = function(proposalId){
@@ -360,11 +363,15 @@ angular.module('machadaloPages')
         }
         $scope.goToMapView = function(proposal){
           if(proposal.campaign_state){
+            console.log("hello");
             $window.localStorage.isReadOnly = 'true';
+            $window.localStorage.proposalState = constants[proposal.campaign_state];
             $location.path('/' + proposal.proposal_id + '/mapview');
           }
           else {
+            console.log("fdsfds");
             $window.localStorage.isReadOnly = 'false';
+            $window.localStorage.proposalState = '';
             $location.path('/' + proposal.proposal_id + '/mapview');
           }
         }

@@ -93,6 +93,9 @@ angular
     proposalRequested : 'PR',
     proposalFinalized : 'PF',
     proposalConverted : 'PTC',
+    PTC : 'Converted',
+    PR : 'Requested',
+    PF : 'Finalized',
     //manage user
     createUser_success : 'Successfully Created',
     create_group_success : 'Group Created Successfully',
