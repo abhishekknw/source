@@ -7,7 +7,7 @@
   <div class = "container">
     <div class="breadcrumb" ncy-breadcrumb></div>
     <div class="page-header" style="text-align:center">
-      <h3 style="color:#337ab7;">Finalized Proposal for {{clientName}}</h3>
+      <h3 style="color:#337ab7;">{{proposalState}} Proposal for {{clientName}}</h3>
     </div>
       <div class="row">
         <div class="panel panel-default">
@@ -37,13 +37,13 @@
          </div>
       </div>
       <!-- <div style="text-align:right;"><button class="btn btn-primary" ng-if="isParentProposal == 'true'" ng-disabled="isUploaded" ng-click="editInitialProposal(proposal.proposal_id)">Edit Proposal</button></div> -->
-      <div class="col-md-3"><label>Select Advertising Location:</label>
+      <!-- <div class="col-md-3"><label>Select Advertising Location:</label>
         <select class="form-control" style="width:50%;"ng-model="current_center_id" ng-change="selectCenter(current_center_id)">
           <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
         </select>
-      </div>
-      <div class="col-md-6">
-      </div>
+      </div> -->
+      <!-- <div class="col-md-6">
+      </div> -->
       <div class="col-md-3">
         <div class="invoiceButton" permission = "[]">
           <button ng-hide="hideData" class="btn btn-danger" data-target="#invoiceModal" data-toggle="modal"><b>Enter Invoice Details</b></button>
@@ -52,7 +52,7 @@
   </div>
 </form>
 <!-- Start: Display supplier details for selected center-->
-<div class = "container page-panel"  ng-if="current_center_id">
+<!-- <div class = "container page-panel"  ng-if="current_center_id">
   <div class = "row">
     <div ng-if="current_center_data.filters.society_allowed">
       <div><button class="society-heading btn btn-danger" style="margin-left:5px"ng-click="isSociety=!isSociety">Click Here For Society Details</button></div>
@@ -90,8 +90,8 @@
                 <td ng-if="supplier.status == 'B'">Buffer</td>
                 <td ng-if="supplier.status == 'R'">Removed</td>
                 <td>
-                  <!-- <a ng-href="" ng-model="supplier.status" ng-if="supplier.status == 'S'" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Buffer</a> -->
-                  <div class="radio">
+                  <! <a ng-href="" ng-model="supplier.status" ng-if="supplier.status == 'S'" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')">Buffer</a> -->
+                  <!-- <div class="radio">
                          <label><input type="radio" ng-model="supplier.status" value="F" ng-click="updateSupplierStatus(supplier,current_center_data,'RS')" ng-disabled="isUploaded">Finalize</label>
                   </div>
                   <div class="radio">
@@ -103,8 +103,9 @@
                 </td>
               </tr>
             </tbody>
-          </table>
-        </div><!-- uib collapse div ends here-->
+          </table> -->
+        <!-- </div> -->
+        <!-- uib collapse div ends here-->
         <!-- <h5 class="panel-heading head" style="text-align:center" uib-collapse="! isSociety"><b>Details of Removed Societies</b></h5> -->
         <!-- <div uib-collapse="! isSociety">
           <table class="table table-bordered society">
@@ -141,10 +142,10 @@
            </tbody>
           </table>
           </div> -->
-      </div>
+      <!-- </div>
     </div>
   </div>
-</div>
+</div>  -->
 <!-- End: Display supplier details for selected center-->
 
 <!--Start: Code for Invoice Modal Window -->

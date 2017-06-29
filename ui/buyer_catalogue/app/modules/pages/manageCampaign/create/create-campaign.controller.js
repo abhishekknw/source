@@ -74,10 +74,11 @@ angular.module('machadaloPages')
             $scope.model.accounts = JSON.parse($window.localStorage.accounts);
             if($window.localStorage.sel_account_index >= 0){
               $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
+              $scope.getProposals($scope.sel_account_id,$window.localStorage.sel_account_index);
             }
           }
-          if($window.localStorage.account_proposals != null)
-            $scope.account_proposals = JSON.parse($window.localStorage.account_proposals);
+          // if($window.localStorage.account_proposals != null)
+          //   $scope.account_proposals = JSON.parse($window.localStorage.account_proposals);
           $scope.choice = "selected";
         }else {
           $scope.model.business = null;
@@ -85,7 +86,6 @@ angular.module('machadaloPages')
           $scope.account_proposals = null;
         }
       }
-      $scope.getStoredData();
       // End: for persisting values after refresh or back from other pages
 
       pagesService.loadBusinessTypes()
@@ -251,14 +251,17 @@ angular.module('machadaloPages')
           pagesService.setProposalAccountId(sel_account_id);
           $window.localStorage.proposal_id = 0;
           $window.localStorage.isSavedProposal = false;
+          $window.localStorage.isReadOnly = 'false';
+          $window.localStorage.proposalState = '';
           $location.path('/'+sel_account_id + '/createproposal');
         }
       }
 
-      $scope.showProposalDetails = function(proposal_id){
+      $scope.showProposalDetails = function(proposal){
         $window.localStorage.parentProposal = true;
-        $window.localStorage.parent_proposal_id = proposal_id;
-        $location.path('/' + proposal_id + '/showcurrentproposal');
+        $window.localStorage.proposalState = constants[proposal.campaign_state];
+        $window.localStorage.parent_proposal_id = proposal.proposal_id;
+        $location.path('/' + proposal.proposal_id + '/showcurrentproposal');
       }
 
       $scope.showHistory = function(proposalId){
@@ -358,10 +361,21 @@ angular.module('machadaloPages')
           $window.localStorage.isReadOnly = 'true';
           $location.path('/' + proposalId + '/mapview');
         }
-        $scope.goToMapView = function(proposalId){
-          console.log(proposalId);
-          $window.localStorage.isReadOnly = 'false';
-          $location.path('/' + proposalId + '/mapview');
+        $scope.goToMapView = function(proposal){
+          if(proposal.campaign_state){
+            console.log("hello");
+            $window.localStorage.isReadOnly = 'true';
+            $window.localStorage.proposalState = constants[proposal.campaign_state];
+            $location.path('/' + proposal.proposal_id + '/mapview');
+          }
+          else {
+            console.log("fdsfds");
+            $window.localStorage.isReadOnly = 'false';
+            $window.localStorage.proposalState = '';
+            $location.path('/' + proposal.proposal_id + '/mapview');
+          }
         }
+
+        $scope.getStoredData();
       // [TODO] implement this
     });
