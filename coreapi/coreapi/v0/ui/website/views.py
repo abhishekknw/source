@@ -2441,6 +2441,7 @@ class ImportSupplierData(APIView):
         class_name = self.__class__.__name__
         try:
 
+
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
             my_file = request.FILES['file']
@@ -2470,9 +2471,6 @@ class ImportSupplierData(APIView):
                     return center_id_list_response
 
                 center_id_list = center_id_list_response.data['data']
-
-                # normalize the center id's or map the actual center id's with indexes starting from zero
-                center_id_to_index_mapping = {}
 
                 for index, center_id in enumerate(center_id_list):
                     if not result.get(center_id):
@@ -2510,22 +2508,13 @@ class ImportSupplierData(APIView):
                     center_object = result[center_id]
 
                     # initialize the center_object  with necessary keys if not already
-                    response = website_utils.initialize_keys(center_object, supplier_type_code)
-                    if not response.data['status']:
-                        return response
-                    center_object = response.data['data']
+                    center_object = website_utils.initialize_keys(center_object, supplier_type_code)
 
                     # add 1 supplier that represents this row to the list of suppliers this object has already
-                    response = website_utils.make_suppliers(center_object, row, supplier_type_code, proposal_id, center_id)
-                    if not response.data['status']:
-                        return response
-                    center_object = response.data['data']
+                    center_object = website_utils.make_suppliers(center_object, row, supplier_type_code, proposal_id, center_id)
 
                     # add the 'center' data  in center_object
-                    response = website_utils.make_center(center_object, row)
-                    if not response.data['status']:
-                        return response
-                    center_object = response.data['data']
+                    center_object = website_utils.make_center(center_object, row)
 
                     # update the center dict in result with modified center_object
                     result[center_id] = center_object

@@ -413,10 +413,10 @@ def initialize_keys(center_object, supplier_type_code):
             # exist
             if not center_object.get('shortlisted_inventory_details'):
                 center_object['shortlisted_inventory_details'] = []
-
-        return ui_utils.handle_response(function, data=center_object, success=True)
+        return center_object
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
+
 
 def make_societies_inventory(center_object, row):
     """
@@ -444,48 +444,67 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
     Returns: a list of shortlisted inventory types for this supplier
 
     """
+    function = make_shortlisted_inventory_list.__name__
     try:
         shortlisted_inventory_list = []
-   
+        # use the filter table to pull out those inventories which were selected.
+        filter_codes = models.Filters.objects.filter(proposal_id=proposal_id, center_id=center_id, filter_name='inventory_type_selected').values_list('filter_code', flat=True)
+        unique_inventory_codes = get_unique_inventory_codes(filter_codes)
         # check for predefined keys in the row. if available, we have that inventory !
-        for inventory in website_constants.is_inventory_available:
-            if inventory in row.keys():
+        for code in unique_inventory_codes:
 
-                # get the base_name so that we can fetch other fields from row
-                base_name = website_constants.inventory_models[inventory]['BASE_NAME']
+            inv_name = website_constants.inventory_code_to_name[code]
+            # get inventory base name
+            base_name = join_with_underscores(website_constants.inventory_code_to_name[code].lower())
 
-                # get inventory_code
-                code = website_constants.inventory_name_to_code[base_name]
+            # get type. it's fixed for now
+            inv_type = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['type']
+            inv_type = website_constants.type_dict[inv_type]
 
-                # get type. it's fixed for now
-                inv_type = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['type']
-                inv_type = website_constants.type_dict[inv_type]
+            # get duration. it's fixed for now
+            inv_duration = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['duration']
+            inv_duration = website_constants.duration_dict[inv_duration]
 
-                # get duration. it's fixed for now
-                inv_duration = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['duration']
-                inv_duration = website_constants.duration_dict[inv_duration]
+            # the inventory ids are added later. but why not here depending upon the count ?
+            shortlisted_inventory_details = {
+                'proposal_id': proposal_id,
+                'center_id': center_id,
+                'supplier_id': row['supplier_id'],
+                'supplier_type_code': supplier_type_code,
+                'inventory_price': row[base_name + '_business_price'],
+                'inventory_count': get_default_inventory_count(inv_name, row['tower_count']),
+                'type': inv_type,
+                'duration': inv_duration,
+                'inventory_name': base_name.upper(),
+                'factor': row[base_name + '_price_factor']
+            }
 
-                shortlisted_inventory_details = {
-                    'proposal_id': proposal_id,
-                    'center_id': center_id,
-                    'supplier_id': row['supplier_id'],
-                    'supplier_type_code': supplier_type_code,
-                    'inventory_price': row[base_name + '_business_price'],
-                    'inventory_count': row[base_name + '_count'],
-                    'type': inv_type,
-                    'duration': inv_duration,
-                    'inventory_name': base_name.upper(),
-                    'factor': row[base_name + '_price_factor']
-                }
-
-                # add it to the list
-                shortlisted_inventory_list.append(shortlisted_inventory_details)
-
-        return Response({'status': True, 'data': shortlisted_inventory_list}, status=status.HTTP_200_OK)
+            # add it to the list
+            shortlisted_inventory_list.append(shortlisted_inventory_details)
+        return shortlisted_inventory_list
     except KeyError as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        raise KeyError(function, ui_utils.get_system_error(e))
     except Exception as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def get_default_inventory_count(inventory_name, tower_count):
+    """
+
+    :param inventory_name:
+    :param tower_count:
+    :return:
+    """
+
+    function = get_default_inventory_count.__name__
+    try:
+
+        if inventory_name.lower() == website_constants.poster.lower() or inventory_name.lower() == website_constants.standee.lower():
+            return tower_count
+        else:
+            return 1
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def make_suppliers(center_object, row, supplier_type_code, proposal_id, center_id):
@@ -507,11 +526,7 @@ def make_suppliers(center_object, row, supplier_type_code, proposal_id, center_i
         supplier = {data_key: row[header] for header, data_key in zip(supplier_header_keys, supplier_data_keys)}
 
         # get the list of shortlisted inventory details
-        shortlisted_inventory_list_response = make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center_id)
-        if not shortlisted_inventory_list_response.data['status']:
-            return shortlisted_inventory_list_response
-
-        shortlisted_inventory_list = shortlisted_inventory_list_response.data['data']
+        shortlisted_inventory_list = make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center_id)
 
         # add it to the list of center_object
         center_object['suppliers'][supplier_type_code].append(supplier)
@@ -520,9 +535,9 @@ def make_suppliers(center_object, row, supplier_type_code, proposal_id, center_i
         center_object['shortlisted_inventory_details'].extend(shortlisted_inventory_list)
 
         # return the result after we are done scanning
-        return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
+        return center_object
     except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
+        raise Exception(function, ui_utils.get_system_error(e))
 
 
 def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
@@ -783,6 +798,7 @@ def make_center(center_object, row):
     """
     # get the fields which also needs to sent for the other api to work upon because they are required for serializing .
     # city, area, pincode, sub_area, latitude, longitude, radius = models.ProposalCenterMapping.objects.values_list('city', 'area', 'pincode', 'subarea', 'latitude', 'longitude', 'radius').get(id=row['center_id'])
+    function = make_center.__name__
     try:
         center_object['center']['center_name'] = row.get('center_name')
         center_object['center']['proposal'] = row['proposal']
@@ -798,10 +814,9 @@ def make_center(center_object, row):
         # if not space_mapping_response.data['status']:
         #     return space_mapping_response
         # center_object['center']['space_mappings'] = space_mapping_response.data['data']
-        return Response({'status': True, 'data': center_object}, status=status.HTTP_200_OK)
+        return center_object
     except Exception as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
-
+        raise Exception(function, ui_utils.get_system_error(e))
 
 def make_space_mappings(row):
     """
@@ -4872,6 +4887,9 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
                         if response.data['data']:
                             output.extend(response.data['data'])
 
+            # if not inventories assigned, means a problem is there.
+            if not len(output):
+                raise Exception('No inventories being assigned for this proposal. Please check the error logs')
             # issue a single insert statements. be aware of disadvantages of .bulk_create usage.
             models.ShortlistedInventoryPricingDetails.objects.bulk_create(output)
             return ui_utils.handle_response(function, data='success', success=True)
@@ -5957,4 +5975,3 @@ def join_with_underscores(str, delim=' '):
         return '_'.join(str.split(delim))
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
-
