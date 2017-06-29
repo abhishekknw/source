@@ -48,10 +48,13 @@ angular.module('catalogueApp')
   $scope.shortlisted = constants.shortlisted;
   $scope.buffered = constants.buffered;
   $scope.removed = constants.removed;
+  $scope.finalized = constants.finalized;
+
   $scope.statusCode = {
-    shortlisted : constants.statusCode_shortlisted,
-    buffered : constants.statusCode_buffered,
-    removed : constants.statusCode_removed,
+      shortlisted : constants.statusCode_shortlisted,
+      buffered : constants.statusCode_buffered,
+      removed : constants.statusCode_removed,
+      finalized: constants.statusCodeFinalized,
   }
     $scope.clear = function() {
         $scope.dt = null;

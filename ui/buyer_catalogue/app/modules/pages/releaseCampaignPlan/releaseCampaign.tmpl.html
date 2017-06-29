@@ -38,6 +38,8 @@
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.buffered">{{buffered}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.removed">{{removed}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.finalized">{{finalized}}</td>
+
             <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
             <td class="" ng-if="key=='NA'">{{key}}</td>
             <td class="" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)"><b>{{key}}</b></a></td>

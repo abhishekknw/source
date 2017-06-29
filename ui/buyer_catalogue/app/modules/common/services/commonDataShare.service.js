@@ -7,6 +7,8 @@ angular.module('catalogueApp')
   var url_base = 'v0/ui/website/';
   var url_base1 = 'v0/ui/'
   var url_base_user = 'v0/'
+  var defaultError = "No data key in response of this API. Cannot render the exact error. For your reference here is the response: ";
+
 
    commonDataShare.showMessage = function(msg){
      alert(msg);
@@ -34,12 +36,40 @@ angular.module('catalogueApp')
    }
 
    commonDataShare.showErrorMessage = function(response){
-     if(constants.show_system && constants.show_general)
-        swal(constants.name, response.data.data.system_error+response.data.data.general_error, constants.error);
-     else if(constants.show_general)
-        swal(constants.name,response.data.data.general_error, constants.error);
-     else if(constants.show_system)
-        swal(constants.name, response.data.data.system_error, constants.error);
+
+     console.log(response.data);
+
+     if(constants.show_system && constants.show_general) {
+          if ( response.data.data ) {
+            swal(constants.name, response.data.data.system_error+ " " + response.data.data.general_error, constants.error);
+          }
+          else {
+            swal(constants.name, defaultError + JSON.stringify(response.data, null, 4) , constants.error);
+
+          }
+
+        }
+     else if(constants.show_general) {
+
+          if ( response.data.data  ) {
+            swal(constants.name,response.data.data.general_error, constants.error);
+          }
+          else  {
+            swal(constants.name, defaultError + JSON.stringify(response.data, null, 4), constants.error);
+          }
+
+        }
+     else if(constants.show_system) {
+
+          if (response.data.data  ) {
+            swal(constants.name, response.data.data.system_error, constants.error);
+          }
+          else {
+             swal(constants.name, defaultError + JSON.stringify(response.data, null, 4), constants.error);
+          }
+
+        }
+
      else
         swal(constants.name, constants.errorMsg, constants.error);
    }
