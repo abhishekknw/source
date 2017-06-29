@@ -17,10 +17,11 @@ angular.module('catalogueApp')
         $scope.hideData = true;
       $scope.centerheaders = [
         {header : 'Serial No'},
-        {header : 'Name'},
+        {header : 'Center Name'},
         {header : 'Area'},
         {header : 'SubArea'},
-        {header : 'Radius'}
+        {header : 'Radius'},
+        {header : 'Supplier Count'},
       ];
       var filters = {
         inv_poster:false,
@@ -195,6 +196,7 @@ angular.module('catalogueApp')
     		})
     	}
      $scope.editInitialProposal = function(proposalId){
+       $window.localStorage.isReadOnly = 'true';
        $window.localStorage.isSavedProposal = 'true';
        $location.path('/' + proposalId + '/mapview');
      }
