@@ -133,14 +133,14 @@ $scope.gridViewSummary = {};
       // TO show different colors for suppliers based on status
       $scope.status_color;
       function getIcon(supplier,key){
-        if(supplier.status == 'X')
-          $scope.status_color = "FFC433";//blue color for new suppliersFCFF33
+        if(supplier.status == 'S')
+          $scope.status_color = "FFFF00";// yellow
         if(supplier.status == 'F')
-          $scope.status_color = "00FF00";//green color for shortlisted suppliers
+          $scope.status_color = "00FF00";//green
         if(supplier.status == 'R')
-          $scope.status_color = "FF0000";//red color for removed suppliers
+          $scope.status_color = "FF0000";// RED
         if(supplier.status == 'B')
-          $scope.status_color = "A52A2A";//black color for buffered suppliers
+          $scope.status_color = "654321";// brown
         var icon;
         icon = icons[key] + $scope.status_color +'/000000/000000/';
         return icon;

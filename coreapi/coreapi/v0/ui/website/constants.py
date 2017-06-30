@@ -48,25 +48,25 @@ proposal_header_keys = [
 
 inventorylist = {
     'PO': {
-        'HEADER': ['Poster Allowed',  'Poster Price', 'Poster Price Factor', 'Poster price per flat', 'Poster Business Price'],
-        'DATA': ['poster_allowed', 'poster_price', 'poster_price_factor', 'poster_price_per_flat', 'poster_business_price']
+        'HEADER': ['Poster Allowed', 'Poster price type', 'Poster price available', 'Poster Price', 'Poster Price Factor', 'Poster price per flat', 'Poster Business Price'],
+        'DATA': ['poster_allowed', 'poster_price_type', 'poster_price_available',  'poster_price', 'poster_price_factor', 'poster_price_per_flat', 'poster_business_price']
     },
     'ST': {
-        'HEADER': ['Standee Allowed', 'Standee Price', 'Standee Price factor','Standee price per flat', 'Standee Business Price'],
-        'DATA': ['standee_allowed', 'standee_price',  'standee_price_factor',
+        'HEADER': ['Standee Allowed', 'Standee price type', 'Standee price available',   'Standee Price', 'Standee Price factor','Standee price per flat', 'Standee Business Price'],
+        'DATA': ['standee_allowed',  'standee_price_type', 'standee_price_available',   'standee_price',  'standee_price_factor',
                  'standee_price_per_flat', 'standee_business_price']
     },
     'FL': {
-        'HEADER': ['Flier Allowed', 'Flier Price',  'Flier Price Factor', 'Flier Business Price'],
-        'DATA': ['flier_allowed', 'flier_price',  'flier_price_factor', 'flier_business_price']
+        'HEADER': ['Flier Allowed', 'Flier price type', 'Flier price available',  'Flier Price',  'Flier Price Factor', 'Flier Business Price'],
+        'DATA': ['flier_allowed',  'flier_price_type', 'flier_price_available',   'flier_price',  'flier_price_factor', 'flier_business_price']
     },
     'SL': {
-        'HEADER': ['Stall Allowed',  'Stall Price',  'Stall Price Factor', 'Stall Business Price'],
-        'DATA': ['stall_allowed', 'stall_price', 'stall_price_factor', 'stall_business_price']
+        'HEADER': ['Stall Allowed', 'Stall price type', 'Stall price available',   'Stall Price',  'Stall Price Factor', 'Stall Business Price'],
+        'DATA': ['stall_allowed', 'stall_price_type', 'stall_price_available',  'stall_price', 'stall_price_factor', 'stall_business_price']
     },
     'CD': {
-        'HEADER': ['Car Display Allowed', 'Car Display Price', 'Car Display Price Factor', 'Car Business Price'],
-        'DATA': ['car_display_allowed', 'car_display_price', 'car_display_price_factor', 'car_business_price']
+        'HEADER': ['Car Display Allowed', 'Car Display price type', 'Car Display price available',  'Car Display Price', 'Car Display Price Factor', 'Car Display Business Price'],
+        'DATA': ['car_display_allowed', 'car_display_price_type', 'car_display_price_available',  'car_display_price', 'car_display_price_factor', 'car_display_business_price']
     },
     'RS': {
         'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA', 'SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT', 'STATUS'],
@@ -636,7 +636,7 @@ default_stall_allocation_interval = 1
 default_stall_assignment_frequency = 1
 
 # temp list of inventories not implemented yet. delete it after implemantation. 
-inv_not_implemented = ['CAR_DISPLAY']
+inv_not_implemented = []
 
 # standee configs
 standee_name = 'STANDEE'

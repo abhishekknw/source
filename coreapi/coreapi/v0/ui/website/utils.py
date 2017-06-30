@@ -49,6 +49,7 @@ import serializers
 from v0 import errors
 import v0.constants as v0_constants
 import tasks
+import  v0.ui.constants as ui_constants
 import v0.utils
 
 
@@ -457,13 +458,16 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
             # get inventory base name
             base_name = join_with_underscores(website_constants.inventory_code_to_name[code].lower())
 
-            # get type. it's fixed for now
-            inv_type = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['type']
-            inv_type = website_constants.type_dict[inv_type]
+            # get type and duration.  it's fixed for now
+            inv_type = website_constants.inventory_type_duration_dict_list[code][1]
+            inv_duration = website_constants.inventory_type_duration_dict_list[code][2]
 
-            # get duration. it's fixed for now
-            inv_duration = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['duration']
-            inv_duration = website_constants.duration_dict[inv_duration]
+            # inv_type = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['type']
+            # inv_type = website_constants.type_dict[inv_type]
+            #
+            # # get duration. it's fixed for now
+            # inv_duration = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['duration']
+            # inv_duration = website_constants.duration_dict[inv_duration]
 
             # the inventory ids are added later. but why not here depending upon the count ?
             shortlisted_inventory_details = {
@@ -475,7 +479,7 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
                 'inventory_count': get_default_inventory_count(inv_name, row['tower_count']),
                 'type': inv_type,
                 'duration': inv_duration,
-                'inventory_name': base_name.upper(),
+                'inventory_name': website_constants.inventory_code_to_name[code].upper(),
                 'factor': row[base_name + '_price_factor']
             }
 
@@ -550,6 +554,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
     """
     function = populate_shortlisted_inventory_pricing_details.__name__
     try:
+
         center_ids = result.keys()
         # this creates a mapping like { 1: 'center_object_1', 2: 'center_object_2' } etc
         center_objects = models.ProposalCenterMapping.objects.in_bulk(center_ids)
@@ -580,7 +585,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
         # create a mapping like {'POSTER':{ 'A3' : ad_inv_object },'STANDEE': {'small':ad_inv_object  } }
         ad_inventory_type_objects_mapping = {}
         for ad_inventory_type_object in ad_inventory_type_objects:
-            # example, 'POSTER', 'STANDEE'
+            # example, 'POSTER', 'STANDEE', 'CAR DISPLAY' becomes 'CAR_DISPLAY'
             inv_name = ad_inventory_type_object.adinventory_name
             # example, 'A3', 'Small', 'High' etc
             inv_type = ad_inventory_type_object.adinventory_type
@@ -1342,9 +1347,9 @@ def save_shortlisted_suppliers(suppliers, fixed_data):
         count = 0
         for supplier in suppliers:
 
-            # we are not saving those suppliers with status as 'X'
-            if supplier['status'] == website_constants.status:
-                continue
+            # by default every supplier is shortlisted, hence we save everything.
+            # if supplier['status'] == website_constants.status:
+            #     continue
 
             # make entry for campaign_status and phase for each supplier here itself.
             campaign_status = supplier['campaign_status'] if supplier.get('campaign_status') else supplier['status']
@@ -2157,6 +2162,7 @@ def proposal_shortlisted_spaces(data):
 
         # fetch all shortlisted suppliers object id's for this proposal
         shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).select_related('content_object').values()
+
         shortlisted_suppliers = manipulate_object_key_values(shortlisted_suppliers)
 
         # collect all supplier_id's 
@@ -2431,7 +2437,6 @@ def make_export_final_response(result, data, inventory_summary_map, supplier_inv
                             stats['supplier_no_pricing_error'][supplier_id] = []
                         key = tuple(website_constants.inventory_type_duration_dict_list[inventory_code])
                         stats['supplier_no_pricing_error'][supplier_id].append(key)
-                        continue
 
                     # if no error, set supplier_object = detail
                     supplier_object = detail.copy()
@@ -2470,6 +2475,10 @@ def set_supplier_inventory_keys(supplier_dict, inv_summary_instance, unique_inve
             inventory_key = '_'.join(website_constants.inventory_code_to_name[code].lower().split())
             inventory_allowed_data_key = inventory_key + '_allowed'
             inventory_pricing_key = inventory_key + '_price'
+            inventory_pricing_available_key = inventory_key + '_price_available'
+
+            supplier_dict[inventory_key + '_price_type'] = join_with_underscores(' '.join(website_constants.inventory_type_duration_dict_list[code])).lower()
+
             if code not in allowed_inventory_codes:
                 # this inventory is not allowed
                 supplier_dict[inventory_allowed_data_key] = 0
@@ -2478,8 +2487,12 @@ def set_supplier_inventory_keys(supplier_dict, inv_summary_instance, unique_inve
                 # set pricing only when it is allowed.
                 price = supplier_inventory_pricing_map[code]['price']['actual_supplier_price']
                 if not price:
-                    return True, (supplier_dict['supplier_id'], code)
-                supplier_dict[inventory_pricing_key] = price
+                    # mark this price as not available, so that they don't eat my head 'why pricing is not available ?'.
+                    supplier_dict[inventory_pricing_available_key] = 0
+                    # return True, (supplier_dict['supplier_id'], code)
+                else:
+                    supplier_dict[inventory_pricing_available_key] = 1
+                    supplier_dict[inventory_pricing_key] = price
         return False, supplier_dict
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -3796,7 +3809,7 @@ def setup_generic_export(data, user, proposal_id):
         # first
         # headers = {
         #     'Access-Control-Expose-Headers': "file_name, Content-Disposition"
-        # }
+        #
 
         return {
             'local_path': os.path.join(settings.BASE_DIR, file_name),
@@ -4568,6 +4581,9 @@ def get_inventory_general_data(inventory_name, inventory_content_type):
     function = get_inventory_general_data.__name__
     try:
         inventory_general_data = {}
+
+        inventory_code = ui_constants.inventory_name_to_code[inventory_name]
+
         if inventory_name == website_constants.standee_name:
             # general inventory data
             inventory_general_data = {
@@ -4593,6 +4609,12 @@ def get_inventory_general_data(inventory_name, inventory_content_type):
             inventory_general_data = {
                 'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.poster, adinventory_type=website_constants.default_poster_type),
                 'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_poster_duration_type),
+                'inventory_content_type': inventory_content_type,
+            }
+        elif inventory_name == website_constants.car_display:
+            inventory_general_data = {
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.car_display, adinventory_type=website_constants.inventory_type_duration_dict_list[inventory_code][1]),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.inventory_type_duration_dict_list[inventory_code][2]),
                 'inventory_content_type': inventory_content_type,
             }
 
@@ -4803,9 +4825,9 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
 
         for inventory in sheet_data:
 
-            # we do not process for removed suppliers.
-            if inventory['status'] == website_constants.removed or inventory['status'] == website_constants.status:
-                continue
+            # since the status is shortlisted by default, we process for each kind of inventory.
+            # if inventory['status'] == website_constants.removed or inventory['status'] == website_constants.status:
+            #     continue
 
             inventory_name = inventory['inventory_name']
             supplier_type_code = inventory['supplier_type_code']

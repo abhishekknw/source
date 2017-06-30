@@ -2441,7 +2441,6 @@ class ImportSupplierData(APIView):
         class_name = self.__class__.__name__
         try:
 
-
             if not request.FILES:
                 return ui_utils.handle_response(class_name, data='No File Found')
             my_file = request.FILES['file']
@@ -2804,6 +2803,15 @@ class ProposalViewSet(viewsets.ViewSet):
 
             proposal = ProposalInfo.objects.get(proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            proposal = ProposalInfo.objects.all()
+            serializer = ProposalInfoSerializer(proposal, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -3534,7 +3542,7 @@ class ProposalVersion(APIView):
                 # change the proposal_id variable here
                 proposal_id = new_proposal_id
 
-            # call create Final Proposal first
+            # call create Final Proposal first, we don't want to delete any filter data.
             website_utils.setup_create_final_proposal_post(data, proposal_id)
 
             result = website_utils.setup_generic_export(data, request.user, proposal_id)
