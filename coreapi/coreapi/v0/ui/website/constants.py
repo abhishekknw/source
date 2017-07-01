@@ -583,6 +583,7 @@ status = 'S'
 shortlisted = 'S'
 removed = 'R'
 buffer = 'B'
+finalized = 'F'
 valid_statuses = [shortlisted, removed, buffer]
 
 # name of inventories as in db

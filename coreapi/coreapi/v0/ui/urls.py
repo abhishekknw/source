@@ -44,7 +44,7 @@ urlpatterns = [
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/image_locations/$', views.ImageLocationsAPIView.as_view()),
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/image_mapping/$', views.ImageMappingAPIView.as_view()),
 
-    url(r'^create_supplier/load_initial_data/$', views.getInitialDataAPIView.as_view()),
+    url(r'^create_supplier/load_initial_data/$', views.GetInitialDataAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_corporate/$', views.SaveBasicCorporateDetailsAPIView.as_view(), name='load-initial-corporate-data'),
     url(r'^locations/(?P<id>[A-Z_a-z0-9]+)/$', views.GetLocationsAPIView.as_view(), name='locations'),
     url(r'^supplier/generate_id/$', views.GenerateSupplierIdAPIView.as_view(), name='generate-id'),

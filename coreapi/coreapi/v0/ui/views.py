@@ -178,24 +178,19 @@ class deleteUsersAPIView(APIView):
         return Response(status=204)
 
 
-class getInitialDataAPIView(APIView):
-    def get(self, request, format=None):
+class GetInitialDataAPIView(APIView):
+
+    def get(self, request):
+        class_name = self.__class__.__name__
         try:
-            user = request.user
             cities = City.objects.all()
-            serializer = CitySerializer(cities, many=True)
-            # if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
-            #     areas = CityArea.objects.filter(city_code__in=[item.city for item in user.cities.all()])
-            # else:
-            #     areas = CityArea.objects.all()
-            # serializer1 = CityAreaSerializer(areas, many=True)
+            city_serializer = CitySerializer(cities, many=True)
             items = SupplierTypeCode.objects.all()
-            serializer2 = SupplierTypeCodeSerializer(items, many=True)
-            # result = {'cities':serializer.data, 'city_areas': serializer1.data, 'supplier_types':serializer2.data}
-            result = {'cities':serializer.data, 'supplier_types':serializer2.data}
+            supplier_code_serializer = SupplierTypeCodeSerializer(items, many=True)
+            result = {'cities':city_serializer.data, 'supplier_types':supplier_code_serializer.data}
             return Response(result, status=200)
-        except :
-            return Response(status=404)
+        except Exception as e :
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class GetLocationsAPIView(APIView):

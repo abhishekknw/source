@@ -4518,6 +4518,7 @@ class BulkInsertInventoryActivityImage(APIView):
         """
         class_name = self.__class__.__name__
         try:
+
             shortlisted_inv_ids = set()  # to store shortlisted inv ids
             act_dates = set()  # to store all act dates
             act_types = set() # to store all act types
@@ -4587,7 +4588,7 @@ class BulkInsertInventoryActivityImage(APIView):
             )
 
             if not inv_act_assignment_objects:
-                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR, request=request)
 
             # this loop creates actual inv act image objects
             for inv_act_assign in inv_act_assignment_objects:
