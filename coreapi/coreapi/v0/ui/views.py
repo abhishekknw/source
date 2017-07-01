@@ -517,7 +517,6 @@ class CorporateAPIListView(APIView):
             user = request.user
             search_txt = request.query_params.get('search', None)
 
-
             if search_txt:
                 items = SupplierTypeCorporate.objects.filter(Q(supplier_id__icontains=search_txt) | Q(name__icontains=search_txt)| Q(address1__icontains=search_txt)| Q(city__icontains=search_txt)| Q(state__icontains=search_txt)).order_by('name')
             else:
@@ -537,10 +536,10 @@ class CorporateAPIListView(APIView):
               'corporates': paginator_response.data
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
-        except SupplierTypeCorporate.DoesNotExist:
-            return Response(status=404)
+        except ObjectDoesNotExist as e :
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except Exception as e:
-            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class SalonAPIListView(APIView):
