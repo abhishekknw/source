@@ -27,7 +27,7 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from v0.permissions import IsOwnerOrManager
 from rest_framework import filters
-from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, UIGymSerializer, UIBusShelterSerializer
+from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, UIGymSerializer, BusShelterSerializer
 from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer,\
                     DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer,\
                     CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer,\
@@ -2828,15 +2828,16 @@ class BusShelter(APIView):
         class_name = self.__class__.__name__
 
         try:
-            items = SupplierTypeBusShelter.objects.all().order_by('name')
-            items = ui_utils.get_supplier_image(items,'Bus Shelter')
+            bus_shelter_serializer = BusShelterSerializer(SupplierTypeBusShelter.objects.all().order_by('name'), many=True)
+
+            items = ui_utils.get_supplier_image(bus_shelter_serializer.data,'Bus Shelter')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             # serializer = SupplierTypeBusShelterSerializer(result_page, many=True)
 
             paginator_response = paginator.get_paginated_response(result_page)
             data = {
-              'count': len(items),
+              'count': len(bus_shelter_serializer.data),
               'busshelters': paginator_response.data
             }
             return ui_utils.handle_response(class_name, data=data, success=True)

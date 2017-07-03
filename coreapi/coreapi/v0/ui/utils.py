@@ -750,7 +750,8 @@ def get_serializer(query):
     except Exception as e:
         return None
 
-def get_supplier_image(supplier_objects,supplier_name):
+
+def get_supplier_image(supplier_objects, supplier_name):
     """
     Args:
         supplier_objects : SupplierTypeSociety, SupplierTypeCorporate
@@ -759,20 +760,17 @@ def get_supplier_image(supplier_objects,supplier_name):
     Returns: list of supplier_objects by appending image_url
 
     """
+    function = get_supplier_image.__name__
     try:
-        images = v0.models.ImageMapping.objects.all()
-        result = [] 
-        # To optimize this for loop, Join query can be used
+        supplier_ids = [data['supplier_id'] for data in supplier_objects]
+        images = v0.models.ImageMapping.objects.filter(object_id__in=supplier_ids)
+        image_dict = {instance.object_id: instance.image_url for instance in images}
         for data in supplier_objects:
-            # data = model_to_dict(model)
-            for image in images:
-                if (data['supplier_id'] == image.object_id):
-                    if (image.name == supplier_name):
-                        data['image_url'] = image.image_url
-            result.append(data)
-        return result
+            supplier_id = data['supplier_id']
+            data['image_url'] = image_dict.get(supplier_id, '')
+        return supplier_objects
     except Exception as e:
-        return None
+        raise Exception(function, get_system_error(e))
 
 
 def generate_poster_objects(count, nb, society, society_content_type):
