@@ -188,3 +188,11 @@ opacity: .5;
 .filter-disable{
     pointer-events:none;
 }
+
+.color-codes{
+
+  margin-left:96px;
+  display: inline;
+  padding: 10px;
+  position:relative;
+}
