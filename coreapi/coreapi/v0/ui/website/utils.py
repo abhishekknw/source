@@ -3822,12 +3822,14 @@ def setup_generic_export(data, user, proposal_id):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def setup_create_final_proposal_post(data, proposal_id, delete_filter_data=True):
+def setup_create_final_proposal_post(data, proposal_id, delete_and_save_filter_data=True, delete_and_save_spaces=True, exclude_shortlisted_space=True):
     """
     Args:
         data: Request data
         proposal_id: Proposal_id
-        delete_filter_data: weather to delete and recreate the filter or not
+        delete_and_save_filter_data: weather to delete and recreate the filter or not
+        delete_and_save_spaces: weather to delete and create spaces.
+        exclude_shortlisted_space: parameter to determine weather to save or exclude suppliers with status as 'S'.
 
     Returns: Success in case success returns.
     """
@@ -3853,12 +3855,18 @@ def setup_create_final_proposal_post(data, proposal_id, delete_filter_data=True)
 
             now_time = timezone.now()
 
-            # delete previous  shortlisted suppliers and save new
-            models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
-            models.ShortlistedSpaces.objects.bulk_create(total_shortlisted_suppliers_list)
-            models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).update(created_at=now_time,updated_at=now_time)
+            if delete_and_save_spaces:
+                # by default it will not save those suppliers which have status set as 'S'.
+                # delete previous  shortlisted suppliers and save new
+                if not exclude_shortlisted_space:
+                    final_shortlisted_list = total_shortlisted_suppliers_list
+                else:
+                    final_shortlisted_list = [instance for instance in total_shortlisted_suppliers_list if instance.status != website_constants.shortlisted]
+                models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
+                models.ShortlistedSpaces.objects.bulk_create(final_shortlisted_list)
+                models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).update(created_at=now_time,updated_at=now_time)
             # making this conditional because we delete filters and save new filters whenever request proposal is hit, but we should not delete filters when the sheet is imported.
-            if delete_filter_data:
+            if delete_and_save_filter_data:
                 # delete previous and save new selected filters and update date
                 models.Filters.objects.filter(proposal_id=proposal_id).delete()
                 models.Filters.objects.bulk_create(filter_data)
@@ -4825,9 +4833,9 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
 
         for inventory in sheet_data:
 
-            # since the status is shortlisted by default, we process for each kind of inventory.
-            # if inventory['status'] == website_constants.removed or inventory['status'] == website_constants.status:
-            #     continue
+            # do not process for status = 's'
+            if inventory['status'] == website_constants.shortlisted:
+                continue
 
             inventory_name = inventory['inventory_name']
             supplier_type_code = inventory['supplier_type_code']

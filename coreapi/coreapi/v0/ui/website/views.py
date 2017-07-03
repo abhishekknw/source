@@ -2518,8 +2518,8 @@ class ImportSupplierData(APIView):
                     # update the center dict in result with modified center_object
                     result[center_id] = center_object
 
-            # do not delete filters, but save whatever ShortlistedSpaces data
-            website_utils.setup_create_final_proposal_post(result.values(), proposal_id, delete_filter_data=False)
+            # during an import, do not delete filters, but save whatever ShortlistedSpaces data. Don't touch filter data, just save spaces.
+            website_utils.setup_create_final_proposal_post(result.values(), proposal_id, delete_and_save_filter_data=False, delete_and_save_spaces=True, exclude_shortlisted_space=True)
 
             # # data for this supplier is made. populate the shortlisted_inventory_details table before hitting the urls
             response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
@@ -2709,7 +2709,8 @@ class CreateFinalProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            website_utils.setup_create_final_proposal_post(request.data, proposal_id)
+            # when save button is clicked, we have already saved space status before hand on individual API call. Only filters are saved here.
+            website_utils.setup_create_final_proposal_post(request.data, proposal_id, delete_and_save_filter_data=True, delete_and_save_spaces=False)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -2720,7 +2721,7 @@ class CreateFinalProposal(APIView):
             request: The request object
             proposal_id: The proposal id
 
-        Returns: updates ShortlistedSpaces table with new data
+        Returns: updates ShortlistedSpaces table with new data or creates the shortlisted space if not already there. PUT does the job of creating data already.
         """
         class_name = self.__class__.__name__
         try:
@@ -3542,8 +3543,8 @@ class ProposalVersion(APIView):
                 # change the proposal_id variable here
                 proposal_id = new_proposal_id
 
-            # call create Final Proposal first, we don't want to delete any filter data.
-            website_utils.setup_create_final_proposal_post(data, proposal_id)
+            # call create Final Proposal first. We need to delete and save filter data. We don't save spaces here. The single status of each space has already been done before on Grid View.
+            website_utils.setup_create_final_proposal_post(data, proposal_id, delete_and_save_filter_data=True, delete_and_save_spaces=False)
 
             result = website_utils.setup_generic_export(data, request.user, proposal_id)
             file_name = result['name']
