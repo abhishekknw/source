@@ -10,12 +10,12 @@
   <div class="table">
     <div class="breadcrumb" ncy-breadcrumb></div>
     <div class="row">
-      <div class="col-md-3 aligndropdown">Select Advertising Location
+      <div class="col-md-2 aligndropdown">Select Advertising Location
         <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
           <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}">{{center_var.center.center_name}}</option>
         </select>
       </div>
-      <div class="col-md-3">Center Latitude & Longitude:{{current_center.center.latitude | limitTo:8 }}/{{current_center.center.longitude | limitTo:8}}
+      <div class="col-md-2">Center Latitude & Longitude:{{current_center.center.latitude | limitTo:8 }}/{{current_center.center.longitude | limitTo:8}}
       </div>
       <div class="col-md-2">Radius:
         <input class="box-spacing-radius" type="number" step="0.5" ng-model="current_center.center.radius" min="0" ng-disabled="isRequested">
@@ -29,8 +29,9 @@
           <a href="#" data-toggle="tooltip" title="Shortlisted"><img src="http://www.googlemapsmarkers.com/v1/FFFF00/" alt=""></a>
           <a href="#" data-toggle="tooltip" title="Buffered"><img src="http://www.googlemapsmarkers.com/v1/654321/" alt=""></a>
           <a href="#" data-toggle="tooltip" title="Removed"><img src="http://www.googlemapsmarkers.com/v1/FF0000/" alt=""></a>
-
-
+          &nbsp;&nbsp;
+          <button class="btn btn-danger active" ng-disabled="!show_societies" ng-click="showSocieties()">Map View</button>
+          <button class="btn btn-danger active" ng-disabled="show_societies" ng-click="showSocieties()">Grid View</button>
     </div>
   </div>
 </div>
@@ -405,6 +406,7 @@
         </tr>
       </tbody>
       </table>
+
     <!--End : adding table for corporates  -->
 
       <!-- <div  ng-repeat="society in current_center.societies"></div> -->
@@ -482,8 +484,8 @@
            </div>
         </div>
         <div>
-         <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
-         <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button>
+         <!-- <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button> -->
+         <!-- <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button> -->
          <button class="btn btn-danger active"  ng-show="!show_societies" ng-click = "saveData()" ng-disabled="isRequested">Save</button>
        </div>
       </div>
@@ -562,15 +564,15 @@
              </div>
           </div>
           <div>
-            <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button>
-            <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button><br>
-            <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested">Add Suppliers</button><br>
-            <button class="btn btn-danger active" ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport">
+            <!-- <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button> -->
+            <!-- <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button><br> -->
+            <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested">Add Suppliers</button>&nbsp;<br>
+            <button class="btn btn-danger active" style="margin-top:2px;" ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport">
               Request Proposal
               </button>
-              <button class="btn btn-success" name="button" ng-disabled="isRequested" ng-if="isRequested">Requested</button>
+              &nbsp;<button class="btn btn-success" name="button" ng-disabled="isRequested" ng-if="isRequested">Requested</button>
             <button class="btn btn-danger active"  ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested">Save</button><br>
-            <button ng-hide="hideData || isGuestUser" class="btn btn-danger active" ngf-select="upload($file)" ng-disabled="isRequested">Upload</button>
+            <button ng-hide="hideData || isGuestUser" class="btn btn-danger active"  style="margin-top:2px;" ngf-select="upload($file)" ng-disabled="isRequested">Upload</button>
         </div>
         </div>
     </div><!-- row div ends here-->
