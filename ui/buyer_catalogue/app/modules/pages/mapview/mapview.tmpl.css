@@ -196,3 +196,6 @@ opacity: .5;
   padding: 10px;
   position:relative;
 }
+#spacing{
+  margin-top: 3px;
+}

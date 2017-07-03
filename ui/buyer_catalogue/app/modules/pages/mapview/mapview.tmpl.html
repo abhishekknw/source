@@ -24,12 +24,12 @@
         <button class="btn btn-sm btn-danger center-button" ng-click="changeCenter()" ng-disabled="isRequested">Change Radius</button>
         <button class="btn btn-sm btn-danger center-button" ng-show="initial_center_changed[current_center_index]" ng-click="changeCenter(false)">Reset Center</button>
         <button class = "btn btn-sm btn-danger center-button" ng-show="center_changed" ng-click="changeCenter(true)" ng-disabled="isRequested">Change Center</button>
- 
+
       <div  class="color-codes">
-        <a href="#" data-toggle="tooltip" title="Finalized"><img src="http://www.googlemapsmarkers.com/v1/00FF00/" alt=""></a>
-        <a href="#" data-toggle="tooltip" title="Shortlisted"><img src="http://www.googlemapsmarkers.com/v1/FFFF00/" alt=""></a>
-        <a href="#" data-toggle="tooltip" title="Buffered"><img src="http://www.googlemapsmarkers.com/v1/654321/" alt=""></a>
-        <a href="#" data-toggle="tooltip" title="Removed"><img src="http://www.googlemapsmarkers.com/v1/FF0000/" alt=""></a>
+        <a data-toggle="tooltip" title="Finalized"><img src="http://www.googlemapsmarkers.com/v1/00FF00/" alt=""></a>
+        <a data-toggle="tooltip" title="Shortlisted"><img src="http://www.googlemapsmarkers.com/v1/FFFF00/" alt=""></a>
+        <a data-toggle="tooltip" title="Buffered"><img src="http://www.googlemapsmarkers.com/v1/654321/" alt=""></a>
+        <a data-toggle="tooltip" title="Removed"><img src="http://www.googlemapsmarkers.com/v1/FF0000/" alt=""></a>
         &nbsp;&nbsp;
         <button class="btn btn-danger active" ng-disabled="!show_societies" ng-click="showSocieties()">Map View</button>
         <button class="btn btn-danger active" ng-disabled="show_societies" ng-click="showSocieties()">Grid View</button>
@@ -569,13 +569,13 @@
           <div>
             <!-- <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button> -->
             <!-- <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button><br> -->
-            <button data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested">Add Suppliers</button>&nbsp;<br>
-            <button class="btn btn-danger active" style="margin-top:2px;" ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport">
+            <button id="spacing" data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested">Add Suppliers</button>&nbsp;<br>
+            <button id="spacing" class="btn btn-danger active"  ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport">
               Request Proposal
               </button>
-              &nbsp;<button class="btn btn-success" name="button" ng-disabled="isRequested" ng-if="isRequested">Requested</button>
-            <button class="btn btn-danger active"  ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested">Save</button><br>
-            <button ng-hide="hideData || isGuestUser" class="btn btn-danger active"  style="margin-top:2px;" ngf-select="upload($file)" ng-disabled="isRequested">Upload</button>
+              <button id="spacing" class="btn btn-success" name="button" ng-disabled="isRequested" ng-if="isRequested">Requested</button><br>
+            <button id="spacing" class="btn btn-danger active"  ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested">Save</button><br>
+            <button id="spacing" ng-hide="hideData || isGuestUser" class="btn btn-danger active" ngf-select="upload($file)" ng-disabled="isRequested">Upload</button>
         </div>
         </div>
     </div><!-- row div ends here-->
