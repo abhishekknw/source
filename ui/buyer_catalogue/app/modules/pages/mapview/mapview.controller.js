@@ -54,7 +54,7 @@ if($scope.user_code == 'guestUser')
 //supplier status
 var supplierStatus = {
   finalized   : 'F',
-  shortlisted : 'X',
+  shortlisted : 'S',
   buffered    : 'B',
   removed     : 'R',
 }
