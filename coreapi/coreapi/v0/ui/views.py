@@ -27,7 +27,7 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from v0.permissions import IsOwnerOrManager
 from rest_framework import filters
-from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, UIGymSerializer, UIBusShelterSerializer
+from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, UIGymSerializer, BusShelterSerializer
 from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer,\
                     DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer,\
                     CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer,\
@@ -178,24 +178,19 @@ class deleteUsersAPIView(APIView):
         return Response(status=204)
 
 
-class getInitialDataAPIView(APIView):
-    def get(self, request, format=None):
+class GetInitialDataAPIView(APIView):
+
+    def get(self, request):
+        class_name = self.__class__.__name__
         try:
-            user = request.user
             cities = City.objects.all()
-            serializer = CitySerializer(cities, many=True)
-            # if user.user_profile.all().first() and user.user_profile.all().first().is_city_manager:
-            #     areas = CityArea.objects.filter(city_code__in=[item.city for item in user.cities.all()])
-            # else:
-            #     areas = CityArea.objects.all()
-            # serializer1 = CityAreaSerializer(areas, many=True)
+            city_serializer = CitySerializer(cities, many=True)
             items = SupplierTypeCode.objects.all()
-            serializer2 = SupplierTypeCodeSerializer(items, many=True)
-            # result = {'cities':serializer.data, 'city_areas': serializer1.data, 'supplier_types':serializer2.data}
-            result = {'cities':serializer.data, 'supplier_types':serializer2.data}
+            supplier_code_serializer = SupplierTypeCodeSerializer(items, many=True)
+            result = {'cities':city_serializer.data, 'supplier_types':supplier_code_serializer.data}
             return Response(result, status=200)
-        except :
-            return Response(status=404)
+        except Exception as e :
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class GetLocationsAPIView(APIView):
@@ -517,7 +512,6 @@ class CorporateAPIListView(APIView):
             user = request.user
             search_txt = request.query_params.get('search', None)
 
-
             if search_txt:
                 items = SupplierTypeCorporate.objects.filter(Q(supplier_id__icontains=search_txt) | Q(name__icontains=search_txt)| Q(address1__icontains=search_txt)| Q(city__icontains=search_txt)| Q(state__icontains=search_txt)).order_by('name')
             else:
@@ -537,10 +531,10 @@ class CorporateAPIListView(APIView):
               'corporates': paginator_response.data
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
-        except SupplierTypeCorporate.DoesNotExist:
-            return Response(status=404)
+        except ObjectDoesNotExist as e :
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except Exception as e:
-            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class SalonAPIListView(APIView):
@@ -953,7 +947,6 @@ class InventorySummaryAPIView(APIView):
             result['inventory'] = model_to_dict(inventory_object)
             inventory_allowed_codes = website_utils.get_inventories_allowed(inventory_object)
             result['inventories_allowed_codes'] = inventory_allowed_codes
-
             return Response(data=result, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
@@ -1035,6 +1028,7 @@ class InventorySummaryAPIView(APIView):
                 return response
 
             data = response.data['data']['request_data']
+
             supplier_object = response.data['data']['supplier_object']
             inventory_object = response.data['data']['inventory_object']
             supplier_type_code = request.data['supplier_type_code']
@@ -1152,6 +1146,7 @@ class InventorySummaryAPIView(APIView):
                 duration_type_dict = ui_utils.duration_type_func()
                 price_list = []
                 if request.data.get('poster_price_week_nb'):
+
                     posPrice = int(request.data.get('poster_price_week_nb'))
                     if request.data.get('poster_allowed_nb'):
                         if request.data.get('nb_A3_allowed'):
@@ -1166,12 +1161,11 @@ class InventorySummaryAPIView(APIView):
                             ui_utils.save_price_data(price, posPrice / towercount)
 
                         if request.data.get('nb_A4_allowed'):
-                            price = PriceMappingDefault.objects.get_price_mapping_object( ui_utils.make_dict_manager(adinventory_dict['poster_a3'], duration_type_dict['campaign_weekly']), id, supplier_type_code)
+
+                            price = PriceMappingDefault.objects.get_price_mapping_object( ui_utils.make_dict_manager(adinventory_dict['poster_a4'], duration_type_dict['campaign_weekly']), id, supplier_type_code)
                             ui_utils.save_price_data(price, posPrice)
 
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['poster_a4'],
-                                                           duration_type_dict['unit_weekly']), id, supplier_type_code)
+                            price = PriceMappingDefault.objects.get_price_mapping_object(ui_utils.make_dict_manager(adinventory_dict['poster_a4'],duration_type_dict['unit_weekly']), id, supplier_type_code)
 
                             ui_utils.save_price_data(price, posPrice / towercount)
 
@@ -1273,7 +1267,7 @@ class InventorySummaryAPIView(APIView):
 
                             price = PriceMappingDefault.objects.get_price_mapping_object(
                                 ui_utils.make_dict_manager(adinventory_dict['car_display_premium'],
-                                                           duration_type_dict['unit_daily']), id, supplier_type_code)
+                                                duration_type_dict['unit_daily']), id, supplier_type_code)
 
                             ui_utils.save_price_data(price, cdPrice)
 
@@ -2834,15 +2828,16 @@ class BusShelter(APIView):
         class_name = self.__class__.__name__
 
         try:
-            items = SupplierTypeBusShelter.objects.all().order_by('name')
-            items = ui_utils.get_supplier_image(items,'Bus Shelter')
+            bus_shelter_serializer = BusShelterSerializer(SupplierTypeBusShelter.objects.all().order_by('name'), many=True)
+
+            items = ui_utils.get_supplier_image(bus_shelter_serializer.data,'Bus Shelter')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
             # serializer = SupplierTypeBusShelterSerializer(result_page, many=True)
 
             paginator_response = paginator.get_paginated_response(result_page)
             data = {
-              'count': len(items),
+              'count': len(bus_shelter_serializer.data),
               'busshelters': paginator_response.data
             }
             return ui_utils.handle_response(class_name, data=data, success=True)

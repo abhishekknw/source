@@ -9,16 +9,19 @@ angular.module('catalogueApp')
       $scope.campaign_start_date;
       $scope.campaign_end_date;
       $scope.errorMsg = constants.emptyResponse;
+      $scope.proposalState = $window.localStorage.proposalState;
+      console.log($scope.proposalState);
       //code added to show or not details based on permissions
       $scope.user_code = $window.localStorage.user_code;
       if($scope.user_code == 'agency')
         $scope.hideData = true;
       $scope.centerheaders = [
         {header : 'Serial No'},
-        {header : 'Name'},
+        {header : 'Center Name'},
         {header : 'Area'},
         {header : 'SubArea'},
-        {header : 'Radius'}
+        {header : 'Radius'},
+        {header : 'Supplier Count'},
       ];
       var filters = {
         inv_poster:false,
@@ -50,22 +53,23 @@ angular.module('catalogueApp')
       $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
       $scope.format = $scope.formats[1];
       $scope.altInputFormats = ['M!/d!/yyyy'];
+      $scope.clientName = $window.localStorage.business_name;
 
     	currentProposalService.getProposal($stateParams.proposal_id)
     	.then(function onSuccess(response, status){
     		$scope.proposal = response.data.data;
     	})
     	.catch(function onError(response, status){
-        swal(constants.name,constants.errorMsg,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,constants.errorMsg,constants.error);
     		console.log("Error Occured");
     		if(typeof(response) == typeof([])){
-    			console.log("Error response is :", response);
     		}
     	});
 
       $scope.edit = function(){
         $scope.showEdit = true;
-      },
+      }
 
         // this service get the all shortlisted suppliers for this proposal
       currentProposalService.getShortlistedSuppliers($stateParams.proposal_id)
@@ -77,7 +81,8 @@ angular.module('catalogueApp')
           $scope.loading = response.data;
         })
         .catch(function onError(response, status){
-          swal(constants.name,constants.errorMsg,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.errorMsg,constants.error);
           console.log("Error Occured");
           if(typeof(response) == typeof([])){
             console.log("Error response is :", response);
@@ -152,7 +157,8 @@ angular.module('catalogueApp')
                 $window.location.reload();
         })
         .catch(function onError(response, status){
-          swal(constants.name,constants.errorMsg,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.errorMsg,constants.error);
           console.log("Error Occured");
         })
       }
@@ -169,7 +175,8 @@ angular.module('catalogueApp')
           .then(function onSuccess(response, status){
             // alert("Saved Successfully");
           }).catch(function onError(response, status){
-            swal(constants.name,constants.errorMsg,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.errorMsg,constants.error);
             // alert("Error Occured");
         });
       }
@@ -180,7 +187,8 @@ angular.module('catalogueApp')
                 $window.location.reload();
     		})
     		.catch(function onError(response, status){
-          swal(constants.name,constants.errorMsg,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.errorMsg,constants.error);
     			console.log("Error Occured");
     			if(typeof(response) == typeof([])){
 	    		console.log("Error response is :", response);
@@ -188,6 +196,7 @@ angular.module('catalogueApp')
     		})
     	}
      $scope.editInitialProposal = function(proposalId){
+       $window.localStorage.isReadOnly = 'true';
        $window.localStorage.isSavedProposal = 'true';
        $location.path('/' + proposalId + '/mapview');
      }
@@ -216,10 +225,10 @@ angular.module('catalogueApp')
                    console.log("success");
            })
            .catch(function onError(response, status){
-             swal("Error!",constants.invoice_error,constants.error);
+             commonDataShare.showErrorMessage(response);
+            //  swal("Error!",constants.invoice_error,constants.error);
              console.log("Error Occured");
          })
         });
      }
-
     });//Controller ends here

@@ -3,6 +3,11 @@ angular.module('catalogueApp')
     ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare','constants',
     function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare, constants) {
       $scope.campaign_id = $stateParams.proposal_id;
+      $scope.bd_manager = constants.bd_manager;
+      $scope.campaign_manager = constants.campaign_manager;
+      if($rootScope.globals.userInfo.is_superuser == true){
+        $scope.backButton = true;
+      }
       $scope.headings = [
         {header : 'Phase'},
         {header : 'Inventory Type'},
@@ -65,6 +70,7 @@ angular.module('catalogueApp')
           })
           .catch(function onError(response){
             console.log("error occured", response.status);
+            commonDataShare.showErrorMessage(response);
           });
       }
       init();
@@ -80,6 +86,7 @@ angular.module('catalogueApp')
       	})
       	.catch(function onError(response){
       		console.log("error occured", response);
+          commonDataShare.showErrorMessage(response);
       	});
       }
       // getCampaignReleaseDetails();
@@ -155,7 +162,8 @@ angular.module('catalogueApp')
           swal(constants.name,constants.updateData_success,constants.success);
       	})
       	.catch(function onError(response){
-          swal(constants.name,constants.updateData_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.updateData_error,constants.error);
       		console.log("error occured", response.status);
       	});
       }
@@ -196,6 +204,7 @@ angular.module('catalogueApp')
         getCampaignReleaseDetails();
       })
       .catch(function onError(response){
+        commonDataShare.showErrorMessage(response);
         console.log("error occured", response.status);
       });
     }
@@ -256,7 +265,8 @@ angular.module('catalogueApp')
       .catch(function onError(response){
         $scope.savingDates = false;
         $('#manageDatesModal').modal('hide');
-        swal(constants.name,constants.inventory_date_error,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,constants.inventory_date_error,constants.error);
         console.log("error occured", response.status);
       });
     }
@@ -320,5 +330,8 @@ angular.module('catalogueApp')
       $scope.invActivityData = [];
       $('#manageDatesModal').on('hide.bs.modal', function () {
       })
+    }
+    $scope.getCampaignState = function(state){
+      return constants[state];
     }
 }]);

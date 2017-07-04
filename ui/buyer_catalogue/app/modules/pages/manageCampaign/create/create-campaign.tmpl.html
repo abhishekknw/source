@@ -22,7 +22,7 @@
                 </select>
             </span>
           </div>
-            <div class="col-md-4" ng-if="campaignAccessAllowed">
+            <div class="col-md-4" permission="[bd_manager]">
               <label for="new">Create New Business</label>
               <input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
             </div>
@@ -101,7 +101,7 @@
                 </tr>
               </tbody>
             </table>
-            <button class="btn btn-danger" ng-click="addNewAccount()" ng-if="campaignAccessAllowed">Add New Account</button>
+            <button class="btn btn-danger" ng-click="addNewAccount()" permission = "[bd_manager]">Add New Account</button>
           </div>
         </div>
       </form>
@@ -128,11 +128,34 @@
                   <td>{{proposal.created_on | limitTo:10}}</td>
                   <td>Vidhi</td><!-- {{proposal.updated_by}} -->
                   <td>{{proposal.updated_on | limitTo:10}}</td>
-                  <td>
-                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal.proposal_id)">
-                      <span ng-if="!isUploaded">Edit</span>
-                      <span ng-if="isUploaded">View</span>
+                  <td ng-if="proposal.campaign_state == null"></td>
+                  <td ng-if="proposal.campaign_state == proposalRequested">
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)">
+                      <span>Requested</span>
                     </button>
+                  </td>
+                  <td ng-if="proposal.campaign_state == proposalFinalized">
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)">
+                      <span>Finalized</span>
+                    </button>
+                  </td>
+                  <td ng-if="proposal.campaign_state == proposalConverted">
+                    <button class="btn btn-success detail-button" ng-click="showProposalDetails(proposal)">
+                      <span>Converted</span>
+                    </button>
+                  </td>
+                  <td ng-if="proposal.campaign_state == proposalOnHold">
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)">
+                      <span>On-Hold</span>
+                    </button>
+                  </td>
+                  <td ng-if="proposal.campaign_state == proposalDeclined">
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)">
+                      <span>Declined</span>
+                    </button>
+                  </td>
+                  <td >
+                    <button class="btn btn-danger detail-button" ng-click="goToMapView(proposal)">View on Map/Grid</button>
                   </td>
                   <!-- <td ng-if="!isUploaded">
                     <button class="btn btn-danger active" ng-click="showProposalDetails(proposal.proposal_id)">
@@ -148,7 +171,7 @@
                 </tr>
               </tbody>
             </table>
-            <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" ng-if="campaignAccessAllowed">Create New Proposal</button>
+            <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" permission = "[bd_manager]">Create New Proposal</button>
             <span class="show-error" ng-show="error">Please select an account</span>
           </div>
         </div>

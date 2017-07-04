@@ -88,10 +88,10 @@ class GenericExportFileSerializerReadOnly(ModelSerializer):
     """
     proposal = ProposalInfoSerializer()
     user = BaseUserSerializer()
+    assignment_detail = serializers.ReadOnlyField(source='calculate_assignment_detail')
 
     class Meta:
         model = models.GenericExportFileName
-
 
 
 class InventoryTypeSerializer(ModelSerializer):
@@ -199,15 +199,27 @@ class UISocietyInventorySerializer(ModelSerializer):
         )
 
 
+
+class BusinessTypeSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.BusinessTypes
+
+class BusinessSubTypeSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.BusinessSubTypes
+
+
 class UIBusinessInfoSerializer(ModelSerializer):
+
     contacts = BusinessAccountContactSerializer(source='get_contacts', many=True)
+    type_name = BusinessTypeSerializer()
+    sub_type = BusinessSubTypeSerializer()
 
     class Meta:
         model = BusinessInfo
-        depth = 2
-        # read_only_fields = (
-        # 'contacts'
-        # )
+        # depth = 2
 
 
 class UIAccountInfoSerializer(ModelSerializer):
@@ -215,10 +227,7 @@ class UIAccountInfoSerializer(ModelSerializer):
 
     class Meta:
         model = AccountInfo
-        depth = 2
-        # read_only_fields = (
-        # 'contacts'
-        # )
+        # depth = 2
 
 
 class CampaignListSerializer(ModelSerializer):

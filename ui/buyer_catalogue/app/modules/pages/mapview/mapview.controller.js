@@ -1,6 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare, constants) {
+    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare, constants, $filter) {
 // You have to initailise some value for the map center beforehand
 // $scope.map is just for that purpose --> Set it according to your needs.
 // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
@@ -39,6 +39,11 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
   //for loading icon
   $scope.requestProposal = true;
 
+  if($window.localStorage.isReadOnly == 'true'){
+    $scope.isRequested = true;
+  }
+$scope.proposalState = $window.localStorage.proposalState;
+$scope.clientName = $window.localStorage.business_name;
 //code added to show or hide some details based on user permissions
 $scope.user_code = $window.localStorage.user_code;
 if($scope.user_code == 'agency')
@@ -48,8 +53,8 @@ if($scope.user_code == 'guestUser')
 
 //supplier status
 var supplierStatus = {
-  finalized   : 'S',
-  shortlisted : 'X',
+  finalized   : 'F',
+  shortlisted : 'S',
   buffered    : 'B',
   removed     : 'R',
 }
@@ -92,6 +97,10 @@ var inventoryTypes = {
   stall   : 'SL',
   flier   : 'FL',
 }
+//supplier status
+$scope.finalize = constants.finalize;
+$scope.buffer = constants.buffer;
+$scope.remove = constants.remove;
 $scope.gridViewSummary = {};
 
 //getting business_name and business_type from localStorage
@@ -124,14 +133,14 @@ $scope.gridViewSummary = {};
       // TO show different colors for suppliers based on status
       $scope.status_color;
       function getIcon(supplier,key){
-        if(supplier.status == 'X')
-          $scope.status_color = "FFC433";//blue color for new suppliersFCFF33
         if(supplier.status == 'S')
-          $scope.status_color = "00FF00";//green color for shortlisted suppliers
+          $scope.status_color = "FFFF00";// yellow
+        if(supplier.status == 'F')
+          $scope.status_color = "00FF00";//green
         if(supplier.status == 'R')
-          $scope.status_color = "FF0000";//red color for removed suppliers
+          $scope.status_color = "FF0000";// RED
         if(supplier.status == 'B')
-          $scope.status_color = "A52A2A";//black color for buffered suppliers
+          $scope.status_color = "654321";// brown
         var icon;
         icon = icons[key] + $scope.status_color +'/000000/000000/';
         return icon;
@@ -239,38 +248,49 @@ $scope.gridViewSummary = {};
 
               // this service will return above deleted variables if checked in the filter
               $scope.current_center.center.center_id = $scope.current_center.center.id;
-              mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center.center)
-              .then(function onSuccess(response, status){
-                // Start : Code changes to add response of suppliers
-                $scope.current_center.suppliers = response.data.data.suppliers[0].suppliers;
-                // $scope.current_center = response;
-                $scope.center_data[$scope.current_center_index].suppliers = response.data.data.suppliers[0].suppliers;
-                // to copy extra suppliers searched in add more suppliers
-                // needs to add every time whenever new response come from backend
-                // current_center_keys gets all keys in current_center so that we can copy
-                var current_center_keys = Object.keys($scope.center_data[$scope.current_center_index].suppliers);
+              var current_center_keys = Object.keys($scope.center_data[$scope.current_center_index].suppliers);
                 for (var i = 0; i < current_center_keys.length; i++) {
                   var code = current_center_keys[i];
-                  $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
+                  if(code == $scope.supplierCode.society)
+                    $scope.societyFilters();
+                  if(code == $scope.supplierCode.corporate)
+                    $scope.corporateFilters();
                 }
-                // End : Code changes to add response of suppliers
-                  // gridView_Summary();
-                  $scope.center_data[$scope.current_center_index] = $scope.current_center;
-                  suppliersData();
-                  mapViewBasicSummary();
-                  // mapViewFiltersSummary();
-                  // mapViewImpressions();
-                  gridViewBasicSummary();
-                  // $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
-                  if($scope.current_center.suppliers != undefined){
-                      $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
-                  }else
-                      $scope.society_markers = [];
-              })
-              .catch(function onError(response, status){
-                swal(constants.name,constants.errorMsg,constants.error);
+              // mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center.center)
+              // .then(function onSuccess(response, status){
+              //   // Start : Code changes to add response of suppliers
+              //   $scope.current_center.suppliers = response.data.data.suppliers[0].suppliers;
+              //   // $scope.current_center = response;
+              //   $scope.center_data[$scope.current_center_index].suppliers = response.data.data.suppliers[0].suppliers;
+              //   // to copy extra suppliers searched in add more suppliers
+              //   // needs to add every time whenever new response come from backend
+              //   // current_center_keys gets all keys in current_center so that we can copy
+              //   var current_center_keys = Object.keys($scope.center_data[$scope.current_center_index].suppliers);
+              //   for (var i = 0; i < current_center_keys.length; i++) {
+              //     var code = current_center_keys[i];
+              //     $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
+              //     getSummary(code,$scope.current_center);
+              //
+              //   }
+              //   // End : Code changes to add response of suppliers
+              //     // gridView_Summary();
+              //     $scope.center_data[$scope.current_center_index] = $scope.current_center;
+              //     suppliersData();
+              //     mapViewBasicSummary();
+              //     // mapViewFiltersSummary();
+              //     // mapViewImpressions();
+              //     gridViewBasicSummary();
+              //     // $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
+              //     if($scope.current_center.suppliers != undefined){
+              //         $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+              //     }else
+              //         $scope.society_markers = [];
+              // })
+              // .catch(function onError(response, status){
+              //   commonDataShare.showErrorMessage(response);
+                // swal(constants.name,constants.errorMsg,constants.error);
 
-              });
+
             }catch(error){
               console.log(error.message);
             }
@@ -357,7 +377,7 @@ $scope.gridViewSummary = {};
           //count of suppliers finalized
           if(supplier.status == supplierStatus.finalized){
             center.summary_meta[supplier_code].finalized.count += 1;
-            if(supplier_code == $scope.supplierCode.society){              
+            if(supplier_code == $scope.supplierCode.society){
               center.summary_meta[supplier_code].finalized.flat_count += supplier.flat_count;
               center.summary_meta[supplier_code].finalized.tower_count += supplier.tower_count;
               center.summary_meta[supplier_code].finalized.poster_count += supplier.tower_count;
@@ -591,7 +611,7 @@ $scope.gridViewSummary = {};
                 max: 0,
                 options: {
                     floor: 0,
-                    ceil: 10000,
+                    ceil: 200,
                     step: 1,
                     noSwitching: true,
                 }
@@ -601,7 +621,7 @@ $scope.gridViewSummary = {};
                 max: 0,
                 options: {
                     floor: 0,
-                    ceil: 100000,
+                    ceil: 10000,
                     step: 1,
                     noSwitching: true,
                 }
@@ -616,7 +636,16 @@ $scope.gridViewSummary = {};
                     noSwitching: true,
                 }
             };
-            $scope.no_of_tenants = angular.copy($scope.flat_count);
+            $scope.no_of_tenants = {
+                min: 0,
+                max: 0,
+                options: {
+                    floor: 0,
+                    ceil: 100,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
             //$scope.no_of_tenants.options.ceil = integer value;  //need to uncomment to fix other ceil value
             $scope.is_standalone_society= {
               selected :false,
@@ -708,8 +737,9 @@ $scope.gridViewSummary = {};
               .then(function onSuccess(response, status) {
                 $scope.amenities = response.data.data;
               })
-              .catch(function onError(response, status){
-                swal(constants.name,constants.amenity_error,constants.error);
+              .catch(function onError(response){
+                commonDataShare.showErrorMessage(response);
+                // swal(constants.name,constants.amenity_error,constants.error);
               });
             //End:   api call to get amenity filters from database
 
@@ -895,7 +925,8 @@ $scope.gridViewSummary = {};
               }
             })
               .catch(function onError(response, status){
-                swal(constants.name,constants.errorMsg,constants.error);
+                commonDataShare.showErrorMessage(response);
+                // swal(constants.name,constants.errorMsg,constants.error);
                 if(status == -1)
                   console.log(error.message);
               });
@@ -974,7 +1005,8 @@ $scope.gridViewSummary = {};
                 }
               })
             .catch(function onError(response, status){
-              swal(constants.name,constants.errorMsg,constants.error);
+              commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.errorMsg,constants.error);
               if(status == -1)
                 console.log(constants.server_connection_error);
               $scope.get_spaces_error = response.message;
@@ -1453,7 +1485,8 @@ $scope.gridViewSummary = {};
                     $scope.checkFilters = false;
                 })
                 .catch(function onError(response, status){
-                  swal(constants.name,constants.errorMsg,constants.error);
+                  commonDataShare.showErrorMessage(response);
+                  // swal(constants.name,constants.errorMsg,constants.error);
                     console.log("Error Happened while filtering");
                     $scope.checkFilters = false;
                 });
@@ -1591,7 +1624,8 @@ $scope.gridViewSummary = {};
         })
         .catch(function onError(response, status){
             console.log("Error Happened while searching");
-            swal(constants.name,constants.errorMsg,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.errorMsg,constants.error);
         });
       }
       else {
@@ -1713,7 +1747,7 @@ $scope.gridViewSummary = {};
        $scope.setSupplierStatus = function (supplier,value){
          try{
           if(supplier.buffer_status == false && value == 'B')
-              supplier.status = 'S';
+              supplier.status = 'F';
           else if(supplier.buffer_status == true && value != 'R')
             supplier.status = 'B';
           else
@@ -1744,10 +1778,11 @@ $scope.gridViewSummary = {};
          saveSelectedFilters();
          var proposal_data = {
            centers:$scope.center_data,
-           is_proposal_version_created:$window.localStorage.isSavedProposal,
+          //  is_proposal_version_created:$window.localStorage.isSavedProposal,
+           is_proposal_version_created:false,
          };
          console.log("sending proposal version API call");
-         mapViewService.proposalVersion(parent_proposal_id, proposal_data)
+         mapViewService.proposalVersion($stateParams.proposal_id, proposal_data)
            .then(  function onSuccess(response) {
                   $scope.clientId = response.data.data.logged_in_user_async_id;
                   $scope.bdHeadId = response.data.data.bd_head_async_id;
@@ -1758,13 +1793,17 @@ $scope.gridViewSummary = {};
                   sendEmailToBDHead();
                   uploadToAmazon();
                   $scope.hideSpinner = true;
+                  $scope.isRequested = true;
+                  $window.localStorage.isReadOnly = 'true';
+                  $window.localStorage.isSavedProposal = 'true';
                   swal(constants.name,constants.request_proposal_success,constants.success);
                   $scope.checkFileExport = false;
            }).catch(function onError(response){
               console.log("Error occurred in fetching response");
               console.log(response);
               $scope.hideSpinner = true;
-              swal(constants.name,constants.request_proposal_error,constants.error);
+              commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.request_proposal_error,constants.error);
               $scope.checkFileExport = false;
          });
        /*  $http({
@@ -1808,8 +1847,8 @@ $scope.gridViewSummary = {};
            deleteFile();
          }
        }).catch(function onError(response){
-         if($scope.isSuperUser == 'true')
-          swal(constants.name,constants.client_email_error,constants.error);
+         commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.client_email_error,constants.error);
        });
      }
 
@@ -1825,8 +1864,8 @@ $scope.gridViewSummary = {};
            deleteFile();
          }
        }).catch(function onError(response){
-         if($scope.isSuperUser == 'true')
-          swal(constants.name,constants.bdhead_email_error,constants.error);
+         commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.bdhead_email_error,constants.error);
        });
      }
      var uploadToAmazon = function(){
@@ -1841,8 +1880,8 @@ $scope.gridViewSummary = {};
           deleteFile();
          }
        }).catch(function onError(response){
-         if($scope.isSuperUser == 'true')
-          swal(constants.name,constants.upload_error,constants.error);
+         commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.upload_error,constants.error);
        });
      }
 
@@ -1858,8 +1897,8 @@ $scope.gridViewSummary = {};
            $scope.uploadToAmazon = null;
           //  console.log(response);
          }).catch(function onError(response){
-           if($scope.isSuperUser == 'true')
-            swal(constants.name,constants.deletefile_error,constants.error);
+           commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.deletefile_error,constants.error);
           //  console.log(response);
          });
        }
@@ -1882,7 +1921,8 @@ $scope.gridViewSummary = {};
          }).then(function onSuccess(response){
               swal(constants.name,constants.uploadfile_success,constants.success);
          }).catch(function onError(response) {
-              swal(constants.name,constants.uploadfile_error,constants.error);
+           commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.uploadfile_error,constants.error);
          });
        }catch(error){
          $scope.hideSpinner = true;
@@ -1905,7 +1945,8 @@ $scope.gridViewSummary = {};
           $scope.hideSpinner = true;
         }).catch(function onError(response) {
           $scope.hideSpinner = true;
-            swal(constants.name,constants.importfile_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.importfile_error,constants.error);
         });
       }catch(error){
         $scope.hideSpinner = true;
@@ -1918,13 +1959,14 @@ $scope.gridViewSummary = {};
     $scope.saveData = function(){
      try{
        saveSelectedFilters();
-      $window.localStorage.isSavedProposal = true;
+      $window.localStorage.isSavedProposal = 'true';
       mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
         .then(function onSuccess(response, status){
           // alert("Saved Successfully");
           swal(constants.name,constants.save_success,constants.success);
         }).catch(function(response, status){
-          swal(constants.name,constants.save_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.save_error,constants.error);
           // alert("Error Occured");
       });//
     }catch(error){
@@ -1946,7 +1988,8 @@ $scope.gridViewSummary = {};
           getSummary(code,center);
           getComprehinsiveSummary(code);
         }).catch(function onError(response, status){
-          swal(constants.name,constants.supplier_status_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.supplier_status_error,constants.error);
       });
     }catch(error){
       console.log(error.message);
@@ -2065,6 +2108,7 @@ $scope.getSocietyDetails = function(supplier,center,index){
      }
   }).catch(function onError(response){
     console.log("error",response);
+    commonDataShare.showErrorMessage(response);
   });
 }//End of function getSocietyDetails
   function estimatedResidents (flatcount){
@@ -2089,7 +2133,8 @@ $scope.getSocietyDetails = function(supplier,center,index){
 
      }).catch(function onError(response,status){
          console.log("error ",response.data.error);
-         swal(constants.name,constants.errorMsg,constants.error);
+         commonDataShare.showErrorMessage(response);
+        //  swal(constants.name,constants.errorMsg,constants.error);
      });
  }
 
@@ -2276,5 +2321,18 @@ var setSocietyLocationOnMap = function(supplier){
     return amenityIcons[amenity];
   }
   //end: for amenity icons
-
+  $scope.getOrderBy = function(center_data,supplierCode,status){
+    $timeout(function () {
+      for (var i = 0; i < center_data.length; i++) {
+        var suppliers = [];
+         suppliers = angular.copy(center_data[i].suppliers[supplierCode]);
+        var sortedSupplierList = [], unsortedSupplierList = [];
+        var k = 0;
+        unsortedSupplierList = $filter('filter')(suppliers, {'status':'!'+status});
+        sortedSupplierList = $filter('filter')(suppliers, {'status':status});
+        Array.prototype.unshift.apply(unsortedSupplierList, sortedSupplierList);
+        center_data[i].suppliers[supplierCode] = angular.copy(unsortedSupplierList);
+      }
+    });
+  }
 });

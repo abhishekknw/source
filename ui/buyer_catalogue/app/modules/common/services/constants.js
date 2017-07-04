@@ -2,8 +2,8 @@ angular
   .module('catalogueApp').
   constant('constants',{
     //amazon keys
-    base_url : 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/',
-    //base_url : 'http://localhost:8000/',
+    //base_url : 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/',
+    base_url : 'http://localhost:8000/',
     url_base : 'v0/ui/website/',
     AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
     policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
@@ -27,9 +27,12 @@ angular
     shortlisted : 'Shortlisted',
     removed : 'Removed',
     buffered : 'Buffered',
+    finalized: 'Finalized',
     statusCode_shortlisted : 'S',
     statusCode_buffered : 'B',
     statusCode_removed : 'R',
+    statusCodeFinalized: 'F',
+    showSystemError: true,
 
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
@@ -50,6 +53,9 @@ angular
     bdhead_email_error : 'Error occured while sending Email to BDHead',
     upload_error : 'error occured while uploading file',
     deletefile_error : 'Error occured, File not deleted',
+    finalize : 'F',
+    buffer : 'B',
+    remove : 'R',
     //auditReleasePlan
     positive_number_error : 'Enter Positive Number Only',
     //opsDashboard
@@ -86,6 +92,17 @@ angular
     business_success : 'Business Details saved successfully',
     business_error : 'Error occured in saving business details',
     campaign_manager : 'campaign_manager',
+    proposalMaking : 'PM',
+    proposalRequested : 'PR',
+    proposalFinalized : 'PF',
+    proposalConverted : 'PTC',
+    proposalOnHold : 'POH',
+    proposalDeclined : 'PNC',
+    PTC : 'Converted',
+    PR : 'Requested',
+    PF : 'Finalized',
+    POH : 'On-Hold',
+    PNC : 'Declined',
     //manage user
     createUser_success : 'Successfully Created',
     create_group_success : 'Group Created Successfully',
@@ -99,6 +116,12 @@ angular
     //guestPage
     location_error : 'Please enter accurate location',
 
+    //permissions
+    bd_manager : 'BD Manager',
+    campaign_manager : 'Campaign Manager',
 
+    //errorMsg
+    show_system : true,
+    show_general : true,
 
   });

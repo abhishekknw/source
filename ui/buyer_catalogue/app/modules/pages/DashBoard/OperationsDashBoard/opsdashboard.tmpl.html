@@ -4,12 +4,14 @@
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 </br></br></br>
 <!-- <back-Button></back-Button> -->
-<div class="breadcrumb" ncy-breadcrumb></div>
+<div class="" permission = "[]">
+  <div class="breadcrumb" ncy-breadcrumb></div>
+</div>
 <div style="margin-left:auto;margin-right:150px;width:8%">
   <button class="btn btn-primary active notify" style="text-align:right" ng-click="goToCampaignList()">List Campaigns</button>
 </div>
 <div ng-show="isEmpty" style="font-size:24px;text-align:center;"><span>{{msg}}</span></div>
-<h3 ng-hide="hideData || isEmpty" style = "margin-left: 460px; margin-top: 60px;">Machadalo Operations Dashboard</h3>
+<h2 ng-hide="hideData || isEmpty" style = "text-align:center;margin-top: 30px;">Machadalo Operations Dashboard</h2>
 <div class="content">
   <div class="container" ng-hide="hideData || isEmpty">
     <div class="row">
@@ -41,6 +43,12 @@
                 <div class="radio">
                        <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#onHoldModal" data-toggle="modal">OnHold</label>
                 </div>
+              </td>
+              <td class="col-md-2" ng-if="proposal.proposal.campaign_state == 'PTC'">
+                {{proposal.assignment_detail.assigned_to}}
+              </td>
+              <td class="col-md-2" ng-if="proposal.proposal.campaign_state != 'PTC'">
+                NA
               </td>
               <td class="col-md-2">
                 <a href="{{bucket_url}}{{proposal.file_name}}" Download> Download </a>
@@ -112,4 +120,4 @@
   </div>
 </div>
 <!-- End: Code for assgining campaign -->
-<footer-bar></footer-bar>
+<!-- <footer-bar></footer-bar> -->

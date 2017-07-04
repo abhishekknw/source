@@ -5,6 +5,10 @@ angular.module('catalogueApp')
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.reAssign = false;
       var sleepTime = 0;
+      $scope.campaign_manager = constants.campaign_manager;
+      if($rootScope.globals.userInfo.is_superuser == true){
+        $scope.backButton = true;
+      }
       $scope.headings = [
         {header : 'Supplier Id'},
         {header : 'Inventory Id'},
@@ -43,6 +47,10 @@ angular.module('catalogueApp')
       };
       $scope.today = new Date();
 
+      $scope.campaignState = $window.localStorage.campaignState;
+      $scope.campaignId = $window.localStorage.campaignId;
+      $scope.bdOwner = $window.localStorage.campaignOwner;
+      $scope.campaignName = $window.localStorage.campaignName;
       // $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
       $scope.formats = ['yyyy-MM-dd'];
       $scope.format = $scope.formats[1];
@@ -58,6 +66,7 @@ angular.module('catalogueApp')
         	})
         	.catch(function onError(response){
             $scope.hideData = true;
+            commonDataShare.showErrorMessage(response);
         		console.log("error occured", response);
         	});
         }
@@ -67,6 +76,7 @@ angular.module('catalogueApp')
               $scope.userList = response.data.data;
             })
             .catch(function onError(response){
+              commonDataShare.showErrorMessage(response);
               console.log("error occured", response);
             });
         }
@@ -148,6 +158,7 @@ angular.module('catalogueApp')
         })
         .catch(function onError(response){
           console.log(response);
+          commonDataShare.showErrorMessage(response);
         });
       }
       $scope.reAssignActivityList = {};
@@ -189,7 +200,8 @@ angular.module('catalogueApp')
           $('#reAssignModal').modal('hide');
           $scope.reAssign = false;
           $scope.reAssignActivityList = {};
-          swal(constants.name,constants.reAssign_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.reAssign_error,constants.error);
           console.log(response);
         });
       }
@@ -201,7 +213,8 @@ angular.module('catalogueApp')
         downloadInProgress();
       }).catch(function onError(response){
         console.log("Error occured", response.status);
-        swal(constants.name,response.data.data.general_error,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,response.data.data.general_error,constants.error);
         $scope.buttonDisable = false;
       })
     }
@@ -220,6 +233,7 @@ angular.module('catalogueApp')
              $scope.buttonDisable = false;
           }).catch(function onError(response){
             $scope.buttonDisable = false;
+            commonDataShare.showErrorMessage(response);
           });
         }
         else {
@@ -228,6 +242,7 @@ angular.module('catalogueApp')
       }).catch(function onError(response){
         console.log(response);
         $scope.buttonDisable = false;
+        commonDataShare.showErrorMessage(response);
       });
     }
 }]);

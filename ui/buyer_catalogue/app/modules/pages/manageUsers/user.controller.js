@@ -42,6 +42,7 @@ angular.module('machadaloPages')
           })
           console.log($scope.permissionsDict);
         }).catch(function onError(response){
+          commonDataShare.showErrorMessage(response);
             console.log("error occured");
         });
 
@@ -53,6 +54,7 @@ angular.module('machadaloPages')
         addMoreFieldsToGroup();
         })
         .catch(function onError(response){
+          commonDataShare.showErrorMessage(response);
             console.log("error occured");
         });
       }
@@ -82,7 +84,8 @@ angular.module('machadaloPages')
         })
         .catch(function onError(response){
             console.log("error occured");
-            swal(constants.name,constants.errorMsg,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.errorMsg,constants.error);
             // alert("Error Occured");
         });
      }
@@ -161,7 +164,8 @@ angular.module('machadaloPages')
          swal(constants.name,constants.create_group_success,constants.success);
        }).catch(function onError(response){
          console.log(response);
-         swal(constants.name,constants.create_group_error,constants.error);
+         commonDataShare.showErrorMessage(response);
+        //  swal(constants.name,constants.create_group_error,constants.error);
        });
      }
     //start:adding groups
@@ -192,6 +196,7 @@ angular.module('machadaloPages')
         console.log(response);
         $scope.usersList = response.data.data;
       }).catch(function onError(response){
+        commonDataShare.showErrorMessage(response);
         console.log(response);
       });
     }
@@ -234,7 +239,8 @@ angular.module('machadaloPages')
         swal(constants.name,constants.save_success,constants.success);
       }).catch(function onError(response){
         console.log(response);
-        swal(constants.name,constants.save_error,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,constants.save_error,constants.error);
       });
     }
     //end:edit user
@@ -257,6 +263,7 @@ angular.module('machadaloPages')
           getAllUsers();
         }).catch(function onError(response){
           console.log(response);
+          commonDataShare.showErrorMessage(response);
         });
       });
     }
@@ -293,7 +300,8 @@ angular.module('machadaloPages')
         swal(constants.name,constants.save_success,constants.success);
       }).catch(function onError(response){
         console.log(response);
-        swal(constants.name,constants.save_error,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,constants.save_error,constants.error);
       });
     }
     //end:code for edit group details
@@ -316,6 +324,7 @@ angular.module('machadaloPages')
           getAllUserGroups();
         }).catch(function onError(response){
           console.log(response);
+          commonDataShare.showErrorMessage(response);
         });
       });
     }
@@ -345,7 +354,8 @@ angular.module('machadaloPages')
         swal(constants.name,constants.changePassword_success,constants.success);
       }).catch(function onError(response){
         console.log(response);
-        swal(constants.name,constants.errorMsg,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,constants.errorMsg,constants.error);
       });
     }
     //end : change password

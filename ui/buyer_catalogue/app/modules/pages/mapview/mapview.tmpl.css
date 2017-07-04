@@ -185,3 +185,17 @@ opacity: .5;
 .panelSubHeader{
   color: initial;
 }
+.filter-disable{
+    pointer-events:none;
+}
+
+.color-codes{
+
+  margin-left:96px;
+  display: inline;
+  padding: 10px;
+  position:relative;
+}
+#spacing{
+  margin-top: 3px;
+}

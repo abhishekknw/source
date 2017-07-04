@@ -3,8 +3,12 @@
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div>
 </br></br></br>
-<!-- <back-Button></back-Button> -->
-<div class="breadcrumb" ncy-breadcrumb></div>
+<div ng-if="!backButton" permission="[campaign_manager]">
+  <back-Button></back-Button>
+</div>
+<div class="" permission = "[]">
+  <div class="breadcrumb" ncy-breadcrumb></div>
+</div>
 <h3 style = "margin-left: 460px; margin-top: 70px;">Campaign Release and Audit Plan</h3>
   <div class = "container">
       <div class="row">
@@ -13,6 +17,7 @@
             <Label>Campaign Id:</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
             <Label class = "labels">Campaign Name:</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
             <Label class = "labels">BD Owner:</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
+            <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{getCampaignState(releaseDetails.campaign.campaign_state)}}</span>
           </div>
         </div>
       </div>
@@ -34,11 +39,13 @@
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.buffered">{{buffered}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.removed">{{removed}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.finalized">{{finalized}}</td>
+
             <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
             <td class="" ng-if="key=='NA'">{{key}}</td>
             <td class="" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)"><b>{{key}}</b></a></td>
             <td class="">{{filter.total_count}}</td>
-            <td class="">{{filter.supplier_price}}</td>
+            <td class="">{{filter.actual_supplier_price}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.total_inventory_supplier_price}}</td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="priceform">
               <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width" min="0">
@@ -196,4 +203,4 @@
 </div>
 <!--End: Code for inventory type Modal Window -->
 
-<div><footer-bar></footer-bar></div>
+<!-- <div><footer-bar></footer-bar></div>

@@ -39,9 +39,11 @@ class UIGymSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeGym
 
-class UIBusShelterSerializer(ModelSerializer):
+
+class BusShelterSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeBusShelter
+
 
 class SocietyListSerializer(ModelSerializer):
     # Start : code changes to display image of society
