@@ -15,7 +15,6 @@ keys = [
 ]
 
 decision = {
-
     "YES": "yes",
     "NO": "No"
 }
@@ -35,7 +34,6 @@ car_display = 'CAR DISPLAY'
 
 
 inventory_name_to_code = {
-
     poster: poster_inventory_code,
     standee: standee_inventory_code,
     stall: stall_inventory_code,
@@ -50,7 +48,6 @@ inventory_name_to_code = {
 #              'SA': v0.models.SupplierTypeSalon}
 
 tower_count_attribute_mapping = {
-
     'RS': 'tower_count',
     'CP': 'building_count',
     'GY': 'none',
@@ -64,13 +61,11 @@ codes_to_model_names = {
                 'GY': 'SupplierTypeGym',
                 'SA': 'SupplierTypeSalon',
                 'BS': 'SupplierTypeBusShelter',
-
                 stall: 'StallInventory',
                 standee: 'StandeeInventory',
                 flier: 'FlyerInventory',
                 poster: 'PosterInventory',
                 car_display:'StallInventory',
-
                 stall_inventory_code: 'StallInventory',
                 standee_inventory_code: 'StandeeInventory',
                 flier_inventory_code: 'FlyerInventory',
