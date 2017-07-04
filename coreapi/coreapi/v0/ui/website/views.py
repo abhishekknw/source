@@ -3562,17 +3562,17 @@ class ProposalVersion(APIView):
 
             bd_body = website_utils.process_template(website_constants.bodys['bd_head'], bd_body)
 
-            # email_data = {
-            #     'subject': website_constants.subjects['bd_head'],
-            #     'body': bd_body,
-            #     'to': [website_constants.emails['bd_head'], website_constants.emails['bd_user'], website_constants.emails['root_user'], website_constants.emails['developer']]
-            # }
-            #
             email_data = {
                 'subject': website_constants.subjects['bd_head'],
                 'body': bd_body,
-                'to': [website_constants.emails['developer'], ]
+                'to': [website_constants.emails['bd_head'], website_constants.emails['bd_user'], website_constants.emails['root_user']]
             }
+
+            #  email_data = {
+            #     'subject': website_constants.subjects['bd_head'],
+            #     'body': bd_body,
+            #     'to': [website_constants.emails['developer'], ]
+            # }
 
             attachment = {
                 'file_name': file_name,
