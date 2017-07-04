@@ -359,16 +359,16 @@ angular.module('machadaloPages')
         }
 
         //to navigate to mapview pages
-        $scope.showOnMapview = function(proposalId){
-          $window.localStorage.isReadOnly = 'false';
-          $window.localStorage.isSavedProposal = 'true';
-          console.log($window.localStorage.isSavedProposal);
-          $location.path('/' + proposalId + '/mapview');
-        }
+        // $scope.showOnMapview = function(proposalId){
+        //   $window.localStorage.isReadOnly = 'false';
+        //   $window.localStorage.isSavedProposal = 'true';
+        //   console.log($window.localStorage.isSavedProposal);
+        //   $location.path('/' + proposalId + '/mapview');
+        // }
         $scope.goToMapView = function(proposal){
           if(proposal.campaign_state){
             console.log("hello");
-            $window.localStorage.isReadOnly = 'false';
+            $window.localStorage.isReadOnly = 'true';
             $window.localStorage.isSavedProposal = 'true';
             $window.localStorage.proposalState = constants[proposal.campaign_state];
             $location.path('/' + proposal.proposal_id + '/mapview');
