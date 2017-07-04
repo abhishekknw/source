@@ -1794,6 +1794,7 @@ $scope.gridViewSummary = {};
                   uploadToAmazon();
                   $scope.hideSpinner = true;
                   $scope.isRequested = true;
+                  $window.localStorage.isReadOnly = 'true';
                   swal(constants.name,constants.request_proposal_success,constants.success);
                   $scope.checkFileExport = false;
            }).catch(function onError(response){
