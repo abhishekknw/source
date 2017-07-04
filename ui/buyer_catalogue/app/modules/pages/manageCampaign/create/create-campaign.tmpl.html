@@ -144,6 +144,16 @@
                       <span>Converted</span>
                     </button>
                   </td>
+                  <td ng-if="proposal.campaign_state == proposalOnHold">
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)">
+                      <span>On-Hold</span>
+                    </button>
+                  </td>
+                  <td ng-if="proposal.campaign_state == proposalDeclined">
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)">
+                      <span>Declined</span>
+                    </button>
+                  </td>
                   <td >
                     <button class="btn btn-danger detail-button" ng-click="showOnMapview(proposal.proposal_id)">View on Map/Grid</button>
                   </td>

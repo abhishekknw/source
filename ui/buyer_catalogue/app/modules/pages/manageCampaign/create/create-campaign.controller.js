@@ -28,6 +28,8 @@ angular.module('machadaloPages')
       $scope.proposalRequested = constants.proposalRequested;
       $scope.proposalFinalized = constants.proposalFinalized;
       $scope.proposalConverted = constants.proposalConverted;
+      $scope.proposalOnHold = constants.proposalOnHold;
+      $scope.proposalDeclined = constants.proposalDeclined;
       $scope.proposalMaking = constants.proposalMaking;
       $scope.maxDate = new Date(2020, 5, 22);
       $scope.today = new Date();

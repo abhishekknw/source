@@ -96,9 +96,13 @@ angular
     proposalRequested : 'PR',
     proposalFinalized : 'PF',
     proposalConverted : 'PTC',
+    proposalOnHold : 'POH',
+    proposalDeclined : 'PNC',
     PTC : 'Converted',
     PR : 'Requested',
     PF : 'Finalized',
+    POH : 'On-Hold',
+    PNC : 'Declined',
     //manage user
     createUser_success : 'Successfully Created',
     create_group_success : 'Group Created Successfully',
