@@ -603,7 +603,7 @@ $scope.gridViewSummary = {};
                 max: 0,
                 options: {
                     floor: 0,
-                    ceil: 10000,
+                    ceil: 1000,
                     step: 1,
                     noSwitching: true,
                 }
@@ -628,7 +628,16 @@ $scope.gridViewSummary = {};
                     noSwitching: true,
                 }
             };
-            $scope.no_of_tenants = angular.copy($scope.flat_count);
+            $scope.no_of_tenants = {
+                min: 0,
+                max: 0,
+                options: {
+                    floor: 0,
+                    ceil: 100,
+                    step: 1,
+                    noSwitching: true,
+                }
+            };
             //$scope.no_of_tenants.options.ceil = integer value;  //need to uncomment to fix other ceil value
             $scope.is_standalone_society= {
               selected :false,
