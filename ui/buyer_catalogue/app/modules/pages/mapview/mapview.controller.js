@@ -290,7 +290,7 @@ $scope.gridViewSummary = {};
               //   commonDataShare.showErrorMessage(response);
                 // swal(constants.name,constants.errorMsg,constants.error);
 
-              
+
             }catch(error){
               console.log(error.message);
             }
@@ -611,7 +611,7 @@ $scope.gridViewSummary = {};
                 max: 0,
                 options: {
                     floor: 0,
-                    ceil: 1000,
+                    ceil: 200,
                     step: 1,
                     noSwitching: true,
                 }
@@ -621,7 +621,7 @@ $scope.gridViewSummary = {};
                 max: 0,
                 options: {
                     floor: 0,
-                    ceil: 100000,
+                    ceil: 10000,
                     step: 1,
                     noSwitching: true,
                 }
