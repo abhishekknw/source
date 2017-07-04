@@ -331,4 +331,7 @@ angular.module('catalogueApp')
       $('#manageDatesModal').on('hide.bs.modal', function () {
       })
     }
+    $scope.getCampaignState = function(state){
+      return constants[state];
+    }
 }]);

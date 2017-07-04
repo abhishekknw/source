@@ -41,6 +41,7 @@ angular.module('catalogueApp')
           var userId = $rootScope.globals.currentUser.user_id;
           campaignListService.getCampaignDetails(assigned_by,userId,fetch_all)
             .then(function onSuccess(response){
+              console.log(response);
               $scope.campaignData = response.data.data;
               if($scope.campaignData.length == 0){
                 $scope.isEmpty = true;
@@ -81,8 +82,13 @@ angular.module('catalogueApp')
         $scope.getDetails = function(proposal_id){
           $location.path('/' + proposal_id + '/releasePlan');
         }
-        $scope.getExecutionDetails = function(proposal_id){
-          $location.path('/' + proposal_id + '/opsExecutionPlan');
+        $scope.getExecutionDetails = function(proposal){
+          $window.localStorage.campaignState = constants[proposal.campaign_state];
+          $window.localStorage.campaignId = proposal.proposal_id;
+          $window.localStorage.campaignOwner = proposal.created_by;
+          $window.localStorage.campaignName = proposal.name;
+          
+          $location.path('/' + proposal.proposal_id + '/opsExecutionPlan');
         }
 
     }]);

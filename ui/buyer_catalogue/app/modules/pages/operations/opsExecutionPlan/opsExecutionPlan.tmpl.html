@@ -12,6 +12,19 @@
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 <div ng-hide="!hideData" style="text-align:center"><label>No Results Found</label></div>
 <h3 ng-hide="hideData" style = "margin-left: 460px; margin-top: 60px;">Operations Execution Plan</h3>
+<div class = "container">
+    <div class="row">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{campaignId}}</span>
+          <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{campaignName}}</span>
+          <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{bdOwner}}</span>
+          <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{campaignState}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <div class="container" ng-hide="hideData">
   <div class="row">
     <div class=" table-responsive panel panel-default">

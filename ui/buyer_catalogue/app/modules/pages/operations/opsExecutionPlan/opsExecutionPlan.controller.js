@@ -47,6 +47,10 @@ angular.module('catalogueApp')
       };
       $scope.today = new Date();
 
+      $scope.campaignState = $window.localStorage.campaignState;
+      $scope.campaignId = $window.localStorage.campaignId;
+      $scope.bdOwner = $window.localStorage.campaignOwner;
+      $scope.campaignName = $window.localStorage.campaignName;
       // $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
       $scope.formats = ['yyyy-MM-dd'];
       $scope.format = $scope.formats[1];

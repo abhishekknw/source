@@ -17,6 +17,7 @@
             <Label>Campaign Id:</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
             <Label class = "labels">Campaign Name:</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
             <Label class = "labels">BD Owner:</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
+            <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{getCampaignState(releaseDetails.campaign.campaign_state)}}</span>
           </div>
         </div>
       </div>

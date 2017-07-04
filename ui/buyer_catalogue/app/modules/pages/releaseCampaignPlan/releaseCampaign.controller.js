@@ -146,4 +146,7 @@ angular.module('catalogueApp')
         console.log("error occured", response.status);
       });
     }
+    $scope.getCampaignState = function(state){
+      return constants[state];
+    }
 }]);//Controller function ends here

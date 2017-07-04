@@ -11,6 +11,18 @@
   <back-Button></back-Button>
 </div>
 <h3 style="text-align:center">Audit / Release Plan Details</h3>
+<div class = "container">
+    <div class="row">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
+          <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
+          <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
+          <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{getCampaignState(releaseDetails.campaign.campaign_state)}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
 <div class="container">
   <div class="row">
       <table class="table table-responsive table-bordered">
