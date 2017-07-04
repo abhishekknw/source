@@ -57,6 +57,7 @@ angular.module('catalogueApp')
 		})
 		.catch(function onError(response){
 			console.log("Error Occured");
+			commonDataShare.showErrorMessage(response);
 		});
 
 		//for centers if proposal is editable
@@ -73,6 +74,7 @@ angular.module('catalogueApp')
 			}
 		}).catch(function onError(response){
 			console.log("Error Occured");
+			commonDataShare.showErrorMessage(response);
 			// alert("Error Occured");
 		});
 	}
@@ -93,6 +95,7 @@ angular.module('catalogueApp')
         $scope.cities = response.data.cities;
 				$scope.loading = response.data;
       }).catch(function onError(response){
+				commonDataShare.showErrorMessage(response);
 				console.log("Error occured");
 			});
 			//changes for searching societies on basis of area,subarea
@@ -108,6 +111,7 @@ angular.module('catalogueApp')
           $scope.areas[index] = response.data;
         }).
         catch(function onError(response){
+					commonDataShare.showErrorMessage(response);
         });
     }
   $scope.get_sub_areas = function(id,index) {
@@ -177,7 +181,8 @@ angular.module('catalogueApp')
 				})
 				.catch(function onError(response){
 					$scope.loadingSpinner = true;
-					swal(constants.name,constants.geo_location_error,constants.error);
+					commonDataShare.showErrorMessage(response);
+					// swal(constants.name,constants.geo_location_error,constants.error);
 					console.log("Error");
 					if(typeof(response) != typeof(12)){
 						console.log("response is ", response);
@@ -210,7 +215,8 @@ angular.module('catalogueApp')
 		 			})
 		 			.catch(function onError(response){
 		 				$scope.loadingSpinner = true;
-		 				swal(constants.name,constants.geo_location_error,constants.error);
+						commonDataShare.showErrorMessage(response);
+						// 	swal(constants.name,constants.geo_location_error,constants.error);
 		 				console.log("Error");
 		 				if(typeof(response) != typeof(12)){
 		 					console.log("response is ", response);

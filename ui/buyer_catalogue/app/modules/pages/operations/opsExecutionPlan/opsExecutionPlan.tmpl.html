@@ -3,11 +3,28 @@
 <div><nav-bar></nav-bar></div>
 <!-- <div ng-loading="loading"></div> --> <!--For displaying loading icon-->
 </br></br></br>
-<!-- <back-Button></back-Button> -->
-<div class="breadcrumb" ncy-breadcrumb></div>
+<div ng-if="!backButton" permission="[campaign_manager]">
+  <back-Button></back-Button>
+</div>
+<div class="" permission = "[]">
+  <div class="breadcrumb" ncy-breadcrumb></div>
+</div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 <div ng-hide="!hideData" style="text-align:center"><label>No Results Found</label></div>
-<h3 ng-hide="hideData" style = "margin-left: 460px; margin-top: 60px;">Operations Execution Plan</h3>
+<h3 ng-hide="hideData" style = "text-align:center">Operations Execution Plan</h3>
+<div class = "container">
+    <div class="row">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{campaignId}}</span>
+          <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{campaignName}}</span>
+          <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{bdOwner}}</span>
+          <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{campaignState}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <div class="container" ng-hide="hideData">
   <div class="row">
     <div class=" table-responsive panel panel-default">
@@ -159,4 +176,4 @@
     </div>
   </div>
 </div>
-<div ng-class="{footer1:campaignDataList.length == 0 }"><footer-bar></footer-bar></div>
+<!-- <div ng-class="{footer1:campaignDataList.length == 0 }"><footer-bar></footer-bar></div> -->

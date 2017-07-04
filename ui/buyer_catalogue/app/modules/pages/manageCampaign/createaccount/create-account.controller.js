@@ -89,7 +89,8 @@ angular.module('machadaloPages')
 	            $scope.choice = "selected";
 	       })
          .catch(function onError(response){
-           swal(constants.name,constants.errorMsg,constants.error);
+           commonDataShare.showErrorMessage(response);
+          //  swal(constants.name,constants.errorMsg,constants.error);
          });
       };
 
@@ -196,7 +197,8 @@ angular.module('machadaloPages')
                 swal(constants.name,constants.account_success,constants.success);
               }
           }).catch(function onError(response){
-              swal(constants.name,constants.account_error,constants.error);
+            commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.account_error,constants.error);
             // status = 406 comes from backend if some information is missing with info in response.message
              // response = response ? JSON.parse(response) : {}
              // console.log(response.message);

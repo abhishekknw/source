@@ -1284,16 +1284,23 @@ class FilteredSuppliers(APIView):
             total_suppliers = website_utils.manipulate_object_key_values(total_suppliers, supplier_type_code=supplier_type_code)
 
             # construct the response and return
-            result['business_name'] = business_name
-            result['suppliers'] = {}
-            result['suppliers_meta'] = {}
 
+            # set the business name
+            result['business_name'] = business_name
+
+            # use this to show what kind of pricing we are using to fetch from pmd table for each kind of inventory
+            result['inventory_pricing_meta'] = website_constants.inventory_type_duration_dict_list
+
+            # set total suppliers
+            result['suppliers'] = {}
             result['suppliers'][supplier_type_code] = total_suppliers
 
+            # set meta info about suppliers
+            result['suppliers_meta'] = {}
             result['suppliers_meta'][supplier_type_code] = {}
-
             result['suppliers_meta'][supplier_type_code]['count'] = 0
             result['suppliers_meta'][supplier_type_code]['inventory_count'] = suppliers_inventory_count
+
             # send explanation separately
             result['suppliers_meta'][supplier_type_code]['pi_index_explanation'] = pi_index_map
 
@@ -2373,129 +2380,6 @@ class ImportSupplierDataFromSheet(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-class ExportData(APIView):
-    """
-     The request is in form:
-     [
-          {
-               center : { id : 1 , center_name: c1, ...   } ,
-               suppliers: [  'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} ]
-               suppliers_meta: {
-                                  'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
-                                  'CP': { 'inventory_type_selected':  ['ST']
-               }
-          }
-     ]
-     Exports supplier data on grid view page.
-     The API is divided into two phases :
-     1. extension of Headers and DATA keys. This is because one or more inventory type selected map to more HEADER
-     and hence more DATA keys
-     2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
-    """
-
-    def post(self, request, proposal_id=None, format=None):
-        try:
-            wb = Workbook()
-
-            # ws = wb.active
-            ws = wb.create_sheet(index=0, title='Shortlisted Spaces Details')
-
-            # iterating through centers in request.data array
-            for center in request.data:
-
-                supplier_codes = center['supplier_codes']
-
-                inventory_array = center['inventory_type_selected']
-
-                # get the unique codes by combining all the codes
-                response = website_utils.get_unique_inventory_codes(inventory_array)
-
-                if not response.data['status']:
-                    return response
-                unique_inventory_codes = response.data['data']
-
-                # get the union of HEADERS
-                response = website_utils.get_union_keys_inventory_code('HEADER', unique_inventory_codes)
-                if not response.data['status']:
-                    return response
-                extra_header_keys = response.data['data']
-
-                # get the union of DATA
-                response = website_utils.get_union_keys_inventory_code('DATA', unique_inventory_codes)
-                if not response.data['status']:
-                    return response
-                extra_supplier_keys = response.data['data']
-
-                # extend the society_keys
-                society_keys.extend(extra_supplier_keys)
-
-                # extend the proposal_header_keys
-                proposal_header_keys.extend(extra_header_keys)
-
-            # remove duplicates if any
-            proposal_header_keys = website_utils.remove_duplicates_preserver_order(proposal_header_keys)
-            society_keys = website_utils.remove_duplicates_preserver_order(society_keys)
-
-            # set the final headers in the sheet
-            for col in range(1):
-                ws.append(proposal_header_keys)
-
-            # populate sheet row by row. Number of rows will be equal to number of societies. 1 society = 1 row
-            master_list = []
-            # for all centers in request.data
-
-            for center in request.data:
-                # get the inventory_array containg all the codes selected for this center
-                inventory_array = center['inventory_type_selected']
-
-                # get the unique codes by combining all the codes
-                response = website_utils.get_unique_inventory_codes(inventory_array)
-                if not response.data['status']:
-                    return response
-                unique_inventory_codes = response.data['data']
-
-                # for all societies in societies array
-                for index, item in enumerate(center['suppliers']):
-
-                    # iterate over center_keys and make a partial row with data from center object
-                    center_list = []
-                    for key in center_keys:
-                        center_list.append(center['center'][key])
-
-                    # add space mapping id
-                    # center_list.append(center['center']['space_mappings']['id'])
-
-                    # add inventory type id
-                    # center_list.append(center['societies_inventory']['id'])
-
-                    # calculates inventory price per flat and  store the result in dict itself
-                    local_list = []
-
-                    # modify the dict with extra keys for pricing
-                    response = website_utils.get_union_inventory_price_per_flat(item, unique_inventory_codes, index)
-                    if not response.data['status']:
-                        return response
-                    item = response.data['data']
-
-                    # use the modified dict in the getList function that makes a list out of keys present in society_keys
-                    temp = website_utils.getList(item, society_keys)
-                    local_list.extend(temp)
-
-                    # append this list to center_list to make final row.
-                    center_list.extend(local_list)
-
-                    # add row to the sheet
-                    ws.append(center_list)
-
-            file_name = 'machadalo_{0}.xlsx'.format(str(datetime.datetime.now()))
-
-            wb.save(file_name)
-
-            return Response(data={"successs"})
-        except Exception as e:
-            return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
-
-
 class GenericExportData(APIView):
     """
         The request is in form:
@@ -2515,13 +2399,17 @@ class GenericExportData(APIView):
         and hence more DATA keys
         2. Making of individual rows. Number of rows in the sheet is equal to total number of societies in all centers combined
         """
-    renderer_classes = (website_renderers.XlsxRenderer, )
+    # renderer_classes = (website_renderers.XlsxRenderer, )
     # permission_classes = (v0_permissions.IsGeneralBdUser, )
 
     def post(self, request, proposal_id=None):
         class_name = self.__class__.__name__
         try:
-            return website_utils.setup_generic_export(request.data, request.user, proposal_id)
+            data = website_utils.setup_generic_export(request.data, request.user, proposal_id)
+            response = ui_utils.handle_response(class_name, data=data, success=True)
+            # attach some custom headers
+            # response['Content-Disposition'] = 'attachment; filename=%s' % data['name']
+            return response
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -2583,9 +2471,6 @@ class ImportSupplierData(APIView):
 
                 center_id_list = center_id_list_response.data['data']
 
-                # normalize the center id's or map the actual center id's with indexes starting from zero
-                center_id_to_index_mapping = {}
-
                 for index, center_id in enumerate(center_id_list):
                     if not result.get(center_id):
                         result[center_id] = {}
@@ -2622,46 +2507,21 @@ class ImportSupplierData(APIView):
                     center_object = result[center_id]
 
                     # initialize the center_object  with necessary keys if not already
-                    response = website_utils.initialize_keys(center_object, supplier_type_code)
-                    if not response.data['status']:
-                        return response
-                    center_object = response.data['data']
+                    center_object = website_utils.initialize_keys(center_object, supplier_type_code)
 
                     # add 1 supplier that represents this row to the list of suppliers this object has already
-                    response = website_utils.make_suppliers(center_object, row, supplier_type_code, proposal_id, center_id)
-                    if not response.data['status']:
-                        return response
-                    center_object = response.data['data']
+                    center_object = website_utils.make_suppliers(center_object, row, supplier_type_code, proposal_id, center_id)
 
                     # add the 'center' data  in center_object
-                    response = website_utils.make_center(center_object, row)
-                    if not response.data['status']:
-                        return response
-                    center_object = response.data['data']
+                    center_object = website_utils.make_center(center_object, row)
 
                     # update the center dict in result with modified center_object
                     result[center_id] = center_object
 
-            # time to hit the url to create-final-proposal that saves shortlisted suppliers and filters data
-            # once data is prepared for all sheets,  we hit the url. if it creates problems in future, me might change
-            # it.
+            # during an import, do not delete filters, but save whatever ShortlistedSpaces data. Don't touch filter data, just save spaces.
+            website_utils.setup_create_final_proposal_post(result.values(), proposal_id, delete_and_save_filter_data=False, delete_and_save_spaces=True, exclude_shortlisted_space=True)
 
-            url = reverse('create-final-proposal', kwargs={'proposal_id': proposal_id})
-            url = BASE_URL + url[1:]
-
-            data = result.values()
-
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-             }
-
-            response = requests.post(url, json.dumps(data), headers=headers)
-
-            if response.status_code != status.HTTP_200_OK:
-                return Response({'status': False, 'error in final proposal api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
-
-            # data for this supplier is made. populate the shortlisted_inventory_details table before hitting the urls
+            # # data for this supplier is made. populate the shortlisted_inventory_details table before hitting the urls
             response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
             if not response.data['status']:
                 return response
@@ -2686,10 +2546,12 @@ class ImportSupplierData(APIView):
                 return Response({'status': False, 'error in import-metric-data api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
 
             # prepare a new name for this file and save it in the required table
-            response = website_utils.get_file_name(request.user, proposal_id, is_exported=False)
-            if not response.data['status']:
-                return response
-            file_name = response.data['data']
+            file_name =  website_utils.get_file_name(request.user, proposal_id, is_exported=False)
+
+            # fetch proposal instance and change it's status to 'finalized'.
+            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            proposal.campaign_state = website_constants.proposal_finalized
+            proposal.save()
 
             return Response({'status': True, 'data': file_name}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -2781,10 +2643,7 @@ class CreateInitialProposal(APIView):
                 account_id = account_id
 
                 # create a unique proposal id
-                response = website_utils.create_proposal_id(business_id, account_id)
-                if not response.data['status']:
-                    return response
-                proposal_data['proposal_id'] = response.data['data']
+                proposal_data['proposal_id'] = website_utils.create_proposal_id(business_id, account_id)
 
                 # get the account object. required for creating the proposal
                 account = AccountInfo.objects.get_user_related_object(user=user, account_id=account_id)
@@ -2850,7 +2709,9 @@ class CreateFinalProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            return website_utils.setup_create_final_proposal_post(request.data, proposal_id)
+            # when save button is clicked, we have already saved space status before hand on individual API call. Only filters are saved here.
+            website_utils.setup_create_final_proposal_post(request.data, proposal_id, delete_and_save_filter_data=True, delete_and_save_spaces=False)
+            return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -2860,7 +2721,7 @@ class CreateFinalProposal(APIView):
             request: The request object
             proposal_id: The proposal id
 
-        Returns: updates ShortlistedSpaces table with new data
+        Returns: updates ShortlistedSpaces table with new data or creates the shortlisted space if not already there. PUT does the job of creating data already.
         """
         class_name = self.__class__.__name__
         try:
@@ -2943,6 +2804,15 @@ class ProposalViewSet(viewsets.ViewSet):
 
             proposal = ProposalInfo.objects.get(proposal_id=pk)
             serializer = ProposalInfoSerializer(proposal)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            proposal = ProposalInfo.objects.all()
+            serializer = ProposalInfoSerializer(proposal, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -3552,12 +3422,8 @@ class SendMail(APIView):
                  'file': file_name
             }
             # call the function to perform the magic
-            response = website_utils.process_template(template_body, body_mapping)
-            if not response.data['status']:
-                return response
-
             # get the modified body
-            modified_body = response.data['data']
+            modified_body = website_utils.process_template(template_body, body_mapping)
 
             email_data = {
                 'subject': str(request.data['subject']),
@@ -3663,11 +3529,9 @@ class ProposalVersion(APIView):
 
             # if this variable is true, we will have to create a new proposal version.
             if is_proposal_version_created:
+
                 # create a unique proposal id
-                response = website_utils.create_proposal_id(business.business_id, account.account_id)
-                if not response.data['status']:
-                    return response
-                new_proposal_id = response.data['data']
+                new_proposal_id = website_utils.create_proposal_id(business.business_id, account.account_id)
 
                 # create new ProposalInfo object for this new proposal_id
                 proposal.pk = new_proposal_id
@@ -3679,17 +3543,14 @@ class ProposalVersion(APIView):
                 # change the proposal_id variable here
                 proposal_id = new_proposal_id
 
-            # call create Final Proposal first
-            response = website_utils.setup_create_final_proposal_post(data, proposal_id)
-            if not response.data['status']:
-                return response
+            # call create Final Proposal first. We need to delete and save filter data. We don't save spaces here. The single status of each space has already been done before on Grid View.
+            website_utils.setup_create_final_proposal_post(data, proposal_id, delete_and_save_filter_data=True, delete_and_save_spaces=False)
 
-            response = website_utils.setup_generic_export(data, request.user, proposal_id)
-            if not response.data['status']:
-                return response
-
-            file_name = response.data['data']['name']
-            my_file = response.data['data']['file']
+            result = website_utils.setup_generic_export(data, request.user, proposal_id)
+            file_name = result['name']
+            stats = result['stats']
+            # todo : either we can check stats and if it's not empty we can throw error here and not allow sheet formation
+            # or we can allow sheet formation and let the user know that such errors have occurred. Fix when it's clear
 
             bd_body = {
                 'user_name': request.user.first_name,
@@ -3699,15 +3560,18 @@ class ProposalVersion(APIView):
                 'file_name': file_name
             }
 
-            response = website_utils.process_template(website_constants.bodys['bd_head'], bd_body)
-            if not response.data['status']:
-                return response
-            bd_body = response.data['data']
+            bd_body = website_utils.process_template(website_constants.bodys['bd_head'], bd_body)
 
+            # email_data = {
+            #     'subject': website_constants.subjects['bd_head'],
+            #     'body': bd_body,
+            #     'to': [website_constants.emails['bd_head'], website_constants.emails['bd_user'], website_constants.emails['root_user'], website_constants.emails['developer']]
+            # }
+            #
             email_data = {
                 'subject': website_constants.subjects['bd_head'],
                 'body': bd_body,
-                'to': [website_constants.emails['bd_head']]
+                'to': [website_constants.emails['developer'], ]
             }
 
             attachment = {
@@ -3729,16 +3593,20 @@ class ProposalVersion(APIView):
 
             # upload this shit to amazon
             upload_to_amazon_aync_id = tasks.upload_to_amazon.delay(file_name).id
-            if not response.data['status']:
-                return response
 
             # prepare to send back async ids
             data = {
                 'logged_in_user_async_id': logged_in_user_async_id,
                 'bd_head_async_id': bd_head_async_id,
                 'upload_to_amazon_async_id': upload_to_amazon_aync_id,
-                'file_name': file_name
+                'file_name': file_name,
+                'stats': stats
             }
+            # change campaign state
+            proposal.campaign_state = website_constants.proposal_requested
+            proposal.save()
+
+            # change the status of the proposal to 'requested' once everything is okay.
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -3757,8 +3625,6 @@ class AssignCampaign(APIView):
         """
         class_name = self.__class__.__name__
         try:
-
-
             assigned_by = request.user
 
             campaign_id = request.data['campaign_id']
@@ -3781,8 +3647,11 @@ class AssignCampaign(APIView):
 
             # todo: check for dates also. you should not assign a past campaign to any user. left for later
 
-            # create the object
-            models.CampaignAssignment.objects.get_or_create(assigned_by=assigned_by, assigned_to=assigned_to, campaign=proposal)
+            # create the object.
+            instance, is_created = models.CampaignAssignment.objects.get_or_create(campaign=proposal)
+            instance.assigned_by = assigned_by
+            instance.assigned_to = assigned_to
+            instance.save()
 
             return ui_utils.handle_response(class_name, data='success', success=True)
 
@@ -3855,11 +3724,11 @@ class AssignCampaign(APIView):
                     query['assigned_to'] = models.BaseUser.objects.get(id=to)
 
             assigned_objects = models.CampaignAssignment.objects.filter(**query)
-
             campaigns = []
             # check each one of them weather they are campaign or not
             for assign_object in assigned_objects:
                 response = website_utils.is_campaign(assign_object.campaign)
+                # if it is a campaign.
                 if response.data['status']:
                     campaigns.append(assign_object)
                     # assign statuses to each of the campaigns.
@@ -4134,7 +4003,7 @@ class CampaignSuppliersInventoryList(APIView):
 
 class ProposalToCampaign(APIView):
     """
-    tries to  book the assigned inventories to this proposal. if successfull, sets the campaign state to right state that
+    sets the campaign state to right state that
     marks this proposal a campaign.
     """
     def post(self, request, proposal_id):
@@ -4152,23 +4021,25 @@ class ProposalToCampaign(APIView):
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
 
             if not proposal.invoice_number:
-                return ui_utils.handle_response(class_name, data=errors.CAMPAIGN_NO_INVOICE_ERROR)
+                return ui_utils.handle_response(class_name, data=errors.CAMPAIGN_NO_INVOICE_ERROR, request=request)
 
             proposal_start_date = proposal.tentative_start_date
             proposal_end_date = proposal.tentative_end_date
 
             if not proposal_start_date or not proposal_end_date:
-                return ui_utils.handle_response(class_name, data=errors.NO_DATES_ERROR.format(proposal_id))
+                return ui_utils.handle_response(class_name, data=errors.NO_DATES_ERROR.format(proposal_id), request=request)
 
-            response = website_utils.is_campaign(proposal)
-            if response.data['status']:
-                return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id))
+            # todo: disabling this check. Now user can press accept as many times as required.
+            #
+            # response = website_utils.is_campaign(proposal)
+            # if response.data['status']:
+            #     return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id), request=request)
 
             # these are the current inventories assigned. These are inventories assigned to this proposal when sheet was imported.
             current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
 
             if not current_assigned_inventories:
-                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORIES_ASSIGNED_ERROR.format(proposal_id))
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORIES_ASSIGNED_ERROR.format(proposal_id), request=request)
 
             current_assigned_inventories_map = {}
 
@@ -4363,7 +4234,6 @@ class InventoryActivityImage(APIView):
         """
         class_name = self.__class__.__name__
         try:
-
             shortlisted_inventory_detail_instance = models.ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_detail_id'])
             activity_date = request.data['activity_date']
             activity_type = request.data['activity_type']
@@ -4649,6 +4519,7 @@ class BulkInsertInventoryActivityImage(APIView):
         """
         class_name = self.__class__.__name__
         try:
+
             shortlisted_inv_ids = set()  # to store shortlisted inv ids
             act_dates = set()  # to store all act dates
             act_types = set() # to store all act types
@@ -4718,7 +4589,7 @@ class BulkInsertInventoryActivityImage(APIView):
             )
 
             if not inv_act_assignment_objects:
-                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
+                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR, request=request)
 
             # this loop creates actual inv act image objects
             for inv_act_assign in inv_act_assignment_objects:
@@ -5096,16 +4967,19 @@ class ExportAllSupplierData(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         try:
+            area_codes = set()
+            subarea_codes = set()
+            city_codes = set()
+            supplier_ids = set()
+            result = []
+            pricing_dict = {}
+
             supplier_type_code = request.query_params['supplier_type_code']
             model_class = ui_utils.get_model(supplier_type_code)
             if supplier_type_code == website_constants.society:
                 model_instances = model_class.objects.all().values('supplier_id', 'society_name')
             else:
                 model_instances = model_class.objects.all().values('supplier_id', 'name')
-
-            area_codes = set()
-            subarea_codes = set()
-            city_codes = set()
 
             for instance_dict in model_instances:
 
@@ -5115,6 +4989,7 @@ class ExportAllSupplierData(APIView):
                 area_codes.add(supplier_id_breakup['area_code'])
                 city_codes.add(supplier_id_breakup['city_code'])
                 subarea_codes.add(supplier_id_breakup['subarea_code'])
+                supplier_ids.add(supplier_id)
                 instance_dict['supplier_id_breakup'] = supplier_id_breakup
 
             city_instances = models.City.objects.filter(city_code__in=city_codes)
@@ -5125,7 +5000,48 @@ class ExportAllSupplierData(APIView):
             area_instance_map = {area.area_code: area for area in area_instances}
             subarea_instance_map = {subarea.subarea_code: subarea for subarea in subarea_instances}
 
-            result = []
+            price_mapping_instance_map = website_utils.get_price_mapping_map(supplier_ids)
+
+            inv_summary_map = website_utils.get_inventory_summary_map(supplier_ids)
+
+            # make pricing dict here
+            for supplier_id in supplier_ids:
+
+                pricing_dict[supplier_id] = {}
+                pricing_dict[supplier_id]['error'] = 'No Error'
+
+                try:
+                    inv_summary_instance = inv_summary_map[supplier_id]
+                except KeyError:
+                    pricing_dict[supplier_id]['error'] = 'No inventory summary instance for this supplier. Cannot determine which inventories are allowed or not allowed.'
+                    continue
+
+                try:
+                    price_instances = price_mapping_instance_map[supplier_id]
+                except KeyError:
+                    pricing_dict[supplier_id]['error'] = 'No pricing instance for this supplier'
+                    continue
+
+                # set all possible inventory_allowed fields to 0 first
+                for code, name in website_constants.inventory_code_to_name.iteritems():
+                    inv_name_key = website_utils.join_with_underscores(name).lower()
+                    pricing_dict[supplier_id][inv_name_key + '_' + 'allowed'] = 0
+
+                # for all inventory codes allowed.
+                for inv_code in website_utils.get_inventories_allowed(inv_summary_instance):
+                    inventory_name = website_constants.inventory_code_to_name[inv_code]
+                    inv_name_key = website_utils.join_with_underscores(inventory_name).lower()
+                    pricing_dict[supplier_id][inv_name_key + '_' + 'allowed'] = 1
+                    # for all pricing instances for this supplier
+                    for price_instance in price_instances:
+                        price_inventory_name = price_instance.adinventory_type.adinventory_name.upper()
+                        # proceed only if you find the inventory name in the instance.
+                        if inventory_name == price_inventory_name:
+                            inventory_meta_type = price_instance.adinventory_type.adinventory_type
+                            inventory_duration = price_instance.duration_type.duration_name
+                            str_key = inv_name_key + ' ' + inventory_meta_type.lower() + ' ' + inventory_duration.lower()
+                            key = website_utils.join_with_underscores(str_key)
+                            pricing_dict[supplier_id][key] = price_instance.actual_supplier_price
 
             for instance_dict in model_instances:
 
@@ -5138,7 +5054,7 @@ class ExportAllSupplierData(APIView):
                 area_instance = area_instance_map.get(supplier_dict_breakup['area_code'])
                 subarea_instance = subarea_instance_map.get(supplier_dict_breakup['subarea_code'])
 
-                result.append({
+                basic_data_dict = {
 
                     'city_name': city_instance.city_name if city_instance else website_constants.not_in_db_special_code,
                     'city_code': city_instance.city_code if city_instance else website_constants.not_in_db_special_code,
@@ -5150,12 +5066,29 @@ class ExportAllSupplierData(APIView):
                     'supplier_name': supplier_name,
                     'supplier_code': supplier_code,
                     'supplier_type_code': supplier_type_code
-                })
+                }
+                # set key, value from pricing_dict to basic_data_dict
+                for key, value in pricing_dict[supplier_id].iteritems():
+                    basic_data_dict[key] = value
+
+                result.append(basic_data_dict)
+
+            # add pricing headers to current headers.
+            headers = website_constants.basic_supplier_export_headers
+            data_keys = website_constants.basic_supplier_data_keys
+            for inventory_name, header_list in website_constants.price_mapping_default_headers.iteritems():
+                for header_tuple in header_list:
+
+                    inv_name_key = website_utils.join_with_underscores(inventory_name).lower()
+                    str_key = inv_name_key + ' '+ (' '.join(header_tuple)).lower()
+                    key = website_utils.join_with_underscores(str_key)
+                    headers.append(key)
+                    data_keys.append(key)
 
             data = {
                 'sheet_name': website_constants.code_to_sheet_names[supplier_type_code],
-                'headers': website_constants.basic_supplier_export_headers,
-                'data_keys': website_constants.basic_supplier_data_keys,
+                'headers': headers,
+                'data_keys': data_keys,
                 'suppliers': result
             }
             file_name = website_utils.generate_supplier_basic_sheet_mail(data)
@@ -5163,7 +5096,7 @@ class ExportAllSupplierData(APIView):
             email_data = {
                 'subject': 'The all society data of test server in  proper format',
                 'body': 'PFA data of all suppliers in the system with supplier_type_code {0}'.format(supplier_type_code),
-                'to': [website_constants.emails['bd_head']]
+                'to': [website_constants.emails['developer']]
             }
 
             attachment = {
@@ -5177,3 +5110,5 @@ class ExportAllSupplierData(APIView):
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+

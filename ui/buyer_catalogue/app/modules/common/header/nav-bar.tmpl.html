@@ -11,13 +11,13 @@
           </a>
           <div class="dropdown-menu posright-0 ">
             <ul>
-              <li ng-show="showData"><a href="/#/manageUser">Manage User</a></li>
+              <li permission="[]"><a href="/#/manageUser">Manage User</a></li>
               <li><a href="/#/logout">Logout</a></li>
             </ul>
           </div>
         </li>
         <li class="dropdown active">
-        <div style="margin-left:25px;margin-top:20px;" ng-hide="isGuestUser">
+        <div style="margin-left:25px;margin-top:20px;">
           <span class="glyphicon glyphicon-menu-hamburger" ng-click="getMenu()" data-toggle="modal" data-target="#menuModal">Menu</span>
         </div>
       </li>
@@ -49,23 +49,27 @@
                         <i class="fa fa-bars fa-2x toggle-btn"></i>
                         <div class="menu-list">
                             <ul id="menu-content" class="menu-content collapse out">
-                                <li ng-class="{active: isActive('/manageCampaign/create')}">
+                                <li ng-class="{active: isActive('/manageCampaign/create')}" permission = "[bd_manager]">
                                   <a ng-href="/#/manageCampaign/create" class="lipadding" ng-click="closeModal()">
                                     <i class="fa fa-tasks fa-lg"></i>Create Business</a>
                                 </li>
-                                <li ng-class="{active: isActive('/OpsDashBoard')}" ng-if="campaignAccessAllowed">
+                                <li ng-class="{active: isActive('/OpsDashBoard')}" permission = "[]">
                                   <a ng-href="/#/OpsDashBoard" class=" lipadding" ng-click="closeModal()">
                                     <i class="fa fa-dashboard fa-lg"></i>OpsDashBoard</a>
                                </li>
-                               <li data-toggle="collapse" data-target="#new" class="collapsed">
-                                 <a class="dropdown-toggle" data-toggle="dropdown" ng-href="#"><i class="fa fa-th fa-lg"></i>Leads <span class="caret"></span></a>
-                                 <ul class="sub-menu collapse" id="new">
-                                   <li><a href="/#/manageCampaign/shortlisted" data-toggle="tab" ng-click="closeModal()">Shortlisted</a></li>
-                                   <li><a href="/#/manageCampaign/requested" data-toggle="tab" ng-click="closeModal()">Requested</a></li>
-                                   <li><a href="/#/manageCampaign/finalized" data-toggle="tab" ng-click="closeModal()">Finalized</a></li>
-                                 </ul><!-- end of dropdown menu -->
+                              <li ng-class="{active: isActive('/CampaignList')}" permission = "[campaign_manager]">
+                                  <a ng-href="/#/CampaignList" class=" lipadding" ng-click="closeModal()">
+                                    <i class="fa fa-dashboard fa-lg"></i>List Campaigns</a>
                                </li>
-                               <li ng-class="{ active: isActive('/#/manageCampaign/finalize')}">
+                               <li data-toggle="collapse" data-target="#new" class="collapsed" permissions="[campaign_manager]">
+                                 <a class="dropdown-toggle" data-toggle="dropdown"  ng-click="closeModal()"><i class="fa fa-th fa-lg"></i>Campaign Status <span class="caret"></span></a>
+                                 <ul class="sub-menu collapse" id="new">
+                                   <li><a href="/#/upcomingCampaigns" data-toggle="tab" ng-click="closeModal()">Upcoming</a></li>
+                                   <li><a href="/#/ongoingCampaigns" data-toggle="tab" ng-click="closeModal()">Ongoing</a></li>
+                                   <li><a href="/#/completedCampaigns" data-toggle="tab" ng-click="closeModal()">Completed</a></li>
+                                 </ul>
+                               </li>
+                               <!-- <li ng-class="{ active: isActive('/#/manageCampaign/finalize')}">
                                  <a ng-href="/#/manageCampaign/finalize" class = "lipadding" ng-click="closeModal()">
                                    <i class="fa fa-list fa-lg"></i>Finalize Campaigns</a>
                                </li>
@@ -92,7 +96,7 @@
                                <li ng-class="{ active: isActive('/society/{{societyId}}/stalls')}">
                                  <a ng-href="#/CampaignList" class = "lipadding" ng-click="closeModal()">
                                    <i class="fa fa-list fa-lg"></i>All Campaigns</a>
-                               </li>
+                               </li> -->
                             </ul>
                         </div>
                     </div>

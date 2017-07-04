@@ -1,24 +1,10 @@
 angular.module('machadaloPages')
 .controller('CreateCampaignCtrl',
-    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, constants, $timeout) {
+    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, constants, $timeout, AuthService, $state) {
 
-      //start:code added to show or hide details based on user permissions
-      $scope.user_code = $window.localStorage.user_code;
-      $scope.campaignAccessAllowed = true;
-      console.log($rootScope.globals.userInfo);
-      if($scope.user_code == 'agency')
-        $scope.hideData = true;
-
-        $timeout(function () {
-          angular.forEach($rootScope.globals.userInfo.groups, function(group){
-            if(group.name == constants.campaign_manager)
-              $scope.campaignAccessAllowed = false;
-          })
-       });
-      
-          // $scope.$apply();
-      console.log($scope.campaignAccessAllowed);
-
+      //start:code added to show or hide details based on user's group permissions
+      $scope.bd_manager = constants.bd_manager;
+      $scope.campaign_manager = constants.campaign_manager;
 
       //End:code added to show or hide details based on user permissions
       $scope.uploadfile = true; // added for loading spinner active/deactive
@@ -39,6 +25,12 @@ angular.module('machadaloPages')
         $scope.clear = function() {
         $scope.dt = null;
       };
+      $scope.proposalRequested = constants.proposalRequested;
+      $scope.proposalFinalized = constants.proposalFinalized;
+      $scope.proposalConverted = constants.proposalConverted;
+      $scope.proposalOnHold = constants.proposalOnHold;
+      $scope.proposalDeclined = constants.proposalDeclined;
+      $scope.proposalMaking = constants.proposalMaking;
       $scope.maxDate = new Date(2020, 5, 22);
       $scope.today = new Date();
       $scope.popup1 = false;
@@ -84,10 +76,11 @@ angular.module('machadaloPages')
             $scope.model.accounts = JSON.parse($window.localStorage.accounts);
             if($window.localStorage.sel_account_index >= 0){
               $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
+              $scope.getProposals($scope.sel_account_id,$window.localStorage.sel_account_index);
             }
           }
-          if($window.localStorage.account_proposals != null)
-            $scope.account_proposals = JSON.parse($window.localStorage.account_proposals);
+          // if($window.localStorage.account_proposals != null)
+          //   $scope.account_proposals = JSON.parse($window.localStorage.account_proposals);
           $scope.choice = "selected";
         }else {
           $scope.model.business = null;
@@ -95,7 +88,6 @@ angular.module('machadaloPages')
           $scope.account_proposals = null;
         }
       }
-      $scope.getStoredData();
       // End: for persisting values after refresh or back from other pages
 
       pagesService.loadBusinessTypes()
@@ -103,7 +95,8 @@ angular.module('machadaloPages')
           $scope.busTypes = response.data;
         })
         .catch(function onError(response){
-          swal(constants.name,constants.errorMsg,constants.error);
+          commonDataShare.showErrorMessage(response);
+          // swal(constants.name,constants.errorMsg,constants.error);
         });
       $scope.getBusiness = function() {
         pagesService.getBusiness($scope.bsSelect)
@@ -113,7 +106,7 @@ angular.module('machadaloPages')
               $rootScope.business_id = response.data.business.business_id;
               $window.localStorage.business_id = response.data.business.business_id;
               $rootScope.business_name = response.data.business.name;
-              $window.localStorage.business_id = response.data.business.name;
+              $window.localStorage.business_name = response.data.business.name;
               $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
               $scope.getSubTypes();
               $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
@@ -135,7 +128,8 @@ angular.module('machadaloPages')
               //End: added to persit data after refresh
          })
          .catch(function onError(response){
-           swal(constants.name,constants.errorMsg,constants.error);
+           commonDataShare.showErrorMessage(response);
+          //  swal(constants.name,constants.errorMsg,constants.error);
          });
       };
 
@@ -156,7 +150,8 @@ angular.module('machadaloPages')
                     $scope.sub_types = response.data;
                   })
                   .catch(function onError(response){
-                    swal(constants.name,constants.errorMsg,constants.error);
+                    commonDataShare.showErrorMessage(response);
+                    // swal(constants.name,constants.errorMsg,constants.error);
                   });
             }
         }
@@ -182,7 +177,8 @@ angular.module('machadaloPages')
 	            $scope.businesses = response.data;
 	       })
          .catch(function onError(response){
-           swal(constants.name,constants.errorMsg,constants.error);
+           commonDataShare.showErrorMessage(response);
+          //  swal(constants.name,constants.errorMsg,constants.error);
          });
 	    };
 
@@ -235,12 +231,13 @@ angular.module('machadaloPages')
 
           pagesService.getAccountProposal(sel_account_id)
           .then(function(response){
-            console.log(response);
+            console.log("proposal",response);
               $scope.account_proposals = response.data.data;
               $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
           })
           .catch(function onError(response){
-            swal(constants.name,constants.errorMsg,constants.error);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.errorMsg,constants.error);
               if(typeof(response) == typeof([]))
                   $scope.proposal_error = response.error;
           });
@@ -256,14 +253,17 @@ angular.module('machadaloPages')
           pagesService.setProposalAccountId(sel_account_id);
           $window.localStorage.proposal_id = 0;
           $window.localStorage.isSavedProposal = false;
+          $window.localStorage.isReadOnly = 'false';
+          $window.localStorage.proposalState = '';
           $location.path('/'+sel_account_id + '/createproposal');
         }
       }
 
-      $scope.showProposalDetails = function(proposal_id){
+      $scope.showProposalDetails = function(proposal){
         $window.localStorage.parentProposal = true;
-        $window.localStorage.parent_proposal_id = proposal_id;
-        $location.path('/' + proposal_id + '/showcurrentproposal');
+        $window.localStorage.proposalState = constants[proposal.campaign_state];
+        $window.localStorage.parent_proposal_id = proposal.proposal_id;
+        $location.path('/' + proposal.proposal_id + '/showcurrentproposal');
       }
 
       $scope.showHistory = function(proposalId){
@@ -293,7 +293,8 @@ angular.module('machadaloPages')
               $window.localStorage.business = JSON.stringify($scope.model.business);
             }
         }).catch(function onError(response){
-            swal(constants.name,constants.business_error,constants.error);
+          commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.business_error,constants.error);
              if (typeof response != 'number'){
                $scope.thenMsg = undefined;
                $scope.errorMsg = response.message;
@@ -314,7 +315,8 @@ angular.module('machadaloPages')
             }).then(function (response) {
               uploadFileToAmazonServer(response.data.data,file);
             }).catch(function onError(response) {
-              swal(constants.name,constants.errorMsg,constants.error);
+              commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.errorMsg,constants.error);
               $scope.uploadfile = true;
               // commonDataShare.showMessage(constants.importfile_error);
             });
@@ -340,7 +342,8 @@ angular.module('machadaloPages')
                       // commonDataShare.showMessage(constants.uploadfile_success);
                  }).catch(function onError(response) {
                       $scope.uploadfile = true;
-                      swal(constants.name,constants.uploadfile_error,constants.error);
+                      commonDataShare.showErrorMessage(response);
+                      // swal(constants.name,constants.uploadfile_error,constants.error);
                       // commonDataShare.showMessage(constants.uploadfile_error);
                  });
            }
@@ -354,5 +357,31 @@ angular.module('machadaloPages')
         $scope.closeMenu = function(){
           $scope.menuItem = undefined;
         }
+
+        //to navigate to mapview pages
+        // $scope.showOnMapview = function(proposalId){
+        //   $window.localStorage.isReadOnly = 'false';
+        //   $window.localStorage.isSavedProposal = 'true';
+        //   console.log($window.localStorage.isSavedProposal);
+        //   $location.path('/' + proposalId + '/mapview');
+        // }
+        $scope.goToMapView = function(proposal){
+          if(proposal.campaign_state){
+            console.log("hello");
+            $window.localStorage.isReadOnly = 'true';
+            $window.localStorage.isSavedProposal = 'true';
+            $window.localStorage.proposalState = constants[proposal.campaign_state];
+            $location.path('/' + proposal.proposal_id + '/mapview');
+          }
+          else {
+            console.log("fdsfds");
+            $window.localStorage.isSavedProposal = 'true';
+            $window.localStorage.isReadOnly = 'false';
+            $window.localStorage.proposalState = '';
+            $location.path('/' + proposal.proposal_id + '/mapview');
+          }
+        }
+
+        $scope.getStoredData();
       // [TODO] implement this
     });

@@ -4,6 +4,10 @@ angular.module('catalogueApp')
     function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants) {
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
+  $scope.campaign_manager = constants.campaign_manager;
+  if($rootScope.globals.userInfo.is_superuser == true){
+    $scope.backButton = true;
+  }
  	$scope.headings = [
         {header : 'Supplier Name'},
         {header : 'Area'},
@@ -12,8 +16,8 @@ angular.module('catalogueApp')
         // {header : 'Supplier ID'},
         {header : 'Inventory Type'},
         {header : 'Inventory Count'},
-        {header : 'Inventory Price'},
-        {header : 'Total Price'},
+        {header : 'Inventory Supplier Price'},
+        {header : 'Total Supplier Price'},
         {header : 'Negotiated Price'},
         {header : 'Booking Status'},
         {header : 'Phase'},
@@ -44,10 +48,13 @@ angular.module('catalogueApp')
   $scope.shortlisted = constants.shortlisted;
   $scope.buffered = constants.buffered;
   $scope.removed = constants.removed;
+  $scope.finalized = constants.finalized;
+
   $scope.statusCode = {
-    shortlisted : constants.statusCode_shortlisted,
-    buffered : constants.statusCode_buffered,
-    removed : constants.statusCode_removed,
+      shortlisted : constants.statusCode_shortlisted,
+      buffered : constants.statusCode_buffered,
+      removed : constants.statusCode_removed,
+      finalized: constants.statusCodeFinalized,
   }
     $scope.clear = function() {
         $scope.dt = null;
@@ -84,6 +91,8 @@ angular.module('catalogueApp')
             $scope.loading = response;
     	})
     	.catch(function onError(response){
+        console.log(response);
+        commonDataShare.showErrorMessage(response);
     		console.log("error occured", response.status);
     	});
 
@@ -132,8 +141,12 @@ angular.module('catalogueApp')
         swal(constants.name,constants.updateData_success,constants.success);
       })
       .catch(function onError(response){
-        swal(constants.name,constants.updateData_error,constants.error);
+        commonDataShare.showErrorMessage(response);
+        // swal(constants.name,constants.updateData_error,constants.error);
         console.log("error occured", response.status);
       });
+    }
+    $scope.getCampaignState = function(state){
+      return constants[state];
     }
 }]);//Controller function ends here

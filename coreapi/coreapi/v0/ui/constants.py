@@ -20,6 +20,29 @@ decision = {
     "NO": "No"
 }
 
+poster_inventory_code = 'PO'
+standee_inventory_code = 'ST'
+flier_inventory_code = 'FL'
+stall_inventory_code = 'SL'
+car_display_inventory_code = 'CD'
+
+# name of inventories as in db
+poster = 'POSTER'
+standee = 'STANDEE'
+stall = 'STALL'
+flier = 'FLIER'
+car_display = 'CAR DISPLAY'
+
+
+inventory_name_to_code = {
+
+    poster: poster_inventory_code,
+    standee: standee_inventory_code,
+    stall: stall_inventory_code,
+    flier: flier_inventory_code,
+    car_display: car_display_inventory_code
+}
+
 # add new supplier type and corresponding class here
 
 # suppliers = {'RS': v0.models.SupplierTypeSociety, 'CP': v0.models.SupplierTypeCorporate,
@@ -41,19 +64,31 @@ codes_to_model_names = {
                 'GY': 'SupplierTypeGym',
                 'SA': 'SupplierTypeSalon',
                 'BS': 'SupplierTypeBusShelter',
-                'STALL': 'StallInventory',
-                'STANDEE': 'StandeeInventory',
-                'FLIER': 'FlyerInventory',
-                'POSTER': 'PosterInventory',
-                'SL': 'StallInventory',
-                'ST': 'StandeeInventory',
-                'FL': 'FlyerInventory',
-                'PO': 'PosterInventory'
+
+                stall: 'StallInventory',
+                standee: 'StandeeInventory',
+                flier: 'FlyerInventory',
+                poster: 'PosterInventory',
+                car_display:'StallInventory',
+
+                stall_inventory_code: 'StallInventory',
+                standee_inventory_code: 'StandeeInventory',
+                flier_inventory_code: 'FlyerInventory',
+                poster_inventory_code: 'PosterInventory',
+                car_display_inventory_code:  'StallInventory'
          }
 # model to codes
 model_to_codes = {
-    'SupplierTypeSociety': 'RS', 'SupplierTypeCorporate': 'CP', 'SupplierTypeGym': 'GY', 'SupplierTypeSalon': 'SA', 'SupplierTypeBusShelter': 'BS',
-    'StallInventory': 'SL', 'StandeeInventory': 'ST', 'FlyerInventory': 'FL', 'PO': 'PosterInventory'
+    'SupplierTypeSociety': 'RS',
+    'SupplierTypeCorporate': 'CP',
+    'SupplierTypeGym': 'GY',
+    'SupplierTypeSalon': 'SA',
+    'SupplierTypeBusShelter': 'BS',
+    'StallInventory': 'SL',
+    'StandeeInventory': 'ST',
+    'FlyerInventory': 'FL',
+    'PO': 'PosterInventory',
+    'PosterInventory': 'PO'
 }
 
 # default state and state codes. used to fetch state object in various import api's.
@@ -81,4 +116,7 @@ permission_type_delete = 'delete'
 
 
 api_error_mail_to = 'nikhil.singh@machadalo.com'
+# default prices
+default_actual_supplier_price = 0
+default_suggested_supplier_price = 0
 

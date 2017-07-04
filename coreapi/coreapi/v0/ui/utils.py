@@ -313,40 +313,37 @@ def set_default_pricing(supplier_id, supplier_type_code):
 
     """
     try:
-
         supplier = get_model(supplier_type_code).objects.get(pk=supplier_id)
         # supplier = supplier_code_filter_params[supplier_type_code]['MODEL'].objects.get(pk=supplier_id)
         content_type = ContentType.objects.get_for_model(supplier)
         # SupplierTypeSociety.objects.get(pk=society_id)
         ad_types = v0.models.AdInventoryType.objects.all()
         duration_types = v0.models.DurationType.objects.all()
+
         price_mapping_list = []
+
         for type in ad_types:
             for duration in duration_types:
                 if (type.adinventory_name == 'POSTER'):
                     if ((duration.duration_name == 'Unit Daily')):
                         pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
-                                                        adinventory_type=type, duration_type=duration,
-                                                        supplier_price=-1, business_price=-1)
+                                                                  adinventory_type=type, duration_type=duration)
                         price_mapping_list.append(pmdefault)
                     if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (
                                 duration.duration_name == 'Unit Monthly') | (duration.duration_name == 'Unit Weekly')):
                         pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
-                                                        adinventory_type=type, duration_type=duration,
-                                                        supplier_price=0, business_price=0)
+                                                                  adinventory_type=type, duration_type=duration)
                         price_mapping_list.append(pmdefault)
 
                 if (type.adinventory_name == 'POSTER LIFT'):
                     if ((duration.duration_name == 'Unit Daily')):
                         pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
-                                                        adinventory_type=type, duration_type=duration,
-                                                        supplier_price=-1, business_price=-1)
+                                                                  adinventory_type=type, duration_type=duration)
                         price_mapping_list.append(pmdefault)
                     if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (
                                 duration.duration_name == 'Unit Monthly') | (duration.duration_name == 'Unit Weekly')):
                         pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
-                                                        adinventory_type=type, duration_type=duration,
-                                                        supplier_price=0, business_price=0)
+                                                                  adinventory_type=type, duration_type=duration)
                         price_mapping_list.append(pmdefault)
 
                 if (type.adinventory_name == 'STANDEE'):
@@ -354,40 +351,34 @@ def set_default_pricing(supplier_id, supplier_type_code):
                                 duration.duration_name == 'Unit Weekly') | (duration.duration_name == 'Unit Monthly')):
                         if (type.adinventory_type == 'Large'):
                             pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
-                                                            adinventory_type=type, duration_type=duration,
-                                                            supplier_price=-1, business_price=-1)
+                                                                      adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
                         else:
                             pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
-                                                            adinventory_type=type, duration_type=duration,
-                                                            supplier_price=0, business_price=0)
+                                                                      adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
                 if (type.adinventory_name == 'STALL'):
                     if ((duration.duration_name == 'Unit Daily') | (duration.duration_name == '2 Days')):
                         if ((type.adinventory_type == 'Canopy') | (type.adinventory_type == 'Small') | (
                                     type.adinventory_type == 'Large')):
                             pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
-                                                            adinventory_type=type, duration_type=duration,
-                                                            supplier_price=0, business_price=0)
+                                                                      adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
                         if (type.adinventory_type == 'Customize'):
                             pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
-                                                            adinventory_type=type, duration_type=duration,
-                                                            supplier_price=-1, business_price=-1)
+                                                                      adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
                 if (type.adinventory_name == 'CAR DISPLAY'):
                     if ((duration.duration_name == 'Unit Daily') | (duration.duration_name == '2 Days')):
                         if ((type.adinventory_type == 'Standard') | (type.adinventory_type == 'Premium')):
                             pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
-                                                            adinventory_type=type, duration_type=duration,
-                                                            supplier_price=0, business_price=0)
+                                                                      adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
                 if ((type.adinventory_name == 'FLIER') & (duration.duration_name == 'Unit Daily')):
                     if ((type.adinventory_type == 'Door-to-Door') | (type.adinventory_type == 'Mailbox') | (
                                 type.adinventory_type == 'Lobby')):
                         pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
-                                                        adinventory_type=type, duration_type=duration,
-                                                        supplier_price=0, business_price=0)
+                                                                  adinventory_type=type, duration_type=duration)
                         price_mapping_list.append(pmdefault)
 
         v0.models.PriceMappingDefault.objects.bulk_create(price_mapping_list)
@@ -595,7 +586,7 @@ def save_price_data(price_object, posprice):
     """
     try:
         if price_object:
-            price_object.supplier_price = posprice
+            price_object.actual_supplier_price = posprice
             price_object.save()
     except Exception as e:
         raise Exception("Error occurred in saving PMD {0}".format(e.message))
@@ -759,7 +750,8 @@ def get_serializer(query):
     except Exception as e:
         return None
 
-def get_supplier_image(supplier_objects,supplier_name):
+
+def get_supplier_image(supplier_objects, supplier_name):
     """
     Args:
         supplier_objects : SupplierTypeSociety, SupplierTypeCorporate
@@ -768,20 +760,17 @@ def get_supplier_image(supplier_objects,supplier_name):
     Returns: list of supplier_objects by appending image_url
 
     """
+    function = get_supplier_image.__name__
     try:
-        images = v0.models.ImageMapping.objects.all()
-        result = [] 
-        # To optimize this for loop, Join query can be used
+        supplier_ids = [data['supplier_id'] for data in supplier_objects]
+        images = v0.models.ImageMapping.objects.filter(object_id__in=supplier_ids)
+        image_dict = {instance.object_id: instance.image_url for instance in images}
         for data in supplier_objects:
-            # data = model_to_dict(model)
-            for image in images:
-                if (data['supplier_id'] == image.object_id):
-                    if (image.name == supplier_name):
-                        data['image_url'] = image.image_url
-            result.append(data)
-        return result
+            supplier_id = data['supplier_id']
+            data['image_url'] = image_dict.get(supplier_id, '')
+        return supplier_objects
     except Exception as e:
-        return None
+        raise Exception(function, get_system_error(e))
 
 
 def generate_poster_objects(count, nb, society, society_content_type):
