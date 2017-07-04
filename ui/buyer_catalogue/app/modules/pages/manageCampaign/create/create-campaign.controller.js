@@ -375,6 +375,7 @@ angular.module('machadaloPages')
           }
           else {
             console.log("fdsfds");
+            $window.localStorage.isSavedProposal = 'true';
             $window.localStorage.isReadOnly = 'false';
             $window.localStorage.proposalState = '';
             $location.path('/' + proposal.proposal_id + '/mapview');

@@ -1795,6 +1795,7 @@ $scope.gridViewSummary = {};
                   $scope.hideSpinner = true;
                   $scope.isRequested = true;
                   $window.localStorage.isReadOnly = 'true';
+                  $window.localStorage.isSavedProposal = 'true';
                   swal(constants.name,constants.request_proposal_success,constants.success);
                   $scope.checkFileExport = false;
            }).catch(function onError(response){
@@ -1958,7 +1959,7 @@ $scope.gridViewSummary = {};
     $scope.saveData = function(){
      try{
        saveSelectedFilters();
-      $window.localStorage.isSavedProposal = true;
+      $window.localStorage.isSavedProposal = 'true';
       mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
         .then(function onSuccess(response, status){
           // alert("Saved Successfully");
