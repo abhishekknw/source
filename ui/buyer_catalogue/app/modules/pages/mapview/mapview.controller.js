@@ -248,41 +248,49 @@ $scope.gridViewSummary = {};
 
               // this service will return above deleted variables if checked in the filter
               $scope.current_center.center.center_id = $scope.current_center.center.id;
-              mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center.center)
-              .then(function onSuccess(response, status){
-                // Start : Code changes to add response of suppliers
-                $scope.current_center.suppliers = response.data.data.suppliers[0].suppliers;
-                // $scope.current_center = response;
-                $scope.center_data[$scope.current_center_index].suppliers = response.data.data.suppliers[0].suppliers;
-                // to copy extra suppliers searched in add more suppliers
-                // needs to add every time whenever new response come from backend
-                // current_center_keys gets all keys in current_center so that we can copy
-                var current_center_keys = Object.keys($scope.center_data[$scope.current_center_index].suppliers);
+              var current_center_keys = Object.keys($scope.center_data[$scope.current_center_index].suppliers);
                 for (var i = 0; i < current_center_keys.length; i++) {
                   var code = current_center_keys[i];
-                  $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
-                  getSummary(code,$scope.current_center);
-
+                  if(code == $scope.supplierCode.society)
+                    $scope.societyFilters();
+                  if(code == $scope.supplierCode.corporate)
+                    $scope.corporateFilters();
                 }
-                // End : Code changes to add response of suppliers
-                  // gridView_Summary();
-                  $scope.center_data[$scope.current_center_index] = $scope.current_center;
-                  suppliersData();
-                  mapViewBasicSummary();
-                  // mapViewFiltersSummary();
-                  // mapViewImpressions();
-                  gridViewBasicSummary();
-                  // $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
-                  if($scope.current_center.suppliers != undefined){
-                      $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
-                  }else
-                      $scope.society_markers = [];
-              })
-              .catch(function onError(response, status){
-                commonDataShare.showErrorMessage(response);
+              // mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center.center)
+              // .then(function onSuccess(response, status){
+              //   // Start : Code changes to add response of suppliers
+              //   $scope.current_center.suppliers = response.data.data.suppliers[0].suppliers;
+              //   // $scope.current_center = response;
+              //   $scope.center_data[$scope.current_center_index].suppliers = response.data.data.suppliers[0].suppliers;
+              //   // to copy extra suppliers searched in add more suppliers
+              //   // needs to add every time whenever new response come from backend
+              //   // current_center_keys gets all keys in current_center so that we can copy
+              //   var current_center_keys = Object.keys($scope.center_data[$scope.current_center_index].suppliers);
+              //   for (var i = 0; i < current_center_keys.length; i++) {
+              //     var code = current_center_keys[i];
+              //     $scope.center_data[$scope.current_center_index].suppliers[code].push.apply($scope.center_data[$scope.current_center_index].suppliers[code],$scope.extraSuppliersData[$scope.current_center_index][code]);
+              //     getSummary(code,$scope.current_center);
+              //
+              //   }
+              //   // End : Code changes to add response of suppliers
+              //     // gridView_Summary();
+              //     $scope.center_data[$scope.current_center_index] = $scope.current_center;
+              //     suppliersData();
+              //     mapViewBasicSummary();
+              //     // mapViewFiltersSummary();
+              //     // mapViewImpressions();
+              //     gridViewBasicSummary();
+              //     // $scope.impressions = calculateImpressions($scope.current_center.societies_inventory_count);
+              //     if($scope.current_center.suppliers != undefined){
+              //         $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+              //     }else
+              //         $scope.society_markers = [];
+              // })
+              // .catch(function onError(response, status){
+              //   commonDataShare.showErrorMessage(response);
                 // swal(constants.name,constants.errorMsg,constants.error);
 
-              });
+              
             }catch(error){
               console.log(error.message);
             }
