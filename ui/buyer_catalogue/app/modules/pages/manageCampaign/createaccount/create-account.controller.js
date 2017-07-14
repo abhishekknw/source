@@ -1,7 +1,7 @@
 angular.module('machadaloPages')
 .controller('CreateAccountCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'pagesService','constants',
-    function ($scope, $rootScope, $window, $location, pagesService, constants) {
+    ['$scope', '$rootScope', '$window', '$location', 'pagesService','constants','$stateParams',
+    function ($scope, $rootScope, $window, $location, pagesService, constants, $stateParams) {
       $scope.model = {};
       $scope.model.account = {};
     	$scope.accounts = [];
@@ -85,6 +85,7 @@ angular.module('machadaloPages')
 	            $scope.model.account = response.data.account;
               $scope.model.business = response.data.business;
               $scope.model.business.contacts = response.data.business.contacts;
+              $scope.model.business = JSON.parse($window.localStorage.business);
               $scope.model.account.business_id = response.data.business.business_id.toString();
 	            $scope.choice = "selected";
 	       })
@@ -95,11 +96,11 @@ angular.module('machadaloPages')
       };
 
       var accId = pagesService.getAccountId();
-      if(accId){
-        $scope.selectAcc = accId;
+      if($stateParams.accountId){
+        $scope.selectAcc = $stateParams.accountId;
         $scope.getAccount();
       }
-      else{
+      else{        
         // $scope.model.business = pagesService.getBusinessObject();
         $scope.model.business = JSON.parse($window.localStorage.business);
         $scope.model.account.business_id = $scope.model.business.business_id;
@@ -135,6 +136,7 @@ angular.module('machadaloPages')
       $scope.setAccount == false;
       $scope.setCreate_Account = function(){
         if($scope.setAccount == true){
+          console.log($scope.model);
         $scope.model.account.name = $scope.model.business.contacts[0].name;;
         $scope.model.account.email = $scope.model.business.email;
         $scope.model.account.phone = $scope.model.business.phone;

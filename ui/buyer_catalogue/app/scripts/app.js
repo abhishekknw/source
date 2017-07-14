@@ -126,7 +126,7 @@ angular
           },
         })
       .state('manageCampaign.createaccount', {
-            url : '/createAccount',
+            url : '/createAccount/:accountId/',
             controller: 'CreateAccountCtrl',
             templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
             ncyBreadcrumb: {

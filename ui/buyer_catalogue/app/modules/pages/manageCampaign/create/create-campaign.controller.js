@@ -1,4 +1,4 @@
-angular.module('machadaloPages')
+  angular.module('machadaloPages')
 .controller('CreateCampaignCtrl',
     function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, constants, $timeout, AuthService, $state) {
 
@@ -101,6 +101,7 @@ angular.module('machadaloPages')
       $scope.getBusiness = function() {
         pagesService.getBusiness($scope.bsSelect)
         .then(function (response) {
+          console.log(response);
               $scope.model.business = response.data.business;
               $scope.model.accounts = response.data.accounts;
               $rootScope.business_id = response.data.business.business_id;
@@ -197,7 +198,7 @@ angular.module('machadaloPages')
       $scope.editAccount = function(account) {
             $(".modal-backdrop").hide();
             pagesService.setAccountId(account.account_id);
-            $location.path("/manageCampaign/createAccount");
+            $location.path("/manageCampaign/createAccount/" + account.account_id + "/");
       };
 
       $scope.newBusiness = function() {
