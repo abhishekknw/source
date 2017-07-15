@@ -10,6 +10,8 @@ angular.module('catalogueApp')
       $scope.campaign_end_date;
       $scope.errorMsg = constants.emptyResponse;
       $scope.proposalState = $window.localStorage.proposalState;
+      if($scope.proposalState == constants.finalized)
+        $scope.invoiceStatus = true;
       console.log($scope.proposalState);
       //code added to show or not details based on permissions
       $scope.user_code = $window.localStorage.user_code;
