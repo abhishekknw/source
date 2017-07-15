@@ -727,7 +727,7 @@ def get_serializer(query):
     Returns: right SerializerClass
 
     """
-
+    function = get_serializer.__name__
     try:
         serializers = {
 
@@ -748,7 +748,7 @@ def get_serializer(query):
         }
         return serializers[query]
     except Exception as e:
-        return None
+        raise Exception(function, get_system_error(e))
 
 
 def get_supplier_image(supplier_objects, supplier_name):

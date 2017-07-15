@@ -596,6 +596,11 @@ car_display = 'CAR DISPLAY'
 # to identify unique supplier types
 society = 'RS'
 corporate = 'CP'
+gym = 'GY'
+salon = 'SA'
+bus_shelter = 'BS'
+
+valid_supplier_codes = [society, corporate, gym, salon, bus_shelter]
 
 # subjects:
 subjects = {

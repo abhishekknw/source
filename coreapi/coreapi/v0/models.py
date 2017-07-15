@@ -2413,6 +2413,8 @@ class InventoryActivityImage(BaseModel):
     comment = models.CharField(max_length=1000, null=True, blank=True)
     actual_activity_date = models.DateTimeField(null=True, blank=True)
     activity_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     class Meta:
         db_table = 'inventory_activity_image'

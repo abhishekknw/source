@@ -32,6 +32,14 @@ stall = 'STALL'
 flier = 'FLIER'
 car_display = 'CAR DISPLAY'
 
+society = 'RS'
+corporate = 'CP'
+gym = 'GY'
+salon = 'SA'
+bus_shelter = 'BS'
+
+valid_supplier_codes = [society, corporate, gym, salon, bus_shelter]
+
 
 inventory_name_to_code = {
     poster: poster_inventory_code,
