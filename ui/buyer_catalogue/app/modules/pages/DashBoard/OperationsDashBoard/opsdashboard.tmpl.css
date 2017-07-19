@@ -28,3 +28,18 @@ body{
 .content{
   min-height: 350px;
 }
+.scrollableContainer {
+   height: 600px;
+ }
+ table{
+   text-align: center;
+ }
+table .cellWidth{
+min-width: 100px;
+}
+.panel{
+  margin-top:20px;
+  margin-left: 100px;
+  margin-right: 100px;
+  margin-bottom: 50px;
+}

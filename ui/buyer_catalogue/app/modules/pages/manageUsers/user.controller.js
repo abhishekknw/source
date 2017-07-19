@@ -112,13 +112,15 @@ angular.module('machadaloPages')
         switch(item){
           case $scope.contentItem.viewUsers:
             getAllUsers();
+            addMoreFieldsToGroup();
             break;
           case $scope.contentItem.editUser:
             editUserInfo(data);
+            addMoreFieldsToPermission();
             break;
           case $scope.contentItem.editGroup:
             $scope.permissionList = [];
-            addMoreFieldsToPermission();
+            addMoreFieldsToGroup();
             $scope.menuItem.name = $scope.contentItem.createGroup;
             editGroupDetails(data);
             break;
@@ -236,10 +238,12 @@ angular.module('machadaloPages')
       userService.updateUserDetails(userDetails.id,userDetails)
       .then(function onSuccess(response){
         console.log(response);
+        console.log(userDetails);
         swal(constants.name,constants.save_success,constants.success);
+        $scope.getContent($scope.contentItem.viewUsers);
       }).catch(function onError(response){
         console.log(response);
-        commonDataShare.showErrorMessage(response);
+        // commonDataShare.showErrorMessage(response);
         // swal(constants.name,constants.save_error,constants.error);
       });
     }
