@@ -33,6 +33,7 @@ angular
     'uiGmapgoogle-maps',
     'ncy-angular-breadcrumb',
     'slickCarousel',
+    'scrollable-table'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider) {
       $stateProvider

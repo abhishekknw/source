@@ -13,27 +13,28 @@
 <div ng-show="isEmpty" style="font-size:24px;text-align:center;"><span>{{msg}}</span></div>
 <h2 ng-hide="hideData || isEmpty" style = "text-align:center;margin-top: 30px;">Machadalo Operations Dashboard</h2>
 <div class="content">
-  <div class="container" ng-hide="hideData || isEmpty">
+  <div class="" ng-hide="hideData || isEmpty">
     <div class="row">
-      <div class=" table-responsive panel panel-default">
-        <table class="table table-fixed table-bordered" style="text-align: center;">
+      <div class="table-responsive panel panel-default">
+        <scrollable-table watch="proposals">
+        <table class="table table-striped table-bordered">
           <thead>
             <tr>
-              <th ng-repeat="header in headings" style="text-align: center;">{{header.header}}</th>
+              <th  style="color:black;" ng-repeat="header in headings">{{header.header}}</th>
             </tr>
           </thead>
           <tbody>
             <tr ng-repeat="proposal in proposals">
-              <td class="col-md-1" ng-click="showProposalDetails(proposal.proposal.proposal_id)">
+              <td class="cellWidth" ng-click="showProposalDetails(proposal.proposal.proposal_id)">
                 <a>{{proposal.proposal.proposal_id}}</a>
               </td>
-              <td class="col-md-2">{{proposal.proposal.name}}</td>
-              <td class="col-md-2">{{proposal.proposal.account}}</td>
-              <td class="col-md-2">{{proposal.proposal.created_by}}</td>
-              <td class="col-md-2">{{proposal.proposal.invoice_number}}</td>
-              <td class="col-md-2">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
-              <td class="col-md-2">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
-              <td class="col-md-2" style="text-align:left">
+              <td class="cellWidth">{{proposal.proposal.name}}</td>
+              <td class="cellWidth">{{proposal.proposal.account}}</td>
+              <td class="cellWidth">{{proposal.proposal.created_by}}</td>
+              <td class="cellWidth">{{proposal.proposal.invoice_number}}</td>
+              <td class="cellWidth">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
+              <td class="cellWidth">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
+              <td class="cellWidth" style="text-align:left">
                 <div class="radio">
                        <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)"  data-toggle="modal" ng-loading="loadSpinner">Accept</label>
                 </div>
@@ -44,18 +45,19 @@
                        <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#onHoldModal" data-toggle="modal">OnHold</label>
                 </div>
               </td>
-              <td class="col-md-2" ng-if="proposal.proposal.campaign_state == 'PTC'">
+              <td class="cellWidth" ng-if="proposal.proposal.campaign_state == 'PTC'">
                 {{proposal.assignment_detail.assigned_to}}
               </td>
-              <td class="col-md-2" ng-if="proposal.proposal.campaign_state != 'PTC'">
+              <td class="cellWidth" ng-if="proposal.proposal.campaign_state != 'PTC'">
                 NA
               </td>
-              <td class="col-md-2">
+              <td class="cellWidth">
                 <a href="{{bucket_url}}{{proposal.file_name}}" Download> Download </a>
               </td>
             </tr>
           </tbody>
         </table>
+        </scrollable-table>
       </div>
     </div>
   </div>
