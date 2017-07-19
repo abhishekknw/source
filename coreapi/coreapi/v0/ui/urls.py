@@ -18,7 +18,6 @@ urlpatterns = [
     url(r'^society/$', views.SocietyAPIView.as_view()),
     # url(r'^society/list/$', views.SocietyAPIListView.as_view()),
     url(r'^society/list/$', views.SocietyList.as_view()),
-    url(r'^corporate/list/$', views.CorporateAPIListView.as_view(), name='corporate-list'),
     url(r'^busshelter/list/$', views.BusShelter.as_view()),
     url(r'^busshelter/search/$', views.BusShelterSearchView.as_view()),
     url(r'^society/filter/$', views.SocietyAPIFiltersView.as_view()),

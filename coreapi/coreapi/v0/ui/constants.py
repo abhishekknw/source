@@ -123,3 +123,8 @@ api_error_mail_to = 'nikhil.singh@machadalo.com'
 default_actual_supplier_price = 0
 default_suggested_supplier_price = 0
 
+valid_regions = {
+    'CITY': 'City',
+    'AREA': 'Area',
+    'SUBAREA': 'Subarea'
+}

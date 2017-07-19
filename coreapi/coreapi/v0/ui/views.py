@@ -241,9 +241,6 @@ class GenerateSupplierIdAPIView(APIView):
             city_object = models.City.objects.get(id=data['city_id'])
             city_code = city_object.city_code
 
-            if not ui_utils.check_city_level_permission(user, supplier_type_code, city_code, ui_constants.permission_type_create):
-                return ui_utils.handle_response(class_name, errors.SUPPLIER_CITY_NO_CREATE_PERMISSION_ERROR.format(supplier_type_code, city_code))
-
             data['supplier_id'] = ui_utils.get_supplier_id(request, data)
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
@@ -449,28 +446,28 @@ class SocietyAPIFilterSubAreaView(APIView):
 
 class SocietyAPIListView(APIView):
 
-    def get(self, request, format=None):
+    def get(self, request):
         class_name = self.__class__.__name__
         try:
             user = request.user
 
             search_txt = request.query_params.get('search', None)
-            items = None
             if search_txt:
-                items = SupplierTypeSociety.objects.filter(Q(supplier_id__icontains=search_txt) | Q(society_name__icontains=search_txt)| Q(society_address1__icontains=search_txt)| Q(society_city__icontains=search_txt)| Q(society_state__icontains=search_txt)).order_by('society_name')
+                society_objects = SupplierTypeSociety.objects.filter(Q(supplier_id__icontains=search_txt) | Q(society_name__icontains=search_txt)| Q(society_address1__icontains=search_txt)| Q(society_city__icontains=search_txt)| Q(society_state__icontains=search_txt)).order_by('society_name')
             else:
                 if user.is_superuser:
-                    items = SupplierTypeSociety.objects.all().order_by('society_name')
+                    society_objects = SupplierTypeSociety.objects.all().order_by('society_name')
                 else:
-                    items = SupplierTypeSociety.objects.filter(Q(society_city__in=[item.city.city_name for item in user.cities.all()]) | Q(created_by=user.id))
-                
+                    city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.society)
+                    society_objects = SupplierTypeSociety.objects.filter(city_query)
+
             # modify items to have society images data
-            items = ui_utils.get_supplier_image(items,'Society')
+            society_objects = ui_utils.get_supplier_image(society_objects, 'Society')
             paginator = PageNumberPagination()
-            result_page = paginator.paginate_queryset(items, request)
+            result_page = paginator.paginate_queryset(society_objects, request)
             paginator_response = paginator.get_paginated_response(result_page)
             data = {
-              'count': len(items),
+              'count': len(society_objects),
               'societies': paginator_response.data
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
@@ -487,13 +484,14 @@ class SocietyList(APIView):
         class_name = self.__class__.__name__
         try:
             user = request.user
-            if user.is_superuser:
-                societies = models.SupplierTypeSociety.objects.all().order_by("society_name")
-            else:
-                societies = models.SupplierTypeSociety.objects.filter(user=request.user).order_by("society_name")
 
-            serializer = SupplierTypeSocietySerializer(societies, many=True)
-            # societies_with_images = ui_utils.get_supplier_image(societies, ui_constants.society_name)
+            if user.is_superuser:
+                society_objects = SupplierTypeSociety.objects.all().order_by('society_name')
+            else:
+                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.society)
+                society_objects = SupplierTypeSociety.objects.filter(city_query)
+
+            serializer = SupplierTypeSocietySerializer(society_objects, many=True)
             suppliers = website_utils.manipulate_object_key_values(serializer.data)
             societies_with_images = ui_utils.get_supplier_image(suppliers, ui_constants.society_name)
             data = {
@@ -501,38 +499,6 @@ class SocietyList(APIView):
                 'societies': societies_with_images
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-
-class CorporateAPIListView(APIView):
-
-    def get(self, request, format=None):
-        class_name = self.__class__.__name__
-        try:
-            user = request.user
-            search_txt = request.query_params.get('search', None)
-
-            if search_txt:
-                items = SupplierTypeCorporate.objects.filter(Q(supplier_id__icontains=search_txt) | Q(name__icontains=search_txt)| Q(address1__icontains=search_txt)| Q(city__icontains=search_txt)| Q(state__icontains=search_txt)).order_by('name')
-            else:
-                if user.is_superuser:
-                    items = SupplierTypeCorporate.objects.all().order_by('name')
-                else:
-                    items = SupplierTypeCorporate.objects.filter(created_by=user.id)
-
-            items = ui_utils.get_supplier_image(items,'Corporate')
-            paginator = PageNumberPagination()
-            result_page = paginator.paginate_queryset(items, request)
-
-            paginator_response = paginator.get_paginated_response(result_page)
-            data = {
-              'count': len(items),
-              'corporates': paginator_response.data
-            }
-            return ui_utils.handle_response(class_name, data=data, success=True)
-        except ObjectDoesNotExist as e :
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -549,9 +515,10 @@ class CorporateViewSet(viewsets.ViewSet):
             if user.is_superuser:
                 corporates = SupplierTypeCorporate.objects.all().order_by('name')
             else:
-                corporates = SupplierTypeCorporate.objects.filter(created_by=user.id)
-            serializer = UICorporateSerializer(corporates, many=True)
+                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.corporate_code)
+                corporates = SupplierTypeCorporate.objects.filter(city_query)
 
+            serializer = UICorporateSerializer(corporates, many=True)
             corporates_with_images = ui_utils.get_supplier_image(serializer.data, 'Corporate')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(corporates_with_images, request)
@@ -657,7 +624,14 @@ class SalonViewSet(viewsets.ViewSet):
 
         class_name = self.__class__.__name__
         try:
-            salon_serializer = UISalonSerializer(SupplierTypeSalon.objects.all().order_by('name'), many=True)
+            user = request.user
+            if user.is_superuser:
+                salon_objects = SupplierTypeSalon.objects.all().order_by('name')
+            else:
+                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.salon)
+                salon_objects = SupplierTypeSalon.objects.filter(city_query)
+
+            salon_serializer = UISalonSerializer(salon_objects, many=True)
             items = ui_utils.get_supplier_image(salon_serializer.data, 'Gym')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
@@ -679,7 +653,14 @@ class GymViewSet(viewsets.ViewSet):
 
         class_name = self.__class__.__name__
         try:
-            gym_shelter_serializer = SupplierTypeGymSerializer(SupplierTypeGym.objects.all().order_by('name'), many=True)
+            user = request.user
+            if user.is_superuser:
+                gym_objects = SupplierTypeGym.objects.all().order_by('name')
+            else:
+                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.gym)
+                gym_objects = SupplierTypeGym.objects.filter(city_query)
+
+            gym_shelter_serializer = SupplierTypeGymSerializer(gym_objects, many=True)
             items = ui_utils.get_supplier_image(gym_shelter_serializer.data,'Gym')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)
@@ -2922,8 +2903,15 @@ class BusShelter(APIView):
         class_name = self.__class__.__name__
 
         try:
-            bus_shelter_serializer = BusShelterSerializer(SupplierTypeBusShelter.objects.all().order_by('name'), many=True)
+            user = request.user
 
+            if user.is_superuser:
+                bus_objects = SupplierTypeBusShelter.objects.all().order_by('name')
+            else:
+                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.bus_shelter)
+                bus_objects = SupplierTypeBusShelter.objects.filter(city_query)
+
+            bus_shelter_serializer = BusShelterSerializer(bus_objects, many=True)
             items = ui_utils.get_supplier_image(bus_shelter_serializer.data,'Bus Shelter')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(items, request)

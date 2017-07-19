@@ -718,6 +718,7 @@ activity_type = {
     'AUDIT': 'AUDIT'
 }
 
+
 # standalone society configs
 standalone_society_config = {
     'tower_count': 2,
@@ -778,9 +779,15 @@ supplier_headers = {
                    ]
         },
 
-        'amenities': ['Amenity Swimming Pool Present', 'Amenity Play Area Present', 'Amenity Garden Present', 'Amenity Gym Present', 'Amenity Open Area Present', 'Amenity Parking Area Present'],
+        'amenities': ['Amenity Swimming Pool Present', 'Amenity Play Area Present', 'Amenity Garden Present', 'Amenity Gym Present', 'Amenity Open Area Present',
+                      'Amenity Parking Area Present', 'Amenity Steam Bath Present'],
 
-        'events': ['Event Holi', 'event deewali', 'event Independence day', 'event republic day', 'event christmas'],
+
+        'events': ['Event Holi', 'event Diwali', 'event Independence day', 'event republic day', 'event christmas',
+                   'event Ganeshotsav', 'event Dusshehra', 'event Navratri', 'event Sports', 'event New Year',
+                   'event Onam', 'event Lohri', 'event Gudi Padwa','event eid', 'event Satyanarayan Puja', 'event Janmashtmi',
+                   'event Guru Nanak Jayanti', 'event Makar Sankranti', 'event any other'
+                   ],
 
         'flats': ['Flat 1 RK present', '1 RK Count', '1 RK size', '1 RK Rent',
                   'Flat 1 BHK present', '1 BHK Count', '1 BHK size', '1 BHK Rent',
@@ -799,6 +806,7 @@ supplier_headers = {
     },
 
     'inventory-pricing-data': {
+
         'basic-data-headers': ['city', 'city_code', 'area', 'area_code', 'sub area', 'sub area code', 'supplier type', 'supplier code', 'supplier name'],
 
         'inventory-pricing-data-headers': [
@@ -829,7 +837,10 @@ valid_amenities = {
     'Parking Area': 'PAR'
 }
 
-valid_events = ['Holi', 'Deewali', 'Republic Day', 'Independence Day', 'Christmas']
+valid_events = ['Holi', 'Diwali', 'Republic Day', 'Independence Day', 'Christmas',
+                'Ganeshotsav', 'Dusshehra', 'Navratri', 'Sports', 'New Year', 'Onam', 'Lohri', 'Gudi Padwa', 'eid',
+                'Satyanarayan Puja', 'Makar Sankranti', 'any other'
+                ]
 
 society_db_field_to_input_field_map = {
     'supplier_code': 'supplier_code',

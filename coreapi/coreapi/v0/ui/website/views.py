@@ -2311,6 +2311,7 @@ class ImportSupplierDataFromSheet(APIView):
                         invalid_rows_detail['detail'][index + 1] = '{0} not present in this row'.format(valid_header)
                         check = True
 
+                # we do not proceed further if headers not valid
                 if check:
                     continue
 
@@ -2378,6 +2379,7 @@ class ImportSupplierDataFromSheet(APIView):
 
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
+            print e.message or e.args
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
@@ -2386,7 +2388,7 @@ class GenericExportData(APIView):
         The request is in form:
         [
              {
-                  center : { id : 1 , center_name: c1, ...   } ,
+                  center : { id : 1 , center_name: c1, ...   } ,    
                   suppliers: { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} }
                   suppliers_meta: {
                                      'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
@@ -4074,6 +4076,7 @@ class ProposalToCampaign(APIView):
             proposal.save()
             return ui_utils.handle_response(class_name, data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
 
+            # todo: uncomment this code and modify when date based booking of inventory comes into picture
             # # get all the proposals which are campaign and which overlap with the current campaign
             # response = website_utils.get_overlapping_campaigns(proposal)
             # if not response.data['status']:
