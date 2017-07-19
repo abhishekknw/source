@@ -35,13 +35,14 @@ import boto
 import boto.s3
 from celery.task.sets import TaskSet, subtask
 from celery.result import GroupResult, AsyncResult
-import tasks
+from geopy.distance import great_circle
+
 
 from rest_framework import permissions
 import openpyxl
 
 # from import_export import resources
-
+import tasks
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer,  CampaignTypeMappingSerializer
 from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, BusinessInfo, \
@@ -2310,6 +2311,7 @@ class ImportSupplierDataFromSheet(APIView):
                         invalid_rows_detail['detail'][index + 1] = '{0} not present in this row'.format(valid_header)
                         check = True
 
+                # we do not proceed further if headers not valid
                 if check:
                     continue
 
@@ -2377,6 +2379,7 @@ class ImportSupplierDataFromSheet(APIView):
 
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
+            print e.message or e.args
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
@@ -2385,7 +2388,7 @@ class GenericExportData(APIView):
         The request is in form:
         [
              {
-                  center : { id : 1 , center_name: c1, ...   } ,
+                  center : { id : 1 , center_name: c1, ...   } ,    
                   suppliers: { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} }
                   suppliers_meta: {
                                      'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
@@ -3844,6 +3847,7 @@ class CampaignSuppliersInventoryList(APIView):
             do_not_query_by_date = request.query_params.get('do_not_query_by_date')
             all_users = models.BaseUser.objects.all().values('id', 'username')
             user_map = {detail['id']: detail['username'] for detail in all_users}
+            shortlisted_supplier_id_set = set()
 
             # constructs a Q object based on current date and delta d days defined in constants
             assigned_date_range_query = Q()
@@ -3927,6 +3931,7 @@ class CampaignSuppliersInventoryList(APIView):
 
                 if not result.get('inventory_activities'):
                     result['inventory_activities'] = {}
+
                 # fetch data for inventory activity key
                 inventory_activity_id = content['inventory_activity']
                 activity_type = content['inventory_activity__activity_type']
@@ -3983,18 +3988,33 @@ class CampaignSuppliersInventoryList(APIView):
             # information for that supplier
             supplier_detail = response.data['data']
 
+            response = website_utils.get_contact_information(content_type_set, supplier_id_set)
+            if not response.data['status']:
+                return response
+            contact_object_per_content_type_per_supplier = response.data['data']
+
             # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
             if result:
                 for shortlisted_space_id, detail in result['shortlisted_suppliers'].iteritems():
+                    key = (detail['content_type_id'], detail['supplier_id'])
                     try:
-                        detail['supplier_detail'] = supplier_detail[detail['content_type_id'], detail['supplier_id']]
+                        detail['supplier_detail'] = supplier_detail[key]
                     except KeyError:
                         # ideally every supplier in ss table must also be in the corresponding supplier table. But
                         # because current data is corrupt as i have manually added suppliers, i have to set this to
                         # empty when KeyError occurres. #todo change this later.
                         detail['supplier_detail'] = {}
                         # set images data to final result
+
+                    # add 'contact' key to each supplier object
+                    try:
+                        contact_object = contact_object_per_content_type_per_supplier[key]
+                        detail['supplier_detail']['contacts'] = contact_object
+                    except KeyError:
+                        detail['supplier_detail']['contacts'] = []
+
                 result['images'] = images
+
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
@@ -4056,6 +4076,7 @@ class ProposalToCampaign(APIView):
             proposal.save()
             return ui_utils.handle_response(class_name, data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
 
+            # todo: uncomment this code and modify when date based booking of inventory comes into picture
             # # get all the proposals which are campaign and which overlap with the current campaign
             # response = website_utils.get_overlapping_campaigns(proposal)
             # if not response.data['status']:
@@ -4240,6 +4261,7 @@ class InventoryActivityImage(APIView):
             activity_by = long(request.data['activity_by'])
             actual_activity_date = request.data['actual_activity_date']
             use_assigned_date = int(request.data['use_assigned_date'])
+            assigned_to = request.user
 
             if use_assigned_date:
                 date_query = Q(activity_date=ui_utils.get_aware_datetime_from_string(activity_date))
@@ -4254,11 +4276,9 @@ class InventoryActivityImage(APIView):
             if activity_type not in valid_activity_types:
                 return ui_utils.handle_response(class_name, data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
 
-            inventory_activity_assignment_instance = models.InventoryActivityAssignment.objects.get(
-                date_query,
-                inventory_activity__shortlisted_inventory_details=shortlisted_inventory_detail_instance,
-                inventory_activity__activity_type=activity_type,
-            )
+            # get the required inventory activity assignment instance.
+            inventory_activity_assignment_instance = models.InventoryActivityAssignment.objects.get(activity_date=activity_date, inventory_activity__shortlisted_inventory_details=shortlisted_inventory_detail_instance, inventory_activity__activity_type=activity_type, assigned_to=assigned_to)
+
             # if it's not superuser and it's not assigned to take the image
             if (not user.is_superuser) and (not inventory_activity_assignment_instance.assigned_to_id == activity_by):
                 return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
@@ -4269,6 +4289,8 @@ class InventoryActivityImage(APIView):
             instance.comment = request.data['comment']
             instance.actual_activity_date = actual_activity_date
             instance.activity_by = models.BaseUser.objects.get(id=activity_by)
+            instance.latitude = request.data['latitude']
+            instance.longitude = request.data['longitude']
             instance.save()
 
             return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
@@ -4492,7 +4514,6 @@ class SupplierAmenity(APIView):
 
             if not response.data['status']:
                 return response
-
             return ui_utils.handle_response(class_name, data='success', success=True)
 
         except Exception as e:
@@ -4564,6 +4585,8 @@ class BulkInsertInventoryActivityImage(APIView):
                     'comment': data['comment'],
                     'activity_by': image_taken_by,
                     'actual_activity_date': data['activity_date'],
+                    'latitude': data['latitude'],
+                    'longitude': data['longitude']
                 }
 
                 try:
@@ -4595,7 +4618,6 @@ class BulkInsertInventoryActivityImage(APIView):
             for inv_act_assign in inv_act_assignment_objects:
 
                 image_data_list = inv_act_assignment_to_image_data_map[
-
                         inv_act_assign.inventory_activity.shortlisted_inventory_details.id,
                         ui_utils.get_date_string_from_datetime(inv_act_assign.activity_date),
                         inv_act_assign.inventory_activity.activity_type
@@ -4901,7 +4923,6 @@ class IsIndividualTaskSuccessFull(APIView):
         try:
             result = AsyncResult(task_id)
             return ui_utils.handle_response(class_name, data={'ready': result.ready(), 'status': result.successful()}, success=True)
-
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 

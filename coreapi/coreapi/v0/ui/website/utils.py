@@ -5631,8 +5631,8 @@ def collect_flat_data(result, supplier_id, row_dict):
                 count_key = flat_key + '_count'
                 size_key = flat_key + '_size'
                 rent_key = flat_key + '_rent'
-                if not row_dict[count_key] or not row_dict[size_key] or not row_dict[rent_key]:
-                    raise Exception(function, errors.COUNT_SIZE_RENT_VALUE_NOT_PRESENT.format(count_key, size_key, rent_key, supplier_id))
+                # if not row_dict[count_key] or not row_dict[size_key] or not row_dict[rent_key]:
+                #    raise Exception(function, errors.COUNT_SIZE_RENT_VALUE_NOT_PRESENT.format(count_key, size_key, rent_key, supplier_id))
                 result[supplier_id]['flats']['positive'][flat_type] = {
                     'count': row_dict[count_key],
                     'size': row_dict[size_key],

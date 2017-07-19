@@ -20,6 +20,7 @@ from django.utils.dateparse import parse_datetime
 from django.utils.timezone import is_aware, make_aware
 from django.utils import timezone
 from django.core.mail import EmailMessage
+from django.db.models import Q
 
 from smtplib import SMTPException
 from rest_framework.response import Response
@@ -727,7 +728,7 @@ def get_serializer(query):
     Returns: right SerializerClass
 
     """
-
+    function = get_serializer.__name__
     try:
         serializers = {
 
@@ -748,7 +749,7 @@ def get_serializer(query):
         }
         return serializers[query]
     except Exception as e:
-        return None
+        raise Exception(function, get_system_error(e))
 
 
 def get_supplier_image(supplier_objects, supplier_name):
@@ -817,6 +818,30 @@ def check_city_level_permission(user, supplier_type_code, city_code, permission_
 
     except Exception as e:
         raise Exception(e, custom_permission, function)
+
+
+def get_region_based_query(user, region, supplier_type_code):
+    """
+    Returns a Q object specific for Forms. Q object contain region based query, currently only 'city' is supported.
+    Checks all groups within the user, which start with 'Form' and check the region corresponding to that and form
+    a Q based query and return.
+
+    :param user:
+    :param region: 'city', 'area' etc
+    :param supplier_type_code: 'RS', 'CP' etc
+    :return:
+    """
+    function = get_region_based_query.__name__
+    try:
+        authorized_region_codes = [group.split('-')[2] for group in user.groups.all().values_list('name', flat=True) if group.startswith("Form-" + region)]
+        city_names = models.City.objects.filter(city_code__in=authorized_region_codes).values_list('city_name', flat=True)
+        if supplier_type_code == 'RS':
+            city_query = Q(society_city__in=city_names)
+        else:
+            city_query = Q(city__in=city_names)
+        return city_query
+    except Exception as e:
+        raise Exception(function, get_system_error(e))
 
 
 def validate_date_format(date_string, date_format):
