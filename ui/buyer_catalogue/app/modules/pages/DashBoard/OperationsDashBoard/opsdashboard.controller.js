@@ -15,6 +15,7 @@ angular.module('catalogueApp')
         $scope.hideData = true;
       //End: code added to show or hide details based on user permissions
     	$scope.headings = [
+        {header : 'Index'},
         {header : 'Proposal Id'},
         {header : 'Proposal Name'},
         {header : 'Proposal For'},

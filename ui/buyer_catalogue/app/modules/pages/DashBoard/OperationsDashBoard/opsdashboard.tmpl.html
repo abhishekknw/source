@@ -7,30 +7,35 @@
 <div class="" permission = "[]">
   <div class="breadcrumb" ncy-breadcrumb></div>
 </div>
-<div style="margin-left:auto;margin-right:150px;width:8%">
+
+<div style="margin-left:auto;margin-right:100px;width:7%;">
   <button class="btn btn-primary active notify" style="text-align:right" ng-click="goToCampaignList()">List Campaigns</button>
 </div>
-<div ng-show="isEmpty" style="font-size:24px;text-align:center;"><span>{{msg}}</span></div>
-<h2 ng-hide="hideData || isEmpty" style = "text-align:center;margin-top: 30px;">Machadalo Operations Dashboard</h2>
-<div class="content">
+<div ng-show="isEmpty" class="panel panel-default" style="font-size:24px;text-align:center;"><span>{{msg}}</span></div>
+<div class="panel-heading">
+    <h2 ng-hide="hideData || isEmpty" style = "text-align:center;">Machadalo Operations Dashboard</h2>
+</div>
+
+<div class="content panel-body">
   <div class="" ng-hide="hideData || isEmpty">
     <div class="row">
       <div class="table-responsive panel panel-default">
         <scrollable-table watch="proposals">
-        <table class="table table-striped table-bordered">
+        <table class="table table-hover  table-bordered">
           <thead>
             <tr>
-              <th  style="color:black;" ng-repeat="header in headings">{{header.header}}</th>
+              <th  ng-repeat="header in headings">{{header.header}}</th>
             </tr>
           </thead>
           <tbody>
             <tr ng-repeat="proposal in proposals">
+              <td>{{$index+1}}</td>
               <td class="cellWidth" ng-click="showProposalDetails(proposal.proposal.proposal_id)">
                 <a>{{proposal.proposal.proposal_id}}</a>
               </td>
               <td class="cellWidth">{{proposal.proposal.name}}</td>
               <td class="cellWidth">{{proposal.proposal.account}}</td>
-              <td class="cellWidth">{{proposal.proposal.created_by}}</td>
+              <td class="cellWidthLarge">{{proposal.proposal.created_by}}</td>
               <td class="cellWidth">{{proposal.proposal.invoice_number}}</td>
               <td class="cellWidth">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
               <td class="cellWidth">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
@@ -51,7 +56,7 @@
               <td class="cellWidth" ng-if="proposal.proposal.campaign_state != 'PTC'">
                 NA
               </td>
-              <td class="cellWidth">
+              <td class="cellWidthLarge">
                 <a href="{{bucket_url}}{{proposal.file_name}}" Download> Download </a>
               </td>
             </tr>
