@@ -897,6 +897,10 @@ $scope.gridViewSummary = {};
            $scope.saloon_show = true;
            $scope.saloon_allowed_gridview = true;
          }
+         console.log($scope.unique_suppliers);
+         $scope.unique_suppliersCode = Array.from($scope.unique_suppliers);
+         $scope.unique_suppliersCode.push('ALL');
+         console.log($scope.unique_suppliersCode);
       //End : code added to display filter panel for all centers on gridview
     }catch(error){
       console.log(error.message);
@@ -2483,5 +2487,8 @@ var setSocietyLocationOnMap = function(supplier){
         center_data[i].suppliers[supplierCode] = angular.copy(unsortedSupplierList);
       }
     });
+  }
+
+  $scope.selectSupplierList = function(){
   }
 });
