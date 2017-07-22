@@ -425,6 +425,9 @@
              <span class = "space filterPanelHeader ">Space Count</span>
              <div ng-if = "current_center.suppliers_allowed.society_allowed "class = "nbCheckbox two-col">Societies:  {{current_center.summary_meta[supplierCode.society].count}}</div>
              <div ng-if ="current_center.suppliers_allowed.corporate_allowed" class = "nbCheckbox two-col">Corporates:  {{current_center.summary_meta[supplierCode.corporate].count}}</div>
+             <div ng-if ="current_center.suppliers_allowed.busShelter_allowed" class = "nbCheckbox two-col">Bus Shelters:  {{current_center.summary_meta[supplierCode.busShelter].count}}</div>
+             <div ng-if ="current_center.suppliers_allowed.gym_allowed" class = "nbCheckbox two-col">Gyms:  {{current_center.summary_meta[supplierCode.gym].count}}</div>
+             <div ng-if ="current_center.suppliers_allowed.saloon_allowed" class = "nbCheckbox two-col">Saloons:  {{current_center.summary_meta[supplierCode.saloon].count}}</div>
              <div ng-if = "current_center.suppliers_allowed.society_allowed" class = "nbCheckbox two-col">Flat Count:  {{current_center.summary_meta[supplierCode.society].flat_count}}</div>
              <div ng-if = "current_center.suppliers_allowed.society_allowed" class = "nbCheckbox two-col">Tower Count:  {{current_center.summary_meta[supplierCode.society].tower_count}}</div>
             <!--added if condition below to display those inventories selected by user in sumarry section-->
@@ -502,6 +505,9 @@
                <span class = "space filterPanelHeader ">Space Count</span>
                <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Societies:  {{total_societies_count}}</div>
                <div ng-if = "corporate_allowed_gridview" class = "nbCheckbox two-col">Corporates:  {{total_corporates_count}}</div>
+               <div ng-if = "busShelter_allowed_gridview" class = "nbCheckbox two-col">Bus Shelters:  {{total_busShleters_count}}</div>
+               <div ng-if = "gym_allowed_gridview" class = "nbCheckbox two-col">Gyms:  {{total_gyms_count}}</div>
+               <div ng-if = "saloon_allowed_gridview" class = "nbCheckbox two-col">Saloons:  {{total_saloons_count}}</div>
                <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Flat Count:  {{total_flat_count}}</div>
                <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Tower Count:  {{total_tower_count}}</div>
               <!--added if condition below to display those inventories selected by user in sumarry section-->

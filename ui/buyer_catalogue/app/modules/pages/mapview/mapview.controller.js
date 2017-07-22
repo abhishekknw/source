@@ -63,8 +63,11 @@ var supplierFilters = {
   CP :  'CP_filters',
 }
 $scope.supplierCode = {
-  society : 'RS',
-  corporate : 'CP',
+  society     : 'RS',
+  corporate   : 'CP',
+  busShelter  : 'BS',
+  gym         : 'GY',
+  saloon      : 'SA',
 }
 var impressions = {
   poster  : 0,
@@ -149,6 +152,9 @@ $scope.gridViewSummary = {};
         // http://www.googlemapsmarkers.com/v1/LABEL/FILL COLOR/LABEL COLOR/STROKE COLOR/
         'RS':'http://www.googlemapsmarkers.com/v1/'+'S/',
         'CP':'http://www.googlemapsmarkers.com/v1/'+'C/',
+        'BS':'http://www.googlemapsmarkers.com/v1/'+'B/',
+        'GY':'http://www.googlemapsmarkers.com/v1/'+'G/',
+        'SA':'http://www.googlemapsmarkers.com/v1/'+'SA/',
       };
       function assignMarkersToMap(spaces) {
           // assigns spaces(society, corporate) markers on the map
@@ -248,6 +254,7 @@ $scope.gridViewSummary = {};
 
               // this service will return above deleted variables if checked in the filter
               $scope.current_center.center.center_id = $scope.current_center.center.id;
+              // $scope.getInitialSpaces($scope.center_data[$scope.current_center_index]);
               var current_center_keys = Object.keys($scope.center_data[$scope.current_center_index].suppliers);
                 for (var i = 0; i < current_center_keys.length; i++) {
                   var code = current_center_keys[i];
@@ -255,6 +262,12 @@ $scope.gridViewSummary = {};
                     $scope.societyFilters();
                   if(code == $scope.supplierCode.corporate)
                     $scope.corporateFilters();
+                  if(code == $scope.supplierCode.busShelter)
+                    $scope.busShelterFilters();
+                  if(code == $scope.supplierCode.gym)
+                    $scope.gymFilters();
+                  if(code == $scope.supplierCode.saloon)
+                    $scope.saloonFilters();
                 }
               // mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center.center)
               // .then(function onSuccess(response, status){
@@ -309,6 +322,9 @@ $scope.gridViewSummary = {};
             }
           if($scope.current_center.suppliers['CP'] != undefined){
             $scope.corporates_count = $scope.current_center.suppliers['CP'].length;
+          }
+          if($scope.current_center.suppliers[$scope.supplierCode.busShelter] != undefined){
+            $scope.corporates_count = $scope.current_center.suppliers[$scope.supplierCode.busShelter].length;
           }
         }catch(error){
           console.log(error.message);
@@ -511,13 +527,23 @@ $scope.gridViewSummary = {};
     //Start: collectng all centers suppliers data in one varible for RS,CP..etc
       var suppliersData = function(){
        try{
-        $scope.total_societies = [], $scope.total_corporates = [];
+        $scope.total_societies = [], $scope.total_corporates = [], $scope.total_busShleters = [];
+        $scope.total_gyms = [], $scope.total_saloons = [];
         for (var index=0;index<$scope.center_data.length;index++){
           if($scope.center_data[index].suppliers['RS']!=undefined){
             $scope.total_societies = $scope.total_societies.concat($scope.center_data[index].suppliers['RS']);
           }
           if($scope.center_data[index].suppliers['CP']!=undefined){
             $scope.total_corporates = $scope.total_corporates.concat($scope.center_data[index].suppliers['CP']);
+          }
+          if($scope.center_data[index].suppliers[$scope.supplierCode.busShelter]!=undefined){
+            $scope.total_busShleters = $scope.total_busShleters.concat($scope.center_data[index].suppliers[$scope.supplierCode.busShelter]);
+          }
+          if($scope.center_data[index].suppliers[$scope.supplierCode.gym]!=undefined){
+            $scope.total_gyms = $scope.total_gyms.concat($scope.center_data[index].suppliers[$scope.supplierCode.gym]);
+          }
+          if($scope.center_data[index].suppliers[$scope.supplierCode.saloon]!=undefined){
+            $scope.total_saloons = $scope.total_saloons.concat($scope.center_data[index].suppliers[$scope.supplierCode.saloon]);
           }
         }
       }catch(error){
@@ -528,9 +554,13 @@ $scope.gridViewSummary = {};
         //Start: gridView basic summary
       var gridViewBasicSummary = function(){
        try{
+         console.log($scope.total_busShleters);
         $scope.total_flat_count = 0, $scope.total_tower_count = 0;
         $scope.total_societies_count = $scope.total_societies.length;
         $scope.total_corporates_count = $scope.total_corporates.length;
+        $scope.total_busShleters_count = $scope.total_busShleters.length;
+        $scope.total_gyms_count = $scope.total_gyms.length;
+        $scope.total_saloons_count = $scope.total_saloons.length;
           for(var temp=0; temp<$scope.total_societies_count; temp++){
             $scope.total_flat_count += $scope.total_societies[temp].flat_count;
             $scope.total_tower_count += $scope.total_societies[temp].tower_count;
@@ -735,9 +765,11 @@ $scope.gridViewSummary = {};
             //Start: api call to get amenity filters from database
               mapViewService.getAmenityFilters()
               .then(function onSuccess(response, status) {
+                console.log(response);
                 $scope.amenities = response.data.data;
               })
               .catch(function onError(response){
+                console.log(response);
                 commonDataShare.showErrorMessage(response);
                 // swal(constants.name,constants.amenity_error,constants.error);
               });
@@ -819,6 +851,25 @@ $scope.gridViewSummary = {};
          center.CP_filters =  angular.copy($scope.CP_filters);
         //  center.suppliers_meta = {};
          $scope.supplier_centers_list.CP.push(center_id);
+         getSummary($scope.supplierCode.corporate,center);
+       }
+       if(center.suppliers[$scope.supplierCode.busShelter] != undefined){
+         center.suppliers_allowed['busShelter_allowed'] = true;
+         center.suppliers_allowed['busShelter_show'] = true;
+         $scope.unique_suppliers.add($scope.supplierCode.busShelter);
+         getSummary($scope.supplierCode.busShelter,center);
+       }
+       if(center.suppliers[$scope.supplierCode.gym] != undefined){
+         center.suppliers_allowed['gym_allowed'] = true;
+         center.suppliers_allowed['gym_show'] = true;
+         $scope.unique_suppliers.add($scope.supplierCode.gym);
+         getSummary($scope.supplierCode.gym,center);
+       }
+       if(center.suppliers[$scope.supplierCode.saloon] != undefined){
+         center.suppliers_allowed['saloon_allowed'] = true;
+         center.suppliers_allowed['saloon_show'] = true;
+         $scope.unique_suppliers.add($scope.supplierCode.saloon);
+         getSummary($scope.supplierCode.saloon,center);
        }
        center_id++;
      });
@@ -834,6 +885,18 @@ $scope.gridViewSummary = {};
         $scope.corporate_show = true;
         $scope.corporate_allowed_gridview = true;
       }
+      if($scope.unique_suppliers.has($scope.supplierCode.busShelter)){
+         $scope.busShelter_show = true;
+         $scope.busShelter_allowed_gridview = true;
+       }
+       if($scope.unique_suppliers.has($scope.supplierCode.gym)){
+          $scope.gym_show = true;
+          $scope.gym_allowed_gridview = true;
+        }
+        if($scope.unique_suppliers.has($scope.supplierCode.saloon)){
+           $scope.saloon_show = true;
+           $scope.saloon_allowed_gridview = true;
+         }
       //End : code added to display filter panel for all centers on gridview
     }catch(error){
       console.log(error.message);
@@ -857,18 +920,110 @@ $scope.gridViewSummary = {};
 // This service gets all the spaces according to center specification like society_allowed
           //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
           $scope.proposal_id_temp = $stateParams.proposal_id;
+          $scope.getInitialSpaces = function(){
+            mapViewService.getSpaces($scope.proposal_id_temp)
+              .then(function onSuccess(response, status){
+                try{
+                  console.log(response);
+                  $scope.business_name = response.data.business_name;
+                  createInitialFilterData();
+                    // $scope.business_name = response.data.business_name;
+                    $scope.center_data = response.data.data.suppliers;
+
+                    $scope.current_center = response.data.data.suppliers[0];
+                    $scope.current_center_index = 0;
+                    $scope.current_center_id = $scope.current_center.center.id;
+                    $scope.old_data = angular.copy($scope.center_data);
+
+                    //loading icon
+                    $scope.loadIcon2 = response.data;
+                    //Start: code added if proposal is already created or exported, and user wants to edit that proposal
+                    var flag;
+                    // for(var i=0;i<$scope.center_data.length;i++){
+                    //   if($scope.center_data[i].suppliers_meta != null){
+                    //     flag = true;
+                    //   }
+                    // }
+                    // if(flag == true){
+                    //   checkSavedFilters();
+                    // }
+                    //End: code added if proposal is already created or exported and user wants to edit that proposal
+                    $scope.addSupplierFilters($scope.center_data);
+
+                    mapViewBasicSummary();
+                    suppliersData();
+                    gridViewBasicSummary();
+                    if($scope.unique_suppliers.has($scope.supplierCode.society))
+                      getComprehinsiveSummary($scope.supplierCode.society);
+                    if($scope.unique_suppliers.has($scope.supplierCode.corporate))
+                      getComprehinsiveSummary($scope.supplierCode.corporate);
+                    if($scope.unique_suppliers.has($scope.supplierCode.busShelter))
+                      getComprehinsiveSummary($scope.supplierCode.busShelter);
+                    // gridView_Summary();
+                    for(var i=0;i<$scope.center_data.length; i++){
+                      $scope.initial_center_changed.push(false);
+                    }
+                    $scope.current_center_id = $scope.current_center.center.id
+                    $scope.map = { zoom: 13, bounds: {},
+                      center: {
+                        latitude: $scope.current_center.center.latitude,
+                        longitude: $scope.current_center.center.longitude,
+                     }
+                    };
+                    $scope.circle = {
+                        id : 1,
+                        center : {
+                            latitude : $scope.current_center.center.latitude,
+                            longitude : $scope.current_center.center.longitude,
+                        },
+                        radius : $scope.current_center.center.radius * 1000,
+                        stroke : {
+                            color : '#08B21F',
+                            weight : 2,
+                            opacity : 1,
+                        },
+                        fill : {
+                            color : '#87cefa',
+                            opacity : 0.5,
+                        },
+                        clickable : false,
+                        control : {},
+                    };
+                    // initial center is to allow user to reset the latitude and longitude to the saved address of the center in the database
+                    $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
+                    $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
+                  }
+                  catch(error){
+                    console.log(error.message);
+                  }
+                })
+              .catch(function onError(response, status){
+                commonDataShare.showErrorMessage(response);
+                // swal(constants.name,constants.errorMsg,constants.error);
+                if(status == -1)
+                  console.log(constants.server_connection_error);
+                $scope.get_spaces_error = response.message;
+                console.log("Error response : ",response);
+              });
+          }
           if($window.localStorage.isSavedProposal == 'true'){
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
               .then(function onSuccess(response, status){
                 try{
+
                   createInitialFilterData();
                   //TO convert dict to array as response coming in dict form and very difficult to use
                   $scope.center_data = $.map(response.data.data, function(value, index){
                     return [value];
                   });
+                  console.log($scope.center_data);
                   $scope.current_center = $scope.center_data[0];
+                  $scope.current_center_index = 0;
+                  $scope.old_data = angular.copy($scope.center_data);
                   $scope.addSupplierFilters($scope.center_data);
                   var flag;
+                  $scope.current_center_id = $scope.current_center.center.id;
+
                   for(var i=0;i<$scope.center_data.length;i++){
                     if($scope.center_data[i].suppliers_meta != null){
                       flag = true;
@@ -877,9 +1032,7 @@ $scope.gridViewSummary = {};
                   if(flag == true){
                     checkSavedFilters();
                   }
-                  $scope.current_center_index = 0;
-                  $scope.current_center_id = $scope.current_center.center.id;
-                  $scope.old_data = angular.copy($scope.center_data);
+
                   // toggleInventoryFilters($scope.current_center,'true','RS');
                   mapViewBasicSummary();
                   suppliersData();
@@ -933,87 +1086,10 @@ $scope.gridViewSummary = {};
           }
           //Start: adding code to call shortlisted_spaces api if the proposal data is already saved
           else{
-          mapViewService.getSpaces($scope.proposal_id_temp)
-            .then(function onSuccess(response, status){
-              try{
-                $scope.business_name = response.data.business_name;
-                createInitialFilterData();
-                  // $scope.business_name = response.data.business_name;
-                  $scope.center_data = response.data.data.suppliers;
-
-                  $scope.current_center = response.data.data.suppliers[0];
-                  $scope.current_center_index = 0;
-                  $scope.current_center_id = $scope.current_center.center.id;
-                  $scope.old_data = angular.copy($scope.center_data);
-
-                  //loading icon
-                  $scope.loadIcon2 = response.data;
-                  //Start: code added if proposal is already created or exported, and user wants to edit that proposal
-                  var flag;
-                  // for(var i=0;i<$scope.center_data.length;i++){
-                  //   if($scope.center_data[i].suppliers_meta != null){
-                  //     flag = true;
-                  //   }
-                  // }
-                  // if(flag == true){
-                  //   checkSavedFilters();
-                  // }
-                  //End: code added if proposal is already created or exported and user wants to edit that proposal
-                  $scope.addSupplierFilters($scope.center_data);
-
-                  mapViewBasicSummary();
-                  suppliersData();
-                  gridViewBasicSummary();
-                  if($scope.unique_suppliers.has($scope.supplierCode.society))
-                    getComprehinsiveSummary($scope.supplierCode.society);
-                  // gridView_Summary();
-                  for(var i=0;i<$scope.center_data.length; i++){
-                    $scope.initial_center_changed.push(false);
-                  }
-                  $scope.current_center_id = $scope.current_center.center.id
-                  $scope.map = { zoom: 13, bounds: {},
-                    center: {
-                      latitude: $scope.current_center.center.latitude,
-                      longitude: $scope.current_center.center.longitude,
-                   }
-                  };
-                  $scope.circle = {
-                      id : 1,
-                      center : {
-                          latitude : $scope.current_center.center.latitude,
-                          longitude : $scope.current_center.center.longitude,
-                      },
-                      radius : $scope.current_center.center.radius * 1000,
-                      stroke : {
-                          color : '#08B21F',
-                          weight : 2,
-                          opacity : 1,
-                      },
-                      fill : {
-                          color : '#87cefa',
-                          opacity : 0.5,
-                      },
-                      clickable : false,
-                      control : {},
-                  };
-                  // initial center is to allow user to reset the latitude and longitude to the saved address of the center in the database
-                  $scope.society_markers = assignMarkersToMap($scope.current_center.suppliers);
-                  $scope.center_marker = assignCenterMarkerToMap($scope.current_center.center);
-                }
-                catch(error){
-                  console.log(error.message);
-                }
-              })
-            .catch(function onError(response, status){
-              commonDataShare.showErrorMessage(response);
-              // swal(constants.name,constants.errorMsg,constants.error);
-              if(status == -1)
-                console.log(constants.server_connection_error);
-              $scope.get_spaces_error = response.message;
-              console.log("Error response : ",response);
-            });
+            $scope.getInitialSpaces();
           }
         });
+
           $scope.windowCoords = {}; // at windowCoords the window will show up
           $scope.space = {}
           //onClick function is called when a marker is clicked
@@ -1064,7 +1140,7 @@ $scope.gridViewSummary = {};
               selectFilters($scope.current_center.suppliers_meta['RS'][filter_types[j]],$scope.current_center.RS_filters[filter_types[j]]);
           }
         }
-        if($scope.current_center.suppliers_meta['RS'] != null || $scope.current_center.suppliers['RS'] != null){
+        if($scope.current_center.suppliers['RS'] != null){
             $scope.societyFilters();
             toggleInventoryFilters($scope.current_center,'true','RS');
           }
@@ -1079,6 +1155,9 @@ $scope.gridViewSummary = {};
         }
         if($scope.current_center.suppliers_meta['CP'] != null || $scope.current_center.suppliers['CP'] != null){
           $scope.corporateFilters();
+        }
+        if($scope.current_center.suppliers[$scope.supplierCode.busShelter] != null){
+          $scope.busShelterFilters();
         }
       }catch(error){
         console.log(error.message);
@@ -1314,57 +1393,57 @@ $scope.gridViewSummary = {};
         $scope.real_estate_allowed = value;
         promises = [];
         var defer = $q.defer();
-        if($scope.show_societies){
-          for(var i=0;i<$scope.center_data.length;i++){
-            if($scope.center_data[i].suppliers['CP'] != null)
-              $scope.center_data[i].CP_filters = angular.copy($scope.gridView_CP_filters);
-          }
-          for(var i=0;i<$scope.center_data.length;i++){
-            if($scope.center_data[i].suppliers['CP'] != null){
-              var filters = {
-                'supplier_type_code' : 'CP',
-                proposal_id : $scope.proposal_id_temp,
-                center_id : $scope.center_data[i].center.id,
-                common_filters : {
-                latitude : $scope.center_data[i].center.latitude,
-                longitude : $scope.center_data[i].center.longitude,
-                radius : $scope.center_data[i].center.radius,
-                quality : [],
-                locality : [],
-                quantity : [],
-              },
-              inventory_filters : [],
-              priority_index_filters : {
-                // real_estate_allowed : $scope.real_estate_allowed,
-                employees_count : [],
-              },
-            };
-            makeFilters($scope.center_data[i].CP_filters.inventory,filters.inventory_filters);
-            makeFilters($scope.center_data[i].CP_filters.employee_count,filters.priority_index_filters.employees_count);
-            makeFilters($scope.center_data[i].CP_filters.quality_type,filters.common_filters.quality);
-            makeFilters($scope.center_data[i].CP_filters.locality_rating,filters.common_filters.locality);
-            makeFilters($scope.center_data[i].CP_filters.quantity_type,filters.common_filters.quantity);
-            if($scope.real_estate_allowed == true)
-              filters.priority_index_filters.real_estate_allowed = true;
-            $scope.checkFilters = true;
-            promises.push(mapViewService.getFilterSuppliers(filters));
-
-          }
-        }
-        var data = [];
-        $q.all(promises).then(function(response){
-          data = angular.copy(promises);
-          handleSupplierPromise(data,"CP");
-          $scope.checkFilters = false;
-        },function (error) {
-        //This will be called if $q.all finds any of the requests erroring.
-          handleErrors();
-          $scope.checkFilters = false;
-      });
-      }
+        // if($scope.show_societies){
+      //     for(var i=0;i<$scope.center_data.length;i++){
+      //       if($scope.center_data[i].suppliers['CP'] != null)
+      //         $scope.center_data[i].CP_filters = angular.copy($scope.gridView_CP_filters);
+      //     }
+      //     for(var i=0;i<$scope.center_data.length;i++){
+      //       if($scope.center_data[i].suppliers['CP'] != null){
+      //         var filters = {
+      //           'supplier_type_code' : 'CP',
+      //           proposal_id : $scope.proposal_id_temp,
+      //           center_id : $scope.center_data[i].center.id,
+      //           common_filters : {
+      //           latitude : $scope.center_data[i].center.latitude,
+      //           longitude : $scope.center_data[i].center.longitude,
+      //           radius : $scope.center_data[i].center.radius,
+      //           quality : [],
+      //           locality : [],
+      //           quantity : [],
+      //         },
+      //         inventory_filters : [],
+      //         priority_index_filters : {
+      //           // real_estate_allowed : $scope.real_estate_allowed,
+      //           employees_count : [],
+      //         },
+      //       };
+      //       makeFilters($scope.center_data[i].CP_filters.inventory,filters.inventory_filters);
+      //       makeFilters($scope.center_data[i].CP_filters.employee_count,filters.priority_index_filters.employees_count);
+      //       makeFilters($scope.center_data[i].CP_filters.quality_type,filters.common_filters.quality);
+      //       makeFilters($scope.center_data[i].CP_filters.locality_rating,filters.common_filters.locality);
+      //       makeFilters($scope.center_data[i].CP_filters.quantity_type,filters.common_filters.quantity);
+      //       if($scope.real_estate_allowed == true)
+      //         filters.priority_index_filters.real_estate_allowed = true;
+      //       $scope.checkFilters = true;
+      //       promises.push(mapViewService.getFilterSuppliers(filters));
+      //
+      //     }
+      //   }
+      //   var data = [];
+      //   $q.all(promises).then(function(response){
+      //     data = angular.copy(promises);
+      //     handleSupplierPromise(data,"CP");
+      //     $scope.checkFilters = false;
+      //   },function (error) {
+      //   //This will be called if $q.all finds any of the requests erroring.
+      //     handleErrors();
+      //     $scope.checkFilters = false;
+      // });
+      // }
         //End : Code added to filter multiple centers on gridview
-    else{
-      $scope.gridView_CP_filters = angular.copy($scope.current_center.CP_filters);
+    // else{
+      // $scope.gridView_CP_filters = angular.copy($scope.current_center.CP_filters);
         var filters = {
           'supplier_type_code' : 'CP',
           proposal_id : $scope.proposal_id_temp,
@@ -1391,11 +1470,78 @@ $scope.gridViewSummary = {};
         if($scope.real_estate_allowed == true)
           filters.priority_index_filters.real_estate_allowed = true;
         filterSupplierData(filters.supplier_type_code,filters);
-      }
+      // }
     }catch(error){
       console.log(error.message);
     }
   }
+
+  //start - busshelter filter call
+  $scope.busShelterFilters = function(value){
+    //Start : Code added to filter multiple centers on gridview
+   try{
+      var filters = {
+        supplier_type_code : $scope.supplierCode.busShelter,
+        proposal_id : $scope.proposal_id_temp,
+        center_id : $scope.current_center.center.id,
+        common_filters : {
+          latitude : $scope.current_center.center.latitude,
+          longitude : $scope.current_center.center.longitude,
+          radius : $scope.current_center.center.radius,
+        },
+      };
+      console.log(filters);
+      filterSupplierData(filters.supplier_type_code,filters);
+      // }
+    }catch(error){
+      console.log(error.message);
+    }
+  }
+  //end - busshelter filter call
+  //start - gym filter call
+  $scope.gymFilters = function(value){
+    //Start : Code added to filter multiple centers on gridview
+   try{
+      var filters = {
+        supplier_type_code : $scope.supplierCode.gym,
+        proposal_id : $scope.proposal_id_temp,
+        center_id : $scope.current_center.center.id,
+        common_filters : {
+          latitude : $scope.current_center.center.latitude,
+          longitude : $scope.current_center.center.longitude,
+          radius : $scope.current_center.center.radius,
+        },
+      };
+      console.log(filters);
+      filterSupplierData(filters.supplier_type_code,filters);
+      // }
+    }catch(error){
+      console.log(error.message);
+    }
+  }
+  //end - gym filter call
+  //start - saloon filter call
+  $scope.saloonFilters = function(value){
+    //Start : Code added to filter multiple centers on gridview
+   try{
+      var filters = {
+        supplier_type_code : $scope.supplierCode.saloon,
+        proposal_id : $scope.proposal_id_temp,
+        center_id : $scope.current_center.center.id,
+        common_filters : {
+          latitude : $scope.current_center.center.latitude,
+          longitude : $scope.current_center.center.longitude,
+          radius : $scope.current_center.center.radius,
+        },
+      };
+      console.log(filters);
+      filterSupplierData(filters.supplier_type_code,filters);
+      // }
+    }catch(error){
+      console.log(error.message);
+    }
+  }
+  //end - saloon filter call
 //End: code for corporate filters
 //Start: for handling multiplse center response in promises for all suppliers
       var handleSupplierPromise = function(responseData,code){
@@ -1457,12 +1603,15 @@ $scope.gridViewSummary = {};
 //start: generic function for fetching all supplier filters
         var filterSupplierData = function (code,supplier_filters){
          try{
+           console.log($scope.center_data);
           $scope.checkFilters = true;
           mapViewService.getFilterSuppliers(supplier_filters)
                 .then(function onSuccess(response, status){
-                console.log(response);
+                console.log(response,$scope.center_data);
                     response.data.data.center = $scope.current_center.center;
-                    $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.data.suppliers[code];
+                    if(response.data.data.suppliers[code].length > 0)
+                      $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.data.suppliers[code];
+                    console.log($scope.center_data);
                     if($scope.center_data[$scope.current_center_index].suppliers_meta){
                       $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.data.suppliers_meta[code];
                     }else {
