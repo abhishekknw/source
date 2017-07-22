@@ -7,6 +7,15 @@ stall_inventory_code = 'SL'
 flier_inventory_code = 'FL'
 car_display_inventory_code = 'CD'
 
+
+# to identify unique supplier types
+society = 'RS'
+corporate = 'CP'
+gym = 'GY'
+salon = 'SA'
+bus_shelter = 'BS'
+
+
 # all supplier codes
 society_code = 'RS'
 corporate_code = 'CP'
@@ -367,12 +376,15 @@ supplier_filters = {
 
 # pi filters which come in range fashion. These filters are used in PI calculation
 pi_range_filters = {
-
-    'RS': {
+    society_code: {
         'flat_avg_rental_persqft': 'flat_avg_rental_persqft',
         'flat_sale_cost_persqft': 'flat_sale_cost_persqft',
         'possession_year': 'age_of_society'
-    }
+    },
+    corporate_code: {},
+    bus_shelter: {},
+    gym: {},
+    salon: {}
 }
 
 # Filter names which do not map directly to db field
@@ -444,7 +456,7 @@ flat_type_name_to_code = {
 # to reduce code, this is a mapping for each type of supplier, from the term we get from front end to the term
 # that is there in db as a column
 query_dict = {
-    'RS': {
+    society_code: {
         'quantity': {'query': 'society_type_quantity__in',
                      'dict': quantity_dict
                      },
@@ -455,7 +467,7 @@ query_dict = {
                      'dict': locality_dict
                      }
     },
-    'CP': {
+    corporate_code: {
         'quantity': {'query': 'quantity_rating__in',
                      'dict': quantity_dict,
                      },
@@ -465,7 +477,24 @@ query_dict = {
         'locality': {'query': 'locality_rating__in',
                      'dict': locality_dict
                      }
+    },
+
+    gym: {
+        'quantity': { },
+        'quality': {},
+        'locality': {}
+    },
+    salon: {
+        'quantity': {},
+        'quality': {},
+        'locality': {}
+    },
+    bus_shelter: {
+        'quantity': {},
+        'quality': {},
+        'locality': {}
     }
+
 }
 # searching fields per supplier
 search_fields = {
@@ -592,13 +621,6 @@ standee = 'STANDEE'
 stall = 'STALL'
 flier = 'FLIER'
 car_display = 'CAR DISPLAY'
-
-# to identify unique supplier types
-society = 'RS'
-corporate = 'CP'
-gym = 'GY'
-salon = 'SA'
-bus_shelter = 'BS'
 
 valid_supplier_codes = [society, corporate, gym, salon, bus_shelter]
 
