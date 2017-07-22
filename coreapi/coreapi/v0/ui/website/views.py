@@ -1166,7 +1166,8 @@ class FilteredSuppliers(APIView):
             if not supplier_type_code:
                 return ui_utils.handle_response(class_name, data='provide supplier type code')
 
-            common_filters = request.data.get('common_filters')  # maps to BaseSupplier Model or a few other models.
+            # common filters are necessary
+            common_filters = request.data['common_filters']  # maps to BaseSupplier Model or a few other models.
             inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
             priority_index_filters = request.data.get('priority_index_filters')  # maps to specific supplier table and are used in calculation of priority index
             proposal_id = request.data['proposal_id']
@@ -1272,11 +1273,14 @@ class FilteredSuppliers(APIView):
             #     pi_index_map = cache.get(cache_key)
             # else:
             #     # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
-            pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
 
-            # cache.set(cache_key, pi_index_map)
+            pi_index_map = {}
+            supplier_id_to_pi_map = {}
 
-            supplier_id_to_pi_map = {supplier_id: detail['total_priority_index'] for supplier_id, detail in pi_index_map.iteritems()}
+            if priority_index_filters:
+                # if you have provided pi filters only then a pi index map is calculated for each supplier
+                pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
+                supplier_id_to_pi_map = {supplier_id: detail['total_priority_index'] for supplier_id, detail in pi_index_map.iteritems()}
 
             # the following function sets the pricing as before and it's temprorary.
             total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, supplier_id_to_pi_map)
@@ -1285,7 +1289,6 @@ class FilteredSuppliers(APIView):
             total_suppliers = website_utils.manipulate_object_key_values(total_suppliers, supplier_type_code=supplier_type_code)
 
             # construct the response and return
-
             # set the business name
             result['business_name'] = business_name
 

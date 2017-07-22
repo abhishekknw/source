@@ -3232,7 +3232,7 @@ def set_pricing_temproray(suppliers, supplier_ids, supplier_type_code, coordinat
         suppliers_inventory_count = get_inventory_count(supplier_ids, content_type, inventory_summary_objects)
         # add the PI indexes
         for supplier in suppliers:
-            supplier['priority_index'] = priority_index_map[supplier['supplier_id']]
+            supplier['priority_index'] = priority_index_map.get(supplier['supplier_id'])
         result = add_inventory_summary_details(suppliers, inventory_summary_objects_mapping, supplier_type_code, status=True)
         return result, suppliers_inventory_count
     except Exception as e:
