@@ -77,13 +77,25 @@ inventorylist = {
         'HEADER': ['Car Display Allowed', 'Car Display price type', 'Car Display price available',  'Car Display Price', 'Car Display Price Factor', 'Car Display Business Price'],
         'DATA': ['car_display_allowed', 'car_display_price_type', 'car_display_price_available',  'car_display_price', 'car_display_price_factor', 'car_display_business_price']
     },
-    'RS': {
+    society_code: {
         'HEADER': ['SUPPLIER ID', 'SOCIETY NAME', 'SOCIETY SUBAREA', 'SOCIETY TYPE QUALITY', 'TOWER COUNT', 'FLAT COUNT', 'STATUS'],
         'DATA': ['supplier_id', 'name', 'subarea', 'quality_rating', 'tower_count', 'flat_count', 'status']
     },
-    'CP': {
+    corporate_code: {
         'HEADER': ['SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA', 'STATUS'],
         'DATA': ['supplier_id', 'name', 'subarea', 'status']
+    },
+    bus_shelter: {
+        'HEADER': [] ,
+        'DATA': []
+    },
+    gym: {
+        'HEADER': [],
+        'DATA': []
+    },
+    salon: {
+        'HEADER': [],
+        'DATA': []
     },
     'CENTER': {
         'HEADER': ['CENTER ID', 'CENTER NAME', 'PROPOSAL'],
@@ -305,26 +317,48 @@ society_common_keys = {
     'society_type_quantity': 'locality_rating',
     'society_type_quality': 'quality_rating',
 }
+salon_sheet_name = 'Salon Details'
+gym_sheet_name = 'Gym Details'
+bus_shelter_sheet_name = 'Bus shelter Details'
 
 # export master data. each key represents a list of list. each list in that list forms a row in the sheet
 master_data = {
-    'RS': {
+    society_code: {
         'sheet_name': 'Shortlisted Spaces Details',
         'headers': [],
         'data': []
     },
-    'CP': {
+    corporate_code: {
         'sheet_name': 'Corporate Park Details',
         'headers': [],
         'data': []
     },
+    bus_shelter: {
+        'sheet_name': bus_shelter_sheet_name,
+        'headers': [],
+        'data': []
+    },
+    gym: {
+        'sheet_name': gym_sheet_name,
+        'headers': [],
+        'data': []
+
+    },
+    salon: {
+        'sheet_name': salon_sheet_name,
+        'headers': [],
+        'data': []
+    },
+
 }
 
 # chose sheet names from just supplier_type_code
 sheet_names = {
     'RS': 'Society Details',
     'CP': 'Corporate Park Details',
-    'GY': 'Gym details'
+    'GY': gym_sheet_name,
+    salon: salon_sheet_name,
+    bus_shelter: bus_shelter_sheet_name
 }
 
 # chose codes from supplier sheet names
@@ -333,7 +367,9 @@ sheet_names = {
 sheet_names_to_codes = {
     'Society Details': 'RS',
     'Corporate Park Details': 'CP',
-    'Gym details': 'GY'
+    gym_sheet_name: 'GY',
+    salon_sheet_name: salon,
+    bus_shelter_sheet_name: bus_shelter
 }
 
 # code to sheet names
@@ -349,7 +385,11 @@ code_to_sheet_names = {
 
 export_supplier_database_keys = {
     'RS': ['id', 'proposal', 'center_name', 'supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ],
-    'CP': ['id', 'proposal', 'center_name', 'supplier_id', 'name', 'subarea']
+    'CP': ['id', 'proposal', 'center_name', 'supplier_id', 'name', 'subarea'],
+    bus_shelter: [],
+    gym: [],
+    salon: []
+
 }
 
 # these HEADER keys are specific to the supplier. the sequence and count of HEADER keys must match with sequence
@@ -366,12 +406,15 @@ lead_keys = ['name', 'email', 'phone', 'address', 'gender', 'age', 'lead_type', 
 
 # filters. the following dict maps supplier specific filters to database fields directly
 supplier_filters = {
-    'CP': {
+    corporate_code: {
         'real_estate_allowed': 'isrealestateallowed',
         'building_count': 'building_count',
     },
-    'RS': {
-    }
+    society_code: {
+    },
+    bus_shelter: {},
+    gym: {},
+    salon: {}
 }
 
 # pi filters which come in range fashion. These filters are used in PI calculation
@@ -498,14 +541,17 @@ query_dict = {
 }
 # searching fields per supplier
 search_fields = {
-    'RS': ['supplier_id__icontains', 'society_name__icontains', 'society_address1__icontains',
+    society_code: ['supplier_id__icontains', 'society_name__icontains', 'society_address1__icontains',
            'society_city__icontains',
            'society_state__icontains'
            ],
-    'CP': ['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
+    corporate_code: ['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
            'subarea__icontains',
            'city__icontains', 'state__icontains', 'zipcode__icontains'
-           ]
+           ],
+    bus_shelter: [],
+    gym: [],
+    salon: []
 }
 
 # to calculate what cost of each inventory. currently we are using only these. type and duration are used to fetch
@@ -597,8 +643,12 @@ email = {
 
 # filter types
 filter_type = {
-    'RS': ['inventory_type_selected', 'quality_type', 'quantity_type', 'locality_rating', 'flat_type'],
-    'CP': ['inventory_type_selected', 'quality_type', 'quantity_type', 'locality_rating', 'employee_count'],
+    society_code: ['inventory_type_selected', 'quality_type', 'quantity_type', 'locality_rating', 'flat_type'],
+    corporate_code: ['inventory_type_selected', 'quality_type', 'quantity_type', 'locality_rating', 'employee_count'],
+    bus_shelter: [],
+    gym: [],
+    salon: []
+
 }
 # to store employee_count
 employee_count_codes = {

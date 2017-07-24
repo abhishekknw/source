@@ -1367,9 +1367,9 @@ def save_shortlisted_suppliers(suppliers, fixed_data):
                 'phase': phase
             }
             shortlisted_suppliers.append(models.ShortlistedSpaces(**data))
-        return ui_utils.handle_response(function_name, data=shortlisted_suppliers, success=True)
+        return shortlisted_suppliers
     except Exception as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
+        raise Exception(function_name, ui_utils.get_system_error(e))
 
 
 def fetch_final_proposal_data(proposal_data, unique_supplier_codes):
@@ -1423,38 +1423,27 @@ def fetch_final_proposal_data(proposal_data, unique_supplier_codes):
             suppliers = proposal_data['suppliers'][code] if proposal_data['suppliers'].get(code) else [] 
 
             # get the content type for this supplier
-            content_type_response = ui_utils.get_content_type(code)
-            if not content_type_response.data['status']:
-                return content_type_response
-
-            content_type = content_type_response.data['data']
+            content_type = ui_utils.fetch_content_type(code)
 
             fixed_data['supplier_code'] = code
             fixed_data['content_type'] = content_type
 
             # save data of shortlisted suppliers
-            response = save_shortlisted_suppliers(suppliers, fixed_data)
-            if not response.data['status']:
-                return response
-            total_shortlisted_suppliers_list.extend(response.data['data'])
+            total_shortlisted_suppliers_list.extend(save_shortlisted_suppliers(suppliers, fixed_data))
 
             # fetch suppliers_meta dict if present 
             suppliers_meta = proposal_data.get('suppliers_meta')
             # check if any filters available for this partcular supplier type
             if suppliers_meta and suppliers_meta.get(code):
-                response = save_filter_data(suppliers_meta, fixed_data)
-                if not response.data['status']:
-                    return response
+                filter_data.extend(save_filter_data(suppliers_meta, fixed_data))
 
-                filter_data.extend(response.data['data'])
-
-        return ui_utils.handle_response(function_name, data=(total_shortlisted_suppliers_list, filter_data), success=True)
+        return total_shortlisted_suppliers_list, filter_data
     except KeyError as e:
-        return ui_utils.handle_response(function_name, data='Key Error', exception_object=e)
+        raise KeyError(function_name, ui_utils.get_system_error(e))
     except ObjectDoesNotExist as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
+        raise ObjectDoesNotExist(function_name, ui_utils.get_system_error(e))
     except Exception as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
+        raise Exception(function_name, ui_utils.get_system_error(e))
 
 
 def save_filter_data(suppliers_meta, fixed_data):
@@ -1476,7 +1465,7 @@ def save_filter_data(suppliers_meta, fixed_data):
         # creating filter objects for each filter value selected
         selected_filters_list = []
         for filter_name in website_constants.filter_type[code]:
-            if filter_name in suppliers_meta[code].keys():
+            if suppliers_meta.get(code) and filter_name in suppliers_meta[code].keys():
                 for inventory_code in suppliers_meta[code][filter_name]:
                     # TO store employee_count by codes so easy to fetch
                     if filter_name == 'employee_count':
@@ -1493,13 +1482,13 @@ def save_filter_data(suppliers_meta, fixed_data):
                     }
                     filter_object = models.Filters(**data)
                     selected_filters_list.append(filter_object)
-        return ui_utils.handle_response(function_name, data=selected_filters_list, success=True)
+        return selected_filters_list
     except KeyError as e:
-        return ui_utils.handle_response(function_name, data='Key Error', exception_object=e)
+        raise KeyError(function_name, ui_utils.get_system_error(e))
     except ObjectDoesNotExist as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
+        raise ObjectDoesNotExist(function_name, ui_utils.get_system_error(e))
     except Exception as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
+        raise Exception(function_name, ui_utils.get_system_error(e))
 
 
 def create_proposal_id(business_id, account_id):
@@ -3846,12 +3835,9 @@ def setup_create_final_proposal_post(data, proposal_id, delete_and_save_filter_d
 
             for proposal_data in data:
                 proposal_data['proposal_id'] = proposal_id
-                response = fetch_final_proposal_data(proposal_data, unique_supplier_codes)
-                if not response.data['status']:
-                    return response
-                result = response.data['data']
-                total_shortlisted_suppliers_list.extend(result[0])
-                filter_data.extend(result[1])
+                shortlisted_suppliers, filter_data = fetch_final_proposal_data(proposal_data, unique_supplier_codes)
+                total_shortlisted_suppliers_list.extend(shortlisted_suppliers)
+                filter_data.extend(filter_data)
 
             now_time = timezone.now()
 
