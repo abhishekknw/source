@@ -2299,7 +2299,10 @@ def extra_header_database_keys(supplier_type_codes, data, result):
                 # check that suppliers_meta is indeed present. Only then the extra headers
                 # are added.
                 if center.get('suppliers_meta') and center.get('suppliers_meta').get(code):
-                    inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
+                    try:
+                        inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
+                    except KeyError:
+                        inventory_codes = []
                 else:
                     inventory_codes = []
 
@@ -2398,7 +2401,11 @@ def make_export_final_response(result, data, inventory_summary_map, supplier_inv
 
                 # calculate unique inventory codes available in the suppliers_meta dict for this supplier_type
                 if center.get('suppliers_meta') and center.get('suppliers_meta').get(code):
-                    inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
+                    try:
+                        inventory_codes = center['suppliers_meta'][code]['inventory_type_selected']
+                    except KeyError:
+                        # happens when 'inventory_type_selected' code is missing
+                        inventory_codes = []
                 else:
                     center_id = center['center']['id']
                     center_error = 'This center with name {0} does not has any inventory selected. Hence No pricing data will be calculated'.format(center_id)
@@ -2415,20 +2422,11 @@ def make_export_final_response(result, data, inventory_summary_map, supplier_inv
                         inventory_summary_map[code][supplier_id]
                     except KeyError:
                         stats['inventory_summary_no_instance_error'].add(supplier_id)
-                        continue
-                    # this module inserts a few keys in supplier_object such as 'is_allowed' and 'pricing' keys for each inventory.
-                    is_error, detail = set_supplier_inventory_keys(supplier_object, inventory_summary_map[code][supplier_id], unique_inv_codes, supplier_inventory_pricing_map[supplier_id])
-                    if is_error:
-                        # collect the stats about an error
-                        supplier_id = detail[0]
-                        inventory_code = detail[1]
-                        if not stats['supplier_no_pricing_error'].get(supplier_id):
-                            stats['supplier_no_pricing_error'][supplier_id] = []
-                        key = tuple(website_constants.inventory_type_duration_dict_list[inventory_code])
-                        stats['supplier_no_pricing_error'][supplier_id].append(key)
 
-                    # if no error, set supplier_object = detail
-                    supplier_object = detail.copy()
+                    if inventory_summary_map.get(code) and inventory_summary_map[code].get(supplier_id):
+                        # this module inserts a few keys in supplier_object such as 'is_allowed' and 'pricing' keys for each inventory.
+                        is_error, detail = set_supplier_inventory_keys(supplier_object, inventory_summary_map[code][supplier_id], unique_inv_codes, supplier_inventory_pricing_map[supplier_id])
+                        supplier_object = detail.copy()
 
                     # obtain the dict containing non-center information
                     supplier_info_dict = construct_single_supplier_row(supplier_object, result[code]['data_keys'])
@@ -2441,6 +2439,7 @@ def make_export_final_response(result, data, inventory_summary_map, supplier_inv
                     response_data = get_union_inventory_price_per_flat(final_supplier_dict, unique_inv_codes, index)
                     # append it to the result
                     result[code]['objects'].append(response_data)
+
         return result, stats
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
