@@ -290,10 +290,10 @@
   <!-- Start: grid view -->
   <div class="col-md-4 table-responsive" ng-if="show_societies" style="width: 800px; height: 550px">
       <h2>Grid View</h2>
-      <select class="drop-width box-spacing" ng-model="supplierListCode" ng-change="selectSupplierList()">
+      <select class="drop-width box-spacing form-control" ng-model="supplierListCode" ng-click="selectSupplierList()">
         <option ng-repeat="supplier in unique_suppliersCode" value="{{supplier}}">{{supplier}}</option>
       </select>
-      <table class="table table-bordered"  ng-if = "society_allowed_gridview && (supplierListCode == supplierCode.society)">
+      <table class="table table-bordered"  ng-if = "society_allowed_gridview && ((supplierListCode == supplierName.society) || (supplierListCode == supplierName.all))">
         <thead>
           <tr>
             <th class = "col-md-1">#</th>
@@ -359,7 +359,7 @@
       </tbody>
       </table>
       <!--Start : adding table for corporates  -->
-      <table class="table table-bordered" ng-if = "corporate_allowed_gridview && (supplierListCode == supplierCode.corporate)">
+      <table class="table table-bordered" ng-if = "corporate_allowed_gridview && ((supplierListCode == supplierName.corporate) || (supplierListCode == supplierName.all))">
         <thead>
           <tr>
             <th class = "col-md-1">#</th>
@@ -415,7 +415,7 @@
 
     <!--End : adding table for corporates  -->
     <!--start: busShelter table  -->
-    <table class="table table-bordered" ng-if = "busShelter_allowed_gridview && (supplierListCode == supplierCode.busShelter)">
+    <table class="table table-bordered" ng-if = "busShelter_allowed_gridview && ((supplierListCode == supplierName.busShelter) || (supplierListCode == supplierName.all))">
       <thead>
         <tr>
           <th class = "col-md-1">#</th>
@@ -470,7 +470,7 @@
     </table>
     <!--End: busShelter table  -->
     <!--start: gym table  -->
-    <table class="table table-bordered" ng-if = "gym_allowed_gridview && (supplierListCode == supplierCode.gym)">
+    <table class="table table-bordered" ng-if = "gym_allowed_gridview && ((supplierListCode == supplierName.gym) || (supplierListCode == supplierName.all))">
       <thead>
         <tr>
           <th class = "col-md-1">#</th>
@@ -525,7 +525,7 @@
     </table>
     <!--End: gym table  -->
     <!--start: saloon table  -->
-    <table class="table table-bordered" ng-if = "saloon_allowed_gridview && (supplierListCode == supplierCode.saloon)">
+    <table class="table table-bordered" ng-if = "saloon_allowed_gridview && ((supplierListCode == supplierName.saloon) || (supplierListCode == supplierName.all))">
       <thead>
         <tr>
           <th class = "col-md-1">#</th>

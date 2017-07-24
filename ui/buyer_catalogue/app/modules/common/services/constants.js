@@ -56,6 +56,14 @@ angular
     finalize : 'F',
     buffer : 'B',
     remove : 'R',
+    supplierCode_all : 'All',
+    RS:'Society',
+    CP:'Corporate',
+    BS:'Bus Shelter',
+    GY:'Gym',
+    SA:'Saloon',
+    All:'All',
+
     //auditReleasePlan
     positive_number_error : 'Enter Positive Number Only',
     //opsDashboard
