@@ -69,6 +69,14 @@ $scope.supplierCode = {
   gym         : 'GY',
   saloon      : 'SA',
 }
+$scope.supplierName = {
+   society : 'Society',
+  corporate : 'Corporate',
+  busShelter : 'Bus Shelter',
+  gym : 'Gym',
+  saloon : 'Saloon',
+  all   : 'All',
+}
 var impressions = {
   poster  : 0,
   standee : 0,
@@ -897,11 +905,26 @@ $scope.gridViewSummary = {};
            $scope.saloon_show = true;
            $scope.saloon_allowed_gridview = true;
          }
+         $scope.unique_suppliersCode = Array.from($scope.unique_suppliers);
+         $scope.unique_suppliersCode.push(constants.supplierCode_all);
+         $scope.unique_suppliersCode = convertSupplierCodeToName($scope.unique_suppliersCode);
+
       //End : code added to display filter panel for all centers on gridview
     }catch(error){
       console.log(error.message);
     }
   }
+  //start:convert supplier code to supplier name
+  var convertSupplierCodeToName = function(supplierCodeList){
+    var supplierNamesList = [];
+    angular.forEach(supplierCodeList, function(code){
+      console.log(code);
+      supplierNamesList.push(constants[code]);
+    })
+    return supplierNamesList;
+    console.log(supplierNamesList);
+  }
+  //end:convert supplier code to supplier name
     //End: add filter varible for each supplier in each center
       //Start: reset all filters
     // $scope.clearAllFilters = function(){
@@ -1010,7 +1033,7 @@ $scope.gridViewSummary = {};
             mapViewService.getShortlistedSuppliers($scope.proposal_id_temp)
               .then(function onSuccess(response, status){
                 try{
-
+                  console.log(response);
                   createInitialFilterData();
                   //TO convert dict to array as response coming in dict form and very difficult to use
                   $scope.center_data = $.map(response.data.data, function(value, index){
@@ -2108,6 +2131,7 @@ $scope.gridViewSummary = {};
     $scope.saveData = function(){
      try{
        saveSelectedFilters();
+       console.log($scope.center_data);
       $window.localStorage.isSavedProposal = 'true';
       mapViewService.saveData($scope.proposal_id_temp,$scope.center_data)
         .then(function onSuccess(response, status){
@@ -2483,5 +2507,15 @@ var setSocietyLocationOnMap = function(supplier){
         center_data[i].suppliers[supplierCode] = angular.copy(unsortedSupplierList);
       }
     });
+  }
+
+  $scope.selectSupplierList = function(){
+    if($scope.supplierListCode == constants.All){
+      $scope.society_allowed_gridview = true;
+      $scope.corporate_allowed_gridview = true;
+      $scope.busShelter_allowed_gridview = true;
+      $scope.gym_allowed_gridview = true;
+      $scope.saloon_allowed_gridview = true;
+    }
   }
 });
