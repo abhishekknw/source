@@ -86,16 +86,16 @@ inventorylist = {
         'DATA': ['supplier_id', 'name', 'subarea', 'status']
     },
     bus_shelter: {
-        'HEADER': [] ,
-        'DATA': []
+        'HEADER': ['SUPPLIER_ID', 'BUS SHELTER NAME', 'BUS SHELTER SUBAREA', 'STATUS'],
+        'DATA': ['supplier_id', 'name', 'subarea', 'status']
     },
     gym: {
-        'HEADER': [],
-        'DATA': []
+        'HEADER': ['SUPPLIER_ID', 'GYM NAME', 'GYM SUBAREA', 'STATUS'],
+        'DATA': ['supplier_id', 'name', 'subarea', 'status']
     },
     salon: {
-        'HEADER': [],
-        'DATA': []
+        'HEADER': ['SUPPLIER_ID', 'SALON NAME', 'SALON SUBAREA', 'STATUS'],
+        'DATA': ['supplier_id', 'name', 'subarea', 'status']
     },
     'CENTER': {
         'HEADER': ['CENTER ID', 'CENTER NAME', 'PROPOSAL'],
