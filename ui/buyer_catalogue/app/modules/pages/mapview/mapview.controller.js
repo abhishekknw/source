@@ -883,7 +883,6 @@ $scope.gridViewSummary = {};
      });
      //Start : code added to display filter panel for all centers on gridview
      if($scope.unique_suppliers.has('RS')){
-       console.log("hello");
         $scope.gridView_RS_filters = angular.copy($scope.RS_filters);
         $scope.society_show = true;
         $scope.society_allowed_gridview = true;
@@ -908,6 +907,7 @@ $scope.gridViewSummary = {};
          $scope.unique_suppliersCode = Array.from($scope.unique_suppliers);
          $scope.unique_suppliersCode.push(constants.supplierCode_all);
          $scope.unique_suppliersCode = convertSupplierCodeToName($scope.unique_suppliersCode);
+         $scope.supplierListCode = constants.All;
 
       //End : code added to display filter panel for all centers on gridview
     }catch(error){
@@ -918,11 +918,9 @@ $scope.gridViewSummary = {};
   var convertSupplierCodeToName = function(supplierCodeList){
     var supplierNamesList = [];
     angular.forEach(supplierCodeList, function(code){
-      console.log(code);
       supplierNamesList.push(constants[code]);
     })
     return supplierNamesList;
-    console.log(supplierNamesList);
   }
   //end:convert supplier code to supplier name
     //End: add filter varible for each supplier in each center
@@ -1039,7 +1037,6 @@ $scope.gridViewSummary = {};
                   $scope.center_data = $.map(response.data.data, function(value, index){
                     return [value];
                   });
-                  console.log($scope.center_data);
                   $scope.current_center = $scope.center_data[0];
                   $scope.current_center_index = 0;
                   $scope.old_data = angular.copy($scope.center_data);
@@ -1253,7 +1250,6 @@ $scope.gridViewSummary = {};
                 }
               }
             }
-          console.log($scope.inventoryHeaders);
       }
     }catch(error){
       console.log(error.message);
@@ -1272,7 +1268,6 @@ $scope.gridViewSummary = {};
 
   //start: set of inventory codes, which helpes to store unique inventories
   var setInventoryTypeCodes = function(supplier_code){
-    console.log($scope.current_center[supplierFilters[supplier_code]]);
     $scope.current_center.inventory_meta[supplier_code] = new Set();
     angular.forEach($scope.current_center[supplierFilters[supplier_code]].inventory, function(filter){
       if(filter.selected == true){
@@ -1399,7 +1394,6 @@ $scope.gridViewSummary = {};
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
       makeFilters($scope.current_center.RS_filters.amenities,filters.priority_index_filters.amenities);
       makeFlatTypeFilters($scope.current_center.RS_filters.flat_type,filters.priority_index_filters.flat_type);
-      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
     }catch(error){
@@ -1513,7 +1507,6 @@ $scope.gridViewSummary = {};
           radius : $scope.current_center.center.radius,
         },
       };
-      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
     }catch(error){
@@ -1535,7 +1528,6 @@ $scope.gridViewSummary = {};
           radius : $scope.current_center.center.radius,
         },
       };
-      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
     }catch(error){
@@ -1557,7 +1549,6 @@ $scope.gridViewSummary = {};
           radius : $scope.current_center.center.radius,
         },
       };
-      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
     }catch(error){
@@ -1626,15 +1617,13 @@ $scope.gridViewSummary = {};
 //start: generic function for fetching all supplier filters
         var filterSupplierData = function (code,supplier_filters){
          try{
-           console.log($scope.center_data);
           $scope.checkFilters = true;
           mapViewService.getFilterSuppliers(supplier_filters)
                 .then(function onSuccess(response, status){
-                console.log(response,$scope.center_data);
+                console.log(response);
                     response.data.data.center = $scope.current_center.center;
                     if(response.data.data.suppliers[code].length > 0)
                       $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.data.suppliers[code];
-                    console.log($scope.center_data);
                     if($scope.center_data[$scope.current_center_index].suppliers_meta){
                       $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.data.suppliers_meta[code];
                     }else {
@@ -1953,6 +1942,7 @@ $scope.gridViewSummary = {};
           //  is_proposal_version_created:$window.localStorage.isSavedProposal,
            is_proposal_version_created:false,
          };
+         console.log("request proposal data",proposal_data);
          console.log("sending proposal version API call");
          mapViewService.proposalVersion($stateParams.proposal_id, proposal_data)
            .then(  function onSuccess(response) {
@@ -2508,14 +2498,13 @@ var setSocietyLocationOnMap = function(supplier){
       }
     });
   }
-
-  $scope.selectSupplierList = function(){
+  $scope.selectSupplierList = function(supplier){
     if($scope.supplierListCode == constants.All){
       $scope.society_allowed_gridview = true;
       $scope.corporate_allowed_gridview = true;
       $scope.busShelter_allowed_gridview = true;
       $scope.gym_allowed_gridview = true;
       $scope.saloon_allowed_gridview = true;
-    }
+    }[]
   }
 });
