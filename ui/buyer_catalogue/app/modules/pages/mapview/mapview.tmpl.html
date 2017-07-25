@@ -305,7 +305,7 @@
             <!-- <th class = "col-md-4">Society Type</th> -->
             <!-- <th class = "col-md-4">Locality Rating</th> -->
             <th class = "col-md-4">Machadalo Index</th>
-            <th class = "col-md-4">Priority Index</th>
+            <th class = "col-md-4"><a ng-click="sortByPriorityIndex(supplierCode.society)">Priority Index</a></th>
             <th class="center-align" ng-if="inventoryHeaders.poster">Poster Count</th>
             <th class="center-align" ng-if="inventoryHeaders.standee">Standee Count</th>
             <th class="center-align" ng-if="inventoryHeaders.stall">Stall Count</th>
@@ -319,7 +319,7 @@
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
         <tbody ng-repeat = "center in center_data" >
-          <tr ng-repeat = "supplier in center.suppliers['RS'] | orderBy:'-priority_index'">
+          <tr ng-repeat = "supplier in center.suppliers['RS']">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
             <td><a ng-href="" data-target = "#societyDetails" data-toggle="modal" ng-click="getSocietyDetails(supplier,center,$index)">{{supplier.name}}</a></td>

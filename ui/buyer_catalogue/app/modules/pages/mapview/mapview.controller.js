@@ -2485,15 +2485,20 @@ var setSocietyLocationOnMap = function(supplier){
   }
   //end: for amenity icons
   $scope.getOrderBy = function(center_data,supplierCode,status){
+    console.log("hello");
     $timeout(function () {
       for (var i = 0; i < center_data.length; i++) {
         var suppliers = [];
          suppliers = angular.copy(center_data[i].suppliers[supplierCode]);
         var sortedSupplierList = [], unsortedSupplierList = [];
+        $scope.myConcatenatedData = [];
         var k = 0;
-        unsortedSupplierList = $filter('filter')(suppliers, {'status':'!'+status});
+        unsortedSupplierList = $filter('filter')(suppliers, {'status':'!'+ status});
         sortedSupplierList = $filter('filter')(suppliers, {'status':status});
+        console.log(sortedSupplierList.length,unsortedSupplierList.length);
         Array.prototype.unshift.apply(unsortedSupplierList, sortedSupplierList);
+        // $scope.myConcatenatedData = sortedSupplierList.concat(unsortedSupplierList);
+        // angular.extend($scope.myConcatenatedData, sortedSupplierList,unsortedSupplierList);
         center_data[i].suppliers[supplierCode] = angular.copy(unsortedSupplierList);
       }
     });
@@ -2506,5 +2511,13 @@ var setSocietyLocationOnMap = function(supplier){
       $scope.gym_allowed_gridview = true;
       $scope.saloon_allowed_gridview = true;
     }[]
+  }
+  $scope.sortByPriorityIndex = function(supplierCode){
+    angular.forEach($scope.center_data, function(center){
+      center.suppliers[supplierCode].sort(function(a, b) {
+      return b.priority_index - a.priority_index;
+    })
+
+});
   }
 });
