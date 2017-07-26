@@ -40,7 +40,22 @@ AD_INVENTORY_CHOICES = (
     ('FLIER', 'Flier'),
     ('BANNER', 'Banner'),
     ('POSTER LIFT', 'Poster Lift'),
+    ('GLASS_FACADE', 'GLASS_FACADE'),
+    ('HOARDING', 'HOARDING'),
+    ('DROPDOWN', 'DROPDOWN'),
+    ('STANDEE', 'STANDEE'),
+    ('PROMOTION_DESK', 'PROMOTION_DESK'),
+    ('PILLAR', 'PILLAR'),
+    ('TROLLEY', 'TROLLEY'),
+    ('WALL_INVENTORY', 'WALL_INVENTORY'),
+    ('FLOOR_INVENTORY', 'FLOOR_INVENTORY')
+)
 
+RETAIL_SHOP_TYPE = (
+    ('GROCERY_STORE', 'GROCERY_STORE'),
+    ('ELECTRONIC_STORE', 'ELECTRONIC_STORE'),
+    ('SANITARY_STORE', 'SANITARY_STORE'),
+    ('STATIONARY_STORE', 'STATIONARY_STORE')
 )
 
 INVENTORY_ACTIVITY_TYPES = (
@@ -156,6 +171,7 @@ class BasicSupplierDetails(BaseModel):
     class Meta:
         abstract = True
 
+
 class ImageMapping(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
     location_id = models.CharField(db_column='LOCATION_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
@@ -229,7 +245,6 @@ class DurationType(BaseModel):
 class PriceMappingDefault(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True, on_delete=models.CASCADE)
-    #adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True, on_delete=models.CASCADE)
     suggested_supplier_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE', null=True, blank=True)
     actual_supplier_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE', null=True, blank=True)
@@ -238,8 +253,10 @@ class PriceMappingDefault(BaseModel):
     object_id = models.CharField(db_index=True, max_length=12, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
+
     class Meta:
         db_table = 'price_mapping_default'
+
 
 class PriceMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -252,6 +269,7 @@ class PriceMapping(models.Model):
 
     class Meta:
         db_table = 'price_mapping'
+
 
 class BannerInventory(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -567,6 +585,7 @@ class ContactDetails(BaseModel):
     class Meta:
 
         db_table = 'contact_details'
+
 
 class ContactDetailsGeneric(models.Model):
     id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
@@ -2418,3 +2437,17 @@ class InventoryActivityImage(BaseModel):
 
     class Meta:
         db_table = 'inventory_activity_image'
+
+
+class SupplierTypeRetailShop(BasicSupplierDetails):
+    """
+    stores details of RETAIL TYPE SUPPLIER.
+    """
+    retail_shop_type = models.CharField(choices=RETAIL_SHOP_TYPE, max_length=255)
+    size = models.FloatField()
+    is_modern_trade = models.BooleanField(default=False)
+    is_traditional = models.BooleanField(default=False)
+    category_name = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'supplier_type_retail_shop'

@@ -7,6 +7,14 @@ stall_inventory_code = 'SL'
 flier_inventory_code = 'FL'
 car_display_inventory_code = 'CD'
 
+glass_facade_inventory_code = 'GF'
+hoarding_inventory_code = 'HO'
+dropdown_inventory_code = 'DD'
+promotion_desk_inventory = 'PD'
+pillar_inventory_code = 'PI'
+trolley_inventory_code = 'TR'
+wall_inventory_code = 'WA'
+floor_inventory_code = 'FO'
 
 # to identify unique supplier types
 society = 'RS'
@@ -14,6 +22,7 @@ corporate = 'CP'
 gym = 'GY'
 salon = 'SA'
 bus_shelter = 'BS'
+retail_shop_code = 'RE'
 
 
 # all supplier codes
@@ -97,6 +106,12 @@ inventorylist = {
         'HEADER': ['SUPPLIER_ID', 'SALON NAME', 'SALON SUBAREA', 'STATUS'],
         'DATA': ['supplier_id', 'name', 'subarea', 'status']
     },
+    retail_shop_code: {
+
+        'HEADER': ['SUPPLIER_ID', 'RETAIL SHOP NAME', 'RETAIL SUBAREA', 'STATUS'],
+        'DATA': ['supplier_id', 'name', 'subarea', 'status']
+    },
+
     'CENTER': {
         'HEADER': ['CENTER ID', 'CENTER NAME', 'PROPOSAL'],
         'DATA': ['id', 'center_name', 'proposal']

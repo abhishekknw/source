@@ -1,62 +1,45 @@
 # python core imports
-import json
 import csv
+import json
 
 # django imports
-from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
-from django.db import IntegrityError
 from django.db import transaction
 from django.db.models import Q
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.forms.models import model_to_dict
-from django.core.urlresolvers import reverse
-from django.contrib.auth import authenticate, login
 
 # third party imports
-import requests
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import viewsets
-from rest_framework.decorators import detail_route,list_route
+from rest_framework.decorators import list_route
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from rest_framework import permissions
-from v0.permissions import IsOwnerOrManager
-from rest_framework import filters
-from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, UIGymSerializer, BusShelterSerializer
-from v0.serializers import ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer,\
-                    DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer,\
-                    CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer,\
-                    PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer,\
-                    UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, \
-                    MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, \
-                    SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, \
+from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, BusShelterSerializer
+from v0.serializers import ImageMappingSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, CommunityHallInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer,\
+                    PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, \
+    ContactDetailsSerializer, EventsSerializer, PoleInventorySerializer, StallInventorySerializer, StreetFurnitureSerializer, SportsInfraSerializer, \
                     SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SocietyTowerSerializer, FlatTypeSerializer,\
-                    CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateCompanyDetailsSerializer, \
-                    CompanyFloorSerializer, CorporateBuildingGetSerializer, CorporateCompanySerializer, CorporateParkCompanySerializer, \
+                    CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateBuildingGetSerializer, CorporateParkCompanySerializer, \
                     SupplierTypeSalonSerializer, SupplierTypeGymSerializer, FlyerInventorySerializer, SupplierTypeBusShelterSerializer
 
-from v0.models import CorporateParkCompanyList, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory,SupplierAmenitiesMap
-from v0.models import City, CityArea, CitySubArea,SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuilding, \
-                    CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
+from v0.models import ImageMapping, PriceMappingDefault, PriceMapping, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, ContactDetails, Events, MailboxInfo, PoleInventory, StallInventory, StreetFurniture, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory,SupplierAmenitiesMap
+from v0.models import SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
-from v0.ui.serializers import SocietyListSerializer
+from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer
 from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
 
 # project imports
 import utils as ui_utils
 import website.utils as website_utils
-from coreapi.settings import BASE_URL, BASE_DIR
-from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas, BaseUser
+from coreapi.settings import BASE_DIR
+from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas
 from constants import keys, decision
 import constants as ui_constants
 from website.utils import save_price_mapping_default
 import v0.models as models
-import v0.errors as errors
 import v0.ui.website.constants as website_constants
 
 
@@ -3099,3 +3082,65 @@ class SuppliersMeta(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+
+class RetailShopViewSet(viewsets.ViewSet):
+    """
+    View Set around RetailShop
+    """
+    def create(self, request):
+
+        class_name = self.__class__.__name__
+        try:
+            serializer = RetailShopSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            # all retail_shop_objects sorted by name
+            user = request.user
+            if user.is_superuser:
+                retail_shop_objects = models.SupplierTypeRetailShop.objects.all().order_by('name')
+            else:
+                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.retail_shop_code)
+                retail_shop_objects = models.SupplierTypeRetailShop.objects.filter(city_query)
+
+            serializer = RetailShopSerializer(retail_shop_objects, many=True)
+            retail_shop_with_images = ui_utils.get_supplier_image(serializer.data, 'Retail Shop')
+            paginator = PageNumberPagination()
+            result_page = paginator.paginate_queryset(retail_shop_with_images, request)
+
+            paginator_response = paginator.get_paginated_response(result_page)
+            data = {
+                'count': len(retail_shop_with_images),
+                'retail_shop_objects': paginator_response.data
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+            retail_shop_instance = models.SupplierTypeRetailShop.objects.get(pk=pk)
+            serializer = RetailShopSerializer(instance=retail_shop_instance, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+            retail_shop_instance = models.SupplierTypeRetailShop.objects.get(pk=pk)
+            serializer = RetailShopSerializer(instance=retail_shop_instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
