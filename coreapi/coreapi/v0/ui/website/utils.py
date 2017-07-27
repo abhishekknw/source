@@ -5,9 +5,7 @@ import StringIO
 from types import *
 import os
 import uuid
-from smtplib import SMTPException
 from string import Template
-from operator import itemgetter
 import json
 import shutil
 import string
@@ -40,17 +38,13 @@ from bulk_update.helper import bulk_update
 from celery import group
 from celery.task.sets import TaskSet, subtask
 
-import constants as website_constants
-from constants import price_per_flat, inventorylist
 import v0.models as models
 from v0.models import PriceMappingDefault
 import v0.ui.utils as ui_utils
 import serializers
 from v0 import errors
-import v0.constants as v0_constants
 import tasks
-import  v0.ui.constants as ui_constants
-import v0.utils
+import v0.constants as v0_constants
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -454,20 +448,20 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
         # check for predefined keys in the row. if available, we have that inventory !
         for code in unique_inventory_codes:
 
-            inv_name = website_constants.inventory_code_to_name[code]
+            inv_name = v0_constants.inventory_code_to_name[code]
             # get inventory base name
-            base_name = join_with_underscores(website_constants.inventory_code_to_name[code].lower())
+            base_name = join_with_underscores(v0_constants.inventory_code_to_name[code].lower())
 
             # get type and duration.  it's fixed for now
-            inv_type = website_constants.inventory_type_duration_dict_list[code][1]
-            inv_duration = website_constants.inventory_type_duration_dict_list[code][2]
+            inv_type = v0_constants.inventory_type_duration_dict_list[code][1]
+            inv_duration = v0_constants.inventory_type_duration_dict_list[code][2]
 
-            # inv_type = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['type']
-            # inv_type = website_constants.type_dict[inv_type]
+            # inv_type = v0_constants.inventory_type_duration_dict[code]['type_duration'][0]['type']
+            # inv_type = v0_constants.type_dict[inv_type]
             #
             # # get duration. it's fixed for now
-            # inv_duration = website_constants.inventory_type_duration_dict[code]['type_duration'][0]['duration']
-            # inv_duration = website_constants.duration_dict[inv_duration]
+            # inv_duration = v0_constants.inventory_type_duration_dict[code]['type_duration'][0]['duration']
+            # inv_duration = v0_constants.duration_dict[inv_duration]
 
             # the inventory ids are added later. but why not here depending upon the count ?
             shortlisted_inventory_details = {
@@ -479,7 +473,7 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
                 'inventory_count': get_default_inventory_count(inv_name, row['tower_count']),
                 'type': inv_type,
                 'duration': inv_duration,
-                'inventory_name': website_constants.inventory_code_to_name[code].upper(),
+                'inventory_name': v0_constants.inventory_code_to_name[code].upper(),
                 'factor': row[base_name + '_price_factor']
             }
 
@@ -503,7 +497,7 @@ def get_default_inventory_count(inventory_name, tower_count):
     function = get_default_inventory_count.__name__
     try:
 
-        if inventory_name.lower() == website_constants.poster.lower() or inventory_name.lower() == website_constants.standee.lower():
+        if inventory_name.lower() == v0_constants.poster.lower() or inventory_name.lower() == v0_constants.standee.lower():
             return tower_count
         else:
             return 1
@@ -524,9 +518,9 @@ def make_suppliers(center_object, row, supplier_type_code, proposal_id, center_i
     try:
         # collect society data in a dict and append it to the list of societies of center_object
 
-        supplier_header_keys = ['_'.join(header.split(' ')) for header in website_constants.inventorylist[supplier_type_code]['HEADER']]
+        supplier_header_keys = ['_'.join(header.split(' ')) for header in v0_constants.inventorylist[supplier_type_code]['HEADER']]
         supplier_header_keys = [header.lower() for header in supplier_header_keys]
-        supplier_data_keys = website_constants.inventorylist[supplier_type_code]['DATA']
+        supplier_data_keys = v0_constants.inventorylist[supplier_type_code]['DATA']
         supplier = {data_key: row[header] for header, data_key in zip(supplier_header_keys, supplier_data_keys)}
 
         # get the list of shortlisted inventory details
@@ -626,7 +620,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
                 }
 
                 # copy supplier_id, inventory_price, inventory_count as it is from the current object
-                for key in website_constants.shortlisted_inventory_pricing_keys:
+                for key in v0_constants.shortlisted_inventory_pricing_keys:
                     shortlisted_inventory_detail_object[key] = shortlisted_inventory_detail[key]
 
                 supplier_type_code = shortlisted_inventory_detail['supplier_type_code']
@@ -692,7 +686,7 @@ def update_shortlisted_inventory_pricing_data(proposal_id, output):
         sipd_instances_per_inventory_map = {}
         for instance in shortlisted_inventory_pricing_instances:
             inventory_name = inventory_content_type_name_map[instance.inventory_content_type]
-            key = (instance.shortlisted_spaces.object_id, website_constants.inventory_code_to_name[inventory_name])
+            key = (instance.shortlisted_spaces.object_id, v0_constants.inventory_code_to_name[inventory_name])
             try:
                 reference = sipd_instances_per_inventory_map[key]
                 reference.append(instance)
@@ -929,7 +923,7 @@ def handle_offline_pricing_row(row, master_data):
         target_string = row[0].value
 
         # for all models and their contents declared in constants
-        for model, model_content in website_constants.offline_pricing_data.iteritems():
+        for model, model_content in v0_constants.offline_pricing_data.iteritems():
             # because model names are joined by _, join them without underscore with first letter as capital
             # this is required for apps.get_model() to work. model_content is a list. each item of this list
             # will map to a row in db
@@ -950,7 +944,7 @@ def handle_offline_pricing_row(row, master_data):
                 column_name = model_row['col_name']
 
                 # get the value for that column
-                value = row[website_constants.value_index].value
+                value = row[v0_constants.value_index].value
 
                 # set data to previously saved data dict if it's a dict because here it will be updated
                 # else set to an empty dict because it will be appended in the list
@@ -965,14 +959,14 @@ def handle_offline_pricing_row(row, master_data):
                     data['supplier_type'] = supplier_content_type.id
 
                 # add comment information to data if comment is not none. index for comment col is defined in constants
-                if row[website_constants.comment_index].value:
-                    data['comment'] = row[website_constants.comment_index].value
+                if row[v0_constants.comment_index].value:
+                    data['comment'] = row[v0_constants.comment_index].value
 
                 # add the specific column and value
                 data[column_name] = value
 
                 # add metric_name and value of the metric in case it's a metric model
-                if model == website_constants.metric_model:
+                if model == v0_constants.metric_model:
                     data['metric_name'] = model_row.get('match_term')
                     data['value'] = value
                 # we will not save here. we will collect the data in master_data
@@ -1081,13 +1075,13 @@ def save_master_data(master_data):
                 return ui_utils.handle_response(function, data=serializer.errors)
 
             # pull the model names to process except proposal_master_cost which has been done
-            model_name_list = list(website_constants.offline_pricing_data.keys())
+            model_name_list = list(v0_constants.offline_pricing_data.keys())
             model_name_list.remove('proposal_master_cost')
 
             # get the right serializer and save the data
             for model in model_name_list:
                 # differentiate if we have list to save or a dict to save
-                if model in website_constants.one_obect_models:
+                if model in v0_constants.one_obect_models:
                     # need to set id of proposal master cost as according to model structure
                     master_data[model]['proposal_master_cost'] = proposal_master_cost_id
                     serializer = ui_utils.get_serializer(model)(data=master_data[model])
@@ -1348,7 +1342,7 @@ def save_shortlisted_suppliers(suppliers, fixed_data):
         for supplier in suppliers:
 
             # by default every supplier is shortlisted, hence we save everything.
-            # if supplier['status'] == website_constants.status:
+            # if supplier['status'] == v0_constants.status:
             #     continue
 
             # make entry for campaign_status and phase for each supplier here itself.
@@ -1464,13 +1458,13 @@ def save_filter_data(suppliers_meta, fixed_data):
 
         # creating filter objects for each filter value selected
         selected_filters_list = []
-        for filter_name in website_constants.filter_type[code]:
+        for filter_name in v0_constants.filter_type[code]:
             if suppliers_meta.get(code) and filter_name in suppliers_meta[code].keys():
                 for inventory_code in suppliers_meta[code][filter_name]:
                     # TO store employee_count by codes so easy to fetch
                     if filter_name == 'employee_count':
                         key = int(inventory_code['min'])
-                        inventory_code = website_constants.employee_count_codes[key]
+                        inventory_code = v0_constants.employee_count_codes[key]
                     data = {
                         'center': center,
                         'proposal': proposal,
@@ -1505,11 +1499,11 @@ def create_proposal_id(business_id, account_id):
         if not business_id or not account_id:
             return ui_utils.handle_response(function, data='provide business and account ids')
         # get number of business letters to append
-        business_letters = website_constants.business_letters
+        business_letters = v0_constants.business_letters
         # get number of account letters to append
-        account_letters = website_constants.account_letters
+        account_letters = v0_constants.account_letters
         # make the proposal id.
-        proposal_id = business_id[:business_letters].upper() + account_id[:account_letters].upper() + (str(uuid.uuid4())[-website_constants.proposal_id_limit:])
+        proposal_id = business_id[:business_letters].upper() + account_id[:account_letters].upper() + (str(uuid.uuid4())[-v0_constants.proposal_id_limit:])
         return proposal_id
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -1602,7 +1596,7 @@ def get_suppliers(query, supplier_type_code, coordinates):
         result = []
         for supplier in serializer.data:
             # replace all society specific keys with common supplier keys
-            for society_key, actual_key in website_constants.society_common_keys.iteritems():
+            for society_key, actual_key in v0_constants.society_common_keys.iteritems():
                 if society_key in supplier.keys():
                     value = supplier[society_key]
                     del supplier[society_key]
@@ -1615,7 +1609,7 @@ def get_suppliers(query, supplier_type_code, coordinates):
             if space_on_circle(latitude, longitude, radius, supplier['latitude'], supplier['longitude']):
                 supplier['shortlisted'] = True
                 # set status= 'S' as suppliers are shortlisted initially.
-                supplier['status'] = website_constants.status
+                supplier['status'] = v0_constants.status
                 result.append(supplier)
         return ui_utils.handle_response(function_name, data=result, success=True)
 
@@ -1911,7 +1905,7 @@ def set_inventory_pricing(supplier_ids, supplier_type_code,  inventory_summary_m
             for inv_code in inventory_codes_allowed:
                 suppliers_per_supplier_type_code[supplier_id][inv_code]['allowed'] = True
                 try:
-                    inventory_default_meta = website_constants.inventory_type_duration_dict_list[inv_code]
+                    inventory_default_meta = v0_constants.inventory_type_duration_dict_list[inv_code]
                 except KeyError:
                     raise Exception('The supplier {0} does not have an entry into constants.' .format(supplier_id))
                 try:
@@ -1972,13 +1966,13 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
             supplier['buffer_status'] = False
             # status is set to True.
             if not supplier.get('status'):
-                supplier['status'] = website_constants.status
+                supplier['status'] = v0_constants.status
 
             allowed_inventory_codes = get_inventories_allowed(supplier_inventory_obj)
             for inventory_code in allowed_inventory_codes:
-                inventory_name = website_constants.inventory_code_to_name[inventory_code].lower()
-                if inventory_name == website_constants.flier.lower():
-                    supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency if supplier_inventory_obj else website_constants.default_inventory_count
+                inventory_name = v0_constants.inventory_code_to_name[inventory_code].lower()
+                if inventory_name == v0_constants.flier.lower():
+                    supplier['flier_frequency'] = supplier_inventory_obj.flier_frequency if supplier_inventory_obj else v0_constants.default_inventory_count
                 else:
                     db_key = 'total_' + inventory_name + '_count'
                     # set count from inventory summary if available. if not set count calculated previously from actual inventory tables
@@ -1990,30 +1984,30 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
                                 try:
                                     supplier[db_key] = inventory_count_map[supplier['supplier_id']][inventory_code]
                                 except KeyError:
-                                    supplier[db_key] = website_constants.default_inventory_count
+                                    supplier[db_key] = v0_constants.default_inventory_count
                             # else, set the default value from inventory summary
                             else:
                                 supplier[db_key] = total_inventory_count
                         # if the 'total_inventory_count' isn't present as a key, set to default count
                         except KeyError:
-                            supplier[db_key] = website_constants.default_inventory_count
+                            supplier[db_key] = v0_constants.default_inventory_count
                     # if no inventory summary we try to set by individual inventory table
                     else:
                         try:
                             supplier[db_key] = inventory_count_map[supplier['supplier_id']][inventory_code]
                         except KeyError:
-                            supplier[db_key] = website_constants.default_inventory_count
+                            supplier[db_key] = v0_constants.default_inventory_count
 
-                ad_inventory_instance = ad_inventory_map[website_constants.inventory_type_duration_dict_list[inventory_code][0], website_constants.inventory_type_duration_dict_list[inventory_code][1]]
-                duration_instance = duration_map[website_constants.inventory_type_duration_dict_list[inventory_code][2]]
+                ad_inventory_instance = ad_inventory_map[v0_constants.inventory_type_duration_dict_list[inventory_code][0], v0_constants.inventory_type_duration_dict_list[inventory_code][1]]
+                duration_instance = duration_map[v0_constants.inventory_type_duration_dict_list[inventory_code][2]]
                 try:
                     supplier[inventory_name + '_price'] = price_mapping_default_map[ad_inventory_instance.id, duration_instance.id, supplier['supplier_id'], content_type.id]['actual_supplier_price']
                 except KeyError:
-                    supplier[inventory_name + '_price'] = website_constants.default_inventory_price
+                    supplier[inventory_name + '_price'] = v0_constants.default_inventory_price
                 try:
                     supplier[inventory_name + '_duration'] = duration_instance.duration_name
                 except KeyError:
-                    supplier[inventory_name + '_duration'] = website_constants.default_inventory_duration
+                    supplier[inventory_name + '_duration'] = v0_constants.default_inventory_duration
 
         return supplier_list
     except Exception as e:
@@ -2036,15 +2030,15 @@ def get_inventories_allowed(inventory_summary_instance):
             return []
         inventory_code_list = []
         if inventory_summary_instance.poster_allowed_nb or inventory_summary_instance.poster_allowed_lift:
-            inventory_code_list.append(website_constants.inventory_name_to_code['poster'])
+            inventory_code_list.append(v0_constants.inventory_name_to_code['poster'])
         if inventory_summary_instance.stall_allowed:
-            inventory_code_list.append(website_constants.inventory_name_to_code['stall'])
+            inventory_code_list.append(v0_constants.inventory_name_to_code['stall'])
         if inventory_summary_instance.standee_allowed:
-            inventory_code_list.append(website_constants.inventory_name_to_code['standee'])
+            inventory_code_list.append(v0_constants.inventory_name_to_code['standee'])
         if inventory_summary_instance.flier_allowed:
-            inventory_code_list.append(website_constants.inventory_name_to_code['flier'])
+            inventory_code_list.append(v0_constants.inventory_name_to_code['flier'])
         if inventory_summary_instance.car_display_allowed:
-            inventory_code_list.append(website_constants.inventory_name_to_code['car_display'])
+            inventory_code_list.append(v0_constants.inventory_name_to_code['car_display'])
         return inventory_code_list
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -2342,7 +2336,7 @@ def initialize_export_final_response(supplier_type_codes, result):
         for code in supplier_type_codes:
 
             result[code] = {}
-            sheet_name = website_constants.sheet_names[code]
+            sheet_name = v0_constants.sheet_names[code]
             result[code]['sheet_name'] = sheet_name
 
             # set fixed headers for center
@@ -2395,7 +2389,7 @@ def make_export_final_response(result, data, inventory_summary_map, supplier_inv
         for center in data:
 
             # obtain the dict containing centre information
-            center_info_dict = construct_single_supplier_row(center['center'], website_constants.center_keys).copy()
+            center_info_dict = construct_single_supplier_row(center['center'], v0_constants.center_keys).copy()
 
             for code, supplier_object_list in center['suppliers'].iteritems():
 
@@ -2460,12 +2454,12 @@ def set_supplier_inventory_keys(supplier_dict, inv_summary_instance, unique_inve
     try:
         allowed_inventory_codes = get_inventories_allowed(inv_summary_instance)
         for code in unique_inventory_codes:
-            inventory_key = '_'.join(website_constants.inventory_code_to_name[code].lower().split())
+            inventory_key = '_'.join(v0_constants.inventory_code_to_name[code].lower().split())
             inventory_allowed_data_key = inventory_key + '_allowed'
             inventory_pricing_key = inventory_key + '_price'
             inventory_pricing_available_key = inventory_key + '_price_available'
 
-            supplier_dict[inventory_key + '_price_type'] = join_with_underscores(' '.join(website_constants.inventory_type_duration_dict_list[code])).lower()
+            supplier_dict[inventory_key + '_price_type'] = join_with_underscores(' '.join(v0_constants.inventory_type_duration_dict_list[code])).lower()
 
             if code not in allowed_inventory_codes:
                 # this inventory is not allowed
@@ -2496,7 +2490,7 @@ def save_leads(row):
     """
     function = save_leads.__name__
     try:
-        lead_data = {lead_key: row[lead_key] for lead_key in website_constants.lead_keys}
+        lead_data = {lead_key: row[lead_key] for lead_key in v0_constants.lead_keys}
         email = lead_data['email']
         if not email:
             return ui_utils.handle_response(function, data='please provide email')
@@ -2614,16 +2608,16 @@ def handle_common_filters(common_filters, supplier_type_code):
             query['longitude__lt'] = max_longitude
             query['longitude__gt'] = min_longitude
         # the keys like 'locality', 'quantity', 'quality' we receive from front end are already defined in constants
-        predefined_common_filter_keys = website_constants.query_dict[supplier_type_code].keys()
+        predefined_common_filter_keys = v0_constants.query_dict[supplier_type_code].keys()
         # we may receive a subset of already defined keys. obtain that subset
         received_common_filter_keys = common_filters.keys()
         # iterate over each predefined key and check if it is what we have received.
         for filter_term in predefined_common_filter_keys:
             if filter_term in received_common_filter_keys:
                 # if received, obtain the query term for that filter key. query term looks like 'locality_rating__in'
-                query_term = website_constants.query_dict[supplier_type_code][filter_term]['query']
+                query_term = v0_constants.query_dict[supplier_type_code][filter_term]['query']
                 # fetch the query dict associated. it contains the code-value mapping of the filters codes
-                query_dict = website_constants.query_dict[supplier_type_code][filter_term]['dict']
+                query_dict = v0_constants.query_dict[supplier_type_code][filter_term]['dict']
                 # fetch the filter codes received like ['HH', 'UH']
                 filter_codes = common_filters.get(filter_term)
                 # get the actual values against these codes for example, 'Ulta High' for 'UH'. These values are defined
@@ -2689,16 +2683,16 @@ def handle_inventory_filters(inventory_list):
         # final Q object to be returned
         inventory_query = Q()
         # atomic inventories means 'PO', 'ST' etc.
-        valid_atomic_inventories = website_constants.inventory_dict.keys()
+        valid_atomic_inventories = v0_constants.inventory_dict.keys()
         # iterate through all the inventory list
         for inventory in inventory_list:
             # if it is atomic, that means you only need to fetch it's db field and set it to Q object
             if inventory in valid_atomic_inventories:
                 # the policy is to  OR the atomic inventories
                 if inventory_query:
-                    inventory_query |= Q(**{website_constants.inventory_dict[inventory]: True})
+                    inventory_query |= Q(**{v0_constants.inventory_dict[inventory]: True})
                 else:
-                    inventory_query = Q(**{website_constants.inventory_dict[inventory]: True})
+                    inventory_query = Q(**{v0_constants.inventory_dict[inventory]: True})
                 continue
             # come here only it it's non atomic inventory code.
             query = {}
@@ -2708,7 +2702,7 @@ def handle_inventory_filters(inventory_list):
             # for each code
             for code in individual_codes:
                 # set the query
-                query[website_constants.inventory_dict[code]] = True
+                query[v0_constants.inventory_dict[code]] = True
 
             # make a new Q object with query and OR it with previously calculated inventory_query.
             if inventory_query:
@@ -2738,7 +2732,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
             return ui_utils.handle_response(function, data=Q(), success=True)
 
         # get the predefined dict of specific filters for this supplier
-        master_specific_filters = website_constants.supplier_filters[supplier_type_code]
+        master_specific_filters = v0_constants.supplier_filters[supplier_type_code]
 
         specific_filters_query = Q()
         # the following loop stores those fields in received filters which can be mapped directly to db columns.
@@ -2753,7 +2747,7 @@ def handle_specific_filters(specific_filters, supplier_type_code):
                 else:
                     specific_filters_query &= Q(**{database_field: filter_value})
 
-        if supplier_type_code == website_constants.corporate:
+        if supplier_type_code == v0_constants.corporate:
             # well, we can receive a multiple dicts for employee counts. each describing min and max employee counts.
             # todo: does not make sense
             if specific_filters.get('employees_count'):
@@ -2803,7 +2797,7 @@ def handle_priority_index_filters(supplier_type_code, pi_filters_map, final_supp
         # cannot be mapped to a particular supplier and vary from supplier to supplier
         # handle filters of type min_max here. min max type filters are always there for PI.
         queryset = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list)
-        for filter_name, db_value in website_constants.pi_range_filters[supplier_type_code].iteritems():
+        for filter_name, db_value in v0_constants.pi_range_filters[supplier_type_code].iteritems():
             if pi_filters_map.get(filter_name):
                 min_value = float(pi_filters_map[filter_name]['min'])
                 max_value = float(pi_filters_map[filter_name]['max'])
@@ -2839,13 +2833,13 @@ def handle_priority_index_filters(supplier_type_code, pi_filters_map, final_supp
                 if not amenity_count:
                     amenity_count = 0
                 # if else check to assign PI of 1 in case the supplier passes the amenity threshold
-                if amenity_count >= website_constants.amenity_count_threshold:
+                if amenity_count >= v0_constants.amenity_count_threshold:
                     pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi'] = 1
 
-                pi_index_map[supplier_id]['detail'][filter_name]['explanation'] = {'supplier_amenity_count':  amenity_count, 'amenity_threshold': website_constants.amenity_count_threshold}
+                pi_index_map[supplier_id]['detail'][filter_name]['explanation'] = {'supplier_amenity_count':  amenity_count, 'amenity_threshold': v0_constants.amenity_count_threshold}
                 pi_index_map[supplier_id]['total_priority_index'] += pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi']
 
-        if supplier_type_code == website_constants.society:
+        if supplier_type_code == v0_constants.society:
 
             # check for standalone societies
             if pi_filters_map.get('is_standalone_society'):
@@ -2878,7 +2872,7 @@ def handle_priority_index_filters(supplier_type_code, pi_filters_map, final_supp
                     flat_details = flat_result.get(supplier_id)
                     if flat_details:
                         for flat_code, detail in pi_filters_map['flat_type'].iteritems():
-                            flat_code_value = website_constants.flat_type_dict[flat_code]
+                            flat_code_value = v0_constants.flat_type_dict[flat_code]
                             single_flat_detail = flat_details.get(flat_code_value)
                             if flat_code_value in flat_details.keys():
                                 pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi'] += 1
@@ -3060,7 +3054,7 @@ def set_supplier_extra_attributes(suppliers, supplier_type_code,  inventory_code
         inventory_types = []
         inventory_durations = []
         for inventory_code in inventory_codes:
-             inventory_duration_dict = website_constants.inventory_duration_dict[inventory_code]
+             inventory_duration_dict = v0_constants.inventory_duration_dict[inventory_code]
              inventory_types.extend(type_dur_dict['type'] for type_dur_dict in inventory_duration_dict['type_duration'])
              inventory_durations.extend(type_dur_dict['duration'] for type_dur_dict in inventory_duration_dict['type_duration'])
              inventory_names.extend(inventory_duration_dict['name'])
@@ -3173,7 +3167,7 @@ def get_inventory_count(supplier_ids, content_type, inventory_summary_objects=No
         if inventory_summary_objects:
             return inventory_summary_objects.aggregate(posters=Sum('total_poster_count'), standees=Sum('total_standee_count'), stalls=Sum('total_stall_count'), fliers=Sum('flier_frequency'))
         # else we need to calculate the counts per supplier by counting each row in each inventory tables
-        all_inventory_codes = website_constants.inventories_with_object_id_fields
+        all_inventory_codes = v0_constants.inventories_with_object_id_fields
         inventory_models = {}
         for code in all_inventory_codes:
             inventory_content_type = ui_utils.fetch_content_type(code)
@@ -3191,7 +3185,7 @@ def get_inventory_count(supplier_ids, content_type, inventory_summary_objects=No
                 try:
                     result[supplier_id][code] = count_query_result[code][supplier_id]
                 except KeyError:
-                    result[supplier_id][code] = website_constants.default_inventory_count
+                    result[supplier_id][code] = v0_constants.default_inventory_count
         return result
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -3323,7 +3317,7 @@ def get_file_name(user, proposal_id, is_exported=True):
     """
     function = get_file_name.__name__
     try:
-        format = website_constants.datetime_format
+        format = v0_constants.datetime_format
         now_time = datetime.datetime.now()
         datetime_stamp = now_time.strftime(format)
         proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id) 
@@ -3359,12 +3353,12 @@ def add_metric_sheet(workbook):
     """
     function = add_metric_sheet.__name__
     try:
-        my_file = open(website_constants.metric_file_path, 'rb')
+        my_file = open(v0_constants.metric_file_path, 'rb')
         wb = openpyxl.load_workbook(my_file)
         # copy first sheet from saved workbook
-        first_sheet = wb.get_sheet_by_name(website_constants.metric_sheet_name)
+        first_sheet = wb.get_sheet_by_name(v0_constants.metric_sheet_name)
         # create a target sheet where data will be copied
-        target_sheet = workbook.create_sheet(index=0, title=website_constants.metric_sheet_name)
+        target_sheet = workbook.create_sheet(index=0, title=v0_constants.metric_sheet_name)
         # for each row, copy it to new sheet
         for row in first_sheet.iter_rows():
             target_row_list = [cell.value for cell in row]
@@ -3412,7 +3406,7 @@ def save_price_mapping_default(supplier_id, supplier_type_code, row):
     try:
         with transaction.atomic():
             # for each predefined inventories. each 'inventory' is actually a tuple. look in constants for more details.
-            for inventory in website_constants.current_inventories:
+            for inventory in v0_constants.current_inventories:
                 inventory_type = inventory[0]  # at index 0 we have inventory_type
                 inventory_duration = inventory[1]  # at index 1 we have inventory_duration
                 if not row[inventory[2]]:
@@ -3550,7 +3544,7 @@ def union_suppliers(first_supplier_list, second_supplier_list):
                 supplier_id = supplier['supplier_id'] if supplier.get('supplier_id') else supplier['object_id']
                 first_supplier_list_ids.add(supplier_id)
                 first_supplier_mapping[supplier_id] = supplier
-                supplier['status'] = website_constants.status
+                supplier['status'] = v0_constants.status
 
         total_supplier_ids = first_supplier_list_ids.union(second_supplier_list_ids)
         suppliers_not_in_second_set = first_supplier_list_ids.difference(second_supplier_list_ids)
@@ -3563,7 +3557,7 @@ def union_suppliers(first_supplier_list, second_supplier_list):
                 result[supplier_id] = second_supplier_mapping[supplier_id]
 
             if supplier_id in suppliers_not_in_second_set:
-                result[supplier_id]['status'] = website_constants.status
+                result[supplier_id]['status'] = v0_constants.status
             result[supplier_id]['supplier_id'] = supplier_id
         return result
     except Exception as e:
@@ -3679,7 +3673,7 @@ def get_shortlisted_suppliers(proposal_id, user):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def manipulate_object_key_values(suppliers, supplier_type_code=website_constants.society, **kwargs):
+def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.society, **kwargs):
     """
     Args:
         suppliers: list of all suppliers
@@ -3693,8 +3687,8 @@ def manipulate_object_key_values(suppliers, supplier_type_code=website_constants
         for supplier in suppliers:
 
             # replace all society specific keys with common supplier keys
-            if supplier_type_code == website_constants.society:
-                for society_key, actual_key in website_constants.society_common_keys.iteritems():
+            if supplier_type_code == v0_constants.society:
+                for society_key, actual_key in v0_constants.society_common_keys.iteritems():
                     if society_key in supplier.keys():
                         value = supplier[society_key]
                         del supplier[society_key]
@@ -3791,7 +3785,7 @@ def setup_generic_export(data, user, proposal_id):
 
         workbook.save(file_name)
         file_content = send_excel_file(file_name)
-        content_type = website_constants.mime['xlsx']
+        content_type = v0_constants.mime['xlsx']
 
         # in order to provide custom headers in response in angular js, we need to set this header
         # first
@@ -3802,7 +3796,7 @@ def setup_generic_export(data, user, proposal_id):
         return {
             'local_path': os.path.join(settings.BASE_DIR, file_name),
             'name': file_name,
-            'pricing_defaults': website_constants.inventory_type_duration_dict_list,
+            'pricing_defaults': v0_constants.inventory_type_duration_dict_list,
             'stats': stats
         }
 
@@ -3846,7 +3840,7 @@ def setup_create_final_proposal_post(data, proposal_id, delete_and_save_filter_d
                 if not exclude_shortlisted_space:
                     final_shortlisted_list = total_shortlisted_suppliers_list
                 else:
-                    final_shortlisted_list = [instance for instance in total_shortlisted_suppliers_list if instance.status != website_constants.shortlisted]
+                    final_shortlisted_list = [instance for instance in total_shortlisted_suppliers_list if instance.status != v0_constants.shortlisted]
                 models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
                 models.ShortlistedSpaces.objects.bulk_create(final_shortlisted_list)
                 models.ShortlistedSpaces.objects.filter(proposal_id=proposal_id).update(created_at=now_time,updated_at=now_time)
@@ -3896,19 +3890,19 @@ def is_campaign(proposal):
         if not proposal.invoice_number:
             return ui_utils.handle_response(function, data=errors.CAMPAIGN_NO_INVOICE_ERROR)
 
-        if proposal.campaign_state == website_constants.proposal_not_converted_to_campaign:
+        if proposal.campaign_state == v0_constants.proposal_not_converted_to_campaign:
             return ui_utils.handle_response(function, data=errors.CAMPAIGN_NOT_APPROVED_ERROR)
         # todo: removing check for on-hold as of now. any proposal must have been accepted before on holding it. A proposal on
         # on hold means, a campaign was running but due to some reason, it's on hold. Still, that proposal_id was a campaign.
         #
-        # if proposal.campaign_state == website_constants.proposal_on_hold:
+        # if proposal.campaign_state == v0_constants.proposal_on_hold:
         #     return ui_utils.handle_response(function, data=errors.CAMPAIGN_ON_HOLD_ERROR)
 
         if not proposal.tentative_start_date or not proposal.tentative_end_date:
             return ui_utils.handle_response(function, data=errors.CAMPAIGN_NO_START_OR_END_DATE_ERROR.format(proposal.proposal_id))
 
-        if (proposal.campaign_state != website_constants.proposal_converted_to_campaign) and (proposal.campaign_state != website_constants.proposal_on_hold):
-            return ui_utils.handle_response(function, data=errors.CAMPAIGN_INVALID_STATE_ERROR.format(proposal.campaign_state,  website_constants.proposal_converted_to_campaign, website_constants.proposal_on_hold))
+        if (proposal.campaign_state != v0_constants.proposal_converted_to_campaign) and (proposal.campaign_state != v0_constants.proposal_on_hold):
+            return ui_utils.handle_response(function, data=errors.CAMPAIGN_INVALID_STATE_ERROR.format(proposal.campaign_state,  v0_constants.proposal_converted_to_campaign, v0_constants.proposal_on_hold))
 
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
@@ -4156,11 +4150,11 @@ def check_valid_codes(payment_status, payment_method, booking_status):
     """
     function = check_valid_codes.__name__
     try:
-        if payment_method and payment_method not in website_constants.payment_method.values():
+        if payment_method and payment_method not in v0_constants.payment_method.values():
             return ui_utils.handle_response(function, data=errors.INVALID_PAYMENT_METHOD_CODE.format(payment_method))
-        if payment_status and payment_status not in website_constants.payment_status.values():
+        if payment_status and payment_status not in v0_constants.payment_status.values():
             return ui_utils.handle_response(function, data=errors.INVALID_PAYMENT_STATUS_CODE.format(payment_status))
-        if booking_status and booking_status not in website_constants.booking_status.values():
+        if booking_status and booking_status not in v0_constants.booking_status.values():
             return ui_utils.handle_response(function, data=errors.INVALID_BOOKING_STATUS_CODE.format(booking_status))
 
         return ui_utils.handle_response(function, data='success', success=True)
@@ -4309,7 +4303,7 @@ def map_objects_ids_to_objects(mapping):
             content_type_object = content_type_object_mapping[content_type_id]
             model_name = content_type_object.model
             # we need to change the keys when we encounter a society
-            if model_name == website_constants.society_model_name:
+            if model_name == v0_constants.society_model_name:
                 supplier_objects = manipulate_object_key_values(supplier_objects)
 
             # map the extra supplier_specific attributes to content_type, supplier_id
@@ -4575,39 +4569,39 @@ def get_inventory_general_data(inventory_name, inventory_content_type):
     try:
         inventory_general_data = {}
 
-        inventory_code = ui_constants.inventory_name_to_code[inventory_name]
+        inventory_code = v0_constants.inventory_name_to_code[inventory_name]
 
-        if inventory_name == website_constants.standee_name:
+        if inventory_name == v0_constants.standee_name:
             # general inventory data
             inventory_general_data = {
-                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.standee_name,adinventory_type=website_constants.default_standee_type),
-                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_standee_duration_type),
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=v0_constants.standee_name,adinventory_type=v0_constants.default_standee_type),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=v0_constants.default_standee_duration_type),
                 'inventory_content_type': inventory_content_type,
             }
 
-        elif inventory_name == website_constants.stall:
+        elif inventory_name == v0_constants.stall:
             # general inventory data
             inventory_general_data = {
-                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.stall,adinventory_type=website_constants.default_stall_type),
-                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_stall_duration_type),
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=v0_constants.stall,adinventory_type=v0_constants.default_stall_type),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=v0_constants.default_stall_duration_type),
                 'inventory_content_type': inventory_content_type,
             }
-        elif inventory_name == website_constants.flier:
+        elif inventory_name == v0_constants.flier:
             inventory_general_data = {
-                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.flier,adinventory_type=website_constants.default_flier_type),
-                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_flier_duration_type),
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=v0_constants.flier,adinventory_type=v0_constants.default_flier_type),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=v0_constants.default_flier_duration_type),
                 'inventory_content_type': inventory_content_type,
             }
-        elif inventory_name == website_constants.poster:
+        elif inventory_name == v0_constants.poster:
             inventory_general_data = {
-                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.poster, adinventory_type=website_constants.default_poster_type),
-                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.default_poster_duration_type),
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=v0_constants.poster, adinventory_type=v0_constants.default_poster_type),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=v0_constants.default_poster_duration_type),
                 'inventory_content_type': inventory_content_type,
             }
-        elif inventory_name == website_constants.car_display:
+        elif inventory_name == v0_constants.car_display:
             inventory_general_data = {
-                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=website_constants.car_display, adinventory_type=website_constants.inventory_type_duration_dict_list[inventory_code][1]),
-                'ad_inventory_duration': models.DurationType.objects.get(duration_name=website_constants.inventory_type_duration_dict_list[inventory_code][2]),
+                'ad_inventory_type': models.AdInventoryType.objects.get(adinventory_name=v0_constants.car_display, adinventory_type=v0_constants.inventory_type_duration_dict_list[inventory_code][1]),
+                'ad_inventory_duration': models.DurationType.objects.get(duration_name=v0_constants.inventory_type_duration_dict_list[inventory_code][2]),
                 'inventory_content_type': inventory_content_type,
             }
 
@@ -4631,9 +4625,9 @@ def get_tower_id(inventory_object):
     function = get_tower_id.__name__
     try:
         class_name = inventory_object.__class__.__name__
-        if class_name == website_constants.stall_class_name or class_name == website_constants.flier_class_name:
+        if class_name == v0_constants.stall_class_name or class_name == v0_constants.flier_class_name:
             return ui_utils.handle_response(function, data=0, success=True)
-        elif class_name == website_constants.standee_class_name or class_name == website_constants.poster_class_name:
+        elif class_name == v0_constants.standee_class_name or class_name == v0_constants.poster_class_name:
             if not inventory_object.tower:
                 return ui_utils.handle_response(function, data=errors.NO_TOWER_ASSIGNED_ERROR.format(class_name, inventory_object.adinventory_id))
             return ui_utils.handle_response(function, data=inventory_object.tower_id, success=True)
@@ -4657,16 +4651,16 @@ def prepare_bucket_per_inventory(inventory_content_type, inventory_name,  list_o
     try:
         # default assignment frequency of each bucket.
         assignment_frequency = 1
-        if inventory_name == website_constants.stall:
-            assignment_frequency = website_constants.default_stall_assignment_frequency
-        if inventory_name == website_constants.poster:
-            assignment_frequency = website_constants.default_poster_assignment_frequency
-        elif inventory_name == website_constants.standee_name:
-            assignment_frequency = website_constants.default_standee_assignment_frequency
-        elif inventory_name == website_constants.flier:
+        if inventory_name == v0_constants.stall:
+            assignment_frequency = v0_constants.default_stall_assignment_frequency
+        if inventory_name == v0_constants.poster:
+            assignment_frequency = v0_constants.default_poster_assignment_frequency
+        elif inventory_name == v0_constants.standee_name:
+            assignment_frequency = v0_constants.default_standee_assignment_frequency
+        elif inventory_name == v0_constants.flier:
             # because all inventories for a supplier must be assigned to a proposal. We know that flier can only have
             # a bucket number as zero.
-            assignment_frequency = website_constants.default_flier_assignment_frequency
+            assignment_frequency = v0_constants.default_flier_assignment_frequency
 
         buckets = {}
         inventory_name = inventory_content_type.model
@@ -4819,7 +4813,7 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
         for inventory in sheet_data:
 
             # do not process for status = 's'
-            if inventory['status'] == website_constants.shortlisted:
+            if inventory['status'] == v0_constants.shortlisted:
                 continue
 
             inventory_name = inventory['inventory_name']
@@ -4860,7 +4854,7 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
             # process each inventory one by one and assign the ids.
             for inventory_name in inventory_names:
 
-                if inventory_name in website_constants.inv_not_implemented:
+                if inventory_name in v0_constants.inv_not_implemented:
                     continue
 
                 # get inventory_content_type.
@@ -4923,15 +4917,15 @@ def get_campaign_status(proposal_start_date, proposal_end_date):
     function = get_campaign_status.__name__
     try:
         if not proposal_end_date or not proposal_start_date:
-            return ui_utils.handle_response(function, data=website_constants.unknown, success=True)
+            return ui_utils.handle_response(function, data=v0_constants.unknown, success=True)
 
         current_date = timezone.now()
 
         if proposal_end_date < current_date:
-            return ui_utils.handle_response(function, data=website_constants.completed, success=True)
+            return ui_utils.handle_response(function, data=v0_constants.completed, success=True)
         if proposal_start_date > current_date:
-            return ui_utils.handle_response(function, data=website_constants.upcoming, success=True)
-        return ui_utils.handle_response(function, data=website_constants.running, success=True)
+            return ui_utils.handle_response(function, data=v0_constants.upcoming, success=True)
+        return ui_utils.handle_response(function, data=v0_constants.running, success=True)
 
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
@@ -4980,7 +4974,7 @@ def get_overlapping_campaigns(proposal):
         end_date = proposal.tentative_end_date
 
         overlapping_campaigns = []
-        campaigns = models.ProposalInfo.objects.filter(campaign_state=website_constants.proposal_converted_to_campaign, invoice_number__isnull=False).exclude(pk=proposal.pk)
+        campaigns = models.ProposalInfo.objects.filter(campaign_state=v0_constants.proposal_converted_to_campaign, invoice_number__isnull=False).exclude(pk=proposal.pk)
 
         for campaign in campaigns:
             target_start_date = campaign.tentative_start_date
@@ -5141,13 +5135,13 @@ def get_inventory_activity_image_objects(shortlisted_inventory_to_audit_count_ma
         for inventory_global_id, audit_count in shortlisted_inventory_to_audit_count_map.iteritems():
 
             if not image_activity_to_audit_count_map.get(inventory_global_id):
-                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id, activity_type=website_constants.activity_type['RELEASE']))
-                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id, activity_type=website_constants.activity_type['CLOSURE']))
+                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id, activity_type=v0_constants.activity_type['RELEASE']))
+                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id, activity_type=v0_constants.activity_type['CLOSURE']))
                 image_activity_to_audit_count_map[inventory_global_id] = 0
 
             actual_audit_count = audit_count - image_activity_to_audit_count_map[inventory_global_id]
             for count in actual_audit_count:
-                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id,activity_type=website_constants.activity_type['AUDIT']))
+                inv_act_objects.append(models.InventoryActivityImage(shortlisted_inventory_details_id=inventory_global_id,activity_type=v0_constants.activity_type['AUDIT']))
 
         return ui_utils.handle_response(function, data=inv_act_objects, success=True)
     except Exception as e:
@@ -5255,7 +5249,7 @@ def construct_date_range_query(database_field):
         current_date = timezone.now().date()
         previous_date = current_date - timezone.timedelta(days=7)
         first_query = Q(**{database_field + '__gte': previous_date})
-        second_query = Q(**{database_field + '__lte': current_date + timezone.timedelta(days=website_constants.delta_days)})
+        second_query = Q(**{database_field + '__lte': current_date + timezone.timedelta(days=v0_constants.delta_days)})
         return first_query & second_query
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -5337,7 +5331,7 @@ def get_standalone_societies(query=Q()):
     """
     function = get_standalone_societies.__name__
     try:
-        response = ui_utils.get_content_type(website_constants.society)
+        response = ui_utils.get_content_type(v0_constants.society)
         if not response.data['status']:
             return response
         content_type = response.data['data']
@@ -5370,7 +5364,7 @@ def is_society_standalone(instance_detail):
         if not instance_detail:
             return False
 
-        if instance_detail['tower_count'] <= website_constants.standalone_society_config['tower_count'] and instance_detail['flat_count'] <= website_constants.standalone_society_config['flat_count'] and  instance_detail['amenity_count'] <= website_constants.standalone_society_config['amenity_count']:
+        if instance_detail['tower_count'] <= v0_constants.standalone_society_config['tower_count'] and instance_detail['flat_count'] <= v0_constants.standalone_society_config['flat_count'] and  instance_detail['amenity_count'] <= v0_constants.standalone_society_config['amenity_count']:
                     return True
         return False
     except Exception as e:
@@ -5409,7 +5403,7 @@ def start_download_from_amazon(proposal_id, image_map):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def get_random_pattern(size=website_constants.pattern_length, chars=string.ascii_uppercase + string.digits):
+def get_random_pattern(size=v0_constants.pattern_length, chars=string.ascii_uppercase + string.digits):
     function = get_random_pattern.__name__
     try:
         return ''.join(random.choice(chars) for _ in range(size))
@@ -5465,7 +5459,7 @@ def generate_supplier_basic_sheet_mail(data):
 
         for supplier_object in data['suppliers']:
             ws.append([supplier_object.get(key) for key in data['data_keys']])
-        file_name = os.path.join(settings.BASE_DIR, website_constants.all_supplier_data_file_name)
+        file_name = os.path.join(settings.BASE_DIR, v0_constants.all_supplier_data_file_name)
         workbook.save(file_name)
         return file_name
 
@@ -5480,7 +5474,7 @@ def validate_society_headers(supplier_type_code, row, data_import_type):
     function = validate_society_headers.__name__
     try:
         lowercase_sheet_header_list_with_underscores = ['_'.join(field.value.lower().split(' ')) for field in row if field.value]
-        supplier_headers_per_import_type = website_constants.supplier_headers[data_import_type]
+        supplier_headers_per_import_type = v0_constants.supplier_headers[data_import_type]
         basic_headers = supplier_headers_per_import_type['basic_data']
         supplier_specific_headers = supplier_headers_per_import_type['supplier_specific'][supplier_type_code]
         amenity_headers = supplier_headers_per_import_type['amenities']
@@ -5512,8 +5506,8 @@ def collect_supplier_common_data(result, supplier_type_code, supplier_id, row_di
     function = collect_supplier_common_data.__name__
     try:
         common_data_key = 'common_data'
-        basic_headers = website_constants.supplier_headers[data_import_type]['basic_data']
-        supplier_specific_headers = website_constants.supplier_headers[data_import_type]['supplier_specific'][supplier_type_code]
+        basic_headers = v0_constants.supplier_headers[data_import_type]['basic_data']
+        supplier_specific_headers = v0_constants.supplier_headers[data_import_type]['supplier_specific'][supplier_type_code]
         common_headers = ['_'.join(field.lower().split(' ')) for field in basic_headers + supplier_specific_headers]
         for key in common_headers:
             result[supplier_id][common_data_key][key] = row_dict.get(key)
@@ -5535,7 +5529,7 @@ def collect_amenity_data(result, supplier_id, row_dict):
     """
     function = collect_amenity_data.__name__
     try:
-        valid_amenities = website_constants.valid_amenities.keys()
+        valid_amenities = v0_constants.valid_amenities.keys()
         positive_amenities_list = []
         negative_amenity_list = []
         for amenity in valid_amenities:
@@ -5543,9 +5537,9 @@ def collect_amenity_data(result, supplier_id, row_dict):
             key = 'amenity_' + '_'.join(amenity.lower().split(' ')) + '_present'
             if not row_dict[key]:
                 continue
-            if row_dict[key].lower() in [item.lower() for item in website_constants.positive]:
+            if row_dict[key].lower() in [item.lower() for item in v0_constants.positive]:
                 positive_amenities_list.append(amenity)
-            elif row_dict[key].lower() in [item.lower() for item in website_constants.negative]:
+            elif row_dict[key].lower() in [item.lower() for item in v0_constants.negative]:
                 negative_amenity_list.append(amenity)
             else:
                 pass
@@ -5571,16 +5565,16 @@ def collect_events_data(result, supplier_id, row_dict):
     """
     function = collect_events_data.__name__
     try:
-        valid_events = website_constants.valid_events
+        valid_events = v0_constants.valid_events
         positive_events = []
         negative_events = []
         for event in valid_events:
             key = 'event_' + '_'.join(event.lower().split(' '))
             if not row_dict[key]:
                 continue
-            if row_dict[key].lower() in [item.lower() for item in website_constants.positive]:
+            if row_dict[key].lower() in [item.lower() for item in v0_constants.positive]:
                 positive_events.append(event)
-            elif row_dict[key].lower() in [item.lower() for item in website_constants.negative]:
+            elif row_dict[key].lower() in [item.lower() for item in v0_constants.negative]:
                 negative_events.append(event)
             else:
                 pass
@@ -5606,13 +5600,13 @@ def collect_flat_data(result, supplier_id, row_dict):
     """
     function = collect_flat_data.__name__
     try:
-        all_flat_types = website_constants.flat_type_dict.values()
+        all_flat_types = v0_constants.flat_type_dict.values()
         for flat_type in all_flat_types:
             flat_key = '_'.join(flat_type.lower().split(' '))
             key = 'flat_' + flat_key + '_present'
             if not row_dict[key]:
                 continue
-            if row_dict[key].lower() in [item.lower() for item in website_constants.positive]:
+            if row_dict[key].lower() in [item.lower() for item in v0_constants.positive]:
                 count_key = flat_key + '_count'
                 size_key = flat_key + '_size'
                 rent_key = flat_key + '_rent'
@@ -5623,7 +5617,7 @@ def collect_flat_data(result, supplier_id, row_dict):
                     'size': row_dict[size_key],
                     'rent': row_dict[rent_key]
                 }
-            elif row_dict[key].lower() in [item.lower() for item in website_constants.negative]:
+            elif row_dict[key].lower() in [item.lower() for item in v0_constants.negative]:
                 result[supplier_id]['flats']['negative'][flat_type] = {}
             else:
                 pass
@@ -5814,9 +5808,9 @@ def handle_supplier_common_attributes(instance, detail, supplier_type_code):
     function = handle_supplier_common_attributes.__name__
     try:
         common_data_key = 'common_data'
-        if supplier_type_code == website_constants.society_code:
+        if supplier_type_code == v0_constants.society_code:
 
-            for society_db_field, input_key in website_constants.society_db_field_to_input_field_map.iteritems():
+            for society_db_field, input_key in v0_constants.society_db_field_to_input_field_map.iteritems():
                 if not detail[common_data_key][input_key]:
                     continue
                 setattr(instance, society_db_field, detail[common_data_key][input_key])

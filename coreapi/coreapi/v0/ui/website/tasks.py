@@ -1,18 +1,17 @@
 from __future__ import absolute_import, unicode_literals
-import os
-import json
-import shutil
-from smtplib import SMTPException
+
 import StringIO
+import os
+from smtplib import SMTPException
 
 from django.conf import settings
 from django.core.mail import EmailMessage
 
-from celery import shared_task
 import boto
 from boto.s3.key import Key
+from celery import shared_task
 
-import v0.ui.website.constants as website_constants
+import v0.constants as v0_constants
 import v0.errors as messages
 
 
@@ -97,7 +96,7 @@ def send_email(email_data, attachment=None):
     try:
         # check if email_data contains the predefined keys
         email_keys = email_data.keys()
-        for key in website_constants.valid_email_keys:
+        for key in v0_constants.valid_email_keys:
             if key not in email_keys:
                 raise Exception(function,'key {0} not found in the recieved structure'.format(key))
         # construct the EmailMessage class

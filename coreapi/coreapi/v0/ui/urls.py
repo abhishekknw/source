@@ -39,7 +39,6 @@ urlpatterns = [
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/inventory_pricing/$', views.InventoryPricingAPIView.as_view()),
 
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/image_locations/$', views.ImageLocationsAPIView.as_view()),
-    url(r'^society/(?P<id>[A-Z_a-z0-9]+)/image_mapping/$', views.ImageMappingAPIView.as_view()),
 
     url(r'^create_supplier/load_initial_data/$', views.GetInitialDataAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_corporate/$', views.SaveBasicCorporateDetailsAPIView.as_view(), name='load-initial-corporate-data'),
@@ -80,5 +79,7 @@ router.register(r'^event', views.EventViewSet, base_name='event')
 router.register(r'^corporate', views.CorporateViewSet, base_name='corporate')
 router.register(r'^gym', views.GymViewSet, base_name='gym')
 router.register(r'^salon', views.SalonViewSet, base_name='salon')
+router.register(r'^retail-shop', views.RetailShopViewSet, base_name='retail-shop')
+router.register(r'^image-mapping', views.ImageMappingViewSet, base_name='image-mapping')
 
 urlpatterns += router.urls

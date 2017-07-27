@@ -26,7 +26,6 @@ import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils
 import errors
-import v0.ui.website.constants as website_constants
 import constants as v0_constants
 import v0.ui.website.utils as website_utils
 
@@ -1662,7 +1661,7 @@ class CreateSocietyTestData(APIView):
                     coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant + remainder, location_lat, location_long, radius, v0_constants.fourth_quadrant_code))
                 result[address] = society_count
 
-            suppliers_dict = v0_utils.assign_supplier_ids(city_code, website_constants.society, coordinates)
+            suppliers_dict = v0_utils.assign_supplier_ids(city_code, v0_constants.society, coordinates)
 
             for society_id, detail in suppliers_dict.iteritems():
                 detail['supplier_id'] = society_id
@@ -1771,10 +1770,10 @@ class CreateAdInventoryTypeDurationType(APIView):
                 return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
 
             # for simplicity i have every combination
-            for duration_code, duration_value in website_constants.duration_dict.iteritems():
+            for duration_code, duration_value in v0_constants.duration_dict.iteritems():
                 DurationType.objects.get_or_create(duration_name=duration_value)
             for inventory_tuple in AD_INVENTORY_CHOICES:
-                for ad_inventory_type_code, ad_inventory_type_value in website_constants.type_dict.iteritems():
+                for ad_inventory_type_code, ad_inventory_type_value in v0_constants.type_dict.iteritems():
                     AdInventoryType.objects.get_or_create(adinventory_name=inventory_tuple[0], adinventory_type=ad_inventory_type_value)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
@@ -1806,7 +1805,7 @@ class AssignInventories(APIView):
             suppliers = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
             if not suppliers:
                 raise Exception("NO societies in the database yet. Add them first and then hit this API.")
-            response = ui_utils.get_content_type(website_constants.society)
+            response = ui_utils.get_content_type(v0_constants.society)
             if not response.data['status']:
                 return response
             content_type = response.data['data']
@@ -1838,7 +1837,7 @@ class SetInventoryPricing(APIView):
                 return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
 
             supplier_ids = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
-            response = ui_utils.get_content_type(website_constants.society)
+            response = ui_utils.get_content_type(v0_constants.society)
             if not response.data['status']:
                 return response
             content_type = response.data['data']

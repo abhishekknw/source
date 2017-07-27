@@ -1,74 +1,53 @@
-import math, random, string, operator
 import csv
 import json
-import datetime
-import os
+import random
 import shutil
-import hashlib
+import string
 
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from django.core.urlresolvers import reverse
-from django.db.models import Q, Sum,F
-from django.db import transaction
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericRelation
+import openpyxl
+import os
+import requests
+from bulk_update.helper import bulk_update
+from celery.result import GroupResult, AsyncResult
 from django.conf import settings
-from django.utils import timezone
-from django.forms.models import model_to_dict
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.urlresolvers import reverse
+from django.db import transaction
+from django.db.models import Q, Sum
 from django.db.models import get_model
+from django.forms.models import model_to_dict
 from django.utils.dateparse import parse_datetime
-from django.core.cache import cache
-
+from openpyxl.compat import range
 from pygeocoder import Geocoder, GeocoderError
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
-from openpyxl import Workbook
-from openpyxl.compat import range
-import requests
 from rest_framework.parsers import JSONParser, FormParser
-from bulk_update.helper import bulk_update
-import boto
-import boto.s3
-from celery.task.sets import TaskSet, subtask
-from celery.result import GroupResult, AsyncResult
-from geopy.distance import great_circle
-
-
-from rest_framework import permissions
-import openpyxl
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 # from import_export import resources
 import tasks
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
-from v0.serializers import CampaignSupplierTypesSerializer, SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, ImageMappingSerializer, InventoryLocationSerializer, AdInventoryLocationMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, PriceMappingDefaultSerializer, PriceMappingSerializer, BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SportsInfraSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer,  CampaignTypeMappingSerializer
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignTypeMapping, Campaign, CampaignSocietyMapping, BusinessInfo, \
-                    BusinessAccountContact, ImageMapping, InventoryLocation, AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, \
-                    PriceMapping, BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, \
-                    SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, \
-                    PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SportsInfra, SupplierTypeSociety, SocietyTower, BusinessTypes, \
-                    BusinessSubTypes, AccountInfo, InventorySummary, FlatType, ProposalInfoVersion, ProposalCenterMappingVersion, \
+from v0.serializers import SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer
+from v0.models import SocietyInventoryBooking, Campaign, CampaignSocietyMapping, BusinessInfo, \
+                    BusinessAccountContact, AdInventoryType, DurationType, PriceMappingDefault, \
+    ContactDetails, SupplierTypeSociety, SocietyTower, BusinessTypes, \
+                    BusinessSubTypes, AccountInfo, InventorySummary, FlatType, ProposalCenterMappingVersion, \
                     SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion
-from v0.ui.views import InventorySummaryAPIView
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping,SpaceMapping , InventoryType, ShortlistedSpaces
 from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer, SpaceMappingSerializer , \
-        InventoryTypeSerializer, ShortlistedSpacesSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
-        ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,\
-        ShortlistedSpacesVersionSerializer, ProposalCenterMappingVersionSpaceSerializer
+        InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
+        ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer, \
+    ProposalCenterMappingVersionSpaceSerializer
 
-from v0.models import City, CityArea, CitySubArea
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
 import utils as website_utils
 import v0.ui.utils as ui_utils
 import v0.models as models
 import serializers as website_serializers
-import constants as website_constants
-import renderers as website_renderers
-import v0.ui.constants as ui_constants
 import v0.serializers as v0_serializers
 import v0.permissions as v0_permissions
 import v0.utils as v0_utils
@@ -1293,7 +1272,7 @@ class FilteredSuppliers(APIView):
             result['business_name'] = business_name
 
             # use this to show what kind of pricing we are using to fetch from pmd table for each kind of inventory
-            result['inventory_pricing_meta'] = website_constants.inventory_type_duration_dict_list
+            result['inventory_pricing_meta'] = v0_constants.inventory_type_duration_dict_list
 
             # set total suppliers
             result['suppliers'] = {}
@@ -1480,7 +1459,7 @@ class FilteredSuppliersAPIView(APIView):
                 suppliers_data.append(supplier)
                 suppliers_count += 1
 
-                for society_key, actual_key in website_constants.society_common_keys.iteritems():
+                for society_key, actual_key in v0_constants.society_common_keys.iteritems():
                     if society_key in supplier.keys():
                         value = supplier[society_key]
                         del supplier[society_key]
@@ -2163,7 +2142,7 @@ class ImportSocietyData(APIView):
         class_name = self.__class__.__name__
         try:
             source_file = open(BASE_DIR + '/files/modified_new_tab.csv', 'rb')
-            response = ui_utils.get_content_type(website_constants.society)
+            response = ui_utils.get_content_type(v0_constants.society)
             if not response.data['status']:
                 return response
             content_type = response.data['data']
@@ -2176,17 +2155,17 @@ class ImportSocietyData(APIView):
                         continue
                     else:
                         # todo: city is not being saved in society.
-                        if len(row) != len(website_constants.supplier_keys):
-                            return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(len(row), len(website_constants.supplier_keys)))
+                        if len(row) != len(v0_constants.supplier_keys):
+                            return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(len(row), len(v0_constants.supplier_keys)))
 
-                        for index, key in enumerate(website_constants.supplier_keys):
+                        for index, key in enumerate(v0_constants.supplier_keys):
                             if row[index] == '':
                                 data[key] = None
                             else:
                                 data[key] = row[index]
 
-                        state_name = ui_constants.state_name
-                        state_code = ui_constants.state_code
+                        state_name = v0_constants.state_name
+                        state_code = v0_constants.state_code
                         state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
                         city_object = models.City.objects.get(city_code=data['city_code'], state_code=state_object)
                         area_object = models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
@@ -2210,10 +2189,7 @@ class ImportSocietyData(APIView):
                         society_object.save()
 
                         # make entry into PMD here.
-                        response = ui_utils.set_default_pricing(supplier_id, data['supplier_type'])
-                        if not response.data['status']:
-                            return response
-
+                        ui_utils.set_default_pricing(supplier_id, data['supplier_type'])
                         towercount = SocietyTower.objects.filter(supplier=society_object).count()
 
                         # what to do if tower are less
@@ -2239,7 +2215,7 @@ class ImportSupplierDataFromSheet(APIView):
     The API tries to read a given sheet in a fixed format and updates the database with data in the sheet. This is used
     to enter data into the system from sheet. Currently Society data is supported, but the API is made generic.
     Please ensure following things before using this API:
-       1. Events are defined in website/constants.py. The event name should match with event names in headers.
+       1. Events are defined in v0/constants.py. The event name should match with event names in headers.
        2. Amenities are already defined in database and their names must match with amenity names used in the headers.
        3. Check once the Flats constants defined and the headers. Both should match.
     NOTE:
@@ -2462,7 +2438,7 @@ class ImportSupplierData(APIView):
             for sheet in all_sheets:
 
                 # fetch supplier_type_code from sheet name
-                supplier_type_code = website_constants.sheet_names_to_codes.get(sheet)
+                supplier_type_code = v0_constants.sheet_names_to_codes.get(sheet)
                 if not supplier_type_code:
                     continue
 
@@ -2470,7 +2446,7 @@ class ImportSupplierData(APIView):
                 ws = wb.get_sheet_by_name(sheet)
 
                 # fetch all the center id's
-                center_id_list_response = website_utils.get_center_id_list(ws, website_constants.index_of_center_id)
+                center_id_list_response = website_utils.get_center_id_list(ws, v0_constants.index_of_center_id)
 
                 if not center_id_list_response.data['status']:
                     return center_id_list_response
@@ -2556,7 +2532,7 @@ class ImportSupplierData(APIView):
 
             # fetch proposal instance and change it's status to 'finalized'.
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-            proposal.campaign_state = website_constants.proposal_finalized
+            proposal.campaign_state = v0_constants.proposal_finalized
             proposal.save()
 
             return Response({'status': True, 'data': file_name}, status=status.HTTP_200_OK)
@@ -2583,7 +2559,7 @@ class ImportProposalCostData(APIView):
         # load the workbook
         wb = openpyxl.load_workbook(file)
         # read the sheet
-        ws = wb.get_sheet_by_name(website_constants.metric_sheet_name)
+        ws = wb.get_sheet_by_name(v0_constants.metric_sheet_name)
 
         # before inserting delete all previous data as we don't want to duplicate things.
         response = website_utils.delete_proposal_cost_data(proposal_id)
@@ -3206,12 +3182,12 @@ class ImportContactDetails(APIView):
                         data = {}
 
                         length_of_row = len(row)
-                        length_of_predefined_keys = len(website_constants.contact_keys)
+                        length_of_predefined_keys = len(v0_constants.contact_keys)
                         if length_of_row != length_of_predefined_keys:
                             return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(length_of_row, length_of_predefined_keys))
 
                         # make the data
-                        for index, key in enumerate(website_constants.contact_keys):
+                        for index, key in enumerate(v0_constants.contact_keys):
                             if row[index] == '':
                                 data[key] = None
                             else:
@@ -3222,7 +3198,7 @@ class ImportContactDetails(APIView):
                             data['landline'] = landline_number[1]
                             data['std_code'] = landline_number[0]
 
-                        data['country_code'] = website_constants.COUNTRY_CODE
+                        data['country_code'] = v0_constants.COUNTRY_CODE
 
                         try:
                             data['supplier_id'] = get_supplier_id(request, data)
@@ -3305,7 +3281,7 @@ class SupplierSearch(APIView):
 
             model = ui_utils.get_model(supplier_type_code)
             search_query = Q()
-            for search_field in website_constants.search_fields[supplier_type_code]:
+            for search_field in v0_constants.search_fields[supplier_type_code]:
                 if search_query:
                     search_query |= Q(**{search_field: search_txt})
                 else:
@@ -3314,7 +3290,7 @@ class SupplierSearch(APIView):
             suppliers = model.objects.filter(search_query)
             serializer_class = ui_utils.get_serializer(supplier_type_code)
             serializer = serializer_class(suppliers, many=True)
-            suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code,  **{'status': website_constants.status})
+            suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code,  **{'status': v0_constants.status})
 
             return ui_utils.handle_response(class_name, data=suppliers, success=True)
         except ObjectDoesNotExist as e:
@@ -3420,7 +3396,7 @@ class SendMail(APIView):
                 my_file = content_file.read()
 
             # get the predefined template for the body
-            template_body = website_constants.email['body']
+            template_body = v0_constants.email['body']
 
             # define a body_mapping.
             body_mapping = {
@@ -3439,7 +3415,7 @@ class SendMail(APIView):
             if my_file:
                 attachment = {
                     'file_name': file_name,
-                    'mime_type': website_constants.mime['xlsx']
+                    'mime_type': v0_constants.mime['xlsx']
                 }
             task_id = tasks.send_email.delay(email_data, attachment).id
             return ui_utils.handle_response(class_name, data={'task_id': task_id}, success=True)
@@ -3565,23 +3541,23 @@ class ProposalVersion(APIView):
                 'file_name': file_name
             }
 
-            bd_body = website_utils.process_template(website_constants.bodys['bd_head'], bd_body)
+            bd_body = website_utils.process_template(v0_constants.bodys['bd_head'], bd_body)
 
             email_data = {
-                'subject': website_constants.subjects['bd_head'],
+                'subject': v0_constants.subjects['bd_head'],
                 'body': bd_body,
-                'to': [website_constants.emails['bd_head'], website_constants.emails['bd_user'], website_constants.emails['root_user']]
+                'to': [v0_constants.emails['bd_head'], v0_constants.emails['bd_user'], v0_constants.emails['root_user']]
             }
 
             #  email_data = {
-            #     'subject': website_constants.subjects['bd_head'],
+            #     'subject': v0_constants.subjects['bd_head'],
             #     'body': bd_body,
-            #     'to': [website_constants.emails['developer'], ]
+            #     'to': [v0_constants.emails['developer'], ]
             # }
 
             attachment = {
                 'file_name': file_name,
-                'mime_type': website_constants.mime['xlsx']
+                'mime_type': v0_constants.mime['xlsx']
             }
 
             # send mail to Bd Head with attachment
@@ -3589,8 +3565,8 @@ class ProposalVersion(APIView):
 
             # send mail to logged in user without attachment
             email_data = {
-             'subject': website_constants.subjects['agency'],
-             'body': website_constants.bodys['agency'],
+             'subject': v0_constants.subjects['agency'],
+             'body': v0_constants.bodys['agency'],
              'to': [user.email]
              }
 
@@ -3608,7 +3584,7 @@ class ProposalVersion(APIView):
                 'stats': stats
             }
             # change campaign state
-            proposal.campaign_state = website_constants.proposal_requested
+            proposal.campaign_state = v0_constants.proposal_requested
             proposal.save()
 
             # change the status of the proposal to 'requested' once everything is okay.
@@ -3955,7 +3931,7 @@ class CampaignSuppliersInventoryList(APIView):
                     'activity_date': activity_date.date() if activity_date else None,
                     'reassigned_activity_date': reassigned_activity_date.date() if reassigned_activity_date else None,
                     'inventory_activity_id': inventory_activity_id,
-                    'assigned_to': user_map[assigned_to] if assigned_to else website_constants.default_assigned_to_string
+                    'assigned_to': user_map[assigned_to] if assigned_to else v0_constants.default_assigned_to_string
                 }
 
             # after the result is prepared, here we collect images data
@@ -4074,7 +4050,7 @@ class ProposalToCampaign(APIView):
             response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
             if not response.data['status']:
                 return response
-            proposal.campaign_state = website_constants.proposal_converted_to_campaign
+            proposal.campaign_state = v0_constants.proposal_converted_to_campaign
             proposal.save()
             return ui_utils.handle_response(class_name, data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
 
@@ -4093,7 +4069,7 @@ class ProposalToCampaign(APIView):
             #     response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
             #     if not response.data['status']:
             #         return response
-            #     proposal.campaign_state = website_constants.proposal_converted_to_campaign
+            #     proposal.campaign_state = v0_constants.proposal_converted_to_campaign
             #     proposal.save()
             #     return ui_utils.handle_response(class_name,data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
             #
@@ -4126,7 +4102,7 @@ class ProposalToCampaign(APIView):
             #     return response
             #
             # bulk_update(booked_inventories)
-            # proposal.campaign_state = website_constants.proposal_converted_to_campaign
+            # proposal.campaign_state = v0_constants.proposal_converted_to_campaign
             # proposal.save()
             #
             # return ui_utils.handle_response(class_name, data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
@@ -4155,13 +4131,13 @@ class CampaignToProposal(APIView):
             if not response.data['status']:
                 return response
 
-            proposal.campaign_state = website_constants.proposal_not_converted_to_campaign
+            proposal.campaign_state = v0_constants.proposal_not_converted_to_campaign
             proposal.save()
 
             current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=campaign_id)
             models.InventoryActivityAssignment.objects.filter(inventory_activity__shortlisted_inventory_details__in=current_assigned_inventories).delete()
 
-            return ui_utils.handle_response(class_name, data=errors.REVERT_CAMPAIGN_TO_PROPOSAL.format(campaign_id, website_constants.proposal_not_converted_to_campaign), success=True)
+            return ui_utils.handle_response(class_name, data=errors.REVERT_CAMPAIGN_TO_PROPOSAL.format(campaign_id, v0_constants.proposal_not_converted_to_campaign), success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -4187,16 +4163,16 @@ class ImportCorporateData(APIView):
                     if num == 0:
                         continue
                     else:
-                        if len(row) != len(website_constants.corporate_keys):
-                            return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(len(row), len(website_constants.corporate_keys)))
+                        if len(row) != len(v0_constants.corporate_keys):
+                            return ui_utils.handle_response(class_name, data=errors.LENGTH_MISMATCH_ERROR.format(len(row), len(v0_constants.corporate_keys)))
 
-                        for index, key in enumerate(website_constants.corporate_keys):
+                        for index, key in enumerate(v0_constants.corporate_keys):
                             if row[index] == '':
                                 data[key] = None
                             else:
                                 data[key] = row[index]
-                        state_name = ui_constants.state_name
-                        state_code = ui_constants.state_code
+                        state_name = v0_constants.state_name
+                        state_code = v0_constants.state_code
                         state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
                         city_object = models.City.objects.get(city_code=data['city_code'], state_code=state_object)
                         area_object = models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
@@ -4219,9 +4195,7 @@ class ImportCorporateData(APIView):
                         corporate_object.save()
 
                         # make entry into PMD here.
-                        response = ui_utils.set_default_pricing(data['supplier_id'], data['supplier_type'])
-                        if not response.data['status']:
-                            return response
+                        ui_utils.set_default_pricing(data['supplier_id'], data['supplier_type'])
 
                         url = reverse('inventory-summary', kwargs={'id': data['supplier_id']})
                         url = BASE_URL + url[1:]
@@ -4945,7 +4919,7 @@ class DeleteFileFromSystem(APIView):
         try:
             file_name = request.data['file_name']
             file_extension = file_name.split('.')[1]
-            if file_extension not in website_constants.valid_extensions:
+            if file_extension not in v0_constants.valid_extensions:
                 raise Exception(class_name, errors.DELETION_NOT_PERMITTED.format(file_extension))
             os.remove(os.path.join(settings.BASE_DIR, file_name))
             return ui_utils.handle_response(class_name, data='success', success=True)
@@ -4999,7 +4973,7 @@ class ExportAllSupplierData(APIView):
 
             supplier_type_code = request.query_params['supplier_type_code']
             model_class = ui_utils.get_model(supplier_type_code)
-            if supplier_type_code == website_constants.society:
+            if supplier_type_code == v0_constants.society:
                 model_instances = model_class.objects.all().values('supplier_id', 'society_name')
             else:
                 model_instances = model_class.objects.all().values('supplier_id', 'name')
@@ -5046,13 +5020,13 @@ class ExportAllSupplierData(APIView):
                     continue
 
                 # set all possible inventory_allowed fields to 0 first
-                for code, name in website_constants.inventory_code_to_name.iteritems():
+                for code, name in v0_constants.inventory_code_to_name.iteritems():
                     inv_name_key = website_utils.join_with_underscores(name).lower()
                     pricing_dict[supplier_id][inv_name_key + '_' + 'allowed'] = 0
 
                 # for all inventory codes allowed.
                 for inv_code in website_utils.get_inventories_allowed(inv_summary_instance):
-                    inventory_name = website_constants.inventory_code_to_name[inv_code]
+                    inventory_name = v0_constants.inventory_code_to_name[inv_code]
                     inv_name_key = website_utils.join_with_underscores(inventory_name).lower()
                     pricing_dict[supplier_id][inv_name_key + '_' + 'allowed'] = 1
                     # for all pricing instances for this supplier
@@ -5079,12 +5053,12 @@ class ExportAllSupplierData(APIView):
 
                 basic_data_dict = {
 
-                    'city_name': city_instance.city_name if city_instance else website_constants.not_in_db_special_code,
-                    'city_code': city_instance.city_code if city_instance else website_constants.not_in_db_special_code,
-                    'area_name': area_instance.label if area_instance else website_constants.not_in_db_special_code,
-                    'area_code': area_instance.area_code if area_instance else website_constants.not_in_db_special_code,
-                    'subarea_name': subarea_instance.subarea_name if subarea_instance else website_constants.not_in_db_special_code,
-                    'subarea_code': subarea_instance.subarea_code if subarea_instance else website_constants.not_in_db_special_code ,
+                    'city_name': city_instance.city_name if city_instance else v0_constants.not_in_db_special_code,
+                    'city_code': city_instance.city_code if city_instance else v0_constants.not_in_db_special_code,
+                    'area_name': area_instance.label if area_instance else v0_constants.not_in_db_special_code,
+                    'area_code': area_instance.area_code if area_instance else v0_constants.not_in_db_special_code,
+                    'subarea_name': subarea_instance.subarea_name if subarea_instance else v0_constants.not_in_db_special_code,
+                    'subarea_code': subarea_instance.subarea_code if subarea_instance else v0_constants.not_in_db_special_code ,
                     'supplier_id': supplier_id,
                     'supplier_name': supplier_name,
                     'supplier_code': supplier_code,
@@ -5097,9 +5071,9 @@ class ExportAllSupplierData(APIView):
                 result.append(basic_data_dict)
 
             # add pricing headers to current headers.
-            headers = website_constants.basic_supplier_export_headers
-            data_keys = website_constants.basic_supplier_data_keys
-            for inventory_name, header_list in website_constants.price_mapping_default_headers.iteritems():
+            headers = v0_constants.basic_supplier_export_headers
+            data_keys = v0_constants.basic_supplier_data_keys
+            for inventory_name, header_list in v0_constants.price_mapping_default_headers.iteritems():
                 for header_tuple in header_list:
 
                     inv_name_key = website_utils.join_with_underscores(inventory_name).lower()
@@ -5109,7 +5083,7 @@ class ExportAllSupplierData(APIView):
                     data_keys.append(key)
 
             data = {
-                'sheet_name': website_constants.code_to_sheet_names[supplier_type_code],
+                'sheet_name': v0_constants.code_to_sheet_names[supplier_type_code],
                 'headers': headers,
                 'data_keys': data_keys,
                 'suppliers': result
@@ -5119,12 +5093,12 @@ class ExportAllSupplierData(APIView):
             email_data = {
                 'subject': 'The all society data of test server in  proper format',
                 'body': 'PFA data of all suppliers in the system with supplier_type_code {0}'.format(supplier_type_code),
-                'to': [website_constants.emails['developer']]
+                'to': [v0_constants.emails['developer']]
             }
 
             attachment = {
                 'file_name': file_name,
-                'mime_type': website_constants.mime['xlsx']
+                'mime_type': v0_constants.mime['xlsx']
             }
 
             # send mail to Bd Head with attachment

@@ -1,22 +1,19 @@
-from types import *
+import hashlib
+import json
 import random
 import string
 from uuid import uuid4
 from types import *
-import json
-import hashlib
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q
 
 import geocoder
-
-import v0.ui.utils as ui_utils
-import v0.constants as v0_constants
-import models as v0_models
-import v0.ui.website.utils as website_utils
-import v0.ui.website.constants as website_constants
 from bulk_update.helper import bulk_update
+
+import models as v0_models
+import v0.constants as v0_constants
+import v0.ui.utils as ui_utils
+import v0.ui.website.utils as website_utils
 
 
 def do_each_model(myModel, supplier_model, content_type):
@@ -192,7 +189,7 @@ def handle_society_flat_detail(flat_detail, suppliers_dict, content_type):
     function = handle_society_flat_detail.__name__
     try:
         supplier_ids = suppliers_dict.keys()
-        flat_type_dict = website_constants.flat_type_dict
+        flat_type_dict = v0_constants.flat_type_dict
         flat_instances = []
         for society_id in supplier_ids:
             total_flat_count = 0
@@ -346,23 +343,23 @@ def handle_supplier_inventory_detail(inventory_detail, supplier_ids, content_typ
                 'content_type': content_type
             }
             for inv_code in inventories_allowed:
-                inv_summary_data[website_constants.inventory_dict[inv_code]]= True
+                inv_summary_data[v0_constants.inventory_dict[inv_code]]= True
                 tower_count = society_instances_map[supplier_id].tower_count
 
                 for index in range(tower_count):  # handle inventories which directly depend on towers
-                    if inv_code == website_constants.inventory_name_to_code['poster']:
+                    if inv_code == v0_constants.inventory_name_to_code['poster']:
                         for poster_index in range(v0_constants.default_poster_per_tower):
                             data = {
-                                'adinventory_id': make_inventory_id(inv_code, website_constants.society),
+                                'adinventory_id': make_inventory_id(inv_code, v0_constants.society),
                                 'tower': tower_instances_map[supplier_id][index],
                                 'content_type': content_type,
                                 'object_id': supplier_id
                             }
                             poster_objects.append(v0_models.PosterInventory(**data))
-                    elif inv_code == website_constants.inventory_name_to_code['standee']:
+                    elif inv_code == v0_constants.inventory_name_to_code['standee']:
                         for standee_index in range(v0_constants.default_standee_per_tower):
                             data = {
-                                'adinventory_id': make_inventory_id(inv_code, website_constants.society),
+                                'adinventory_id': make_inventory_id(inv_code, v0_constants.society),
                                 'tower': tower_instances_map[supplier_id][index],
                                 'content_type': content_type,
                                 'object_id': supplier_id
@@ -370,19 +367,19 @@ def handle_supplier_inventory_detail(inventory_detail, supplier_ids, content_typ
                             standee_objects.append(v0_models.StandeeInventory(**data))
 
                 # handle inventories which do not depend on towers
-                if inv_code == website_constants.inventory_name_to_code['stall']:
+                if inv_code == v0_constants.inventory_name_to_code['stall']:
                     for stall_index in range(v0_constants.default_stall_per_society):
                         data = {
-                            'adinventory_id': make_inventory_id(inv_code, website_constants.society),
+                            'adinventory_id': make_inventory_id(inv_code, v0_constants.society),
                             'content_type': content_type,
                             'object_id': supplier_id
                         }
                         stall_objects.append(v0_models.StallInventory(**data))
 
-                elif inv_code == website_constants.inventory_name_to_code['flier']:
+                elif inv_code == v0_constants.inventory_name_to_code['flier']:
                     for flier_frequency in range(v0_constants.default_flier_frequency_per_society):
                         data = {
-                            'adinventory_id': make_inventory_id(inv_code, website_constants.society),
+                            'adinventory_id': make_inventory_id(inv_code, v0_constants.society),
                             'content_type': content_type,
                             'object_id': supplier_id
                         }
@@ -426,7 +423,7 @@ def handle_society_detail(suppliers_dict, society_detail):
 
         supplier_ids = suppliers_dict.keys()
         societies = v0_models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
-        response = ui_utils.get_content_type(website_constants.society)
+        response = ui_utils.get_content_type(v0_constants.society)
         if not response.data['status']:
             return response
         content_type = response.data['data']
@@ -452,9 +449,9 @@ def handle_society_detail(suppliers_dict, society_detail):
         if society_detail.get('direct_society_details'):
 
             direct_society_detail_key = 'direct_society_details'
-            society_type_list = society_detail[direct_society_detail_key]['society_type'] if society_detail[direct_society_detail_key].get('society_type') else website_constants.quality_dict.keys()
-            society_location_type_list = society_detail[direct_society_detail_key]['society_location'] if society_detail[direct_society_detail_key].get('society_location') else website_constants.locality_dict.keys()
-            society_size_list = society_detail[direct_society_detail_key]['society_size'] if society_detail[direct_society_detail_key].get('society_size') else website_constants.quantity_dict.keys()
+            society_type_list = society_detail[direct_society_detail_key]['society_type'] if society_detail[direct_society_detail_key].get('society_type') else v0_constants.quality_dict.keys()
+            society_location_type_list = society_detail[direct_society_detail_key]['society_location'] if society_detail[direct_society_detail_key].get('society_location') else v0_constants.locality_dict.keys()
+            society_size_list = society_detail[direct_society_detail_key]['society_size'] if society_detail[direct_society_detail_key].get('society_size') else v0_constants.quantity_dict.keys()
             possession_year_range = society_detail[direct_society_detail_key]['possession_year'] if society_detail[direct_society_detail_key].get('possession_year') else v0_constants.default_possession_year_range
             flat_avg_rental_persqft_range = society_detail[direct_society_detail_key]['flat_avg_rental_persqft'] if society_detail[direct_society_detail_key].get('flat_avg_rental_persqft') else v0_constants.default_flat_avg_rental_persqft_range
             flat_sale_cost_persqft_range = society_detail[direct_society_detail_key]['flat_sale_cost_persqft'] if society_detail[direct_society_detail_key].get('flat_sale_cost_persqft') else v0_constants.default_flat_sale_cost_persqft_range
@@ -466,9 +463,9 @@ def handle_society_detail(suppliers_dict, society_detail):
             assert flat_sale_cost_persqft_range[0] <= flat_sale_cost_persqft_range[1], "Flat Average Sale Cost Invalid Range"
 
             for society in societies:
-                society.society_type_quality = website_constants.quality_dict[society_type_list[random.randint(0, len(society_type_list)-1)]]
-                society.society_location_type = website_constants.locality_dict[society_location_type_list[random.randint(0, len(society_location_type_list)-1)]]
-                society.society_type_quantity = website_constants.quantity_dict[society_size_list[random.randint(0, len(society_size_list)-1)]]
+                society.society_type_quality = v0_constants.quality_dict[society_type_list[random.randint(0, len(society_type_list)-1)]]
+                society.society_location_type = v0_constants.locality_dict[society_location_type_list[random.randint(0, len(society_location_type_list)-1)]]
+                society.society_type_quantity = v0_constants.quantity_dict[society_size_list[random.randint(0, len(society_size_list)-1)]]
                 society.age_of_society = random.randint(possession_year_range[0], possession_year_range[1])
                 society.total_tenant_flat_count = int((random.uniform(percentage_range_of_tenants_to_flat[0], percentage_range_of_tenants_to_flat[1]) * society.flat_count)/100)
                 society.flat_avg_rental_persqft = random.randint(flat_avg_rental_persqft_range[0], flat_avg_rental_persqft_range[1])
@@ -498,16 +495,16 @@ def handle_inventory_pricing(supplier_ids, content_type, price_dict):
         for supplier_id in supplier_ids:
             inventory_summary_instance = inventory_summary_instance_map[supplier_id]
             if inventory_summary_instance.poster_allowed_nb:
-                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, website_constants.poster,   price_dict))
+                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, v0_constants.poster,   price_dict))
 
             if inventory_summary_instance.standee_allowed:
-                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, website_constants.standee,  price_dict))
+                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, v0_constants.standee,  price_dict))
 
             if inventory_summary_instance.stall_allowed:
-                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, website_constants.stall,  price_dict))
+                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, v0_constants.stall,  price_dict))
 
             if inventory_summary_instance.flier_allowed:
-                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, website_constants.flier,  price_dict))
+                price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, v0_constants.flier,  price_dict))
         v0_models.PriceMappingDefault.objects.all().delete()
         v0_models.PriceMappingDefault.objects.bulk_create(price_mapping_instances_list)
         return True

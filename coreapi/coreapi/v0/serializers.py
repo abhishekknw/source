@@ -567,3 +567,8 @@ class BaseUserUpdateSerializer(ModelSerializer):
         model = models.BaseUser
         fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile','is_superuser', 'groups', 'user_permissions')
        
+
+class SupplierTypeRetailShopSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.SupplierTypeRetailShop

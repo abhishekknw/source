@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 from django.conf import settings
 
-import v0.ui.website.constants as constants
+import v0.constants as constants
 
 
 def change_space_status(apps, schema_editor):

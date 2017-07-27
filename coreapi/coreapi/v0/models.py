@@ -12,25 +12,17 @@
 
 from __future__ import unicode_literals
 
-import datetime
-
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.db import models
-from django.contrib.auth.models import User
 from datetime import date
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.contenttypes import generic
-from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.auth.models import AbstractUser
-from django.conf import settings
-from django.utils import timezone
 
 import managers
-import v0.ui.website.constants as website_constants
-
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
+from django.utils import timezone
 
 AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
@@ -119,7 +111,7 @@ class BaseModel(models.Model):
 #     """
 #     A BaseInventory model for all inventories. The fields here are common for all inventories.
 #     """
-#     status = models.CharField(max_length=10, default=website_constants.inventory_status)
+#     status = models.CharField(max_length=10, default=v0_constants.inventory_status)
 #
 #     class Meta:
 #         abstract = True
@@ -2443,11 +2435,11 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     """
     stores details of RETAIL TYPE SUPPLIER.
     """
-    retail_shop_type = models.CharField(choices=RETAIL_SHOP_TYPE, max_length=255)
-    size = models.FloatField()
+    retail_shop_type = models.CharField(choices=RETAIL_SHOP_TYPE, max_length=255, null=True, blank=True)
+    size = models.FloatField(null=True, blank=True)
     is_modern_trade = models.BooleanField(default=False)
     is_traditional = models.BooleanField(default=False)
-    category_name = models.CharField(max_length=255)
+    category_name = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_type_retail_shop'

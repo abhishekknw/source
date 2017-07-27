@@ -36,12 +36,10 @@ import utils as ui_utils
 import website.utils as website_utils
 from coreapi.settings import BASE_DIR
 from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas
-from constants import keys, decision
-import constants as ui_constants
+from v0.constants import keys, decision
 from website.utils import save_price_mapping_default
 import v0.models as models
-import v0.ui.website.constants as website_constants
-
+import v0.constants as v0_constants
 
 class UsersProfilesAPIView(APIView):
 
@@ -227,21 +225,15 @@ class GenerateSupplierIdAPIView(APIView):
             data['supplier_id'] = ui_utils.get_supplier_id(request, data)
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
-
             response = ui_utils.make_supplier_data(data)
             if not response.data['status']:
                 return response
             all_supplier_data = response.data['data']
-            response = ui_utils.save_supplier_data(user, all_supplier_data)
-
-            if not response.data['status']:
-                return response
-            return Response(data=response.data['data'], status=status.HTTP_200_OK)
-
+            return ui_utils.handle_response(class_name, data=ui_utils.save_supplier_data(user, all_supplier_data), success=True)
         except ObjectDoesNotExist as e:
-            return Response(data={str(e.message) + " Object does not exists"}, status=status.HTTP_400_BAD_REQUEST)
+            return ui_utils.handle_response(class_name, exception_object=e)
         except Exception as e:
-            return Response(data={str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+            return ui_utils.handle_response(class_name, exception_object=e)
 
 
 class SupplierImageDetails(APIView):
@@ -441,7 +433,7 @@ class SocietyAPIListView(APIView):
                 if user.is_superuser:
                     society_objects = SupplierTypeSociety.objects.all().order_by('society_name')
                 else:
-                    city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.society)
+                    city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.society)
                     society_objects = SupplierTypeSociety.objects.filter(city_query)
 
             # modify items to have society images data
@@ -471,12 +463,12 @@ class SocietyList(APIView):
             if user.is_superuser:
                 society_objects = SupplierTypeSociety.objects.all().order_by('society_name')
             else:
-                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.society)
+                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.society)
                 society_objects = SupplierTypeSociety.objects.filter(city_query)
 
             serializer = SupplierTypeSocietySerializer(society_objects, many=True)
             suppliers = website_utils.manipulate_object_key_values(serializer.data)
-            societies_with_images = ui_utils.get_supplier_image(suppliers, ui_constants.society_name)
+            societies_with_images = ui_utils.get_supplier_image(suppliers, v0_constants.society_name)
             data = {
                 'count': len(societies_with_images),
                 'societies': societies_with_images
@@ -498,7 +490,7 @@ class CorporateViewSet(viewsets.ViewSet):
             if user.is_superuser:
                 corporates = SupplierTypeCorporate.objects.all().order_by('name')
             else:
-                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.corporate_code)
+                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.corporate_code)
                 corporates = SupplierTypeCorporate.objects.filter(city_query)
 
             serializer = UICorporateSerializer(corporates, many=True)
@@ -611,7 +603,7 @@ class SalonViewSet(viewsets.ViewSet):
             if user.is_superuser:
                 salon_objects = SupplierTypeSalon.objects.all().order_by('name')
             else:
-                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.salon)
+                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.salon)
                 salon_objects = SupplierTypeSalon.objects.filter(city_query)
 
             salon_serializer = UISalonSerializer(salon_objects, many=True)
@@ -640,7 +632,7 @@ class GymViewSet(viewsets.ViewSet):
             if user.is_superuser:
                 gym_objects = SupplierTypeGym.objects.all().order_by('name')
             else:
-                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.gym)
+                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.gym)
                 gym_objects = SupplierTypeGym.objects.filter(city_query)
 
             gym_shelter_serializer = SupplierTypeGymSerializer(gym_objects, many=True)
@@ -870,7 +862,7 @@ class FlatTypeAPIView(APIView):
         den = 0.0
         totalFlats = 0
         flag = True
-        content_type = ui_utils.fetch_content_type(website_constants.society_code)
+        content_type = ui_utils.fetch_content_type(v0_constants.society_code)
         if request.data['flat_details_available']:
             for key in request.data['flat_details']:
                 if 'size_builtup_area' in key and 'flat_rent' in key and key['size_builtup_area'] > 0 and key['flat_rent'] > 0:
@@ -2084,7 +2076,7 @@ class EventAPIView(APIView):
 
     def post(self, request, id, format=None):
         society=SupplierTypeSociety.objects.get(pk=id)
-        content_type = ui_utils.fetch_content_type(website_constants.society_code)
+        content_type = ui_utils.fetch_content_type(v0_constants.society_code)
 
         for key in request.data['event_details']:
             if 'event_id' in key:
@@ -2237,71 +2229,6 @@ class ImageLocationsAPIView(APIView):
             return Response(status=404)
 
         return Response({"response":response}, status=201)
-
-
-class ImageMappingAPIView(APIView):
-    '''
-    API around image mapping  table
-    '''
-
-    def get(self, request, id):
-        '''
-        get the ImageMapping objects based on supplier_id
-        '''
-        class_name = self.__class__.__name__
-        try:
-            images = ImageMapping.objects.filter(object_id=id)
-            serializer = ImageMappingSerializer(images, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-    def post(self, request, id):
-        '''
-        create new ImageMapping objects
-        '''
-
-        class_name = self.__class__.__name__
-
-        try:
-
-            print request.data
-
-            supplier_type_code = request.query_params.get('supplierTypeCode', None)
-            content_type = ui_utils.fetch_content_type(supplier_type_code)
-            supplier_object = ui_utils.get_model(supplier_type_code).objects.get(pk=id)
-            for image in request.data['image_details']:
-                image['object_id'] = id
-                image['content_type'] = content_type.id            
-                serializer = ImageMappingSerializer(data=image)
-                if serializer.is_valid():
-                    serializer.save()
-                else:
-                    return ui_utils.handle_response(class_name, data=serializer.errors)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-    def put(self, request, id):
-        """ 
-        updates the ImageMapping objects 
-        """
-
-        class_name = self.__class__.__name__
-
-        try:
-            # collect all image ids
-            image_data =  request.data['image_details'][0]
-            image_id = image_data['id']
-            image_object = ImageMapping.objects.get(pk=image_id)
-      
-            serializer = ImageMappingSerializer(image_object,data=image_data)
-            if serializer.is_valid():
-                serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 def generate_location_tag(initial_tag, type, index):
@@ -2891,7 +2818,7 @@ class BusShelter(APIView):
             if user.is_superuser:
                 bus_objects = SupplierTypeBusShelter.objects.all().order_by('name')
             else:
-                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.bus_shelter)
+                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.bus_shelter)
                 bus_objects = SupplierTypeBusShelter.objects.filter(city_query)
 
             bus_shelter_serializer = BusShelterSerializer(bus_objects, many=True)
@@ -3064,20 +2991,25 @@ class SuppliersMeta(APIView):
         try:
             valid_supplier_type_code_instances = models.SupplierTypeCode.objects.all()
             data = {}
+
             for instance in valid_supplier_type_code_instances:
+                supplier_type_code = instance.supplier_type_code
                 error = False
                 try:
-                    model_name = ui_utils.get_model(instance.supplier_type_code)
+                    model_name = ui_utils.get_model(supplier_type_code)
                     count = model_name.objects.all().count()
                 except Exception:
                     count = 0
                     error = True
 
-                data[instance.supplier_type_code] = {
+                data[supplier_type_code] = {
                     'count': count,
                     'name': instance.supplier_type_name,
                     'error': error
                 }
+                if supplier_type_code == v0_constants.retail_shop_code:
+                    data[supplier_type_code]['retail_shop_types'] = [tup[0] for tup in models.RETAIL_SHOP_TYPE]
+
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -3095,7 +3027,7 @@ class RetailShopViewSet(viewsets.ViewSet):
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -3107,7 +3039,7 @@ class RetailShopViewSet(viewsets.ViewSet):
             if user.is_superuser:
                 retail_shop_objects = models.SupplierTypeRetailShop.objects.all().order_by('name')
             else:
-                city_query = ui_utils.get_region_based_query(user, ui_constants.valid_regions['CITY'], ui_constants.retail_shop_code)
+                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.retail_shop_code)
                 retail_shop_objects = models.SupplierTypeRetailShop.objects.filter(city_query)
 
             serializer = RetailShopSerializer(retail_shop_objects, many=True)
@@ -3142,5 +3074,53 @@ class RetailShopViewSet(viewsets.ViewSet):
             retail_shop_instance = models.SupplierTypeRetailShop.objects.get(pk=pk)
             serializer = RetailShopSerializer(instance=retail_shop_instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class ImageMappingViewSet(viewsets.ViewSet):
+    """
+    Image Mapping View Set
+    """
+    def list(self, request):
+        """
+        Lists all images
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_type_code = request.query_params['supplier_type_code']
+            content_type = ui_utils.fetch_content_type(supplier_type_code)
+            instances = models.ImageMapping.objects.filter(content_type=content_type)
+            serializer = ImageMappingSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+            instance = models.ImageMapping.objects.get(pk=pk)
+            serializer = ImageMappingSerializer(instance=instance, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        class_name = self.__class__.__name__
+        try:
+            supplier_type_code = request.query_params['supplier_type_code']
+            content_type = ui_utils.fetch_content_type(supplier_type_code)
+            data = request.data.copy()
+            data['content_type'] = content_type.pk
+            serializer = ImageMappingSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

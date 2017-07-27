@@ -28,10 +28,9 @@ from rest_framework import status
 
 import v0.models
 import v0.serializers
-
-import constants as ui_constants
 import v0.models as models
 import v0.errors as errors
+import v0.constants as v0_constants
 
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
@@ -73,7 +72,7 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
             try:
                 subject = 'Error occurred in an api {0}'.format(request.build_absolute_uri())
                 body = data
-                to = ui_constants.api_error_mail_to
+                to = v0_constants.api_error_mail_to
                 email_data = {
                     'subject': subject,
                     'body': json.dumps(body, indent=4, sort_keys=True),
@@ -144,7 +143,7 @@ def save_basic_supplier_details(supplier_type_code, data):
         return handle_response(function_name, exception_object=e)
 
 
-def get_supplier_id(request, data, state_name=ui_constants.state_name, state_code=ui_constants.state_code):
+def get_supplier_id(request, data, state_name=v0_constants.state_name, state_code=v0_constants.state_code):
     """
     :param request: request parameter
     :param data: dict containing valid keys . Note the keys should be 'city', 'area', sub_area', 'supplier_type' ,
@@ -154,7 +153,7 @@ def get_supplier_id(request, data, state_name=ui_constants.state_name, state_cod
     """
     function = get_supplier_id.__name__
 
-    error = 'You might want to double check the state name {0} and state code {1} defined in ui constants'.format(ui_constants.state_name, ui_constants.state_code)
+    error = 'You might want to double check the state name {0} and state code {1} defined in ui constants'.format(v0_constants.state_name, v0_constants.state_code)
     try:
         try:
             state_object = v0.models.State.objects.get(state_name=state_name, state_code=state_code)
@@ -186,8 +185,8 @@ def make_supplier_data(data):
     try:
         current_user = data['current_user']
         try:
-            state_name = ui_constants.state_name
-            state_code = ui_constants.state_code
+            state_name = v0_constants.state_name
+            state_code = v0_constants.state_code
             state_object = v0.models.State.objects.get(state_name=state_name, state_code=state_code)
             city = v0.models.City.objects.get(city_code=data.get('city_code'), state_code=state_object)
             area = v0.models.CityArea.objects.get(area_code=data.get('area_code'), city_code=city)
@@ -263,7 +262,17 @@ def make_supplier_data(data):
                 },
                 'serializer': get_serializer('BS')
             },
-
+            "RE": {
+                'data': {
+                    'supplier_id': data['supplier_id'],
+                    'name': data['supplier_name'],
+                    'city': city.city_name,
+                    'area': area.label,
+                    'subarea': subarea.subarea_name,
+                    'state': city.state_code.state_name
+                },
+                'serializer': get_serializer('RE')
+            },
             "supplier_type_code": data['supplier_type_code']
         }
         return Response(data={"status": True, "data": all_supplier_data}, status=status.HTTP_200_OK)
@@ -284,26 +293,20 @@ def save_supplier_data(user, master_data):
 
     Returns: saved supplier instance
     """
-
+    function_name = save_supplier_data.__name__
     try:
-        function_name = save_supplier_data.__name__
-
         supplier_code = master_data['supplier_type_code']
         serializer_class = get_serializer(supplier_code)
-        # serializer_class = master_data[supplier_code]['serializer']
         supplier_data = master_data[supplier_code]['data']
         serializer = serializer_class(data=supplier_data)
         if serializer.is_valid():
             serializer.save(user=user)
-            response = set_default_pricing(serializer.data['supplier_id'], supplier_code)
-            if not response.data['status']:
-                return response
-            return Response(data={"status": True, "data": serializer.data}, status=status.HTTP_200_OK)
+            set_default_pricing(serializer.data['supplier_id'], supplier_code)
+            return serializer.data
         else:
-            return Response(data={"status": False, "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
+            raise Exception(function_name, serializer.errors)
     except Exception as e:
-        return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        raise Exception(function_name, get_system_error(e))
 
 
 def set_default_pricing(supplier_id, supplier_type_code):
@@ -313,6 +316,7 @@ def set_default_pricing(supplier_id, supplier_type_code):
     :return:  makes an entry into PriceMappingDefault table for the given supplier
 
     """
+    function = set_default_pricing.__name__
     try:
         supplier = get_model(supplier_type_code).objects.get(pk=supplier_id)
         # supplier = supplier_code_filter_params[supplier_type_code]['MODEL'].objects.get(pk=supplier_id)
@@ -383,10 +387,9 @@ def set_default_pricing(supplier_id, supplier_type_code):
                         price_mapping_list.append(pmdefault)
 
         v0.models.PriceMappingDefault.objects.bulk_create(price_mapping_list)
-        return Response({'status': True, 'data': 'success'}, status=status.HTTP_200_OK)
-
+        return True
     except Exception as e:
-        return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+        raise Exception(function, get_system_error(e))
 
 
 def adinventory_func():
@@ -458,7 +461,7 @@ def get_supplier_inventory(data, id):
             return Response(data={"status": False, "error": "provide supplier code and  supplier id"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # supplier_class = ui_constants.suppliers[supplier_code]
+        # supplier_class = v0_constants.suppliers[supplier_code]
         supplier_class = get_model(supplier_code)
         supplier_object = supplier_class.objects.get(pk=id)
         content_type = ContentType.objects.get_for_model(supplier_class)
@@ -490,7 +493,7 @@ def get_supplier_inventory(data, id):
 #         if not supplier_code or not id:
 #             return Response(data={"status": False, "error": "provide supplier code and  supplier id"},
 #                             status=status.HTTP_400_BAD_REQUEST)
-#         supplier_class = ui_constants.suppliers[supplier_code]
+#         supplier_class = v0_constants.suppliers[supplier_code]
 #         content_type = ContentType.objects.get_for_model(supplier_class)
 #
 #         inventory_object = InventorySummary.objects.get(object_id=id,
@@ -603,9 +606,9 @@ def get_tower_count(supplier_object, supplier_type_code):
     """
     try:
         count = 1
-        #supplier_object = ui_constants.suppliers[supplier_type_code]
+        #supplier_object = v0_constants.suppliers[supplier_type_code]
         # supplier_object = get_model(supplier_type_code)
-        attr = ui_constants.tower_count_attribute_mapping[supplier_type_code]
+        attr = v0_constants.tower_count_attribute_mapping[supplier_type_code]
         if attr != 'none':
             count = getattr(supplier_object, attr)
         return Response(data={'status': True, 'data': count}, status=status.HTTP_200_OK)
@@ -674,7 +677,7 @@ def get_content_types(codes):
         final_content_types = {}
 
         for model_class, content_type in content_types.iteritems():
-            model_code = ui_constants.model_to_codes[model_class.__name__]
+            model_code = v0_constants.model_to_codes[model_class.__name__]
             final_content_types[model_code] = content_type
         return handle_response(function, data=final_content_types, success=True)
     except Exception as e:
@@ -691,12 +694,12 @@ def get_models(codes):
     """
     function = get_models.__name__
     try:
-        model_names = [ui_constants.codes_to_model_names[code] for code in codes]
+        model_names = [v0_constants.codes_to_model_names[code] for code in codes]
         all_models = apps.get_models()
         model_classes = {}
         for model in all_models:
             if model.__name__ in model_names:
-                code = ui_constants.model_to_codes[model.__name__]
+                code = v0_constants.model_to_codes[model.__name__]
                 model_classes[code] = model
         return handle_response(function, data=model_classes, success=True)
     except Exception as e:
@@ -713,7 +716,7 @@ def get_model(supplier_type_code):
     """
     function = get_model.__name__
     try:
-        suppliers = ui_constants.codes_to_model_names
+        suppliers = v0_constants.codes_to_model_names
         load_model = apps.get_model('v0', suppliers[supplier_type_code])
         return load_model
     except Exception as e:
@@ -737,6 +740,7 @@ def get_serializer(query):
             'GY': v0.serializers.SupplierTypeGymSerializer,
             'SA': v0.serializers.SupplierTypeSalonSerializer,
             'BS': v0.serializers.SupplierTypeBusShelterSerializer,
+            'RE': v0.serializers.SupplierTypeRetailShopSerializer,
             'ideation_design_cost': v0.serializers.IdeationDesignCostSerializer,
             'logistic_operations_cost': v0.serializers.LogisticOperationsCostSerializer,
             'space_booking_cost': v0.serializers.SpaceBookingCostSerializer,
