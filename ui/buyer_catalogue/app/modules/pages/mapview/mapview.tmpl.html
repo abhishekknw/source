@@ -357,7 +357,7 @@
             <!--End: code added to change status   -->
         </tr>
       </tbody>
-      </table>
+        </table>
       <!--Start : adding table for corporates  -->
       <table class="table table-bordered" ng-if = "corporate_allowed_gridview && ((supplierListCode == supplierName.corporate) || (supplierListCode == supplierName.all))">
         <thead>
@@ -400,7 +400,7 @@
             <!-- <td ng-if="inv_flier">{{society.flier_price}}</td> -->
             <td class="col-md-2">
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,'CP')" ng-disabled="isRequested">Finalize</label>
+                     <label><input type="radio" ng-model="supplier.status" value="F" ng-click="updateSupplierStatus(supplier,center,'CP')" ng-disabled="isRequested">Finalize</label>
               </div>
               <div class="radio">
                      <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,'CP')" ng-disabled="isRequested">Buffer</label>
@@ -440,7 +440,7 @@
           <td>{{supplier.machadalo_index}}</td>
           <td class="col-md-2">
             <div class="radio">
-                   <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,supplierCode.busShelter)" ng-disabled="isRequested">Finalize</label>
+                   <label><input type="radio" ng-model="supplier.status" value="F" ng-click="updateSupplierStatus(supplier,center,supplierCode.busShelter)" ng-disabled="isRequested">Finalize</label>
             </div>
             <div class="radio">
                    <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,supplierCode.busShelter)" ng-disabled="isRequested">Buffer</label>
@@ -475,7 +475,7 @@
           <td>{{supplier.machadalo_index}}</td>
           <td class="col-md-2">
             <div class="radio">
-                   <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,supplierCode.gym)" ng-disabled="isRequested">Finalize</label>
+                   <label><input type="radio" ng-model="supplier.status" value="F" ng-click="updateSupplierStatus(supplier,center,supplierCode.gym)" ng-disabled="isRequested">Finalize</label>
             </div>
             <div class="radio">
                    <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,supplierCode.gym')" ng-disabled="isRequested">Buffer</label>
@@ -512,13 +512,50 @@
           <td>{{supplier.machadalo_index}}</td>
           <td class="col-md-2">
             <div class="radio">
-                   <label><input type="radio" ng-model="supplier.status" value="S" ng-click="updateSupplierStatus(supplier,center,supplierCode.saloon)" ng-disabled="isRequested">Finalize</label>
+                   <label><input type="radio" ng-model="supplier.status" value="F" ng-click="updateSupplierStatus(supplier,center,supplierCode.saloon)" ng-disabled="isRequested">Finalize</label>
             </div>
             <div class="radio">
                    <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,supplierCode.saloon)" ng-disabled="isRequested">Buffer</label>
             </div>
             <div class="radio" ng-if="supplier.status != 'X'">
                    <label><input type="radio" ng-model="supplier.status" value="R" ng-click="updateSupplierStatus(supplier,center,supplierCode.saloon)" ng-disabled="isRequested">Remove</label>
+            </div>
+          </td>
+      </tr>
+    </tbody>
+    </table>
+    <!--End: saloon table  -->
+    <!--start: retailStore table  -->
+    <table class="table table-bordered" ng-if = "retailStore_allowed_gridview && ((supplierListCode == supplierName.retailStore) || (supplierListCode == supplierName.all))">
+      <thead>
+        <tr>
+          <th class = "col-md-1">#</th>
+          <th class = "col-md-4">Center Name</th>
+          <th class = "col-md-4">Supplier Name</th>
+          <th class = "col-md-4">SubArea-Area</th>
+          <th class = "col-md-4">Machadalo Index</th>
+          <th class = "col-md-4">Finalize/Buffer</th>
+        </tr>
+      </thead>
+      <!--Changes for displaying all center's societies in gridView  -->
+      <tbody ng-repeat = "center in center_data" >
+      <tr ng-repeat = "supplier in center.suppliers[supplierCode.retailStore]">
+          <td>{{$index+1}}</td>
+          <td>{{center.center.center_name}}</td>
+          <td>{{supplier.name}}</td>
+          <td>{{supplier.subarea}}</td>
+          <!-- <td>{{society.society_type_quality}}</td> -->
+          <!-- <td>{{society.society_location_type}}</td> -->
+          <td>{{supplier.machadalo_index}}</td>
+          <td class="col-md-2">
+            <div class="radio">
+                   <label><input type="radio" ng-model="supplier.status" value="F" ng-click="updateSupplierStatus(supplier,center,supplierCode.retailStore)" ng-disabled="isRequested">Finalize</label>
+            </div>
+            <div class="radio">
+                   <label><input type="radio" ng-model="supplier.status" value="B" ng-click="updateSupplierStatus(supplier,center,supplierCode.retailStore)" ng-disabled="isRequested">Buffer</label>
+            </div>
+            <div class="radio" ng-if="supplier.status != 'X'">
+                   <label><input type="radio" ng-model="supplier.status" value="R" ng-click="updateSupplierStatus(supplier,center,supplierCode.retailStore)" ng-disabled="isRequested">Remove</label>
             </div>
           </td>
       </tr>
@@ -541,6 +578,7 @@
              <div ng-if ="current_center.suppliers_allowed.busShelter_allowed" class = "nbCheckbox two-col">Bus Shelters:  {{current_center.summary_meta[supplierCode.busShelter].count}}</div>
              <div ng-if ="current_center.suppliers_allowed.gym_allowed" class = "nbCheckbox two-col">Gyms:  {{current_center.summary_meta[supplierCode.gym].count}}</div>
              <div ng-if ="current_center.suppliers_allowed.saloon_allowed" class = "nbCheckbox two-col">Saloons:  {{current_center.summary_meta[supplierCode.saloon].count}}</div>
+             <div ng-if ="current_center.suppliers_allowed.retailStore_allowed" class = "nbCheckbox two-col">Retail Stores:  {{current_center.summary_meta[supplierCode.retailStore].count}}</div>
              <div ng-if = "current_center.suppliers_allowed.society_allowed" class = "nbCheckbox two-col">Flat Count:  {{current_center.summary_meta[supplierCode.society].flat_count}}</div>
              <div ng-if = "current_center.suppliers_allowed.society_allowed" class = "nbCheckbox two-col">Tower Count:  {{current_center.summary_meta[supplierCode.society].tower_count}}</div>
             <!--added if condition below to display those inventories selected by user in sumarry section-->
@@ -621,6 +659,7 @@
                <div ng-if = "busShelter_allowed_gridview" class = "nbCheckbox two-col">Bus Shelters:  {{total_busShleters_count}}</div>
                <div ng-if = "gym_allowed_gridview" class = "nbCheckbox two-col">Gyms:  {{total_gyms_count}}</div>
                <div ng-if = "saloon_allowed_gridview" class = "nbCheckbox two-col">Saloons:  {{total_saloons_count}}</div>
+               <div ng-if = "retailStore_allowed_gridview" class = "nbCheckbox two-col">Retail Stores:  {{total_retailStores_count}}</div>
                <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Flat Count:  {{total_flat_count}}</div>
                <div ng-if = "society_allowed_gridview" class = "nbCheckbox two-col">Tower Count:  {{total_tower_count}}</div>
               <!--added if condition below to display those inventories selected by user in sumarry section-->
