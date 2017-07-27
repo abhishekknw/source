@@ -62,6 +62,7 @@ angular
     BS:'Bus Shelter',
     GY:'Gym',
     SA:'Saloon',
+    RE:'Retail Store',
     All:'All',
 
     //auditReleasePlan

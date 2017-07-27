@@ -11,6 +11,7 @@ angular.module('catalogueApp')
 		{name:"Bus Shelter", code:"BS", selected:"false"},
 		{name:"Gym", code:"GY", selected:"false"},
 		{name:"Saloon", code:"SA", selected:"false"},
+		{name:"Retail Shop", code:"RE", selected:"false"},
 	];
 	$scope.proposalheaders = [
         {header : 'Advertising Area'},

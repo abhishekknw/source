@@ -68,13 +68,15 @@ $scope.supplierCode = {
   busShelter  : 'BS',
   gym         : 'GY',
   saloon      : 'SA',
+  retailStore  : 'RE',
 }
 $scope.supplierName = {
-   society : 'Society',
+  society : 'Society',
   corporate : 'Corporate',
   busShelter : 'Bus Shelter',
   gym : 'Gym',
   saloon : 'Saloon',
+  retailStore : 'Retail Store',
   all   : 'All',
 }
 var impressions = {
@@ -163,6 +165,7 @@ $scope.gridViewSummary = {};
         'BS':'http://www.googlemapsmarkers.com/v1/'+'B/',
         'GY':'http://www.googlemapsmarkers.com/v1/'+'G/',
         'SA':'http://www.googlemapsmarkers.com/v1/'+'SA/',
+        'RE':'http://www.googlemapsmarkers.com/v1/'+'RE/',
       };
       function assignMarkersToMap(spaces) {
           // assigns spaces(society, corporate) markers on the map
@@ -276,6 +279,8 @@ $scope.gridViewSummary = {};
                     $scope.gymFilters();
                   if(code == $scope.supplierCode.saloon)
                     $scope.saloonFilters();
+                    if(code == $scope.supplierCode.retailStore)
+                      $scope.retailStoreFilters();
                 }
               // mapViewService.getChangedCenterSpaces($scope.proposal_id_temp, $scope.current_center.center)
               // .then(function onSuccess(response, status){
@@ -536,7 +541,7 @@ $scope.gridViewSummary = {};
       var suppliersData = function(){
        try{
         $scope.total_societies = [], $scope.total_corporates = [], $scope.total_busShleters = [];
-        $scope.total_gyms = [], $scope.total_saloons = [];
+        $scope.total_gyms = [], $scope.total_saloons = [], $scope.total_retailStores = [];
         for (var index=0;index<$scope.center_data.length;index++){
           if($scope.center_data[index].suppliers['RS']!=undefined){
             $scope.total_societies = $scope.total_societies.concat($scope.center_data[index].suppliers['RS']);
@@ -552,6 +557,9 @@ $scope.gridViewSummary = {};
           }
           if($scope.center_data[index].suppliers[$scope.supplierCode.saloon]!=undefined){
             $scope.total_saloons = $scope.total_saloons.concat($scope.center_data[index].suppliers[$scope.supplierCode.saloon]);
+          }
+          if($scope.center_data[index].suppliers[$scope.supplierCode.retailStore]!=undefined){
+            $scope.total_retailStores = $scope.total_retailStores.concat($scope.center_data[index].suppliers[$scope.supplierCode.retailStore]);
           }
         }
       }catch(error){
@@ -569,6 +577,7 @@ $scope.gridViewSummary = {};
         $scope.total_busShleters_count = $scope.total_busShleters.length;
         $scope.total_gyms_count = $scope.total_gyms.length;
         $scope.total_saloons_count = $scope.total_saloons.length;
+        $scope.total_retailStores_count = $scope.total_retailStores.length;
           for(var temp=0; temp<$scope.total_societies_count; temp++){
             $scope.total_flat_count += $scope.total_societies[temp].flat_count;
             $scope.total_tower_count += $scope.total_societies[temp].tower_count;
@@ -879,11 +888,16 @@ $scope.gridViewSummary = {};
          $scope.unique_suppliers.add($scope.supplierCode.saloon);
          getSummary($scope.supplierCode.saloon,center);
        }
+       if(center.suppliers[$scope.supplierCode.retailStore] != undefined){
+         center.suppliers_allowed['retailStore_allowed'] = true;
+         center.suppliers_allowed['retailStore_show'] = true;
+         $scope.unique_suppliers.add($scope.supplierCode.retailStore);
+         getSummary($scope.supplierCode.retailStore,center);
+       }
        center_id++;
      });
      //Start : code added to display filter panel for all centers on gridview
      if($scope.unique_suppliers.has('RS')){
-       console.log("hello");
         $scope.gridView_RS_filters = angular.copy($scope.RS_filters);
         $scope.society_show = true;
         $scope.society_allowed_gridview = true;
@@ -905,9 +919,14 @@ $scope.gridViewSummary = {};
            $scope.saloon_show = true;
            $scope.saloon_allowed_gridview = true;
          }
+         if($scope.unique_suppliers.has($scope.supplierCode.retailStore)){
+            $scope.retailStore_show = true;
+            $scope.retailStore_allowed_gridview = true;
+          }
          $scope.unique_suppliersCode = Array.from($scope.unique_suppliers);
          $scope.unique_suppliersCode.push(constants.supplierCode_all);
          $scope.unique_suppliersCode = convertSupplierCodeToName($scope.unique_suppliersCode);
+         $scope.supplierListCode = constants.All;
 
       //End : code added to display filter panel for all centers on gridview
     }catch(error){
@@ -918,11 +937,9 @@ $scope.gridViewSummary = {};
   var convertSupplierCodeToName = function(supplierCodeList){
     var supplierNamesList = [];
     angular.forEach(supplierCodeList, function(code){
-      console.log(code);
       supplierNamesList.push(constants[code]);
     })
     return supplierNamesList;
-    console.log(supplierNamesList);
   }
   //end:convert supplier code to supplier name
     //End: add filter varible for each supplier in each center
@@ -1039,7 +1056,6 @@ $scope.gridViewSummary = {};
                   $scope.center_data = $.map(response.data.data, function(value, index){
                     return [value];
                   });
-                  console.log($scope.center_data);
                   $scope.current_center = $scope.center_data[0];
                   $scope.current_center_index = 0;
                   $scope.old_data = angular.copy($scope.center_data);
@@ -1253,7 +1269,6 @@ $scope.gridViewSummary = {};
                 }
               }
             }
-          console.log($scope.inventoryHeaders);
       }
     }catch(error){
       console.log(error.message);
@@ -1272,7 +1287,6 @@ $scope.gridViewSummary = {};
 
   //start: set of inventory codes, which helpes to store unique inventories
   var setInventoryTypeCodes = function(supplier_code){
-    console.log($scope.current_center[supplierFilters[supplier_code]]);
     $scope.current_center.inventory_meta[supplier_code] = new Set();
     angular.forEach($scope.current_center[supplierFilters[supplier_code]].inventory, function(filter){
       if(filter.selected == true){
@@ -1399,7 +1413,6 @@ $scope.gridViewSummary = {};
       makeFilters($scope.current_center.RS_filters.quantity_type,filters.common_filters.quantity);
       makeFilters($scope.current_center.RS_filters.amenities,filters.priority_index_filters.amenities);
       makeFlatTypeFilters($scope.current_center.RS_filters.flat_type,filters.priority_index_filters.flat_type);
-      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
     }catch(error){
@@ -1513,7 +1526,6 @@ $scope.gridViewSummary = {};
           radius : $scope.current_center.center.radius,
         },
       };
-      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
     }catch(error){
@@ -1535,7 +1547,6 @@ $scope.gridViewSummary = {};
           radius : $scope.current_center.center.radius,
         },
       };
-      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
     }catch(error){
@@ -1557,7 +1568,6 @@ $scope.gridViewSummary = {};
           radius : $scope.current_center.center.radius,
         },
       };
-      console.log(filters);
       filterSupplierData(filters.supplier_type_code,filters);
       // }
     }catch(error){
@@ -1565,7 +1575,28 @@ $scope.gridViewSummary = {};
     }
   }
   //end - saloon filter call
-//End: code for corporate filters
+  //start - retailStore filter call
+  $scope.retailStoreFilters = function(value){
+    //Start : Code added to filter multiple centers on gridview
+   try{
+      var filters = {
+        supplier_type_code : $scope.supplierCode.retailStore,
+        proposal_id : $scope.proposal_id_temp,
+        center_id : $scope.current_center.center.id,
+        common_filters : {
+          latitude : $scope.current_center.center.latitude,
+          longitude : $scope.current_center.center.longitude,
+          radius : $scope.current_center.center.radius,
+        },
+      };
+      filterSupplierData(filters.supplier_type_code,filters);
+      // }
+    }catch(error){
+      console.log(error.message);
+    }
+  }
+  //end - retailStore filter call
+
 //Start: for handling multiplse center response in promises for all suppliers
       var handleSupplierPromise = function(responseData,code){
         try{
@@ -1626,15 +1657,13 @@ $scope.gridViewSummary = {};
 //start: generic function for fetching all supplier filters
         var filterSupplierData = function (code,supplier_filters){
          try{
-           console.log($scope.center_data);
           $scope.checkFilters = true;
           mapViewService.getFilterSuppliers(supplier_filters)
                 .then(function onSuccess(response, status){
-                console.log(response,$scope.center_data);
+                console.log(response);
                     response.data.data.center = $scope.current_center.center;
                     if(response.data.data.suppliers[code].length > 0)
                       $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.data.suppliers[code];
-                    console.log($scope.center_data);
                     if($scope.center_data[$scope.current_center_index].suppliers_meta){
                       $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.data.suppliers_meta[code];
                     }else {
@@ -1772,6 +1801,10 @@ $scope.gridViewSummary = {};
   $scope.supplier_names = [
     { name: 'Residential',      code:'RS'},
     { name: 'Corporate Parks',  code:'CP'},
+    { name: 'Bus Shelter',  code:'BS'},
+    { name: 'Gym',  code:'GY'},
+    { name: 'Saloon',  code:'SA'},
+    { name: 'Retail Store',  code:'RE'},
     ];
   $scope.search;
   $scope.search_status = false;
@@ -1953,6 +1986,7 @@ $scope.gridViewSummary = {};
           //  is_proposal_version_created:$window.localStorage.isSavedProposal,
            is_proposal_version_created:false,
          };
+         console.log("request proposal data",proposal_data);
          console.log("sending proposal version API call");
          mapViewService.proposalVersion($stateParams.proposal_id, proposal_data)
            .then(  function onSuccess(response) {
@@ -2495,27 +2529,40 @@ var setSocietyLocationOnMap = function(supplier){
   }
   //end: for amenity icons
   $scope.getOrderBy = function(center_data,supplierCode,status){
+    console.log("hello");
     $timeout(function () {
       for (var i = 0; i < center_data.length; i++) {
         var suppliers = [];
          suppliers = angular.copy(center_data[i].suppliers[supplierCode]);
         var sortedSupplierList = [], unsortedSupplierList = [];
+        $scope.myConcatenatedData = [];
         var k = 0;
-        unsortedSupplierList = $filter('filter')(suppliers, {'status':'!'+status});
+        unsortedSupplierList = $filter('filter')(suppliers, {'status':'!'+ status});
         sortedSupplierList = $filter('filter')(suppliers, {'status':status});
+        console.log(sortedSupplierList.length,unsortedSupplierList.length);
         Array.prototype.unshift.apply(unsortedSupplierList, sortedSupplierList);
+        // $scope.myConcatenatedData = sortedSupplierList.concat(unsortedSupplierList);
+        // angular.extend($scope.myConcatenatedData, sortedSupplierList,unsortedSupplierList);
         center_data[i].suppliers[supplierCode] = angular.copy(unsortedSupplierList);
       }
     });
   }
+  // $scope.selectSupplierList = function(supplier){
+  //   if($scope.supplierListCode == constants.All){
+  //     $scope.society_allowed_gridview = true;
+  //     $scope.corporate_allowed_gridview = true;
+  //     $scope.busShelter_allowed_gridview = true;
+  //     $scope.gym_allowed_gridview = true;
+  //     $scope.saloon_allowed_gridview = true;
+  //     $scope.retailStore_allowed_gridview = true;
+  //   }
+  // }
+  $scope.sortByPriorityIndex = function(supplierCode){
+    angular.forEach($scope.center_data, function(center){
+      center.suppliers[supplierCode].sort(function(a, b) {
+      return b.priority_index - a.priority_index;
+    })
 
-  $scope.selectSupplierList = function(){
-    if($scope.supplierListCode == constants.All){
-      $scope.society_allowed_gridview = true;
-      $scope.corporate_allowed_gridview = true;
-      $scope.busShelter_allowed_gridview = true;
-      $scope.gym_allowed_gridview = true;
-      $scope.saloon_allowed_gridview = true;
-    }
+});
   }
 });
