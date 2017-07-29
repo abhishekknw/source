@@ -378,9 +378,14 @@ society_common_keys = {
     'society_type_quantity': 'locality_rating',
     'society_type_quality': 'quality_rating',
 }
+
+# define sheet names
 salon_sheet_name = 'Salon Details'
 gym_sheet_name = 'Gym Details'
 bus_shelter_sheet_name = 'Bus shelter Details'
+retail_shop_sheet_name = 'Retail Shop Details'
+society_sheet_name = 'Society Details'
+corporate_sheet_name = 'Corporate Park Details'
 
 # export master data. each key represents a list of list. each list in that list forms a row in the sheet
 master_data = {
@@ -410,27 +415,33 @@ master_data = {
         'headers': [],
         'data': []
     },
+    retail_shop_code: {
+        'sheet_name': retail_shop_sheet_name,
+        'headers': [],
+        'data': []
+    }
 
 }
 
 # chose sheet names from just supplier_type_code
 sheet_names = {
-    'RS': 'Society Details',
-    'CP': 'Corporate Park Details',
-    'GY': gym_sheet_name,
+    society_code: society_sheet_name ,
+    corporate_code: corporate_sheet_name,
+    gym: gym_sheet_name,
     salon: salon_sheet_name,
-    bus_shelter: bus_shelter_sheet_name
+    bus_shelter: bus_shelter_sheet_name,
+    retail_shop_code: retail_shop_sheet_name
 }
 
 # chose codes from supplier sheet names
 # sheet_names_to_codes
-
 sheet_names_to_codes = {
-    'Society Details': 'RS',
-    'Corporate Park Details': 'CP',
-    gym_sheet_name: 'GY',
+    society_sheet_name: society_code,
+    corporate_sheet_name: corporate_code,
+    gym_sheet_name: gym,
     salon_sheet_name: salon,
-    bus_shelter_sheet_name: bus_shelter
+    bus_shelter_sheet_name: bus_shelter,
+    retail_shop_sheet_name: retail_shop_code
 }
 
 # code to sheet names
@@ -597,6 +608,12 @@ query_dict = {
         'quantity': {},
         'quality': {},
         'locality': {}
+    },
+
+    retail_shop_code: {
+        'quantity': {},
+        'quality': {},
+        'locality': {}
     }
 
 }
@@ -612,7 +629,8 @@ search_fields = {
            ],
     bus_shelter: [],
     gym: [],
-    salon: []
+    salon: [],
+    retail_shop_code:[]
 }
 
 # to calculate what cost of each inventory. currently we are using only these. type and duration are used to fetch
@@ -708,7 +726,8 @@ filter_type = {
     corporate_code: ['inventory_type_selected', 'quality_type', 'quantity_type', 'locality_rating', 'employee_count'],
     bus_shelter: [],
     gym: [],
-    salon: []
+    salon: [],
+    retail_shop_code: []
 
 }
 # to store employee_count
@@ -1090,7 +1109,6 @@ bus_shelter = 'BS'
 retail_shop = 'RE'
 
 
-
 inventory_name_to_code = {
     poster: poster_inventory_code,
     standee: standee_inventory_code,
@@ -1181,3 +1199,5 @@ valid_regions = {
     'AREA': 'Area',
     'SUBAREA': 'Subarea'
 }
+
+supplier_id_max_length = 20

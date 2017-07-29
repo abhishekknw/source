@@ -113,10 +113,10 @@ def get_union_inventory_price_per_flat(data, unique_inventory_codes, index):
         # iterate over individual codes and calculate for each code and  return
         for code in unique_inventory_codes:
             if data.get('flat_count'):
-                inventory_price = data.get(price_per_flat[code][1], 0)
+                inventory_price = data.get(v0_constants.price_per_flat[code][1], 0)
                 if not inventory_price:
                     inventory_price = 0.0
-                data[price_per_flat[code][0]] = inventory_price/(float(data['flat_count']))
+                data[v0_constants.price_per_flat[code][0]] = inventory_price/(float(data['flat_count']))
         return data
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -443,7 +443,7 @@ def make_shortlisted_inventory_list(row, supplier_type_code, proposal_id, center
     try:
         shortlisted_inventory_list = []
         # use the filter table to pull out those inventories which were selected.
-        filter_codes = models.Filters.objects.filter(proposal_id=proposal_id, center_id=center_id, filter_name='inventory_type_selected').values_list('filter_code', flat=True)
+        filter_codes = models.Filters.objects.filter(proposal_id=proposal_id, center_id=center_id, filter_name='inventory_type_selected', supplier_type_code=supplier_type_code).values_list('filter_code', flat=True)
         unique_inventory_codes = get_unique_inventory_codes(filter_codes)
         # check for predefined keys in the row. if available, we have that inventory !
         for code in unique_inventory_codes:
@@ -517,7 +517,6 @@ def make_suppliers(center_object, row, supplier_type_code, proposal_id, center_i
     function = make_suppliers.__name__
     try:
         # collect society data in a dict and append it to the list of societies of center_object
-
         supplier_header_keys = ['_'.join(header.split(' ')) for header in v0_constants.inventorylist[supplier_type_code]['HEADER']]
         supplier_header_keys = [header.lower() for header in supplier_header_keys]
         supplier_data_keys = v0_constants.inventorylist[supplier_type_code]['DATA']
@@ -642,14 +641,12 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
                 output.append(shortlisted_inventory_detail_object)
 
         # make the inventories assigned to suppliers
-        response = make_inventory_assignments(proposal_id, output, supplier_type_codes)
-        if not response.data['status']:
-            return response
+        message = make_inventory_assignments(proposal_id, output, supplier_type_codes)
 
         # update the data in sipd instances created for this proposal.
         update_shortlisted_inventory_pricing_data(proposal_id, output)
 
-        return ui_utils.handle_response(function, data='success', success=True)
+        return message
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
@@ -2030,15 +2027,15 @@ def get_inventories_allowed(inventory_summary_instance):
             return []
         inventory_code_list = []
         if inventory_summary_instance.poster_allowed_nb or inventory_summary_instance.poster_allowed_lift:
-            inventory_code_list.append(v0_constants.inventory_name_to_code['poster'])
+            inventory_code_list.append(v0_constants.inventory_name_to_code['POSTER'])
         if inventory_summary_instance.stall_allowed:
-            inventory_code_list.append(v0_constants.inventory_name_to_code['stall'])
+            inventory_code_list.append(v0_constants.inventory_name_to_code['STALL'])
         if inventory_summary_instance.standee_allowed:
-            inventory_code_list.append(v0_constants.inventory_name_to_code['standee'])
+            inventory_code_list.append(v0_constants.inventory_name_to_code['STANDEE'])
         if inventory_summary_instance.flier_allowed:
-            inventory_code_list.append(v0_constants.inventory_name_to_code['flier'])
+            inventory_code_list.append(v0_constants.inventory_name_to_code['FLIER'])
         if inventory_summary_instance.car_display_allowed:
-            inventory_code_list.append(v0_constants.inventory_name_to_code['car_display'])
+            inventory_code_list.append(v0_constants.inventory_name_to_code['CAR DISPLAY'])
         return inventory_code_list
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -3266,7 +3263,7 @@ def get_suppliers_within_circle(suppliers, coordinates, supplier_type_code):
 
         for supplier in suppliers:
             # include only those suppliers that lie within the circle of radius given
-            supplier_latitude  = get_dict_value(supplier, ['society_latitude', 'latitude'])
+            supplier_latitude = get_dict_value(supplier, ['society_latitude', 'latitude'])
             supplier_longitude = get_dict_value(supplier, ['society_longitude', 'longitude'])
             if space_on_circle(latitude, longitude, radius, supplier_latitude, supplier_longitude):
                 result.append(supplier)
@@ -4896,12 +4893,13 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
                         if response.data['data']:
                             output.extend(response.data['data'])
 
+            message = 'success'
             # if not inventories assigned, means a problem is there.
             if not len(output):
-                raise Exception('No inventories being assigned for this proposal. Please check the error logs')
+                message = 'No inventories being assigned for this proposal. Please check the error logs'
             # issue a single insert statements. be aware of disadvantages of .bulk_create usage.
             models.ShortlistedInventoryPricingDetails.objects.bulk_create(output)
-            return ui_utils.handle_response(function, data='success', success=True)
+            return message
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 

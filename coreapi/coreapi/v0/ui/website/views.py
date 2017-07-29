@@ -2517,9 +2517,7 @@ class ImportSupplierData(APIView):
             website_utils.setup_create_final_proposal_post(result.values(), proposal_id, delete_and_save_filter_data=False, delete_and_save_spaces=True, exclude_shortlisted_space=True)
 
             # # data for this supplier is made. populate the shortlisted_inventory_details table before hitting the urls
-            response = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
-            if not response.data['status']:
-                return response
+            message = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
 
             # hit metric url to save metric data. current m sending the entire file, though only first sheet sending
             # is required.
@@ -2541,7 +2539,7 @@ class ImportSupplierData(APIView):
                 return Response({'status': False, 'error in import-metric-data api ': response.text}, status=status.HTTP_400_BAD_REQUEST)
 
             # prepare a new name for this file and save it in the required table
-            file_name =  website_utils.get_file_name(request.user, proposal_id, is_exported=False)
+            file_name = website_utils.get_file_name(request.user, proposal_id, is_exported=False)
 
             # fetch proposal instance and change it's status to 'finalized'.
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
@@ -4049,20 +4047,21 @@ class ProposalToCampaign(APIView):
             # these are the current inventories assigned. These are inventories assigned to this proposal when sheet was imported.
             current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
 
-            if not current_assigned_inventories:
-                return ui_utils.handle_response(class_name, data=errors.NO_INVENTORIES_ASSIGNED_ERROR.format(proposal_id), request=request)
+            # assign default dates when you have some inventories assigned
+            if current_assigned_inventories:
+                current_assigned_inventories_map = {}
 
-            current_assigned_inventories_map = {}
+                for inv in current_assigned_inventories:
+                    inv_tuple = (inv.inventory_content_type, inv.inventory_id)
+                    current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
 
-            for inv in current_assigned_inventories:
-                inv_tuple = (inv.inventory_content_type, inv.inventory_id)
-                current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
+                # currently set the R.D and C.D of all inventories to proposal's start and end date.
+                inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
+                response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
+                if not response.data['status']:
+                    return response
 
-            # currently set the R.D and C.D of all inventories to proposal's start and end date.
-            inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
-            response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
-            if not response.data['status']:
-                return response
+            # convert to campaign and return
             proposal.campaign_state = v0_constants.proposal_converted_to_campaign
             proposal.save()
             return ui_utils.handle_response(class_name, data=errors.PROPOSAL_CONVERTED_TO_CAMPAIGN.format(proposal_id), success=True)
