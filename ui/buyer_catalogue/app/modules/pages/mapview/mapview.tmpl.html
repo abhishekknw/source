@@ -375,7 +375,11 @@
             <th class="center-align" ng-if="inv_standee">Standee Count</th>
             <th class="center-align" ng-if="inv_stall">Stall Count</th>
             <th class="center-align" ng-if="inv_flier">Flyer Count</th>
-            <th class = "col-md-4">Finalize/Buffer</th>
+            <th class = "col-md-4">
+              <a ng-click="getOrderBy(center_data,supplierCode.corporate,finalize)"> Finalize </a>/
+              <a ng-click="getOrderBy(center_data,supplierCode.corporate,buffer)"> Buffer </a>/
+              <a ng-click="getOrderBy(center_data,supplierCode.corporate,remove)"> Remove </a>
+              </th>
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
@@ -425,7 +429,11 @@
           <!-- <th class = "col-md-4">Society Type</th> -->
           <!-- <th class = "col-md-4">Locality Rating</th> -->
           <th class = "col-md-4">Machadalo Index</th>
-          <th class = "col-md-4">Finalize/Buffer</th>
+          <th class = "col-md-4">
+            <a ng-click="getOrderBy(center_data,supplierCode.busShelter,finalize)"> Finalize </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.busShelter,buffer)"> Buffer </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.busShelter,remove)"> Remove </a>
+            </th>
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
@@ -462,7 +470,11 @@
           <th class = "col-md-4">Supplier Name</th>
           <th class = "col-md-4">SubArea-Area</th>
           <th class = "col-md-4">Machadalo Index</th>
-          <th class = "col-md-4">Finalize/Buffer</th>
+          <th class = "col-md-4">
+            <a ng-click="getOrderBy(center_data,supplierCode.gym,finalize)"> Finalize </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.gym,buffer)"> Buffer </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.gym,remove)"> Remove </a>
+            </th>
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
@@ -497,7 +509,11 @@
           <th class = "col-md-4">Supplier Name</th>
           <th class = "col-md-4">SubArea-Area</th>
           <th class = "col-md-4">Machadalo Index</th>
-          <th class = "col-md-4">Finalize/Buffer</th>
+          <th class = "col-md-4">
+            <a ng-click="getOrderBy(center_data,supplierCode.saloon,finalize)"> Finalize </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.saloon,buffer)"> Buffer </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.saloon,remove)"> Remove </a>
+            </th>
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
@@ -534,7 +550,11 @@
           <th class = "col-md-4">Supplier Name</th>
           <th class = "col-md-4">SubArea-Area</th>
           <th class = "col-md-4">Machadalo Index</th>
-          <th class = "col-md-4">Finalize/Buffer</th>
+          <th class = "col-md-4">
+            <a ng-click="getOrderBy(center_data,supplierCode.retailStore,finalize)"> Finalize </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.retailStore,buffer)"> Buffer </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.retailStore,remove)"> Remove </a>
+            </th>
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
