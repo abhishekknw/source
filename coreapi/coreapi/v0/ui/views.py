@@ -495,13 +495,13 @@ class CorporateViewSet(viewsets.ViewSet):
 
             serializer = UICorporateSerializer(corporates, many=True)
             corporates_with_images = ui_utils.get_supplier_image(serializer.data, 'Corporate')
-            paginator = PageNumberPagination()
-            result_page = paginator.paginate_queryset(corporates_with_images, request)
-
-            paginator_response = paginator.get_paginated_response(result_page)
+            # disabling pagination as search cannot be performed on whole data set
+            # paginator = PageNumberPagination()
+            # result_page = paginator.paginate_queryset(corporates_with_images, request)
+            # paginator_response = paginator.get_paginated_response(result_page)
             data = {
                 'count': len(corporates_with_images),
-                'corporates': paginator_response.data
+                'corporates': corporates_with_images
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except ObjectDoesNotExist as e:
@@ -607,13 +607,14 @@ class SalonViewSet(viewsets.ViewSet):
                 salon_objects = SupplierTypeSalon.objects.filter(city_query)
 
             salon_serializer = UISalonSerializer(salon_objects, many=True)
-            items = ui_utils.get_supplier_image(salon_serializer.data, 'Gym')
-            paginator = PageNumberPagination()
-            result_page = paginator.paginate_queryset(items, request)
-            paginator_response = paginator.get_paginated_response(result_page)
+            items = ui_utils.get_supplier_image(salon_serializer.data, 'Salon')
+            # disabling pagination because search cannot be performed on whole data set
+            # paginator = PageNumberPagination()
+            # result_page = paginator.paginate_queryset(items, request)
+            # paginator_response = paginator.get_paginated_response(result_page)
             data = {
                 'count': len(salon_serializer.data),
-                'salons': paginator_response.data
+                'salons': items
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except ObjectDoesNotExist as e:
@@ -637,12 +638,13 @@ class GymViewSet(viewsets.ViewSet):
 
             gym_shelter_serializer = SupplierTypeGymSerializer(gym_objects, many=True)
             items = ui_utils.get_supplier_image(gym_shelter_serializer.data,'Gym')
-            paginator = PageNumberPagination()
-            result_page = paginator.paginate_queryset(items, request)
-            paginator_response = paginator.get_paginated_response(result_page)
+            # disabling pagination because search cannot be performed on whole data set
+            # paginator = PageNumberPagination()
+            # result_page = paginator.paginate_queryset(items, request)
+            # paginator_response = paginator.get_paginated_response(result_page)
             data = {
               'count': len(gym_shelter_serializer.data),
-              'gyms': paginator_response.data
+              'gyms': items
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except ObjectDoesNotExist as e:
@@ -2823,12 +2825,13 @@ class BusShelter(APIView):
 
             bus_shelter_serializer = BusShelterSerializer(bus_objects, many=True)
             items = ui_utils.get_supplier_image(bus_shelter_serializer.data,'Bus Shelter')
-            paginator = PageNumberPagination()
-            result_page = paginator.paginate_queryset(items, request)
-            paginator_response = paginator.get_paginated_response(result_page)
+            # disabling pagination because search cannot be performed in whole data set.
+            # paginator = PageNumberPagination()
+            # result_page = paginator.paginate_queryset(items, request)
+            # paginator_response = paginator.get_paginated_response(result_page)
             data = {
               'count': len(bus_shelter_serializer.data),
-              'busshelters': paginator_response.data
+              'busshelters': items
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except SupplierTypeBusShelter.DoesNotExist as e:
@@ -3041,16 +3044,16 @@ class RetailShopViewSet(viewsets.ViewSet):
             else:
                 city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.retail_shop_code)
                 retail_shop_objects = models.SupplierTypeRetailShop.objects.filter(city_query)
-
             serializer = RetailShopSerializer(retail_shop_objects, many=True)
             retail_shop_with_images = ui_utils.get_supplier_image(serializer.data, 'Retail Shop')
-            paginator = PageNumberPagination()
-            result_page = paginator.paginate_queryset(retail_shop_with_images, request)
 
-            paginator_response = paginator.get_paginated_response(result_page)
+            # disabling paginators because search cannot be performed in front end in whole data set
+            # paginator = PageNumberPagination()
+            # result_page = paginator.paginate_queryset(retail_shop_with_images, request)
+            # paginator_response = paginator.get_paginated_response(result_page)
             data = {
-                'count': len(retail_shop_with_images),
-                'retail_shop_objects': paginator_response.data
+                'count': len(serializer.data),
+                'retail_shop_objects': retail_shop_with_images
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:

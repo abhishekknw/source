@@ -1005,6 +1005,19 @@ society_db_field_to_input_field_map = {
 
 }
 
+# these basic fields are common to all kinds of suppliers
+basic_db_fields_to_input_field_map = {
+    'supplier_code':  'supplier_code',
+    'name': 'supplier_name',
+    'address1': 'address1',
+    'address2': 'address2',
+    'area': 'area',
+    'subarea': 'sub_area',
+    'city': 'city',
+    'latitude': 'latitude',
+    'longitude': 'longitude'
+}
+
 
 campaign_weekly = 'Campaign Weekly'
 campaign_monthly = 'Campaign Monthly'

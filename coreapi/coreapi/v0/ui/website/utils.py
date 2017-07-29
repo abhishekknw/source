@@ -56,11 +56,11 @@ def get_union_keys_inventory_code(key_type, unique_inventory_codes):
 
     assert key_type is not None, 'key type should not be None'
     assert unique_inventory_codes is not None, 'inventory code  should not be None'
-    assert type(inventorylist) is DictType, 'Inventory list is not dict type'
+    assert type(v0_constants.inventorylist) is DictType, 'Inventory list is not dict type'
     function = get_union_keys_inventory_code.__name__
     try:
         # for each code in individual_codes union the data and return
-        return [item for code in unique_inventory_codes for item in inventorylist.get(code)[key_type]]
+        return [item for code in unique_inventory_codes for item in v0_constants.inventorylist.get(code)[key_type]]
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
@@ -5467,24 +5467,33 @@ def generate_supplier_basic_sheet_mail(data):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def validate_society_headers(supplier_type_code, row, data_import_type):
+def validate_supplier_headers(supplier_type_code, row, data_import_type):
     """
     Returns: True means the headers defined in constants exactly match the headers defined in sheet.
     """
-    function = validate_society_headers.__name__
+    function = validate_supplier_headers.__name__
     try:
         lowercase_sheet_header_list_with_underscores = ['_'.join(field.value.lower().split(' ')) for field in row if field.value]
         supplier_headers_per_import_type = v0_constants.supplier_headers[data_import_type]
         basic_headers = supplier_headers_per_import_type['basic_data']
-        supplier_specific_headers = supplier_headers_per_import_type['supplier_specific'][supplier_type_code]
+
+        supplier_specific_headers = supplier_headers_per_import_type['supplier_specific'].get(supplier_type_code)
         amenity_headers = supplier_headers_per_import_type['amenities']
         event_headers = supplier_headers_per_import_type['events']
         flat_headers = supplier_headers_per_import_type['flats']
-        all_header_list = basic_headers + supplier_specific_headers + amenity_headers + event_headers + flat_headers
-        for current_header in all_header_list:
-            lookup_key = '_'.join(current_header.lower().split(' '))
-            if lookup_key not in lowercase_sheet_header_list_with_underscores:
-                raise Exception(function, errors.HEADER_NOT_PRESENT_IN_SHEET.format(current_header, lookup_key))
+
+        all_header_list = basic_headers + amenity_headers + event_headers + flat_headers
+
+        if supplier_specific_headers:
+            all_header_list += supplier_specific_headers
+
+        # convert each one to standard underscore format
+        all_header_list = ['_'.join(current_header.lower().split(' ')) for current_header in all_header_list]
+        # check what we have from sheet
+        for current_header in lowercase_sheet_header_list_with_underscores:
+            # check weather the header in the sheet is with us or not
+            if current_header not in all_header_list:
+                raise Exception(function, errors.HEADER_NOT_PRESENT_IN_SYSTEM.format(current_header))
         return True
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -5507,8 +5516,10 @@ def collect_supplier_common_data(result, supplier_type_code, supplier_id, row_di
     try:
         common_data_key = 'common_data'
         basic_headers = v0_constants.supplier_headers[data_import_type]['basic_data']
-        supplier_specific_headers = v0_constants.supplier_headers[data_import_type]['supplier_specific'][supplier_type_code]
-        common_headers = ['_'.join(field.lower().split(' ')) for field in basic_headers + supplier_specific_headers]
+        supplier_specific_headers = v0_constants.supplier_headers[data_import_type]['supplier_specific'].get(supplier_type_code)
+        if supplier_specific_headers:
+            basic_headers += supplier_specific_headers
+        common_headers = ['_'.join(field.lower().split(' ')) for field in basic_headers]
         for key in common_headers:
             result[supplier_id][common_data_key][key] = row_dict.get(key)
         return result
@@ -5698,10 +5709,11 @@ def handle_supplier_data_from_sheet(result, supplier_instance_map, content_type,
 
             instance = supplier_instance_map[supplier_id]
 
-            # get additional tower instance to be added if any first before setting new attributes
-            tower_created_list = handle_society_towers(instance, detail, tower_count_map,  content_type)
-            if tower_created_list:
-                tower_instance_list.extend(tower_created_list)
+            if supplier_type_code == v0_constants.society_code:
+                # get additional tower instance to be added if any first before setting new attributes
+                tower_created_list = handle_society_towers(instance, detail, tower_count_map,  content_type)
+                if tower_created_list:
+                    tower_instance_list.extend(tower_created_list)
 
             instance = handle_supplier_common_attributes(instance, detail, supplier_type_code)
             supplier_instance_list.append(instance)
@@ -5815,7 +5827,10 @@ def handle_supplier_common_attributes(instance, detail, supplier_type_code):
                     continue
                 setattr(instance, society_db_field, detail[common_data_key][input_key])
         else:
-            raise Exception(function, 'Not implemented for supplier type code {0}'.format(supplier_type_code))
+            for basic_db_field, input_key in v0_constants.basic_db_fields_to_input_field_map.iteritems():
+                if not detail[common_data_key][input_key]:
+                    continue
+                setattr(instance, basic_db_field, detail[common_data_key][input_key])
 
         return instance
 
@@ -5839,8 +5854,12 @@ def handle_flats(supplier_id, result, flat_map, content_type):
         positive_updated_instances = []
         positive_created_instances = []
         negative_flat_instances = []
-        positive_flat_dict = result[supplier_id]['flats']['positive']
-        negative_flat_dict = result[supplier_id]['flats']['negative']
+        try:
+            positive_flat_dict = result[supplier_id]['flats']['positive']
+            negative_flat_dict = result[supplier_id]['flats']['negative']
+        except KeyError:
+            return positive_created_instances, positive_updated_instances, negative_flat_instances
+
         for flat_type, detail in positive_flat_dict.iteritems():
             try:
                 instance = flat_map[flat_type, supplier_id, content_type]
@@ -5877,10 +5896,15 @@ def handle_events(supplier_id, result, events_map,  content_type):
     """
     function = handle_events.__name__
     try:
-        positive_events = result[supplier_id]['events']['positive']['names']
-        negative_events = result[supplier_id]['events']['negative']['names']
         pos_event_list = []
         neg_events_list = []
+
+        try:
+            positive_events = result[supplier_id]['events']['positive']['names']
+            negative_events = result[supplier_id]['events']['negative']['names']
+        except KeyError:
+            return pos_event_list, neg_events_list
+
         for event in positive_events:
             try:
                 ref = events_map[event, supplier_id, content_type]
@@ -5916,9 +5940,14 @@ def handle_amenities(supplier_id, result, amenity_map, supplier_amenity_instance
     function = handle_amenities.__name__
     try:
         supplier_amenity_instances = []
-        positive_amenities = result[supplier_id]['amenities']['positive']['names']
-        negative_amenities = result[supplier_id]['amenities']['negative']['names']
         negative_amenity_instances = []
+
+        try:
+            positive_amenities = result[supplier_id]['amenities']['positive']['names']
+            negative_amenities = result[supplier_id]['amenities']['negative']['names']
+        except KeyError:
+            return supplier_amenity_instances, negative_amenity_instances
+
         for amenity_name in positive_amenities + negative_amenities:
             amenity_instance = amenity_map.get(amenity_name)
             if amenity_instance:

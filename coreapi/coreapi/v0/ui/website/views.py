@@ -2255,14 +2255,14 @@ class ImportSupplierDataFromSheet(APIView):
             # collects invalid row indexes
             invalid_rows_detail = {}
             possible_suppliers = 0
+            new_cities_created = []
+            new_areas_created = []
+            new_subareas_created = []
 
             # will store all the info of society
             result = {}
             supplier_id_per_row = {}
             state_instance = models.State.objects.get(state_code=state_code)
-            city_codes = models.City.objects.filter(state_code=state_instance).values_list('city_code', flat=True)
-            area_codes = models.CityArea.objects.filter(city_code__city_code__in=city_codes).values_list('area_code', flat=True)
-            subarea_codes = models.CitySubArea.objects.filter(area_code__area_code__in=area_codes).values_list('subarea_code', flat=True)
 
             # put debugging information here
             invalid_rows_detail['detail'] = {}
@@ -2272,7 +2272,7 @@ class ImportSupplierDataFromSheet(APIView):
             # iterate through all rows and populate result array
             for index, row in enumerate(ws.iter_rows()):
                 if index == 0:
-                    website_utils.validate_society_headers(supplier_type_code, row, data_import_type)
+                    website_utils.validate_supplier_headers(supplier_type_code, row, data_import_type)
                     continue
 
                 possible_suppliers += 1
@@ -2294,15 +2294,26 @@ class ImportSupplierDataFromSheet(APIView):
                 if check:
                     continue
 
-                if row_dict['city_code'] not in city_codes:
-                    invalid_rows_detail['detail'][index + 1] = row_dict['city_code'] + '  not in city_codes'
-                    continue
-                if row_dict['area_code'] not in area_codes:
-                    invalid_rows_detail['detail'][index + 1] = row_dict['area_code'] + '  not in area codes'
-                    continue
-                if row_dict['sub_area_code'] not in subarea_codes:
-                    invalid_rows_detail['detail'][index + 1] = row_dict['sub_area_code'] + '  not in sub area codes'
-                    continue
+                city_code = row_dict['city_code'].strip()
+                city_instance, is_created = models.City.objects.get_or_create(city_code=city_code, state_code=state_instance)
+                city_instance.city_name = row_dict['city']
+                city_instance.save()
+                if is_created:
+                    new_cities_created.append((city_code, city_instance.city_name))
+
+                area_code = row_dict['area_code'].strip()
+                area_instance,  is_created = models.CityArea.objects.get_or_create(area_code=area_code, city_code=city_instance)
+                area_instance.label = row_dict['area']
+                area_instance.save()
+                if is_created:
+                    new_areas_created.append((area_code, area_instance.label))
+
+                subarea_code = row_dict['sub_area_code'].strip()
+                sub_area_instance, is_created = models.CitySubArea.objects.get_or_create(subarea_code=subarea_code, area_code=area_instance)
+                sub_area_instance.subarea_name = row_dict['sub_area']
+                sub_area_instance.save()
+                if is_created:
+                    new_subareas_created.append((subarea_code, sub_area_instance.subarea_name))
 
                 supplier_id = row_dict['city_code'].strip() + row_dict['area_code'].strip() + row_dict['sub_area_code'].strip() + supplier_type_code.strip() + row_dict['supplier_code'].strip()
                 supplier_id_per_row[index] = supplier_id
@@ -2319,14 +2330,13 @@ class ImportSupplierDataFromSheet(APIView):
                     'inventories': {'positive': {}, 'negative': {}}
                 }
                 result = website_utils.collect_supplier_common_data(result, supplier_type_code, supplier_id, row_dict, data_import_type)
-                result = website_utils.collect_amenity_data(result, supplier_id, row_dict)
-                result = website_utils.collect_events_data(result, supplier_id, row_dict)
-                result = website_utils.collect_flat_data(result, supplier_id, row_dict)
+                # result = website_utils.collect_amenity_data(result, supplier_id, row_dict)
+                # result = website_utils.collect_events_data(result, supplier_id, row_dict)
+                # result = website_utils.collect_flat_data(result, supplier_id, row_dict)
 
             input_supplier_ids = set(result.keys())
-
             if not input_supplier_ids:
-                return ui_utils.handle_response(class_name, data='System did not get any suppliers from sheet to work upon')
+                return ui_utils.handle_response(class_name, data=invalid_rows_detail)
 
             model = ui_utils.get_model(supplier_type_code)
             content_type = ui_utils.fetch_content_type(supplier_type_code)
@@ -2352,7 +2362,10 @@ class ImportSupplierDataFromSheet(APIView):
                 'already_existing_suppliers_from_this_sheet': already_existing_supplier_ids,
                 'summary': summary,
                 'supplier_id_per_row': supplier_id_per_row,
-                'total_suppliers_in_sheet': len(supplier_id_per_row.keys())
+                'total_suppliers_in_sheet': len(supplier_id_per_row.keys()),
+                'new_cities_created': new_cities_created,
+                'new_areas_created': new_areas_created,
+                'new_subareas_created': new_subareas_created
 
             }
 
