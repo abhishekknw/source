@@ -294,6 +294,7 @@
         <option ng-repeat="supplier in unique_suppliersCode" value="{{supplier}}" ng-selected="$last">{{supplier}}</option>
       </select></h2>
       <table class="table table-bordered"  ng-if = "society_allowed_gridview && ((supplierListCode == supplierName.society) || (supplierListCode == supplierName.all))">
+        <h2 ng-if = "society_allowed_gridview && ((supplierListCode == supplierName.society) || (supplierListCode == supplierName.all))">Society</h2>
         <thead>
           <tr>
             <th class = "col-md-1">#</th>
@@ -360,6 +361,7 @@
         </table>
       <!--Start : adding table for corporates  -->
       <table class="table table-bordered" ng-if = "corporate_allowed_gridview && ((supplierListCode == supplierName.corporate) || (supplierListCode == supplierName.all))">
+        <h2 ng-if = "corporate_allowed_gridview && ((supplierListCode == supplierName.corporate) || (supplierListCode == supplierName.all))">Corporate</h2>
         <thead>
           <tr>
             <th class = "col-md-1">#</th>
@@ -375,7 +377,11 @@
             <th class="center-align" ng-if="inv_standee">Standee Count</th>
             <th class="center-align" ng-if="inv_stall">Stall Count</th>
             <th class="center-align" ng-if="inv_flier">Flyer Count</th>
-            <th class = "col-md-4">Finalize/Buffer</th>
+            <th class = "col-md-4">
+              <a ng-click="getOrderBy(center_data,supplierCode.corporate,finalize)"> Finalize </a>/
+              <a ng-click="getOrderBy(center_data,supplierCode.corporate,buffer)"> Buffer </a>/
+              <a ng-click="getOrderBy(center_data,supplierCode.corporate,remove)"> Remove </a>
+              </th>
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
@@ -416,6 +422,7 @@
     <!--End : adding table for corporates  -->
     <!--start: busShelter table  -->
     <table class="table table-bordered" ng-if = "busShelter_allowed_gridview && ((supplierListCode == supplierName.busShelter) || (supplierListCode == supplierName.all))">
+      <h2 ng-if = "busShelter_allowed_gridview && ((supplierListCode == supplierName.busShelter) || (supplierListCode == supplierName.all))">Bus Shelter</h2>
       <thead>
         <tr>
           <th class = "col-md-1">#</th>
@@ -425,7 +432,11 @@
           <!-- <th class = "col-md-4">Society Type</th> -->
           <!-- <th class = "col-md-4">Locality Rating</th> -->
           <th class = "col-md-4">Machadalo Index</th>
-          <th class = "col-md-4">Finalize/Buffer</th>
+          <th class = "col-md-4">
+            <a ng-click="getOrderBy(center_data,supplierCode.busShelter,finalize)"> Finalize </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.busShelter,buffer)"> Buffer </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.busShelter,remove)"> Remove </a>
+            </th>
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
@@ -455,6 +466,7 @@
     <!--End: busShelter table  -->
     <!--start: gym table  -->
     <table class="table table-bordered" ng-if = "gym_allowed_gridview && ((supplierListCode == supplierName.gym) || (supplierListCode == supplierName.all))">
+      <h2 ng-if = "gym_allowed_gridview && ((supplierListCode == supplierName.gym) || (supplierListCode == supplierName.all))">Gym</h2>
       <thead>
         <tr>
           <th class = "col-md-1">#</th>
@@ -462,7 +474,11 @@
           <th class = "col-md-4">Supplier Name</th>
           <th class = "col-md-4">SubArea-Area</th>
           <th class = "col-md-4">Machadalo Index</th>
-          <th class = "col-md-4">Finalize/Buffer</th>
+          <th class = "col-md-4">
+            <a ng-click="getOrderBy(center_data,supplierCode.gym,finalize)"> Finalize </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.gym,buffer)"> Buffer </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.gym,remove)"> Remove </a>
+            </th>
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
@@ -490,6 +506,7 @@
     <!--End: gym table  -->
     <!--start: saloon table  -->
     <table class="table table-bordered" ng-if = "saloon_allowed_gridview && ((supplierListCode == supplierName.saloon) || (supplierListCode == supplierName.all))">
+      <h2 ng-if = "saloon_allowed_gridview && ((supplierListCode == supplierName.saloon) || (supplierListCode == supplierName.all))">Saloon</h2>
       <thead>
         <tr>
           <th class = "col-md-1">#</th>
@@ -497,7 +514,11 @@
           <th class = "col-md-4">Supplier Name</th>
           <th class = "col-md-4">SubArea-Area</th>
           <th class = "col-md-4">Machadalo Index</th>
-          <th class = "col-md-4">Finalize/Buffer</th>
+          <th class = "col-md-4">
+            <a ng-click="getOrderBy(center_data,supplierCode.saloon,finalize)"> Finalize </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.saloon,buffer)"> Buffer </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.saloon,remove)"> Remove </a>
+            </th>
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
@@ -527,6 +548,7 @@
     <!--End: saloon table  -->
     <!--start: retailStore table  -->
     <table class="table table-bordered" ng-if = "retailStore_allowed_gridview && ((supplierListCode == supplierName.retailStore) || (supplierListCode == supplierName.all))">
+      <h2 ng-if = "retailStore_allowed_gridview && ((supplierListCode == supplierName.retailStore) || (supplierListCode == supplierName.all))">Retail Shop</h2>
       <thead>
         <tr>
           <th class = "col-md-1">#</th>
@@ -534,7 +556,11 @@
           <th class = "col-md-4">Supplier Name</th>
           <th class = "col-md-4">SubArea-Area</th>
           <th class = "col-md-4">Machadalo Index</th>
-          <th class = "col-md-4">Finalize/Buffer</th>
+          <th class = "col-md-4">
+            <a ng-click="getOrderBy(center_data,supplierCode.retailStore,finalize)"> Finalize </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.retailStore,buffer)"> Buffer </a>/
+            <a ng-click="getOrderBy(center_data,supplierCode.retailStore,remove)"> Remove </a>
+            </th>
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->

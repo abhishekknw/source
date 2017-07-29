@@ -1662,7 +1662,7 @@ $scope.gridViewSummary = {};
                 .then(function onSuccess(response, status){
                 console.log(response);
                     response.data.data.center = $scope.current_center.center;
-                    if(response.data.data.suppliers[code].length > 0)
+                    // if(response.data.data.suppliers[code].length > 0)
                       $scope.center_data[$scope.current_center_index].suppliers[code] = response.data.data.suppliers[code];
                     if($scope.center_data[$scope.current_center_index].suppliers_meta){
                       $scope.center_data[$scope.current_center_index].suppliers_meta[code] = response.data.data.suppliers_meta[code];
@@ -2189,9 +2189,10 @@ $scope.gridViewSummary = {};
         'supplier_id':supplier.supplier_id,
         'status':supplier.status,
         'supplier_type_code':code,
-      };
+      };      
       mapViewService.updateSupplierStatus($scope.proposal_id_temp,data)
         .then(function onSuccess(response, status){
+          console.log(response);
           getSummary(code,center);
           getComprehinsiveSummary(code);
         }).catch(function onError(response, status){
