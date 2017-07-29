@@ -18,9 +18,6 @@ urlpatterns = [
     url(r'^society/$', views.SocietyAPIView.as_view()),
     # url(r'^society/list/$', views.SocietyAPIListView.as_view()),
     url(r'^society/list/$', views.SocietyList.as_view()),
-    url(r'^corporate/list/$', views.CorporateAPIListView.as_view(), name='corporate-list'),
-    url(r'^salon/list/$', views.SalonAPIListView.as_view()),
-    url(r'^gym/list/$', views.GymAPIListView.as_view()),
     url(r'^busshelter/list/$', views.BusShelter.as_view()),
     url(r'^busshelter/search/$', views.BusShelterSearchView.as_view()),
     url(r'^society/filter/$', views.SocietyAPIFiltersView.as_view()),
@@ -42,7 +39,6 @@ urlpatterns = [
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/inventory_pricing/$', views.InventoryPricingAPIView.as_view()),
 
     url(r'^society/(?P<id>[A-Z_a-z0-9]+)/image_locations/$', views.ImageLocationsAPIView.as_view()),
-    url(r'^society/(?P<id>[A-Z_a-z0-9]+)/image_mapping/$', views.ImageMappingAPIView.as_view()),
 
     url(r'^create_supplier/load_initial_data/$', views.GetInitialDataAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_corporate/$', views.SaveBasicCorporateDetailsAPIView.as_view(), name='load-initial-corporate-data'),
@@ -71,7 +67,7 @@ urlpatterns = [
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_gym/$', views.saveBasicGymDetailsAPIView.as_view()),
 
     url(r'^(?P<id>[A-Z_a-z0-9]+)/bus-shelter/$', views.BusShelter.as_view()),
-
+    url(r'^suppliers-meta/$', views.SuppliersMeta.as_view()),
     url(r'^supplier/(?P<id>[A-Z_a-z0-9]+)/image_details/$', views.SupplierImageDetails.as_view()),
 
 ]
@@ -80,4 +76,10 @@ urlpatterns = [
 router = DefaultRouter()
 router.include_format_suffixes = False
 router.register(r'^event', views.EventViewSet, base_name='event')
+router.register(r'^corporate', views.CorporateViewSet, base_name='corporate')
+router.register(r'^gym', views.GymViewSet, base_name='gym')
+router.register(r'^salon', views.SalonViewSet, base_name='salon')
+router.register(r'^retail-shop', views.RetailShopViewSet, base_name='retail-shop')
+router.register(r'^image-mapping', views.ImageMappingViewSet, base_name='image-mapping')
+
 urlpatterns += router.urls

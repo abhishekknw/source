@@ -32,7 +32,7 @@
           </tr>
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers" ng-init="rowIndex = $index">
-          <tr ng-repeat="(key,filter) in getFilters(supplier)">
+          <tr ng-repeat="(key,filter) in getFilters(supplier)" ng-if="supplier.booking_status=='BK'">
             <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">
             {{supplier.phase}}
             </td>

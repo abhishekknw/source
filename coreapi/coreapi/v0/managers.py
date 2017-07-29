@@ -1,4 +1,3 @@
-import ui.constants as ui_constants
 from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import models
@@ -115,7 +114,7 @@ class GeneralManager(models.Manager):
     def get_content_type(self, supplier_type_code):
         try:
             ContentType = apps.get_model('contenttypes', 'ContentType')
-            suppliers = ui_constants.codes_to_model_names
+            suppliers = v0_constants.codes_to_model_names
             load_model = apps.get_model('v0', suppliers[supplier_type_code])
             content_type = ContentType.objects.get_for_model(load_model)
             return content_type

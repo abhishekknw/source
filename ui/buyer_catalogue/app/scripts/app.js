@@ -33,6 +33,7 @@ angular
     'uiGmapgoogle-maps',
     'ncy-angular-breadcrumb',
     'slickCarousel',
+    'scrollable-table'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider) {
       $stateProvider
@@ -126,7 +127,7 @@ angular
           },
         })
       .state('manageCampaign.createaccount', {
-            url : '/createAccount',
+            url : '/createAccount/:accountId/',
             controller: 'CreateAccountCtrl',
             templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
             ncyBreadcrumb: {

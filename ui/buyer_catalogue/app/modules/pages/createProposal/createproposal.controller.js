@@ -8,6 +8,10 @@ angular.module('catalogueApp')
 	$scope.suppliers = [
 		{name:"Societies", code:"RS", selected:"false"},
 		{name:"Corporate Parks", code:"CP", selected:"false"},
+		{name:"Bus Shelter", code:"BS", selected:"false"},
+		{name:"Gym", code:"GY", selected:"false"},
+		{name:"Saloon", code:"SA", selected:"false"},
+		{name:"Retail Shop", code:"RE", selected:"false"},
 	];
 	$scope.proposalheaders = [
         {header : 'Advertising Area'},

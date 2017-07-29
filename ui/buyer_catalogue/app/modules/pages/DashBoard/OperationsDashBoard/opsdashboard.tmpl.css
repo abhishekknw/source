@@ -1,7 +1,8 @@
 th{
-  	background: #808080;
+  	/*background: #808080;*/
     text-align: center;
-  	color: #fff;
+  	color: #000;
+
 }
 body{
 	background: #f2f2f2;
@@ -19,7 +20,7 @@ body{
     font-size: x-large;
 }
 .breadcrumb{
-	width: 80%;
+	width: 90%;
 	margin-left: auto;
 	margin-right: auto;
 	background-color: transparent;
@@ -27,4 +28,22 @@ body{
 }
 .content{
   min-height: 350px;
+}
+.scrollableContainer {
+   height: 600px;
+ }
+ table{
+   text-align: center;
+ }
+table .cellWidth{
+min-width: 100px;
+}
+table .cellWidthLarge{
+min-width: 130px;
+}
+.panel{
+  margin-top:20px;
+  margin-left: 100px;
+  margin-right: 100px;
+  margin-bottom: 50px;
 }

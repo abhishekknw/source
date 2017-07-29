@@ -26,7 +26,6 @@ import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils
 import errors
-import v0.ui.website.constants as website_constants
 import constants as v0_constants
 import v0.ui.website.utils as website_utils
 
@@ -1662,7 +1661,7 @@ class CreateSocietyTestData(APIView):
                     coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant + remainder, location_lat, location_long, radius, v0_constants.fourth_quadrant_code))
                 result[address] = society_count
 
-            suppliers_dict = v0_utils.assign_supplier_ids(city_code, website_constants.society, coordinates)
+            suppliers_dict = v0_utils.assign_supplier_ids(city_code, v0_constants.society, coordinates)
 
             for society_id, detail in suppliers_dict.iteritems():
                 detail['supplier_id'] = society_id
@@ -1691,51 +1690,60 @@ class CreateBusinessTypeSubType(APIView):
         The SubType Instances cannot be collected at the time of collecting Type instances because SubTypes depend on respective
         Type instances. Hence first we create Type instances and then create SubType instances.
         Args:
-            request: JSON for business type and subtypes
+            request: JSON for business type and subtypes. sample JSON looks like this
 
         Returns: The created instances
 
         """
         class_name = self.__class__.__name__
         try:
-            default_database_name = settings.DATABASES['default']['NAME']
+            # default_database_name = settings.DATABASES['default']['NAME']
 
-            if default_database_name != v0_constants.database_name:
-                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+            already_present_business_codes = BusinessTypes.objects.all().values_list('business_type_code', flat=True)
 
-            business_type_instances = []  # to store actual objects of BusinessType
-            business_sub_type_data = []  # to store data in list of dict form for BusinessSubType
+            # if default_database_name != v0_constants.database_name:
+            #     return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+
             business_type_code_list = []  # to store list of all codes of BusinessType. Later used to fetch objects of BusinessType
-            business_sub_type_instances = []  # to store actual instances of BusinessSubType.
 
             for business_type, detail in request.data.iteritems():
 
                 business_type_code = detail['code']
                 business_type_code_list.append(business_type_code)
 
-                business_type_instances.append(BusinessTypes(business_type=business_type, business_type_code=business_type_code))
+                # if already present, fetch it
+                if business_type_code in already_present_business_codes:
+                    business_type_instance = BusinessTypes.objects.get(business_type_code=business_type_code)
+
+                else:
+                    # we create this business first. it's not present in the system
+                    business_type_instance = BusinessTypes.objects.create(business_type_code=business_type_code, business_type=business_type)
+
+                # fetch already present business sub types
+                already_present_business_sub_type_codes_instances = BusinessSubTypes.objects.filter(business_type=business_type_instance)
+
+                # iterate through subtypes
                 for sub_type_dict in detail['subtypes']:
-                    data = {
-                        'business_sub_type': sub_type_dict['name'],
-                        'business_sub_type_code': sub_type_dict['code'],
-                        'business_type_code': business_type_code
-                    }
-                    business_sub_type_data.append(data)
+                    business_sub_type_code = sub_type_dict['code']
+                    check = False
+                    # check weather this sub type is already present or not for this business type
+                    for sub_type_instance in already_present_business_sub_type_codes_instances:
+                        if sub_type_instance.business_sub_type_code == business_sub_type_code:
+                            # this is already done
+                            check = True
+                            break
 
-            # create Type instances here
-            BusinessTypes.objects.all().delete()
-            BusinessTypes.objects.bulk_create(business_type_instances)
+                    # if check = True, skip this part. This sub type is already present
+                    if not check:
+                        # business sub type not in already business sub types
+                        data = {
+                            'business_type': business_type_instance,
+                            'business_sub_type': sub_type_dict['name'],
+                            'business_sub_type_code': sub_type_dict['code']
+                        }
+                        BusinessSubTypes.objects.create(**data)
+
             business_type_instances = BusinessTypes.objects.filter(business_type_code__in=business_type_code_list)
-            # map from code to type instances so that we can fetch type instance from knowing the code itself.
-            business_type_instances_map = {instance.business_type_code: instance for instance in business_type_instances}
-
-            # now create SubType instances
-            for sub_type_data in business_sub_type_data:
-                sub_type_data['business_type'] = business_type_instances_map[sub_type_data['business_type_code']]
-                del sub_type_data['business_type_code']
-                business_sub_type_instances.append(BusinessSubTypes(**sub_type_data))
-            BusinessSubTypes.objects.all().delete()
-            BusinessSubTypes.objects.bulk_create(business_sub_type_instances)
             serializer = BusinessTypeSubTypeReadOnlySerializer(business_type_instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -1762,10 +1770,10 @@ class CreateAdInventoryTypeDurationType(APIView):
                 return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
 
             # for simplicity i have every combination
-            for duration_code, duration_value in website_constants.duration_dict.iteritems():
+            for duration_code, duration_value in v0_constants.duration_dict.iteritems():
                 DurationType.objects.get_or_create(duration_name=duration_value)
             for inventory_tuple in AD_INVENTORY_CHOICES:
-                for ad_inventory_type_code, ad_inventory_type_value in website_constants.type_dict.iteritems():
+                for ad_inventory_type_code, ad_inventory_type_value in v0_constants.type_dict.iteritems():
                     AdInventoryType.objects.get_or_create(adinventory_name=inventory_tuple[0], adinventory_type=ad_inventory_type_value)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
@@ -1797,7 +1805,7 @@ class AssignInventories(APIView):
             suppliers = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
             if not suppliers:
                 raise Exception("NO societies in the database yet. Add them first and then hit this API.")
-            response = ui_utils.get_content_type(website_constants.society)
+            response = ui_utils.get_content_type(v0_constants.society)
             if not response.data['status']:
                 return response
             content_type = response.data['data']
@@ -1829,7 +1837,7 @@ class SetInventoryPricing(APIView):
                 return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
 
             supplier_ids = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
-            response = ui_utils.get_content_type(website_constants.society)
+            response = ui_utils.get_content_type(v0_constants.society)
             if not response.data['status']:
                 return response
             content_type = response.data['data']
