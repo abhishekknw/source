@@ -81,5 +81,7 @@ router.register(r'^gym', views.GymViewSet, base_name='gym')
 router.register(r'^salon', views.SalonViewSet, base_name='salon')
 router.register(r'^retail-shop', views.RetailShopViewSet, base_name='retail-shop')
 router.register(r'^image-mapping', views.ImageMappingViewSet, base_name='image-mapping')
+router.register(r'^state', views.StateViewSet, base_name='state')
+
 
 urlpatterns += router.urls

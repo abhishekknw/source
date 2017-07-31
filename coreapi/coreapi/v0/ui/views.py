@@ -28,7 +28,7 @@ from v0.serializers import ImageMappingSerializer, PriceMappingDefaultSerializer
 from v0.models import ImageMapping, PriceMappingDefault, PriceMapping, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, ContactDetails, Events, MailboxInfo, PoleInventory, StallInventory, StreetFurniture, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory,SupplierAmenitiesMap
 from v0.models import SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
-from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer
+from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer, StateSerializer
 from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
 
 # project imports
@@ -3125,5 +3125,24 @@ class ImageMappingViewSet(viewsets.ViewSet):
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class StateViewSet(viewsets.ViewSet):
+    """
+    ViewSet around states
+    """
+    def list(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            states = models.State.objects.all()
+            serializer = StateSerializer(states, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
