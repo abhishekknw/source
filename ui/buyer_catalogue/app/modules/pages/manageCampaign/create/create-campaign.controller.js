@@ -339,6 +339,10 @@
                      file: file }
                  }).then(function (response){
                       $scope.uploadfile = true;
+                      if($window.localStorage.sel_account_index >= 0){
+                        $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
+                        $scope.getProposals($scope.sel_account_id,$window.localStorage.sel_account_index);
+                      }
                       swal(constants.name,constants.uploadfile_success,constants.success);
                       // commonDataShare.showMessage(constants.uploadfile_success);
                  }).catch(function onError(response) {
