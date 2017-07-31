@@ -198,7 +198,7 @@
       $scope.editAccount = function(account) {
             $(".modal-backdrop").hide();
             pagesService.setAccountId(account.account_id);
-            $location.path("/manageCampaign/createAccount/" + account.account_id + "/");
+            $location.path("/manageCampaign/editAccount/" + account.account_id + "/");
       };
 
       $scope.newBusiness = function() {
@@ -215,7 +215,7 @@
 
       $scope.addNewAccount = function() {
               pagesService.setAccountId(undefined);
-              $location.path("/manageCampaign/createAccount");
+              $location.path("/manageCampaign/createAccount/");
       };
 
       $scope.getProposals = function(sel_account_id,index){
@@ -339,6 +339,10 @@
                      file: file }
                  }).then(function (response){
                       $scope.uploadfile = true;
+                      if($window.localStorage.sel_account_index >= 0){
+                        $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
+                        $scope.getProposals($scope.sel_account_id,$window.localStorage.sel_account_index);
+                      }
                       swal(constants.name,constants.uploadfile_success,constants.success);
                       // commonDataShare.showMessage(constants.uploadfile_success);
                  }).catch(function onError(response) {

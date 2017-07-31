@@ -155,6 +155,11 @@ $scope.gridViewSummary = {};
         if(supplier.status == 'B')
           $scope.status_color = "654321";// brown
         var icon;
+        if(key == $scope.supplierCode.retailStore){
+          $scope.status_color = "0000FF";
+          icon = icons[key] + $scope.status_color +'/000000/000000/';
+          return icon
+        }
         icon = icons[key] + $scope.status_color +'/000000/000000/';
         return icon;
       }
@@ -2189,7 +2194,7 @@ $scope.gridViewSummary = {};
         'supplier_id':supplier.supplier_id,
         'status':supplier.status,
         'supplier_type_code':code,
-      };      
+      };
       mapViewService.updateSupplierStatus($scope.proposal_id_temp,data)
         .then(function onSuccess(response, status){
           console.log(response);
