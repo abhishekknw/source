@@ -126,8 +126,8 @@ angular
             label: 'Homepage'
           },
         })
-      .state('manageCampaign.createaccount', {
-            url : '/createAccount/:accountId/',
+      .state('manageCampaign.editAccount', {
+            url : '/editAccount/:accountId/',
             controller: 'CreateAccountCtrl',
             templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
             ncyBreadcrumb: {
@@ -135,6 +135,15 @@ angular
               parent : 'manageCampaign.create'
             }
         })
+        .state('manageCampaign.createaccount', {
+              url : '/createAccount/',
+              controller: 'CreateAccountCtrl',
+              templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
+              ncyBreadcrumb: {
+                label: 'Create Account',
+                parent : 'manageCampaign.create'
+              }
+          })
       .state('manageCampaign.shortlisted', {
           url : '/shortlisted',
           controller: 'ShortlistedCampaignCtrl',

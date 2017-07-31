@@ -198,7 +198,7 @@
       $scope.editAccount = function(account) {
             $(".modal-backdrop").hide();
             pagesService.setAccountId(account.account_id);
-            $location.path("/manageCampaign/createAccount/" + account.account_id + "/");
+            $location.path("/manageCampaign/editAccount/" + account.account_id + "/");
       };
 
       $scope.newBusiness = function() {
@@ -215,7 +215,7 @@
 
       $scope.addNewAccount = function() {
               pagesService.setAccountId(undefined);
-              $location.path("/manageCampaign/createAccount");
+              $location.path("/manageCampaign/createAccount/");
       };
 
       $scope.getProposals = function(sel_account_id,index){
