@@ -54,9 +54,9 @@
   overflow-y: scroll;
 }
 .breadcrumb{
-	width:25%;
-	margin-left: auto;
+	width:50%;
 	margin-right: auto;
+	margin-left: auto;
 	background-color: transparent;
 	font-size : x-large;
 }
