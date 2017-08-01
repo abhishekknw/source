@@ -3,7 +3,7 @@
 	position: relative;
 }
 .content{
-	width: 110%;
+	width: 50%;
 	margin-left: auto;
 	margin-right: auto;
 }
@@ -54,7 +54,7 @@
   overflow-y: scroll;
 }
 .breadcrumb{
-	width:100%;
+	width:25%;
 	margin-left: auto;
 	margin-right: auto;
 	background-color: transparent;
