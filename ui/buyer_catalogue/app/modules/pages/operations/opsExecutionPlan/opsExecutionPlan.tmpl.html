@@ -6,10 +6,20 @@
 <div ng-if="!backButton" permission="[campaign_manager]">
   <back-Button></back-Button>
 </div>
-<div class="" permission = "[]">
-  <div class="breadcrumb" ncy-breadcrumb></div>
+<div class="container-fluid">
+  <div class="col-sm-2"></div>
+  <div class="col-sm-10">
+    <div class="" permission = "[]">
+      <div class="breadcrumb" ncy-breadcrumb></div>
+    </div>
+  </div>
 </div>
+
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
+<div class="container-fluid">
+  <div class="col-sm-2"> </div>
+  <div class="col-sm-7">
+
 <div ng-hide="!hideData" style="text-align:center"><label>No Results Found</label></div>
 <h3 ng-hide="hideData" style = "text-align:center">Operations Execution Plan</h3>
 <div class = "container">
@@ -24,6 +34,12 @@
       </div>
     </div>
   </div>
+</div>
+<div class="col-sm-3"></div>
+</div>
+<div class="container-fluid">
+  <div class="col-sm-2"></div>
+  <div class="col-sm-7">
 
 <div class="container" ng-hide="hideData">
   <div class="row">
@@ -56,6 +72,9 @@
     <button class="btn btn-danger active notify" ng-click="getSummary()">Summary</button>
     <button class="btn btn-danger active notify" ng-click="downloadImages()" ng-disabled="buttonDisable">Download</button>
   </div>
+</div>
+</div>
+<div class="col-sm-3"></div>
 </div>
 <!--Start: Code for supplier details Modal Window -->
 <div id="supplierModal" class="modal fade">

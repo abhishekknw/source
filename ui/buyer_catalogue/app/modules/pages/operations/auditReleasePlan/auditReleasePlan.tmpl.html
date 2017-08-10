@@ -3,26 +3,40 @@
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 <br><br><br>
-<div class="" permission = "[]">
-  <div class="breadcrumb" ncy-breadcrumb></div>
-</div>
-</br></br></br>
+<div class="container-fluid">
+  <div class="col-sm-2"></div>
+  <div class="col-sm-10">
+    <div class="" permission = "[]">
+      <div class="breadcrumb" ncy-breadcrumb></div>
+    </div>
+  </div>
+</div></br></br></br>
 <div ng-if="!backButton" permission="[campaign_manager]">
   <back-Button></back-Button>
 </div>
 <h3 style="text-align:center">Audit / Release Plan Details</h3>
-<div class = "container">
-    <div class="row">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
-          <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
-          <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
-          <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{getCampaignState(releaseDetails.campaign.campaign_state)}}</span>
+<div class="container-fluid">
+  <div class="col-sm-2"></div>
+  <div class="col-sm-7">
+    <div class = "container">
+        <div class="row">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
+              <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
+              <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
+              <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{getCampaignState(releaseDetails.campaign.campaign_state)}}</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
   </div>
+  <div class="col-sm-3"></div>
+</div>
+<div class="container-fluid">
+  <div class="col-sm-2"></div>
+  <div class="col-sm-7">
+
 <div class="container">
   <div class="row">
       <table class="table table-responsive table-bordered">
@@ -59,6 +73,9 @@
       </table>
     </div>
   </div>
+</div>
+<div class="col-sm-3"></div>
+</div>
     </br>
       <div class = "col-md-12" style="text-align:right;padding-right:150px">
         <button class="btn btn-danger active notify" ng-click="updateData()">Update</button>
