@@ -77,27 +77,12 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = 'coreapi.wsgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-
-DATABASES = {
-        'sqlite': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        },
-        'default': {
-            'NAME': 'mdtestnew',
-            'ENGINE': 'django.db.backends.mysql',
-            'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-            'USER': 'mdtest',
-            'PASSWORD': 'mdtestmachadalo',
-            'PORT': 3306
-        }
-}
-
 
 # DATABASES = {
 #         'sqlite': {
@@ -107,12 +92,28 @@ DATABASES = {
 #         'default': {
 #             'NAME': 'mdtestnew',
 #             'ENGINE': 'django.db.backends.mysql',
-#             'HOST': 'localhost',
-#             'USER': 'root',
-#             'PASSWORD': 'root',
+#             'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+#             'USER': 'mdtest',
+#             'PASSWORD': 'mdtestmachadalo',
+#             'PORT': 3306
 #         }
 # }
-#
+
+
+DATABASES = {
+        'sqlite': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        },
+        'default': {
+            'NAME': 'mdtestnew',
+            'ENGINE': 'django.db.backends.mysql',
+            'HOST': 'localhost',
+            'USER': 'root',
+            'PASSWORD': 'root',
+        }
+}
+
 
 #
 # if 'RDS_HOSTNAME' in os.environ:
@@ -238,9 +239,8 @@ JWT_AUTH = {
       'JWT_VERIFY_EXPIRATION': False,
       }
 
-BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
-# BASE_URL = 'http://localhost:8000/'
-
+# BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
+BASE_URL = 'http://localhost:8000/'
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -267,8 +267,9 @@ format = '%Y-%m-%d'
 DEFAULT_DATE = timezone.make_aware(datetime.datetime.strptime(date_string, format), timezone.get_default_timezone())
 
 # AWS settings.
-AWS_ACCESS_KEY_ID = 'AKIAIIGRT3EJEDSRVSFQ'
-AWS_SECRET_ACCESS_KEY = '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'
+AWS_ACCESS_KEY_ID = 'AKIAJITJYDRLJ5N5CG5Q'
+AWS_SECRET_ACCESS_KEY = '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'
+
 BUCKET_NAME = 'mdimages-test'
 
 ANDROID_BUCKET_NAME = 'androidtokyo'
