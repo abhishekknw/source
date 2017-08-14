@@ -30,7 +30,7 @@ body{
 }
 .breadcrumb{
 	background-color: transparent;
-  width: 82%;
+  /*width: 82%;*/
   margin-left: auto;
   margin-right: auto;
   font-size : x-large;

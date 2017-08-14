@@ -1,33 +1,53 @@
 <link rel="stylesheet" href="modules/pages/operations/opsExecutionPlan/opsExecutionPlan.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"> -->
 <div><nav-bar></nav-bar></div>
 <!-- <div ng-loading="loading"></div> --> <!--For displaying loading icon-->
 </br></br></br>
 <div ng-if="!backButton" permission="[campaign_manager]">
   <back-Button></back-Button>
 </div>
-<div class="" permission = "[]">
-  <div class="breadcrumb" ncy-breadcrumb></div>
+<div class="container-fluid">
+  <div class="col-md-1"></div>
+  <div class="col-md-8">
+    <div class="" permission = "[]">
+      <div class="breadcrumb" ncy-breadcrumb></div>
+    </div>
+  </div>
+  <div class="col-md-3">
+
+  </div>
 </div>
+
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
-<div ng-hide="!hideData" style="text-align:center"><label>No Results Found</label></div>
-<h3 ng-hide="hideData" style = "text-align:center">Operations Execution Plan</h3>
-<div class = "container">
-    <div class="row">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{campaignId}}</span>
-          <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{campaignName}}</span>
-          <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{bdOwner}}</span>
-          <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{campaignState}}</span>
+<div class="container-fluid">
+  <div class=""> </div>
+
+  <div class="">
+    <div ng-hide="!hideData" style="text-align:center"><label>No Results Found</label></div>
+    <h3 ng-hide="hideData" style = "text-align:center">Operations Execution Plan</h3>
+    <div class = "container">
+        <div class="row">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{campaignId}}</span>
+              <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{campaignName}}</span>
+              <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{bdOwner}}</span>
+              <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{campaignState}}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+    <div class=""></div>
+</div>
+<div class="container-fluid">
+  <div class=""></div>
+  <div class="">
 
 <div class="container" ng-hide="hideData">
   <div class="row">
-    <div class=" table-responsive panel panel-default">
+    <div class="">
       <table class="table table-fixed table-bordered" style="text-align: center;">
         <thead>
           <tr>
@@ -56,6 +76,9 @@
     <button class="btn btn-danger active notify" ng-click="getSummary()">Summary</button>
     <button class="btn btn-danger active notify" ng-click="downloadImages()" ng-disabled="buttonDisable">Download</button>
   </div>
+</div>
+</div>
+<div class=""></div>
 </div>
 <!--Start: Code for supplier details Modal Window -->
 <div id="supplierModal" class="modal fade">

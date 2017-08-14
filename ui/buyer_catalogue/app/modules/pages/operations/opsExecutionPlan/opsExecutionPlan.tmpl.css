@@ -1,15 +1,15 @@
-#table-scroll {
+/*#table-scroll {
   height:150px;
   overflow:auto;
   margin-top:20px;
   margin-left:20px;
-}
+}*/
 #modalReAssign{
   margin-left: 60px;
   text-align: center;
 }
 .breadcrumb{
-  width: 80%;
+  /*width: 80%;*/
   margin-left: auto;
   margin-right: auto;
 	background-color: transparent;
