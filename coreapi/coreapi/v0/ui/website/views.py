@@ -2541,6 +2541,10 @@ class ImportSupplierData(APIView):
             # prepare a new name for this file and save it in the required table
             file_name = website_utils.get_file_name(request.user, proposal_id, is_exported=False)
 
+            # upload the file here to s3
+            my_file.seek(0)  # rewind the file to start
+            website_utils.upload_to_amazon(file_name, my_file)
+
             # fetch proposal instance and change it's status to 'finalized'.
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             proposal.campaign_state = v0_constants.proposal_finalized
