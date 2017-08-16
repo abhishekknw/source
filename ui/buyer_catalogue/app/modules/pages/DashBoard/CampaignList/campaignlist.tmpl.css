@@ -20,3 +20,17 @@ body{
 	background-color: transparent;
   font-size : x-large;
 }
+.panel{
+  margin-left: 10%;
+  margin-right: 10%;
+  min-height: 80vh;
+}
+.panel1{
+  margin-left: 10%;
+  margin-right: 10%;
+}
+.panel-heading{
+  text-align: center;
+  background-color: #808080;
+  color: white;
+}
