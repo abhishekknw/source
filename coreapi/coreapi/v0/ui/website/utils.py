@@ -34,6 +34,7 @@ import geocoder
 from openpyxl import Workbook
 import boto
 import boto.s3
+from boto.s3.key import Key
 from bulk_update.helper import bulk_update
 from celery import group
 from celery.task.sets import TaskSet, subtask
@@ -6009,5 +6010,35 @@ def join_with_underscores(str, delim=' '):
     function = join_with_underscores.__name__
     try:
         return '_'.join(str.split(delim))
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+def upload_to_amazon(file_name, file_content=None):
+    """
+    Args:
+        file_name: The file name
+        file_content: optional file content
+    Returns: success in case file is uploaded, failure otherwise error
+    """
+    function = upload_to_amazon.__name__
+    try:
+
+        if not os.path.exists(file_name) and (not file_content):
+            raise Exception(function, 'The file path {0} does not exists also NO content provided.'.format(file_name))
+
+        bucket_name = settings.BUCKET_NAME
+        conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+        bucket = conn.get_bucket(bucket_name)
+
+        k = Key(bucket)
+        k.key = file_name
+        if file_content:
+            k.set_contents_from_string(file_content.read())
+        else:
+            k.set_contents_from_filename(file_name)
+        k.make_public()
+        return 1
+
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
