@@ -316,6 +316,7 @@
             }).then(function (response) {
               console.log(response);
               $scope.uploadfile = true;
+              commonDataShare.showErrorMessage(response);
               // uploadFileToAmazonServer(response.data.data,file);
             }).catch(function onError(response) {
               console.log(response);
