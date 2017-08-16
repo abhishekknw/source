@@ -32,3 +32,36 @@ body{
 .labels{
 	margin-left: 55px;
 }
+.header-panel{
+  margin-left: 10%;
+  margin-right: 10%;
+}
+.panel-heading{
+  text-align: center;
+  background-color: #808080;
+  color: white;
+}
+
+.table-panel{
+  margin-left: 10%;
+  margin-right: 10%;
+  height: 60vh;
+  overflow-y: auto;
+
+}
+.button-panel{
+  text-align: right;
+  padding-bottom: 20px;
+  margin-left: 10%;
+  margin-right: 10%;
+}
+.btn{
+  margin-left: 10px;
+}
+thead{
+  position: initial;
+}
+tr:hover,tr.alt:hover
+{
+    background: #A0E8FF!important;
+}

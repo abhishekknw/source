@@ -7,55 +7,41 @@
 <div ng-if="!backButton" permission="[campaign_manager]">
   <back-Button></back-Button>
 </div>
-<div class="container-fluid">
-  <div class="col-md-1"></div>
-  <div class="col-md-8">
+<div class="header-panel">
+  <!-- <div class="col2"> -->
     <div class="" permission = "[]">
-      <div class="breadcrumb" ncy-breadcrumb></div>
-    </div>
-  </div>
-  <div class="col-md-3">
-
+      <div ncy-breadcrumb></div>
+    <!-- </div> -->
   </div>
 </div>
-
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
-<div class="container-fluid">
-  <div class=""> </div>
-
-  <div class="">
+<div class="panel header-panel">
     <div ng-hide="!hideData" style="text-align:center"><label>No Results Found</label></div>
-    <h3 ng-hide="hideData" style = "text-align:center">Operations Execution Plan</h3>
-    <div class = "container">
-        <div class="row">
-          <div class="panel panel-default">
-            <div class="panel-heading">
+    <div class="panel-heading">
+        <h3 ng-hide="hideData">Operations Execution Plan</h3>
+    </div>
+
+            <div class="panel-body">
               <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{campaignId}}</span>
               <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{campaignName}}</span>
               <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{bdOwner}}</span>
               <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{campaignState}}</span>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class=""></div>
-</div>
-<div class="container-fluid">
-  <div class=""></div>
-  <div class="">
 
-<div class="container" ng-hide="hideData">
-  <div class="row">
+    </div>
+<div class="panel table-panel">
+  <div class="" ng-hide="hideData">
+  <div class="">
     <div class="">
-      <table class="table table-fixed table-bordered" style="text-align: center;">
+      <table class="table table-condensed table-striped table-bordered table-hover" style="text-align: center;" >
         <thead>
           <tr>
-            <th ng-repeat="header in headings" class="col-md-2" style="text-align: center;">{{header.header}}</th>
+            <th ng-repeat="header in headings" class="col-md-1" style="text-align: center;">{{header.header}}</th>
           </tr>
         </thead>
         <tbody>
           <tr ng-repeat="inventory in campaignDataList">
+            <td>{{$index+1}}</td>
             <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(inventory)">{{inventory.supplier_id}}</a></td>
             <td class="col-md-1">{{inventory.inv_id}}</td>
             <td class="col-md-2">{{inventory.inv_type}}</td>
@@ -71,14 +57,12 @@
       </table>
     </div>
   </div>
-  <div class = "col-md-12" style="text-align:right">
-    <button class="btn btn-danger active notify"  data-target = "#reAssignModal" data-toggle = "modal" ng-disabled="!reAssign">ReAssign</button>
-    <button class="btn btn-danger active notify" ng-click="getSummary()">Summary</button>
-    <button class="btn btn-danger active notify" ng-click="downloadImages()" ng-disabled="buttonDisable">Download</button>
-  </div>
 </div>
 </div>
-<div class=""></div>
+<div class = "button-panel">
+  <button class="btn btn-danger active notify"  data-target = "#reAssignModal" data-toggle = "modal" ng-disabled="!reAssign">ReAssign</button>
+  <button class="btn btn-danger active notify" ng-click="getSummary()">Summary</button>
+  <button class="btn btn-danger active notify" ng-click="downloadImages()" ng-disabled="buttonDisable">Download</button>
 </div>
 <!--Start: Code for supplier details Modal Window -->
 <div id="supplierModal" class="modal fade">

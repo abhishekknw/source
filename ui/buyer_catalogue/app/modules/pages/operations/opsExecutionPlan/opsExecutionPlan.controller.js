@@ -10,6 +10,7 @@ angular.module('catalogueApp')
         $scope.backButton = true;
       }
       $scope.headings = [
+        {header : 'Index'},
         {header : 'Supplier Id'},
         {header : 'Inventory Id'},
         {header : 'Inventory Type'},
