@@ -9,6 +9,7 @@ angular.module('catalogueApp')
     $scope.backButton = true;
   }
  	$scope.headings = [
+        {header : 'Index'},
         {header : 'Supplier Name'},
         {header : 'Area'},
         {header : 'Sub Area'},

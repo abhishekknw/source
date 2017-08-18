@@ -9,30 +9,36 @@
 <div class="" permission = "[]">
   <div class="breadcrumb" ncy-breadcrumb></div>
 </div>
-<h3 style = "margin-left: 460px; margin-top: 70px;">Campaign Release and Audit Plan</h3>
-  <div class = "container">
-      <div class="row">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <Label>Campaign Id:</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
-            <Label class = "labels">Campaign Name:</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
-            <Label class = "labels">BD Owner:</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
-            <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{getCampaignState(releaseDetails.campaign.campaign_state)}}</span>
+<div class="panel panel-default">
+  <div class="panel-heading">
+      <h3>Campaign Release and Audit Plan</h3>
+  </div>
+    <div class = "panel-body">
+        <div class="row">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <Label>Campaign Id:</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
+              <Label class = "labels">Campaign Name:</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
+              <Label class = "labels">BD Owner:</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
+              <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{getCampaignState(releaseDetails.campaign.campaign_state)}}</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+</div>
+
 <!-- <div class="container"> -->
   <!-- <div class="row" style="margin-left:10px;"> -->
-    <!-- <div class=" table-responsive" > -->
-      <table class="table-bordered table-responsive table-scroll" style="text-align: center;table-layout:fixed;word-wrap:break-word;">
+    <div class=" panel panel-default table-style" >
+      <table class="table-bordered table-responsive table-scroll table-striped" style="text-align: center;word-wrap:break-word;">
         <thead>
           <tr>
-            <th ng-repeat="header in headings" style="text-align: center;">{{header.header}}</th>
+            <th ng-repeat="header in headings">{{header.header}}</th>
           </tr>
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
+            <td rowspan="{{key.length}}" ng-show="$first">{{$parent.$index + 1}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.object_id}})</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.area}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.subarea}}</td>
@@ -48,16 +54,16 @@
             <td class="">{{filter.actual_supplier_price}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.total_inventory_supplier_price}}</td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="priceform">
-              <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing col-width" min="0">
+              <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing input-width" min="0">
               <span class="error" ng-show="priceform.price.$error.min">{{positiveNoError}}</span>
             </td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first">
-              <select class="form-control spacing" ng-model="supplier.booking_status">
+              <select class="form-control spacing input-width" ng-model="supplier.booking_status">
                 <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
               </select>
             </td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
-              <input type="number" name="phase" class="form-control spacing" ng-model="supplier.phase" min="1" style="width:70px;" ng-disabled="supplier.booking_status != 'BK'">
+              <input type="number" name="phase" class="form-control spacing input-width-phase" ng-model="supplier.phase" min="1" ng-disabled="supplier.booking_status != 'BK'">
               <span class="error" ng-show="phaseform.phase.$error.min">{{positiveNoError}}</span>
             </td>
             <!--mode of payment  -->
@@ -93,7 +99,7 @@
           </tr>
         </tbody>
       </table>
-    <!-- </div> -->
+    </div>
   <!-- </div> -->
   <div class = "row">
     <span class = "col-md-6">
