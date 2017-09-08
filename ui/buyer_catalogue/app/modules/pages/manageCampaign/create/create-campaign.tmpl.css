@@ -10,7 +10,7 @@
 .business-panel{
 	margin-top: 0px;
 	padding: 10px;
-	width: 1000px;
+	/*width: 1000px;*/
 	align-self: center;
 }
 .form{
@@ -20,7 +20,7 @@
 .choices{
 	font-size: 15px;
 	margin-top: 40px;
-	width: 1200px;
+	/*width: 1200px;*/
 }
 .choices.form-group {
 	padding: 20px;
@@ -37,7 +37,7 @@
 		padding: 5px;
 }
 .input-size{
-	width: 100% !important;
+	/*width: 100% !important;*/
 	align-self: right !important;
 }
 .detail-button{
@@ -54,7 +54,7 @@
   overflow-y: scroll;
 }
 .breadcrumb{
-	width:50%;
+	/*width:50%;*/
 	margin-right: auto;
 	margin-left: auto;
 	background-color: transparent;
@@ -62,4 +62,7 @@
 }
 .detailModal{
 	width : 1000px;
+}
+.choicePanel{
+	border-color: white !important;
 }
