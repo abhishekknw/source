@@ -387,3 +387,4 @@ class InventoryActivityAssignmentSerializer(ModelSerializer):
     """
     class Meta:
         model = models.InventoryActivityAssignment
+

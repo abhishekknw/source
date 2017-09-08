@@ -2116,30 +2116,30 @@ $scope.gridViewSummary = {};
      }
 
 //Start : function to upload files to amazon server, just provide file name and file
-   var uploadFileToAmazonServer = function(file_name,file){
-    try{
-     Upload.upload({
-         url: constants.aws_bucket_url,
-         method : 'POST',
-         data: {
-             key: file_name, // the key to store the file on S3, could be file name or customized
-             AWSAccessKeyId : constants.AWSAccessKeyId,
-             acl : constants.acl, // sets the access to the uploaded file in the bucket: private, public-read, ...
-             policy : constants.policy,
-             signature : constants.signature, // base64-encoded signature based on policy string (see article below)
-             "Content-Type": constants.content_type,// content type of the file (NotEmpty)
-             file: file }
-         }).then(function onSuccess(response){
-              swal(constants.name,constants.uploadfile_success,constants.success);
-         }).catch(function onError(response) {
-           commonDataShare.showErrorMessage(response);
-              // swal(constants.name,constants.uploadfile_error,constants.error);
-         });
-       }catch(error){
-         $scope.hideSpinner = true;
-         console.log(error.message);
-       }
-   }
+  //  var uploadFileToAmazonServer = function(file_name,file){
+  //   try{
+  //    Upload.upload({
+  //        url: constants.aws_bucket_url,
+  //        method : 'POST',
+  //        data: {
+  //            key: file_name, // the key to store the file on S3, could be file name or customized
+  //            AWSAccessKeyId : constants.AWSAccessKeyId,
+  //            acl : constants.acl, // sets the access to the uploaded file in the bucket: private, public-read, ...
+  //            policy : constants.policy,
+  //            signature : constants.signature, // base64-encoded signature based on policy string (see article below)
+  //            "Content-Type": constants.content_type,// content type of the file (NotEmpty)
+  //            file: file }
+  //        }).then(function onSuccess(response){
+  //             swal(constants.name,constants.uploadfile_success,constants.success);
+  //        }).catch(function onError(response) {
+  //          commonDataShare.showErrorMessage(response);
+  //             // swal(constants.name,constants.uploadfile_error,constants.error);
+  //        });
+  //      }catch(error){
+  //        $scope.hideSpinner = true;
+  //        console.log(error.message);
+  //      }
+  //  }
 //End : function to upload files to amazon server, just provide file name and file
     $scope.upload = function (file) {
       if(file){
@@ -2152,8 +2152,10 @@ $scope.gridViewSummary = {};
             data: {file: file, 'username': $scope.username},
             headers: {'Authorization': 'JWT ' + token},
         }).then(function onSuccess(response) {
-          uploadFileToAmazonServer(response.data.data,file);
           $scope.hideSpinner = true;
+          swal(constants.name,constants.uploadfile_success,constants.success);
+          // uploadFileToAmazonServer(response.data.data,file);
+
         }).catch(function onError(response) {
           $scope.hideSpinner = true;
           commonDataShare.showErrorMessage(response);

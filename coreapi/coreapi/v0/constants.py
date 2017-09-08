@@ -98,6 +98,7 @@ gym = 'GY'
 salon = 'SA'
 bus_shelter = 'BS'
 retail_shop_code = 'RE'
+bus_depot_code = 'BD'
 
 # all supplier codes
 society_code = 'RS'
@@ -106,6 +107,8 @@ corporate_code = 'CP'
 # yes or no
 positive = ['Yes', 'Y', '1']
 negative = ['No', 'N', '0']
+
+valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code]
 
 supplier_keys = [
 
@@ -752,7 +755,6 @@ stall = 'STALL'
 flier = 'FLIER'
 car_display = 'CAR DISPLAY'
 
-valid_supplier_codes = [society, corporate, gym, salon, bus_shelter]
 
 # subjects:
 subjects = {
@@ -1137,6 +1139,7 @@ codes_to_model_names = {
     'GY': 'SupplierTypeGym',
     'SA': 'SupplierTypeSalon',
     'BS': 'SupplierTypeBusShelter',
+    bus_depot_code: 'SupplierTypeBusDepot',
     retail_shop: 'SupplierTypeRetailShop',
     stall: 'StallInventory',
     standee: 'StandeeInventory',
@@ -1161,7 +1164,8 @@ model_to_codes = {
     'StandeeInventory': 'ST',
     'FlyerInventory': 'FL',
     'PO': 'PosterInventory',
-    'PosterInventory': 'PO'
+    'PosterInventory': 'PO',
+    'SupplierTypeBusDepot': bus_depot_code
 
 }
 

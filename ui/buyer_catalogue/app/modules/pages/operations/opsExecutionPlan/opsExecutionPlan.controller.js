@@ -10,8 +10,9 @@ angular.module('catalogueApp')
         $scope.backButton = true;
       }
       $scope.headings = [
-        {header : 'Supplier Id'},
-        {header : 'Inventory Id'},
+        {header : 'Index'},
+        {header : 'Supplier Name'},
+        // {header : 'Inventory Id'},
         {header : 'Inventory Type'},
         {header : 'Image'},
          {header : 'Activity Name'},
@@ -58,6 +59,7 @@ angular.module('catalogueApp')
       var getOpsExecutionImageDetails = function(){
         opsExecutionPlanService.getOpsExecutionImageDetails($scope.campaign_id)
         	.then(function onSuccess(response){
+            console.log(response);
         		$scope.campaignData = response.data.data;
             createList();
             if($scope.campaignData.length == 0)
@@ -107,6 +109,7 @@ angular.module('catalogueApp')
                       var data = angular.copy(campaignDataStruct);
                       data.id = assignId;
                       data.supplier_id = $scope.campaignData.shortlisted_suppliers[spaceId].supplier_id;
+                      data.supplier_name = $scope.campaignData.shortlisted_suppliers[spaceId].supplier_detail.name;
                       data.inv_id = $scope.campaignData.shortlisted_inventories[invId].inventory_id;
                       data.inv_type = $scope.campaignData.shortlisted_inventories[invId].inventory_name;
                       data.act_name = $scope.campaignData.inventory_activities[actId].activity_type;

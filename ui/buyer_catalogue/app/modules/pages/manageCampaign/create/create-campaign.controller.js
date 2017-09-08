@@ -314,8 +314,12 @@
                 data: {file: file, 'username': $scope.username},
                 headers: {'Authorization': 'JWT ' + token},
             }).then(function (response) {
-              uploadFileToAmazonServer(response.data.data,file);
+              console.log(response);
+              $scope.uploadfile = true;
+              swal(constants.name,constants.uploadfile_success,constants.success);
+              // uploadFileToAmazonServer(response.data.data,file);
             }).catch(function onError(response) {
+              console.log(response);
               commonDataShare.showErrorMessage(response);
               // swal(constants.name,constants.errorMsg,constants.error);
               $scope.uploadfile = true;
@@ -325,33 +329,33 @@
         };
         //End: To upload file when upload button is clicked
         //Start : function to upload files to amazon server, just provide file name and file
-           var uploadFileToAmazonServer = function(file_name,file){
-             Upload.upload({
-                 url: constants.aws_bucket_url,
-                 method : 'POST',
-                 data: {
-                     key: file_name, // the key to store the file on S3, could be file name or customized
-                     AWSAccessKeyId : constants.AWSAccessKeyId,
-                     acl : constants.acl, // sets the access to the uploaded file in the bucket: private, public-read, ...
-                     policy : constants.policy,
-                     signature : constants.signature, // base64-encoded signature based on policy string (see article below)
-                     "Content-Type": constants.content_type,// content type of the file (NotEmpty)
-                     file: file }
-                 }).then(function (response){
-                      $scope.uploadfile = true;
-                      if($window.localStorage.sel_account_index >= 0){
-                        $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
-                        $scope.getProposals($scope.sel_account_id,$window.localStorage.sel_account_index);
-                      }
-                      swal(constants.name,constants.uploadfile_success,constants.success);
-                      // commonDataShare.showMessage(constants.uploadfile_success);
-                 }).catch(function onError(response) {
-                      $scope.uploadfile = true;
-                      commonDataShare.showErrorMessage(response);
-                      // swal(constants.name,constants.uploadfile_error,constants.error);
-                      // commonDataShare.showMessage(constants.uploadfile_error);
-                 });
-           }
+          //  var uploadFileToAmazonServer = function(file_name,file){
+          //    Upload.upload({
+          //        url: constants.aws_bucket_url,
+          //        method : 'POST',
+          //        data: {
+          //            key: file_name, // the key to store the file on S3, could be file name or customized
+          //            AWSAccessKeyId : constants.AWSAccessKeyId,
+          //            acl : constants.acl, // sets the access to the uploaded file in the bucket: private, public-read, ...
+          //            policy : constants.policy,
+          //            signature : constants.signature, // base64-encoded signature based on policy string (see article below)
+          //            "Content-Type": constants.content_type,// content type of the file (NotEmpty)
+          //            file: file }
+          //        }).then(function (response){
+          //             $scope.uploadfile = true;
+          //             if($window.localStorage.sel_account_index >= 0){
+          //               $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
+          //               $scope.getProposals($scope.sel_account_id,$window.localStorage.sel_account_index);
+          //             }
+          //             swal(constants.name,constants.uploadfile_success,constants.success);
+          //             // commonDataShare.showMessage(constants.uploadfile_success);
+          //        }).catch(function onError(response) {
+          //             $scope.uploadfile = true;
+          //             commonDataShare.showErrorMessage(response);
+          //             // swal(constants.name,constants.uploadfile_error,constants.error);
+          //             // commonDataShare.showMessage(constants.uploadfile_error);
+          //        });
+          //  }
         //End : function to upload files to amazon server, just provide file name and file
         $scope.getMenu = function(){
           if($scope.menuItem == true)

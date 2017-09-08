@@ -64,3 +64,18 @@ td{
  .breadcrumb{
 	 font-size: x-large;
  }
+ .table-style{
+	 height: 60vh;
+	 overflow: auto;
+ }
+.input-width{
+	min-width: 120px !important;
+}
+.input-width-phase{
+	min-width: 60px !important;
+}
+.panel-heading{
+	text-align: center;
+	background-color: #808080 !important;
+	color: white !important;
+}

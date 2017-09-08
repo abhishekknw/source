@@ -28,7 +28,7 @@ from v0.serializers import ImageMappingSerializer, PriceMappingDefaultSerializer
 from v0.models import ImageMapping, PriceMappingDefault, PriceMapping, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, ContactDetails, Events, MailboxInfo, PoleInventory, StallInventory, StreetFurniture, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory,SupplierAmenitiesMap
 from v0.models import SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
-from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer, StateSerializer
+from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer, StateSerializer, BusDepotSerializer
 from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
 
 # project imports
@@ -3143,6 +3143,53 @@ class StateViewSet(viewsets.ViewSet):
         try:
             states = models.State.objects.all()
             serializer = StateSerializer(states, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class BusDepotViewSet(viewsets.ViewSet):
+    """
+    ViewSet around Bus depot
+    """
+    def create(self, request):
+        class_name = self.__class__.__name__
+        try:
+            data = request.data
+            serializer = BusDepotSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            bus_depots = models.SupplierTypeBusDepot.objects.all()
+            serializer = BusDepotSerializer(bus_depots, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request,pk=None):
+        class_name = self.__class__.__name__
+        try:
+            instance = models.SupplierTypeBusDepot.objects.get(pk=pk)
+            serializer = BusDepotSerializer(instance=instance, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk=None):
+        class_name = self.__class__.__name__
+        try:
+            instance = models.SupplierTypeBusDepot.objects.get(pk=pk)
+            serializer = BusDepotSerializer(instance=instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
