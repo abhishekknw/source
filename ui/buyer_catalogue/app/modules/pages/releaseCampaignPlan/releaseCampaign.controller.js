@@ -13,6 +13,8 @@ angular.module('catalogueApp')
         {header : 'Supplier Name'},
         {header : 'Area'},
         {header : 'Sub Area'},
+        {header : 'Flat Count'},
+        {header : 'Tower Count'},
         {header : 'Status'},
         // {header : 'Supplier ID'},
         {header : 'Inventory Type'},

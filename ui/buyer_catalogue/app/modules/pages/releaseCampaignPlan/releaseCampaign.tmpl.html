@@ -42,6 +42,8 @@
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.object_id}})</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.area}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.subarea}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.flat_count}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.tower_count}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.buffered">{{buffered}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.removed">{{removed}}</td>
