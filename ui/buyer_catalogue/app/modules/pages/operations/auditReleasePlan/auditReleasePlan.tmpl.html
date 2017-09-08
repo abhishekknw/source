@@ -40,7 +40,7 @@
             <td class="col-md-1">RS</td>
             <td class="col-md-3 checkboxes-btn">
               <div ng-repeat="inventory in filter.detail">
-                <input type="checkbox" class="" ng-disabled="isDisable(rowIndex)" ng-model="inventory.status" ng-click="addInventory(inventory,rowIndex,$index)"/>{{key}}{{$index}}
+                <input type="checkbox" class="" ng-disabled="isDisable(rowIndex)" ng-model="inventory.status" ng-click="addInventory(inventory,rowIndex,$index)"/>{{key}}{{$index+1}}
               </div>
             </td>
             <td class="col-md-1">
