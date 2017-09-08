@@ -2444,4 +2444,50 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     category_name = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
+
         db_table = 'supplier_type_retail_shop'
+
+
+class SupplierTypeBusDepot(BasicSupplierDetails):
+    """
+    stores info about a bus depot
+    """
+    bus_count = models.IntegerField(null=True, blank=True)
+    route_count_originate = models.IntegerField(null=True, blank=True)
+    route_count_terminate = models.IntegerField(null=True, blank=True)
+    bus_types = models.CharField(max_length=20, null=True, blank=True)
+
+    class Meta:
+        db_table = 'supplier_type_bus_depot'
+
+#
+# class SupplierTypeBus(BaseModel):
+#     """
+#     captures details of a single BUS
+#     """
+#     registered_number = models.CharField(max_length=100, unique=True)
+#     bus_depot = models.ForeignKey(SupplierTypeBusDepot)
+#     is_ac = models.BooleanField(default=False)
+#     size_back_side_banner = models.FloatField(null=True, blank=True)
+#     size_left_side_banner = models.FloatField(null=True, blank=True)
+#     size_right_side_banner = models.FloatField(null=True, blank=True)
+#     cost_back_side_banner = models.FloatField(null=True, blank=True)
+#     cost_left_side_banner = models.FloatField(null=True, blank=True)
+#     cost_right_side_banner = models.FloatField(null=True, blank=True)
+#     printing_cost_back_side_banner = models.FloatField(null=True, blank=True)
+#     printing_cost_left_side_banner = models.FloatField(null=True, blank=True)
+#     printing_cost_right_side_banner = models.FloatField(null=True, blank=True)
+#     mounting_cost_back_side_banner = models.FloatField(null=True, blank=True)
+#     mounting_cost_left_side_banner = models.FloatField(null=True, blank=True)
+#     mounting_cost_right_side_banner = models.FloatField(null=True, blank=True)
+#     is_tv_screen = models.BooleanField(default=False)
+#     is_wifi_connected = models.BooleanField(default=False)
+#     seat_count = models.IntegerField()
+#     size_seat_back_inventory = models.FloatField(null=True, blank=True)
+#     cost_seat_back_inventory = models.FloatField(null=True, blank=True)
+#     printing_cost_seat_back_inventory = models.FloatField(null=True, blank=True)
+#     mounting_cost_seat_back_inventory = models.FloatField(null=True, blank=True)
+#
+#     class Meta:
+#         db_table = 'bus'
+#

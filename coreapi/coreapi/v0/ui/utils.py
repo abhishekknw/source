@@ -10,6 +10,7 @@ order of imports
 '''
 import json
 import datetime
+from collections import defaultdict
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
@@ -31,6 +32,7 @@ import v0.serializers
 import v0.models as models
 import v0.errors as errors
 import v0.constants as v0_constants
+import v0.ui.serializers as ui_serializers
 
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
@@ -196,85 +198,44 @@ def make_supplier_data(data):
             area = v0.models.CityArea.objects.get(id=data['area_id'])
             subarea = v0.models.CitySubArea.objects.get(id=data['subarea_id'], area_code=area)
 
-        all_supplier_data = {
+        all_supplier_data = defaultdict(dict)
 
-            "RS": {
+        for code in v0_constants.valid_supplier_codes:
 
-                'data': {'supplier_code': data['supplier_code'],
-                         'society_name': data['supplier_name'],
-                         'supplier_id': data['supplier_id'],
-                         'created_by': current_user.id,
+            if code == v0_constants.society_code:
 
-                         'society_city': city.city_name,
-                         'society_subarea': subarea.subarea_name,
-                         'society_locality': area.label,
-                         'society_state': city.state_code.state_name,
-                         'society_location_type': subarea.locality_rating
-                         },
+                all_supplier_data[code] = {
 
-                'serializer': get_serializer('RS')
+                    'data': {
+                             'supplier_code': data['supplier_code'],
+                             'society_name': data['supplier_name'],
+                             'supplier_id': data['supplier_id'],
+                             'created_by': current_user.id,
+                             'society_city': city.city_name,
+                             'society_subarea': subarea.subarea_name,
+                             'society_locality': area.label,
+                             'society_state': city.state_code.state_name,
+                             'society_location_type': subarea.locality_rating
+                    },
 
-            },
+                    'serializer': get_serializer(code)
+                }
+            else:
 
-            "CP": {
-                'data': {
-                    'supplier_id': data['supplier_id'],
-                    'name': data['supplier_name'],
-                    'city': city.city_name,
-                    'area': area.label,
-                    'subarea': subarea.subarea_name,
-                    'state': city.state_code.state_name
-                },
-                'serializer': get_serializer('CP')
-            },
-            "SA": {
-                'data': {
-                    'supplier_id': data['supplier_id'],
-                    'name': data['supplier_name'],
-                    'city': city.city_name,
-                    'locality': area.label,
-                    'subarea': subarea.subarea_name,
-                    'state': city.state_code.state_name
-                },
-                'serializer': get_serializer('SA')
-            },
+                all_supplier_data[code] = {
+                    'data': {
+                        'supplier_id': data['supplier_id'],
+                        'name': data['supplier_name'],
+                        'city': city.city_name,
+                        'area': area.label,
+                        'subarea': subarea.subarea_name,
+                        'state': city.state_code.state_name
+                    },
+                    'serializer': get_serializer(code),
+                }
 
-            "GY": {
-                'data': {
-                    'supplier_id': data['supplier_id'],
-                    'name': data['supplier_name'],
-                    'city': city.city_name,
-                    'area': area.label,
-                    'subarea': subarea.subarea_name,
-                    'state': city.state_code.state_name
-                },
-                'serializer': get_serializer('GY')
-            },
+        all_supplier_data['supplier_type_code'] = data['supplier_type_code']
 
-            "BS": {
-                'data': {
-                    'supplier_id': data['supplier_id'],
-                    'name': data['supplier_name'],
-                    'city': city.city_name,
-                    'area': area.label,
-                    'subarea': subarea.subarea_name,
-                    'state': city.state_code.state_name
-                },
-                'serializer': get_serializer('BS')
-            },
-            "RE": {
-                'data': {
-                    'supplier_id': data['supplier_id'],
-                    'name': data['supplier_name'],
-                    'city': city.city_name,
-                    'area': area.label,
-                    'subarea': subarea.subarea_name,
-                    'state': city.state_code.state_name
-                },
-                'serializer': get_serializer('RE')
-            },
-            "supplier_type_code": data['supplier_type_code']
-        }
         return Response(data={"status": True, "data": all_supplier_data}, status=status.HTTP_200_OK)
     except KeyError as e:
         return handle_response(function, exception_object=e)
@@ -735,12 +696,13 @@ def get_serializer(query):
     try:
         serializers = {
 
-            'RS': v0.serializers.SupplierTypeSocietySerializer,
-            'CP': v0.serializers.SupplierTypeCorporateSerializer,
-            'GY': v0.serializers.SupplierTypeGymSerializer,
-            'SA': v0.serializers.SupplierTypeSalonSerializer,
-            'BS': v0.serializers.SupplierTypeBusShelterSerializer,
-            'RE': v0.serializers.SupplierTypeRetailShopSerializer,
+            v0_constants.society_code: v0.serializers.SupplierTypeSocietySerializer,
+            v0_constants.corporate_code: v0.serializers.SupplierTypeCorporateSerializer,
+            v0_constants.gym: v0.serializers.SupplierTypeGymSerializer,
+            v0_constants.salon: v0.serializers.SupplierTypeSalonSerializer,
+            v0_constants.bus_shelter: v0.serializers.SupplierTypeBusShelterSerializer,
+            v0_constants.retail_shop_code: v0.serializers.SupplierTypeRetailShopSerializer,
+            v0_constants.bus_depot_code: ui_serializers.BusDepotSerializer,
             'ideation_design_cost': v0.serializers.IdeationDesignCostSerializer,
             'logistic_operations_cost': v0.serializers.LogisticOperationsCostSerializer,
             'space_booking_cost': v0.serializers.SpaceBookingCostSerializer,
