@@ -5125,3 +5125,18 @@ class ExportAllSupplierData(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+class UploadInventoryActivityImageAmazon(APIView):
+    """
+
+    """
+    def post(self, request):
+        """
+        API to upload inventory activity image amazon
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            pass
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
