@@ -6014,7 +6014,7 @@ def join_with_underscores(str, delim=' '):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def upload_to_amazon(file_name, file_content=None):
+def upload_to_amazon(file_name, file_content=None, bucket_name=settings.BUCKET_NAME):
     """
     Args:
         file_name: The file name
@@ -6027,7 +6027,6 @@ def upload_to_amazon(file_name, file_content=None):
         if not os.path.exists(file_name) and (not file_content):
             raise Exception(function, 'The file path {0} does not exists also NO content provided.'.format(file_name))
 
-        bucket_name = settings.BUCKET_NAME
         conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
         bucket = conn.get_bucket(bucket_name)
 

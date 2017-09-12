@@ -53,6 +53,7 @@ module.exports = function(config) {
       'bower_components/bootstrap-sweetalert/dist/sweetalert.js',
       'bower_components/angular-aria/angular-aria.js',
       'bower_components/angular-scrollable-table/angular-scrollable-table.js',
+      'bower_components/angular-loading-bar/build/loading-bar.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",

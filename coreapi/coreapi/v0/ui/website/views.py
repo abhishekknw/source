@@ -3,6 +3,7 @@ import json
 import random
 import shutil
 import string
+import time
 
 import openpyxl
 import os
@@ -18,6 +19,7 @@ from django.db.models import Q, Sum
 from django.db.models import get_model
 from django.forms.models import model_to_dict
 from django.utils.dateparse import parse_datetime
+from django.utils import timezone
 from openpyxl.compat import range
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework import status
@@ -5128,7 +5130,7 @@ class ExportAllSupplierData(APIView):
 
 class UploadInventoryActivityImageAmazon(APIView):
     """
-
+    This API first attempts to upload the given image to amazon and saves path in inventory activity image table.
     """
     def post(self, request):
         """
@@ -5138,6 +5140,25 @@ class UploadInventoryActivityImageAmazon(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            pass
+            file = request.data['file']
+            extension = file.name.split('.')[-1]
+            supplier_name = request.data['supplier_name'].replace(' ', '_')
+            activity_name = request.data['activity_name']
+            activity_date = request.data['activity_date']
+            inventory_name = request.data['inventory_name']
+            inventory_activity_assignment_id = request.data['inventory_activity_assignment_id']
+
+            inventory_activity_assignment_instance = models.InventoryActivityAssignment.objects.get(pk=inventory_activity_assignment_id)
+
+            file_name = supplier_name + '_' + inventory_name + '_' + activity_name + '_' + activity_date.replace('-', '_') + '_' + str(time.time()).replace('.', '_') + '.' + extension
+            website_utils.upload_to_amazon(file_name, file_content=file, bucket_name=settings.ANDROID_BUCKET_NAME)
+
+            # Now save the path
+            instance, is_created = models.InventoryActivityImage.objects.get_or_create(image_path=file_name)
+            instance.inventory_activity_assignment = inventory_activity_assignment_instance
+            instance.actual_activity_date = activity_date
+            instance.save()
+
+            return ui_utils.handle_response(class_name, data=True, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

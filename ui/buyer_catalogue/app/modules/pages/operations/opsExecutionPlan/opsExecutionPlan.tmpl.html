@@ -52,6 +52,7 @@
             <td class="col-md-2">{{inventory.assigned_to}}</td>
             <td class="col-md-2"> <input type="checkbox" ng-model="inventory.status" ng-value="true" ng-click="addActivity($index,inventory)"></td>
             <td class="col-md-2">{{inventory.reAssign_date}}</td>
+            <td><button class="btn btn-primary active" ngf-select="uploadImage($file,inventory)">Upload Image</button></td>
           </tr>
         </tbody>
       </table>
@@ -184,3 +185,7 @@
   </div>
 </div>
 <!-- <div ng-class="{footer1:campaignDataList.length == 0 }"><footer-bar></footer-bar></div> -->
+<!--Start: Code for loading progress bar -->
+<div id="progressBarModal" class="modal fade" data-backdrop="static" data-keyboard="false">
+</div>
+<!--End: Code for loading progress bar -->
