@@ -350,11 +350,11 @@ class AccountContacts(APIView):
                 business_id = account_data['business_id']
                 # checking a valid business
 
-                business = BusinessInfo.objects.get_user_related_object(user=current_user, business_id=business_id)
+                business = BusinessInfo.objects.get(pk=business_id)
 
                 if 'account_id' in account_data:
-                    account = AccountInfo.objects.get_user_related_object(user=current_user, pk=account_data['account_id'])
-                    serializer = AccountInfoSerializer(account,data=account_data)
+                    account = AccountInfo.objects.get(pk=account_data['account_id'])
+                    serializer = AccountInfoSerializer(account, data=account_data)
                 else:
                     account_data['account_id']= self.generate_account_id(account_name=account_data['name'],business_id=business_id)
                     if account_data['account_id'] is None:

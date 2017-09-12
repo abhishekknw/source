@@ -346,11 +346,9 @@ class BusinessInfoSerializer(ModelSerializer):
 
 
 class AccountInfoSerializer(ModelSerializer):
-    # business = BusinessSerializer(read_only=True)
     class Meta:
         model = AccountInfo
-        depth = 2
-        # fields = ('id','name')
+        # depth = 1
 
 
 class AccountSerializer(ModelSerializer):

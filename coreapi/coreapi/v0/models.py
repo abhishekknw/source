@@ -1285,9 +1285,9 @@ class BusinessSubTypes(BaseModel):
 
 class AccountInfo(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    account_id  = models.CharField(db_column='ACCOUNT_ID', max_length=15, primary_key=True)
-    business    = models.ForeignKey(BusinessInfo, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
-    name        = models.CharField(db_column='NAME', max_length=50, blank=True)
+    account_id = models.CharField(db_column='ACCOUNT_ID', max_length=15, primary_key=True)
+    business  = models.ForeignKey(BusinessInfo, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
+    name    = models.CharField(db_column='NAME', max_length=50, blank=True)
     phone       = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email       = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     address     = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
