@@ -1,24 +1,26 @@
 <link rel="stylesheet" href="modules/pages/createProposal/createproposal.tmpl.css" />
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
+<div class="panel-default breadcrumbStyle">
+  <div class=""><div class="breadcrumb" ncy-breadcrumb></div></div>
+</div>
 <div ng-if="errormsg"><h3>{{errormsg}}</h3></div>
-  <div class="page-container">
-  	<div>
-    	<span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span><br>
-    	<span style="color:blue;margin-left:28%;font-size:18px;">{{successMsg}}</span>
-  	</div>
-    <!-- <back-Button></back-Button> -->
-    <div class="breadcrumb" ncy-breadcrumb></div>
+<div>
+	<span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span><br>
+	<span style="color:blue;margin-left:28%;font-size:18px;">{{successMsg}}</span>
+</div>
+
     <div ng-loading="loading"></div> <!--For displaying loading icon-->
+  <div class="panel panel-default">
+    <h3 class="panel-heading alignment">Initial Requirement Gathering</h3>
   	<form name="proposal">
-  		<div class="panel panel-default business-panel">
-        <h3 class="panel-heading alignment">Initial Requirement Gathering</h3>
+  		<div class="panel-body business-panel">
   			<div class="table">
-  				<div class="row">
+  				<div class="row basic-info">
   					<div class="col-md-3"><label class="spacing">Name of Proposal</label></div>
   					<div class="col-md-3"><input type="text" ng-model="model.name" class="form-control spacing" required></div>
   				</div>
-  				<div class="row">
+  				<div class="row basic-info">
   					<div class="col-md-3"><label class="spacing">Tentative Budget</label></div>
   					<div class="col-md-3"><input type="number" ng-model="model.tentative_cost" class="form-control spacing"></div>
   				</div>
@@ -26,8 +28,8 @@
   			</div>
   		</div>
   	</form>
-    <form class="row">
-        <button class="btn btn-danger spacing pull-left addButton" ng-click="addCenter()">Add Center</button><br>
+    <form class="row addButton">
+        <button class="btn btn-danger spacing pull-left" ng-click="addCenter()">Add Center</button><br>
     </form>
     <form name="centerDetail">
     	<div class="table-responsive panel panel-default business-panel">
@@ -40,11 +42,11 @@
     			<tbody ng-repeat="center in model.centers track by $index">
     				<tr>
     					<td>
-                <input type="text" ng-if="center.isEditProposal" ng-model="center.center.center_name" class="form-control spacing" required>
-                <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.center_name" class="form-control spacing" readonly>
+                <input type="text" ng-if="center.isEditProposal" ng-model="center.center.center_name" class="form-control spacing input-size" required>
+                <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.center_name" class="form-control spacing input-size" readonly>
               </td>
-    					<td><input type="text" ng-if="center.isEditProposal" ng-model="center.center.address" class="form-control spacing" required>
-                  <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.address" class="form-control spacing" readonly>
+    					<td><input type="text" ng-if="center.isEditProposal" ng-model="center.center.address" class="form-control spacing input-size" required>
+                  <input type="text" ng-if="!center.isEditProposal" ng-model="center.center.address" class="form-control spacing input-size" readonly>
               </td>
               <td>
                 <select ng-if="center.isEditProposal" name="city" class="form-control input-size" ng-change="get_areas(center.city,$index)" ng-model="center.city" required>
@@ -70,19 +72,19 @@
               <td><input type="number" ng-if="center.isEditProposal" ng-model="center.center.pincode" class="form-control spacing col-width">
                 <input type="number" ng-if="!center.isEditProposal" ng-model="center.center.pincode"  class="form-control spacing">
               </td>
-    					<td><input type="number" name = "radius" ng-model="center.center.radius" class="form-control spacing col-width" required></td>
+    					<td><input type="number" name = "radius" ng-model="center.center.radius" class="form-control spacing input-size-radius" required></td>
     					<td>
-                <div ng-repeat="supplier in center.suppliers">
+                <div class="input-size" ng-repeat="supplier in center.suppliers">
                   <input type="checkbox"  ng-model = "supplier.selected" ng-click="checkSpace(supplier,center)">{{supplier.name}}
                 </div>
                 <!-- <input type="checkbox"  ng-click="checkSpace('CP',center)">Corporate Parks -->
               </td>
-    					<td><button class="btn btn-danger spacing" ng-click="removeCenter($index)">Remove Center</button></td>
+    					<td><button class="btn btn-danger spacing" ng-click="removeCenter($index)">Remove</button></td>
     				</tr>
     			</tbody>
     		</table>
     		<button class="btn btn-danger spacing" ng-click="submit()" ng-disabled="proposal.$invalid || centerDetail.$invalid" ng-loading="loadingSpinner">Submit</button>
-    	</div>
     </form>
+  </div>
 
 <!-- <div><footer-bar></footer-bar></div> -->
