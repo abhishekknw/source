@@ -132,6 +132,7 @@ angular.module('catalogueApp')
           });
         });
       }
+
       $scope.setImageUrl = function(images){
         $scope.imageUrlList = [];
         for(var i=0; i<images.length; i++){
@@ -142,6 +143,7 @@ angular.module('catalogueApp')
           $scope.imageUrlList.push(imageData);
         }
       }
+
       $scope.getSupplierDetails = function(supplier){
         $scope.supplierData = [];
         var supplierId = supplier.supplier_id;
@@ -272,10 +274,10 @@ angular.module('catalogueApp')
                 },
                 headers: {'Authorization': 'JWT ' + token}
             }).then(function onSuccess(response){
-                  console.log(response);
+                  uploaded_image = {'image_path': response.data.data };
+                  inventory.images.push(uploaded_image);
                   cfpLoadingBar.complete();
                   $("#progressBarModal").modal('hide');
-
             })
             .catch(function onError(response) {
               console.log(response);
