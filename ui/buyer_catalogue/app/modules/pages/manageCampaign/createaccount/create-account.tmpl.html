@@ -1,17 +1,12 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/createaccount/create-account.tmpl.css" />
-<div class="container-fluid">
-  <div class="col-md-4"></div>
-  <div class="col-md-6"><div class="breadcrumb" ncy-breadcrumb></div></div>
-  <div class="col-md-2"></div>
+<div class="panel-panel-default">
+  <div class=""><div class="breadcrumb" ncy-breadcrumb></div></div>
 </div>
-<div class="container-fluid">
   <div>
     <span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span>
   </div>
 <!-- <back-Button></back-Button> -->
-<div class="col-sm-3"></div>
-<div class="col-sm-6">
-<form name = "form" class="content">
+<form name = "form" class="">
   <!-- <div class="breadcrumb" ncy-breadcrumb></div> -->
   <div class = "panel panel-default business-panel">
     <h3 class = "panel-heading">Create Account</h3>
@@ -25,7 +20,7 @@
          </div></br>
 
           <div class = "row">
-            <div class = "col-md-3"><label>Account Name </label></div>
+            <div class = "col-md-3"><label>Account Name* </label></div>
             <div class = "col-md-3"><input type="text" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.account.name" ng-required="true" /></div>
             <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
 
@@ -38,7 +33,7 @@
        <div class="form-group">
          <div class = "row">
             <div class = "col-md-3"><label>Account Email</label></div>
-            <div class = "col-md-3"><input type="email" name="account_email" id="account_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.account.email" ng-required="true" />
+            <div class = "col-md-3"><input type="email" name="account_email" id="account_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="model.account.email"/>
             <span class="show-error" ng-show="form.account_email.$error.email">Please Enter Valid Email Id</span></div>
             <div class = "col-md-3"><label>Account Phone</label></div>
             <div class = "col-md-3"><input type="text" name="account_phone" id="account_phone" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="model.account.phone"/>
@@ -116,7 +111,7 @@
         <div class="form-group">
           <div class = "row">
               <div class = "col-md-3"><label>Phone</label></div>
-              <div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-required="true" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="contact.phone"/>
+              <div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="contact.phone"/>
                <span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span>
               </div>
 
@@ -139,10 +134,5 @@
         </div>
       </div>
     </div>
-    <button type="submit" class="btn btn-danger" ng-click="create()">Save Details</button>
+    <button type="submit" class="btn btn-danger" ng-disabled="form.$invalid" ng-click="create()">Save Details</button>
   </form>
-</div>
-<div class="col-sm-3">
-
-</div>
-</div>
