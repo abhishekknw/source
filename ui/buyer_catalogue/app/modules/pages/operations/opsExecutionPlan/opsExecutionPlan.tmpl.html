@@ -52,7 +52,9 @@
             <td class="col-md-2">{{inventory.assigned_to}}</td>
             <td class="col-md-2"> <input type="checkbox" ng-model="inventory.status" ng-value="true" ng-click="addActivity($index,inventory)"></td>
             <td class="col-md-2">{{inventory.reAssign_date}}</td>
-            <td><button class="btn btn-primary active" ngf-select="uploadImage($file,inventory)">Upload Image</button></td>
+            <md-progress-linear md-mode="determinate" value="...">
+              <td><button class="btn btn-primary active" ngf-select="uploadImage($file,inventory)">Upload Image</button></td>
+            </md-progress-linear>
           </tr>
         </tbody>
       </table>

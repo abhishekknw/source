@@ -5159,6 +5159,6 @@ class UploadInventoryActivityImageAmazon(APIView):
             instance.actual_activity_date = activity_date
             instance.save()
 
-            return ui_utils.handle_response(class_name, data=True, success=True)
+            return ui_utils.handle_response(class_name, data=file_name, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
