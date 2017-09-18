@@ -97,6 +97,7 @@ angular.module('machadaloPages')
        {name : 'viewGroups'},
        {name : 'editUser'},
        {name : 'editGroup'},
+       {name : 'profile'}
      ];
      $scope.contentItem = {
        createUser  : 'createUser',
@@ -105,6 +106,7 @@ angular.module('machadaloPages')
        viewGroups  : 'viewGroups',
        editUser    : 'editUser',
        editGroup    : 'editGroup',
+       profile    : 'profile',
      }
      $scope.getContent = function(item,data){
        console.log(item);

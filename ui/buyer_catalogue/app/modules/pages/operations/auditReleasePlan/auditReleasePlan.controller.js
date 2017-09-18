@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('AuditReleasePlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare','constants',
-    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare, constants) {
+    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare','constants','$filter',
+    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare, constants, $filter) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.bd_manager = constants.bd_manager;
       $scope.campaign_manager = constants.campaign_manager;
@@ -15,10 +15,6 @@ angular.module('catalogueApp')
         {header : 'Supplier Type'},
         {header : 'AdInventory Id'},
         {header : 'Activity Date'},
-        // {header : 'Release Date'},
-        // {header : 'Audit Date'},
-        // {header : 'Closure Date'},
-        // {header : 'Assign'},
         {header : 'Comments'},
       ];
       $scope.audit_dates = [
@@ -31,9 +27,9 @@ angular.module('catalogueApp')
         {header : 'Assigned User'},
       ];
       $scope.activity_names = [
-        {header : 'Release' , code : 'RE'},
-        {header : 'Closure',   code : 'CL'},
-        {header : 'Audit',     code : 'AU'},
+        {header : 'RELEASE' , code : 'RE'},
+        {header : 'CLOSURE',   code : 'CL'},
+        {header : 'AUDIT',     code : 'AU'},
       ];
       $scope.maxDate = new Date(2020, 5, 22);
       $scope.today = new Date();
@@ -65,7 +61,6 @@ angular.module('catalogueApp')
       var getUsersList = function(){
         commonDataShare.getUsersList()
           .then(function onSuccess(response){
-            console.log(response);
             $scope.userList = response.data.data;
           })
           .catch(function onError(response){
@@ -82,12 +77,24 @@ angular.module('catalogueApp')
           console.log("get values",response);
       		$scope.releaseDetails = response.data.data;
           setDataToModel($scope.releaseDetails.shortlisted_suppliers);
-              $scope.loading = response.data;
+
+          $scope.filteredAssignDatesList = angular.copy($scope.releaseDetails);
+          $scope.loading = response.data;
+          makeAssignDateData($scope.releaseDetails);
       	})
       	.catch(function onError(response){
       		console.log("error occured", response);
           commonDataShare.showErrorMessage(response);
       	});
+      }
+      var makeAssignDateData = function(data){
+        $scope.phaseData = [], $scope.phases = [];
+        $scope.phaseData =  $filter('unique')(data.shortlisted_suppliers,'phase');
+        $scope.inventoryTypes = Object.keys(data.shortlisted_suppliers[0].shortlisted_inventories);
+        angular.forEach($scope.phaseData, function(phase){
+          if(phase.phase != null)
+            $scope.phases.push(phase.phase);
+        })
       }
       // getCampaignReleaseDetails();
         var setDataToModel = function(suppliers){
@@ -170,7 +177,6 @@ angular.module('catalogueApp')
 
       $scope.assignUserToActivity = function(inv){
         try{
-          console.log(inv);
           $scope.inventoryList = [];
           for(var i=0; i<inv.length; i++){
             createInventoryList(inv[i].inventory_id,'RELEASE',inv[i].release_date,inv[i].id);
@@ -198,7 +204,6 @@ angular.module('catalogueApp')
       }
     }
     $scope.saveUserForActivity = function(){
-      console.log($scope.inventoryList);
       auditReleasePlanService.saveUser($scope.inventoryList)
       .then(function onSuccess(response){
         getCampaignReleaseDetails();
@@ -266,7 +271,6 @@ angular.module('catalogueApp')
         $scope.savingDates = false;
         $('#manageDatesModal').modal('hide');
         commonDataShare.showErrorMessage(response);
-        // swal(constants.name,constants.inventory_date_error,constants.error);
         console.log("error occured", response.status);
       });
     }
@@ -277,10 +281,8 @@ angular.module('catalogueApp')
             inventoryList.detail[i].status = false;
           }
        });
-      //  console.log(inventoryList);
      }
     var editActivityDates = function(){
-      // console.log($scope.invActivityData);
       var data = [];
       var auditData = {
         activity_type : '',
@@ -297,7 +299,6 @@ angular.module('catalogueApp')
           releaseClosureData.activity_type = $scope.invActivityData[i].activity_type;
           var date = commonDataShare.formatDate($scope.invActivityData[i].act_date.date);
           var userCode = $scope.invActivityData[i].act_date.userCode;
-          // var userCode = 6;
           releaseClosureData.date_user_assignments[date] = userCode;
           data.push(releaseClosureData);
         }
@@ -306,10 +307,8 @@ angular.module('catalogueApp')
       auditData.activity_type = $scope.invActivityAuditData.activity_type;
       for(var i=0; i<$scope.invActivityAuditData.audit_dates.length; i++){
         if($scope.invActivityAuditData.audit_dates[i].date){
-          // auditData.date_user_assignments[i] = {};
           var date = commonDataShare.formatDate($scope.invActivityAuditData.audit_dates[i].date);
           var userCode = $scope.invActivityAuditData.audit_dates[i].userCode;
-          // var userCode = 6;
           auditData.date_user_assignments[date] = userCode;
         }
       }
@@ -333,5 +332,44 @@ angular.module('catalogueApp')
     }
     $scope.getCampaignState = function(state){
       return constants[state];
+    }
+    $scope.filterAssignDatesData = function(filterKey,filterValue){
+      var filterExpression = {};
+      filterExpression[filterKey] = filterValue;
+      $scope.filteredAssignDatesList = $filter('filter')($scope.filteredAssignDatesList.shortlisted_suppliers, filterExpression);
+    }
+    $scope.assignDates = function(inventory,activity,date,user){
+      var dateUserExpression = {};
+      var shortlistedInvIdList = [];
+      date = commonDataShare.formatDate(date);
+      dateUserExpression[date] = user;
+      var assignment_detail = {
+        activity_type : activity,
+        date_user_assignments : dateUserExpression,
+      };
+      angular.forEach($scope.filteredAssignDatesList, function(supplier){
+        if(inventory in supplier.shortlisted_inventories){
+          angular.forEach(supplier.shortlisted_inventories[inventory].detail,function(inv){
+            shortlistedInvIdList.push(inv.id);
+          })
+        }
+      })
+      var requestData = {
+        shortlisted_inventory_id_detail : shortlistedInvIdList,
+        assignment_detail : [],
+      }
+      requestData.assignment_detail.push(assignment_detail);
+      console.log(requestData);
+      auditReleasePlanService.saveActivityDetails(requestData)
+      .then(function onSuccess(response){
+        getCampaignReleaseDetails();
+        $scope.dateChecked = false;
+        swal(constants.name,constants.inventory_date_success,constants.success);
+      })
+      .catch(function onError(response){
+        commonDataShare.showErrorMessage(response);
+        console.log("error occured", response.status);
+      });
+
     }
 }]);
