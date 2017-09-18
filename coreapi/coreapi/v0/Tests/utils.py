@@ -79,8 +79,8 @@ def create_basic_proposal(proposal_id):
                                                                         business_sub_type_code='SCH')
 
         # make businesses
-        business = models.BusinessInfo.objects.create(business_id='B1', name='AXCDG', type_name=business_type,
-                                                           sub_type=business_sub_type, )
+        business = models.Organisation.objects.create(business_id='B1', name='AXCDG', type_name=business_type,
+                                                      sub_type=business_sub_type, )
 
         # make account
         account = models.AccountInfo.objects.create(account_id='a1', business=business, name='A1', phone='960790857',

@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 import v0.models as models
-from v0.models import BusinessInfo, Campaign, CampaignSocietyMapping, SocietyInventoryBooking, AccountInfo
+from v0.models import Organisation, Campaign, CampaignSocietyMapping, SocietyInventoryBooking, AccountInfo
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety,\
                     ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, BaseUser
 from v0.serializers import BusinessAccountContactSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, BaseUserSerializer
@@ -218,7 +218,7 @@ class UIBusinessInfoSerializer(ModelSerializer):
     sub_type = BusinessSubTypeSerializer()
 
     class Meta:
-        model = BusinessInfo
+        model = Organisation
         # depth = 2
 
 

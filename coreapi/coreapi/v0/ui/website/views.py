@@ -33,7 +33,7 @@ from rest_framework.views import APIView
 import tasks
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer
-from v0.models import SocietyInventoryBooking, Campaign, CampaignSocietyMapping, BusinessInfo, \
+from v0.models import SocietyInventoryBooking, Campaign, CampaignSocietyMapping, Organisation, \
                     BusinessAccountContact, AdInventoryType, DurationType, PriceMappingDefault, \
     ContactDetails, SupplierTypeSociety, SocietyTower, BusinessTypes, \
                     BusinessSubTypes, AccountInfo, InventorySummary, FlatType, ProposalCenterMappingVersion, \
@@ -84,7 +84,7 @@ class BusinessAPIListView(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            items = BusinessInfo.objects.filter_user_related_objects(user=request.user)
+            items = Organisation.objects.filter_user_related_objects(user=request.user)
             serializer = BusinessInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
@@ -122,7 +122,7 @@ class BusinessAccounts(APIView):
     def get(self, request, id):
         class_name = self.__class__.__name__
         try:
-            item = BusinessInfo.objects.get_user_related_object(user=request.user, pk=id)
+            item = Organisation.objects.get_user_related_object(user=request.user, pk=id)
             business_serializer = UIBusinessInfoSerializer(item)
             accounts = AccountInfo.objects.filter_user_related_objects(user=request.user, business=item)
             accounts_serializer = UIAccountInfoSerializer(accounts, many=True)
@@ -160,7 +160,7 @@ class AccountAPIView(APIView):
         try:
             account = AccountInfo.objects.get_user_related_object(user=request.user, pk=id)
             account_serializer = UIAccountInfoSerializer(account)
-            business = BusinessInfo.objects.get(pk=account.business_id)
+            business = Organisation.objects.get(pk=account.business_id)
             business_serializer = BusinessInfoSerializer(business)
             '''contacts = AccountContact.objects.filter(account=account)
             serializer3 = AccountContactSerializer(contacts, many=True)'''
@@ -207,7 +207,7 @@ class BusinessContacts(APIView):
                 business_serializer_data = {}
 
                 if 'business_id' in business_data:
-                    business = BusinessInfo.objects.get_user_related_object(user=request.user, pk=business_data['business_id'])
+                    business = Organisation.objects.get_user_related_object(user=request.user, pk=business_data['business_id'])
                     serializer = BusinessInfoSerializer(business, data=business_data)
                 else:
                     business_data['business_id'] = self.generate_business_id(business_name=business_data['name'], \
@@ -225,8 +225,8 @@ class BusinessContacts(APIView):
                      business_serializer_data['business_sub_type'] = sub_type.business_sub_type
                      business_serializer_data['business_type'] = type_name.business_type
 
-                business = BusinessInfo.objects.get_user_related_object(user=current_user, pk=business_data['business_id'])
-                content_type_business = ContentType.objects.get_for_model(BusinessInfo)
+                business = Organisation.objects.get_user_related_object(user=current_user, pk=business_data['business_id'])
+                content_type_business = ContentType.objects.get_for_model(Organisation)
                 contact_ids = list(business.contacts.all().values_list('id', flat=True))
                 contact_list = []
 
@@ -275,11 +275,11 @@ class BusinessContacts(APIView):
             return business_id.lower()
 
         try:
-            business = BusinessInfo.objects.get(business_id=business_id)
+            business = Organisation.objects.get(business_id=business_id)
             # if exception does not occur means conflict
             business_code = create_code(name=business_name, conflict=True)
             business_id = type_name.business_type_code + sub_type.business_sub_type_code + business_code
-            business = BusinessInfo.objects.get(business_id=business_id)
+            business = Organisation.objects.get(business_id=business_id)
 
             # still conflict ---> Generate random 4 uppercase character string
             i = 0  # i keeps track of infinite loop tune it according to the needs
@@ -288,10 +288,10 @@ class BusinessContacts(APIView):
                     return None
                 business_code = ''.join(random.choice(string.ascii_uppercase) for _ in range(4))
                 business_id = business_front + business_code
-                business = BusinessInfo.objects.get(business_id=business_id)
+                business = Organisation.objects.get(business_id=business_id)
                 i += 1
 
-        except BusinessInfo.DoesNotExist:
+        except Organisation.DoesNotExist:
             return business_id.upper()
 
 
@@ -352,7 +352,7 @@ class AccountContacts(APIView):
                 business_id = account_data['business_id']
                 # checking a valid business
 
-                business = BusinessInfo.objects.get(pk=business_id)
+                business = Organisation.objects.get(pk=business_id)
 
                 if 'account_id' in account_data:
                     account = AccountInfo.objects.get(pk=account_data['account_id'])
@@ -3519,7 +3519,7 @@ class ProposalVersion(APIView):
             user = request.user
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
-            business = models.BusinessInfo.objects.get(business_id=account.business.business_id)
+            business = models.Organisation.objects.get(business_id=account.business.business_id)
 
             # if you don't provide this value, No proposal version is created.
             is_proposal_version_created = request.data['is_proposal_version_created'] if request.data.get('is_proposal_version_created') else False
@@ -5162,3 +5162,62 @@ class UploadInventoryActivityImageAmazon(APIView):
             return ui_utils.handle_response(class_name, data=file_name, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class ContactViewSet(viewsets.ViewSet):
+    """
+    ViewSet around contacts
+    """
+
+    def list(self, request):
+        """
+        list all the contacts for a given object_id or all if none
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            object_id = request.query_params.get('object_id')
+            if object_id:
+                instances = models.ContactDetails.objects.filter(object_id=object_id)
+            else:
+                instances = models.ContactDetails.objects.all()
+            serializer = v0_serializers.ContactDetailsSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            serializer = v0_serializers.ContactDetailsSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.ContactDetails.objects.get(pk=pk)
+            serializer = v0_serializers.ContactDetailsSerializer(data=request.data, instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+

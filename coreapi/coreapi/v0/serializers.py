@@ -4,7 +4,7 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, \
-    Campaign, BusinessInfo, BusinessAccountContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, \
+    Campaign, Organisation, BusinessAccountContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, \
     AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, \
     CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, \
     SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, \
@@ -313,7 +313,7 @@ class BusinessTypesSerializer(ModelSerializer):
 #     # sub_type = BusinessSubTypesSerializer()
 #     # type = BusinessTypesSerializer()
 #     class Meta:
-#         model = BusinessInfo
+#         model = Organisation
 #         depth = 2
 
         # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
@@ -335,7 +335,7 @@ class BusinessInfoSerializer(ModelSerializer):
     # sub_type = BusinessSubTypesSerializer()
     # type = BusinessTypesSerializer()
     class Meta:
-        model = BusinessInfo
+        model = Organisation
         # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
         # 'reference_phone', 'reference_email', 'comments')
 
