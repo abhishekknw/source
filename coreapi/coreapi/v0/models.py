@@ -2514,11 +2514,13 @@ class Profile(BaseModel):
         db_table = 'profile'
 
 
-class ObjectLevelPermission(Permission):
+class ObjectLevelPermission(models.Model):
     """
     This class grants access  Read, Update, View, ViewAll, and UpdateAll on each object it's tied to.
-    Inherits from already defined built in Permission model.
     """
+    name = models.CharField(max_length=255)
+    codename = models.CharField(max_length=50)
+    content_type = models.ForeignKey(ContentType)
     view = models.BooleanField(default=False)
     update = models.BooleanField(default=False)
     create = models.BooleanField(default=False)

@@ -79,6 +79,7 @@ urlpatterns = [
     url(r'^child-proposals/(?P<proposal_id>[A-Z_a-z0-9-]+)/$', views.ChildProposals.as_view()),
     url(r'^export-all-supplier_data/$', views.ExportAllSupplierData.as_view()),
     url(r'^import-supplier-data-from-sheet/$', views.ImportSupplierDataFromSheet.as_view()),
+    url(r'^clone-profile/$', views.CloneProfile.as_view()),
     url(r'^upload-inventory-activity-image-amazon/$', views.UploadInventoryActivityImageAmazon.as_view()),
 
 ]
