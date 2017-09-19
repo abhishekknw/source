@@ -5221,3 +5221,110 @@ class ContactViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+
+class ProfileViewSet(viewsets.ViewSet):
+    """
+    Profile View Set
+    """
+    def list(self, request):
+        """
+        returns a profile object along with general user permissions and object level permissions instances.
+        works with query params which is organisation_id and it's optional
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            organisation_id = request.query_params.get('organisation_id')
+            if organisation_id:
+                org = models.Organisation.objects.get(organisation_id=organisation_id)
+                instances = models.Profile.objects.filter(organisation=org)
+            else:
+                instances = models.Profile.objects.all()
+            serializer = website_serializers.ProfileNestedSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+        creates a profile object. Also create associated object level and general user permissions objects.
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            organisation_id = request.data['organisation_id']
+            # just to check weather this org even exists or not
+            org = models.Organisation.objects.get(pk=organisation_id)
+            profile_data = data['profile']
+            profile_data['organisation'] = organisation_id
+
+            serializer = website_serializers.ProfileSimpleSerializer(data=profile_data)
+            if serializer.is_valid():
+                profile_instance_pk = serializer.save()
+            else:
+                return ui_utils.handle_response(class_name, data=serializer.errors)
+
+            object_level_permission = data['object_level_permission']
+
+            assert type(object_level_permission) == list
+
+            for content in object_level_permission:
+                content['profile'] = profile_instance_pk
+
+            serializer = website_serializers.ObjectLevelPermissionSerializer(data=object_level_permission)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return ui_utils.handle_response(class_name, data=serializer.errors)
+
+            general_user_permission = data['general_user_permission']
+
+            assert type(general_user_permission) == list
+
+            for content in general_user_permission:
+                content['profile'] = profile_instance_pk
+
+            serializer = website_serializers.GeneralUserPermissionSerializer(data=general_user_permission)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return ui_utils.handle_response(class_name, data=serializer.errors)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.Profile.objects.get(pk=pk)
+            serializer = website_serializers.ProfileNestedSerializer(instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def destroy(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            models.Profile.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=True, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+
+

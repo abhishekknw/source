@@ -388,3 +388,38 @@ class InventoryActivityAssignmentSerializer(ModelSerializer):
     class Meta:
         model = models.InventoryActivityAssignment
 
+
+class ObjectLevelPermissionSerializer(ModelSerializer):
+    """
+    serializer for Object Level Permissions
+    """
+    class Meta:
+        model = models.ObjectLevelPermission
+
+
+class GeneralUserPermissionSerializer(ModelSerializer):
+    """
+    serializer for GeneralUserPermissions
+    """
+    class Meta:
+        model = models.GeneralUserPermission
+
+
+class ProfileNestedSerializer(ModelSerializer):
+    """
+    Nested serializer for Profile
+    """
+    object_level_permission = ObjectLevelPermissionSerializer(many=True, source='objectlevelpermission_set')
+    general_user_permission = GeneralUserPermissionSerializer(many=True, source='generaluserpermission_set')
+
+    class Meta:
+        model = models.Profile
+
+
+class ProfileSimpleSerializer(ModelSerializer):
+    """
+    simple serializer for Profile
+    """
+
+    class Meta:
+        model = models.Profile

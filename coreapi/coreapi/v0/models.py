@@ -16,7 +16,7 @@ from datetime import date
 
 import managers
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Permission
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -2500,34 +2500,46 @@ class SupplierTypeBusDepot(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_type_bus_depot'
 
-#
-# class SupplierTypeBus(BaseModel):
-#     """
-#     captures details of a single BUS
-#     """
-#     registered_number = models.CharField(max_length=100, unique=True)
-#     bus_depot = models.ForeignKey(SupplierTypeBusDepot)
-#     is_ac = models.BooleanField(default=False)
-#     size_back_side_banner = models.FloatField(null=True, blank=True)
-#     size_left_side_banner = models.FloatField(null=True, blank=True)
-#     size_right_side_banner = models.FloatField(null=True, blank=True)
-#     cost_back_side_banner = models.FloatField(null=True, blank=True)
-#     cost_left_side_banner = models.FloatField(null=True, blank=True)
-#     cost_right_side_banner = models.FloatField(null=True, blank=True)
-#     printing_cost_back_side_banner = models.FloatField(null=True, blank=True)
-#     printing_cost_left_side_banner = models.FloatField(null=True, blank=True)
-#     printing_cost_right_side_banner = models.FloatField(null=True, blank=True)
-#     mounting_cost_back_side_banner = models.FloatField(null=True, blank=True)
-#     mounting_cost_left_side_banner = models.FloatField(null=True, blank=True)
-#     mounting_cost_right_side_banner = models.FloatField(null=True, blank=True)
-#     is_tv_screen = models.BooleanField(default=False)
-#     is_wifi_connected = models.BooleanField(default=False)
-#     seat_count = models.IntegerField()
-#     size_seat_back_inventory = models.FloatField(null=True, blank=True)
-#     cost_seat_back_inventory = models.FloatField(null=True, blank=True)
-#     printing_cost_seat_back_inventory = models.FloatField(null=True, blank=True)
-#     mounting_cost_seat_back_inventory = models.FloatField(null=True, blank=True)
-#
-#     class Meta:
-#         db_table = 'bus'
-#
+
+class Profile(BaseModel):
+    """
+    This model describes profile. a user can only have one profile.
+    """
+    name = models.CharField(max_length=255)
+    organisation = models.ForeignKey('Organisation')
+    is_standard = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'profile'
+
+
+class ObjectLevelPermission(Permission):
+    """
+    This class grants access  Read, Update, View, ViewAll, and UpdateAll on each object it's tied to.
+    Inherits from already defined built in Permission model.
+    """
+    view = models.BooleanField(default=False)
+    update = models.BooleanField(default=False)
+    create = models.BooleanField(default=False)
+    delete = models.BooleanField(default=False)
+    view_all = models.BooleanField(default=False)
+    update_all = models.BooleanField(default=False)
+    description = models.CharField(max_length=1000, null=True, blank=True)
+    profile = models.ForeignKey(Profile)
+
+    class Meta:
+        db_table = 'object_level_permission'
+
+
+class GeneralUserPermission(BaseModel):
+    """
+    This class defines all the possible functions in website and tells weather that is allowed/not allowed for a profile
+    """
+    name = models.CharField(max_length=255)
+    codename = models.CharField(max_length=50)
+    description = models.CharField(max_length=1000, null=True, blank=True)
+    is_allowed = models.BooleanField(default=False)
+    profile = models.ForeignKey(Profile)
+
+    class Meta:
+        db_table = 'general_user_permission'
