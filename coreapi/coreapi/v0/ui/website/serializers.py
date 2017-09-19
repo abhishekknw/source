@@ -423,3 +423,9 @@ class ProfileSimpleSerializer(ModelSerializer):
 
     class Meta:
         model = models.Profile
+
+
+class OrganisationSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.Organisation
