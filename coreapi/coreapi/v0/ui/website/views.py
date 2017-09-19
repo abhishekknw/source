@@ -5399,7 +5399,6 @@ class ContentTypeViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
 class ObjectLevelPermissionViewSet(viewsets.ViewSet):
     """
     ViewSet around object level permission model
@@ -5420,9 +5419,6 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
 
     def retrieve(self, request, pk):
         """
-
-        :param request:
-        :param pk:
         :return:
         """
         class_name = self.__class__.__name__
