@@ -74,6 +74,7 @@ class BaseUser(AbstractUser):
     """
     user_code = models.CharField(max_length=255, default=settings.DEFAULT_USER_CODE)
     mobile = models.CharField(max_length=20, null=True, blank=True)
+    profile = models.ForeignKey('Profile', null=True, blank=True)  # remove null=true once every user has been attached one profile
 
     class Meta:
         db_table = 'base_user'

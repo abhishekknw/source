@@ -12,6 +12,7 @@ from bulk_update.helper import bulk_update
 from celery.result import GroupResult, AsyncResult
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Permission
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import transaction
@@ -5241,7 +5242,7 @@ class ProfileViewSet(viewsets.ViewSet):
                 instances = models.Profile.objects.filter(organisation=org)
             else:
                 instances = models.Profile.objects.all()
-            serializer = website_serializers.ProfileNestedSerializer(instances, many=True)
+            serializer = website_serializers.ProfileSimpleSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5254,45 +5255,11 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            data = request.data.copy()
-            organisation_id = request.data['organisation_id']
-            # just to check weather this org even exists or not
-            org = models.Organisation.objects.get(pk=organisation_id)
-            profile_data = data['profile']
-            profile_data['organisation'] = organisation_id
-
-            serializer = website_serializers.ProfileSimpleSerializer(data=profile_data)
-            if serializer.is_valid():
-                profile_instance_pk = serializer.save()
-            else:
-                return ui_utils.handle_response(class_name, data=serializer.errors)
-
-            object_level_permission = data['object_level_permission']
-
-            assert type(object_level_permission) == list
-
-            for content in object_level_permission:
-                content['profile'] = profile_instance_pk
-
-            serializer = website_serializers.ObjectLevelPermissionSerializer(data=object_level_permission)
+            serializer = website_serializers.ProfileSimpleSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-            else:
-                return ui_utils.handle_response(class_name, data=serializer.errors)
-
-            general_user_permission = data['general_user_permission']
-
-            assert type(general_user_permission) == list
-
-            for content in general_user_permission:
-                content['profile'] = profile_instance_pk
-
-            serializer = website_serializers.GeneralUserPermissionSerializer(data=general_user_permission)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                return ui_utils.handle_response(class_name, data=serializer.errors)
-
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -5306,7 +5273,7 @@ class ProfileViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = models.Profile.objects.get(pk=pk)
-            serializer = website_serializers.ProfileNestedSerializer(instance)
+            serializer = website_serializers.ProfileSimpleSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5396,4 +5363,173 @@ class OrganisationViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
-            ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class ContentTypeViewSet(viewsets.ViewSet):
+    """
+    fetches all content types in the system
+    """
+
+    def list(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            serializer = website_serializers.ContentTypeSerializer(ContentType.objects.all(), many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = ContentType.objects.get_for_id(id=pk)
+            serializer = website_serializers.ContentTypeSerializer(instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class ObjectLevelPermissionViewSet(viewsets.ViewSet):
+    """
+    ViewSet around object level permission model
+    """
+    def list(self, request):
+        """
+        retrieves all Object level permission in the system
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instances = models.ObjectLevelPermission.objects.all()
+            serializer = website_serializers.ObjectLevelPermissionSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.ObjectLevelPermission.objects.get(pk=pk)
+            serializer = website_serializers.ObjectLevelPermissionSerializer(instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            serializer = website_serializers.ObjectLevelPermissionSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name  = self.__class__.__name__
+        try:
+            instance = models.ObjectLevelPermission.objects.get(pk=pk)
+            serializer = website_serializers.ObjectLevelPermissionSerializer(data=request.data, instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class GeneralUserPermissionViewSet(viewsets.ViewSet):
+    """
+    ViewSet around general user permission model
+    """
+
+    def list(self, request):
+        """
+        retrieves all general user permission in the system
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instances = models.GeneralUserPermission.objects.all()
+            serializer = website_serializers.GeneralUserPermissionSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.GeneralUserPermission.objects.get(pk=pk)
+            serializer = website_serializers.GeneralUserPermissionSerializer(instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            serializer = website_serializers.GeneralUserPermissionSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        """
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.GeneralUserPermission.objects.get(pk=pk)
+            serializer = website_serializers.GeneralUserPermissionSerializer(data=request.data, instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)

@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.models import ContentType
 
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
@@ -429,3 +430,17 @@ class OrganisationSerializer(ModelSerializer):
 
     class Meta:
         model = models.Organisation
+
+
+class ContentTypeSerializer(ModelSerializer):
+
+    class Meta:
+        model =  ContentType
+
+
+class ObjectLevelPermissionViewSet(ModelSerializer):
+    """
+
+    """
+    class Meta:
+        model = models.ObjectLevelPermission
