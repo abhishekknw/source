@@ -5221,3 +5221,77 @@ class ContactViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+
+class OrganisationViewSet(viewsets.ViewSet):
+    """
+    ViewSets around organisations
+    """
+    def list(self, request):
+        """list all organisations for provided category
+        :param request
+        :param category
+        :return
+        """
+
+        class_name = self.__class__.__name__
+        try:
+            category = request.query_params.get('category')
+            instances = models.Organisation.objects.filter(category=category)
+            serializer = v0_serializers.OrganisationSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+
+
+    def retrieve(self, request, pk):
+        """
+        :param request
+        :return
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.Organisation.objects.get(pk=pk)
+            serializer = v0_serializers.OrganisationSerializer(instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name,exception_object=e, request=request)
+
+    def create(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+
+        class_name = self.__class__.__name__
+        try:
+            serializer = v0_serializers.OrganisationSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self,request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+
+        class_name = self.__class__.__name__
+        try:
+            instance = models.Organisation.objects.get(pk=pk)
+            serializer = v0_serializers.OrganisationSerializer(data=request.data,instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
+        except Exception as e:
+            ui_utils.handle_response(class_name, exception_object=e, request=request)

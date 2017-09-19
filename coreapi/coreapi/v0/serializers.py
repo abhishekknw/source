@@ -570,3 +570,8 @@ class SupplierTypeRetailShopSerializer(ModelSerializer):
 
     class Meta:
         model = models.SupplierTypeRetailShop
+
+class OrganisationSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.Organisation

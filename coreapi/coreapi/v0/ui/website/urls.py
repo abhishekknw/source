@@ -87,5 +87,6 @@ router = DefaultRouter()
 router.include_format_suffixes = False
 router.register(r'^proposal', views.ProposalViewSet, base_name='Proposal')
 router.register(r'^contact', views.ContactViewSet, base_name='Contact')
+router.register(r'^organisation', views.OrganisationViewSet, base_name='Organisation')
 
 urlpatterns += router.urls
