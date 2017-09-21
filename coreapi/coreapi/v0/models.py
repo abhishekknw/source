@@ -107,7 +107,10 @@ class BaseModel(models.Model):
                 # pk is Not none, it can be an old instance or a new instance in some cases.
                 # if object is found, then it is indeed an old instance.
                 self.__class__.objects.get(pk=self.pk)
-                self.updated_at = timezone.now()
+                self.updated_at = current_time
+                # in some case if self.created_at is not already set, set it here
+                if not self.created_at:
+                    self.created_at = current_time
 
             except ObjectDoesNotExist:
                 # if pk does not exist, this is  a new instance

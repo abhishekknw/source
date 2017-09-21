@@ -19,7 +19,7 @@ sys.path.append(PROJECT_DIR)
 sys.path.append(os.path.join(PROJECT_DIR, 'coreapi'))
 
 # django virtualenv has the env stuff one level up from the project
-PROJECT_ENV = os.path.join(os.path.dirname(PROJECT_DIR), "eb-env")
+PROJECT_ENV = os.path.join(os.path.dirname(PROJECT_DIR), "env")
 
 # Add the site-packages of the chosen virtualenv to work with
 #site.addsitedir(os.path.join(PROJECT_ENV, 'Lib/site-packages'))
