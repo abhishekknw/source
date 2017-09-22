@@ -89,10 +89,10 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       return machadaloHttp.get(url);
   };
 
-    pagesService.createBusinessCampaign = function (data) {
-       var url = url_base + "newCampaign/";
-       return machadaloHttp.post(url, data);
-      };
+    // pagesService.createBusinessCampaign = function (data) {
+    //    var url = url_base + "newCampaign/";
+    //    return machadaloHttp.post(url, data);
+    //   };
 
     pagesService.createAccountCampaign = function (data) {
        var url = url_base + "newAccountCampaign/";
@@ -144,6 +144,10 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       $rootScope.societyId = null;
     }
    };
+   pagesService.createOrganisation = function (data) {
+      var url = url_base + "organisation/";
+      return machadaloHttp.post(url, data);
+     };
 
    return pagesService;
 }]);

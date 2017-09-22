@@ -33,6 +33,8 @@ angular
     statusCode_removed : 'R',
     statusCodeFinalized: 'F',
     showSystemError: true,
+    create_success : 'Created Successfully',
+    update_success : 'Updated Successfully',
 
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',

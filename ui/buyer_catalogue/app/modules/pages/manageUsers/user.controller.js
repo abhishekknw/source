@@ -10,6 +10,9 @@ angular.module('machadaloPages')
      $scope.permissionsDict = [];
      $scope.userInfo = {};
      $scope.passwordError = constants.password_error;
+     $scope.profileData = {};// to create profile
+     $scope.organisationData = {}; // to create organisation
+     $scope.organisationMappedIdList = []; // to create a list of organisation ids
      $scope.options = [
         {usercode : 'BD', id : '01'},
         {usercode : 'Ops', id: '02'},
@@ -31,6 +34,20 @@ angular.module('machadaloPages')
       {header : 'Edit'},
       {header : 'Delete'},
     ]
+    //to create organisation we should map that organisation to category
+    $scope.organisationCategories = [
+      'MACHADALO',
+      'BUSINESS',
+      'BUSINESS_AGENCY',
+      'SUPPLIER_AGENCY',
+      'SUPPLIER',
+    ]
+    $scope.operationOrganisation = {
+      view : false,
+      edit : false,
+      create : false,
+    }
+    $scope.operationProfile = angular.copy($scope.operationOrganisation);
       //To get permission list
       userService.getAllUserPermissions()
       .then(function onSuccess(response){
@@ -97,7 +114,11 @@ angular.module('machadaloPages')
        {name : 'viewGroups'},
        {name : 'editUser'},
        {name : 'editGroup'},
-       {name : 'profile'}
+       {name : 'profile'},
+       {name : 'organisationCommon'},
+       {name : 'organisation'},
+       {name : 'profileView'},
+
      ];
      $scope.contentItem = {
        createUser  : 'createUser',
@@ -106,7 +127,10 @@ angular.module('machadaloPages')
        viewGroups  : 'viewGroups',
        editUser    : 'editUser',
        editGroup    : 'editGroup',
-       profile    : 'profile',
+       profile      : 'profile',
+       organisation : 'organisation',
+       organisationCommon : 'organisationCommon',
+       profileView : 'profileView',
      }
      $scope.getContent = function(item,data){
        console.log(item);
@@ -132,6 +156,13 @@ angular.module('machadaloPages')
             addMoreFieldsToPermission();
             // $scope.permissions = [];
             $scope.groupName.name = null;
+            break;
+          case $scope.contentItem.organisationCommon:
+            getOrganisations();
+            break;
+          case $scope.contentItem.profileView:
+            getProfiles();
+            getOrganisations();
             break;
         }
      }
@@ -366,4 +397,85 @@ angular.module('machadaloPages')
     }
     //end : change password
 
+    //start: create organisation
+    $scope.createOrganisation = function(){
+      userService.createOrganisation($scope.organisationData)
+      .then(function onSuccess(response){
+        console.log(response);
+        swal(constants.name,constants.create_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    //end: create organisation
+    var getOrganisations = function(){
+      userService.getOrganisations()
+      .then(function onSuccess(response){
+        $scope.organisationList = response.data.data;
+        angular.forEach($scope.organisationList, function(organisation){
+          console.log(organisation);
+          $scope.organisationMappedIdList[organisation.organisation_id] = organisation;
+        })
+        console.log(response);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.updateOrganisation = function(){
+      userService.updateOrganisationDetails($scope.organisationData)
+      .then(function onSuccess(response){
+        console.log(response);
+        swal(constants.name,constants.update_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.goToOrganisation = function(contentItem, operation, data={}){
+      // console.log(data);
+        $scope.organisationData = data;
+        $scope.operationOrganisation.view = false;
+        $scope.operationOrganisation.create = false;
+        $scope.operationOrganisation.edit = false;
+        $scope.operationOrganisation[operation] = true;
+        $scope.getContent(contentItem);
+    }
+
+    //start: create profile
+    $scope.createProfile = function(){
+      userService.createProfile($scope.profileData)
+      .then(function onSuccess(response){
+        console.log(response);
+        swal(constants.name,constants.create_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    //end: create profile
+    var getProfiles = function(){
+      userService.getProfiles()
+      .then(function onSuccess(response){
+        $scope.profilesList = response.data.data;
+        console.log(response);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.goToProfiles = function(contentItem, operation, data={}){
+      $scope.profileData = data;
+      $scope.operationProfile.view = false;
+      $scope.operationProfile.create = false;
+      $scope.operationProfile.edit = false;
+      $scope.operationProfile[operation] = true;
+      console.log($scope.profileData);
+      $scope.getContent(contentItem);
+    }
+    $scope.updateProfile = function(){
+      userService.updateProfile($scope.profileData)
+      .then(function onSuccess(response){
+        console.log(response);
+        swal(constants.name,constants.update_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
    }]);//end of controller
