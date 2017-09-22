@@ -336,12 +336,80 @@
               </select>
               <span ng-if="operationProfile.view">{{organisationMappedIdList[profileData.organisation].name}}</span>
             </div>
-            <div class="create-profile-btn">
+            <div class="align-right-btn">
               <button ng-if="operationProfile.create" class="btn btn-danger" ng-click="createProfile()">Create</button>
               <button ng-if="operationProfile.edit" class="btn btn-danger" ng-click="updateProfile()">UpdateProfile</button>
             </div>
           </form>
         </div>
+
+        <!--start: object level permissions  -->
+        <div class="panel-heading">
+          <h3>Object Level Permissions</h3>
+        </div>
+        <div class="panel-body">
+          <div class = "table">
+            <div class="form-group">
+               <div class = "row">
+
+                 <div class = "col-md-6">
+                   <button type="button" class="btn btn-danger active" name="button">Clone Profile</button>
+                 </div>
+
+                 <div class = "col-md-6 align-right-btn">
+                   <button class="btn btn-danger active" data-toggle="modal" data-target="#createObjectLevelPermissionModal" data-backdrop="static" data-keyboard="false">
+                     Create Object Level Permission
+                   </button>
+                 </div>
+               </div>
+             </div>
+           </div>
+           <!--list of object-level-permissions  -->
+           <div class="panel-body organisation-view-tab-content">
+             <div class = "table">
+               <div class="form-group">
+                  <div class = "row organisation-view-tab">
+                    <div class = "col-md-2"><label>Index </label></div>
+                    <div class = "col-md-3"><label>Name </label></div>
+                    <div class = "col-md-1"><label>View </label></div>
+                    <div class = "col-md-1"><label>Edit </label></div>
+                    <div class = "col-md-1"><label>Create </label></div>
+                    <div class = "col-md-1"><label>Delete </label></div>
+                    <div class = "col-md-1"><label>View All </label></div>
+                    <div class = "col-md-2"><label>Update All </label></div>
+                  </div></br>
+                  <div class = "row" ng-repeat="permission in objectLevelPermissions">
+                    <div class = "col-md-2">
+                      {{$index+1}}
+                    </div>
+                    <div class = "col-md-3">
+                      <label>{{permission.name}}</label>
+                    </div>
+                    <div class = "col-md-1">
+                      <input type="checkbox" ng-model="permission.view" ng-value="{{permission.view}}">
+                    </div>
+                    <div class = "col-md-1">
+                      <input type="checkbox" ng-model="permission.update" ng-value="{{permission.update}}">
+                    </div>
+                    <div class = "col-md-1">
+                      <input type="checkbox" ng-model="permission.create" ng-value="{{permission.create}}">
+                    </div>
+                    <div class = "col-md-1">
+                      <input type="checkbox" ng-model="permission.delete" ng-value="{{permission.delete}}">
+                    </div>
+                    <div class = "col-md-1">
+                      <input type="checkbox" ng-model="permission.view_all" ng-value="{{permission.view_all}}">
+                    </div>
+                    <div class = "col-md-2">
+                      <input type="checkbox" ng-model="permission.update_all" ng-value="{{permission.update_all}}">
+                    </div>
+
+                  </div></br>
+                </div>
+              </div>
+           </div>
+        </div>
+        <!--end : object level permissions  -->
     </div>
   </div>
   <!--End: profile tab -->
@@ -535,3 +603,53 @@
     </div>
 </div>
 <!--end : change password  -->
+<!--start: modal for create object lvel permission for profile  -->
+<div id="createObjectLevelPermissionModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Create Object Level Permission</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <label for="email">Object Name</label>
+            <select class="form-control" ng-model="objectLevelPermissionData.content_type">
+              <option ng-repeat="content_type in contentTypeList" value="{{content_type.id}}">{{content_type.model|uppercase}}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Assign Object Level Permissions : </label></br>
+            <label><input type="checkbox" ng-model="objectLevelPermissionData.view">&nbsp;View</label> &nbsp;
+            <label><input type="checkbox" ng-model="objectLevelPermissionData.update">&nbsp;Update</label> &nbsp;
+            <label><input type="checkbox" ng-model="objectLevelPermissionData.create">&nbsp;Create</label> &nbsp;
+            <label><input type="checkbox" ng-model="objectLevelPermissionData.delete">&nbsp;Delete</label> &nbsp;
+            <label><input type="checkbox" ng-model="objectLevelPermissionData.view_all">&nbsp;ViewAll</label> &nbsp;
+            <label><input type="checkbox" ng-model="objectLevelPermissionData.update_all">&nbsp;UpdateAll</label> &nbsp;
+          </div>
+          <div class="form-group">
+            <label for="email">Select Profile</label>
+            <select class="form-control" ng-model="objectLevelPermissionData.profile">
+              <option ng-repeat="profile in profilesList" ng-if="profile.is_standard" value="{{profile.id}}">{{profile.name}}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="email">Description</label>
+            <textarea  class="form-control" rows="4" cols="40"></textarea>
+          </div>
+          <button type="submit" class="btn btn-default" ng-model="objectLevelPermissionData.description" ng-click="createObjectLevelPermission()">Create</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!--end: modal for create object lvel permission for profile  -->

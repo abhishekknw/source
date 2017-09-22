@@ -91,5 +91,26 @@ angular.module('machadaloPages')
       var url = url_base_website + "profile/" + data.id + "/";
       return machadaloHttp.put(url,data);
     }
+
+    userService.getObjectLevelPermissions = function(){
+      var url = url_base_website + "object-level-permission/";
+      return machadaloHttp.get(url);
+    }
+
+    userService.createObjectLevelPermission = function(data){
+      var url = url_base_website + "object-level-permission/";
+      return machadaloHttp.post(url,data);
+    }
+
+    userService.updateObjectLevelPermission = function(data){
+      var url = url_base_website + "object-level-permission/";
+      return machadaloHttp.put(url,data);
+    }
+
+    userService.getContentTypes = function(){
+      var url = url_base_website + "content-type/";
+      return machadaloHttp.get(url);
+    }
+
   return userService;
 }]);

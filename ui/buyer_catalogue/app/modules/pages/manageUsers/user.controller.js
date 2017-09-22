@@ -13,6 +13,9 @@ angular.module('machadaloPages')
      $scope.profileData = {};// to create profile
      $scope.organisationData = {}; // to create organisation
      $scope.organisationMappedIdList = []; // to create a list of organisation ids
+     $scope.objectLevelPermissions = []; // list of object level permissions
+     $scope.contentTypeObject = {};
+     $scope.contentTypeListById = [];
      $scope.options = [
         {usercode : 'BD', id : '01'},
         {usercode : 'Ops', id: '02'},
@@ -75,8 +78,22 @@ angular.module('machadaloPages')
             console.log("error occured");
         });
       }
+      //get content types with model names
+      var getContentTypes = function(){
+        userService.getContentTypes()
+        .then(function onSuccess(response){
+          console.log(response);
+          $scope.contentTypeList = response.data.data;
+          angular.forEach($scope.contentTypeList, function(contentType){
+            $scope.contentTypeListById[contentType.id] = contentType;
+          })
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
       //calling when page load
       getAllUserGroups();
+      getContentTypes();
       var addMoreFieldsToPermission = function(){
         angular.forEach($scope.permissions, function(permission){
           permission.selected = false;
@@ -162,6 +179,7 @@ angular.module('machadaloPages')
             break;
           case $scope.contentItem.profileView:
             getProfiles();
+            getObjectLevelPermissions();
             getOrganisations();
             break;
         }
@@ -478,4 +496,40 @@ angular.module('machadaloPages')
         console.log(response);
       })
     }
+    //for generaluser permissionsDict
+    var getObjectLevelPermissions = function(){
+      userService.getObjectLevelPermissions()
+      .then(function onSuccess(response){
+        console.log(response);
+        $scope.objectLevelPermissions = response.data.data;
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.createObjectLevelPermission = function(){
+      console.log($scope.contentTypeObject);
+      $scope.objectLevelPermissionData['name'] = $scope.contentTypeListById[$scope.objectLevelPermissionData.content_type].model.toUpperCase();
+      console.log($scope.objectLevelPermissionData);
+      userService.createObjectLevelPermission($scope.objectLevelPermissionData)
+      .then(function onSuccess(response){
+        console.log(response);
+        getObjectLevelPermissions();
+        $('#createObjectLevelPermissionModal').modal('hide');
+        swal(constants.name, constants.create_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.updateObjectLevelPermission = function(){
+      userService.updateObjectLevelPermission()
+      .then(function onSuccess(response){
+        console.log(response);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.assignObjectName = function(c){
+      console.log(c);
+    }
+
    }]);//end of controller
