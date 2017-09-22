@@ -5454,7 +5454,9 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            serializer = website_serializers.ObjectLevelPermissionSerializer(data=request.data)
+            data = request.data.copy()
+            data['codename'] = ''.join(data['name'].split(' '))
+            serializer = website_serializers.ObjectLevelPermissionSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
