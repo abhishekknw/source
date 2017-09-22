@@ -90,14 +90,15 @@ DATABASES = {
             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         },
         'default': {
-            'NAME': 'mdtestnew',
+
+            'NAME': 'machadalodb',
             'ENGINE': 'django.db.backends.mysql',
-            'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-            'USER': 'mdtest',
-            'PASSWORD': 'mdtestmachadalo',
-            'PORT': 3306
+            'HOST': 'localhost',
+            'USER': 'machadalo',
+            'PASSWORD': 'machadalo@tech',
         }
 }
+#
 
 #
 # DATABASES = {
@@ -240,8 +241,9 @@ JWT_AUTH = {
       'JWT_VERIFY_EXPIRATION': False,
       }
 
-BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
-# BASE_URL = 'http://localhost:8000/'
+# BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
+BASE_URL = 'http://localhost:8000/'
+
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

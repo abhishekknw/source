@@ -32,7 +32,10 @@ def fill_organisation(apps, schema_editor):
             'comments': instance.comments,
             'category': 'BUSINESS',
         }
-        organisation_model.objects.create(**data)
+        try:
+            organisation_model.objects.create(**data)
+        except:
+            pass
 
 
 def empty_organisation(apps, schema_editor):

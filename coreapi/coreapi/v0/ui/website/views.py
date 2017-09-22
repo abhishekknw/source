@@ -5469,7 +5469,7 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
         :param pk:
         :return:
         """
-        class_name  = self.__class__.__name__
+        class_name = self.__class__.__name__
         try:
             instance = models.ObjectLevelPermission.objects.get(pk=pk)
             serializer = website_serializers.ObjectLevelPermissionSerializer(data=request.data, instance=instance)
@@ -5546,3 +5546,49 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class CloneProfile(APIView):
+    """
+    Clone a profile.
+    """
+    def post(self, request):
+        """
+        clones a given profile to a new profile with a new name and new organisation_id. copies all object
+        level and general user permission.
+        """
+        class_name = self.__class__.__name__
+        try:
+            profile_pk = request.data['clone_from_profile_id']
+            profile_instance = models.Profile.objects.get(pk=profile_pk)
+            new_organisation_id = request.data['new_organisation_id']
+            new_profile_name = request.data['new_name']
+
+            data = {
+                'name': new_profile_name,
+                'organisation': new_organisation_id,
+                'is_standard': profile_instance.is_standard
+            }
+            serializer = website_serializers.ProfileSimpleSerializer(data=data)
+
+            if serializer.is_valid():
+                new_profile_instance = serializer.save()
+                # copy all object level permissions to new profile. Running .save() call in a loop is okay here
+                # as there won't be much objects per profile in our system
+                for object_level_permission in models.ObjectLevelPermission.objects.filter(profile=profile_instance):
+                    object_level_permission.pk = None
+                    object_level_permission.profile = new_profile_instance
+                    object_level_permission.save()
+                # copy all general user permissions to new profile. Running .save() call in a loop is okay here
+                # as there won't be much objects per profile in our system here.
+                for general_user_permission in models.GeneralUserPermission.objects.filter(profile=profile_instance):
+                    general_user_permission.pk = None
+                    general_user_permission.profile = new_profile_instance
+                    general_user_permission.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            else:
+                return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
