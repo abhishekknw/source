@@ -14,6 +14,8 @@ angular.module('machadaloPages')
      $scope.organisationData = {}; // to create organisation
      $scope.organisationMappedIdList = []; // to create a list of organisation ids
      $scope.objectLevelPermissions = []; // list of object level permissions
+     $scope.generalUserLevelPermissionData = {};// to create generalUserLevelPermissionData
+     $scope.generalUserLevelPermissionsList = [];
      $scope.contentTypeObject = {};
      $scope.contentTypeListById = [];
      $scope.options = [
@@ -153,6 +155,8 @@ angular.module('machadaloPages')
        console.log(item);
        $scope.menuItem.name = item;
         switch(item){
+          case $scope.contentItem.createUser:
+            getProfiles();
           case $scope.contentItem.viewUsers:
             getAllUsers();
             addMoreFieldsToGroup();
@@ -181,6 +185,7 @@ angular.module('machadaloPages')
             getProfiles();
             getObjectLevelPermissions();
             getOrganisations();
+            getGeneralUserLevelPermissions();
             break;
         }
      }
@@ -431,7 +436,6 @@ angular.module('machadaloPages')
       .then(function onSuccess(response){
         $scope.organisationList = response.data.data;
         angular.forEach($scope.organisationList, function(organisation){
-          console.log(organisation);
           $scope.organisationMappedIdList[organisation.organisation_id] = organisation;
         })
         console.log(response);
@@ -531,5 +535,27 @@ angular.module('machadaloPages')
     $scope.assignObjectName = function(c){
       console.log(c);
     }
+    //genral user level permissions
+    var getGeneralUserLevelPermissions = function()
+    {
+      userService.getGeneralUserLevelPermissions()
+      .then(function onSuccess(response){
+        console.log(response);
+        $scope.generalUserLevelPermissionsList = response.data.data;
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
 
+    $scope.createGeneralUserLevelPermission = function(){
+      userService.createGeneralUserLevelPermission($scope.generalUserLevelPermissionData)
+      .then(function onSuccess(response){
+        console.log(response);
+        $('#createGeneralUserPermissionModal').modal('hide');
+        getGeneralUserLevelPermissions();
+        swal(constants.name, constants.create_success, constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
    }]);//end of controller

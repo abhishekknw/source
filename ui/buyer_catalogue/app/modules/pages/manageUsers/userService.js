@@ -112,5 +112,15 @@ angular.module('machadaloPages')
       return machadaloHttp.get(url);
     }
 
+    userService.getGeneralUserLevelPermissions = function(){
+      var url = url_base_website + "general-user-permission/";
+      return machadaloHttp.get(url);
+    }
+
+    userService.createGeneralUserLevelPermission = function(data){
+      var url = url_base_website + "general-user-permission/";4
+      return machadaloHttp.post(url,data);
+    }
+
   return userService;
 }]);
