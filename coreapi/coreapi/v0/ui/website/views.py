@@ -5350,10 +5350,11 @@ class OrganisationViewSet(viewsets.ViewSet):
             if (not is_view_all_permission) and (not is_view_permission):
                 error = (error_all, error_single)
                 return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
-            # if view_all present, no user based query
+            # if view_all present, no user based query. it's important we should check first VIEW_ALL permission and then
+            # VIEW permission. In case both are present, VIEW_ALL is superior.
             if is_view_all_permission:
                 instance = models.Organisation.objects.get(pk=pk)
-            # if single view present, must query based on user
+            # if single view present, must query based on user.
             else:
                 instance = models.Organisation.objects.get(user=request.user, pk=pk)
 

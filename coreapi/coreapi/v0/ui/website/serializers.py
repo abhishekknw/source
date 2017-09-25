@@ -406,10 +406,17 @@ class GeneralUserPermissionSerializer(ModelSerializer):
         model = models.GeneralUserPermission
 
 
+class OrganisationSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.Organisation
+
+
 class ProfileNestedSerializer(ModelSerializer):
     """
     Nested serializer for Profile
     """
+    organisation = OrganisationSerializer()
     object_level_permission = ObjectLevelPermissionSerializer(many=True, source='objectlevelpermission_set')
     general_user_permission = GeneralUserPermissionSerializer(many=True, source='generaluserpermission_set')
 
@@ -425,11 +432,6 @@ class ProfileSimpleSerializer(ModelSerializer):
     class Meta:
         model = models.Profile
 
-
-class OrganisationSerializer(ModelSerializer):
-
-    class Meta:
-        model = models.Organisation
 
 
 class ContentTypeSerializer(ModelSerializer):

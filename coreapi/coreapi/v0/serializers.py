@@ -16,6 +16,17 @@ from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySu
     CompanyFloor
 import models
 
+from v0.ui.website.serializers import ProfileNestedSerializer
+
+
+class ProfileSimpleSerializer(ModelSerializer):
+    """
+    simple serializer for Profile
+    """
+
+    class Meta:
+        model = models.Profile
+
 
 class UserSerializer(ModelSerializer):
     class Meta:
@@ -507,6 +518,7 @@ class BaseUserSerializer(ModelSerializer):
     """
     groups = GroupSerializer(read_only=True,  many=True)
     user_permissions = PermissionsSerializer(read_only=True,  many=True)
+    profile = ProfileNestedSerializer(read_only=True)
 
     def create(self, validated_data):
         """
@@ -532,7 +544,7 @@ class BaseUserSerializer(ModelSerializer):
     
     class Meta:
         model = models.BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'password', 'is_superuser', 'groups', 'user_permissions')
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'password', 'is_superuser', 'groups', 'user_permissions', 'profile')
         extra_kwargs = {
             'password': {'write_only': True}
         }
