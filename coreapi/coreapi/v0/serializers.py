@@ -531,6 +531,40 @@ class ProfileNestedSerializer(ModelSerializer):
         model = models.Profile
 
 
+class BaseUserCreateSerializer(ModelSerializer):
+    """
+    specifically for creating  User objects. There was a need for creating this as standard serializer
+    was also containing a nested serializer. It's not possible to write to a serializer if it's nested
+    as of Django 1.8.
+    """
+
+    def create(self, validated_data):
+        """
+        Args:
+            validated_data: the data that is used to be create the user.
+
+        Returns: sets the password of the user when it's created.
+        """
+
+        # get the password
+        password = validated_data['password']
+        # delete it from the validated_data because we do not want to save it as raw password
+        del validated_data['password']
+        user = self.Meta.model.objects.create(**validated_data)
+        # save password this way
+        user.set_password(password)
+        # save profile
+        user.save()
+        # return
+        return user
+
+    class Meta:
+        model = models.BaseUser
+        fields = (
+        'id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'password', 'is_superuser', 'profile')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
 
 class BaseUserSerializer(ModelSerializer):
@@ -542,7 +576,7 @@ class BaseUserSerializer(ModelSerializer):
     """
     groups = GroupSerializer(read_only=True,  many=True)
     user_permissions = PermissionsSerializer(read_only=True,  many=True)
-    profile = ProfileNestedSerializer(read_only=True)
+    profile = ProfileNestedSerializer()
 
     def create(self, validated_data):
         """
@@ -550,7 +584,6 @@ class BaseUserSerializer(ModelSerializer):
             validated_data: the data that is used to be create the user.
 
         Returns: sets the password of the user when it's created.
-
         """
 
         # get the password
@@ -560,12 +593,12 @@ class BaseUserSerializer(ModelSerializer):
         user = self.Meta.model.objects.create(**validated_data)
         # save password this way
         user.set_password(password)
-        # hit save
+        # save profile
         user.save()
         # return
         return user
 
-    
+
     class Meta:
         model = models.BaseUser
         fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'password', 'is_superuser', 'groups', 'user_permissions', 'profile')
@@ -573,9 +606,10 @@ class BaseUserSerializer(ModelSerializer):
             'password': {'write_only': True}
         }
 
+
 class BaseUserUpdateSerializer(ModelSerializer):
     """
-
+    specific to updating the USER model
     """
     def update(self, instance, validated_data):
         """
@@ -599,7 +633,7 @@ class BaseUserUpdateSerializer(ModelSerializer):
 
     class Meta:
         model = models.BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile','is_superuser', 'groups', 'user_permissions')
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile','is_superuser', 'groups', 'user_permissions', 'profile')
        
 
 class SupplierTypeRetailShopSerializer(ModelSerializer):

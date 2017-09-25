@@ -428,7 +428,6 @@ class ProfileSimpleSerializer(ModelSerializer):
     """
     simple serializer for Profile
     """
-
     class Meta:
         model = models.Profile
 
