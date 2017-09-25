@@ -16,18 +16,6 @@ from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySu
     CompanyFloor
 import models
 
-from v0.ui.website.serializers import ProfileNestedSerializer
-
-
-class ProfileSimpleSerializer(ModelSerializer):
-    """
-    simple serializer for Profile
-    """
-
-    class Meta:
-        model = models.Profile
-
-
 class UserSerializer(ModelSerializer):
     class Meta:
         model = models.BaseUser
@@ -507,6 +495,42 @@ class GroupSerializer(ModelSerializer):
 class PermissionsSerializer(ModelSerializer):
     class Meta:
         model = Permission
+
+
+class GeneralUserPermissionSerializer(ModelSerializer):
+    """
+    serializer for GeneralUserPermissions
+    """
+    class Meta:
+        model = models.GeneralUserPermission
+
+
+class OrganisationSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.Organisation
+
+
+class ObjectLevelPermissionSerializer(ModelSerializer):
+    """
+    serializer for Object Level Permissions
+    """
+    class Meta:
+        model = models.ObjectLevelPermission
+
+
+class ProfileNestedSerializer(ModelSerializer):
+    """
+    Nested serializer for Profile
+    """
+    organisation = OrganisationSerializer()
+    object_level_permission = ObjectLevelPermissionSerializer(many=True, source='objectlevelpermission_set')
+    general_user_permission = GeneralUserPermissionSerializer(many=True, source='generaluserpermission_set')
+
+    class Meta:
+        model = models.Profile
+
+
 
 
 class BaseUserSerializer(ModelSerializer):
