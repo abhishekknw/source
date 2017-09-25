@@ -6,6 +6,7 @@ from uuid import uuid4
 from types import *
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.contenttypes.models import ContentType
 
 import geocoder
 from bulk_update.helper import bulk_update
@@ -568,3 +569,26 @@ def create_cache_key(module_name, *args):
         raise Exception(e, function)
 
 
+def check_object_permission(user, model, permission):
+    """
+    checks weather a a given 'user' has 'permission' on  a given 'model'
+    returns True if user has a permission, false otherwise
+
+    :param user: instance of BaseUser model
+    :param model:  model itself
+    :param permission: 'create', 'view', etc. Fields of ObjectLevelPermission model
+    :return:
+    """
+    function = check_object_permission.__name__
+    try:
+        error = ''
+        if not user.profile:
+            raise Exception('Every User must have associated profile')
+        content_type = ContentType.objects.get_for_model(model)
+        instance = v0_models.ObjectLevelPermission.objects.get(profile=user.profile, content_type=content_type)
+        if instance.__dict__[permission]:
+            return True, error
+        error = 'This user does not have permission of ' + permission + ' on this model ' + model.__class__.__name__
+        return False, error
+    except Exception as e:
+        raise Exception(e, function)

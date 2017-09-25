@@ -5308,10 +5308,28 @@ class OrganisationViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             category = request.query_params.get('category')
-            if category:
-                instances = models.Organisation.objects.filter(category=category)
+
+            is_view_permission, error_single = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['VIEW'])
+            is_view_all_permission, error_all = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['VIEW_ALL'])
+
+            # if both are not present, return error
+            if (not is_view_all_permission) and (not is_view_permission):
+                error = (error_all, error_single)
+                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
+            # if view_all present, no user based query
+            if is_view_all_permission:
+
+                if category:
+                    instances = models.Organisation.objects.filter(category=category)
+                else:
+                    instances = models.Organisation.objects.all()
+            # if single view present, must query based on user
             else:
-                instances = models.Organisation.objects.all()
+                if category:
+                    instances = models.Organisation.objects.filter(user=request.user, category=category)
+                else:
+                    instances = models.Organisation.objects.filter(user=request.user)
+
             serializer = website_serializers.OrganisationSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
 
@@ -5325,7 +5343,20 @@ class OrganisationViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instance = models.Organisation.objects.get(pk=pk)
+            is_view_permission, error_single = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['VIEW'])
+            is_view_all_permission, error_all = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['VIEW_ALL'])
+
+            # if both are not present, return error
+            if (not is_view_all_permission) and (not is_view_permission):
+                error = (error_all, error_single)
+                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
+            # if view_all present, no user based query
+            if is_view_all_permission:
+                instance = models.Organisation.objects.get(pk=pk)
+            # if single view present, must query based on user
+            else:
+                instance = models.Organisation.objects.get(user=request.user, pk=pk)
+
             serializer = website_serializers.OrganisationSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5339,6 +5370,10 @@ class OrganisationViewSet(viewsets.ViewSet):
 
         class_name = self.__class__.__name__
         try:
+            is_permission, error = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['CREATE'])
+            if not is_permission:
+                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
+
             serializer = website_serializers.OrganisationSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -5356,8 +5391,21 @@ class OrganisationViewSet(viewsets.ViewSet):
 
         class_name = self.__class__.__name__
         try:
-            instance = models.Organisation.objects.get(pk=pk)
-            serializer = website_serializers.OrganisationSerializer(data=request.data,instance=instance)
+            is_update_all_permission, error_all = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['UPDATE_ALL'])
+            is_update_permission, error_single = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['UPDATE'])
+
+            # if both are not present, return error
+            if (not is_update_all_permission) and (not is_update_permission):
+                error = (error_all, error_single)
+                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
+            # if update_all present, no user based query
+            if is_update_all_permission:
+                instance = models.Organisation.objects.get(pk=pk)
+            # if single update present, must query based on user
+            else:
+                instance = models.Organisation.objects.get(user=request.user, pk=pk)
+
+            serializer = website_serializers.OrganisationSerializer(data=request.data, instance=instance)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)

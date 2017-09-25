@@ -35,7 +35,7 @@ import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 
 
-def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
+def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None, permission_error=False):
     """
     Args:
         success: determines wether to send success or failure messages
@@ -45,6 +45,7 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
         headers: the dict of headers
         content_type: The content_type.
         request: The request param
+        permission_error: if this is true, that means it's permission error and we need to return 403 ERROR.
 
         This method can later be used to log the errors.
 
@@ -84,8 +85,10 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
             except Exception as e:
                 # email sending failed. let it go.
                 pass
-
-        return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
+        if not permission_error:
+            return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_403_FORBIDDEN)
     else:
         return Response({'status': True, 'data': data}, headers=headers, content_type=content_type,  status=status.HTTP_200_OK)
 
