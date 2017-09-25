@@ -1966,8 +1966,6 @@ class UserViewSet(viewsets.ViewSet):
             serializer = BaseUserSerializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
-                for instance in group_instances:
-                    user.groups.add(instance)
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
