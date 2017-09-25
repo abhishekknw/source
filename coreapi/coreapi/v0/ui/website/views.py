@@ -5292,6 +5292,22 @@ class ProfileViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    def update(self, request, pk):
+        """
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.Profile.objects.get(pk=pk)
+            serializer = website_serializers.ProfileSimpleSerializer(data=request.data,instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class OrganisationViewSet(viewsets.ViewSet):
     """
@@ -5376,6 +5392,10 @@ class OrganisationViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
 
             serializer = website_serializers.OrganisationSerializer(data=request.data)
+            data = request.data.copy()
+            data['user'] = request.user.pk
+            data['organisation_id'] = website_utils.get_organisation_id(data['category'], data['name'])
+            serializer = website_serializers.OrganisationSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5486,7 +5506,9 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            serializer = website_serializers.ObjectLevelPermissionSerializer(data=request.data)
+            data = request.data.copy()
+            data['codename'] = ''.join(data['name'].split(' '))
+            serializer = website_serializers.ObjectLevelPermissionSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5554,7 +5576,10 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            serializer = website_serializers.GeneralUserPermissionSerializer(data=request.data)
+            data = request.data.copy()
+            data['codename'] = "".join(data['name'].split()[:2]).upper()
+            data['name'] = "_".join(data['name'].split(" "))
+            serializer = website_serializers.GeneralUserPermissionSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)

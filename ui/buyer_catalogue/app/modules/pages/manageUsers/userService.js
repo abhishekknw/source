@@ -4,6 +4,7 @@ angular.module('machadaloPages')
 
     var url_base_user = 'v0/';
     var url_base = 'v0/ui/';
+    var url_base_website = 'v0/ui/website/';
     var userService = {};
 
     userService.createUser = function(data){
@@ -49,7 +50,7 @@ angular.module('machadaloPages')
 
     userService.updateGroupDetails = function(id,data){
       var url = url_base_user + "group/" + id + "/";
-      return machadaloHttp.put(url,data)
+      return machadaloHttp.put(url,data);
     }
 
     userService.deleteGroup = function(id){
@@ -58,6 +59,66 @@ angular.module('machadaloPages')
     }
     userService.changePassword = function(id,data){
       var url = url_base_user + "user/" + id + "/change_password/";
+      return machadaloHttp.post(url,data);
+    }
+
+    userService.createProfile = function(data){
+      var url = url_base_website + "profile/";
+      return machadaloHttp.post(url,data);
+    }
+
+    userService.createOrganisation = function(data){
+      var url = url_base_website + "organisation/";
+      return machadaloHttp.post(url,data);
+    }
+
+    userService.getOrganisations = function(){
+      var url = url_base_website + "organisation/";
+      return machadaloHttp.get(url);
+    }
+
+    userService.updateOrganisationDetails = function(data){
+      var url = url_base_website + "organisation/" + data.organisation_id + "/";
+      return machadaloHttp.put(url,data);
+    }
+
+    userService.getProfiles = function(){
+      var url = url_base_website + "profile/";
+      return machadaloHttp.get(url);
+    }
+
+    userService.updateProfile = function(data){
+      var url = url_base_website + "profile/" + data.id + "/";
+      return machadaloHttp.put(url,data);
+    }
+
+    userService.getObjectLevelPermissions = function(){
+      var url = url_base_website + "object-level-permission/";
+      return machadaloHttp.get(url);
+    }
+
+    userService.createObjectLevelPermission = function(data){
+      var url = url_base_website + "object-level-permission/";
+      return machadaloHttp.post(url,data);
+    }
+
+    userService.updateObjectLevelPermission = function(data){
+      var url = url_base_website + "object-level-permission/";
+      return machadaloHttp.put(url,data);
+    }
+
+    userService.getContentTypes = function(){
+      var url = url_base_website + "content-type/";
+      return machadaloHttp.get(url);
+    }
+
+    userService.getGeneralUserLevelPermissions = function(){
+      var url = url_base_website + "general-user-permission/";
+      return machadaloHttp.get(url);
+    }
+
+    userService.createGeneralUserLevelPermission = function(data){
+      var url = url_base_website + "general-user-permission/";4
       return machadaloHttp.post(url,data);
     }
 

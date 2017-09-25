@@ -1963,13 +1963,9 @@ class UserViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            # fetch all groups objects
-            group_instances = Group.objects.filter(name__in=request.data.get('groups'))
             serializer = BaseUserSerializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
-                for instance in group_instances:
-                    user.groups.add(instance)
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:

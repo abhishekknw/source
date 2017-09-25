@@ -6041,3 +6041,17 @@ def upload_to_amazon(file_name, file_content=None, bucket_name=settings.BUCKET_N
 
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
+
+def get_organisation_id(category, name):
+    """
+    :param category:
+    :param name: name of organisation
+    :return:
+    """
+    function = get_organisation_id.__name__
+    try:
+        name_string = ''.join(name.split(' '))
+        assert len(name_string) >= 3
+        return category[:2].upper() + name_string[:3].upper() + str(uuid.uuid4())[-4:].upper()
+    except Exception as e:
+        return  Exception(function, ui_utils.get_system_error(e))

@@ -1,5 +1,5 @@
   angular.module('machadaloPages')
-.controller('CreateCampaignCtrl',
+  .controller('CreateCampaignCtrl',
     function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, constants, $timeout, AuthService, $state) {
 
       //start:code added to show or hide details based on user's group permissions
@@ -273,6 +273,7 @@
       }
     	$scope.create = function() {
         console.log($scope.model);
+        $scope.model['category'] = 'Business';
         pagesService.createBusinessCampaign($scope.model)
           .then(function (response) {
             var sub_type_id = $scope.model.business.sub_type_id;

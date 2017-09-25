@@ -10,6 +10,14 @@ angular.module('machadaloPages')
      $scope.permissionsDict = [];
      $scope.userInfo = {};
      $scope.passwordError = constants.password_error;
+     $scope.profileData = {};// to create profile
+     $scope.organisationData = {}; // to create organisation
+     $scope.organisationMappedIdList = []; // to create a list of organisation ids
+     $scope.objectLevelPermissions = []; // list of object level permissions
+     $scope.generalUserLevelPermissionData = {};// to create generalUserLevelPermissionData
+     $scope.generalUserLevelPermissionsList = [];
+     $scope.contentTypeObject = {};
+     $scope.contentTypeListById = [];
      $scope.options = [
         {usercode : 'BD', id : '01'},
         {usercode : 'Ops', id: '02'},
@@ -31,6 +39,20 @@ angular.module('machadaloPages')
       {header : 'Edit'},
       {header : 'Delete'},
     ]
+    //to create organisation we should map that organisation to category
+    $scope.organisationCategories = [
+      'MACHADALO',
+      'BUSINESS',
+      'BUSINESS_AGENCY',
+      'SUPPLIER_AGENCY',
+      'SUPPLIER',
+    ]
+    $scope.operationOrganisation = {
+      view : false,
+      edit : false,
+      create : false,
+    }
+    $scope.operationProfile = angular.copy($scope.operationOrganisation);
       //To get permission list
       userService.getAllUserPermissions()
       .then(function onSuccess(response){
@@ -58,8 +80,22 @@ angular.module('machadaloPages')
             console.log("error occured");
         });
       }
+      //get content types with model names
+      var getContentTypes = function(){
+        userService.getContentTypes()
+        .then(function onSuccess(response){
+          console.log(response);
+          $scope.contentTypeList = response.data.data;
+          angular.forEach($scope.contentTypeList, function(contentType){
+            $scope.contentTypeListById[contentType.id] = contentType;
+          })
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
       //calling when page load
       getAllUserGroups();
+      getContentTypes();
       var addMoreFieldsToPermission = function(){
         angular.forEach($scope.permissions, function(permission){
           permission.selected = false;
@@ -97,7 +133,11 @@ angular.module('machadaloPages')
        {name : 'viewGroups'},
        {name : 'editUser'},
        {name : 'editGroup'},
-       {name : 'profile'}
+       {name : 'profile'},
+       {name : 'organisationCommon'},
+       {name : 'organisation'},
+       {name : 'profileView'},
+
      ];
      $scope.contentItem = {
        createUser  : 'createUser',
@@ -106,12 +146,17 @@ angular.module('machadaloPages')
        viewGroups  : 'viewGroups',
        editUser    : 'editUser',
        editGroup    : 'editGroup',
-       profile    : 'profile',
+       profile      : 'profile',
+       organisation : 'organisation',
+       organisationCommon : 'organisationCommon',
+       profileView : 'profileView',
      }
      $scope.getContent = function(item,data){
        console.log(item);
        $scope.menuItem.name = item;
         switch(item){
+          case $scope.contentItem.createUser:
+            getProfiles();
           case $scope.contentItem.viewUsers:
             getAllUsers();
             addMoreFieldsToGroup();
@@ -132,6 +177,15 @@ angular.module('machadaloPages')
             addMoreFieldsToPermission();
             // $scope.permissions = [];
             $scope.groupName.name = null;
+            break;
+          case $scope.contentItem.organisationCommon:
+            getOrganisations();
+            break;
+          case $scope.contentItem.profileView:
+            getProfiles();
+            getObjectLevelPermissions();
+            getOrganisations();
+            getGeneralUserLevelPermissions();
             break;
         }
      }
@@ -366,4 +420,142 @@ angular.module('machadaloPages')
     }
     //end : change password
 
+    //start: create organisation
+    $scope.createOrganisation = function(){
+      userService.createOrganisation($scope.organisationData)
+      .then(function onSuccess(response){
+        console.log(response);
+        swal(constants.name,constants.create_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    //end: create organisation
+    var getOrganisations = function(){
+      userService.getOrganisations()
+      .then(function onSuccess(response){
+        $scope.organisationList = response.data.data;
+        angular.forEach($scope.organisationList, function(organisation){
+          $scope.organisationMappedIdList[organisation.organisation_id] = organisation;
+        })
+        console.log(response);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.updateOrganisation = function(){
+      userService.updateOrganisationDetails($scope.organisationData)
+      .then(function onSuccess(response){
+        console.log(response);
+        swal(constants.name,constants.update_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.goToOrganisation = function(contentItem, operation, data={}){
+      // console.log(data);
+        $scope.organisationData = data;
+        $scope.operationOrganisation.view = false;
+        $scope.operationOrganisation.create = false;
+        $scope.operationOrganisation.edit = false;
+        $scope.operationOrganisation[operation] = true;
+        $scope.getContent(contentItem);
+    }
+
+    //start: create profile
+    $scope.createProfile = function(){
+      userService.createProfile($scope.profileData)
+      .then(function onSuccess(response){
+        console.log(response);
+        swal(constants.name,constants.create_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    //end: create profile
+    var getProfiles = function(){
+      userService.getProfiles()
+      .then(function onSuccess(response){
+        $scope.profilesList = response.data.data;
+        console.log(response);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.goToProfiles = function(contentItem, operation, data={}){
+      $scope.profileData = data;
+      $scope.operationProfile.view = false;
+      $scope.operationProfile.create = false;
+      $scope.operationProfile.edit = false;
+      $scope.operationProfile[operation] = true;
+      console.log($scope.profileData);
+      $scope.getContent(contentItem);
+    }
+    $scope.updateProfile = function(){
+      userService.updateProfile($scope.profileData)
+      .then(function onSuccess(response){
+        console.log(response);
+        swal(constants.name,constants.update_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    //for generaluser permissionsDict
+    var getObjectLevelPermissions = function(){
+      userService.getObjectLevelPermissions()
+      .then(function onSuccess(response){
+        console.log(response);
+        $scope.objectLevelPermissions = response.data.data;
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.createObjectLevelPermission = function(){
+      console.log($scope.contentTypeObject);
+      $scope.objectLevelPermissionData['name'] = $scope.contentTypeListById[$scope.objectLevelPermissionData.content_type].model.toUpperCase();
+      console.log($scope.objectLevelPermissionData);
+      userService.createObjectLevelPermission($scope.objectLevelPermissionData)
+      .then(function onSuccess(response){
+        console.log(response);
+        getObjectLevelPermissions();
+        $('#createObjectLevelPermissionModal').modal('hide');
+        swal(constants.name, constants.create_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.updateObjectLevelPermission = function(){
+      userService.updateObjectLevelPermission()
+      .then(function onSuccess(response){
+        console.log(response);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.assignObjectName = function(c){
+      console.log(c);
+    }
+    //genral user level permissions
+    var getGeneralUserLevelPermissions = function()
+    {
+      userService.getGeneralUserLevelPermissions()
+      .then(function onSuccess(response){
+        console.log(response);
+        $scope.generalUserLevelPermissionsList = response.data.data;
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+
+    $scope.createGeneralUserLevelPermission = function(){
+      userService.createGeneralUserLevelPermission($scope.generalUserLevelPermissionData)
+      .then(function onSuccess(response){
+        console.log(response);
+        $('#createGeneralUserPermissionModal').modal('hide');
+        getGeneralUserLevelPermissions();
+        swal(constants.name, constants.create_success, constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
    }]);//end of controller
