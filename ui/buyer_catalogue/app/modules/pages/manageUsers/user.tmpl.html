@@ -313,7 +313,8 @@
     <div class="panel panel-default">
         <div class="panel-heading">
           <h3 ng-if="operationProfile.create">Create Profile</h3>
-          <h3 ng-if="operationProfile.edit || operationProfile.view">Profile Details</h3>
+          <h3 ng-if="operationProfile.edit">Edit Profile Details</h3>
+          <h3 ng-if="operationProfile.view">View Profile Details</h3>
         </div>
         <div class="panel-body">
           <form>
@@ -349,22 +350,6 @@
           <h3>Object Level Permissions</h3>
         </div>
         <div class="panel-body">
-          <div class = "table">
-            <div class="form-group">
-               <div class = "row">
-
-                 <div class = "col-md-6">
-                   <button type="button" class="btn btn-danger active" name="button">Clone Profile</button>
-                 </div>
-
-                 <div class = "col-md-6 align-right-btn">
-                   <button class="btn btn-danger active" data-toggle="modal" data-target="#createObjectLevelPermissionModal" data-backdrop="static" data-keyboard="false" ng-click="setModalData(profileData)">
-                     Create Object Level Permission
-                   </button>
-                 </div>
-               </div>
-             </div>
-           </div>
            <!--list of object-level-permissions  -->
            <div class="panel-body organisation-view-tab-content">
              <span ng-if="!profileData.object_level_permission.length">No Permissions Assigned</span>
@@ -387,29 +372,45 @@
                     <div class = "col-md-3">
                       <label>{{permission.name}}</label>
                     </div>
+
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.view" ng-value="{{permission.view}}" ng-disabled="operationProfile.view">
+                      <input type="checkbox" ng-model="permission.view" ng-value="{{permission.view}}" ng-disabled="operationProfile.view || isDataUpdating" ng-click="updateObjectLevelPermission(permission,$index)">
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.update" ng-value="{{permission.update}}" ng-disabled="operationProfile.view">
+                      <input type="checkbox" ng-model="permission.update" ng-value="{{permission.update}}" ng-disabled="operationProfile.view || isDataUpdating" ng-click="updateObjectLevelPermission(permission,$index)">
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.create" ng-value="{{permission.create}}" ng-disabled="operationProfile.view">
+                      <input type="checkbox" ng-model="permission.create" ng-value="{{permission.create}}" ng-disabled="operationProfile.view || isDataUpdating" ng-click="updateObjectLevelPermission(permission,$index)">
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.delete" ng-value="{{permission.delete}}" ng-disabled="operationProfile.view">
+                      <input type="checkbox" ng-model="permission.delete" ng-value="{{permission.delete}}" ng-disabled="operationProfile.view || isDataUpdating" ng-click="updateObjectLevelPermission(permission,$index)">
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.view_all" ng-value="{{permission.view_all}}" ng-disabled="operationProfile.view">
+                      <input type="checkbox" ng-model="permission.view_all" ng-value="{{permission.view_all}}" ng-disabled="operationProfile.view || isDataUpdating" ng-click="updateObjectLevelPermission(permission,$index)">
                     </div>
                     <div class = "col-md-2">
-                      <input type="checkbox" ng-model="permission.update_all" ng-value="{{permission.update_all}}" ng-disabled="operationProfile.view">
+                      <input type="checkbox" ng-model="permission.update_all" ng-value="{{permission.update_all}}" ng-disabled="operationProfile.view || isDataUpdating" ng-click="updateObjectLevelPermission(permission,$index)">
                     </div>
-
                   </div></br>
                 </div>
               </div>
            </div>
+           <div class = "table">
+             <div class="form-group">
+                <div class = "row">
+
+                  <div class = "col-md-6">
+                    <button type="button" class="btn btn-danger active" name="button">Clone Profile</button>
+                  </div>
+
+                  <div class = "col-md-6 align-right-btn">
+                    <button class="btn btn-danger active" data-toggle="modal" data-target="#createObjectLevelPermissionModal" data-backdrop="static" data-keyboard="false" ng-click="setModalData(profileData)">
+                      Create Object Level Permission
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
         </div>
         <!--end : object level permissions  -->
 
@@ -418,21 +419,10 @@
           <h3>General User Level Permissions</h3>
         </div>
         <div class="panel-body">
-          <div class = "table">
-            <div class="form-group">
-               <div class = "row">
-                 <div class = "col-md-6 align-right-btn">
-                   <button class="btn btn-danger active" data-toggle="modal" data-target="#createGeneralUserPermissionModal" data-backdrop="static" data-keyboard="false" ng-click="setModalData(profileData)">
-                     Create General User Level Permission
-                   </button>
-                 </div>
-               </div>
-             </div>
-           </div>
            <!--list of general user -level-permissions  -->
            <div class="panel-body organisation-view-tab-content">
              <span ng-if="!profileData.general_user_permission.length">No Permissions Assigned</span>
-             <div class = "table" ng-if="profileData.general_user_permission.length">
+             <div class = "table table-striped table-hover" ng-if="profileData.general_user_permission.length">
                <div class="form-group">
                   <div class = "row organisation-view-tab">
                     <div class = "col-md-2"><label>Index </label></div>
@@ -448,12 +438,26 @@
                       <label>{{permission.name.split("_").join(" ");}}</label>
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.is_allowed" ng-value="{{permission.is_allowed}}" ng-disabled="operationProfile.view">
+                      <input type="checkbox" ng-model="permission.is_allowed" ng-value="{{permission.is_allowed}}" ng-disabled="operationProfile.view || isDataUpdating" ng-click="updateGeneralUserPermission(permission,$index)">
                     </div>
                   </div></br>
                 </div>
               </div>
            </div>
+           <div class = "table">
+             <div class="form-group">
+                <div class = "row">
+                  <!-- <div class="col-md-6">
+
+                  </div> -->
+                  <div class = "col-md-12 align-right-btn">
+                    <button class="btn btn-danger active" data-toggle="modal" data-target="#createGeneralUserPermissionModal" data-backdrop="static" data-keyboard="false" ng-click="setModalData(profileData)">
+                      Create General User Level Permission
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
         </div>
         <!--end : general user level permissions  -->
     </div>

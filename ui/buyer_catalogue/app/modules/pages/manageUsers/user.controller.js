@@ -1,7 +1,7 @@
 angular.module('machadaloPages')
 .controller('userCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'userService','constants','$timeout',
-    function ($scope, $rootScope, $window, $location, userService, constants, $timeout) {
+    ['$scope', '$rootScope', '$window', '$location', 'userService','constants','$timeout','cfpLoadingBar',
+    function ($scope, $rootScope, $window, $location, userService, constants, $timeout, cfpLoadingBar) {
         // reset login status
      $scope.model = {};
      $scope.permissionList = [];
@@ -539,14 +539,17 @@ angular.module('machadaloPages')
         console.log(response);
       })
     }
-    $scope.updateObjectLevelPermission = function(){
-      userService.updateObjectLevelPermission()
-      .then(function onSuccess(response){
-        console.log(response);
-      }).catch(function onError(response){
-        console.log(response);
-      })
-    }
+    // $scope.updateObjectLevelPermission = function(){
+    //   cfpLoadingBar.start();
+    //   cfpLoadingBar.inc();
+    //   userService.updateObjectLevelPermission()
+    //   .then(function onSuccess(response){
+    //     console.log(response);
+    //     cfpLoadingBar.complete();
+    //   }).catch(function onError(response){
+    //     console.log(response);
+    //   })
+    // }
     $scope.assignObjectName = function(c){
       console.log(c);
     }
@@ -582,5 +585,35 @@ angular.module('machadaloPages')
       console.log(data);
       $scope.modalData = data;
     }
-    console.log($rootScope);
+    // start : update object and general user level permission
+    $scope.updateObjectLevelPermission = function(permission,index){
+      $scope.isDataUpdating = true;
+      cfpLoadingBar.start();
+      userService.updateObjectLevelPermission(permission)
+      .then(function onSuccess(response){
+        console.log(response);
+        cfpLoadingBar.complete();
+        $scope.isDataUpdating = false;
+        $scope.profileData.object_level_permission[index] = response.data.data;
+      }).catch(function onError(response){
+        console.log(response);
+        $scope.isDataUpdating = false;
+      })
+    }
+    $scope.updateGeneralUserPermission = function(permission,index){
+      $scope.isDataUpdating = true;
+      cfpLoadingBar.start();
+      userService.updateGeneralUserPermission(permission)
+      .then(function onSuccess(response){
+        console.log(response);
+        cfpLoadingBar.complete();
+        $scope.isDataUpdating = false;
+        $scope.profileData.general_user_permission[index] = response.data.data;
+      }).catch(function onError(response){
+        console.log(response);
+        $scope.isDataUpdating = false;
+      })
+
+    }
+    // end : update object and general user level permission
    }]);//end of controller

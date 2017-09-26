@@ -121,8 +121,18 @@ angular.module('machadaloPages')
     }
 
     userService.createGeneralUserLevelPermission = function(data){
-      var url = url_base_website + "general-user-permission/";4
+      var url = url_base_website + "general-user-permission/";
       return machadaloHttp.post(url,data);
+    }
+
+    userService.updateObjectLevelPermission = function(data){
+      var url = url_base_website + "object-level-permission/" + data.id + "/";
+      return machadaloHttp.put(url,data);
+    }
+
+    userService.updateGeneralUserPermission = function(data){
+      var url = url_base_website + "general-user-permission/" + data.id + "/";
+      return machadaloHttp.put(url,data);
     }
 
   return userService;
