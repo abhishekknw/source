@@ -82,8 +82,11 @@ angular.module('machadaloPages')
       return machadaloHttp.put(url,data);
     }
 
-    userService.getProfiles = function(){
-      var url = url_base_website + "profile/";
+    userService.getProfiles = function(id){
+      if(id)
+        var url = url_base_website + "profile/?organisation_id=" + id;
+      else
+        var url = url_base_website + "profile/";
       return machadaloHttp.get(url);
     }
 

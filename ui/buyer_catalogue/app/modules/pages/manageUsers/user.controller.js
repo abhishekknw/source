@@ -18,6 +18,7 @@ angular.module('machadaloPages')
      $scope.generalUserLevelPermissionsList = [];
      $scope.contentTypeObject = {};
      $scope.contentTypeListById = [];
+     $scope.userInfo = $rootScope.globals.userInfo;
      $scope.options = [
         {usercode : 'BD', id : '01'},
         {usercode : 'Ops', id: '02'},
@@ -29,7 +30,8 @@ angular.module('machadaloPages')
       {header : 'Last Name'},
       {header : 'Email Id'},
       {header : 'Username'},
-      {header : 'Groups'},
+      {header : 'Organisation'},
+      {header : 'Profile'},
       {header : 'Edit'},
       {header : 'Delete'},
       {header : 'Change Password'},
@@ -93,9 +95,36 @@ angular.module('machadaloPages')
           console.log(response);
         })
       }
+      $scope.getProfiles = function(organisationId){
+        console.log(organisationId);
+        var promise = [];
+        if(!organisationId)
+          promise = userService.getProfiles()
+        else
+          promise = userService.getProfiles(organisationId)
+        promise.then(function onSuccess(response){
+          $scope.profilesList = response.data.data;
+          console.log(response);
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
+      var getOrganisations = function(){
+        userService.getOrganisations()
+        .then(function onSuccess(response){
+          $scope.organisationList = response.data.data;
+          angular.forEach($scope.organisationList, function(organisation){
+            $scope.organisationMappedIdList[organisation.organisation_id] = organisation;
+          })
+          console.log(response);
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
       //calling when page load
       getAllUserGroups();
       getContentTypes();
+      $scope.getProfiles();
       var addMoreFieldsToPermission = function(){
         angular.forEach($scope.permissions, function(permission){
           permission.selected = false;
@@ -107,6 +136,7 @@ angular.module('machadaloPages')
         });
       }
      $scope.register = function(){
+       console.log($scope.model);
        $scope.model['groups'] = $scope.selectedGroupList;
        console.log($scope.model);
      userService.createUser($scope.model)
@@ -156,10 +186,12 @@ angular.module('machadaloPages')
        $scope.menuItem.name = item;
         switch(item){
           case $scope.contentItem.createUser:
-            getProfiles();
+            $scope.getProfiles();
+            getOrganisations();
           case $scope.contentItem.viewUsers:
             getAllUsers();
             addMoreFieldsToGroup();
+            getOrganisations();
             break;
           case $scope.contentItem.editUser:
             editUserInfo(data);
@@ -182,10 +214,10 @@ angular.module('machadaloPages')
             getOrganisations();
             break;
           case $scope.contentItem.profileView:
-            getProfiles();
-            getObjectLevelPermissions();
+            $scope.getProfiles();
+            // getObjectLevelPermissions();
             getOrganisations();
-            getGeneralUserLevelPermissions();
+            // getGeneralUserLevelPermissions();
             break;
         }
      }
@@ -431,18 +463,6 @@ angular.module('machadaloPages')
       })
     }
     //end: create organisation
-    var getOrganisations = function(){
-      userService.getOrganisations()
-      .then(function onSuccess(response){
-        $scope.organisationList = response.data.data;
-        angular.forEach($scope.organisationList, function(organisation){
-          $scope.organisationMappedIdList[organisation.organisation_id] = organisation;
-        })
-        console.log(response);
-      }).catch(function onError(response){
-        console.log(response);
-      })
-    }
     $scope.updateOrganisation = function(){
       userService.updateOrganisationDetails($scope.organisationData)
       .then(function onSuccess(response){
@@ -453,7 +473,7 @@ angular.module('machadaloPages')
       })
     }
     $scope.goToOrganisation = function(contentItem, operation, data={}){
-      // console.log(data);
+      console.log(data);
         $scope.organisationData = data;
         $scope.operationOrganisation.view = false;
         $scope.operationOrganisation.create = false;
@@ -473,15 +493,6 @@ angular.module('machadaloPages')
       })
     }
     //end: create profile
-    var getProfiles = function(){
-      userService.getProfiles()
-      .then(function onSuccess(response){
-        $scope.profilesList = response.data.data;
-        console.log(response);
-      }).catch(function onError(response){
-        console.log(response);
-      })
-    }
     $scope.goToProfiles = function(contentItem, operation, data={}){
       $scope.profileData = data;
       $scope.operationProfile.view = false;
@@ -558,4 +569,5 @@ angular.module('machadaloPages')
         console.log(response);
       })
     }
+    console.log($rootScope);
    }]);//end of controller
