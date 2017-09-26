@@ -487,6 +487,7 @@ angular.module('machadaloPages')
       userService.createProfile($scope.profileData)
       .then(function onSuccess(response){
         console.log(response);
+        $scope.profileData = response.data.data;
         swal(constants.name,constants.create_success,constants.success);
       }).catch(function onError(response){
         console.log(response);
@@ -528,7 +529,10 @@ angular.module('machadaloPages')
       userService.createObjectLevelPermission($scope.objectLevelPermissionData)
       .then(function onSuccess(response){
         console.log(response);
-        getObjectLevelPermissions();
+        if(!$scope.profileData.object_level_permission)
+          $scope.profileData['object_level_permission'] = [];
+        $scope.profileData['object_level_permission'].push(response.data.data);
+        // getObjectLevelPermissions();/
         $('#createObjectLevelPermissionModal').modal('hide');
         swal(constants.name, constants.create_success,constants.success);
       }).catch(function onError(response){
@@ -559,15 +563,24 @@ angular.module('machadaloPages')
     }
 
     $scope.createGeneralUserLevelPermission = function(){
+      console.log($scope.generalUserLevelPermissionData);
       userService.createGeneralUserLevelPermission($scope.generalUserLevelPermissionData)
       .then(function onSuccess(response){
         console.log(response);
+        console.log("hello" + $scope.profileData);
         $('#createGeneralUserPermissionModal').modal('hide');
-        getGeneralUserLevelPermissions();
+        // getGeneralUserLevelPermissions();
+        if(!$scope.profileData.general_user_permission)
+          $scope.profileData['general_user_permission'] = [];
+        $scope.profileData['general_user_permission'].push(response.data.data);
         swal(constants.name, constants.create_success, constants.success);
       }).catch(function onError(response){
         console.log(response);
       })
+    }
+    $scope.setModalData = function(data){
+      console.log(data);
+      $scope.modalData = data;
     }
     console.log($rootScope);
    }]);//end of controller

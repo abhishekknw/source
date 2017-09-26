@@ -318,12 +318,12 @@
         <div class="panel-body">
           <form>
             <div class="form-group">
-              <label>Profile Name:</label>
+              <label class="col-md-3">Profile Name:</label>
               <input ng-if="operationProfile.create || operationProfile.edit" type="text" class="form-control" ng-model="profileData.name">
-              <span ng-if="operationProfile.view">{{profileData.name}}</span>
+              <span class="col-md-3" ng-if="operationProfile.view">{{profileData.name}}</span>
             </div>
             <div class="form-group">
-              <label>Is Standard Profile:</label>&nbsp;&nbsp;
+              <label class="col-md-3">Is Standard Profile:</label>&nbsp;&nbsp;
               <input ng-if="operationProfile.create || operationProfile.edit" type="radio" ng-model="profileData.is_standard" ng-value="true">
               <span ng-if="operationProfile.create || operationProfile.edit">Yes</span> &nbsp;
               <input ng-if="operationProfile.create || operationProfile.edit" type="radio" ng-model="profileData.is_standard" ng-value="false">
@@ -331,11 +331,11 @@
               <span ng-if="operationProfile.view">{{profileData.is_standard}}</span>
             </div>
             <div class="form-group">
-              <label>Organisation :</label>
+              <label class="col-md-3">Organisation :</label>
               <select ng-if="operationProfile.create || operationProfile.edit" class="form-control" name="" ng-model="profileData.organisation">
                 <option ng-repeat="organisation in organisationList" value="{{organisation.organisation_id}}">{{organisation.name}}</option>
               </select>
-              <span ng-if="operationProfile.view">{{organisationMappedIdList[profileData.organisation].name}}</span>
+              <span ng-if="operationProfile.view">{{profileData.organisation.name}}</span>
             </div>
             <div class="align-right-btn">
               <button ng-if="operationProfile.create" class="btn btn-danger" ng-click="createProfile()">Create</button>
@@ -358,7 +358,7 @@
                  </div>
 
                  <div class = "col-md-6 align-right-btn">
-                   <button class="btn btn-danger active" data-toggle="modal" data-target="#createObjectLevelPermissionModal" data-backdrop="static" data-keyboard="false">
+                   <button class="btn btn-danger active" data-toggle="modal" data-target="#createObjectLevelPermissionModal" data-backdrop="static" data-keyboard="false" ng-click="setModalData(profileData)">
                      Create Object Level Permission
                    </button>
                  </div>
@@ -388,22 +388,22 @@
                       <label>{{permission.name}}</label>
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.view" ng-value="{{permission.view}}">
+                      <input type="checkbox" ng-model="permission.view" ng-value="{{permission.view}}" ng-disabled="operationProfile.view">
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.update" ng-value="{{permission.update}}">
+                      <input type="checkbox" ng-model="permission.update" ng-value="{{permission.update}}" ng-disabled="operationProfile.view">
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.create" ng-value="{{permission.create}}">
+                      <input type="checkbox" ng-model="permission.create" ng-value="{{permission.create}}" ng-disabled="operationProfile.view">
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.delete" ng-value="{{permission.delete}}">
+                      <input type="checkbox" ng-model="permission.delete" ng-value="{{permission.delete}}" ng-disabled="operationProfile.view">
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.view_all" ng-value="{{permission.view_all}}">
+                      <input type="checkbox" ng-model="permission.view_all" ng-value="{{permission.view_all}}" ng-disabled="operationProfile.view">
                     </div>
                     <div class = "col-md-2">
-                      <input type="checkbox" ng-model="permission.update_all" ng-value="{{permission.update_all}}">
+                      <input type="checkbox" ng-model="permission.update_all" ng-value="{{permission.update_all}}" ng-disabled="operationProfile.view">
                     </div>
 
                   </div></br>
@@ -422,7 +422,7 @@
             <div class="form-group">
                <div class = "row">
                  <div class = "col-md-6 align-right-btn">
-                   <button class="btn btn-danger active" data-toggle="modal" data-target="#createGeneralUserPermissionModal" data-backdrop="static" data-keyboard="false">
+                   <button class="btn btn-danger active" data-toggle="modal" data-target="#createGeneralUserPermissionModal" data-backdrop="static" data-keyboard="false" ng-click="setModalData(profileData)">
                      Create General User Level Permission
                    </button>
                  </div>
@@ -448,7 +448,7 @@
                       <label>{{permission.name.split("_").join(" ");}}</label>
                     </div>
                     <div class = "col-md-1">
-                      <input type="checkbox" ng-model="permission.is_allowed" ng-value="{{permission.is_allowed}}">
+                      <input type="checkbox" ng-model="permission.is_allowed" ng-value="{{permission.is_allowed}}" ng-disabled="operationProfile.view">
                     </div>
                   </div></br>
                 </div>
@@ -684,7 +684,7 @@
           <div class="form-group">
             <label for="email">Select Profile</label>
             <select class="form-control" ng-model="objectLevelPermissionData.profile">
-              <option ng-repeat="profile in profilesList" ng-if="profile.is_standard" value="{{profile.id}}">{{profile.name}}</option>
+              <option ng-if="modalData.is_standard" value="{{modalData.id}}">{{modalData.name}}</option>
             </select>
           </div>
           <div class="form-group">
@@ -705,7 +705,7 @@
 
 <!--end: modal for create object lvel permission for profile  -->
 
-<!--start: modal for create object lvel permission for profile  -->
+<!--start: modal for create general user  lvel permission for profile  -->
 <div id="createGeneralUserPermissionModal" class="modal fade" role="dialog">
   <div class="modal-dialog">
 
@@ -726,9 +726,9 @@
             <label><input type="checkbox" ng-model="generalUserLevelPermissionData.is_allowed">&nbsp;Is Allowed</label> &nbsp;
           </div>
           <div class="form-group">
-            <label for="email">Select Profile</label>
+            <label>Select Profile</label>
             <select class="form-control" ng-model="generalUserLevelPermissionData.profile">
-              <option ng-repeat="profile in profilesList" ng-if="profile.is_standard" value="{{profile.id}}">{{profile.name}}</option>
+              <option ng-if="modalData.is_standard" value="{{modalData.id}}">{{modalData.name}}</option>
             </select>
           </div>
           <div class="form-group">
