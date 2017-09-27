@@ -425,19 +425,20 @@
              <div class = "table table-striped table-hover" ng-if="profileData.general_user_permission.length">
                <div class="form-group">
                   <div class = "row organisation-view-tab">
-                    <div class = "col-md-2"><label>Index </label></div>
-                    <div class = "col-md-3"><label>Name </label></div>
+                    <div class = "col-md-3"><label>Index </label></div>
+                    <div class = "col-md-6"><label>Name </label></div>
                     <div class = "col-md-3"><label>Is Allowed </label></div>
 
                   </div></br>
                   <div class = "row" ng-repeat="permission in profileData.general_user_permission">
-                    <div class = "col-md-2">
+                    <div class = "col-md-3">
                       {{$index+1}}
                     </div>
-                    <div class = "col-md-3">
-                      <label>{{permission.name.split("_").join(" ");}}</label>
+                    <div class = "col-md-6">
+                      <label ng-if="operationProfile.view || operationProfile.create">{{permission.name.split("_").join(" ");}}</label>
+                      <input type="text" class="form-control" ng-model="permission.name" ng-if="operationProfile.edit" ng-disabled="isDataUpdating" ng-enter="updateGeneralUserPermission(permission,$index)">
                     </div>
-                    <div class = "col-md-1">
+                    <div class = "col-md-3">
                       <input type="checkbox" ng-model="permission.is_allowed" ng-value="{{permission.is_allowed}}" ng-disabled="operationProfile.view || isDataUpdating" ng-click="updateGeneralUserPermission(permission,$index)">
                     </div>
                   </div></br>
