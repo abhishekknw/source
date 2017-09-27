@@ -5391,7 +5391,6 @@ class OrganisationViewSet(viewsets.ViewSet):
             if not is_permission:
                 return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
 
-            serializer = website_serializers.OrganisationSerializer(data=request.data)
             data = request.data.copy()
             data['user'] = request.user.pk
             data['organisation_id'] = website_utils.get_organisation_id(data['category'], data['name'])
