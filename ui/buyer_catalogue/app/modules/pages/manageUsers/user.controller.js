@@ -17,6 +17,9 @@ angular.module('machadaloPages')
     function ($scope, $rootScope, $window, $location, userService, constants, $timeout, cfpLoadingBar) {
         // reset login status
      $scope.model = {};
+     console.log($rootScope);
+     $scope.standardOrganisation = constants.standard_organisation;
+     console.log($scope.standardOrganisation);
      $scope.permissionList = [];
      $scope.groupName = {};
      $scope.selectedGroupList = [];
@@ -41,6 +44,7 @@ angular.module('machadaloPages')
     $scope.userInfoHeaders = [
       {header : 'First Name'},
       {header : 'Last Name'},
+      {header:  'Is SuperUser'},
       {header : 'Email Id'},
       {header : 'Username'},
       {header : 'Organisation'},

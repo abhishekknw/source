@@ -38,10 +38,10 @@
                         <a class="lipadding" ng-click="getContent(contentItem.createUser)">
                           <i class="fa fa-tasks fa-lg"></i>Create User</a>
                       </li>
-                      <!-- <li ng-class="{active: isActive('/OpsDashBoard')}">
+                 <!--     <li ng-class="{active: isActive('/OpsDashBoard')}">
                         <a class=" lipadding" ng-click="getContent(contentItem.createGroup)">
                           <i class="fa fa-dashboard fa-lg"></i>Create Group</a>
-                     </li> -->
+                     </li>-->
                      <li ng-class="{active: isActive('/OpsDashBoard')}">
                        <a class=" lipadding" ng-click="getContent(contentItem.viewUsers)">
                          <i class="fa fa-dashboard fa-lg"></i>View Users</a>
@@ -142,8 +142,8 @@
             </div>
             <div class="form-group">
                 <label for="confirm" class="cols-sm-2 control-label">Organisation :</label>
-                <span ng-if="userInfo.profile.organisation.name != 'Machadalo'">{{userInfo.profile.organisation.name}}</span>
-                <select ng-if="userInfo.profile.organisation.name == 'Machadalo'" class="form-control" ng-model="model.organisation" ng-change="getProfiles(model.organisation)">
+                <span ng-if="(userInfo.profile.organisation.name != standardOrganisation)">{{userInfo.profile.organisation.name}}</span>
+                <select ng-if="(userInfo.profile.organisation.name == standardOrganisation) || userInfo.is_superuser" class="form-control" ng-model="model.organisation" ng-change="getProfiles(model.organisation)">
                   <option ng-repeat="organisation in organisationList" value="{{organisation.organisation_id}}">{{organisation.name}}</option>
                 </select>
             </div>
@@ -230,6 +230,7 @@
           <tr ng-repeat="user in usersList">
             <td class="col-md-1"> {{user.first_name}} </td>
             <td class="col-md-1"> {{user.last_name}} </td>
+            <td class="col-md-1"> {{user.is_superuser}} </td>
             <td class="col-md-2"> {{user.email}} </td>
             <td class="col-md-2"> {{user.username}} </td>
             <td class="col-md-2">
@@ -277,8 +278,8 @@
     </div></br>
     <div class="row">
         <label class="cols-sm-2">Organisation :</label></br>
-        <span ng-if="userInfo.profile.organisation.name != 'Machadalo'">{{userInfo.profile.organisation.name}}</span>
-        <select ng-if="userInfo.profile.organisation.name == 'Machadalo'" class="form-control form-user" ng-model="model.organisation" ng-change="getProfiles(model.organisation)">
+        <span ng-if="userInfo.profile.organisation.name != standardOrganisation">{{userInfo.profile.organisation.name}}</span>
+        <select ng-if="(userInfo.profile.organisation.name == standardOrganisation) || userInfo.is_superuser" class="form-control form-user" ng-model="model.organisation" ng-change="getProfiles(model.organisation)">
           <option ng-repeat="organisation in organisationList" value="{{organisation.organisation_id}}">{{organisation.name}}</option>
         </select>
     </div>

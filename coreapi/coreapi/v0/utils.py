@@ -582,6 +582,10 @@ def check_object_permission(user, model, permission):
     function = check_object_permission.__name__
     try:
         error = ''
+        # superuser is still GOD
+        if user.is_superuser:
+            return True, error
+
         if not user.profile:
             raise Exception('Every User must have associated profile')
         content_type = ContentType.objects.get_for_model(model)
