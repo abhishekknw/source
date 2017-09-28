@@ -71,6 +71,11 @@ angular.module('machadaloPages')
       edit : false,
       create : false,
     }
+    $scope.operationOnBoard = {
+      organisation : true,
+      profile : false,
+      user : false,
+    }
     $scope.operationProfile = angular.copy($scope.operationOrganisation);
       //To get permission list
       userService.getAllUserPermissions()
@@ -113,7 +118,6 @@ angular.module('machadaloPages')
         })
       }
       $scope.getProfiles = function(organisationId){
-        console.log(organisationId);
         var promise = [];
         if(!organisationId)
           promise = userService.getProfiles()
@@ -184,6 +188,8 @@ angular.module('machadaloPages')
        {name : 'organisationCommon'},
        {name : 'organisation'},
        {name : 'profileView'},
+       {name : 'onBoard'},
+
 
      ];
      $scope.contentItem = {
@@ -197,6 +203,7 @@ angular.module('machadaloPages')
        organisation : 'organisation',
        organisationCommon : 'organisationCommon',
        profileView : 'profileView',
+       onBoard    :   'onBoard',
      }
      $scope.getContent = function(item,data){
        console.log(item);
@@ -633,4 +640,16 @@ angular.module('machadaloPages')
 
     }
     // end : update object and general user level permission
+    //start:onboard functionality
+    $scope.activityNumber = 1;
+    $scope.createOnBoardActivity = function(number){
+      if(number == 1){
+        console.log("org");
+        $scope.createOrganisation();
+        $scope.activityNumber++;
+      }
+      else
+        console.log("prof");
+    }
+
    }]);//end of controller

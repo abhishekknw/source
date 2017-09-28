@@ -35,7 +35,9 @@ angular
     'ncy-angular-breadcrumb',
     'slickCarousel',
     'scrollable-table',
-    'cfp.loadingBar'
+    'cfp.loadingBar',
+    'vcRecaptcha',
+    'ngMaterial'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
       $stateProvider

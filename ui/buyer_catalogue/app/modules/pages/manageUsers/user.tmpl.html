@@ -4,6 +4,25 @@
 <link href='https://fonts.googleapis.com/css?family=Passion+One' rel='stylesheet' type='text/css'>
 <link href='https://fonts.googleapis.com/css?family=Oxygen' rel='stylesheet' type='text/css'>
 
+<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<title>Material Bootstrap Wizard by Creative Tim</title>
+
+	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+    <meta name="viewport" content="width=device-width" />
+
+
+
+<link rel="apple-touch-icon" sizes="76x76" href="assets/img/apple-icon.png" />
+	<link rel="icon" type="image/png" href="assets/img/favicon.png" />
+<!--     Fonts and icons     -->
+	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" />
+
+  <!-- CSS Files -->
+	<link href="assets/css/bootstrap.min.css" rel="stylesheet" />
+	<link href="assets/css/material-bootstrap-wizard.css" rel="stylesheet" />
+
 <link rel="stylesheet" href="modules/common/header/menu-bar-tmpl.css"/>
 <div><nav-bar></nav-bar></div>
 
@@ -40,6 +59,11 @@
                      <i class="fa fa-dashboard fa-lg"></i>View Organisations
                    </a>
                 </li>
+                <li ng-class="{active: isActive('/OpsDashBoard')}">
+                  <a class=" lipadding" ng-click="getContent(contentItem.onBoard)">
+                    <i class="fa fa-dashboard fa-lg"></i>OnBoard Organisation
+                  </a>
+               </li>
                   </ul>
               </div>
           </div>
@@ -627,6 +651,251 @@
     </div>
   </div>
   <!--End: organisation view tab -->
+  <!--start: wizard tab  -->
+  <div class="" ng-switch-when="onBoard" id="onBoard">
+  <body>
+
+	<!-- <div class="image-container set-full-height" style="background-image: url('assets/img/wizard-book.jpg')"> -->
+	    <!--   Creative Tim Branding   -->
+
+
+		<!--  Made With Material Kit  -->
+	    <!--   Big container   -->
+	    <!-- <div class="panel panel-default"> -->
+	        <!-- <div class="row"> -->
+		        <!-- <div class="col-sm-8 col-sm-offset-2"> -->
+		            <!--      Wizard container        -->
+		            <div class="wizard-container">
+		                <div class="card wizard-card" data-color="red" id="wizard">
+		                    <form action="" method="">
+		                <!--        You can switch " data-color="blue" "  with one of the next bright colors: "green", "orange", "red", "purple"             -->
+
+		                    	<div class="wizard-header">
+		                        	<h3 class="wizard-title">
+                                Organisation OnBoarding Wizard
+		                        	</h3>
+									<h5>Step By Step Guide To OnBoard Any Organisation.</h5>
+		                    	</div>
+								<div class="wizard-navigation">
+									<ul>
+                      <li><a href="#details"  data-toggle="tab">Organisation</a></li>
+                      <li><a href="#captain"  data-toggle="tab">Profile</a></li>
+                      <li><a href="#description"  data-toggle="tab">User</a></li>
+                  </ul>
+								</div>
+
+                <div class="tab-content">
+                    <div class="tab-pane" id="details">
+                    	<div class="row">
+                      	<div class="col-sm-12">
+                          	<h4 class="info-text"> Let's start with the basic details.</h4>
+                      	</div>
+                        <div class="col-sm-6">
+  												<div class="input-group">
+  													<span class="input-group-addon">
+  														<i class="material-icons"></i>
+  													</span>
+  													<div class="form-group label-floating">
+                             	 <label class="control-label">Organisation Name</label>
+                          	   <input name="name" type="text" class="form-control" ng-model="organisationData.name">
+                            </div>
+  												</div>
+
+  												<div class="input-group">
+  													<span class="input-group-addon">
+  														<i class="material-icons">phone</i>
+  													</span>
+  													<div class="form-group label-floating">
+                              	<label class="control-label">Mobile Number</label>
+                              	<input name="name2" type="number" class="form-control" ng-model="organisationData.phone">
+                            </div>
+  												</div>
+                        </div>
+                      <div class="col-sm-6">
+												<div class="input-group">
+													<span class="input-group-addon">
+														<i class="material-icons">email</i>
+													</span>
+													<div class="form-group label-floating">
+                           	 <label class="control-label">Email</label>
+                        	   <input name="name" type="text" class="form-control" ng-model="organisationData.email">
+                          </div>
+												</div>
+
+												<div class="input-group">
+													<span class="input-group-addon">
+														<i class="material-icons">lock_outline</i>
+													</span>
+                          <div class="form-group label-floating">
+                            <label class="control-label">Category</label>
+                            <select class="form-control" ng-model="organisationData.category">
+                              <option disabled="" selected=""></option>
+                              <option ng-repeat="category in organisationCategories"value="{{category}}"> {{category}} </option>
+                            </select>
+                          </div>
+												</div>
+                      </div>
+                    <div class="col-sm-6">
+                      <div class="input-group">
+                        <span class="input-group-addon">
+                          <i class="material-icons">comment</i>
+                        </span>
+                        <div class="form-group label-floating">
+                            <label class="control-label">Comments</label>
+                            <input name="name2" type="text" class="form-control" ng-model="organisationData.comment">
+                        </div>
+                      </div>
+                    </div>
+		               </div>
+		             </div>
+		                            <div class="tab-pane" id="captain">
+                                  <div class="row">
+                                   <div class="col-sm-12">
+                                       <h4 class="info-text"> Let's start with the basic details.</h4>
+                                   </div>
+                                    <div class="col-sm-6">
+                                     <div class="input-group">
+                                       <span class="input-group-addon">
+                                         <i class="material-icons"></i>
+                                       </span>
+                                       <div class="form-group label-floating">
+                                            <label class="control-label">Profile Name</label>
+                                          <input name="name" type="text" class="form-control">
+                                        </div>
+                                     </div>
+
+                                     <div class="input-group">
+                                       <span class="input-group-addon">
+                                         <i class="material-icons"></i>
+                                       </span>
+                                       <div class="form-group label-floating">
+                                           <label class="">Is Standard Profile</label></br>
+                                           <input type="radio" class="">&nbsp;<span>Yes</span>
+                                           <input type="radio" class="">&nbsp;<span>No</span>
+                                        </div>
+                                     </div>
+                                    </div>
+                                  <div class="col-sm-6">
+                                   <div class="input-group">
+                                     <span class="input-group-addon">
+                                       <i class="material-icons">lock_outline</i>
+                                     </span>
+                                      <div class="form-group label-floating">
+                                        <label class="control-label">Organisation</label>
+                                        <select class="form-control">
+                                          <option disabled="" selected=""></option>
+                                          <option ng-repeat="organisation in organisationList"value="{{organisation.organisation_id}}"> {{organisation.name}} </option>
+                                        </select>
+                                      </div>
+                                   </div>
+                                   <div class="input-group">
+                                     <span class="input-group-addon">
+                                       <i class="material-icons">lock_outline</i>
+                                     </span>
+                                      <div class="form-group label-floating">
+                                        <label class="control-label">Clone Profile</label>
+                                        <select class="form-control">
+                                          <option disabled="" selected=""></option>
+                                          <option ng-repeat="organisation in organisationList"value="{{organisation.organisation_id}}"> {{organisation.name}} </option>
+                                        </select>
+                                      </div>
+                                   </div>
+                                  </div>
+                              </div>
+		                            </div>
+		                            <div class="tab-pane" id="description">
+                                  <div class="row">
+                                   <div class="col-sm-12">
+                                       <h4 class="info-text"> Let's start with the basic details.</h4>
+                                   </div>
+                                    <div class="col-sm-6">
+
+                                      <div class="input-group">
+                                        <span class="input-group-addon">
+                                          <i class="material-icons"></i>
+                                        </span>
+                                        <div class="form-group label-floating">
+                                             <label class="control-label">First Name</label>
+                                           <input name="name" type="text" class="form-control">
+                                         </div>
+                                      </div>
+
+                                      <div class="input-group">
+                                        <span class="input-group-addon">
+                                          <i class="material-icons"></i>
+                                        </span>
+                                        <div class="form-group label-floating">
+                                             <label class="control-label">Last Name</label>
+                                           <input name="name" type="text" class="form-control">
+                                         </div>
+                                      </div>
+                                    </div>
+                                  <div class="col-sm-6">
+                                    <div class="input-group">
+                                      <span class="input-group-addon">
+                                        <i class="material-icons"></i>
+                                      </span>
+                                      <div class="form-group label-floating">
+                                           <label class="control-label">UserName</label>
+                                         <input name="name" type="text" class="form-control">
+                                       </div>
+                                    </div>
+                                    <div class="input-group">
+            													<span class="input-group-addon">
+            														<i class="material-icons">email</i>
+            													</span>
+            													<div class="form-group label-floating">
+                                       	 <label class="control-label">Email Id</label>
+                                    	   <input name="name" type="text" class="form-control">
+                                      </div>
+            												</div>
+                                  </div>
+
+                                  <div class="col-sm-6">
+                                    <div class="input-group">
+                                      <span class="input-group-addon">
+                                        <i class="material-icons">lock_outline</i>
+                                      </span>
+                                      <div class="form-group label-floating">
+                                           <label class="control-label">Password</label>
+                                         <input name="name" type="text" class="form-control">
+                                       </div>
+                                    </div>
+                                  </div>
+                              </div>
+		                         </div>
+		                        </div>
+	                        	<div class="wizard-footer">
+	                            	<div class="pull-right">
+                                  <input type='button' class='btn btn-next btn-fill btn-danger btn-wd' name='next' value='Next' ng-click="createOnBoardActivity(activityNumber)"/>
+                                  <input type='button' class='btn btn-finish btn-fill btn-danger btn-wd' name='finish' value='Finish' />
+	                               </div>
+	                                <div class="pull-left">
+	                                  <input type='button' class='btn btn-previous btn-fill btn-default btn-wd' name='previous' value='Previous' />
+	                                </div>
+	                                <div class="clearfix"></div>
+	                        	</div>
+		                    </form>
+		                </div>
+		            </div> <!-- wizard container -->
+		        <!-- </div> -->
+	    	<!-- </div> <!-- row --> -->
+		<!-- </div> <!--  big container --> -->
+	<!-- </div> -->
+
+</body>
+<!--   Core JS Files   -->
+	<script src="assets/js/jquery-2.2.4.min.js" type="text/javascript"></script>
+	<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
+	<script src="assets/js/jquery.bootstrap.js" type="text/javascript"></script>
+
+	<!--  Plugin for the Wizard -->
+	<script src="assets/js/material-bootstrap-wizard.js"></script>
+
+	<!--  More information about jquery.validate here: http://jqueryvalidation.org/	 -->
+	<script src="assets/js/jquery.validate.min.js"></script>
+  </div>
+  <!--end:   wizard tab  -->
 </div>
 <!--End of container  -->
 <!--end: content  -->
