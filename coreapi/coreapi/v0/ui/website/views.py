@@ -5308,6 +5308,23 @@ class ProfileViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    @list_route(methods=['GET'])
+    def standard_profiles(self, request):
+        """
+        fetches standard profiles from the system. Any profile which is marked is_standard=True and whose Organisation Cateogry is 'MACHADALO',
+        is qualified as standard profile. This list is used in creating profiles for other organisations quickly.
+        Any other organisation will only clone profile, not create one.
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instances = models.Profile.objetcs.filter(is_standard=True, organisation__category=models.ORGANIZATION_CATEGORY[0][0])
+            serializer = website_serializers.ProfileSimpleSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class OrganisationViewSet(viewsets.ViewSet):
     """
