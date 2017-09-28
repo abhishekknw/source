@@ -35,6 +35,7 @@ angular.module('machadaloPages')
      $scope.contentTypeObject = {};
      $scope.contentTypeListById = [];
      $scope.userInfo = $rootScope.globals.userInfo;
+
      $scope.options = [
         {usercode : 'BD', id : '01'},
         {usercode : 'Ops', id: '02'},
@@ -58,6 +59,7 @@ angular.module('machadaloPages')
       {header : 'Edit'},
       {header : 'Delete'},
     ]
+
     //to create organisation we should map that organisation to category
     $scope.organisationCategories = [
       'MACHADALO',
@@ -76,6 +78,7 @@ angular.module('machadaloPages')
       profile : false,
       user : false,
     }
+
     $scope.operationProfile = angular.copy($scope.operationOrganisation);
       //To get permission list
       userService.getAllUserPermissions()
@@ -444,6 +447,7 @@ angular.module('machadaloPages')
         });
       });
     }
+
     //end : delete group code
     //start : change password
     $scope.setPasswordDetails = function(user){
