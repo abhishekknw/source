@@ -145,10 +145,19 @@ angular.module('machadaloPages')
           console.log(response);
         })
       }
+      var getStandardProfileToClone = function(){
+        userService.getStandardProfileToClone()
+        .then(function onSuccess(response){
+          console.log(response);
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
       //calling when page load
       getAllUserGroups();
       getContentTypes();
       $scope.getProfiles();
+      getStandardProfileToClone();
       var addMoreFieldsToPermission = function(){
         angular.forEach($scope.permissions, function(permission){
           permission.selected = false;
@@ -192,8 +201,6 @@ angular.module('machadaloPages')
        {name : 'organisation'},
        {name : 'profileView'},
        {name : 'onBoard'},
-
-
      ];
      $scope.contentItem = {
        createUser  : 'createUser',
@@ -485,6 +492,7 @@ angular.module('machadaloPages')
       userService.createOrganisation($scope.organisationData)
       .then(function onSuccess(response){
         console.log(response);
+        $scope.onBoardOrgId = response.data.data.organisation_id;
         swal(constants.name,constants.create_success,constants.success);
       }).catch(function onError(response){
         console.log(response);
@@ -650,10 +658,13 @@ angular.module('machadaloPages')
       if(number == 1){
         console.log("org");
         $scope.createOrganisation();
+        console.log($scope.onBoardOrgId);
         $scope.activityNumber++;
       }
-      else
-        console.log("prof");
+      else{
+        $scope.profileData['organisation_id'] = $scope.onBoardOrgId;
+      }
+
     }
 
    }]);//end of controller
