@@ -645,7 +645,10 @@
                  <div class = "col-md-2"><a ng-click="goToProfiles(contentItem.profile,'view',profile)">View </a></div>
                  <div class = "col-md-1"><a ng-click="goToProfiles(contentItem.profile,'edit',profile)">Edit </a></div>
                  <div class = "col-md-1"><a ng-click="goToProfiles(contentItem.profile,'delete')">Delete </a></div>
-                 <div class = "col-md-1" data-toggle="modal" data-target="#cloneProfileModal"><a ng-click="setModalData(profile)">Clone Profile</a></div></div></br>
+                 <div class = "col-md-1" data-toggle="modal" data-target="#cloneProfileModal">
+									 <button class=" btn btn-primary btn-sm" ng-click="setModalData(profile)">Clone Profile</button>
+								 </div>
+							 </div>
              </div>
            </div>
         </div>
