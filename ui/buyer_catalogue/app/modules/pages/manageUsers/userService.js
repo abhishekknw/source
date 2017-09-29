@@ -144,5 +144,15 @@ angular.module('machadaloPages')
       var url = url_base_website + "clone-profile/";
       return machadaloHttp.post(url,data)
     }
+
+    userService.getOrganisationsByCategory = function(category){
+      var url = url_base_website + "organisation/?category=" + category;
+      return machadaloHttp.get(url);
+    }
+
+    userService.createOrganisationMapping = function(data){
+      var url = url_base_website + "organisation-map/";
+      return machadaloHttp.post(url,data);
+    }
   return userService;
 }]);

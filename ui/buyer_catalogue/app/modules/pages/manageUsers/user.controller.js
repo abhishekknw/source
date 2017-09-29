@@ -36,6 +36,7 @@ angular.module('machadaloPages')
      $scope.contentTypeObject = {};
      $scope.contentTypeListById = [];
      $scope.cloneProfileNewName = '';
+     $scope.mappingData = {};
 
 
      $scope.userInfo = $rootScope.globals.userInfo;
@@ -212,6 +213,7 @@ angular.module('machadaloPages')
        {name : 'profileView'},
        {name : 'onBoard'},
        {name : 'aboutYou'},
+       {name : 'mapOrganisations'},
      ];
      $scope.contentItem = {
        createUser  : 'createUser',
@@ -226,6 +228,7 @@ angular.module('machadaloPages')
        profileView : 'profileView',
        onBoard    :   'onBoard',
        aboutYou   :   'aboutYou',
+       mapOrganisations : 'mapOrganisations',
      }
      $scope.getContent = function(item,data){
        console.log(item);
@@ -715,5 +718,31 @@ angular.module('machadaloPages')
         else
           return true;
       }
+    }
+    $scope.getOrganisationsByCategory = function(category,source){
+      userService.getOrganisationsByCategory(category)
+      .then(function onSuccess(response){
+        console.log("categoryOrg",response);
+        if(source)
+          $scope.sourceOrganisationListByCategory = response.data.data;
+        else
+          $scope.destinationOrganisationListByCategory = response.data.data;
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.createOrganisationMapping = function(){
+      console.log($scope.mappingData);
+      userService.createOrganisationMapping($scope.mappingData)
+      .then(function onSuccess(response){
+        console.log(response);
+        $('#createNewOrganisationMapModal').modal('hide');
+        $('body').removeClass('modal-open');
+         $('.modal-backdrop').remove();
+        swal(constants.name,constants.create_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+        swal(constants.name,constants.errorMsg,constants.error);
+      })
     }
    }]);//end of controller

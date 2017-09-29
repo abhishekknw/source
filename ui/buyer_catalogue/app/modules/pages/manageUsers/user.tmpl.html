@@ -68,6 +68,11 @@
                     <i class="fa fa-dashboard fa-lg"></i>OnBoard Organisation
                   </a>
                </li>
+							 <li ng-class="{active: isActive('/OpsDashBoard')}">
+								 <a class=" lipadding" ng-click="getContent(contentItem.mapOrganisations)">
+									 <i class="fa fa-dashboard fa-lg"></i>Map Organisations
+								 </a>
+							</li>
                   </ul>
               </div>
           </div>
@@ -126,10 +131,6 @@
 	                  <span>{{userInfo.profile.organisation.category}}</span>
 	                 </div>
 	               </div></br>
-
-
-
-
 	             </div>
 
 	           </div>
@@ -966,7 +967,49 @@
 	<!--  More information about jquery.validate here: http://jqueryvalidation.org/	 -->
 	<script src="assets/js/jquery.validate.min.js"></script>
   </div>
-  <!--end:   wizard tab  -->
+  <!--end:   wizard / onBoard  Organisation tab  -->
+
+	<!--Start: map Organisations tab -->
+	<div ng-switch-when="mapOrganisations" id="mapOrganisations">
+		<div class="panel panel-default">
+				<div class="panel-heading">
+					<h3>Organisations Mapping</h3>
+				</div>
+				<div class="panel-body organisation-view-tab-content">
+          <div class = "table">
+            <div class="form-group">
+               <div class = "row organisation-view-tab">
+                 <div class = "col-md-2"><label>Index </label></div>
+                 <div class = "col-md-2"><label>Source Organisation Name </label></div>
+                 <div class = "col-md-2"><label>Organisation Category </label></div>
+
+                 <div class = "col-md-2"><label>Organisation Working With</label></div>
+                 <div class = "col-md-2"><label>Organisation Category </label></div>
+                 <div class = "col-md-2"><label>Delete </label></div>
+               </div></br>
+               <div class = "row" ng-repeat="profile in profilesList">
+                 <div class = "col-md-2">
+                   {{$index+1}}
+                 </div>
+                 <div class = "col-md-2">
+                   <label>{{profile.name}}</label>
+                 </div>
+                 <div class = "col-md-2">
+                   <label>{{profile.organisation.name}}</label>
+                 </div>
+                 <div class = "col-md-2"><a ng-click="goToProfiles(contentItem.profile,'view',profile)">View </a></div>
+                 <div class = "col-md-2"><a ng-click="goToProfiles(contentItem.profile,'edit',profile)">Edit </a></div>
+                 <div class = "col-md-2"><a ng-click="goToProfiles(contentItem.profile,'delete')">Delete </a></div>
+							 </div>
+             </div>
+           </div>
+        </div>
+		</div>
+		<div>
+			<button type="button" name="button" data-target="#createNewOrganisationMapModal" data-toggle="modal">Create New Mapping</button>
+		</div>
+	</div>
+	<!--End: map Organisations tab -->
 </div>
 <!--End of container  -->
 <!--end: content  -->
@@ -1124,9 +1167,55 @@
 
   </div>
 </div>
+<!--start: create new organisation mapping modal  -->
+<div id="createNewOrganisationMapModal" class="modal fade" role="dialog">
 
+  <div class="modal-dialog">
 
+    <!-- Modal content-->
+    <div class="modal-content">
 
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Create New Organisation Mapping </b></h4>
+      </div>
 
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <label for="email">Select Source Category</label>
+            <select class="form-control" name="" ng-model="sourceCategory" ng-change="getOrganisationsByCategory(sourceCategory,true)">
+							<option ng-repeat="category in organisationCategories" value="{{category}}">{{category}}</option>
+            </select>
+          </div>
+					<div class="form-group">
+            <label for="email">Select Source Organisation</label>
+            <select class="form-control" name="" ng-model="mappingData.first_organisation_id">
+							<option ng-repeat="organisation in sourceOrganisationListByCategory" value="{{organisation.organisation_id}}">{{organisation.name}}</option>
+            </select>
+          </div>
+					<div class="form-group">
+            <label for="email">Select Category You Want To Work With</label>
+            <select class="form-control" name="" ng-model="destinationCategory"  ng-change="getOrganisationsByCategory(destinationCategory)">
+							<option ng-repeat="category in organisationCategories" value="{{category}}">{{category}}</option>
+            </select>
+          </div>
+					<div class="form-group">
+            <label for="email">Select Organisation You Want To Work With</label>
+            <select class="form-control" name="" ng-model="mappingData.second_organisation_id">
+							<option ng-repeat="organisation in destinationOrganisationListByCategory" value="{{organisation.organisation_id}}">{{organisation.name}}</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-default"ng-click="createOrganisationMapping()">Create</button>
+        </form>
+      </div>
 
-<!--end: modal for create object lvel permission for profile  -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+<!--end : create new organisation mapping modal  -->
