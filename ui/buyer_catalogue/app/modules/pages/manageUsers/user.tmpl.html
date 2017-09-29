@@ -234,7 +234,7 @@
             <td class="col-md-2"> {{user.email}} </td>
             <td class="col-md-2"> {{user.username}} </td>
             <td class="col-md-2">
-              <a ng-click="goToOrganisation(contentItem.organisation,'view',user.profile.organisation)">{{user.profile.organisation.name}}
+              <a ng-click="goToOrganisation(contentItem.organisation,'view',user.profile.organisation)">{{user.profile.organisation.name}} </a>
             </td>
             <td class="col-md-2">
               <a ng-click="goToProfiles(contentItem.profile,'view',user.profile)">{{user.profile.name}}</a>
@@ -263,6 +263,14 @@
     <div class="row">
       <label for="name" class="cols-sm-2 ">Last Name :</label></br>
           <input type="text" class="form-control form-user"  ng-model="userDetails.last_name" required/>
+    </div></br>
+    <div class="row">
+      <label for="name" class="cols-sm-2 ">Is Super User:</label></br>
+      <select class="form-control" ng-model="userDetails.is_superuser">
+          <option ng-selected="userDetails.is_superuser==true"   ng-value = "true" >True</option>
+          <option ng-selected="userDetails.is_superuser==false" ng-value = "false" >False</option>
+      </select>
+
     </div></br>
     <div class="row">
       <label for="name" class="cols-sm-2 ">Email Id :</label></br>

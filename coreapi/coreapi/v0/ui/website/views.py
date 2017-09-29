@@ -5464,7 +5464,8 @@ class ContentTypeViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            serializer = website_serializers.ContentTypeSerializer(ContentType.objects.all(), many=True)
+            valid_models = [models.Organisation, models.BaseUser, models.Profile, models.AccountInfo, models.ProposalInfo]
+            serializer = website_serializers.ContentTypeSerializer(ContentType.objects.get_for_models(*valid_models).values(), many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5484,6 +5485,7 @@ class ContentTypeViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+
 class ObjectLevelPermissionViewSet(viewsets.ViewSet):
     """
     ViewSet around object level permission model
@@ -5496,7 +5498,9 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instances = models.ObjectLevelPermission.objects.all()
+            # change this list if you want more models
+            valid_models = [models.Organisation, models.BaseUser, models.Profile, models.AccountInfo, models.ProposalInfo]
+            instances = models.ObjectLevelPermission.objects.filter(content_type__in= ContentType.objects.get_for_models(*valid_models).values())
             serializer = website_serializers.ObjectLevelPermissionSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
