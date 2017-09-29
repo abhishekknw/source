@@ -5669,3 +5669,45 @@ class CloneProfile(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+class OrganisationMapViewSet(viewsets.ViewSet):
+    """
+    viewset that around OrganisationMap model
+    """
+
+    def list(self, request):
+        """
+        returns a dict {
+           'details' : { k1: {}, k2: {} },
+           'mapping' : { k1: [ k2, k3], k2: [ k3 ], k3: [ k1 ] }
+        }
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            source_organisation_id = request.query_params.get('source_organisation_id')
+            instance = models.Organisation.objects.get(pk=source_organisation_id)
+            if source_organisation_id:
+                instances = models.OrganisationMap.objects.filter(Q(first_organisation=instance) or Q(second_organisation=instance))
+            else:
+                instances = models.OrganisationMap.objects.all()
+            serializer = website_serializers.OrganisationMapNestedSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+        creates a map
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            first_organisation = models.OrganisationMap.objects.get(first_organisation_id=request.data['first_organisation_id'])
+            second_organisation = models.OrganisationMap.objects.get(second_organisation_id=request.data['second_organisation_id'])
+            instance, is_created = models.OrganisationMap.objects.get_or_create(first_organisation=first_organisation,second_organisation=second_organisation)
+            serializer = website_serializers.OrganisationMapNestedSerializer(instance=instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)

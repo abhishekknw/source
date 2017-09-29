@@ -1260,6 +1260,17 @@ class Organisation(BaseModel):
         db_table = 'organisation'
 
 
+class OrganisationMap(BaseModel):
+    """
+    Generic table that maps relationship between any two organisations.
+    """
+    first_organisation = models.ForeignKey(Organisation, related_name='first_organisation')
+    second_organisation = models.ForeignKey(Organisation, related_name='second_organisation')
+
+    class Meta:
+        db_table = 'organisation_map'
+
+
 class BusinessInfo(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     business_id = models.CharField(db_column='BUSINESS_ID',max_length=15, primary_key=True)

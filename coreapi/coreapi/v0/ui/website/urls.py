@@ -93,6 +93,6 @@ router.register(r'^content-type', views.ContentTypeViewSet, base_name='Content-T
 router.register(r'^organisation', views.OrganisationViewSet, base_name='Organisation')
 router.register(r'^object-level-permission', views.ObjectLevelPermissionViewSet, base_name='object-level-permission')
 router.register(r'^general-user-permission', views.GeneralUserPermissionViewSet, base_name='general-user-permission')
-
+router.register(r'^organisation-map', views.OrganisationMapViewSet, base_name='organisation-map')
 
 urlpatterns += router.urls

@@ -445,3 +445,14 @@ class ObjectLevelPermissionViewSet(ModelSerializer):
     """
     class Meta:
         model = models.ObjectLevelPermission
+
+
+class OrganisationMapNestedSerializer(ModelSerializer):
+    """
+
+    """
+    first_organisation = OrganisationSerializer()
+    second_organisation = OrganisationSerializer()
+
+    class Meta:
+        model = models.OrganisationMap
