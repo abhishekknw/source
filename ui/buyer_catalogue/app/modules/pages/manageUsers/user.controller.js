@@ -17,6 +17,7 @@ angular.module('machadaloPages')
     function ($scope, $rootScope, $window, $location, userService, constants, $timeout, cfpLoadingBar) {
         // reset login status
      $scope.model = {};
+     $scope.cloneFromProfileId = {};
      console.log($rootScope);
      $scope.standardOrganisation = constants.standard_organisation;
      console.log($scope.standardOrganisation);
@@ -145,6 +146,7 @@ angular.module('machadaloPages')
       var getStandardProfileToClone = function(){
         userService.getStandardProfileToClone()
         .then(function onSuccess(response){
+          $scope.standardProfileList = response.data.data;
           console.log(response);
         }).catch(function onError(response){
           console.log(response);
@@ -165,25 +167,28 @@ angular.module('machadaloPages')
           group.selected = false;
         });
       }
-     $scope.register = function(){
-       console.log($scope.model);
-       $scope.model['groups'] = $scope.selectedGroupList;
-       console.log($scope.model);
-     userService.createUser($scope.model)
-      .then(function onSuccess(response){
-        console.log("Successful");
-        $scope.selectedGroupList = [];
-        $scope.model = {};
-        addMoreFieldsToGroup();
-        swal(constants.name,constants.createUser_success,constants.success);
-        // alert("Successfully Created");
-        })
-        .catch(function onError(response){
-            console.log("error occured");
-            commonDataShare.showErrorMessage(response);
-            // swal(constants.name,constants.errorMsg,constants.error);
-            // alert("Error Occured");
-        });
+     $scope.register = function(wizardFinish){
+      //  $scope.model['groups'] = $scope.selectedGroupList;
+      console.log(wizardFinish);
+      if ( !wizardFinish || ( wizardFinish && $scope.model.first_name && $scope.model.last_name && $scope.model.username && $scope.model.email && $scope.model.password) ) {
+        userService.createUser($scope.model)
+         .then(function onSuccess(response){
+           console.log("Successful");
+           $scope.selectedGroupList = [];
+           $scope.model = {};
+           addMoreFieldsToGroup();
+           if(wizardFinish)
+            $scope.getContent($scope.contentItem.onBoard);
+           swal(constants.name,constants.createUser_success,constants.success);
+           // alert("Successfully Created");
+           })
+           .catch(function onError(response){
+               console.log("error occured");
+               commonDataShare.showErrorMessage(response);
+               // swal(constants.name,constants.errorMsg,constants.error);
+               // alert("Error Occured");
+           });
+      }
      }
      //Start: to navigate menu list
      $scope.menuItem = [
@@ -249,6 +254,11 @@ angular.module('machadaloPages')
             // getObjectLevelPermissions();
             getOrganisations();
             // getGeneralUserLevelPermissions();
+            break;
+          case $scope.contentItem.onBoard:
+            $scope.profileData = {};
+            $scope.organisationData = {};
+            $scope.cloneFromProfileId.id = null;
             break;
         }
      }
@@ -651,16 +661,37 @@ angular.module('machadaloPages')
     //start:onboard functionality
     $scope.activityNumber = 1;
     $scope.createOnBoardActivity = function(number){
-      if(number == 1){
+      if(number == 1 && $scope.organisationData.name && $scope.organisationData.phone && $scope.organisationData.email && $scope.organisationData.category){
         console.log("org");
         $scope.createOrganisation();
         console.log($scope.onBoardOrgId);
         $scope.activityNumber++;
       }
-      else{
-        $scope.profileData['organisation_id'] = $scope.onBoardOrgId;
+      if(number == 2 && $scope.profileData.name && $scope.cloneFromProfileId.id){
+        cloneProfile();
       }
-
     }
-
+    var cloneProfile = function(){
+      var data = {
+        clone_from_profile_id : $scope.cloneFromProfileId.id,
+        new_organisation_id : $scope.onBoardOrgId,
+        new_name : $scope.profileData.name,
+      }
+      userService.cloneProfile(data)
+      .then(function onSuccess(response){
+        console.log("cloned",response);
+        swal(constants.name, constants.create_success, constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+        swal(constants.name, constants.errorMsg, constants.error);
+      })
+    }
+    $scope.validateOnBoardData = function(activity){
+      if(activity == 'finish'){
+        if($scope.model.firstname && $scope.model.lastname && $scope.model.username && $scope.model.email && $scope.model.password)
+          return false;
+        else
+          return true;
+      }
+    }
    }]);//end of controller

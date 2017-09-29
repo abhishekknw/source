@@ -140,5 +140,9 @@ angular.module('machadaloPages')
       return machadaloHttp.get(url);
     }
 
+    userService.cloneProfile = function(data){
+      var url = url_base_website + "clone-profile/";
+      return machadaloHttp.post(url,data)
+    }
   return userService;
 }]);

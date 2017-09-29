@@ -3,13 +3,13 @@
  =========================================================
  * Material Bootstrap Wizard - v1.0.2
  =========================================================
- 
+
  * Product Page: https://www.creative-tim.com/product/material-bootstrap-wizard
  * Copyright 2017 Creative Tim (http://www.creative-tim.com)
  * Licensed under MIT (https://github.com/creativetimofficial/material-bootstrap-wizard/blob/master/LICENSE.md)
- 
+
  =========================================================
- 
+
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
  */
 
@@ -25,7 +25,6 @@ $(document).ready(function(){
 
     /*  Activate the tooltips      */
     $('[rel="tooltip"]').tooltip();
-
     // Code for the Validator
     var $validator = $('.wizard-card form').validate({
 		  rules: {
@@ -40,7 +39,22 @@ $(document).ready(function(){
 		    email: {
 		      required: true,
 		      minlength: 3,
-		    }
+		    },
+        organisationName: {
+          required : true,
+          minlength : 3,
+        },
+        profileName: {
+          required : true,
+          minlength : 3,
+        },
+        profileClone: {
+          required : true,
+        },
+        firstName:{
+          required: true,
+        }
+
         },
 
         errorPlacement: function(error, element) {
@@ -68,6 +82,7 @@ $(document).ready(function(){
             var $wizard = navigation.closest('.wizard-card');
 
             $first_li = navigation.find('li:first-child a').html();
+            console.log($first_li);
             $moving_div = $('<div class="moving-tab">' + $first_li + '</div>');
             $('.wizard-card .wizard-navigation').append($moving_div);
 
@@ -76,15 +91,15 @@ $(document).ready(function(){
             $('.moving-tab').css('transition','transform 0s');
        },
 
-        onTabClick : function(tab, navigation, index){
-            var $valid = $('.wizard-card form').valid();
-
-            if(!$valid){
-                return false;
-            } else{
-                return true;
-            }
-        },
+        // onTabClick : function(tab, navigation, index){
+        //     var $valid = $('.wizard-card form').valid();
+        //
+        //     if(!$valid){
+        //         return false;
+        //     } else{
+        //         return true;
+        //     }
+        // },
 
         onTabShow: function(tab, navigation, index) {
             var $total = navigation.find('li').length;
