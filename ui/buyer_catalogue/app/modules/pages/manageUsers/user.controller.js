@@ -35,6 +35,9 @@ angular.module('machadaloPages')
      $scope.generalUserLevelPermissionsList = [];
      $scope.contentTypeObject = {};
      $scope.contentTypeListById = [];
+     $scope.cloneProfileNewName = '';
+
+
      $scope.userInfo = $rootScope.globals.userInfo;
 
      $scope.options = [
@@ -689,7 +692,30 @@ angular.module('machadaloPages')
         console.log(response);
         swal(constants.name, constants.errorMsg, constants.error);
       })
+
     }
+
+    // use this function to clone a profile within an organisation
+    $scope.cloneProfileGeneral = function(cloneFromProfileId, onBoardOrgId, profileNewName){
+
+      console.log("cloneProfileGeneral", cloneFromProfileId, onBoardOrgId, profileNewName);
+
+      var data = {
+        clone_from_profile_id : cloneFromProfileId,
+        new_organisation_id : onBoardOrgId,
+        new_name : profileNewName ,
+      }
+      userService.cloneProfile(data)
+      .then(function onSuccess(response){
+        console.log("cloned",response);
+        swal(constants.name, constants.create_success, constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+        swal(constants.name, constants.errorMsg, constants.error);
+      })
+
+    }
+
     $scope.validateOnBoardData = function(activity){
       if(activity == 'finish'){
         if($scope.model.firstname && $scope.model.lastname && $scope.model.username && $scope.model.email && $scope.model.password)
