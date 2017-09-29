@@ -174,6 +174,8 @@ angular.module('machadaloPages')
       //  $scope.model['groups'] = $scope.selectedGroupList;
       console.log(wizardFinish);
       if ( !wizardFinish || ( wizardFinish && $scope.model.first_name && $scope.model.last_name && $scope.model.username && $scope.model.email && $scope.model.password) ) {
+        if(wizardFinish)
+          $scope.model['profile'] = $scope.clonedProfileId;
         userService.createUser($scope.model)
          .then(function onSuccess(response){
            console.log("Successful");
@@ -181,7 +183,7 @@ angular.module('machadaloPages')
            $scope.model = {};
            addMoreFieldsToGroup();
            if(wizardFinish)
-            $scope.getContent($scope.contentItem.onBoard);
+            $scope.getContent($scope.contentItem.organisationCommon);
            swal(constants.name,constants.createUser_success,constants.success);
            // alert("Successfully Created");
            })
@@ -684,6 +686,7 @@ angular.module('machadaloPages')
       userService.cloneProfile(data)
       .then(function onSuccess(response){
         console.log("cloned",response);
+        $scope.clonedProfileId = response.data.data.id;
         swal(constants.name, constants.create_success, constants.success);
       }).catch(function onError(response){
         console.log(response);
