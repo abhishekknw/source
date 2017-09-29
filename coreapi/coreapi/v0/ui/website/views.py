@@ -5319,7 +5319,7 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instances = models.Profile.objetcs.filter(is_standard=True, organisation__category=models.ORGANIZATION_CATEGORY[0][0])
+            instances = models.Profile.objects.filter(is_standard=True, organisation__category=models.ORGANIZATION_CATEGORY[0][0])
             serializer = website_serializers.ProfileSimpleSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5640,7 +5640,7 @@ class CloneProfile(APIView):
             data = {
                 'name': new_profile_name,
                 'organisation': new_organisation_id,
-                'is_standard': profile_instance.is_standard
+                'is_standard': False
             }
             serializer = website_serializers.ProfileSimpleSerializer(data=data)
 
