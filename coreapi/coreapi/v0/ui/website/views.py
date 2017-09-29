@@ -5704,8 +5704,8 @@ class OrganisationMapViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            first_organisation = models.OrganisationMap.objects.get(first_organisation_id=request.data['first_organisation_id'])
-            second_organisation = models.OrganisationMap.objects.get(second_organisation_id=request.data['second_organisation_id'])
+            first_organisation = models.Organisation.objects.get(organisation_id=request.data['first_organisation_id'])
+            second_organisation = models.Organisation.objects.get(organisation_id=request.data['second_organisation_id'])
             instance, is_created = models.OrganisationMap.objects.get_or_create(first_organisation=first_organisation,second_organisation=second_organisation)
             serializer = website_serializers.OrganisationMapNestedSerializer(instance=instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
