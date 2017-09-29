@@ -34,6 +34,10 @@
               <i class="fa fa-bars fa-2x toggle-btn"></i>
               <div class="menu-list">
                   <ul id="menu-content" class="menu-content collapse out">
+											<li ng-class="{active: isActive('/manageCampaign/create')}">
+												<a class="lipadding" ng-click="getContent(contentItem.aboutYou)">
+													<i class="fa fa-tasks fa-lg"></i>About You</a>
+											</li>
                       <li ng-class="{active: isActive('/manageCampaign/create')}">
                         <a class="lipadding" ng-click="getContent(contentItem.createUser)">
                           <i class="fa fa-tasks fa-lg"></i>Create User</a>
@@ -73,6 +77,66 @@
 <!--start: content  -->
 <div class="col-sm-8" style="margin-left:25%;margin-top:5%;" ng-switch on="menuItem.name">
   <div class="">
+		<!--Start: about you tab -->
+	  <div ng-switch-when="aboutYou" id="aboutYou">
+	    <div class="panel panel-default">
+	        <div class="panel-heading">
+	          <h3>About You</h3>
+	        </div>
+	        <div class="panel-body">
+	          <div class = "table">
+	            <div class="form-group">
+	               <div class = "row">
+	                 <div class = "col-md-3"><label>First Name :</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.first_name}}</span>
+	                 </div>
+	                 <div class = "col-md-3"><label>Last Name :</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.last_name}}</span>
+	                 </div>
+	               </div></br>
+								 <div class = "row">
+	                 <div class = "col-md-3"><label>Mobile No :</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.phone}}</span>
+	                 </div>
+	                 <div class = "col-md-3"><label>Email Id :</label></div>
+	                 <div class = "col-md-3">
+	                  <span>{{userInfo.email}}</span>
+	                 </div>
+	               </div></br>
+								 <div class = "row">
+	                 <div class = "col-md-3"><label>Username :</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.username}}</span>
+	                 </div>
+	                 <div class = "col-md-3"><label>Your Profile Name :</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.profile.name}}</span>
+	                 </div>
+	               </div></br>
+								 <div class = "row">
+	                 <div class = "col-md-3"><label>Your Organisation</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.profile.organisation.name}}</span>
+	                 </div>
+	                 <div class = "col-md-3"><label>Organisation Category</label></div>
+	                 <div class = "col-md-3">
+	                  <span>{{userInfo.profile.organisation.category}}</span>
+	                 </div>
+	               </div></br>
+
+
+
+
+	             </div>
+
+	           </div>
+	        </div>
+	    </div>
+	  </div>
+	  <!--End: about you tab -->
   <div ng-switch-when='createUser' id="createUser" style="margin-right:20%;margin-left:30%">
     <div>
       <h3 class="createUser">Create New User</h3><hr>
@@ -645,7 +709,10 @@
                  <div class = "col-md-2"><a ng-click="goToProfiles(contentItem.profile,'view',profile)">View </a></div>
                  <div class = "col-md-1"><a ng-click="goToProfiles(contentItem.profile,'edit',profile)">Edit </a></div>
                  <div class = "col-md-1"><a ng-click="goToProfiles(contentItem.profile,'delete')">Delete </a></div>
-                 <div class = "col-md-2" data-toggle="modal" data-target="#cloneProfileModal"><a ng-click="setModalData(profile)">Clone Profile</a></div></div></br>
+                 <div class = "col-md-1" data-toggle="modal" data-target="#cloneProfileModal">
+									 <button class=" btn btn-primary btn-sm" ng-click="setModalData(profile)">Clone Profile</button>
+								 </div>
+							 </div>
              </div>
            </div>
         </div>
@@ -678,7 +745,7 @@
 		                        	<h3 class="wizard-title">
                                 Organisation OnBoarding Wizard
 		                        	</h3>
-									<h5>Step By Step Guide To OnBoard Any Organisation.</h5>
+									<h5>Step By Step Guide To OnBoard Any Organisation within 5 minutes</h5>
 		                    	</div>
 								<div class="wizard-navigation">
 									<ul>
@@ -711,7 +778,7 @@
   													</span>
   													<div class="form-group label-floating">
                               	<label class="control-label">Mobile Number</label>
-                              	<input name="name2" type="number" class="form-control" ng-model="organisationData.phone" required>
+                              	<input name="mobile" type="number" class="form-control" ng-model="organisationData.phone" required>
                             </div>
   												</div>
                         </div>
@@ -722,7 +789,7 @@
 													</span>
 													<div class="form-group label-floating">
                            	 <label class="control-label">Email</label>
-                        	   <input name="name" type="text" class="form-control" ng-model="organisationData.email" required>
+                        	   <input name="email" type="email" class="form-control" ng-model="organisationData.email" required>
                           </div>
 												</div>
 
@@ -850,7 +917,7 @@
             													</span>
             													<div class="form-group label-floating">
                                        	 <label class="control-label">Email Id</label>
-                                    	   <input name="email" type="text" class="form-control" ng-model="model.email" required>
+                                    	   <input name="email" type="email" class="form-control" ng-model="model.email" required>
                                       </div>
             												</div>
                                   </div>
@@ -862,7 +929,7 @@
                                       </span>
                                       <div class="form-group label-floating">
                                            <label class="control-label">Password</label>
-                                         <input name="password" type="text" class="form-control" ng-model="model.password" required>
+                                         <input name="password" type="passoword" class="form-control" ng-model="model.password" required>
                                        </div>
                                     </div>
                                   </div>

@@ -177,6 +177,8 @@ angular.module('machadaloPages')
       //  $scope.model['groups'] = $scope.selectedGroupList;
       console.log(wizardFinish);
       if ( !wizardFinish || ( wizardFinish && $scope.model.first_name && $scope.model.last_name && $scope.model.username && $scope.model.email && $scope.model.password) ) {
+        if(wizardFinish)
+          $scope.model['profile'] = $scope.clonedProfileId;
         userService.createUser($scope.model)
          .then(function onSuccess(response){
            console.log("Successful");
@@ -184,7 +186,7 @@ angular.module('machadaloPages')
            $scope.model = {};
            addMoreFieldsToGroup();
            if(wizardFinish)
-            $scope.getContent($scope.contentItem.onBoard);
+            $scope.getContent($scope.contentItem.organisationCommon);
            swal(constants.name,constants.createUser_success,constants.success);
            // alert("Successfully Created");
            })
@@ -209,6 +211,7 @@ angular.module('machadaloPages')
        {name : 'organisation'},
        {name : 'profileView'},
        {name : 'onBoard'},
+       {name : 'aboutYou'},
      ];
      $scope.contentItem = {
        createUser  : 'createUser',
@@ -222,6 +225,7 @@ angular.module('machadaloPages')
        organisationCommon : 'organisationCommon',
        profileView : 'profileView',
        onBoard    :   'onBoard',
+       aboutYou   :   'aboutYou',
      }
      $scope.getContent = function(item,data){
        console.log(item);
@@ -675,26 +679,9 @@ angular.module('machadaloPages')
         $scope.activityNumber++;
       }
       if(number == 2 && $scope.profileData.name && $scope.cloneFromProfileId.id){
-        cloneProfile();
+        $scope.cloneProfileGeneral($scope.cloneFromProfileId.id, $scope.onBoardOrgId, $scope.profileData.name);
       }
     }
-    var cloneProfile = function(){
-      var data = {
-        clone_from_profile_id : $scope.cloneFromProfileId.id,
-        new_organisation_id : $scope.onBoardOrgId,
-        new_name : $scope.profileData.name,
-      }
-      userService.cloneProfile(data)
-      .then(function onSuccess(response){
-        console.log("cloned",response);
-        swal(constants.name, constants.create_success, constants.success);
-      }).catch(function onError(response){
-        console.log(response);
-        swal(constants.name, constants.errorMsg, constants.error);
-      })
-
-    }
-
     // use this function to clone a profile within an organisation
     $scope.cloneProfileGeneral = function(cloneFromProfileId, onBoardOrgId, profileNewName){
 
@@ -708,6 +695,11 @@ angular.module('machadaloPages')
       userService.cloneProfile(data)
       .then(function onSuccess(response){
         console.log("cloned",response);
+        $scope.clonedProfileId = response.data.data.id;
+        $scope.getProfiles();
+        $('#cloneProfileModal').modal('hide');
+        $('body').removeClass('modal-open');
+         $('.modal-backdrop').remove();
         swal(constants.name, constants.create_success, constants.success);
       }).catch(function onError(response){
         console.log(response);
