@@ -211,6 +211,7 @@ angular.module('machadaloPages')
        {name : 'organisation'},
        {name : 'profileView'},
        {name : 'onBoard'},
+       {name : 'aboutYou'},
      ];
      $scope.contentItem = {
        createUser  : 'createUser',
@@ -224,6 +225,7 @@ angular.module('machadaloPages')
        organisationCommon : 'organisationCommon',
        profileView : 'profileView',
        onBoard    :   'onBoard',
+       aboutYou   :   'aboutYou',
      }
      $scope.getContent = function(item,data){
        console.log(item);

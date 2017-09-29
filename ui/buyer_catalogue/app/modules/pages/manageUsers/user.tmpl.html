@@ -34,6 +34,10 @@
               <i class="fa fa-bars fa-2x toggle-btn"></i>
               <div class="menu-list">
                   <ul id="menu-content" class="menu-content collapse out">
+											<li ng-class="{active: isActive('/manageCampaign/create')}">
+												<a class="lipadding" ng-click="getContent(contentItem.aboutYou)">
+													<i class="fa fa-tasks fa-lg"></i>About You</a>
+											</li>
                       <li ng-class="{active: isActive('/manageCampaign/create')}">
                         <a class="lipadding" ng-click="getContent(contentItem.createUser)">
                           <i class="fa fa-tasks fa-lg"></i>Create User</a>
@@ -73,6 +77,66 @@
 <!--start: content  -->
 <div class="col-sm-8" style="margin-left:25%;margin-top:5%;" ng-switch on="menuItem.name">
   <div class="">
+		<!--Start: about you tab -->
+	  <div ng-switch-when="aboutYou" id="aboutYou">
+	    <div class="panel panel-default">
+	        <div class="panel-heading">
+	          <h3>About You</h3>
+	        </div>
+	        <div class="panel-body">
+	          <div class = "table">
+	            <div class="form-group">
+	               <div class = "row">
+	                 <div class = "col-md-3"><label>First Name :</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.first_name}}</span>
+	                 </div>
+	                 <div class = "col-md-3"><label>Last Name :</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.last_name}}</span>
+	                 </div>
+	               </div></br>
+								 <div class = "row">
+	                 <div class = "col-md-3"><label>Mobile No :</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.phone}}</span>
+	                 </div>
+	                 <div class = "col-md-3"><label>Email Id :</label></div>
+	                 <div class = "col-md-3">
+	                  <span>{{userInfo.email}}</span>
+	                 </div>
+	               </div></br>
+								 <div class = "row">
+	                 <div class = "col-md-3"><label>Username :</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.username}}</span>
+	                 </div>
+	                 <div class = "col-md-3"><label>Your Profile Name :</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.profile.name}}</span>
+	                 </div>
+	               </div></br>
+								 <div class = "row">
+	                 <div class = "col-md-3"><label>Your Organisation</label></div>
+	                 <div class = "col-md-3">
+	                   <span>{{userInfo.profile.organisation.name}}</span>
+	                 </div>
+	                 <div class = "col-md-3"><label>Organisation Category</label></div>
+	                 <div class = "col-md-3">
+	                  <span>{{userInfo.profile.organisation.category}}</span>
+	                 </div>
+	               </div></br>
+
+
+
+
+	             </div>
+
+	           </div>
+	        </div>
+	    </div>
+	  </div>
+	  <!--End: about you tab -->
   <div ng-switch-when='createUser' id="createUser" style="margin-right:20%;margin-left:30%">
     <div>
       <h3 class="createUser">Create New User</h3><hr>
