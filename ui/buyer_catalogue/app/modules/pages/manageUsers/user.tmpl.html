@@ -620,20 +620,20 @@
           <div class = "table">
             <div class="form-group">
                <div class = "row organisation-view-tab">
-                 <div class = "col-md-2"><label>Index </label></div>
-                 <div class = "col-md-2"><label>Profile Name </label></div>
-                 <div class = "col-md-3"><label>Organisation Name </label></div>
+                 <div class = "col-md-1"><label><b>Index</b></label></div>
+                 <div class = "col-md-2"><label><b>Profile Name</b></label></div>
+                 <div class = "col-md-3"><label> <b>Organisation Name</b> </label></div>
 
-                 <div class = "col-md-2"><label>View </label></div>
-                 <div class = "col-md-1"><label>Edit </label></div>
-                 <div class = "col-md-1"><label>Delete </label></div>
-                 <div class = "col-md-1">
-                   <label>Clone</label>
+                 <div class = "col-md-2"><label><b>View</b> </label></div>
+                 <div class = "col-md-1"><label><b>Edit</b> </label></div>
+                 <div class = "col-md-1"><label><b>Delete</b>  </label></div>
+                 <div class = "col-md-2">
+                   <label><b>Clone</b></label>
                  </div>
 
                </div></br>
                <div class = "row" ng-repeat="profile in profilesList">
-                 <div class = "col-md-2">
+                 <div class = "col-md-1">
                    {{$index+1}}
                  </div>
                  <div class = "col-md-2">
@@ -645,7 +645,7 @@
                  <div class = "col-md-2"><a ng-click="goToProfiles(contentItem.profile,'view',profile)">View </a></div>
                  <div class = "col-md-1"><a ng-click="goToProfiles(contentItem.profile,'edit',profile)">Edit </a></div>
                  <div class = "col-md-1"><a ng-click="goToProfiles(contentItem.profile,'delete')">Delete </a></div>
-                 <div class = "col-md-1" data-toggle="modal" data-target="#cloneProfileModal"><a ng-click="setModalData(profile)">Clone Profile</a></div></div></br>
+                 <div class = "col-md-2" data-toggle="modal" data-target="#cloneProfileModal"><a ng-click="setModalData(profile)">Clone Profile</a></div></div></br>
              </div>
            </div>
         </div>
