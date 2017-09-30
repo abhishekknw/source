@@ -154,5 +154,11 @@ angular.module('machadaloPages')
       var url = url_base_website + "organisation-map/";
       return machadaloHttp.post(url,data);
     }
+
+    userService.getOrganisationMappingList = function(id){
+      var url = url_base_website + "organisation-map/?source_organisation_id=" + id;
+      return machadaloHttp.get(url);
+    }
+
   return userService;
 }]);

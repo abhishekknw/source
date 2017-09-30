@@ -6,7 +6,6 @@
 
 <meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-	<title>Material Bootstrap Wizard by Creative Tim</title>
 
 	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
     <meta name="viewport" content="width=device-width" />
@@ -987,26 +986,30 @@
                  <div class = "col-md-2"><label>Organisation Category </label></div>
                  <div class = "col-md-2"><label>Delete </label></div>
                </div></br>
-               <div class = "row" ng-repeat="profile in profilesList">
+               <div class = "row" ng-repeat="organisation in organisationMappingList">
                  <div class = "col-md-2">
                    {{$index+1}}
                  </div>
                  <div class = "col-md-2">
-                   <label>{{profile.name}}</label>
+                   <label>{{organisation.first_organisation.name}}</label>
                  </div>
                  <div class = "col-md-2">
-                   <label>{{profile.organisation.name}}</label>
+                   <label>{{organisation.first_organisation.category}}</label>
                  </div>
-                 <div class = "col-md-2"><a ng-click="goToProfiles(contentItem.profile,'view',profile)">View </a></div>
-                 <div class = "col-md-2"><a ng-click="goToProfiles(contentItem.profile,'edit',profile)">Edit </a></div>
-                 <div class = "col-md-2"><a ng-click="goToProfiles(contentItem.profile,'delete')">Delete </a></div>
+								 <div class = "col-md-2">
+                   <label>{{organisation.second_organisation.name}}</label>
+                 </div>
+                 <div class = "col-md-2">
+                   <label>{{organisation.second_organisation.category}}</label>
+                 </div>
+                 <div class = "col-md-2"><a>Delete </a></div>
 							 </div>
              </div>
            </div>
         </div>
 		</div>
 		<div>
-			<button type="button" name="button" data-target="#createNewOrganisationMapModal" data-toggle="modal">Create New Mapping</button>
+			<button type="button" name="button" class="btn btn-primary" data-target="#createNewOrganisationMapModal" data-toggle="modal" data-backdrop="static" data-keyboard="false">Create New Mapping</button>
 		</div>
 	</div>
 	<!--End: map Organisations tab -->
@@ -1044,7 +1047,7 @@
 </div>
 <!--end : change password  -->
 <!--start: modal for create object lvel permission for profile  -->
-<div id="createObjectLevelPermissionModal" class="modal fade" role="dialog">
+<div id="createObjectLevelPermissionModal" class="modal" role="dialog">
   <div class="modal-dialog">
 
     <!-- Modal content-->
@@ -1095,7 +1098,7 @@
 <!--end: modal for create object lvel permission for profile  -->
 
 <!--start: modal for create general user  lvel permission for profile  -->
-<div id="createGeneralUserPermissionModal" class="modal fade" role="dialog">
+<div id="createGeneralUserPermissionModal" class="modal" role="dialog">
   <div class="modal-dialog">
 
     <!-- Modal content-->
@@ -1137,7 +1140,7 @@
 
 
 
-<div id="cloneProfileModal" class="modal fade" role="dialog">
+<div id="cloneProfileModal" class="modal" role="dialog">
 
   <div class="modal-dialog">
 
@@ -1168,7 +1171,7 @@
   </div>
 </div>
 <!--start: create new organisation mapping modal  -->
-<div id="createNewOrganisationMapModal" class="modal fade" role="dialog">
+<div id="createNewOrganisationMapModal" class="modal" role="dialog">
 
   <div class="modal-dialog">
 

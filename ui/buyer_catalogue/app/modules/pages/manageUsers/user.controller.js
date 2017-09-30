@@ -13,8 +13,8 @@ angular.module('machadaloPages')
     }
 })
 .controller('userCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'userService','constants','$timeout','cfpLoadingBar',
-    function ($scope, $rootScope, $window, $location, userService, constants, $timeout, cfpLoadingBar) {
+    ['$scope', '$rootScope', '$window', '$location', 'userService','constants','$timeout','cfpLoadingBar','commonDataShare',
+    function ($scope, $rootScope, $window, $location, userService, constants, $timeout, cfpLoadingBar, commonDataShare) {
         // reset login status
      $scope.model = {};
      $scope.cloneFromProfileId = {};
@@ -273,6 +273,9 @@ angular.module('machadaloPages')
             $scope.organisationData = {};
             $scope.cloneFromProfileId.id = null;
             break;
+          case $scope.contentItem.mapOrganisations:
+            getOrganisationMappingList($scope.userInfo.profile.organisation.organisation_id);
+            break;
         }
      }
      //End: to navigate menu list
@@ -497,7 +500,7 @@ angular.module('machadaloPages')
       .then(function onSuccess(response){
         console.log(response);
         $scope.userInfo = {};
-        $('#passwordModal').modal('hide');
+        commonDataShare.closeModal('#passwordModal');
         swal(constants.name,constants.changePassword_success,constants.success);
       }).catch(function onError(response){
         console.log(response);
@@ -589,7 +592,7 @@ angular.module('machadaloPages')
           $scope.profileData['object_level_permission'] = [];
         $scope.profileData['object_level_permission'].push(response.data.data);
         // getObjectLevelPermissions();/
-        $('#createObjectLevelPermissionModal').modal('hide');
+        commonDataShare.closeModal('#createObjectLevelPermissionModal');
         swal(constants.name, constants.create_success,constants.success);
       }).catch(function onError(response){
         console.log(response);
@@ -627,7 +630,7 @@ angular.module('machadaloPages')
       .then(function onSuccess(response){
         console.log(response);
         console.log("hello" + $scope.profileData);
-        $('#createGeneralUserPermissionModal').modal('hide');
+        commonDataShare.closeModal('#createGeneralUserPermissionModal');
         // getGeneralUserLevelPermissions();
         if(!$scope.profileData.general_user_permission)
           $scope.profileData['general_user_permission'] = [];
@@ -700,9 +703,7 @@ angular.module('machadaloPages')
         console.log("cloned",response);
         $scope.clonedProfileId = response.data.data.id;
         $scope.getProfiles();
-        $('#cloneProfileModal').modal('hide');
-        $('body').removeClass('modal-open');
-         $('.modal-backdrop').remove();
+        commonDataShare.closeModal('#cloneProfileModal');
         swal(constants.name, constants.create_success, constants.success);
       }).catch(function onError(response){
         console.log(response);
@@ -736,13 +737,21 @@ angular.module('machadaloPages')
       userService.createOrganisationMapping($scope.mappingData)
       .then(function onSuccess(response){
         console.log(response);
-        $('#createNewOrganisationMapModal').modal('hide');
-        $('body').removeClass('modal-open');
-         $('.modal-backdrop').remove();
+        commonDataShare.closeModal('#createNewOrganisationMapModal');
+        $scope.organisationMappingList.push(response.data.data);
         swal(constants.name,constants.create_success,constants.success);
       }).catch(function onError(response){
+          console.log(response);
+          swal(constants.name,constants.errorMsg,constants.error);
+      })
+    }
+    var getOrganisationMappingList = function(organisationId){
+      userService.getOrganisationMappingList(organisationId)
+      .then(function onSuccess(response){
         console.log(response);
-        swal(constants.name,constants.errorMsg,constants.error);
+        $scope.organisationMappingList = response.data.data;
+      }).catch(function onError(response){
+        console.log(response);
       })
     }
    }]);//end of controller
