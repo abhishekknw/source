@@ -173,9 +173,11 @@
         $window.localStorage.account_proposals = null;
         $window.localStorage.sel_account_index = null;
         $scope.bsSelect = undefined;
-	    	pagesService.getAllBusinesses()
+        var orgId = $rootScope.globals.userInfo.profile.organisation.organisation_id;
+	    	pagesService.getAllBusinesses(orgId)
 	    	.then(function (response) {
-	            $scope.businesses = response.data;
+	            $scope.organisations = response.data.data;
+              console.log(response);
 	       })
          .catch(function onError(response){
            commonDataShare.showErrorMessage(response);
@@ -393,5 +395,15 @@
         }
 
         $scope.getStoredData();
+        $scope.getOrganisation = function(){
+          pagesService.getOrganisation($scope.bsSelect)
+          .then(function onSuccess(response){
+            console.log(response);
+            $scope.model.organisation = response.data.data;
+            $scope.choice = "selected";
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
       // [TODO] implement this
     });

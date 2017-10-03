@@ -13,59 +13,61 @@
       <form class="choices">
       <div class="form-group">
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-6">
               <div><span >{{errorMsg.message}}</span></div>
-              <label for="existing">Select existing Business </label>
+              <label for="existing">Select Organisation You want to work with :</label>
               <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
             </div>
           <div class="col-md-4">
             <span class = "" ng-show ="choice == 'existing'">
-                <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
-                    <option  ng-repeat = "business in businesses" value="{{business.business_id}}">{{business.name}}</option>
+                <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getOrganisation()">
+                    <option  ng-repeat = "organisation in organisations" value="{{organisation.second_organisation.organisation_id}}">{{organisation.second_organisation.name}}</option>
                 </select>
             </span>
           </div>
-            <div class="col-md-4" permission="[bd_manager]">
+            <!-- <div class="col-md-4" permission="[bd_manager]">
               <label for="new">Create New Business</label>
               <input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
-            </div>
+            </div> -->
         </div>
         </div>
       </form>
 
       <form name = "form1" ng-show="choice == 'selected'" class="">
         <div class = "panel panel-default business-panel">
-        <h3 class = "panel-heading">Business Details</h3>
+        <h3 class = "panel-heading">Organisation Details</h3>
         <div class = "table">
           <div class = "row">
-            <div class = "col-md-3"><label>Business Name</label></div>
-            <div class = "col-md-3">{{model.business.name}}</div>
-            <div class = "col-md-3"><label>Business Type</label></div>
-            <div class = "col-md-3">{{model.business.type_name.business_type}}</div>
+            <div class = "col-md-3"><label>Organisation Name</label></div>
+            <div class = "col-md-3">{{model.organisation.name}}</div>
+            <div class = "col-md-3"><label>Organisation Category</label></div>
+            <div class = "col-md-3">{{model.organisation.category}}</div>
           </div>
           <div class = "row">
-            <div class = "col-md-3"><label>Business Sub-Type</label></div>
-            <div class = "col-md-3">{{model.business.sub_type.business_sub_type}}</div>
-            <div class = "col-md-3"><label>Business Email</label></div>
-            <div class = "col-md-3">{{model.business.email}}</div>
+            <div class = "col-md-3"><label>Organisation Phone</label></div>
+            <div class = "col-md-3">{{model.organisation.phone}}</div>
+            <!-- <div class = "col-md-3"><label>Business Sub-Type</label></div>
+            <div class = "col-md-3">{{model.business.sub_type.business_sub_type}}</div> -->
+            <div class = "col-md-3"><label>Organisation Email</label></div>
+            <div class = "col-md-3">{{model.organisation.email}}</div>
           </div>
           <div class = "row">
-            <div class = "col-md-3"><label>Business Phone</label></div>
-            <div class = "col-md-3">{{model.business.phone}}</div>
-            <div class = "col-md-3"><label>Business Address</label></div>
-            <div class = "col-md-3">{{model.business.address}}</div>
+            <!-- <div class = "col-md-3"><label>Organisation Phone</label></div>
+            <div class = "col-md-3">{{model.organisation.phone}}</div> -->
+            <div class = "col-md-3"><label>Organisation Address</label></div>
+            <div class = "col-md-3">{{model.organisation.address}}</div>
           </div>
           <div class = "row">
             <div class = "col-md-3"><label>Reference Contact Name</label></div>
-            <div class = "col-md-3">{{model.business.reference_name}}</div>
+            <div class = "col-md-3">{{model.organisation.reference_name}}</div>
             <div class = "col-md-3"><label>Reference Contact Phone</label></div>
-            <div class = "col-md-3">{{model.business.reference_phone}}</div>
+            <div class = "col-md-3">{{model.organisation.reference_phone}}</div>
           </div>
           <div class = "row">
             <div class = "col-md-3"><label>Reference Contact Email</label></div>
-            <div class = "col-md-3">{{model.business.reference_email}}</div>
+            <div class = "col-md-3">{{model.organisation.reference_email}}</div>
             <div class = "col-md-3"><label>Comments</label></div>
-            <div class = "col-md-3">{{model.business.comments}}</div>
+            <div class = "col-md-3">{{model.organisation.comments}}</div>
           </div>
           <br>
           <div class = "row">
