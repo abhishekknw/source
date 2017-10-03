@@ -280,6 +280,7 @@ angular.module('catalogueApp')
                   $("#progressBarModal").modal('hide');
             })
             .catch(function onError(response) {
+              cfpLoadingBar.complete();
               console.log(response);
             });
           }
