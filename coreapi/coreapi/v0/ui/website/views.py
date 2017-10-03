@@ -5711,3 +5711,71 @@ class OrganisationMapViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class AccountViewSet(viewsets.ViewSet):
+    """
+    viewset that around AcountInfo model
+    """
+    def list(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            organisation_id = request.query_params.get('organisation_id')
+            accounts = models.AccountInfo.objects.filter(organisation=organisation_id)
+            serializer = AccountInfoSerializer(accounts, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            account = models.AccountInfo.objects.get(pk=pk)
+            serializer = AccountInfoSerializer(account)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            serializer = AccountInfoSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.AccountInfo.objects.get(pk=pk)
+            serializer = AccountInfoSerializer(data=request.data, instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)

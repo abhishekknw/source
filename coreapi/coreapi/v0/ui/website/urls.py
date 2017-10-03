@@ -94,5 +94,6 @@ router.register(r'^organisation', views.OrganisationViewSet, base_name='Organisa
 router.register(r'^object-level-permission', views.ObjectLevelPermissionViewSet, base_name='object-level-permission')
 router.register(r'^general-user-permission', views.GeneralUserPermissionViewSet, base_name='general-user-permission')
 router.register(r'^organisation-map', views.OrganisationMapViewSet, base_name='organisation-map')
+router.register(r'^account', views.AccountViewSet, base_name='account')
 
 urlpatterns += router.urls
