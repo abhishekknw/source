@@ -14,6 +14,7 @@ from collections import defaultdict
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import PermissionDenied
 from django.apps import apps
 from django.forms.models import model_to_dict
 from django.conf import settings
@@ -35,7 +36,7 @@ import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 
 
-def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None, permission_error=False):
+def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """
     Args:
         success: determines wether to send success or failure messages
@@ -45,7 +46,6 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
         headers: the dict of headers
         content_type: The content_type.
         request: The request param
-        permission_error: if this is true, that means it's permission error and we need to return 403 ERROR.
 
         This method can later be used to log the errors.
 
@@ -85,10 +85,11 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
             except Exception as e:
                 # email sending failed. let it go.
                 pass
-        if not permission_error:
-            return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
-        else:
+
+        if isinstance(exception_object, PermissionDenied):
             return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'status': True, 'data': data}, headers=headers, content_type=content_type,  status=status.HTTP_200_OK)
 

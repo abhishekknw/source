@@ -85,7 +85,7 @@ class BusinessAPIListView(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            items = Organisation.objects.filter_user_related_objects(user=request.user)
+            items = Organisation.objects.filter_permission(user=request.user)
             serializer = BusinessInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
@@ -123,9 +123,9 @@ class BusinessAccounts(APIView):
     def get(self, request, id):
         class_name = self.__class__.__name__
         try:
-            item = Organisation.objects.get_user_related_object(user=request.user, pk=id)
+            item = Organisation.objects.get_permission(user=request.user, pk=id)
             business_serializer = UIBusinessInfoSerializer(item)
-            accounts = AccountInfo.objects.filter_user_related_objects(user=request.user, business=item)
+            accounts = AccountInfo.objects.filter_permission(user=request.user, business=item)
             accounts_serializer = UIAccountInfoSerializer(accounts, many=True)
             response = {
                 'business': business_serializer.data,
@@ -143,7 +143,7 @@ class Accounts(APIView):
     def get(self, request, format=None):
         class_name = self.__class__.__name__
         try:
-            items = AccountInfo.objects.filter_user_related_objects(user=request.user)
+            items = AccountInfo.objects.filter_permission(user=request.user)
             serializer = AccountInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
@@ -159,7 +159,7 @@ class AccountAPIView(APIView):
         class_name = self.__class__.__name__
 
         try:
-            account = AccountInfo.objects.get_user_related_object(user=request.user, pk=id)
+            account = AccountInfo.objects.get_permission(user=request.user, pk=id)
             account_serializer = UIAccountInfoSerializer(account)
             business = Organisation.objects.get(pk=account.business_id)
             business_serializer = BusinessInfoSerializer(business)
@@ -208,7 +208,7 @@ class BusinessContacts(APIView):
                 business_serializer_data = {}
 
                 if 'business_id' in business_data:
-                    business = Organisation.objects.get_user_related_object(user=request.user, pk=business_data['business_id'])
+                    business = Organisation.objects.get_permission(user=request.user, pk=business_data['business_id'])
                     serializer = BusinessInfoSerializer(business, data=business_data)
                 else:
                     business_data['business_id'] = self.generate_business_id(business_name=business_data['name'], \
@@ -226,7 +226,7 @@ class BusinessContacts(APIView):
                      business_serializer_data['business_sub_type'] = sub_type.business_sub_type
                      business_serializer_data['business_type'] = type_name.business_type
 
-                business = Organisation.objects.get_user_related_object(user=current_user, pk=business_data['business_id'])
+                business = Organisation.objects.get_permission(user=current_user, pk=business_data['business_id'])
                 content_type_business = ContentType.objects.get_for_model(Organisation)
                 contact_ids = list(business.contacts.all().values_list('id', flat=True))
                 contact_list = []
@@ -2646,7 +2646,7 @@ class CreateInitialProposal(APIView):
                 proposal_data['proposal_id'] = website_utils.create_proposal_id(business_id, account_id)
 
                 # get the account object. required for creating the proposal
-                account = AccountInfo.objects.get_user_related_object(user=user, account_id=account_id)
+                account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
                 proposal_data['account'] = account.account_id
                 proposal_data['user'] = user.id
 
@@ -2656,7 +2656,7 @@ class CreateInitialProposal(APIView):
                 proposal_data['parent'] = parent
                 # set parent if available
                 if parent:
-                    proposal_data['parent'] = ProposalInfo.objects.get_user_related_object(user=user, proposal_id=parent).proposal_id
+                    proposal_data['parent'] = ProposalInfo.objects.get_permission(user=user, proposal_id=parent).proposal_id
 
                 # call the function that saves basic proposal information
                 response = website_utils.create_basic_proposal(proposal_data)
@@ -3473,8 +3473,8 @@ class Business(APIView):
         class_name = self.__class__.__name__
         try:
             master_user = models.BaseUser.objects.get(id=8)
-            result = AccountInfo.objects.get_user_related_object(user=master_user)
-            # result = AccountInfo.objects.filter_user_related_objects(user=master_user)
+            result = AccountInfo.objects.get_permission(user=master_user)
+            # result = AccountInfo.objects.filter_permission(user=master_user)
             serializer = v0_serializers.AccountSerializer(result)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5341,31 +5341,12 @@ class OrganisationViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             category = request.query_params.get('category')
-
-            is_view_permission, error_single = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['VIEW'])
-            is_view_all_permission, error_all = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['VIEW_ALL'])
-
-            # if both are not present, return error
-            if (not is_view_all_permission) and (not is_view_permission):
-                error = (error_all, error_single)
-                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
-            # if view_all present, no user based query
-            if is_view_all_permission:
-
-                if category:
-                    instances = models.Organisation.objects.filter(category=category)
-                else:
-                    instances = models.Organisation.objects.all()
-            # if single view present, must query based on user
+            if category:
+                instances = models.Organisation.objects.filter_permission(user=request.user, category=category)
             else:
-                if category:
-                    instances = models.Organisation.objects.filter(user=request.user, category=category)
-                else:
-                    instances = models.Organisation.objects.filter(user=request.user)
-
+                instances = models.Organisation.objects.filter_permission(user=request.user)
             serializer = website_serializers.OrganisationSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -5376,21 +5357,7 @@ class OrganisationViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            is_view_permission, error_single = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['VIEW'])
-            is_view_all_permission, error_all = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['VIEW_ALL'])
-
-            # if both are not present, return error
-            if (not is_view_all_permission) and (not is_view_permission):
-                error = (error_all, error_single)
-                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
-            # if view_all present, no user based query. it's important we should check first VIEW_ALL permission and then
-            # VIEW permission. In case both are present, VIEW_ALL is superior.
-            if is_view_all_permission:
-                instance = models.Organisation.objects.get(pk=pk)
-            # if single view present, must query based on user.
-            else:
-                instance = models.Organisation.objects.get(user=request.user, pk=pk)
-
+            instance = models.Organisation.objects.get_permission(user=request.user, pk=pk)
             serializer = website_serializers.OrganisationSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5404,13 +5371,9 @@ class OrganisationViewSet(viewsets.ViewSet):
 
         class_name = self.__class__.__name__
         try:
-            is_permission, error = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['CREATE'])
-            if not is_permission:
-                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
-
             data = request.data.copy()
             data['user'] = request.user.pk
-            data['organisation_id'] = website_utils.get_organisation_id(data['category'], data['name'])
+            data['organisation_id'] = website_utils.get_generic_id([data['category'], data['name']])
             serializer = website_serializers.OrganisationSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
@@ -5428,20 +5391,7 @@ class OrganisationViewSet(viewsets.ViewSet):
 
         class_name = self.__class__.__name__
         try:
-            is_update_all_permission, error_all = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['UPDATE_ALL'])
-            is_update_permission, error_single = v0_utils.check_object_permission(request.user, models.Organisation, v0_constants.permission_contants['UPDATE'])
-
-            # if both are not present, return error
-            if (not is_update_all_permission) and (not is_update_permission):
-                error = (error_all, error_single)
-                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
-            # if update_all present, no user based query
-            if is_update_all_permission:
-                instance = models.Organisation.objects.get(pk=pk)
-            # if single update present, must query based on user
-            else:
-                instance = models.Organisation.objects.get(user=request.user, pk=pk)
-
+            instance = models.Organisation.objects.get_permission(user=request.user, check_update_permissions=True, pk=pk)
             serializer = website_serializers.OrganisationSerializer(data=request.data, instance=instance)
             if serializer.is_valid():
                 serializer.save()
@@ -5726,19 +5676,7 @@ class AccountViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             organisation_id = request.query_params['organisation_id']
-            is_view_permission, error_single = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['VIEW'])
-            is_view_all_permission, error_all = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['VIEW_ALL'])
-
-            # if both are not present, return error
-            if (not is_view_all_permission) and (not is_view_permission):
-                error = (error_all, error_single)
-                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
-            # if view_all present, no user based query
-            if is_view_all_permission:
-                accounts = models.AccountInfo.objects.filter(organisation=models.Organisation.objects.get(pk=organisation_id))
-            # if single view present, must query based on user
-            else:
-                accounts = models.AccountInfo.objects.filter(user=request.user, organisation=models.Organisation.objects.get(pk=organisation_id))
+            accounts = models.AccountInfo.objects.filter_permission(user=request.user, organisation=models.Organisation.objects.get(pk=organisation_id))
             serializer = AccountInfoSerializer(accounts, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5753,19 +5691,7 @@ class AccountViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            is_view_permission, error_single = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['VIEW'])
-            is_view_all_permission, error_all = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['VIEW_ALL'])
-
-            # if both are not present, return error
-            if (not is_view_all_permission) and (not is_view_permission):
-                error = (error_all, error_single)
-                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
-            # if view_all present, no user based query
-            if is_view_all_permission:
-                account = models.AccountInfo.objects.get(pk=pk)
-            # if single view present, must query based on user
-            else:
-                account = models.AccountInfo.objects.get(user=request.user, pk=pk)
+            account = models.AccountInfo.objects.get_permission(user=request.user, pk=pk)
             serializer = AccountInfoSerializer(account)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5779,11 +5705,11 @@ class AccountViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            is_permission, error = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['CREATE'])
-            if not is_permission:
-                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
-
-            serializer = AccountInfoSerializer(data=request.data)
+            data = request.data.copy()
+            data['user'] = request.user.pk
+            organisation_name = models.Organisation.objects.get(pk=data['organisation']).name
+            data['account_id'] = website_utils.get_generic_id([organisation_name, data['name']])
+            serializer = AccountInfoSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5800,19 +5726,7 @@ class AccountViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            is_update_permission, error_single = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['UPDATE'])
-            is_update_all_permission, error_all = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['UPDATE_ALL'])
-
-            # if both are not present, return error
-            if (not is_update_all_permission) and (not is_update_permission):
-                error = (error_all, error_single)
-                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
-            # if view_all present, no user based query
-            if is_update_all_permission:
-                account = models.AccountInfo.objects.get(pk=pk)
-            # if single view present, must query based on user
-            else:
-                account = models.AccountInfo.objects.get(user=request.user, pk=pk)
+            account = models.AccountInfo.objects.get_permission(user=request.user, check_update_permissions=True, pk=pk)
             serializer = AccountInfoSerializer(data=request.data, instance=account)
             if serializer.is_valid():
                 serializer.save()

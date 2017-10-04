@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User, Permission, Group
+from django.core.exceptions import PermissionDenied
 
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
@@ -15,6 +16,35 @@ from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySu
     UserProfile, CorporateParkCompanyList, CorporateBuilding, CorporateBuildingWing, CorporateCompanyDetails, \
     CompanyFloor
 import models
+import v0.constants as v0_constants
+from managers import check_object_permission
+
+
+class BaseModelPermissionSerializer(ModelSerializer):
+      """
+
+      Inherit this serializer if you want permission checking in creation of  a model instance through serializer.
+      Not sure weather to do this in .save() method or here. Going with serializer.
+
+      """
+      def create(self, validated_data):
+          """
+          called in creating instance. Here we only check fo 'CREATE' permission for the given user.
+          :param validated_data:
+          :return:
+          """
+          class_name = self.__class__.__name__
+          is_permission, error = check_object_permission(validated_data['user'], self.Meta.model, v0_constants.permission_contants['CREATE'])
+          if not is_permission:
+              raise PermissionDenied(class_name, error)
+          return self.Meta.model.objects.create(**validated_data)
+
+
+class AccountInfoSerializer(BaseModelPermissionSerializer):
+
+    class Meta:
+        model = AccountInfo
+
 
 class UserSerializer(ModelSerializer):
     class Meta:
@@ -344,11 +374,6 @@ class BusinessInfoSerializer(ModelSerializer):
 #         model = BusinessAccountContact
 
 
-class AccountInfoSerializer(ModelSerializer):
-    class Meta:
-        model = AccountInfo
-        # depth = 1
-
 
 class AccountSerializer(ModelSerializer):
     class Meta:
@@ -505,7 +530,7 @@ class GeneralUserPermissionSerializer(ModelSerializer):
         model = models.GeneralUserPermission
 
 
-class OrganisationSerializer(ModelSerializer):
+class OrganisationSerializer(BaseModelPermissionSerializer):
 
     class Meta:
         model = models.Organisation

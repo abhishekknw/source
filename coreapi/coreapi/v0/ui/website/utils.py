@@ -552,7 +552,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
         center_ids = result.keys()
         # this creates a mapping like { 1: 'center_object_1', 2: 'center_object_2' } etc
         center_objects = models.ProposalCenterMapping.objects.in_bulk(center_ids)
-        proposal_object = models.ProposalInfo.objects.get_user_related_object(user=user, proposal_id=proposal_id)
+        proposal_object = models.ProposalInfo.objects.get_permission(user=user, proposal_id=proposal_id)
 
         # set to hold all durations
         duration_list = set()
@@ -1297,7 +1297,7 @@ def save_center_data(proposal_data, user):
 
                 if 'id' in center_info:
                     # means an existing center was updated
-                    center_instance = models.ProposalCenterMapping.objects.get_user_related_object(user=user, id=center_info['id'])
+                    center_instance = models.ProposalCenterMapping.objects.get_permission(user=user, id=center_info['id'])
                     center_serializer = serializers.ProposalCenterMappingSerializer(center_instance, data=center)
                 else:
                     # means we need to create new center
@@ -1830,7 +1830,7 @@ def child_proposals(data):
         parent = data['parent']
         user = data['user']
         account_id = data['account_id']
-        proposal_children = models.ProposalInfo.objects.filter_user_related_objects(user=user)
+        proposal_children = models.ProposalInfo.objects.filter_permission(user=user)
         if account_id:
             proposal_children = proposal_children.filter(account_id=account_id)
         proposal_children = proposal_children.filter(parent=parent).order_by('-created_on')
@@ -5969,7 +5969,7 @@ def get_inventory_summary_map(supplier_ids=None):
     """
     function = get_inventory_summary_map.__name__
     try:
-        instances = models.InventorySummary.objects.filter_user_related_objects(object_id__in=supplier_ids)
+        instances = models.InventorySummary.objects.filter_permission(object_id__in=supplier_ids)
         inv_sum_map = {}
         for instance in instances:
             supplier_id = instance.object_id
@@ -6050,8 +6050,25 @@ def get_organisation_id(category, name):
     """
     function = get_organisation_id.__name__
     try:
-        name_string = ''.join(name.split(' '))
-        assert len(name_string) >= 3
         return category[:2].upper() + name_string[:3].upper() + str(uuid.uuid4())[-4:].upper()
+    except Exception as e:
+        return  Exception(function, ui_utils.get_system_error(e))
+
+
+def get_generic_id(items):
+    """
+    pulls first three characters from each of the item in items and adds a random 4 digit at the end to make a general id for any object where custom primary key is required
+    :param items:
+    :return:
+    """
+    function = get_generic_id.__name__
+    try:
+        object_id = ''
+        for item in items:
+            my_item = ''.join(item.split(' '))
+            assert len(my_item) >= 3
+            object_id += my_item[:3].upper()
+        object_id += str(uuid.uuid4())[-4:].upper()
+        return object_id
     except Exception as e:
         return  Exception(function, ui_utils.get_system_error(e))
