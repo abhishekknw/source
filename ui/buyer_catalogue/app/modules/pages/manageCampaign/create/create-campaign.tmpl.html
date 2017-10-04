@@ -13,18 +13,18 @@
       <form class="choices">
       <div class="form-group">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-10">
               <div><span >{{errorMsg.message}}</span></div>
-              <label for="existing">Select Organisation You want to work with :</label>
-              <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
+              <label for="existing">In order to create accounts, you need to select an organisation you are working with. By default, your own organisation is selected :</label>
+              <!-- <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()"> -->
             </div>
-          <div class="col-md-4">
+          <!-- <div class="col-md-4">
             <span class = "" ng-show ="choice == 'existing'">
                 <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getOrganisation()">
                     <option  ng-repeat = "organisation in organisations" value="{{organisation.second_organisation.organisation_id}}">{{organisation.second_organisation.name}}</option>
                 </select>
             </span>
-          </div>
+          </div> -->
             <!-- <div class="col-md-4" permission="[bd_manager]">
               <label for="new">Create New Business</label>
               <input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
@@ -33,7 +33,50 @@
         </div>
       </form>
 
-      <form name = "form1" ng-show="choice == 'selected'" class="">
+      <!--start:organisations list  -->
+      <form name = "" class="">
+        <div class = "panel panel-default business-panel">
+        <h3 class = "panel-heading">Organisations</h3>
+        <div class = "table">
+          <div class = "row align-center">
+            <div class = "col-md-2">
+            <label>Action</label>
+            </div>
+            <div class = "col-md-2"><label>Index</label></div>
+            <div class = "col-md-4"><label>Organisation Name</label></div>
+            <div class = "col-md-4"><label>Category</label></div>
+          </div>
+          <div class="form-organisation-list">
+          <div class = "row align-center">
+            <div class = "col-md-2">
+              <input type="radio" name="org-list"  ng-value="organisations[0].first_organisation.organisation_id" ng-model="bsSelect" ng-click="getOrganisation(bsSelect)">
+            </div>
+            <div class = "col-md-2">{{$index+1}}</div>
+            <div class = "col-md-4">{{organisations[0].first_organisation.name}}</div>
+            <div class = "col-md-4">{{organisations[0].first_organisation.category}}</div>
+          </div>
+          <div class = "row table-hover align-center" ng-repeat="organisation in organisations">
+            <div class = "col-md-2">
+              <input type="radio" name="org-list"  ng-value="organisation.second_organisation.organisation_id" ng-model="bsSelect" ng-click="getOrganisation(bsSelect)">
+            </div>
+            <div class = "col-md-2">{{$index+2}}</div>
+            <div class = "col-md-4">{{organisation.second_organisation.name}}</div>
+            <div class = "col-md-4">{{organisation.second_organisation.category}}</div>
+          </div>
+          </div>
+          <br>
+          <div class = "row">
+            <div class = "col-md-4"><a data-target="#detailModal" class="btn btn-danger  active" data-toggle="modal">View Contact Details</a></div>
+            <div class = "col-md-2"></div>
+            <div class = "col-md-2"></div>
+            <div class = "col-md-4"><button class="btn btn-danger" ng-model="edit" ng-click="editDetails()">Edit Details</button></div>
+          </div>
+        </div>
+      </div>
+    </form>
+      <!--end: organisations list  -->
+
+      <form name = "form1" class="">
         <div class = "panel panel-default business-panel">
         <h3 class = "panel-heading">Organisation Details</h3>
         <div class = "table">
@@ -82,9 +125,9 @@
 
     <form name="existingAccount" ng-show="choice == 'selected'">
         <div class="panel panel-default business-panel">
-          <h4 class="panel-heading">Existing Accounts</h4>
+          <h4 class="panel-heading"><a ng-click="getAccounts()">Click Here To View Existing Accounts</a></h4>
           <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" ng-if="showAccounts">
               <thead>
                 <tr>
                   <th></th>

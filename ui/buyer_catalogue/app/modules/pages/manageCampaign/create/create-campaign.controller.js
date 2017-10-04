@@ -5,6 +5,7 @@
       //start:code added to show or hide details based on user's group permissions
       $scope.bd_manager = constants.bd_manager;
       $scope.campaign_manager = constants.campaign_manager;
+      $scope.userInfo = $rootScope.globals.userInfo;
 
       //End:code added to show or hide details based on user permissions
       $scope.uploadfile = true; // added for loading spinner active/deactive
@@ -169,14 +170,17 @@
         $scope.model.business.contacts.splice(index, 1);
       };
 
-    	$scope.getAllBusinesses = function() {
+    	$scope.getOrganisations = function() {
         $window.localStorage.account_proposals = null;
         $window.localStorage.sel_account_index = null;
         $scope.bsSelect = undefined;
         var orgId = $rootScope.globals.userInfo.profile.organisation.organisation_id;
-	    	pagesService.getAllBusinesses(orgId)
+	    	pagesService.getOrganisations(orgId)
 	    	.then(function (response) {
 	            $scope.organisations = response.data.data;
+              $scope.bsSelect = $scope.organisations[0].first_organisation.organisation_id;
+              $scope.model.organisation = $scope.organisations[0].first_organisation;
+              console.log($scope.bsSelect);
               console.log(response);
 	       })
          .catch(function onError(response){
@@ -395,7 +399,10 @@
         }
 
         $scope.getStoredData();
-        $scope.getOrganisation = function(){
+        $scope.getOrganisation = function(bsSelect){
+          console.log($scope.bsSelect);
+          if(bsSelect)
+            $scope.bsSelect = bsSelect;
           pagesService.getOrganisation($scope.bsSelect)
           .then(function onSuccess(response){
             console.log(response);
@@ -405,5 +412,25 @@
             console.log(response);
           })
         }
+        $scope.getAccounts = function(){
+          pagesService.getAccounts($scope.bsSelect)
+          .then(function onSuccess(response){
+            console.log(response);
+            $scope.model.accounts = response.data.data;
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+        $scope.getAccount = function(){
+          pagesService.getAccount($scope.bsSelect)
+          .then(function onSuccess(response){
+            console.log(response);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+
+        //call when page loads
+        $scope.getOrganisations();
       // [TODO] implement this
     });
