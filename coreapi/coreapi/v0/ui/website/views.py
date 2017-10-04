@@ -5726,7 +5726,19 @@ class AccountViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             organisation_id = request.query_params['organisation_id']
-            accounts = models.AccountInfo.objects.filter(organisation=models.Organisation.objects.get(pk=organisation_id))
+            is_view_permission, error_single = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['VIEW'])
+            is_view_all_permission, error_all = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['VIEW_ALL'])
+
+            # if both are not present, return error
+            if (not is_view_all_permission) and (not is_view_permission):
+                error = (error_all, error_single)
+                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
+            # if view_all present, no user based query
+            if is_view_all_permission:
+                accounts = models.AccountInfo.objects.filter(organisation=models.Organisation.objects.get(pk=organisation_id))
+            # if single view present, must query based on user
+            else:
+                accounts = models.AccountInfo.objects.filter(user=request.user, organisation=models.Organisation.objects.get(pk=organisation_id))
             serializer = AccountInfoSerializer(accounts, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5741,7 +5753,19 @@ class AccountViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            account = models.AccountInfo.objects.get(pk=pk)
+            is_view_permission, error_single = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['VIEW'])
+            is_view_all_permission, error_all = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['VIEW_ALL'])
+
+            # if both are not present, return error
+            if (not is_view_all_permission) and (not is_view_permission):
+                error = (error_all, error_single)
+                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
+            # if view_all present, no user based query
+            if is_view_all_permission:
+                account = models.AccountInfo.objects.get(pk=pk)
+            # if single view present, must query based on user
+            else:
+                account = models.AccountInfo.objects.get(user=request.user, pk=pk)
             serializer = AccountInfoSerializer(account)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5755,6 +5779,10 @@ class AccountViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
+            is_permission, error = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['CREATE'])
+            if not is_permission:
+                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
+
             serializer = AccountInfoSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -5772,8 +5800,20 @@ class AccountViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instance = models.AccountInfo.objects.get(pk=pk)
-            serializer = AccountInfoSerializer(data=request.data, instance=instance)
+            is_update_permission, error_single = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['UPDATE'])
+            is_update_all_permission, error_all = v0_utils.check_object_permission(request.user, models.AccountInfo, v0_constants.permission_contants['UPDATE_ALL'])
+
+            # if both are not present, return error
+            if (not is_update_all_permission) and (not is_update_permission):
+                error = (error_all, error_single)
+                return ui_utils.handle_response(class_name, request=request, data=error, permission_error=True)
+            # if view_all present, no user based query
+            if is_update_all_permission:
+                account = models.AccountInfo.objects.get(pk=pk)
+            # if single view present, must query based on user
+            else:
+                account = models.AccountInfo.objects.get(user=request.user, pk=pk)
+            serializer = AccountInfoSerializer(data=request.data, instance=account)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
