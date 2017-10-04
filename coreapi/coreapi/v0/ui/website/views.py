@@ -5712,6 +5712,7 @@ class OrganisationMapViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+
 class AccountViewSet(viewsets.ViewSet):
     """
     viewset that around AcountInfo model
@@ -5724,8 +5725,8 @@ class AccountViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            organisation_id = request.query_params.get('organisation_id')
-            accounts = models.AccountInfo.objects.filter(organisation=organisation_id)
+            organisation_id = request.query_params['organisation_id']
+            accounts = models.AccountInfo.objects.filter(organisation=models.Organisation.objects.get(pk=organisation_id))
             serializer = AccountInfoSerializer(accounts, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
