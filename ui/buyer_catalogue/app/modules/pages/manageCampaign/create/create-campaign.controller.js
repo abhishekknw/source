@@ -12,6 +12,7 @@
       $scope.account_proposals = [];
       $scope.model = {};
       $scope.model.business = {};
+      $scope.model.organisation = {};
     	$scope.businesses = [];
       $scope.supplier_types = ['Society', 'Corporate', 'Club', 'Mall', 'School/College']
     	$scope.campaign_types = ['Poster', 'Standee', 'Stall', 'CarDisplay', 'Fliers']
@@ -178,8 +179,13 @@
 	    	pagesService.getOrganisations(orgId)
 	    	.then(function (response) {
 	            $scope.organisations = response.data.data;
-              $scope.bsSelect = $scope.organisations[0].first_organisation.organisation_id;
-              $scope.model.organisation = $scope.organisations[0].first_organisation;
+              if($scope.organisations.length){
+                $scope.bsSelect = $scope.organisations[0].first_organisation.organisation_id;
+                $scope.model.organisation = $scope.organisations[0].first_organisation;
+              }else {
+                $scope.bsSelect = $scope.userInfo.profile.organisation.organisation_id;
+                $scope.model.organisation = $scope.userInfo.profile.organisation;
+              }
               console.log($scope.bsSelect);
               console.log(response);
 	       })
@@ -204,7 +210,8 @@
       $scope.editAccount = function(account) {
             $(".modal-backdrop").hide();
             pagesService.setAccountId(account.account_id);
-            $location.path("/manageCampaign/editAccount/" + account.account_id + "/");
+            $window.localStorage.organisation_name = $scope.model.organisation.name;
+            $location.path("/manageCampaign/editAccount/" + account.account_id);
       };
 
       $scope.newBusiness = function() {
@@ -221,7 +228,7 @@
 
       $scope.addNewAccount = function() {
               pagesService.setAccountId(undefined);
-              $location.path("/manageCampaign/createAccount/");
+              $location.path("/manageCampaign/createAccount/" + $scope.bsSelect);
       };
 
       $scope.getProposals = function(sel_account_id,index){
@@ -262,6 +269,8 @@
           $window.localStorage.isSavedProposal = false;
           $window.localStorage.isReadOnly = 'false';
           $window.localStorage.proposalState = '';
+          console.log("hello",$scope.bsSelect);
+          $window.localStorage.organisationId = $scope.bsSelect;
           $location.path('/'+sel_account_id + '/createproposal');
         }
       }
@@ -417,6 +426,8 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.model.accounts = response.data.data;
+            if(!$scope.model.accounts.length)
+              displayMessage($scope.showAccountsMessage);
           }).catch(function onError(response){
             console.log(response);
           })
@@ -429,6 +440,13 @@
             console.log(response);
           })
         }
+
+        var displayMessage = function() {
+            $scope.showAccountsMessage = true;
+            $timeout(function() {
+               $scope.showAccountsMessage = false;
+            }, 2000);
+         };
 
         //call when page loads
         $scope.getOrganisations();
