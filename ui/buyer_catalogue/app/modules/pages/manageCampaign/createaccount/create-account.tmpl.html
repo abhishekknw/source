@@ -9,7 +9,8 @@
 <form name = "form" class="">
   <!-- <div class="breadcrumb" ncy-breadcrumb></div> -->
   <div class = "panel panel-default business-panel">
-    <h3 class = "panel-heading">Create Account</h3>
+    <h3 class = "panel-heading" ng-if="!editAccount">Create Account</h3>
+    <h3 class = "panel-heading" ng-if="editAccount">Edit Account</h3>
      <div class = "table">
        <div class="form-group">
          <!-- <div class = "row">
@@ -66,7 +67,8 @@
            <div class = "col-md-6"><textarea name="comments" id="comments" class="form-control" ng-model="model.account.comments"></textarea></div>
           </div>
        </div>
-       <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="createAccount()">Save</button>
+       <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="createAccount()" ng-if="!editAccount">Save</button>
+       <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="editAccount()" ng-if="editAccount">Update</button>
      </div>
    </div>
 
