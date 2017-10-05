@@ -172,6 +172,11 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
     pagesService.createAccount = function(data){
       var url = url_base + "account/";
       return machadaloHttp.post(url, data);
+    }
+
+    pagesService.editAccount = function(data,id){
+      var url = url_base + "account/" + id + "/";
+      return machadaloHttp.put(url, data);
     };
 
    return pagesService;

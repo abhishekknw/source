@@ -1,8 +1,9 @@
 angular.module('machadaloPages')
 .controller('CreateAccountCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'pagesService','constants','$stateParams',
-    function ($scope, $rootScope, $window, $location, pagesService, constants, $stateParams) {
+    ['$scope', '$rootScope', '$window', '$location', 'pagesService','constants','$stateParams','commonDataShare',
+    function ($scope, $rootScope, $window, $location, pagesService, constants, $stateParams, commonDataShare) {
       $scope.model = {};
+      $scope.editAccount = false;
       $scope.model.account = {};
       $scope.organisationData = {};
     	$scope.accounts = [];
@@ -248,8 +249,21 @@ angular.module('machadaloPages')
             console.log(response);
           })
         }
-        if(organisationId)
+        if(organisationId){
           getOrganisation();
-        if(accountId)
+        }
+        if(accountId){
           getAccount();
+          $scope.editAccount = true;
+        }
+        $scope.editAccount = function(){
+          pagesService.editAccount($scope.model.account,accountId)
+          .then(function onSuccess(response){
+            console.log(response);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+
+
     }]);
