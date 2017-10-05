@@ -269,6 +269,8 @@
           $window.localStorage.isSavedProposal = false;
           $window.localStorage.isReadOnly = 'false';
           $window.localStorage.proposalState = '';
+          console.log("hello",$scope.bsSelect);
+          $window.localStorage.organisationId = $scope.bsSelect;
           $location.path('/'+sel_account_id + '/createproposal');
         }
       }

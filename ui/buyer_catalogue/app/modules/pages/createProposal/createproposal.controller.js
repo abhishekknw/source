@@ -164,9 +164,9 @@ angular.module('catalogueApp')
 	$scope.submit = function(){
 	    var status = checkSupplierCode();
 	    if(status >= 0){
-			$scope.model.account_id = $window.localStorage.account_id;
-			$scope.model.business_id = $window.localStorage.business_id;
-			$scope.model.parent = $window.localStorage.proposal_id;
+			$scope.model.account_id = $stateParams.account_id;
+			$scope.model.organisation_id = $window.localStorage.organisationId;
+			// $scope.model.parent = $window.localStorage.proposal_id;
 			$scope.requestData = angular.copy($scope.model);
 			console.log($scope.requestData);
 			convertPincodeToString($scope.requestData.centers);

@@ -131,16 +131,16 @@ angular
           },
         })
       .state('manageCampaign.editAccount', {
-            url : '/editAccount/:accountId/',
+            url : '/editAccount/:accountId',
             controller: 'CreateAccountCtrl',
             templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
             ncyBreadcrumb: {
-              label: 'Create Account',
+              label: 'Account',
               parent : 'manageCampaign.create'
             }
         })
         .state('manageCampaign.createaccount', {
-              url : '/createAccount/',
+              url : '/createAccount/:organisationId',
               controller: 'CreateAccountCtrl',
               templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
               ncyBreadcrumb: {
