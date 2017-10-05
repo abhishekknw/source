@@ -161,7 +161,7 @@ class AccountAPIView(APIView):
         try:
             account = AccountInfo.objects.get_permission(user=request.user, pk=id)
             account_serializer = UIAccountInfoSerializer(account)
-            business = Organisation.objects.get(pk=account.business_id)
+            business = Organisation.objects.get(pk=account.organisation_id)
             business_serializer = BusinessInfoSerializer(business)
             '''contacts = AccountContact.objects.filter(account=account)
             serializer3 = AccountContactSerializer(contacts, many=True)'''
@@ -207,15 +207,15 @@ class BusinessContacts(APIView):
 
                 business_serializer_data = {}
 
-                if 'business_id' in business_data:
-                    business = Organisation.objects.get_permission(user=request.user, pk=business_data['business_id'])
+                if 'organisation_id' in business_data:
+                    business = Organisation.objects.get_permission(user=request.user, pk=business_data['organisation_id'])
                     serializer = BusinessInfoSerializer(business, data=business_data)
                 else:
-                    business_data['business_id'] = self.generate_business_id(business_name=business_data['name'], \
+                    business_data['organisation_id'] = self.generate_organisation_id(business_name=business_data['name'], \
                                                                              sub_type=sub_type, type_name=type_name)
-                    if business_data['business_id'] is None:
-                        # if business_id is None --> after 12 attempts couldn't get unique id so return first id in lowercase
-                        business_data['business_id'] = self.generate_business_id(business_data['name'], \
+                    if business_data['organisation_id'] is None:
+                        # if organisation_id is None --> after 12 attempts couldn't get unique id so return first id in lowercase
+                        business_data['organisation_id'] = self.generate_organisation_id(business_data['name'], \
                                                                                  sub_type=sub_type, type_name=type_name,
                                                                                  lower=True)
                     serializer = BusinessInfoSerializer(data=business_data)
@@ -226,14 +226,14 @@ class BusinessContacts(APIView):
                      business_serializer_data['business_sub_type'] = sub_type.business_sub_type
                      business_serializer_data['business_type'] = type_name.business_type
 
-                business = Organisation.objects.get_permission(user=current_user, pk=business_data['business_id'])
+                business = Organisation.objects.get_permission(user=current_user, pk=business_data['organisation_id'])
                 content_type_business = ContentType.objects.get_for_model(Organisation)
                 contact_ids = list(business.contacts.all().values_list('id', flat=True))
                 contact_list = []
 
                 for contact in business_data['contacts']:
 
-                    contact['object_id'] = business.business_id
+                    contact['object_id'] = business.organisation_id
                     contact['content_type'] = content_type_business.id
                     contact['user'] = current_user.id
 
@@ -268,19 +268,19 @@ class BusinessContacts(APIView):
         except Exception as e:
                 return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
-    def generate_business_id(self, business_name, sub_type, type_name, lower=False):
+    def generate_organisation_id(self, business_name, sub_type, type_name, lower=False):
         business_code = create_code(name=business_name)
         business_front = type_name.business_type_code + sub_type.business_sub_type_code
-        business_id = business_front + business_code
+        organisation_id = business_front + business_code
         if lower:
-            return business_id.lower()
+            return organisation_id.lower()
 
         try:
-            business = Organisation.objects.get(business_id=business_id)
+            business = Organisation.objects.get(organisation_id=organisation_id)
             # if exception does not occur means conflict
             business_code = create_code(name=business_name, conflict=True)
-            business_id = type_name.business_type_code + sub_type.business_sub_type_code + business_code
-            business = Organisation.objects.get(business_id=business_id)
+            organisation_id = type_name.business_type_code + sub_type.business_sub_type_code + business_code
+            business = Organisation.objects.get(organisation_id=organisation_id)
 
             # still conflict ---> Generate random 4 uppercase character string
             i = 0  # i keeps track of infinite loop tune it according to the needs
@@ -288,12 +288,12 @@ class BusinessContacts(APIView):
                 if i > 10:
                     return None
                 business_code = ''.join(random.choice(string.ascii_uppercase) for _ in range(4))
-                business_id = business_front + business_code
-                business = Organisation.objects.get(business_id=business_id)
+                organisation_id = business_front + business_code
+                business = Organisation.objects.get(organisation_id=organisation_id)
                 i += 1
 
         except Organisation.DoesNotExist:
-            return business_id.upper()
+            return organisation_id.upper()
 
 
 def create_code(name, conflict=False):
@@ -350,19 +350,19 @@ class AccountContacts(APIView):
 
             with transaction.atomic():
 
-                business_id = account_data['business_id']
+                organisation_id = account_data['organisation_id']
                 # checking a valid business
 
-                business = Organisation.objects.get(pk=business_id)
+                business = Organisation.objects.get(pk=organisation_id)
 
                 if 'account_id' in account_data:
                     account = AccountInfo.objects.get(pk=account_data['account_id'])
                     serializer = AccountInfoSerializer(account, data=account_data)
                 else:
-                    account_data['account_id']= self.generate_account_id(account_name=account_data['name'],business_id=business_id)
+                    account_data['account_id']= self.generate_account_id(account_name=account_data['name'],organisation_id=organisation_id)
                     if account_data['account_id'] is None:
                         # if account_id is None --> after 12 attempts couldn't get unique id so return first id in lowercase
-                        account_data['account_id'] = self.generate_account_id(account_name=account_data['name'],business_id=business_id, lower=True)
+                        account_data['account_id'] = self.generate_account_id(account_name=account_data['name'],organisation_id=organisation_id, lower=True)
                     serializer = AccountInfoSerializer(data=account_data)
 
                 if serializer.is_valid():
@@ -407,8 +407,8 @@ class AccountContacts(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-    def generate_account_id(self, account_name, business_id, lower=False):
-        business_code = business_id[-4:]
+    def generate_account_id(self, account_name, organisation_id, lower=False):
+        business_code = organisation_id[-4:]
         account_code = create_code(name = account_name)
         account_id = business_code + account_code
 
@@ -1158,7 +1158,7 @@ class FilteredSuppliers(APIView):
             # cannot be handled  under specific society filters because it involves operation of two columns in database which cannot be generalized to a query.
             # To get business name
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-            business_name = proposal.account.business.name
+            organisation_name = proposal.account.organisation.name
 
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
@@ -1272,7 +1272,7 @@ class FilteredSuppliers(APIView):
 
             # construct the response and return
             # set the business name
-            result['business_name'] = business_name
+            result['organisation_name'] = organisation_name
 
             # use this to show what kind of pricing we are using to fetch from pmd table for each kind of inventory
             result['inventory_pricing_meta'] = v0_constants.inventory_type_duration_dict_list
@@ -2639,11 +2639,11 @@ class CreateInitialProposal(APIView):
                 proposal_data = request.data
                 user = request.user
 
-                business_id = proposal_data.get('business_id')
+                organisation_id = proposal_data['organisation_id']
                 account_id = account_id
 
                 # create a unique proposal id
-                proposal_data['proposal_id'] = website_utils.create_proposal_id(business_id, account_id)
+                proposal_data['proposal_id'] = website_utils.get_generic_id([models.Organisation.objects.get(pk=organisation_id).name, models.AccountInfo.objects.get(pk=account_id).name])
 
                 # get the account object. required for creating the proposal
                 account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
@@ -3520,7 +3520,7 @@ class ProposalVersion(APIView):
             user = request.user
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
-            business = models.Organisation.objects.get(business_id=account.business.business_id)
+            business = models.Organisation.objects.get(organisation_id=account.organisation.organisation_id)
 
             # if you don't provide this value, No proposal version is created.
             is_proposal_version_created = request.data['is_proposal_version_created'] if request.data.get('is_proposal_version_created') else False
@@ -3530,7 +3530,7 @@ class ProposalVersion(APIView):
             if is_proposal_version_created:
 
                 # create a unique proposal id
-                new_proposal_id = website_utils.create_proposal_id(business.business_id, account.account_id)
+                new_proposal_id = website_utils.create_proposal_id(business.organisation_id, account.account_id)
 
                 # create new ProposalInfo object for this new proposal_id
                 proposal.pk = new_proposal_id

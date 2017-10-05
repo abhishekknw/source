@@ -1483,10 +1483,10 @@ def save_filter_data(suppliers_meta, fixed_data):
         raise Exception(function_name, ui_utils.get_system_error(e))
 
 
-def create_proposal_id(business_id, account_id):
+def create_proposal_id(organisation_id, account_id):
     """
     Args:
-        business_id: The business_id
+        organisation_id: The organisation_id
         account_id:  The account id
 
     Returns: A unique proposal id
@@ -1494,14 +1494,14 @@ def create_proposal_id(business_id, account_id):
     """
     function = create_proposal_id.__name__
     try:
-        if not business_id or not account_id:
+        if not organisation_id or not account_id:
             return ui_utils.handle_response(function, data='provide business and account ids')
         # get number of business letters to append
         business_letters = v0_constants.business_letters
         # get number of account letters to append
         account_letters = v0_constants.account_letters
         # make the proposal id.
-        proposal_id = business_id[:business_letters].upper() + account_id[:account_letters].upper() + (str(uuid.uuid4())[-v0_constants.proposal_id_limit:])
+        proposal_id = organisation_id[:business_letters].upper() + account_id[:account_letters].upper() + (str(uuid.uuid4())[-v0_constants.proposal_id_limit:])
         return proposal_id
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -1732,11 +1732,11 @@ def suppliers_within_radius(data):
         proposal_id = data['proposal_id']
         center_id = data['center_id']
         proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-        business_name = proposal.account.business.name
+        organisation_name = proposal.account.organisation.name
 
         master_result = {
             # set the business_name
-            'business_name': business_name,
+            'organisation_name': organisation_name,
             # space to store the suppliers
             'suppliers': []
         }
@@ -3320,17 +3320,17 @@ def get_file_name(user, proposal_id, is_exported=True):
         datetime_stamp = now_time.strftime(format)
         proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id) 
         account = proposal.account
-        business = account.business
+        organisation = account.organisation
         if user.is_anonymous():
             user_string = 'Anonymous'
             user = None
         else:
             user_string = user.get_username()
-        file_name = user_string + '_' + business.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
+        file_name = user_string + '_' + organisation.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
         # save this file in db 
         data = {
             'user':  user,
-            'business': business,
+            'organisation': organisation,
             'account': account,
             'proposal': proposal,
             'date': now_time,
