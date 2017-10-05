@@ -165,8 +165,13 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
     }
 
     pagesService.getAccount = function (id) {
-       var url = url_base + "account/" + id;
+       var url = url_base + "account/" + id + "/";
        return machadaloHttp.get(url);
+    }
+
+    pagesService.createAccount = function(data){
+      var url = url_base + "account/";
+      return machadaloHttp.post(url, data);
     };
 
    return pagesService;

@@ -12,20 +12,18 @@
     <h3 class = "panel-heading">Create Account</h3>
      <div class = "table">
        <div class="form-group">
-         <div class = "row">
+         <!-- <div class = "row">
            <div class ="col-md-3 "><input type="checkbox"  ng-model="setAccount" ng-click="setCreate_Account()" />
            <label> As Business </label></div>
-
-           <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
-         </div></br>
+         </div></br> -->
 
           <div class = "row">
             <div class = "col-md-3"><label>Account Name* </label></div>
             <div class = "col-md-3"><input type="text" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.account.name" ng-required="true" /></div>
             <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
 
-            <div class = "col-md-3"><label>Business Name </label></div>
-            <div class = "col-md-3"><input type="text" class="form-control input-size" ng-model="model.business.name" readonly="true"/></div>
+            <div class = "col-md-3"><label>Organisation Name </label></div>
+            <div class = "col-md-3"><input type="text" class="form-control input-size" ng-model="organisationData.name" readonly="true"/></div>
             <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
           </div>
         </div>
@@ -68,6 +66,7 @@
            <div class = "col-md-6"><textarea name="comments" id="comments" class="form-control" ng-model="model.account.comments"></textarea></div>
           </div>
        </div>
+       <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="createAccount()">Save</button>
      </div>
    </div>
 
@@ -78,12 +77,10 @@
       <div ng-repeat="contact in model.account.contacts track by $index">
           <div class = "table">
             <div class="form-group">
-              <div class = "row">
+              <!-- <div class = "row">
                 <div class ="col-md-3 "><input type="checkbox"  ng-model="setContact" ng-click="setContact_Account($index)" />
                 <label> As Business </label></div>
-
-                <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
-              </div></br>
+              </div></br> -->
 
               <div class = "row">
                   <div class = "col-md-3"><label>Name</label></div>
