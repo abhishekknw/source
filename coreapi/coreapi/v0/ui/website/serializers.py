@@ -7,7 +7,7 @@ import v0.models as models
 from v0.models import Organisation, Campaign, CampaignSocietyMapping, SocietyInventoryBooking, AccountInfo
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety,\
                     ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, BaseUser
-from v0.serializers import BusinessAccountContactSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, BaseUserSerializer
+from v0.serializers import BusinessAccountContactSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, BaseUserSerializer, BaseModelPermissionSerializer
 from v0.ui.serializers import UISocietySerializer
 
 
@@ -69,7 +69,7 @@ class ProposalCenterMappingVersionSpaceSerializer(ModelSerializer):
         model = ProposalCenterMappingVersion
 
 
-class ProposalInfoSerializer(ModelSerializer):
+class ProposalInfoSerializer(BaseModelPermissionSerializer):
 
     class Meta:
         model = ProposalInfo

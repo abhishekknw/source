@@ -144,7 +144,7 @@ class GeneralManager(models.Manager):
             # if both are not present, return error
             if (not user_based_verdict) and (not user_independent_verdict):
                 error = (user_based_error, user_independent_error)
-                raise PermissionDenied(function, error)
+                raise PermissionDenied(error)
 
             # if view_all present, no user based query
             if user_independent_verdict:
@@ -158,6 +158,8 @@ class GeneralManager(models.Manager):
             raise ObjectDoesNotExist(e, function)
         except MultipleObjectsReturned as e:
             raise MultipleObjectsReturned(e, function)
+        except PermissionDenied as e:
+            raise PermissionDenied(e, function)
         except Exception as e:
             raise Exception(e, function)
 
@@ -181,7 +183,7 @@ class GeneralManager(models.Manager):
             # if both are not present, return error
             if (not user_based_verdict) and (not user_independent_verdict):
                 error = (user_based_error, user_independent_error)
-                raise PermissionDenied(function, error)
+                raise PermissionDenied(error)
 
             # if view_all present, no user based query
             if user_independent_verdict:
@@ -192,6 +194,8 @@ class GeneralManager(models.Manager):
                 return self.filter(**kwargs)
         except ObjectDoesNotExist as e:
             raise ObjectDoesNotExist(e, function)
+        except PermissionDenied as e:
+            raise PermissionDenied(e, function)
         except Exception as e:
             raise Exception(e, function)
 

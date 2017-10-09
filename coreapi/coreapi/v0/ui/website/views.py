@@ -2772,10 +2772,7 @@ class ChildProposals(APIView):
                 'user': request.user,
                 'account_id': account_id
             }
-            response = website_utils.child_proposals(data)
-            if not response:
-                return response
-            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+            return ui_utils.handle_response(class_name, data=website_utils.child_proposals(data), success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 

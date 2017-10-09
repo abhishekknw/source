@@ -1835,10 +1835,9 @@ def child_proposals(data):
             proposal_children = proposal_children.filter(account_id=account_id)
         proposal_children = proposal_children.filter(parent=parent).order_by('-created_on')
         serializer = serializers.ProposalInfoSerializer(proposal_children, many=True)
-        return ui_utils.handle_response(function_name, data=serializer.data, success=True)
+        return serializer.data
     except Exception as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
-
+        raise Exception(function_name, ui_utils.get_system_error(e))
 
 def construct_proposal_response(proposal_id):
     """
