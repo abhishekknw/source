@@ -3,7 +3,6 @@ angular.module('machadaloPages')
     ['$scope', '$rootScope', '$window', '$location', 'pagesService','constants','$stateParams','commonDataShare',
     function ($scope, $rootScope, $window, $location, pagesService, constants, $stateParams, commonDataShare) {
       $scope.model = {};
-      $scope.editAccount = false;
       $scope.model.account = {};
       $scope.organisationData = {};
     	$scope.accounts = [];
@@ -20,7 +19,8 @@ angular.module('machadaloPages')
         $scope.clear = function() {
         $scope.dt = null;
       };
-
+      $scope.organisationData = JSON.parse($window.localStorage.organisationInfo);
+      console.log($scope.organisationData);
       $scope.maxDate = new Date(2020, 5, 22);
       $scope.today = new Date();
       $scope.popup1 = false;
@@ -227,6 +227,7 @@ angular.module('machadaloPages')
             $scope.organisationData = response.data.data;
           }).catch(function onError(response){
             console.log(response);
+            commonDataShare.checkPermission(response);
           })
         }
         $scope.createAccount = function(){
@@ -234,8 +235,10 @@ angular.module('machadaloPages')
           pagesService.createAccount($scope.model.account)
           .then(function onSuccess(response){
             console.log(response);
+            swal(constants.name, constants.create_success, constants.success);
           }).catch(function onError(response){
             console.log(response);
+            commonDataShare.checkPermission(response);
           })
         }
         var accountId = $stateParams.accountId;
@@ -247,19 +250,18 @@ angular.module('machadaloPages')
             $scope.organisationData['name'] = $window.localStorage.organisation_name;
           }).catch(function onError(response){
             console.log(response);
+            commonDataShare.checkPermission(response);
           })
-        }
-        if(organisationId){
-          getOrganisation();
-        }
+        }      
         if(accountId){
+          $scope.editAccountField = true;
           getAccount();
-          $scope.editAccount = true;
         }
         $scope.editAccount = function(){
           pagesService.editAccount($scope.model.account,accountId)
           .then(function onSuccess(response){
             console.log(response);
+            swal(constants.name, constants.update_success, constants.success);
           }).catch(function onError(response){
             console.log(response);
           })

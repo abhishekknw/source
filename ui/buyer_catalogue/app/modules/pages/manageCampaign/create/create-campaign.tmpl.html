@@ -34,7 +34,7 @@
       </form>
 
       <!--start:organisations list  -->
-      <form name = "" class="">
+      <form name = "" class="" permission = "[permList.organisationsListView]">
         <div class = "panel panel-default business-panel">
         <h3 class = "panel-heading">Organisations</h3>
         <div class = "table">
@@ -81,7 +81,7 @@
     </form>
       <!--end: organisations list  -->
 
-      <form name = "form1" class="">
+      <form name = "form1" class="" permission = "[permList.organisationDetailsView]">
         <div class = "panel panel-default business-panel">
         <h3 class = "panel-heading">Organisation Details</h3>
         <div class = "table">
@@ -128,7 +128,7 @@
       </div>
     </form>
 
-    <form name="existingAccount">
+    <form name="existingAccount"permission = "[permList.accountListView]" >
         <div class="panel panel-default business-panel">
           <h4 class="panel-heading">
             <a ng-click="getAccounts()">Click Here To View Existing Accounts</a>
@@ -157,15 +157,13 @@
                   </td>
                 </tr>
               </tbody>
-
             </table>
-
           </div>
-      <button class="btn btn-danger" ng-click="addNewAccount()" permission = "[bd_manager]">Add New Account</button>
+      <button class="btn btn-danger" ng-click="addNewAccount()" permission="[permList.addNewAccount]">Add New Account</button>
         </div>
       </form>
 
-      <form name="existingProposal">
+      <form name="existingProposal" permission="[permList.proposalListView]">
         <div class="panel panel-default business-panel">
           <h4 class="panel-heading">Existing Proposals</h4>
           <div class="table-responsive tableBodyList">
@@ -232,8 +230,8 @@
             </table>
           </div>
           <br>
-          <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" permission = "[bd_manager]">Create New Proposal</button>
-            <span class="show-error" ng-show="error">Please select an account</span>
+          <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" permission="[permList.createNewProposal]">Create New Proposal</button>
+          <span class="show-error" ng-show="error">Please select an account</span>
         </div>
       </form>
 

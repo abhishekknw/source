@@ -1,8 +1,10 @@
   angular.module('machadaloPages')
   .controller('CreateCampaignCtrl',
-    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, constants, $timeout, AuthService, $state) {
+    function ($scope, $rootScope, $window, $location, pagesService, constants, Upload, commonDataShare, constants, $timeout, AuthService, $state, permissions) {
 
       //start:code added to show or hide details based on user's group permissions
+      $scope.permList = permissions.homePage;
+      console.log(permissions.homePage);
       $scope.bd_manager = constants.bd_manager;
       $scope.campaign_manager = constants.campaign_manager;
       $scope.userInfo = $rootScope.globals.userInfo;
@@ -27,6 +29,7 @@
         $scope.clear = function() {
         $scope.dt = null;
       };
+      $scope.newAccount = 'can_add_new_account';
       $scope.proposalRequested = constants.proposalRequested;
       $scope.proposalFinalized = constants.proposalFinalized;
       $scope.proposalConverted = constants.proposalConverted;
@@ -192,7 +195,7 @@
       $scope.remove = function(index) {
         $scope.model.business.contacts.splice(index, 1);
       };
-
+      console.log($rootScope);
     	$scope.getOrganisations = function() {
         $window.localStorage.account_proposals = null;
 //        $window.localStorage.sel_account_index = null;
@@ -201,8 +204,8 @@
 	    	pagesService.getOrganisations(orgId)
 	    	.then(function (response) {
 	            $scope.organisations = response.data.data;
-	            if($scope.model.organisation != null){
-	            console.log("Hi",$scope.model.organisation);
+              console.log($scope.model.organisation);
+	            if($scope.model.organisation.hasOwnProperty('organisation_id')){	            
 	              $scope.bsSelect = $scope.model.organisation.organisation_id;
 	            }
               else if($scope.organisations.length){
@@ -237,6 +240,7 @@
             $(".modal-backdrop").hide();
             pagesService.setAccountId(account.account_id);
             $window.localStorage.organisation_name = $scope.model.organisation.name;
+            $window.localStorage.editAccount = true;
             $location.path("/manageCampaign/editAccount/" + account.account_id);
       };
 
@@ -254,6 +258,8 @@
 
       $scope.addNewAccount = function() {
               pagesService.setAccountId(undefined);
+              $window.localStorage.editAccount = false;
+              $window.localStorage.organisationInfo = JSON.stringify($scope.model.organisation);
               $location.path("/manageCampaign/createAccount/" + $scope.bsSelect);
       };
 
@@ -271,12 +277,15 @@
 
           pagesService.getAccountProposal(sel_account_id)
           .then(function(response){
+            console.log($scope.account_proposals);
             console.log("proposal",response);
               $scope.account_proposals = response.data.data;
               $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
+              console.log($scope.account_proposals);
           })
           .catch(function onError(response){
             commonDataShare.showErrorMessage(response);
+            console.log($scope.account_proposals);
             // swal(constants.name,constants.errorMsg,constants.error);
               if(typeof(response) == typeof([]))
                   $scope.proposal_error = response.error;

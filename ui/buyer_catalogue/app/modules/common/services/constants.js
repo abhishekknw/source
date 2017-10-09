@@ -136,4 +136,9 @@ angular
     show_system : true,
     show_general : true,
 
+    //permissions error
+    permission_error : 'You do not have sufficient permission to perform this action, Please contact Machadalo Admin',
+    profile_error : 'You do not have profile attached, Please Contact Your Organisation Admin',
+    forbidden_error_code : 403,
+    forbidden_title : 'FORBIDDEN : 403',
   });
