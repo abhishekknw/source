@@ -70,24 +70,46 @@
       var contactCopy = angular.copy($scope.contact);
       $scope.model.business.contacts = [$scope.contact];
 
-      // Start: for persisting values after refresh or back from other pages
-      $scope.getStoredData = function(){
-        if($window.localStorage.business != null){
-          $scope.model.business = JSON.parse($window.localStorage.business);
-          if($window.localStorage.accounts != null){
-            $scope.model.accounts = JSON.parse($window.localStorage.accounts);
-            if($window.localStorage.sel_account_index >= 0){
+      $scope.getAccounts = function(savedState){
+          pagesService.getAccounts($scope.bsSelect)
+          .then(function onSuccess(response){
+            console.log(response);
+            $scope.model.accounts = response.data.data;
+            if(savedState){
               $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
               $scope.getProposals($scope.sel_account_id,$window.localStorage.sel_account_index);
             }
+
+            if(!$scope.model.accounts.length)
+              displayMessage($scope.showAccountsMessage);
+            else
+              $scope.showAccountList = true;
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+
+      // Start: for persisting values after refresh or back from other pages
+      $scope.getStoredData = function(){
+        if($window.localStorage['organisationData'] != null){
+          $scope.model.organisation = JSON.parse($window.localStorage['organisationData']);
+          $scope.bsSelect = $scope.model.organisation.organisation_id;
+          if($window.localStorage.sel_account_index >= 0){
+            var savedState = true;
+            $scope.getAccounts(savedState);
           }
+//            if($window.localStorage.sel_account_index >= 0){
+//              //$scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
+//              $scope.getProposals($scope.sel_account_id,$window.localStorage.sel_account_index);
+//            }
+
           // if($window.localStorage.account_proposals != null)
           //   $scope.account_proposals = JSON.parse($window.localStorage.account_proposals);
           $scope.choice = "selected";
         }else {
           $scope.model.business = null;
-          $scope.model.accounts = null;
-          $scope.account_proposals = null;
+          //$scope.model.accounts = null;
+          //$scope.account_proposals = null;
         }
       }
       // End: for persisting values after refresh or back from other pages
@@ -100,41 +122,41 @@
           commonDataShare.showErrorMessage(response);
           // swal(constants.name,constants.errorMsg,constants.error);
         });
-      $scope.getBusiness = function() {
-        pagesService.getBusiness($scope.bsSelect)
-        .then(function (response) {
-          console.log(response);
-              $scope.model.business = response.data.business;
-              $scope.model.accounts = response.data.accounts;
-              $rootScope.business_id = response.data.business.business_id;
-              $window.localStorage.business_id = response.data.business.business_id;
-              $rootScope.business_name = response.data.business.name;
-              $window.localStorage.business_name = response.data.business.name;
-              $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
-              $scope.getSubTypes();
-              $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
-              $scope.choice = "selected";
-              // pagesService.setBusinessObject($scope.model.business);
-              //Start: added to persit data after refresh
-              $window.localStorage.business = JSON.stringify($scope.model.business);
-              if($scope.model.accounts.length != 0){
-                $window.localStorage.accounts = JSON.stringify($scope.model.accounts);
-              }else{
-                $window.localStorage.accounts = null;
-              }
-              $window.localStorage.account_proposals = null;
-              $scope.account_proposals = null;
-              $window.localStorage.sel_account_index = -1;
-              $scope.sel_account_id = null;
-              $scope.error = false;
-              $scope.thenMsg = null;
-              //End: added to persit data after refresh
-         })
-         .catch(function onError(response){
-           commonDataShare.showErrorMessage(response);
-          //  swal(constants.name,constants.errorMsg,constants.error);
-         });
-      };
+//      $scope.getBusiness = function() {
+//        pagesService.getBusiness($scope.bsSelect)
+//        .then(function (response) {
+//          console.log(response);
+//              $scope.model.business = response.data.business;
+//             // $scope.model.accounts = response.data.accounts;
+//              $rootScope.business_id = response.data.business.business_id;
+//              $window.localStorage.business_id = response.data.business.business_id;
+//              $rootScope.business_name = response.data.business.name;
+//              $window.localStorage.business_name = response.data.business.name;
+//              $scope.model.business.business_type_id = $scope.model.business.type_name.id.toString();
+//              $scope.getSubTypes();
+//              $scope.model.business.sub_type_id = $scope.model.business.sub_type.id.toString();
+//              $scope.choice = "selected";
+//              // pagesService.setBusinessObject($scope.model.business);
+//              //Start: added to persit data after refresh
+//              $window.localStorage.business = JSON.stringify($scope.model.business);
+//              if($scope.model.accounts.length != 0){
+//                $window.localStorage.accounts = JSON.stringify($scope.model.accounts);
+//              }else{
+//                $window.localStorage.accounts = null;
+//              }
+//              $window.localStorage.account_proposals = null;
+//              $scope.account_proposals = null;
+//              $window.localStorage.sel_account_index = -1;
+//              $scope.sel_account_id = null;
+//              $scope.error = false;
+//              $scope.thenMsg = null;
+//              //End: added to persit data after refresh
+//         })
+//         .catch(function onError(response){
+//           commonDataShare.showErrorMessage(response);
+//          //  swal(constants.name,constants.errorMsg,constants.error);
+//         });
+//      };
 
       var business_id_temp = pagesService.getBusinessId();
       if(business_id_temp){
@@ -173,13 +195,17 @@
 
     	$scope.getOrganisations = function() {
         $window.localStorage.account_proposals = null;
-        $window.localStorage.sel_account_index = null;
-        $scope.bsSelect = undefined;
+//        $window.localStorage.sel_account_index = null;
+//        $scope.bsSelect = undefined;
         var orgId = $rootScope.globals.userInfo.profile.organisation.organisation_id;
 	    	pagesService.getOrganisations(orgId)
 	    	.then(function (response) {
 	            $scope.organisations = response.data.data;
-              if($scope.organisations.length){
+	            if($scope.model.organisation != null){
+	            console.log("Hi",$scope.model.organisation);
+	              $scope.bsSelect = $scope.model.organisation.organisation_id;
+	            }
+              else if($scope.organisations.length){
                 $scope.bsSelect = $scope.organisations[0].first_organisation.organisation_id;
                 $scope.model.organisation = $scope.organisations[0].first_organisation;
               }else {
@@ -218,7 +244,7 @@
               $scope.contact = angular.copy(contactCopy);
               $scope.form.$setPristine();
               $scope.model.business = {};
-              $scope.model.accounts = {};
+              //$scope.model.accounts = {};
               $scope.model.business.contacts = [$scope.contact];
               $scope.account_proposals = null;
               $scope.sel_account_id = null;
@@ -416,22 +442,13 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.model.organisation = response.data.data;
+            $window.localStorage['organisationData'] = angular.toJson($scope.model.organisation);
             $scope.choice = "selected";
           }).catch(function onError(response){
             console.log(response);
           })
         }
-        $scope.getAccounts = function(){
-          pagesService.getAccounts($scope.bsSelect)
-          .then(function onSuccess(response){
-            console.log(response);
-            $scope.model.accounts = response.data.data;
-            if(!$scope.model.accounts.length)
-              displayMessage($scope.showAccountsMessage);
-          }).catch(function onError(response){
-            console.log(response);
-          })
-        }
+
         $scope.getAccount = function(){
           pagesService.getAccount($scope.bsSelect)
           .then(function onSuccess(response){

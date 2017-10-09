@@ -2228,3 +2228,43 @@ class SetParams(APIView):
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class CopyOrganisation(APIView):
+    """
+
+    """
+    def get(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        business_info_model = apps.get_model(settings.APP_NAME, 'BusinessInfo')
+        organisation_model = apps.get_model(settings.APP_NAME, 'Organisation')
+        instances = business_info_model.objects.all()
+        for instance in instances:
+
+            data = {
+                'name': instance.name,
+                'user': instance.user,
+                'organisation_id': instance.business_id,
+                'type_name': instance.type_name,
+                'sub_type': instance.sub_type,
+                'phone': instance.phone,
+                'email': instance.email,
+                'address': instance.address,
+                'reference_name': instance.reference_name,
+                'reference_phone': instance.reference_phone,
+                'reference_email': instance.reference_email,
+                'comments': instance.comments,
+                'category': 'BUSINESS',
+            }
+            try:
+                organisation_model.objects.create(**data)
+            except Exception as e:
+                print e
+        return ui_utils.handle_response(class_name, data='success', success=True)
+
+
+
