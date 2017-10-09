@@ -14,6 +14,7 @@ from collections import defaultdict
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import PermissionDenied
 from django.apps import apps
 from django.forms.models import model_to_dict
 from django.conf import settings
@@ -85,7 +86,10 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
                 # email sending failed. let it go.
                 pass
 
-        return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
+        if isinstance(exception_object, PermissionDenied):
+            return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'status': True, 'data': data}, headers=headers, content_type=content_type,  status=status.HTTP_200_OK)
 

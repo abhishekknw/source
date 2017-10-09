@@ -13,106 +13,162 @@
       <form class="choices">
       <div class="form-group">
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-10">
               <div><span >{{errorMsg.message}}</span></div>
-              <label for="existing">Select existing Business </label>
-              <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()">
+              <label for="existing">In order to create accounts, you need to select an organisation you are working with. By default, your own organisation is selected :</label>
+              <!-- <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()"> -->
             </div>
-          <div class="col-md-4">
+          <!-- <div class="col-md-4">
             <span class = "" ng-show ="choice == 'existing'">
-                <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getBusiness()">
-                    <option  ng-repeat = "business in businesses" value="{{business.business_id}}">{{business.name}}</option>
+                <select name="bsSelect" id="bsSelect" ng-model="bsSelect" ng-change="getOrganisation()">
+                    <option  ng-repeat = "organisation in organisations" value="{{organisation.second_organisation.organisation_id}}">{{organisation.second_organisation.name}}</option>
                 </select>
             </span>
-          </div>
-            <div class="col-md-4" permission="[bd_manager]">
+          </div> -->
+            <!-- <div class="col-md-4" permission="[bd_manager]">
               <label for="new">Create New Business</label>
               <input id="new" type="radio" name="choice" ng-model="choice" value="new" ng-click="newBusiness()">
-            </div>
+            </div> -->
         </div>
         </div>
       </form>
 
-      <form name = "form1" ng-show="choice == 'selected'" class="">
+      <!--start:organisations list  -->
+      <form name = "" class="">
         <div class = "panel panel-default business-panel">
-        <h3 class = "panel-heading">Business Details</h3>
+        <h3 class = "panel-heading">Organisations</h3>
+        <div class = "table">
+          <div class = "row align-center">
+            <div class = "col-md-2">
+            <label>Action</label>
+            </div>
+            <div class = "col-md-2"><label>Index</label></div>
+            <div class = "col-md-4"><label>Organisation Name</label></div>
+            <div class = "col-md-4"><label>Category</label></div>
+          </div>
+          <div class="form-organisation-list">
+          <div class = "row align-center">
+            <div class = "col-md-2">
+              <input type="radio" name="org-list"  ng-value="model.organisation.organisation_id" ng-model="bsSelect" ng-click="getOrganisation(bsSelect)" ng-if="!organisations.length">
+              <input type="radio" name="org-list"  ng-value="organisations[0].first_organisation.organisation_id" ng-model="bsSelect" ng-click="getOrganisation(bsSelect)" ng-if="organisations.length">
+            </div>
+            <div class = "col-md-2">{{$index+1}}</div>
+            <div class = "col-md-4" ng-if="!organisations.length">{{model.organisation.name}}</div>
+            <div class = "col-md-4" ng-if="organisations.length">{{organisations[0].first_organisation.name}}</div>
+            <div class = "col-md-4" ng-if="!organisations.length">{{model.organisation.category}}</div>
+            <div class = "col-md-4" ng-if="organisations.length">{{organisations[0].first_organisation.category}}</div>
+          </div>
+          <div class = "row table-hover align-center" ng-repeat="organisation in organisations">
+            <div class = "col-md-2">
+              <input type="radio" name="org-list"  ng-value="organisation.second_organisation.organisation_id" ng-model="bsSelect" ng-click="getOrganisation(bsSelect)">
+            </div>
+            <div class = "col-md-2">{{$index+2}}</div>
+            <div class = "col-md-4">{{organisation.second_organisation.name}}</div>
+            <div class = "col-md-4">{{organisation.second_organisation.category}}</div>
+          </div>
+          </div>
+          <br>
+          <!-- <div class = "row">
+            <div class = "col-md-4"><a data-target="#detailModal" class="btn btn-danger  active" data-toggle="modal">View Contact Details</a></div>
+            <div class = "col-md-2"></div>
+            <div class = "col-md-2"></div>
+            <div class = "col-md-4 align-right">
+              <button class="btn btn-danger" ng-model="edit" ng-click="editDetails()">Edit Details</button>
+            </div>
+          </div> -->
+        </div>
+      </div>
+    </form>
+      <!--end: organisations list  -->
+
+      <form name = "form1" class="">
+        <div class = "panel panel-default business-panel">
+        <h3 class = "panel-heading">Organisation Details</h3>
         <div class = "table">
           <div class = "row">
-            <div class = "col-md-3"><label>Business Name</label></div>
-            <div class = "col-md-3">{{model.business.name}}</div>
-            <div class = "col-md-3"><label>Business Type</label></div>
-            <div class = "col-md-3">{{model.business.type_name.business_type}}</div>
+            <div class = "col-md-3"><label>Organisation Name</label></div>
+            <div class = "col-md-3">{{model.organisation.name}}</div>
+            <div class = "col-md-3"><label>Organisation Category</label></div>
+            <div class = "col-md-3">{{model.organisation.category}}</div>
           </div>
           <div class = "row">
-            <div class = "col-md-3"><label>Business Sub-Type</label></div>
-            <div class = "col-md-3">{{model.business.sub_type.business_sub_type}}</div>
-            <div class = "col-md-3"><label>Business Email</label></div>
-            <div class = "col-md-3">{{model.business.email}}</div>
+            <div class = "col-md-3"><label>Organisation Phone</label></div>
+            <div class = "col-md-3">{{model.organisation.phone}}</div>
+            <!-- <div class = "col-md-3"><label>Business Sub-Type</label></div>
+            <div class = "col-md-3">{{model.business.sub_type.business_sub_type}}</div> -->
+            <div class = "col-md-3"><label>Organisation Email</label></div>
+            <div class = "col-md-3">{{model.organisation.email}}</div>
           </div>
           <div class = "row">
-            <div class = "col-md-3"><label>Business Phone</label></div>
-            <div class = "col-md-3">{{model.business.phone}}</div>
-            <div class = "col-md-3"><label>Business Address</label></div>
-            <div class = "col-md-3">{{model.business.address}}</div>
+            <!-- <div class = "col-md-3"><label>Organisation Phone</label></div>
+            <div class = "col-md-3">{{model.organisation.phone}}</div> -->
+            <div class = "col-md-3"><label>Organisation Address</label></div>
+            <div class = "col-md-3">{{model.organisation.address}}</div>
           </div>
           <div class = "row">
             <div class = "col-md-3"><label>Reference Contact Name</label></div>
-            <div class = "col-md-3">{{model.business.reference_name}}</div>
+            <div class = "col-md-3">{{model.organisation.reference_name}}</div>
             <div class = "col-md-3"><label>Reference Contact Phone</label></div>
-            <div class = "col-md-3">{{model.business.reference_phone}}</div>
+            <div class = "col-md-3">{{model.organisation.reference_phone}}</div>
           </div>
           <div class = "row">
             <div class = "col-md-3"><label>Reference Contact Email</label></div>
-            <div class = "col-md-3">{{model.business.reference_email}}</div>
+            <div class = "col-md-3">{{model.organisation.reference_email}}</div>
             <div class = "col-md-3"><label>Comments</label></div>
-            <div class = "col-md-3">{{model.business.comments}}</div>
+            <div class = "col-md-3">{{model.organisation.comments}}</div>
           </div>
           <br>
-          <div class = "row">
+          <!-- <div class = "row">
             <div class = "col-md-4"><a data-target="#detailModal" class="btn btn-danger  active" data-toggle="modal">View Contact Details</a></div>
             <div class = "col-md-2"></div>
             <div class = "col-md-2"></div>
             <div class = "col-md-4"><button class="btn btn-danger" ng-model="edit" ng-click="editDetails()">Edit Details</button></div>
-          </div>
+          </div> -->
         </div>
       </div>
     </form>
 
-    <form name="existingAccount" ng-show="choice == 'selected'">
+    <form name="existingAccount">
         <div class="panel panel-default business-panel">
-          <h4 class="panel-heading">Existing Accounts</h4>
-          <div class="table-responsive">
-            <table class="table table-hover">
+          <h4 class="panel-heading">
+            <a ng-click="getAccounts()">Click Here To View Existing Accounts</a>
+            <span ng-if="showAccountsMessage">No Accounts Found!!</span>
+          </h4>
+          <div class="table-responsive tableBodyList">
+            <table class="table table-hover ">
               <thead>
                 <tr>
                   <th></th>
-                  <th class="col-md-3 table-heading">Account Name</th>
-                  <th class="col-md-3 table-heading">Account Type</th>
-                  <th class="col-md-3 table-heading">Comments</th>
-                  <th class="col-md-3 table-heading"></th>
+                  <th class="col-md-4 table-heading">Account Name</th>
+                  <!-- <th class="col-md-3 table-heading">Account Type</th> -->
+                  <th class="col-md-4 table-heading">Comments</th>
+                  <th class="col-md-4 table-heading"></th>
                 </tr>
               </thead>
+
               <tbody>
                 <tr ng-repeat="account in model.accounts track by $index">
                   <td><input type="radio" id="sel_account_id" name="sel_account_id" value="{{account.account_id}}" ng-checked="sel_account_id" ng-model="sel_account_id" ng-click = "getProposals(sel_account_id,$index)"></td>
                   <td>{{account.name}}</td>
-                  <td>{{account.business.type_name.business_type}}</td>
+                  <!-- <td>{{account.business.type_name.business_type}}</td> -->
                   <td>{{account.comments}}</td>
                   <td>
                     <a data-target="#detailModalAccount" class="btn btn-danger  active" data-toggle="modal" ng-click="showAccount(account)">Details</a></div>
                   </td>
                 </tr>
               </tbody>
+
             </table>
-            <button class="btn btn-danger" ng-click="addNewAccount()" permission = "[bd_manager]">Add New Account</button>
+
           </div>
+      <button class="btn btn-danger" ng-click="addNewAccount()" permission = "[bd_manager]">Add New Account</button>
         </div>
       </form>
 
-      <form name="existingProposal" ng-show="choice == 'selected'">
+      <form name="existingProposal">
         <div class="panel panel-default business-panel">
           <h4 class="panel-heading">Existing Proposals</h4>
-          <div class="table-responsive">
+          <div class="table-responsive tableBodyList">
             <table class="table table-hover" ng-show="account_proposals.length != 0">
               <thead>
                 <tr>
@@ -174,9 +230,10 @@
                 </tr>
               </tbody>
             </table>
-            <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" permission = "[bd_manager]">Create New Proposal</button>
-            <span class="show-error" ng-show="error">Please select an account</span>
           </div>
+          <br>
+          <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" permission = "[bd_manager]">Create New Proposal</button>
+            <span class="show-error" ng-show="error">Please select an account</span>
         </div>
       </form>
 

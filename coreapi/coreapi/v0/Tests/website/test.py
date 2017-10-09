@@ -54,8 +54,8 @@ This file contains test cases for website app.
 #         self.business_sub_type = models.BusinessSubTypes.objects.create(business_type=self.business_type, business_sub_type='SCHOOL',  business_sub_type_code='SCH')
 #
 #         # make some businesses
-#         self.business = models.BusinessInfo.objects.create(business_id='B1', name='AXCDG', type_name=self.business_type, sub_type=self.business_sub_type,)
-#         business_content_type = ContentType.objects.get_for_model(model=models.BusinessInfo)
+#         self.business = models.Organisation.objects.create(business_id='B1', name='AXCDG', type_name=self.business_type, sub_type=self.business_sub_type,)
+#         business_content_type = ContentType.objects.get_for_model(model=models.Organisation)
 #
 #         # make a contact for the business
 #         self.contact = models.BusinessAccountContact.objects.create(content_type=business_content_type, object_id=self.business.business_id, name='C1', designation='d1', department='D1', phone='123456789', email='whatever@gmail.com')
@@ -91,7 +91,7 @@ This file contains test cases for website app.
 #                                                                         business_sub_type_code='SCH')
 #
 #         # make some businesses
-#         self.business = models.BusinessInfo.objects.create(business_id='B1', name='AXCDG', type_name=self.business_type,
+#         self.business = models.Organisation.objects.create(business_id='B1', name='AXCDG', type_name=self.business_type,
 #                                                            sub_type=self.business_sub_type, )
 #
 #         # make accounts
@@ -188,7 +188,7 @@ This file contains test cases for website app.
 #                                                                         business_sub_type_code='SCH')
 #
 #         # make businesses
-#         self.business = models.BusinessInfo.objects.create(business_id='B1', name='AXCDG', type_name=self.business_type,
+#         self.business = models.Organisation.objects.create(business_id='B1', name='AXCDG', type_name=self.business_type,
 #                                                            sub_type=self.business_sub_type, )
 #
 #         # make account
@@ -362,8 +362,8 @@ class CreateInitialProposalTestCases(APITestCase):
                                                                         business_sub_type_code='SCH')
 
         # make businesses
-        business = models.BusinessInfo.objects.create(business_id='B1', name='AXCDG', type_name=business_type,
-                                                           sub_type=business_sub_type, )
+        business = models.Organisation.objects.create(business_id='B1', name='AXCDG', type_name=business_type,
+                                                      sub_type=business_sub_type, )
 
         # make account
         self.account = models.AccountInfo.objects.create(account_id='a1', business=business, name='A1', phone='960790857',

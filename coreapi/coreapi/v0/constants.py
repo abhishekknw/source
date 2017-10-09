@@ -1205,3 +1205,13 @@ valid_regions = {
 }
 
 supplier_id_max_length = 20
+
+# the values must match with fields of ObjectLevelPermission model
+permission_contants = {
+    'CREATE': 'create',
+    'UPDATE': 'update',
+    'VIEW': 'view',
+    'VIEW_ALL': 'view_all',
+    'UPDATE_ALL': 'update_all',
+    'DELETE': 'delete'
+}

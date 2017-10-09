@@ -1,12 +1,13 @@
+from django.contrib.contenttypes.models import ContentType
 
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 import v0.models as models
-from v0.models import BusinessInfo, Campaign, CampaignSocietyMapping, SocietyInventoryBooking, AccountInfo
+from v0.models import Organisation, Campaign, CampaignSocietyMapping, SocietyInventoryBooking, AccountInfo
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety,\
                     ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, BaseUser
-from v0.serializers import BusinessAccountContactSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, BaseUserSerializer
+from v0.serializers import BusinessAccountContactSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, BaseUserSerializer, BaseModelPermissionSerializer
 from v0.ui.serializers import UISocietySerializer
 
 
@@ -68,7 +69,7 @@ class ProposalCenterMappingVersionSpaceSerializer(ModelSerializer):
         model = ProposalCenterMappingVersion
 
 
-class ProposalInfoSerializer(ModelSerializer):
+class ProposalInfoSerializer(BaseModelPermissionSerializer):
 
     class Meta:
         model = ProposalInfo
@@ -218,7 +219,7 @@ class UIBusinessInfoSerializer(ModelSerializer):
     sub_type = BusinessSubTypeSerializer()
 
     class Meta:
-        model = BusinessInfo
+        model = Organisation
         # depth = 2
 
 
@@ -388,3 +389,70 @@ class InventoryActivityAssignmentSerializer(ModelSerializer):
     class Meta:
         model = models.InventoryActivityAssignment
 
+
+class ObjectLevelPermissionSerializer(ModelSerializer):
+    """
+    serializer for Object Level Permissions
+    """
+    class Meta:
+        model = models.ObjectLevelPermission
+
+
+class GeneralUserPermissionSerializer(ModelSerializer):
+    """
+    serializer for GeneralUserPermissions
+    """
+    class Meta:
+        model = models.GeneralUserPermission
+
+
+class OrganisationSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.Organisation
+
+
+class ProfileNestedSerializer(ModelSerializer):
+    """
+    Nested serializer for Profile
+    """
+    organisation = OrganisationSerializer()
+    object_level_permission = ObjectLevelPermissionSerializer(many=True, source='objectlevelpermission_set')
+    general_user_permission = GeneralUserPermissionSerializer(many=True, source='generaluserpermission_set')
+
+    class Meta:
+        model = models.Profile
+
+
+class ProfileSimpleSerializer(ModelSerializer):
+    """
+    simple serializer for Profile
+    """
+    class Meta:
+        model = models.Profile
+
+
+
+class ContentTypeSerializer(ModelSerializer):
+
+    class Meta:
+        model =  ContentType
+
+
+class ObjectLevelPermissionViewSet(ModelSerializer):
+    """
+
+    """
+    class Meta:
+        model = models.ObjectLevelPermission
+
+
+class OrganisationMapNestedSerializer(ModelSerializer):
+    """
+
+    """
+    first_organisation = OrganisationSerializer()
+    second_organisation = OrganisationSerializer()
+
+    class Meta:
+        model = models.OrganisationMap

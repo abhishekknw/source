@@ -1,10 +1,11 @@
 from django.contrib.auth.models import User, Permission, Group
+from django.core.exceptions import PermissionDenied
 
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, \
-    Campaign, BusinessInfo, BusinessAccountContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, \
+    Campaign, Organisation, BusinessAccountContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, \
     AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, \
     CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, \
     SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, \
@@ -15,6 +16,34 @@ from v0.models import City, CityArea, CitySubArea, SupplierTypeCode, InventorySu
     UserProfile, CorporateParkCompanyList, CorporateBuilding, CorporateBuildingWing, CorporateCompanyDetails, \
     CompanyFloor
 import models
+import v0.constants as v0_constants
+from managers import check_object_permission
+
+
+class BaseModelPermissionSerializer(ModelSerializer):
+      """
+
+      Inherit this serializer if you want permission checking in creation of  a model instance through serializer.
+      Not sure weather to do this in .save() method or here. Going with serializer.
+
+      """
+      def create(self, validated_data):
+          """
+          called in creating instance. Here we only check fo 'CREATE' permission for the given user.
+          :param validated_data:
+          :return:
+          """
+          class_name = self.__class__.__name__
+          is_permission, error = check_object_permission(validated_data['user'], self.Meta.model, v0_constants.permission_contants['CREATE'])
+          if not is_permission:
+              raise PermissionDenied(class_name, error)
+          return self.Meta.model.objects.create(**validated_data)
+
+
+class AccountInfoSerializer(BaseModelPermissionSerializer):
+
+    class Meta:
+        model = AccountInfo
 
 
 class UserSerializer(ModelSerializer):
@@ -313,7 +342,7 @@ class BusinessTypesSerializer(ModelSerializer):
 #     # sub_type = BusinessSubTypesSerializer()
 #     # type = BusinessTypesSerializer()
 #     class Meta:
-#         model = BusinessInfo
+#         model = Organisation
 #         depth = 2
 
         # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
@@ -335,7 +364,7 @@ class BusinessInfoSerializer(ModelSerializer):
     # sub_type = BusinessSubTypesSerializer()
     # type = BusinessTypesSerializer()
     class Meta:
-        model = BusinessInfo
+        model = Organisation
         # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
         # 'reference_phone', 'reference_email', 'comments')
 
@@ -344,13 +373,6 @@ class BusinessInfoSerializer(ModelSerializer):
 #     class Meta:
 #         model = BusinessAccountContact
 
-
-class AccountInfoSerializer(ModelSerializer):
-    # business = BusinessSerializer(read_only=True)
-    class Meta:
-        model = AccountInfo
-        depth = 2
-        # fields = ('id','name')
 
 
 class AccountSerializer(ModelSerializer):
@@ -500,15 +522,46 @@ class PermissionsSerializer(ModelSerializer):
         model = Permission
 
 
-class BaseUserSerializer(ModelSerializer):
+class GeneralUserPermissionSerializer(ModelSerializer):
     """
-    You can only write a password. Not allowed to read it. Hence password is in extra_kwargs dict.
-    when creating a BaseUser instance we want password to be saved by .set_password() method, hence overwritten to
-    do that.
-    When updating the BaseUser, we never update the password. There is a separate api for updating password.
+    serializer for GeneralUserPermissions
     """
-    groups = GroupSerializer(read_only=True,  many=True)
-    user_permissions = PermissionsSerializer(read_only=True,  many=True)
+    class Meta:
+        model = models.GeneralUserPermission
+
+
+class OrganisationSerializer(BaseModelPermissionSerializer):
+
+    class Meta:
+        model = models.Organisation
+
+
+class ObjectLevelPermissionSerializer(ModelSerializer):
+    """
+    serializer for Object Level Permissions
+    """
+    class Meta:
+        model = models.ObjectLevelPermission
+
+
+class ProfileNestedSerializer(ModelSerializer):
+    """
+    Nested serializer for Profile
+    """
+    organisation = OrganisationSerializer()
+    object_level_permission = ObjectLevelPermissionSerializer(many=True, source='objectlevelpermission_set')
+    general_user_permission = GeneralUserPermissionSerializer(many=True, source='generaluserpermission_set')
+
+    class Meta:
+        model = models.Profile
+
+
+class BaseUserCreateSerializer(ModelSerializer):
+    """
+    specifically for creating  User objects. There was a need for creating this as standard serializer
+    was also containing a nested serializer. It's not possible to write to a serializer if it's nested
+    as of Django 1.8.
+    """
 
     def create(self, validated_data):
         """
@@ -516,7 +569,6 @@ class BaseUserSerializer(ModelSerializer):
             validated_data: the data that is used to be create the user.
 
         Returns: sets the password of the user when it's created.
-
         """
 
         # get the password
@@ -526,22 +578,63 @@ class BaseUserSerializer(ModelSerializer):
         user = self.Meta.model.objects.create(**validated_data)
         # save password this way
         user.set_password(password)
-        # hit save
+        # save profile
         user.save()
         # return
         return user
 
-    
     class Meta:
         model = models.BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'password', 'is_superuser', 'groups', 'user_permissions')
+        fields = (
+        'id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'password', 'is_superuser', 'profile')
         extra_kwargs = {
             'password': {'write_only': True}
         }
 
+
+class BaseUserSerializer(ModelSerializer):
+    """
+    You can only write a password. Not allowed to read it. Hence password is in extra_kwargs dict.
+    when creating a BaseUser instance we want password to be saved by .set_password() method, hence overwritten to
+    do that.
+    When updating the BaseUser, we never update the password. There is a separate api for updating password.
+    """
+    groups = GroupSerializer(read_only=True,  many=True)
+    user_permissions = PermissionsSerializer(read_only=True,  many=True)
+    profile = ProfileNestedSerializer()
+
+    def create(self, validated_data):
+        """
+        Args:
+            validated_data: the data that is used to be create the user.
+
+        Returns: sets the password of the user when it's created.
+        """
+
+        # get the password
+        password = validated_data['password']
+        # delete it from the validated_data because we do not want to save it as raw password
+        del validated_data['password']
+        user = self.Meta.model.objects.create(**validated_data)
+        # save password this way
+        user.set_password(password)
+        # save profile
+        user.save()
+        # return
+        return user
+
+
+    class Meta:
+        model = models.BaseUser
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'password', 'is_superuser', 'groups', 'user_permissions', 'profile')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+
 class BaseUserUpdateSerializer(ModelSerializer):
     """
-
+    specific to updating the USER model
     """
     def update(self, instance, validated_data):
         """
@@ -565,7 +658,7 @@ class BaseUserUpdateSerializer(ModelSerializer):
 
     class Meta:
         model = models.BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile','is_superuser', 'groups', 'user_permissions')
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile','is_superuser', 'groups', 'user_permissions', 'profile')
        
 
 class SupplierTypeRetailShopSerializer(ModelSerializer):

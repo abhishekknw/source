@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
-from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, BaseUserSerializer, BaseUserUpdateSerializer
+from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, CityAreaSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, BaseUserSerializer, BaseUserUpdateSerializer, BaseUserCreateSerializer
 from rest_framework.decorators import detail_route, list_route
 from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, CityArea, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, BusinessSubTypes, AdInventoryType, DurationType, \
     Amenity, SupplierAmenitiesMap
@@ -1940,12 +1940,9 @@ class UserViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             user = BaseUser.objects.get(pk=pk)            
-            groups = Group.objects.filter(name__in=request.data.get('groups'))
             serializer = BaseUserUpdateSerializer(user, data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
-                for instance in groups:
-                    user.groups.add(instance)
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except ObjectDoesNotExist as e:
@@ -1963,13 +1960,9 @@ class UserViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            # fetch all groups objects
-            group_instances = Group.objects.filter(name__in=request.data.get('groups'))
-            serializer = BaseUserSerializer(data=request.data)
+            serializer = BaseUserCreateSerializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
-                for instance in group_instances:
-                    user.groups.add(instance)
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
@@ -2235,3 +2228,43 @@ class SetParams(APIView):
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class CopyOrganisation(APIView):
+    """
+
+    """
+    def get(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        business_info_model = apps.get_model(settings.APP_NAME, 'BusinessInfo')
+        organisation_model = apps.get_model(settings.APP_NAME, 'Organisation')
+        instances = business_info_model.objects.all()
+        for instance in instances:
+
+            data = {
+                'name': instance.name,
+                'user': instance.user,
+                'organisation_id': instance.business_id,
+                'type_name': instance.type_name,
+                'sub_type': instance.sub_type,
+                'phone': instance.phone,
+                'email': instance.email,
+                'address': instance.address,
+                'reference_name': instance.reference_name,
+                'reference_phone': instance.reference_phone,
+                'reference_email': instance.reference_email,
+                'comments': instance.comments,
+                'category': 'BUSINESS',
+            }
+            try:
+                organisation_model.objects.create(**data)
+            except Exception as e:
+                print e
+        return ui_utils.handle_response(class_name, data='success', success=True)
+
+
+

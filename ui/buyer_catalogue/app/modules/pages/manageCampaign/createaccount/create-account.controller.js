@@ -1,9 +1,11 @@
 angular.module('machadaloPages')
 .controller('CreateAccountCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'pagesService','constants','$stateParams',
-    function ($scope, $rootScope, $window, $location, pagesService, constants, $stateParams) {
+    ['$scope', '$rootScope', '$window', '$location', 'pagesService','constants','$stateParams','commonDataShare',
+    function ($scope, $rootScope, $window, $location, pagesService, constants, $stateParams, commonDataShare) {
       $scope.model = {};
+      $scope.editAccount = false;
       $scope.model.account = {};
+      $scope.organisationData = {};
     	$scope.accounts = [];
       $scope.supplier_types = ['Society', 'Corporate', 'Club', 'Mall', 'School/College']
     	$scope.campaign_types = ['Poster', 'Standee', 'Stall', 'CarDisplay', 'Fliers']
@@ -100,11 +102,11 @@ angular.module('machadaloPages')
         $scope.selectAcc = $stateParams.accountId;
         $scope.getAccount();
       }
-      else{        
-        // $scope.model.business = pagesService.getBusinessObject();
-        $scope.model.business = JSON.parse($window.localStorage.business);
-        $scope.model.account.business_id = $scope.model.business.business_id;
-      }
+      // else{
+      //   // $scope.model.business = pagesService.getBusinessObject();
+      //   $scope.model.business = JSON.parse($window.localStorage.business);
+      //   $scope.model.account.business_id = $scope.model.business.business_id;
+      // }
 
       $scope.readMore = function() {
               $scope.seeMore = "true";
@@ -215,4 +217,53 @@ angular.module('machadaloPages')
 
         })
         };
+
+        //after adding organisation instead of business
+        var organisationId = $stateParams.organisationId;
+        var getOrganisation = function(){
+          pagesService.getOrganisation(organisationId)
+          .then(function onSuccess(response){
+            console.log(response);
+            $scope.organisationData = response.data.data;
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+        $scope.createAccount = function(){
+          $scope.model.account['organisation'] = $scope.organisationData.organisation_id;
+          pagesService.createAccount($scope.model.account)
+          .then(function onSuccess(response){
+            console.log(response);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+        var accountId = $stateParams.accountId;
+        var getAccount = function(){
+          pagesService.getAccount(accountId)
+          .then(function onSuccess(response){
+            console.log(response);
+            $scope.model.account = response.data.data;
+            $scope.organisationData['name'] = $window.localStorage.organisation_name;
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+        if(organisationId){
+          getOrganisation();
+        }
+        if(accountId){
+          getAccount();
+          $scope.editAccount = true;
+        }
+        $scope.editAccount = function(){
+          pagesService.editAccount($scope.model.account,accountId)
+          .then(function onSuccess(response){
+            console.log(response);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+
+
     }]);

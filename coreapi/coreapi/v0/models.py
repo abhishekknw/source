@@ -16,7 +16,7 @@ from datetime import date
 
 import managers
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Permission
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -58,6 +58,15 @@ INVENTORY_ACTIVITY_TYPES = (
     ('AUDIT', 'AUDIT')
 )
 
+# five possible organization types
+ORGANIZATION_CATEGORY = (
+    ('MACHADALO', 'MACHADALO'),
+    ('BUSINESS', 'BUSINESS'),
+    ('BUSINESS_AGENCY', 'BUSINESS_AGENCY'),
+    ('SUPPLIER_AGENCY', 'SUPPLIER_AGENCY'),
+    ('SUPPLIER', 'SUPPLIER')
+)
+
 
 class BaseUser(AbstractUser):
     """
@@ -65,6 +74,7 @@ class BaseUser(AbstractUser):
     """
     user_code = models.CharField(max_length=255, default=settings.DEFAULT_USER_CODE)
     mobile = models.CharField(max_length=20, null=True, blank=True)
+    profile = models.ForeignKey('Profile', null=True, blank=True)  # remove null=true once every user has been attached one profile
 
     class Meta:
         db_table = 'base_user'
@@ -97,7 +107,10 @@ class BaseModel(models.Model):
                 # pk is Not none, it can be an old instance or a new instance in some cases.
                 # if object is found, then it is indeed an old instance.
                 self.__class__.objects.get(pk=self.pk)
-                self.updated_at = timezone.now()
+                self.updated_at = current_time
+                # in some case if self.created_at is not already set, set it here
+                if not self.created_at:
+                    self.created_at = current_time
 
             except ObjectDoesNotExist:
                 # if pk does not exist, this is  a new instance
@@ -558,19 +571,23 @@ class CommonAreaDetails(models.Model):
 
 
 class ContactDetails(BaseModel):
-    id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
-    supplier = models.ForeignKey('SupplierTypeSociety', related_name='contacts', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
-    contact_type = models.CharField(db_column='CONTACT_TYPE',  max_length=30, blank=True, null=True)  # Field name made lowercase.
-    specify_others = models.CharField(db_column='SPECIFY_OTHERS',  max_length=50, blank=True, null=True)  # Field name made lowercase.
-    name = models.CharField(db_column='CONTACT_NAME',  max_length=50, blank=True, null=True)  # Field name made lowercase.
-    salutation = models.CharField(db_column='SALUTATION',  max_length=50, blank=True, null=True)  # Field name made lowercase.
-    landline = models.BigIntegerField(db_column='CONTACT_LANDLINE', blank=True, null=True)  # Field name made lowercase.
-    std_code = models.CharField(db_column='STD_CODE',max_length=6, blank=True, null=True)  # Field name made lowercase.
-    mobile = models.BigIntegerField(db_column='CONTACT_MOBILE', blank=True, null=True)  # Field name made lowercase.
-    country_code = models.CharField(db_column='COUNTRY_CODE', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    email = models.CharField(db_column='CONTACT_EMAILID',  max_length=50, blank=True, null=True)  # Field name made lowercase.
-    spoc = models.CharField(db_column='SPOC', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    contact_authority = models.CharField(db_column='CONTACT_AUTHORITY', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    """
+    holds contacts of all kinds.
+    """
+    contact_type = models.CharField(max_length=30, blank=True, null=True)
+    specify_others = models.CharField(max_length=50, blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    salutation = models.CharField(max_length=50, blank=True, null=True)
+    landline = models.BigIntegerField(blank=True, null=True)
+    std_code = models.CharField(max_length=6, blank=True, null=True)
+    mobile = models.BigIntegerField(blank=True, null=True)
+    country_code = models.CharField(max_length=10, blank=True, null=True)
+    email = models.CharField(max_length=50, blank=True, null=True)
+    spoc = models.CharField(max_length=5, blank=True, null=True)
+    contact_authority = models.CharField(max_length=5, blank=True, null=True)
+    designation = models.CharField(max_length=155, null=True, blank=True)
+    department = models.CharField(max_length=155, null=True, blank=True)
+    comments = models.TextField(max_length=255, null=True, blank=True)
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
@@ -1218,6 +1235,42 @@ class BusinessAccountContact(BaseModel):
         db_table = 'business_account_contact'
 
 
+class Organisation(BaseModel):
+    """
+    This is model which captures the essence of any organisation interacting with our system. The class
+    Business is merly a type of this model and will be soon be deleted once, the data is migrated into this model.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    organisation_id = models.CharField(max_length=30, primary_key=True)
+    name = models.CharField(max_length=255, blank=True)
+    type_name = models.ForeignKey('BusinessTypes', null=True, blank=True)
+    sub_type = models.ForeignKey('BusinessSubTypes', null=True, blank=True)
+    phone = models.CharField(max_length=12, blank=True)
+    email = models.CharField(max_length=50, blank=True)
+    address = models.CharField(max_length=255, blank=True)
+    reference_name = models.CharField(max_length=50, blank=True)
+    reference_phone = models.CharField(max_length=10, blank=True)
+    reference_email = models.CharField(max_length=50, blank=True)
+    comments = models.TextField(max_length=100, blank=True)
+    contacts = GenericRelation(BusinessAccountContact)
+    category = models.CharField(max_length=30, choices=ORGANIZATION_CATEGORY, default=ORGANIZATION_CATEGORY[1][0])
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'organisation'
+
+
+class OrganisationMap(BaseModel):
+    """
+    Generic table that maps relationship between any two organisations.
+    """
+    first_organisation = models.ForeignKey(Organisation, related_name='first_organisation')
+    second_organisation = models.ForeignKey(Organisation, related_name='second_organisation')
+
+    class Meta:
+        db_table = 'organisation_map'
+
+
 class BusinessInfo(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     business_id = models.CharField(db_column='BUSINESS_ID',max_length=15, primary_key=True)
@@ -1285,9 +1338,10 @@ class BusinessSubTypes(BaseModel):
 
 class AccountInfo(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    account_id  = models.CharField(db_column='ACCOUNT_ID', max_length=15, primary_key=True)
-    business    = models.ForeignKey(BusinessInfo, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
-    name        = models.CharField(db_column='NAME', max_length=50, blank=True)
+    account_id = models.CharField(db_column='ACCOUNT_ID', max_length=15, primary_key=True)
+    business  = models.ForeignKey(BusinessInfo, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
+    organisation = models.ForeignKey(Organisation, null=True, blank=True)
+    name    = models.CharField(db_column='NAME', max_length=50, blank=True)
     phone       = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email       = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
     address     = models.CharField(db_column='ADDRESS',  max_length=100, blank=True)
@@ -2291,6 +2345,7 @@ class GenericExportFileName(BaseModel):
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     business = models.ForeignKey('BusinessInfo', null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, null=True, blank=True)
     account = models.ForeignKey('AccountInfo', null=True, blank=True)
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
@@ -2460,34 +2515,48 @@ class SupplierTypeBusDepot(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_type_bus_depot'
 
-#
-# class SupplierTypeBus(BaseModel):
-#     """
-#     captures details of a single BUS
-#     """
-#     registered_number = models.CharField(max_length=100, unique=True)
-#     bus_depot = models.ForeignKey(SupplierTypeBusDepot)
-#     is_ac = models.BooleanField(default=False)
-#     size_back_side_banner = models.FloatField(null=True, blank=True)
-#     size_left_side_banner = models.FloatField(null=True, blank=True)
-#     size_right_side_banner = models.FloatField(null=True, blank=True)
-#     cost_back_side_banner = models.FloatField(null=True, blank=True)
-#     cost_left_side_banner = models.FloatField(null=True, blank=True)
-#     cost_right_side_banner = models.FloatField(null=True, blank=True)
-#     printing_cost_back_side_banner = models.FloatField(null=True, blank=True)
-#     printing_cost_left_side_banner = models.FloatField(null=True, blank=True)
-#     printing_cost_right_side_banner = models.FloatField(null=True, blank=True)
-#     mounting_cost_back_side_banner = models.FloatField(null=True, blank=True)
-#     mounting_cost_left_side_banner = models.FloatField(null=True, blank=True)
-#     mounting_cost_right_side_banner = models.FloatField(null=True, blank=True)
-#     is_tv_screen = models.BooleanField(default=False)
-#     is_wifi_connected = models.BooleanField(default=False)
-#     seat_count = models.IntegerField()
-#     size_seat_back_inventory = models.FloatField(null=True, blank=True)
-#     cost_seat_back_inventory = models.FloatField(null=True, blank=True)
-#     printing_cost_seat_back_inventory = models.FloatField(null=True, blank=True)
-#     mounting_cost_seat_back_inventory = models.FloatField(null=True, blank=True)
-#
-#     class Meta:
-#         db_table = 'bus'
-#
+
+class Profile(BaseModel):
+    """
+    This model describes profile. a user can only have one profile.
+    """
+    name = models.CharField(max_length=255)
+    organisation = models.ForeignKey('Organisation')
+    is_standard = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'profile'
+
+
+class ObjectLevelPermission(models.Model):
+    """
+    This class grants access  Read, Update, View, ViewAll, and UpdateAll on each object it's tied to.
+    """
+    name = models.CharField(max_length=255)
+    codename = models.CharField(max_length=50)
+    content_type = models.ForeignKey(ContentType)
+    view = models.BooleanField(default=False)
+    update = models.BooleanField(default=False)
+    create = models.BooleanField(default=False)
+    delete = models.BooleanField(default=False)
+    view_all = models.BooleanField(default=False)
+    update_all = models.BooleanField(default=False)
+    description = models.CharField(max_length=1000, null=True, blank=True)
+    profile = models.ForeignKey(Profile)
+
+    class Meta:
+        db_table = 'object_level_permission'
+
+
+class GeneralUserPermission(BaseModel):
+    """
+    This class defines all the possible functions in website and tells weather that is allowed/not allowed for a profile
+    """
+    name = models.CharField(max_length=255)
+    codename = models.CharField(max_length=50)
+    description = models.CharField(max_length=1000, null=True, blank=True)
+    is_allowed = models.BooleanField(default=False)
+    profile = models.ForeignKey(Profile)
+
+    class Meta:
+        db_table = 'general_user_permission'

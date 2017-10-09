@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('OpsExecutionPlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare','constants','$timeout',
-    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare,constants,$timeout) {
+    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare','constants','$timeout','Upload','cfpLoadingBar',
+    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare,constants,$timeout,Upload,cfpLoadingBar) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.reAssign = false;
       var sleepTime = 0;
@@ -20,6 +20,7 @@ angular.module('catalogueApp')
         {header : 'Assigned User'},
         {header : 'ReAssign'},
         {header : 'ReAssigned Date'},
+        {header : 'Action'},
       ];
       $scope.supplier_headings = [
         {header : 'Supplier Id'},
@@ -131,6 +132,7 @@ angular.module('catalogueApp')
           });
         });
       }
+
       $scope.setImageUrl = function(images){
         $scope.imageUrlList = [];
         for(var i=0; i<images.length; i++){
@@ -141,6 +143,7 @@ angular.module('catalogueApp')
           $scope.imageUrlList.push(imageData);
         }
       }
+
       $scope.getSupplierDetails = function(supplier){
         $scope.supplierData = [];
         var supplierId = supplier.supplier_id;
@@ -248,4 +251,39 @@ angular.module('catalogueApp')
         commonDataShare.showErrorMessage(response);
       });
     }
+
+    $scope.uploadImage = function(file,inventory){
+      console.log(inventory);
+
+      // cfpLoadingBar.set(0.3)
+
+          var token = $rootScope.globals.currentUser.token;
+          if (file) {
+             $("#progressBarModal").modal();
+            cfpLoadingBar.start();
+            // cfpLoadingBar.inc();
+            Upload.upload({
+                url: constants.base_url + constants.url_base + constants.upload_image_activity_url,
+                data: {
+                  file: file,
+                  'inventory_activity_assignment_id' : inventory.id,
+                  'supplier_name' : inventory.supplier_name,
+                  'activity_name' : inventory.act_name,
+                  'inventory_name' : inventory.inv_type,
+                  'activity_date' : inventory.act_date,
+                },
+                headers: {'Authorization': 'JWT ' + token}
+            }).then(function onSuccess(response){
+                  uploaded_image = {'image_path': response.data.data };
+                  inventory.images.push(uploaded_image);
+                  cfpLoadingBar.complete();
+                  $("#progressBarModal").modal('hide');
+            })
+            .catch(function onError(response) {
+              cfpLoadingBar.complete();
+              console.log(response);
+            });
+          }
+        }
+
 }]);

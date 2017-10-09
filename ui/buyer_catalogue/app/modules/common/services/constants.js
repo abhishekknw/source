@@ -2,8 +2,8 @@ angular
   .module('catalogueApp').
   constant('constants',{
     //amazon keys
-    base_url : 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/',
-    //base_url : 'http://localhost:8000/',
+    // base_url : 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/',
+    base_url : 'http://localhost:8000/',
     url_base : 'v0/ui/website/',
     AWSAccessKeyId : 'AKIAI6PVCXJEAXV6UHUQ',
     policy : "eyJleHBpcmF0aW9uIjogIjIwMjAtMDEtMDFUMDA6MDA6MDBaIiwKICAiY29uZGl0aW9ucyI6IFsgCiAgICB7ImJ1Y2tldCI6ICJtZGltYWdlcyJ9LCAKICAgIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXSwKICAgIHsiYWNsIjogInB1YmxpYy1yZWFkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRDb250ZW50LVR5cGUiLCAiIl0sCiAgICBbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwgMCwgNTI0Mjg4MDAwXQogIF0KfQoK",
@@ -33,7 +33,9 @@ angular
     statusCode_removed : 'R',
     statusCodeFinalized: 'F',
     showSystemError: true,
-
+    create_success : 'Created Successfully',
+    update_success : 'Updated Successfully',
+    standard_organisation : 'MACHADALO',
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
     center_warning : 'Do you want to create only one center ?',
@@ -94,6 +96,7 @@ angular
     reAssign_error : 'Error occured while reassigning, Please Try again',
     images_download_error : 'Download Failed, Retry later',
     no_image_error : 'There are no images available to download',
+    upload_image_activity_url : 'upload-inventory-activity-image-amazon/',
     //createAccount
     account_success : 'Account Details saved successfully',
     account_error : 'Error occured in saving account details',

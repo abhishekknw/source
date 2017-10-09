@@ -552,7 +552,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
         center_ids = result.keys()
         # this creates a mapping like { 1: 'center_object_1', 2: 'center_object_2' } etc
         center_objects = models.ProposalCenterMapping.objects.in_bulk(center_ids)
-        proposal_object = models.ProposalInfo.objects.get_user_related_object(user=user, proposal_id=proposal_id)
+        proposal_object = models.ProposalInfo.objects.get_permission(user=user, proposal_id=proposal_id)
 
         # set to hold all durations
         duration_list = set()
@@ -1297,7 +1297,7 @@ def save_center_data(proposal_data, user):
 
                 if 'id' in center_info:
                     # means an existing center was updated
-                    center_instance = models.ProposalCenterMapping.objects.get_user_related_object(user=user, id=center_info['id'])
+                    center_instance = models.ProposalCenterMapping.objects.get_permission(user=user, id=center_info['id'])
                     center_serializer = serializers.ProposalCenterMappingSerializer(center_instance, data=center)
                 else:
                     # means we need to create new center
@@ -1483,10 +1483,10 @@ def save_filter_data(suppliers_meta, fixed_data):
         raise Exception(function_name, ui_utils.get_system_error(e))
 
 
-def create_proposal_id(business_id, account_id):
+def create_proposal_id(organisation_id, account_id):
     """
     Args:
-        business_id: The business_id
+        organisation_id: The organisation_id
         account_id:  The account id
 
     Returns: A unique proposal id
@@ -1494,14 +1494,14 @@ def create_proposal_id(business_id, account_id):
     """
     function = create_proposal_id.__name__
     try:
-        if not business_id or not account_id:
+        if not organisation_id or not account_id:
             return ui_utils.handle_response(function, data='provide business and account ids')
         # get number of business letters to append
         business_letters = v0_constants.business_letters
         # get number of account letters to append
         account_letters = v0_constants.account_letters
         # make the proposal id.
-        proposal_id = business_id[:business_letters].upper() + account_id[:account_letters].upper() + (str(uuid.uuid4())[-v0_constants.proposal_id_limit:])
+        proposal_id = organisation_id[:business_letters].upper() + account_id[:account_letters].upper() + (str(uuid.uuid4())[-v0_constants.proposal_id_limit:])
         return proposal_id
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -1732,11 +1732,11 @@ def suppliers_within_radius(data):
         proposal_id = data['proposal_id']
         center_id = data['center_id']
         proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-        business_name = proposal.account.business.name
+        organisation_name = proposal.account.organisation.name
 
         master_result = {
             # set the business_name
-            'business_name': business_name,
+            'organisation_name': organisation_name,
             # space to store the suppliers
             'suppliers': []
         }
@@ -1830,15 +1830,14 @@ def child_proposals(data):
         parent = data['parent']
         user = data['user']
         account_id = data['account_id']
-        proposal_children = models.ProposalInfo.objects.filter_user_related_objects(user=user)
+        proposal_children = models.ProposalInfo.objects.filter_permission(user=user)
         if account_id:
             proposal_children = proposal_children.filter(account_id=account_id)
         proposal_children = proposal_children.filter(parent=parent).order_by('-created_on')
         serializer = serializers.ProposalInfoSerializer(proposal_children, many=True)
-        return ui_utils.handle_response(function_name, data=serializer.data, success=True)
+        return serializer.data
     except Exception as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
-
+        raise Exception(function_name, ui_utils.get_system_error(e))
 
 def construct_proposal_response(proposal_id):
     """
@@ -3320,17 +3319,17 @@ def get_file_name(user, proposal_id, is_exported=True):
         datetime_stamp = now_time.strftime(format)
         proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id) 
         account = proposal.account
-        business = account.business
+        organisation = account.organisation
         if user.is_anonymous():
             user_string = 'Anonymous'
             user = None
         else:
             user_string = user.get_username()
-        file_name = user_string + '_' + business.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
+        file_name = user_string + '_' + organisation.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
         # save this file in db 
         data = {
             'user':  user,
-            'business': business,
+            'organisation': organisation,
             'account': account,
             'proposal': proposal,
             'date': now_time,
@@ -5969,7 +5968,7 @@ def get_inventory_summary_map(supplier_ids=None):
     """
     function = get_inventory_summary_map.__name__
     try:
-        instances = models.InventorySummary.objects.filter_user_related_objects(object_id__in=supplier_ids)
+        instances = models.InventorySummary.objects.filter_permission(object_id__in=supplier_ids)
         inv_sum_map = {}
         for instance in instances:
             supplier_id = instance.object_id
@@ -6014,7 +6013,7 @@ def join_with_underscores(str, delim=' '):
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def upload_to_amazon(file_name, file_content=None):
+def upload_to_amazon(file_name, file_content=None, bucket_name=settings.BUCKET_NAME):
     """
     Args:
         file_name: The file name
@@ -6027,7 +6026,6 @@ def upload_to_amazon(file_name, file_content=None):
         if not os.path.exists(file_name) and (not file_content):
             raise Exception(function, 'The file path {0} does not exists also NO content provided.'.format(file_name))
 
-        bucket_name = settings.BUCKET_NAME
         conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
         bucket = conn.get_bucket(bucket_name)
 
@@ -6042,3 +6040,22 @@ def upload_to_amazon(file_name, file_content=None):
 
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
+
+
+def get_generic_id(items):
+    """
+    pulls first three characters from each of the item in items and adds a random 4 digit at the end to make a general id for any object where custom primary key is required
+    :param items:
+    :return:
+    """
+    function = get_generic_id.__name__
+    try:
+        object_id = ''
+        for item in items:
+            my_item = ''.join(item.split(' '))
+            assert len(my_item) >= 3
+            object_id += my_item[:3].upper()
+        object_id += str(uuid.uuid4())[-4:].upper()
+        return object_id
+    except Exception as e:
+        return  Exception(function, ui_utils.get_system_error(e))

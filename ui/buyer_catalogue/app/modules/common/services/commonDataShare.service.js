@@ -74,5 +74,11 @@ angular.module('catalogueApp')
         swal(constants.name, constants.errorMsg, constants.error);
    }
 
+   commonDataShare.closeModal = function(modalId){
+     $(modalId).modal('hide');
+     $('body').removeClass('modal-open');
+      $('.modal-backdrop').remove();
+   }
+
    return commonDataShare;
 }]);

@@ -3,6 +3,7 @@ import json
 import random
 import shutil
 import string
+import time
 
 import openpyxl
 import os
@@ -11,6 +12,7 @@ from bulk_update.helper import bulk_update
 from celery.result import GroupResult, AsyncResult
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Permission
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import transaction
@@ -18,6 +20,7 @@ from django.db.models import Q, Sum
 from django.db.models import get_model
 from django.forms.models import model_to_dict
 from django.utils.dateparse import parse_datetime
+from django.utils import timezone
 from openpyxl.compat import range
 from pygeocoder import Geocoder, GeocoderError
 from rest_framework import status
@@ -31,7 +34,7 @@ from rest_framework.views import APIView
 import tasks
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer
-from v0.models import SocietyInventoryBooking, Campaign, CampaignSocietyMapping, BusinessInfo, \
+from v0.models import SocietyInventoryBooking, Campaign, CampaignSocietyMapping, Organisation, \
                     BusinessAccountContact, AdInventoryType, DurationType, PriceMappingDefault, \
     ContactDetails, SupplierTypeSociety, SocietyTower, BusinessTypes, \
                     BusinessSubTypes, AccountInfo, InventorySummary, FlatType, ProposalCenterMappingVersion, \
@@ -82,7 +85,7 @@ class BusinessAPIListView(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            items = BusinessInfo.objects.filter_user_related_objects(user=request.user)
+            items = Organisation.objects.filter_permission(user=request.user)
             serializer = BusinessInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
@@ -120,9 +123,9 @@ class BusinessAccounts(APIView):
     def get(self, request, id):
         class_name = self.__class__.__name__
         try:
-            item = BusinessInfo.objects.get_user_related_object(user=request.user, pk=id)
+            item = Organisation.objects.get_permission(user=request.user, pk=id)
             business_serializer = UIBusinessInfoSerializer(item)
-            accounts = AccountInfo.objects.filter_user_related_objects(user=request.user, business=item)
+            accounts = AccountInfo.objects.filter_permission(user=request.user, business=item)
             accounts_serializer = UIAccountInfoSerializer(accounts, many=True)
             response = {
                 'business': business_serializer.data,
@@ -140,7 +143,7 @@ class Accounts(APIView):
     def get(self, request, format=None):
         class_name = self.__class__.__name__
         try:
-            items = AccountInfo.objects.filter_user_related_objects(user=request.user)
+            items = AccountInfo.objects.filter_permission(user=request.user)
             serializer = AccountInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
@@ -156,9 +159,9 @@ class AccountAPIView(APIView):
         class_name = self.__class__.__name__
 
         try:
-            account = AccountInfo.objects.get_user_related_object(user=request.user, pk=id)
+            account = AccountInfo.objects.get_permission(user=request.user, pk=id)
             account_serializer = UIAccountInfoSerializer(account)
-            business = BusinessInfo.objects.get(pk=account.business_id)
+            business = Organisation.objects.get(pk=account.organisation_id)
             business_serializer = BusinessInfoSerializer(business)
             '''contacts = AccountContact.objects.filter(account=account)
             serializer3 = AccountContactSerializer(contacts, many=True)'''
@@ -204,15 +207,15 @@ class BusinessContacts(APIView):
 
                 business_serializer_data = {}
 
-                if 'business_id' in business_data:
-                    business = BusinessInfo.objects.get_user_related_object(user=request.user, pk=business_data['business_id'])
+                if 'organisation_id' in business_data:
+                    business = Organisation.objects.get_permission(user=request.user, pk=business_data['organisation_id'])
                     serializer = BusinessInfoSerializer(business, data=business_data)
                 else:
-                    business_data['business_id'] = self.generate_business_id(business_name=business_data['name'], \
+                    business_data['organisation_id'] = self.generate_organisation_id(business_name=business_data['name'], \
                                                                              sub_type=sub_type, type_name=type_name)
-                    if business_data['business_id'] is None:
-                        # if business_id is None --> after 12 attempts couldn't get unique id so return first id in lowercase
-                        business_data['business_id'] = self.generate_business_id(business_data['name'], \
+                    if business_data['organisation_id'] is None:
+                        # if organisation_id is None --> after 12 attempts couldn't get unique id so return first id in lowercase
+                        business_data['organisation_id'] = self.generate_organisation_id(business_data['name'], \
                                                                                  sub_type=sub_type, type_name=type_name,
                                                                                  lower=True)
                     serializer = BusinessInfoSerializer(data=business_data)
@@ -223,14 +226,14 @@ class BusinessContacts(APIView):
                      business_serializer_data['business_sub_type'] = sub_type.business_sub_type
                      business_serializer_data['business_type'] = type_name.business_type
 
-                business = BusinessInfo.objects.get_user_related_object(user=current_user, pk=business_data['business_id'])
-                content_type_business = ContentType.objects.get_for_model(BusinessInfo)
+                business = Organisation.objects.get_permission(user=current_user, pk=business_data['organisation_id'])
+                content_type_business = ContentType.objects.get_for_model(Organisation)
                 contact_ids = list(business.contacts.all().values_list('id', flat=True))
                 contact_list = []
 
                 for contact in business_data['contacts']:
 
-                    contact['object_id'] = business.business_id
+                    contact['object_id'] = business.organisation_id
                     contact['content_type'] = content_type_business.id
                     contact['user'] = current_user.id
 
@@ -265,19 +268,19 @@ class BusinessContacts(APIView):
         except Exception as e:
                 return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
-    def generate_business_id(self, business_name, sub_type, type_name, lower=False):
+    def generate_organisation_id(self, business_name, sub_type, type_name, lower=False):
         business_code = create_code(name=business_name)
         business_front = type_name.business_type_code + sub_type.business_sub_type_code
-        business_id = business_front + business_code
+        organisation_id = business_front + business_code
         if lower:
-            return business_id.lower()
+            return organisation_id.lower()
 
         try:
-            business = BusinessInfo.objects.get(business_id=business_id)
+            business = Organisation.objects.get(organisation_id=organisation_id)
             # if exception does not occur means conflict
             business_code = create_code(name=business_name, conflict=True)
-            business_id = type_name.business_type_code + sub_type.business_sub_type_code + business_code
-            business = BusinessInfo.objects.get(business_id=business_id)
+            organisation_id = type_name.business_type_code + sub_type.business_sub_type_code + business_code
+            business = Organisation.objects.get(organisation_id=organisation_id)
 
             # still conflict ---> Generate random 4 uppercase character string
             i = 0  # i keeps track of infinite loop tune it according to the needs
@@ -285,12 +288,12 @@ class BusinessContacts(APIView):
                 if i > 10:
                     return None
                 business_code = ''.join(random.choice(string.ascii_uppercase) for _ in range(4))
-                business_id = business_front + business_code
-                business = BusinessInfo.objects.get(business_id=business_id)
+                organisation_id = business_front + business_code
+                business = Organisation.objects.get(organisation_id=organisation_id)
                 i += 1
 
-        except BusinessInfo.DoesNotExist:
-            return business_id.upper()
+        except Organisation.DoesNotExist:
+            return organisation_id.upper()
 
 
 def create_code(name, conflict=False):
@@ -347,19 +350,19 @@ class AccountContacts(APIView):
 
             with transaction.atomic():
 
-                business_id = account_data['business_id']
+                organisation_id = account_data['organisation_id']
                 # checking a valid business
 
-                business = BusinessInfo.objects.get_user_related_object(user=current_user, business_id=business_id)
+                business = Organisation.objects.get(pk=organisation_id)
 
                 if 'account_id' in account_data:
-                    account = AccountInfo.objects.get_user_related_object(user=current_user, pk=account_data['account_id'])
-                    serializer = AccountInfoSerializer(account,data=account_data)
+                    account = AccountInfo.objects.get(pk=account_data['account_id'])
+                    serializer = AccountInfoSerializer(account, data=account_data)
                 else:
-                    account_data['account_id']= self.generate_account_id(account_name=account_data['name'],business_id=business_id)
+                    account_data['account_id']= self.generate_account_id(account_name=account_data['name'],organisation_id=organisation_id)
                     if account_data['account_id'] is None:
                         # if account_id is None --> after 12 attempts couldn't get unique id so return first id in lowercase
-                        account_data['account_id'] = self.generate_account_id(account_name=account_data['name'],business_id=business_id, lower=True)
+                        account_data['account_id'] = self.generate_account_id(account_name=account_data['name'],organisation_id=organisation_id, lower=True)
                     serializer = AccountInfoSerializer(data=account_data)
 
                 if serializer.is_valid():
@@ -404,8 +407,8 @@ class AccountContacts(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-    def generate_account_id(self, account_name, business_id, lower=False):
-        business_code = business_id[-4:]
+    def generate_account_id(self, account_name, organisation_id, lower=False):
+        business_code = organisation_id[-4:]
         account_code = create_code(name = account_name)
         account_id = business_code + account_code
 
@@ -1155,7 +1158,7 @@ class FilteredSuppliers(APIView):
             # cannot be handled  under specific society filters because it involves operation of two columns in database which cannot be generalized to a query.
             # To get business name
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-            business_name = proposal.account.business.name
+            organisation_name = proposal.account.organisation.name
 
             # get the right model and content_type
             supplier_model = ui_utils.get_model(supplier_type_code)
@@ -1269,7 +1272,7 @@ class FilteredSuppliers(APIView):
 
             # construct the response and return
             # set the business name
-            result['business_name'] = business_name
+            result['organisation_name'] = organisation_name
 
             # use this to show what kind of pricing we are using to fetch from pmd table for each kind of inventory
             result['inventory_pricing_meta'] = v0_constants.inventory_type_duration_dict_list
@@ -2636,14 +2639,14 @@ class CreateInitialProposal(APIView):
                 proposal_data = request.data
                 user = request.user
 
-                business_id = proposal_data.get('business_id')
+                organisation_id = proposal_data['organisation_id']
                 account_id = account_id
 
                 # create a unique proposal id
-                proposal_data['proposal_id'] = website_utils.create_proposal_id(business_id, account_id)
+                proposal_data['proposal_id'] = website_utils.get_generic_id([models.Organisation.objects.get(pk=organisation_id).name, models.AccountInfo.objects.get(pk=account_id).name])
 
                 # get the account object. required for creating the proposal
-                account = AccountInfo.objects.get_user_related_object(user=user, account_id=account_id)
+                account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
                 proposal_data['account'] = account.account_id
                 proposal_data['user'] = user.id
 
@@ -2653,7 +2656,7 @@ class CreateInitialProposal(APIView):
                 proposal_data['parent'] = parent
                 # set parent if available
                 if parent:
-                    proposal_data['parent'] = ProposalInfo.objects.get_user_related_object(user=user, proposal_id=parent).proposal_id
+                    proposal_data['parent'] = ProposalInfo.objects.get_permission(user=user, proposal_id=parent).proposal_id
 
                 # call the function that saves basic proposal information
                 response = website_utils.create_basic_proposal(proposal_data)
@@ -2769,10 +2772,7 @@ class ChildProposals(APIView):
                 'user': request.user,
                 'account_id': account_id
             }
-            response = website_utils.child_proposals(data)
-            if not response:
-                return response
-            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+            return ui_utils.handle_response(class_name, data=website_utils.child_proposals(data), success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -3470,8 +3470,8 @@ class Business(APIView):
         class_name = self.__class__.__name__
         try:
             master_user = models.BaseUser.objects.get(id=8)
-            result = AccountInfo.objects.get_user_related_object(user=master_user)
-            # result = AccountInfo.objects.filter_user_related_objects(user=master_user)
+            result = AccountInfo.objects.get_permission(user=master_user)
+            # result = AccountInfo.objects.filter_permission(user=master_user)
             serializer = v0_serializers.AccountSerializer(result)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -3517,7 +3517,7 @@ class ProposalVersion(APIView):
             user = request.user
             proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
             account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
-            business = models.BusinessInfo.objects.get(business_id=account.business.business_id)
+            business = models.Organisation.objects.get(organisation_id=account.organisation.organisation_id)
 
             # if you don't provide this value, No proposal version is created.
             is_proposal_version_created = request.data['is_proposal_version_created'] if request.data.get('is_proposal_version_created') else False
@@ -3527,7 +3527,7 @@ class ProposalVersion(APIView):
             if is_proposal_version_created:
 
                 # create a unique proposal id
-                new_proposal_id = website_utils.create_proposal_id(business.business_id, account.account_id)
+                new_proposal_id = website_utils.create_proposal_id(business.organisation_id, account.account_id)
 
                 # create new ProposalInfo object for this new proposal_id
                 proposal.pk = new_proposal_id
@@ -5126,3 +5126,608 @@ class ExportAllSupplierData(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+class UploadInventoryActivityImageAmazon(APIView):
+    """
+    This API first attempts to upload the given image to amazon and saves path in inventory activity image table.
+    """
+    def post(self, request):
+        """
+        API to upload inventory activity image amazon
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            file = request.data['file']
+            extension = file.name.split('.')[-1]
+            supplier_name = request.data['supplier_name'].replace(' ', '_')
+            activity_name = request.data['activity_name']
+            activity_date = request.data['activity_date']
+            inventory_name = request.data['inventory_name']
+            inventory_activity_assignment_id = request.data['inventory_activity_assignment_id']
+
+            inventory_activity_assignment_instance = models.InventoryActivityAssignment.objects.get(pk=inventory_activity_assignment_id)
+
+            file_name = supplier_name + '_' + inventory_name + '_' + activity_name + '_' + activity_date.replace('-', '_') + '_' + str(time.time()).replace('.', '_') + '.' + extension
+            website_utils.upload_to_amazon(file_name, file_content=file, bucket_name=settings.ANDROID_BUCKET_NAME)
+
+            # Now save the path
+            instance, is_created = models.InventoryActivityImage.objects.get_or_create(image_path=file_name)
+            instance.inventory_activity_assignment = inventory_activity_assignment_instance
+            instance.actual_activity_date = activity_date
+            instance.save()
+
+            return ui_utils.handle_response(class_name, data=file_name, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class ContactViewSet(viewsets.ViewSet):
+    """
+    ViewSet around contacts
+    """
+
+    def list(self, request):
+        """
+        list all the contacts for a given object_id or all if none
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            object_id = request.query_params.get('object_id')
+            if object_id:
+                instances = models.ContactDetails.objects.filter(object_id=object_id)
+            else:
+                instances = models.ContactDetails.objects.all()
+            serializer = v0_serializers.ContactDetailsSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            serializer = v0_serializers.ContactDetailsSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.ContactDetails.objects.get(pk=pk)
+            serializer = v0_serializers.ContactDetailsSerializer(data=request.data, instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class ProfileViewSet(viewsets.ViewSet):
+    """
+    Profile View Set
+    """
+    def list(self, request):
+        """
+        returns a profile object along with general user permissions and object level permissions instances.
+        works with query params which is organisation_id and it's optional
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            organisation_id = request.query_params.get('organisation_id')
+            if organisation_id:
+                org = models.Organisation.objects.get(organisation_id=organisation_id)
+                instances = models.Profile.objects.filter(organisation=org)
+            else:
+                instances = models.Profile.objects.all()
+            serializer = website_serializers.ProfileNestedSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+        creates a profile object. Also create associated object level and general user permissions objects.
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            serializer = website_serializers.ProfileSimpleSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.Profile.objects.get(pk=pk)
+            serializer = website_serializers.ProfileNestedSerializer(instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def destroy(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            models.Profile.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=True, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        """
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.Profile.objects.get(pk=pk)
+            serializer = website_serializers.ProfileSimpleSerializer(data=request.data,instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route(methods=['GET'])
+    def standard_profiles(self, request):
+        """
+        fetches standard profiles from the system. Any profile which is marked is_standard=True and whose Organisation Cateogry is 'MACHADALO',
+        is qualified as standard profile. This list is used in creating profiles for other organisations quickly.
+        Any other organisation will only clone profile, not create one.
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instances = models.Profile.objects.filter(is_standard=True, organisation__category=models.ORGANIZATION_CATEGORY[0][0])
+            serializer = website_serializers.ProfileSimpleSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class OrganisationViewSet(viewsets.ViewSet):
+    """
+    ViewSets around organisations.
+    """
+    def list(self, request):
+        """
+        list all organisations for provided category
+        :param request
+        :param
+        :return
+        """
+
+        class_name = self.__class__.__name__
+        try:
+            category = request.query_params.get('category')
+            if category:
+                instances = models.Organisation.objects.filter_permission(user=request.user, category=category)
+            else:
+                instances = models.Organisation.objects.filter_permission(user=request.user)
+            serializer = website_serializers.OrganisationSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+        :param request
+        :return
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.Organisation.objects.get_permission(user=request.user, pk=pk)
+            serializer = website_serializers.OrganisationSerializer(instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name,exception_object=e, request=request)
+
+    def create(self, request):
+        """
+        :param request:
+        :return:
+        """
+
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            data['user'] = request.user.pk
+            data['organisation_id'] = website_utils.get_generic_id([data['category'], data['name']])
+            serializer = website_serializers.OrganisationSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        """
+        :param request:
+        :param pk:
+        :return:
+        """
+
+        class_name = self.__class__.__name__
+        try:
+            instance = models.Organisation.objects.get_permission(user=request.user, check_update_permissions=True, pk=pk)
+            serializer = website_serializers.OrganisationSerializer(data=request.data, instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class ContentTypeViewSet(viewsets.ViewSet):
+    """
+    fetches all content types in the system
+    """
+
+    def list(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            valid_models = [models.Organisation, models.BaseUser, models.Profile, models.AccountInfo, models.ProposalInfo]
+            serializer = website_serializers.ContentTypeSerializer(ContentType.objects.get_for_models(*valid_models).values(), many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = ContentType.objects.get_for_id(id=pk)
+            serializer = website_serializers.ContentTypeSerializer(instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class ObjectLevelPermissionViewSet(viewsets.ViewSet):
+    """
+    ViewSet around object level permission model
+    """
+    def list(self, request):
+        """
+        retrieves all Object level permission in the system
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            # change this list if you want more models
+            valid_models = [models.Organisation, models.BaseUser, models.Profile, models.AccountInfo, models.ProposalInfo]
+            instances = models.ObjectLevelPermission.objects.filter(content_type__in= ContentType.objects.get_for_models(*valid_models).values())
+            serializer = website_serializers.ObjectLevelPermissionSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.ObjectLevelPermission.objects.get(pk=pk)
+            serializer = website_serializers.ObjectLevelPermissionSerializer(instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            data['codename'] = ''.join(data['name'].split(' '))
+            serializer = website_serializers.ObjectLevelPermissionSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.ObjectLevelPermission.objects.get(pk=pk)
+            serializer = website_serializers.ObjectLevelPermissionSerializer(data=request.data, instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class GeneralUserPermissionViewSet(viewsets.ViewSet):
+    """
+    ViewSet around general user permission model
+    """
+
+    def list(self, request):
+        """
+        retrieves all general user permission in the system
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instances = models.GeneralUserPermission.objects.all()
+            serializer = website_serializers.GeneralUserPermissionSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.GeneralUserPermission.objects.get(pk=pk)
+            serializer = website_serializers.GeneralUserPermissionSerializer(instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            data['codename'] = "".join(data['name'].split()[:2]).upper()
+            data['name'] = "_".join(data['name'].split(" "))
+            serializer = website_serializers.GeneralUserPermissionSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        """
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            instance = models.GeneralUserPermission.objects.get(pk=pk)
+            serializer = website_serializers.GeneralUserPermissionSerializer(data=request.data, instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class CloneProfile(APIView):
+    """
+    Clone a profile.
+    """
+    def post(self, request):
+        """
+        clones a given profile to a new profile with a new name and new organisation_id. copies all object
+        level and general user permission.
+        """
+        class_name = self.__class__.__name__
+        try:
+            profile_pk = request.data['clone_from_profile_id']
+            profile_instance = models.Profile.objects.get(pk=profile_pk)
+            new_organisation_id = request.data['new_organisation_id']
+            new_profile_name = request.data['new_name']
+
+            data = {
+                'name': new_profile_name,
+                'organisation': new_organisation_id,
+                'is_standard': False
+            }
+            serializer = website_serializers.ProfileSimpleSerializer(data=data)
+
+            if serializer.is_valid():
+                new_profile_instance = serializer.save()
+                # copy all object level permissions to new profile. Running .save() call in a loop is okay here
+                # as there won't be much objects per profile in our system
+                for object_level_permission in models.ObjectLevelPermission.objects.filter(profile=profile_instance):
+                    object_level_permission.pk = None
+                    object_level_permission.profile = new_profile_instance
+                    object_level_permission.save()
+                # copy all general user permissions to new profile. Running .save() call in a loop is okay here
+                # as there won't be much objects per profile in our system here.
+                for general_user_permission in models.GeneralUserPermission.objects.filter(profile=profile_instance):
+                    general_user_permission.pk = None
+                    general_user_permission.profile = new_profile_instance
+                    general_user_permission.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            else:
+                return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class OrganisationMapViewSet(viewsets.ViewSet):
+    """
+    viewset that around OrganisationMap model
+    """
+
+    def list(self, request):
+        """
+        returns a dict {
+           'details' : { k1: {}, k2: {} },
+           'mapping' : { k1: [ k2, k3], k2: [ k3 ], k3: [ k1 ] }
+        }
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            source_organisation_id = request.query_params.get('source_organisation_id')
+            instance = models.Organisation.objects.get(pk=source_organisation_id)
+            if source_organisation_id:
+                instances = models.OrganisationMap.objects.filter(Q(first_organisation=instance) or Q(second_organisation=instance))
+            else:
+                instances = models.OrganisationMap.objects.all()
+            serializer = website_serializers.OrganisationMapNestedSerializer(instances, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+        creates a map
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            first_organisation = models.Organisation.objects.get(organisation_id=request.data['first_organisation_id'])
+            second_organisation = models.Organisation.objects.get(organisation_id=request.data['second_organisation_id'])
+            instance, is_created = models.OrganisationMap.objects.get_or_create(first_organisation=first_organisation,second_organisation=second_organisation)
+            serializer = website_serializers.OrganisationMapNestedSerializer(instance=instance)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class AccountViewSet(viewsets.ViewSet):
+    """
+    viewset that around AcountInfo model
+    """
+    def list(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            organisation_id = request.query_params['organisation_id']
+            accounts = models.AccountInfo.objects.filter_permission(user=request.user, organisation=models.Organisation.objects.get(pk=organisation_id))
+            serializer = AccountInfoSerializer(accounts, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def retrieve(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            account = models.AccountInfo.objects.get_permission(user=request.user, pk=pk)
+            serializer = AccountInfoSerializer(account)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            data['user'] = request.user.pk
+            organisation_name = models.Organisation.objects.get(pk=data['organisation']).name
+            data['account_id'] = website_utils.get_generic_id([organisation_name, data['name']])
+            serializer = AccountInfoSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            account = models.AccountInfo.objects.get_permission(user=request.user, check_update_permissions=True, pk=pk)
+            serializer = AccountInfoSerializer(data=request.data, instance=account)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)

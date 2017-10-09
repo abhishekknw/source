@@ -58,10 +58,15 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
      return machadaloHttp.get(url);
    };
 
-    pagesService.getAllBusinesses = function () {
-      var url = url_base + "businesses/";
-      return machadaloHttp.get(url);
-   };
+  //   pagesService.getAllBusinesses = function () {
+  //     var url = url_base + "businesses/";
+  //     return machadaloHttp.get(url);
+  //  };
+
+  pagesService.getOrganisations = function (id) {
+    var url = url_base + "organisation-map/?source_organisation_id=" + id;
+    return machadaloHttp.get(url);
+ };
 
 
    pagesService.getBusiness = function (id) {
@@ -74,10 +79,10 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       return machadaloHttp.get(url);
     };
 
-   pagesService.getAccount = function (id) {
-      var url = url_base + "account/" + id;
-      return machadaloHttp.get(url);
-   };
+  //  pagesService.getAccount = function (id) {
+  //     var url = url_base + "account/" + id;
+  //     return machadaloHttp.get(url);
+  //  };
 
   pagesService.loadBusinessTypes = function () {
       var url = url_base + "create_business/load_business_types/";
@@ -89,10 +94,10 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       return machadaloHttp.get(url);
   };
 
-    pagesService.createBusinessCampaign = function (data) {
-       var url = url_base + "newCampaign/";
-       return machadaloHttp.post(url, data);
-      };
+    // pagesService.createBusinessCampaign = function (data) {
+    //    var url = url_base + "newCampaign/";
+    //    return machadaloHttp.post(url, data);
+    //   };
 
     pagesService.createAccountCampaign = function (data) {
        var url = url_base + "newAccountCampaign/";
@@ -144,6 +149,35 @@ angular.module('machadaloPages').factory('pagesService', ['machadaloHttp','$stat
       $rootScope.societyId = null;
     }
    };
+   pagesService.createOrganisation = function (data) {
+      var url = url_base + "organisation/";
+      return machadaloHttp.post(url, data);
+     };
+
+    pagesService.getOrganisation = function(id){
+      var url = url_base + "organisation/" + id + "/";
+      return machadaloHttp.get(url);
+    }
+
+    pagesService.getAccounts = function(id){
+      var url = url_base + "account/?organisation_id=" + id;
+      return machadaloHttp.get(url);
+    }
+
+    pagesService.getAccount = function (id) {
+       var url = url_base + "account/" + id + "/";
+       return machadaloHttp.get(url);
+    }
+
+    pagesService.createAccount = function(data){
+      var url = url_base + "account/";
+      return machadaloHttp.post(url, data);
+    }
+
+    pagesService.editAccount = function(data,id){
+      var url = url_base + "account/" + id + "/";
+      return machadaloHttp.put(url, data);
+    };
 
    return pagesService;
 }]);

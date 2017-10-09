@@ -79,10 +79,21 @@ urlpatterns = [
     url(r'^child-proposals/(?P<proposal_id>[A-Z_a-z0-9-]+)/$', views.ChildProposals.as_view()),
     url(r'^export-all-supplier_data/$', views.ExportAllSupplierData.as_view()),
     url(r'^import-supplier-data-from-sheet/$', views.ImportSupplierDataFromSheet.as_view()),
+    url(r'^clone-profile/$', views.CloneProfile.as_view()),
+    url(r'^upload-inventory-activity-image-amazon/$', views.UploadInventoryActivityImageAmazon.as_view()),
 
 ]
 
 router = DefaultRouter()
 router.include_format_suffixes = False
-router.register(r'^proposal', views.ProposalViewSet, base_name='Proposal')  
+router.register(r'^proposal', views.ProposalViewSet, base_name='Proposal')
+router.register(r'^contact', views.ContactViewSet, base_name='Contact')
+router.register(r'^profile', views.ProfileViewSet, base_name='Profile')
+router.register(r'^content-type', views.ContentTypeViewSet, base_name='Content-Type')
+router.register(r'^organisation', views.OrganisationViewSet, base_name='Organisation')
+router.register(r'^object-level-permission', views.ObjectLevelPermissionViewSet, base_name='object-level-permission')
+router.register(r'^general-user-permission', views.GeneralUserPermissionViewSet, base_name='general-user-permission')
+router.register(r'^organisation-map', views.OrganisationMapViewSet, base_name='organisation-map')
+router.register(r'^account', views.AccountViewSet, base_name='account')
+
 urlpatterns += router.urls

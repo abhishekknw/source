@@ -6,6 +6,7 @@ from uuid import uuid4
 from types import *
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.contenttypes.models import ContentType
 
 import geocoder
 from bulk_update.helper import bulk_update
@@ -566,5 +567,4 @@ def create_cache_key(module_name, *args):
         return module_name + '_' + hashlib.sha1(final_string).hexdigest()
     except Exception as e:
         raise Exception(e, function)
-
 

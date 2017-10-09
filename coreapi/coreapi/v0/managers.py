@@ -1,8 +1,11 @@
 from django.apps import apps
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
 from django.db import models
 from django.db.models import Q
+
 import v0.models
+from v0 import constants
 
 
 class GeneralManager(models.Manager):
@@ -114,47 +117,85 @@ class GeneralManager(models.Manager):
     def get_content_type(self, supplier_type_code):
         try:
             ContentType = apps.get_model('contenttypes', 'ContentType')
-            suppliers = v0_constants.codes_to_model_names
+            suppliers = constants.codes_to_model_names
             load_model = apps.get_model('v0', suppliers[supplier_type_code])
             content_type = ContentType.objects.get_for_model(load_model)
             return content_type
         except Exception as e:
             pass
 
-    def get_user_related_object(self, **kwargs):
-        function = self.get_user_related_object.__name__
+    def get_permission(self, check_update_permissions=False, **kwargs):
+        function = self.get_permission.__name__
         try:
-            if kwargs.get('user'):
-                user = kwargs['user']
-                # idea is to not involve user keyword when the user is superuser. When a superuser requests, it means
-                # no checking is done on user key. The request is straight away passed
-                if user.is_superuser:
-                    kwargs.pop('user')
-            # query = HelperManagerMethods.prepare_query(user, **kwargs)
-            result = self.get(**kwargs)
-            return result
+            user = kwargs['user']
+            kwargs.pop('user')
+
+            if user.is_superuser:
+                return self.get(**kwargs)
+
+            if check_update_permissions:
+                user_based_verdict, user_based_error =  check_object_permission(user, self.model, constants.permission_contants['UPDATE'])
+                user_independent_verdict, user_independent_error = check_object_permission(user, self.model, constants.permission_contants['UPDATE_ALL'])
+            else:
+
+                user_based_verdict, user_based_error = check_object_permission(user, self.model, constants.permission_contants['VIEW'])
+                user_independent_verdict, user_independent_error = check_object_permission(user, self.model, constants.permission_contants['VIEW_ALL'])
+
+            # if both are not present, return error
+            if (not user_based_verdict) and (not user_independent_verdict):
+                error = (user_based_error, user_independent_error)
+                raise PermissionDenied(error)
+
+            # if view_all present, no user based query
+            if user_independent_verdict:
+                return self.get(**kwargs)
+            # if single view present, must query based on user
+            else:
+                kwargs['user'] = user
+                return self.get(**kwargs)
+
         except ObjectDoesNotExist as e:
             raise ObjectDoesNotExist(e, function)
         except MultipleObjectsReturned as e:
             raise MultipleObjectsReturned(e, function)
+        except PermissionDenied as e:
+            raise PermissionDenied(e, function)
         except Exception as e:
             raise Exception(e, function)
 
-    def filter_user_related_objects(self, **kwargs):
-        function = self.filter_user_related_objects.__name__
+    def filter_permission(self, check_update_permissions=False, **kwargs):
+        function = self.filter_permission.__name__
         try:
-            if kwargs.get('user'):
-                user = kwargs['user']
-                # idea is to not involve user keyword when the user is superuser. When a superuser requests, it means
-                # no checking is done on user key. The request is straight away passed
-                if user.is_superuser:
-                    kwargs.pop('user')
+            user = kwargs['user']
+            kwargs.pop('user')
 
-            result = self.filter(**kwargs)
-            # query = HelperManagerMethods.prepare_query(user, **kwargs)
-            return result
+            if user.is_superuser:
+                return self.filter(**kwargs)
+
+            if check_update_permissions:
+                user_based_verdict, user_based_error =  check_object_permission(user, self.model, constants.permission_contants['UPDATE'])
+                user_independent_verdict, user_independent_error = check_object_permission(user, self.model, constants.permission_contants['UPDATE_ALL'])
+            else:
+
+                user_based_verdict, user_based_error = check_object_permission(user, self.model, constants.permission_contants['VIEW'])
+                user_independent_verdict, user_independent_error = check_object_permission(user, self.model, constants.permission_contants['VIEW_ALL'])
+
+            # if both are not present, return error
+            if (not user_based_verdict) and (not user_independent_verdict):
+                error = (user_based_error, user_independent_error)
+                raise PermissionDenied(error)
+
+            # if view_all present, no user based query
+            if user_independent_verdict:
+                return self.filter(**kwargs)
+            # if single view present, must query based on user
+            else:
+                kwargs['user'] = user
+                return self.filter(**kwargs)
         except ObjectDoesNotExist as e:
             raise ObjectDoesNotExist(e, function)
+        except PermissionDenied as e:
+            raise PermissionDenied(e, function)
         except Exception as e:
             raise Exception(e, function)
 
@@ -219,3 +260,32 @@ class HelperManagerMethods(object):
             return custom_query
         except Exception as e:
             raise Exception(e, function)
+
+
+def check_object_permission(user, model, permission):
+    """
+    checks weather a a given 'user' has 'permission' on  a given 'model'
+    returns True if user has a permission, false otherwise
+
+    :param user: instance of BaseUser model
+    :param model:  model itself
+    :param permission: 'create', 'view', etc. Fields of ObjectLevelPermission model
+    :return:
+    """
+    function = check_object_permission.__name__
+    try:
+        error = ''
+        # superuser is still GOD
+        if user.is_superuser:
+            return True, error
+
+        if not user.profile:
+            raise Exception('Every User must have associated profile')
+        content_type = ContentType.objects.get_for_model(model)
+        instance = v0.models.ObjectLevelPermission.objects.get(profile=user.profile, content_type=content_type)
+        if instance.__dict__[permission]:
+            return True, error
+        error = 'This user does not have permission of ' + permission + ' on this model ' + model.__class__.__name__
+        return False, error
+    except Exception as e:
+        raise Exception(e, function)

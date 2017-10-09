@@ -9,8 +9,8 @@
  * Main module of the application.
  */
 
-var APIBaseUrl = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/';
-//var APIBaseUrl = 'http://localhost:8000/';
+// var APIBaseUrl = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/';
+var APIBaseUrl = 'http://localhost:8000/';
 
 angular.module('Authentication', []);
 angular
@@ -34,9 +34,12 @@ angular
     'uiGmapgoogle-maps',
     'ncy-angular-breadcrumb',
     'slickCarousel',
-    'scrollable-table'
+    'scrollable-table',
+    'cfp.loadingBar',
+    'vcRecaptcha',
+    'ngMaterial'
   ])
-  .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider) {
+  .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
       $stateProvider
       .state('society', {
           url : '/society',
@@ -128,16 +131,16 @@ angular
           },
         })
       .state('manageCampaign.editAccount', {
-            url : '/editAccount/:accountId/',
+            url : '/editAccount/:accountId',
             controller: 'CreateAccountCtrl',
             templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
             ncyBreadcrumb: {
-              label: 'Create Account',
+              label: 'Account',
               parent : 'manageCampaign.create'
             }
         })
         .state('manageCampaign.createaccount', {
-              url : '/createAccount/',
+              url : '/createAccount/:organisationId',
               controller: 'CreateAccountCtrl',
               templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
               ncyBreadcrumb: {
@@ -251,7 +254,7 @@ angular
       .state('auditReleasePlan',{
             url : '/:proposal_id/auditReleasePlan',
             controller : 'AuditReleasePlanCtrl',
-            templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.html',
+            templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan1.tmpl.html',
             ncyBreadcrumb: {
               label:'AuditReleasePlan',
               parent : 'releasePlan'

@@ -32,8 +32,8 @@ body{
 	margin-left: 55px;
 }
 .panel-breadcrumb{
-  margin-left: 10%;
-  margin-right: 10%;
+  margin-left: 5%;
+  margin-right: 5%;
 }
 .panel-heading{
   text-align: center;
@@ -41,8 +41,8 @@ body{
 	color: white !important;
 }
 .panel{
-  margin-left: 10%;
-  margin-right: 10%;
+  margin-left: 5%;
+  margin-right: 5%;
 }
 .panel-table{
   height:60vh;
@@ -51,6 +51,18 @@ body{
 .button-style{
   text-align: right;
   padding-top: 20px;
-  margin-left: 10%;
-  margin-right: 10%;
+  margin-right: 2%;
+	margin-bottom: 2%;
+	/*margin-left: 10%;*/
+}
+.assign-date{
+	margin-left: 5%;
+}
+.form-inline{
+	margin: 2%;
+}
+.date-panel{
+	padding: 10px;
+	margin-left: 5%;
+	margin-right: 5%;
 }
