@@ -80,5 +80,11 @@ angular.module('catalogueApp')
       $('.modal-backdrop').remove();
    }
 
+   commonDataShare.checkPermission = function(response){
+     console.log(response);
+     if(response.status === constants.forbidden_error_code){
+       swal(constants.forbidden_title, constants.permission_error, constants.error);
+     }
+   }
    return commonDataShare;
 }]);

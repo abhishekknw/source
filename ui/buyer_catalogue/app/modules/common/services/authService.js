@@ -3,8 +3,8 @@
 angular.module('Authentication')
 
 .factory('AuthService',
-    ['$http', '$location', '$rootScope', '$window', '$timeout','commonDataShare',
-    function ($http, $location, $rootScope, $window, $timeout, commonDataShare) {
+    ['$http', '$location', '$rootScope', '$window', '$timeout','commonDataShare','constants',
+    function ($http, $location, $rootScope, $window, $timeout, commonDataShare, constants) {
 
         var authService = {};
         var userInfo = {};
@@ -45,8 +45,16 @@ angular.module('Authentication')
            authService.getUserData = function(callback){
              commonDataShare.getUserDetails($rootScope.globals.currentUser.user_id)
               .then(function onSuccess(response){
+                if(response.data.data.profile){
+                  response.data.data.profile['permissions'] = {}
+                  angular.forEach(response.data.data.profile.general_user_permission, function(perm){
+                    response.data.data.profile.permissions[perm.name.toLowerCase()] = perm.is_allowed;
+                  })
+                }
+
                  $window.localStorage.userInfo = JSON.stringify(response.data.data);
                  $rootScope.globals.userInfo = JSON.parse($window.localStorage.userInfo);
+                 $rootScope.globals.userInfo['permissions'] = $window.localStorage.permissions;
                  response.allowUser = true;
                  callback(response.data);
                }).catch(function onError(response){
@@ -147,27 +155,21 @@ angular.module('Authentication')
 
         //code added to add permissions
         authService.userHasPermission = function(permissions){
-         if(!authService.isAuthenticated()){
+          console.log(permissions);
 
+         if(!authService.isAuthenticated()){
              return false;
          }
-         var found = false;
-         if($rootScope.globals.userInfo.is_superuser == true){
-           found = true;
+         if ($rootScope.globals.userInfo.is_superuser == true)
+             return true;
+          for( var i=0; i<permissions.length; i++ ){
+           if ( $rootScope.globals.userInfo.profile.permissions.hasOwnProperty(permissions[i])) {
+                if ($rootScope.globals.userInfo.profile.permissions[permissions[i]] == true)
+                  return true;
+            }
          }
-         else{
-           angular.forEach(permissions, function(permission, index){
-               angular.forEach($rootScope.globals.userInfo.groups, function(group){
-                 if(group.name == permission){
-                    found = true;
-                    return;
-                  }
-               })
-         });
+         return false;
        }
-         return found;
-     };
-
      //to check permission for views or pages
      authService.checkPermissionForView = function(view) {
 

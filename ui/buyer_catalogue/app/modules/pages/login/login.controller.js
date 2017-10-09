@@ -12,17 +12,15 @@ angular.module('machadaloPages')
           $scope.loadingSpinner = true;
             AuthService.Login($scope.username, $scope.password, function(response) {
                 if(response.logged_in) {
-                  var path = "/";
+                  var path = "/";                  
                   AuthService.getUserData(function(response){
-                    angular.forEach(response.data.groups, function(group){
-                      if(group.name == constants.campaign_manager){
-                          path = "/CampaignList";
-                      }
-                    })
-                    $scope.loadingSpinner = false;
-                    $location.path(path);
+                    if(!response.data.profile){
+                      swal(constants.name, constants.profile_error, constants.error);
+                      $location.path("/logout");
+                    }else {
+                      $location.path(path);
+                    }
                   })
-
                 } else {
                   $scope.loadingSpinner = false;
                     $scope.error = response.message;

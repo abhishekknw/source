@@ -21,7 +21,6 @@ angular
     'ngRoute',
     'ui.router',
     'ngSanitize',
-    'ngTouch',
     'machadaloCommon',
     'machadaloPages',
     'Authentication',
@@ -144,7 +143,7 @@ angular
               controller: 'CreateAccountCtrl',
               templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
               ncyBreadcrumb: {
-                label: 'Create Account',
+                label: 'Account',
                 parent : 'manageCampaign.create'
               }
           })
@@ -291,6 +290,10 @@ angular
             url : '/completedCampaigns',
             controller : 'CompletedCampaignCtrl',
             templateUrl : 'modules/pages/campaignStatus/completedCampaigns/completedCampaign.tmpl.html',
+      })
+      .state('forbiddenPage',{
+            url : '/forbiddenPage',
+            templateUrl : 'modules/common/forbiddenErrorPage.tmpl.html',
       });
       //$qProvider.errorOnUnhandledRejections(false);
       $locationProvider.hashPrefix('');
@@ -311,7 +314,11 @@ angular
        var whence = $location.path();
        $rootScope.$on('$locationChangeStart', function (event, next, current) {
          var whence = $location.path();
-
+        //  if(!AuthService.userHasPermission(next) || $location.path == '/forbiddenPage'){
+        //    console.log(next);
+        //    $location.path('/forbiddenPage');
+        //  }
+        console.log(event);
          console.log("location change start - Whence: " + whence);
 
          // redirect to login page if not logged in
