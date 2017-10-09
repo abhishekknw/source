@@ -83,23 +83,6 @@ WSGI_APPLICATION = 'coreapi.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-
-DATABASES = {
-        'sqlite': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        },
-        'default': {
-
-            'NAME': 'machadalodb',
-            'ENGINE': 'django.db.backends.mysql',
-            'HOST': 'localhost',
-            'USER': 'machadalo',
-            'PASSWORD': 'machadalo@tech',
-        }
-}
-#
-
 #
 # DATABASES = {
 #         'sqlite': {
@@ -114,6 +97,21 @@ DATABASES = {
 #             'PASSWORD': 'root',
 #         }
 # }
+
+
+DATABASES = {
+        'sqlite': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        },
+        'default': {
+            'NAME': 'mdtestnew',
+            'ENGINE': 'django.db.backends.mysql',
+            'HOST': 'localhost',
+            'USER': 'root',
+            'PASSWORD': 'root',
+        }
+}
 
 
 

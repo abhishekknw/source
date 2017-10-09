@@ -55,7 +55,7 @@ angular.module('catalogueApp')
       $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
       $scope.format = $scope.formats[1];
       $scope.altInputFormats = ['M!/d!/yyyy'];
-      $scope.clientName = $window.localStorage.business_name;
+      $scope.clientName = JSON.parse($window.localStorage.organisationData).name;
 
     	currentProposalService.getProposal($stateParams.proposal_id)
     	.then(function onSuccess(response, status){

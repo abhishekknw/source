@@ -134,8 +134,8 @@
             <a ng-click="getAccounts()">Click Here To View Existing Accounts</a>
             <span ng-if="showAccountsMessage">No Accounts Found!!</span>
           </h4>
-          <div class="table-responsive">
-            <table class="table table-hover" ng-if="model.accounts.length">
+          <div class="table-responsive tableBodyList">
+            <table class="table table-hover ">
               <thead>
                 <tr>
                   <th></th>
@@ -145,6 +145,7 @@
                   <th class="col-md-4 table-heading"></th>
                 </tr>
               </thead>
+
               <tbody>
                 <tr ng-repeat="account in model.accounts track by $index">
                   <td><input type="radio" id="sel_account_id" name="sel_account_id" value="{{account.account_id}}" ng-checked="sel_account_id" ng-model="sel_account_id" ng-click = "getProposals(sel_account_id,$index)"></td>
@@ -156,16 +157,18 @@
                   </td>
                 </tr>
               </tbody>
+
             </table>
-            <button class="btn btn-danger" ng-click="addNewAccount()" permission = "[bd_manager]">Add New Account</button>
+
           </div>
+      <button class="btn btn-danger" ng-click="addNewAccount()" permission = "[bd_manager]">Add New Account</button>
         </div>
       </form>
 
       <form name="existingProposal">
         <div class="panel panel-default business-panel">
           <h4 class="panel-heading">Existing Proposals</h4>
-          <div class="table-responsive">
+          <div class="table-responsive tableBodyList">
             <table class="table table-hover" ng-show="account_proposals.length != 0">
               <thead>
                 <tr>
@@ -227,9 +230,10 @@
                 </tr>
               </tbody>
             </table>
-            <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" permission = "[bd_manager]">Create New Proposal</button>
-            <span class="show-error" ng-show="error">Please select an account</span>
           </div>
+          <br>
+          <button class="btn btn-danger" ng-click="addNewProposal(sel_account_id)" permission = "[bd_manager]">Create New Proposal</button>
+            <span class="show-error" ng-show="error">Please select an account</span>
         </div>
       </form>
 
