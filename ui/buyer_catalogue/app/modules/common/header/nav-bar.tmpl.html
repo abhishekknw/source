@@ -4,12 +4,12 @@
 <div class="navbar-wrapper2 navbar-fixed-top" style="height: 45px;">
   <div class="container">
     <a class="navbar-brand aligntop"><img src="images/logo.png" alt="Machadalo" class="logo"/></a>
-    <div class="navbar-collapse collapse">
+    <div class="navbar-collapse collapse" >
       <ul class="nav navbar-nav navbar-right">
-        <li class="dropdown active">
-          <a class="header-nav-bar-a aligntop" ng-click="killer = !killer" class="dropdown-toggle"><img src="img/man.png"/>&nbsp;<b> Welcome {{globals.currentUser.name}}</b><b class="lightcaret mt-2"></b>
+        <li class="dropdown active" ng-mouseover="enableDropDown = true" ng-mouseout="enableDropDown = false">
+          <a class="header-nav-bar-a aligntop" class="dropdown-toggle"><img src="img/man.png"/>&nbsp;<b> Welcome {{globals.currentUser.name}}</b><b class="lightcaret mt-2"></b>
           </a>
-          <div class=" " ng-show="killer">
+          <div class=" " ng-show="enableDropDown">
             <ul>
               <li permission="[]"><a href="/#/manageUser">Management</a></li>
               <li><a href="/#/logout">Logout</a></li>
