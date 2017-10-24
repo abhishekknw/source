@@ -205,7 +205,7 @@
 	    	.then(function (response) {
 	            $scope.organisations = response.data.data;
               console.log($scope.model.organisation);
-	            if($scope.model.organisation.hasOwnProperty('organisation_id')){	            
+	            if($scope.model.organisation.hasOwnProperty('organisation_id')){
 	              $scope.bsSelect = $scope.model.organisation.organisation_id;
 	            }
               else if($scope.organisations.length){
@@ -312,6 +312,7 @@
 
       $scope.showProposalDetails = function(proposal){
         $window.localStorage.parentProposal = true;
+        $window.localStorage.orgName = $scope.model.organisation.name;
         $window.localStorage.proposalState = constants[proposal.campaign_state];
         $window.localStorage.parent_proposal_id = proposal.proposal_id;
         $location.path('/' + proposal.proposal_id + '/showcurrentproposal');

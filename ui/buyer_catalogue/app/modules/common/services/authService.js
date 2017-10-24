@@ -167,6 +167,7 @@ angular.module('Authentication')
                 if ($rootScope.globals.userInfo.profile.permissions[permissions[i]] == true)
                   return true;
             }
+            console.log(permissions[i]);
          }
          return false;
        }

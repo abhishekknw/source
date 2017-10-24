@@ -24,7 +24,7 @@
     </div>
   </div>
   <div class="assign-date">
-    <input type="checkbox" ng-model="dateChecked">
+    <input type="checkbox" ng-model="dateChecked" permission = "[permissions.assignDates]">
     <label><h4>Assign Dates<h4></label>
   </div>
 
@@ -85,7 +85,7 @@
             </div>
          </div>
 
-         <button type="submit" class="btn btn-danger" ng-disabled="form.$invalid" ng-click="assignDates(inventoryType,activityType,activityDate,user)">Assign</button>
+         <button type="submit" class="btn btn-danger" ng-disabled="form.$invalid" ng-click="assignDates(inventoryType,activityType,activityDate,user)"  permission = "[permissions.assignDates]">Assign</button>
        </div>
      </div>
    </form>
@@ -108,26 +108,26 @@
                <td class="col-md-1">RS</td>
                <td class="col-md-3 checkboxes-btn">
                  <div ng-repeat="inventory in filter.detail">
-                   <input type="checkbox" class="" ng-disabled="isDisable(rowIndex)" ng-model="inventory.status" ng-click="addInventory(inventory,rowIndex,$index)"/>{{key}}{{$index+1}}
+                   <input type="checkbox" class="" ng-disabled="isDisable(rowIndex)" ng-model="inventory.status" ng-click="addInventory(inventory,rowIndex,$index)"  permission = "[permissions.assignDates]" />{{key}}{{$index+1}}
                  </div>
                </td>
                <td class="col-md-1">
                  <div>
-                 <button  class="btn btn-info" ng-disabled="invIdList.length == 0 || isDisable(rowIndex)" data-target="#manageDatesModal" data-toggle="modal" data-backdrop="static" ng-click="getActivityDates(supplier)">Manage Date</button>
+                 <button  class="btn btn-info" ng-disabled="invIdList.length == 0 || isDisable(rowIndex)" data-target="#manageDatesModal" data-toggle="modal" data-backdrop="static" ng-click="getActivityDates(supplier)"  permission = "[permissions.assignDates]">Manage Date</button>
                </div><br>
                <div>
-                 <button  class="btn" data-target="#showDatesModal" data-toggle="modal" ng-click="showActivityDates(filter.detail)" ng-disabled="savingDates">View Dates</button>
+                 <button  class="btn" data-target="#showDatesModal" data-toggle="modal" ng-click="showActivityDates(filter.detail)" ng-disabled="savingDates"  permission = "[permissions.viewDates]">View Dates</button>
                </div>
                </td>
                <td class="col-md-8">
-                 <textarea rows="4" cols="50" name="comments"  ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing"></textarea></td>
+                 <textarea rows="4" cols="50" name="comments"  ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing"  permission = "[permissions.addComments]"></textarea></td>
              </tr>
            </tbody>
          </table>
        </br>
      </div>
      <div class="button-style">
-       <button class="btn btn-danger active notify" ng-click="updateData()">Update</button>
+       <button class="btn btn-danger active notify" ng-click="updateData()"  permission = "[permissions.updateData]">Update</button>
      </div>
 
      <!--Start: Code for Audit Date Modal Window -->

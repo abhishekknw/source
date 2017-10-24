@@ -1,13 +1,14 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','constants',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants) {
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','constants','permissions',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants, permissions) {
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
   $scope.campaign_manager = constants.campaign_manager;
   if($rootScope.globals.userInfo.is_superuser == true){
     $scope.backButton = true;
   }
+  $scope.permissions = permissions.supplierBookingPage;
  	$scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},

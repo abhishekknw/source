@@ -51,36 +51,36 @@
 
             <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
             <td class="" ng-if="key=='NA'">{{key}}</td>
-            <td class="" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)"><b>{{key}}</b></a></td>
+            <td class="" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)" permission = "[permissions.viewInventoryIds]"><b>{{key}}</b></a></td>
             <td class="">{{filter.total_count}}</td>
             <td class="">{{filter.actual_supplier_price}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.total_inventory_supplier_price}}</td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="priceform">
-              <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing input-width" min="0">
               <span class="error" ng-show="priceform.price.$error.min">{{positiveNoError}}</span>
+              <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing input-width" min="0" permission = "[permissions.addNegotiatedPrice,permissions.viewNegotiatedPrice]">
             </td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first">
-              <select class="form-control spacing input-width" ng-model="supplier.booking_status">
+              <select class="form-control spacing input-width" ng-model="supplier.booking_status" permission = "[permissions.changeBookingStatus,permissions.viewBookingStatus]">
                 <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
               </select>
             </td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
-              <input type="number" name="phase" class="form-control spacing input-width-phase" ng-model="supplier.phase" min="1" ng-disabled="supplier.booking_status != 'BK'">
+              <input type="number" name="phase" class="form-control spacing input-width-phase" ng-model="supplier.phase" min="1" ng-disabled="supplier.booking_status != 'BK'" permission = "[permissions.addPhase, permissions.viewPhase]">
               <span class="error" ng-show="phaseform.phase.$error.min">{{positiveNoError}}</span>
             </td>
             <!--mode of payment  -->
             <td class="" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.payment_method" value="NEFT" ng-click="updateSupplierStatus()">NEFT</label>
+                     <label><input type="radio" ng-model="supplier.payment_method" value="NEFT" ng-click="updateSupplierStatus()" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]">NEFT</label>
               </div>
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.payment_method" value="CHEQUE" ng-click="updateSupplierStatus()">Cheque</label>
+                     <label><input type="radio" ng-model="supplier.payment_method" value="CHEQUE" ng-click="updateSupplierStatus()" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]">Cheque</label>
               </div>
               <div class="radio" ng-if="supplier.status != 'X'">
-                     <label><input type="radio" ng-model="supplier.payment_method" value="CASH" ng-click="updateSupplierStatus()">Cash</label>
+                     <label><input type="radio" ng-model="supplier.payment_method" value="CASH" ng-click="updateSupplierStatus()" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]">Cash</label>
               </div>
               <div style="text-align:center">
-                <a data-target="#paymentModal" data-toggle="modal" ng-click="setPayment(supplier)"><b>Details</b></a>
+                <a data-target="#paymentModal" data-toggle="modal" ng-click="setPayment(supplier)" permission = "[permissions.viewPaymentDetails]"><b>Details</b></a>
               </div>
             </td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">
@@ -92,7 +92,7 @@
                      <label><input type="radio" ng-model="supplier.payment_status" value="PD" ng-click="updateSupplierStatus()">Paid</label>
               </div>
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.payment_status" value="PP" ng-click="updateSupplierStatus()">Pending</label>
+ permission = "[permissions.viewPaymentDetails]"                     <label><input type="radio" ng-model="supplier.payment_status" value="PP" ng-click="updateSupplierStatus()">Pending</label>
               </div>
               <div class="radio" ng-if="supplier.status != 'X'">
                      <label><input type="radio" ng-model="supplier.payment_status" value="PNI" ng-click="updateSupplierStatus()">Not Paid</label>
@@ -105,7 +105,7 @@
   <!-- </div> -->
   <div class = "row">
     <span class = "col-md-6">
-      <button class="btn btn-danger active notify" style="text-align:left; margin-left:10px" ng-click="updateData()">Update</button>
+      <button class="btn btn-danger active notify" style="text-align:left; margin-left:10px" ng-click="updateData()" permission = "[permissions.updateData]">Update</button>
     </span>
       <span class = "col-md-6" style="text-align:right">
         <button class="btn btn-danger active notify" style="text-align:right" ng-click="changeLocation()">Planning Release-Audit</button>

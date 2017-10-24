@@ -1,6 +1,6 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare, constants, $filter) {
+    .controller('MapCtrl', function($scope, $rootScope, $stateParams,  $window, $location, createProposalService, mapViewService ,$http, uiGmapGoogleMapApi,uiGmapIsReady,$q, Upload, $timeout, commonDataShare, constants, $filter, permissions) {
 // You have to initailise some value for the map center beforehand
 // $scope.map is just for that purpose --> Set it according to your needs.
 // One good way is to set it at center of India when covering multiple cities otherwise middle of mumbai
@@ -21,7 +21,8 @@ $scope.options = { scrollwheel: false, mapTypeControl: true,
       position: google.maps.ControlPosition.TOP_RIGHT
     },
   };
-
+//permissions
+$scope.permissions = permissions.mapviewPage;
 // initial_center currently no use AND old and new center to track whether center marker has been changed or not
   $scope.inital_center = {}
   $scope.old_center = {}
