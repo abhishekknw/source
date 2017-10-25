@@ -560,9 +560,11 @@ angular.module('machadaloPages')
       $scope.operationProfile.edit = false;
       $scope.operationProfile[operation] = true;
       console.log($scope.profileData);
+      $scope.profileData.organisation = $scope.profileData.organisation.organisation_id;
       $scope.getContent(contentItem);
     }
     $scope.updateProfile = function(){
+      console.log($scope.profileData);
       userService.updateProfile($scope.profileData)
       .then(function onSuccess(response){
         console.log(response);

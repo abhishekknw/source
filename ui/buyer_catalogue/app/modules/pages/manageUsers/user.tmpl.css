@@ -219,3 +219,6 @@ h3{
 .disableClick{
     pointer-events: none;
 }
+label,a{
+  word-wrap: break-word;
+}
