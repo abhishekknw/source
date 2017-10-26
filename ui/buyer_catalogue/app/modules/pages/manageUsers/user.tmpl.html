@@ -299,7 +299,7 @@
 
 								 <div class = "col-md-1"><label><b>Is SuperUser</b> </label></div>
 								 <div class = "col-md-2"><label><b>Email</b> </label></div>
-								 <div class = "col-md-2"><label><b>Username</b>  </label></div>
+								 <div class = "col-md-1"><label><b>Username</b>  </label></div>
 								 <div class = "col-md-1"><label><b>Organisation</b>  </label></div>
 								 <div class = "col-md-1"><label><b>Profile</b>  </label></div>
 								 <div class = "col-md-1"><label><b>Edit</b>  </label></div>
@@ -312,7 +312,7 @@
 								 <div class = "col-md-1"> <label>{{user.last_name}}</label> </div>
 								 <div class = "col-md-1"> <label>{{user.is_superuser}}</label> </div>
 								 <div class = "col-md-2"> <label>{{user.email}}</label> </div>
-								 <div class = "col-md-2"> <label>{{user.username}}</label> </div>
+								 <div class = "col-md-1"> <label>{{user.username}}</label> </div>
 								 <div class = "col-md-1">
 									 <a ng-click="goToOrganisation(contentItem.organisation,'view',user.profile.organisation)">
 										 {{user.profile.organisation.name}}
@@ -958,7 +958,7 @@
                                       </span>
                                       <div class="form-group label-floating">
                                            <label class="control-label">Password</label>
-                                         <input name="password" type="passoword" class="form-control" ng-model="model.password" required>
+                                         <input name="password" type="password" class="form-control" ng-model="model.password" required>
                                        </div>
                                     </div>
                                   </div>

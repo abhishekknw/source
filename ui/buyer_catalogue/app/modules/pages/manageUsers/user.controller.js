@@ -272,6 +272,7 @@ angular.module('machadaloPages')
             $scope.profileData = {};
             $scope.organisationData = {};
             $scope.cloneFromProfileId.id = null;
+            $scope.activityNumber = 1;
             break;
           case $scope.contentItem.mapOrganisations:
             getOrganisationMappingList($scope.userInfo.profile.organisation.organisation_id);
@@ -512,6 +513,7 @@ angular.module('machadaloPages')
 
     //start: create organisation
     $scope.createOrganisation = function(){
+      console.log($scope.organisationData);
       userService.createOrganisation($scope.organisationData)
       .then(function onSuccess(response){
         console.log(response);
