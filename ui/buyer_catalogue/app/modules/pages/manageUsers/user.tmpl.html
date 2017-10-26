@@ -1049,6 +1049,8 @@
 </div>
 <!--start : change password  -->
 <div class="modal change_password" id="passwordModal" >
+	  <div class="modal-dialog">
+			<div class="modal-content">
     <div class="modal-header">
         <h3>Change Password <span class="extra-title muted"></span></h3>
     </div>
@@ -1071,8 +1073,10 @@
   </form>
     <div class="modal-footer">
         <button href="#" class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-        <button href="#" class="btn btn-primary" id="password_modal_save" ng-click="changePassword()" ng-disabled="!passwordValid">Save changes</button>
+        <button href="#" class="btn btn-primary"  id="password_modal_save" ng-click="changePassword()" ng-disabled="!passwordValid">Save changes</button>
     </div>
+	</div>
+	</div>
 </div>
 <!--end : change password  -->
 <!--start: modal for create object lvel permission for profile  -->
