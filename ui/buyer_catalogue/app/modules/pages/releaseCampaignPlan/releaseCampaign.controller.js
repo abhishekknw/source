@@ -14,6 +14,8 @@ angular.module('catalogueApp')
         {header : 'Supplier Name'},
         {header : 'Area'},
         {header : 'Sub Area'},
+        {header : 'Address'},
+        {header : 'LandMark'},
         {header : 'Flat Count'},
         {header : 'Tower Count'},
         {header : 'Status'},
@@ -89,6 +91,7 @@ angular.module('catalogueApp')
 
     releaseCampaignService.getCampaignReleaseDetails($scope.campaign_id)
     	.then(function onSuccess(response){
+        console.log(response);
     		$scope.releaseDetails = response.data.data;
         console.log($scope.releaseDetails);
         setDataToModel($scope.releaseDetails.shortlisted_suppliers);
@@ -152,5 +155,21 @@ angular.module('catalogueApp')
     }
     $scope.getCampaignState = function(state){
       return constants[state];
+    }
+    $scope.getInventoryPrice = function(price, inventory){
+      if(inventory == 'POSTER')
+        price = price * 0.3;
+      return price;
+    }
+    $scope.getTotalSupplierPrice = function(supplier){      
+      var totalPrice = 0;
+      angular.forEach(supplier.shortlisted_inventories, function(value, key){
+        console.log(key, value);
+        if(key == 'POSTER')
+          totalPrice = totalPrice + value.actual_supplier_price *0.3;
+        else
+          totalPrice += value.actual_supplier_price;
+      })
+      return totalPrice;
     }
 }]);//Controller function ends here
