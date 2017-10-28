@@ -12,8 +12,10 @@ angular.module('catalogueApp')
       $scope.headings = [
         {header : 'Phase'},
         {header : 'Inventory Type'},
-        {header : 'Supplier Id'},
-        {header : 'Supplier Type'},
+        {header : 'Supplier Name'},
+        {header : 'Area'},
+        {header : 'SubArea'},
+        {header : 'Address'},
         {header : 'AdInventory Id'},
         {header : 'Activity Date'},
         {header : 'Comments'},
@@ -320,8 +322,11 @@ angular.module('catalogueApp')
       };
     }
 
-    $scope.showActivityDates = function(inventory){
+    $scope.showActivityDates = function(inventory, supplier, key){
+      console.log(inventory, supplier);
       $scope.ActivityDatesData = inventory;
+      $scope.supplierName = supplier.name;
+      $scope.inventoryName = key;
     }
     //event on modal close i.e - clear invIdList
     $scope.resetData = function(){

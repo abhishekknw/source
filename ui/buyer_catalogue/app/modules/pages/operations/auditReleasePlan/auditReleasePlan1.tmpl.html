@@ -57,7 +57,9 @@
              <div class = "col-md-3"><label>Select Activity Type </label></div>
              <div class = "col-md-3">
                <select class="form-control" ng-model="activityType" ng-disabled="!inventoryType" required>
-                <option ng-repeat="activity in activity_names" value="{{activity.header}}">{{activity.header}}</option>
+                <option ng-repeat="activity in activity_names" value="{{activity.header}}" ng-hide="inventoryType == 'FLIER' && activity.header != 'RELEASE'">
+                  {{activity.header}}
+                </option>
                </select>
              </div>
              <div class = "col-md-3"><label>Activity Date </label></div>
@@ -105,8 +107,10 @@
                </td>
                <td class="col-md-1">{{key}}</td>
                <td class="col-md-2">{{supplier.name}}<br>({{supplier.object_id}})</td>
-               <td class="col-md-1">RS</td>
-               <td class="col-md-3 checkboxes-btn">
+                <td class="col-md-1">{{supplier.area}}</td>
+                <td class="col-md-1">{{supplier.subarea}}</td>
+                <td class="col-md-2">{{supplier.address1}} {{supplier.address2}}</td>
+               <td class="col-md-2 checkboxes-btn">
                  <div ng-repeat="inventory in filter.detail">
                    <input type="checkbox" class="" ng-disabled="isDisable(rowIndex)" ng-model="inventory.status" ng-click="addInventory(inventory,rowIndex,$index)"  permission = "[permissions.assignDates]" />{{key}}{{$index+1}}
                  </div>
@@ -116,7 +120,7 @@
                  <button  class="btn btn-info" ng-disabled="invIdList.length == 0 || isDisable(rowIndex)" data-target="#manageDatesModal" data-toggle="modal" data-backdrop="static" ng-click="getActivityDates(supplier)"  permission = "[permissions.assignDates]">Manage Date</button>
                </div><br>
                <div>
-                 <button  class="btn" data-target="#showDatesModal" data-toggle="modal" ng-click="showActivityDates(filter.detail)" ng-disabled="savingDates"  permission = "[permissions.viewDates]">View Dates</button>
+                 <button  class="btn" data-target="#showDatesModal" data-toggle="modal" ng-click="showActivityDates(filter.detail, supplier, key)" ng-disabled="savingDates"  permission = "[permissions.viewDates]">View Dates</button>
                </div>
                </td>
                <td class="col-md-8">
@@ -301,7 +305,7 @@
          <div class="modal-content">
            <div class="modal-header">
              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-             <h4 class="modal-title">Activity Date & Assigned User Details</h4>
+             <h4 class="modal-title">Activity Date & Assigned User Details for <b>{{supplierName}}</b></h4>
              <hr/>
              <div class = "modal-body" style = "width: 650px; height: 300px;">
                <div class="modal-body col-md-4 table-responsive" style="width: 650px; height: 350px">
@@ -313,7 +317,7 @@
                      </thead>
                      <tbody ng-repeat = "inventory in ActivityDatesData">
                        <tr ng-repeat = "activity in inventory.inventory_activities">
-                         <td>{{inventory.inventory_id}}</td>
+                         <td>{{inventoryName}}{{$parent.$index+1}}</td>
                          <td>{{activity.activity_type}}</td>
                          <td>
                            <div ng-repeat = "date in activity.inventory_activity_assignment">
