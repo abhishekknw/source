@@ -452,6 +452,8 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.model.organisation = response.data.data;
+            $scope.model.accounts = [];
+            $scope.account_proposals = [];
             $window.localStorage['organisationData'] = angular.toJson($scope.model.organisation);
             $scope.choice = "selected";
           }).catch(function onError(response){
