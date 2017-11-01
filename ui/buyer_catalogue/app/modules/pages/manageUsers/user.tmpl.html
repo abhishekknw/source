@@ -17,7 +17,7 @@
 <!--     Fonts and icons     -->
 	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" />
-	
+
 
   <!-- CSS Files -->
 	<link href="assets/css/bootstrap.min.css" rel="stylesheet" />
@@ -283,40 +283,67 @@
       </ul>
     </div>
   </div>
-  <!--start: users list  -->
-  <div ng-switch-when='viewUsers' id="viewUsers">
-    <h3 style="text-align:center">List of Users</h3>
-    <div class="table-responsive">
-      <table class="table table-bordered">
-        <th ng-repeat="header in userInfoHeaders">
-          {{header.header}}
-        </th>
-        <tbody>
-          <tr ng-repeat="user in usersList">
-            <td class="col-md-1"> {{user.first_name}} </td>
-            <td class="col-md-1"> {{user.last_name}} </td>
-            <td class="col-md-1"> {{user.is_superuser}} </td>
-            <td class="col-md-2"> {{user.email}} </td>
-            <td class="col-md-2"> {{user.username}} </td>
-            <td class="col-md-2">
-              <a ng-click="goToOrganisation(contentItem.organisation,'view',user.profile.organisation)">{{user.profile.organisation.name}} </a>
-            </td>
-            <td class="col-md-2">
-              <a ng-click="goToProfiles(contentItem.profile,'view',user.profile)">{{user.profile.name}}</a>
-            </td>
-            <td class="col-md-1" ><a data-toggle="tooltip" title="Edit" ng-click="getContent(contentItem.editUser,user)">
-              <span class="glyphicon glyphicon-edit"></span></a></td>
-            <td class="col-md-1">
-               <a data-toggle="tooltip" title="Delete"><span class="glyphicon glyphicon-trash" ng-click="deleteUser(user)"></span></a>
-            </td>
-            <td>
-              <a data-target="#passwordModal" data-toggle="modal" ng-click="setPasswordDetails(user)">click here</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    </div>
+  <!--start: users list view -->
+	<div ng-switch-when='viewUsers' id="viewUsers">
+		<div class="panel panel-default">
+				<div class="panel-heading">
+					<h3>List Of Users</h3>
+				</div>
+				<div class="panel-body organisation-view-tab-content">
+					<div class = "table">
+						<div class="form-group container">
+							 <div class = "row organisation-view-tab">
+								 <div class = "col-md-1"><label><b>Index</b></label></div>
+								 <div class = "col-md-1"><label><b>First Name</b></label></div>
+								 <div class = "col-md-1"><label> <b>Last Name</b> </label></div>
+
+								 <div class = "col-md-1"><label><b>Is SuperUser</b> </label></div>
+								 <div class = "col-md-2"><label><b>Email</b> </label></div>
+								 <div class = "col-md-1"><label><b>Username</b>  </label></div>
+								 <div class = "col-md-1"><label><b>Organisation</b>  </label></div>
+								 <div class = "col-md-1"><label><b>Profile</b>  </label></div>
+								 <div class = "col-md-1"><label><b>Edit</b>  </label></div>
+								 <div class = "col-md-1"><label><b>Delete</b>  </label></div>
+								 <div class = "col-md-1"><label><b>Change Password</b>  </label></div>
+							 </div></br>
+							 <div class = "row" ng-repeat="user in usersList">
+								 <div class = "col-md-1"> {{$index+1}} </div>
+								 <div class = "col-md-1"> <label>{{user.first_name}}</label> </div>
+								 <div class = "col-md-1"> <label>{{user.last_name}}</label> </div>
+								 <div class = "col-md-1"> <label>{{user.is_superuser}}</label> </div>
+								 <div class = "col-md-2"> <label>{{user.email}}</label> </div>
+								 <div class = "col-md-1"> <label>{{user.username}}</label> </div>
+								 <div class = "col-md-1">
+									 <a ng-click="goToOrganisation(contentItem.organisation,'view',user.profile.organisation)">
+										 {{user.profile.organisation.name}}
+									 </a>
+								 </div>
+								 <div class = "col-md-1">
+									 <a ng-click="goToProfiles(contentItem.profile,'view',user.profile)">
+										 {{user.profile.name}}
+									 </a>
+								 </div>
+								 <div class = "col-md-1">
+									 <a data-toggle="tooltip" title="Edit" ng-click="getContent(contentItem.editUser,user)">
+			               <span class="glyphicon glyphicon-edit"></span>
+									 </a>
+								 </div>
+								 <div class = "col-md-1">
+									 <a data-toggle="tooltip" title="Delete">
+										 <span class="glyphicon glyphicon-trash" ng-click="deleteUser(user)"></span>
+									 </a>
+								 </div>
+								 <div class = "col-md-1">
+									 <a data-target="#passwordModal" data-toggle="modal" ng-click="setPasswordDetails(user)">
+										 click here
+									 </a>
+								 </div>
+							 </div>
+						 </div>
+					 </div>
+				</div>
+		</div>
+	</div>
   <!--end: users list  -->
   <!--start: edit user  -->
   <div ng-switch-when='editUser' id="editUser">
@@ -431,8 +458,9 @@
             </div>
             <div class="form-group">
               <label class="col-md-3">Organisation :</label>
-              <select ng-if="operationProfile.create || operationProfile.edit" class="form-control" name="" ng-model="profileData.organisation">
-                <option ng-repeat="organisation in organisationList" value="{{organisation.organisation_id}}">{{organisation.name}}</option>
+              <select ng-if="operationProfile.create || operationProfile.edit" class="form-control" ng-model="profileData.organisation"
+									ng-options="organisation.organisation_id as organisation.name for organisation in organisationList">
+                <!-- <option ng-selected="{{profileData.organisation.name == organisation.name}}" ng-repeat="organisation in organisationList" value="{{organisation.organisation_id}}">{{organisation.name}}</option> -->
               </select>
               <span ng-if="operationProfile.view">{{profileData.organisation.name}}</span>
             </div>
@@ -722,7 +750,7 @@
       <button type="button" class="btn btn-primary" name="button" ng-click="goToProfiles(contentItem.profile,'create')">Create New Profile</button>
     </div>
   </div>
-  <!--End: organisation view tab -->
+  <!--End: profile view tab -->
   <!--start: wizard tab  -->
   <div ng-switch-when="onBoard" id="onBoard">
   <body>
@@ -930,7 +958,7 @@
                                       </span>
                                       <div class="form-group label-floating">
                                            <label class="control-label">Password</label>
-                                         <input name="password" type="passoword" class="form-control" ng-model="model.password" required>
+                                         <input name="password" type="password" class="form-control" ng-model="model.password" required>
                                        </div>
                                     </div>
                                   </div>
@@ -1021,6 +1049,8 @@
 </div>
 <!--start : change password  -->
 <div class="modal change_password" id="passwordModal" >
+	  <div class="modal-dialog">
+			<div class="modal-content">
     <div class="modal-header">
         <h3>Change Password <span class="extra-title muted"></span></h3>
     </div>
@@ -1043,8 +1073,10 @@
   </form>
     <div class="modal-footer">
         <button href="#" class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-        <button href="#" class="btn btn-primary" id="password_modal_save" ng-click="changePassword()" ng-disabled="!passwordValid">Save changes</button>
+        <button href="#" class="btn btn-primary"  id="password_modal_save" ng-click="changePassword()" ng-disabled="!passwordValid">Save changes</button>
     </div>
+	</div>
+	</div>
 </div>
 <!--end : change password  -->
 <!--start: modal for create object lvel permission for profile  -->

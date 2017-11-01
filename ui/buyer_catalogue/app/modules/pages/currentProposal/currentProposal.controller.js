@@ -1,7 +1,8 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('CurrentProposal', function($scope, $rootScope, $stateParams, $window, $location, currentProposalService ,$http, constants) {
+    .controller('CurrentProposal', function($scope, $rootScope, $stateParams, $window, $location, currentProposalService ,$http, constants, permissions, commonDataShare) {
 
+      $scope.permissions = permissions.proposalSummaryPage;
     	$scope.proposal = {};
       $scope.society = {society_name:'',center:'',poster_count:'',standee_count:'',stall_count:'',status:''};
       $scope.societyDetails = [];
@@ -55,7 +56,8 @@ angular.module('catalogueApp')
       $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
       $scope.format = $scope.formats[1];
       $scope.altInputFormats = ['M!/d!/yyyy'];
-      $scope.clientName = JSON.parse($window.localStorage.organisationData).name;
+      console.log($window.localStorage.organisationInfo);
+      $scope.clientName = $window.localStorage.orgName;
 
     	currentProposalService.getProposal($stateParams.proposal_id)
     	.then(function onSuccess(response, status){

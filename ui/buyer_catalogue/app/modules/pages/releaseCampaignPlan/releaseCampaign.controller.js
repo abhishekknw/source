@@ -1,18 +1,21 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','constants',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants) {
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','constants','permissions',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants, permissions) {
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
   $scope.campaign_manager = constants.campaign_manager;
   if($rootScope.globals.userInfo.is_superuser == true){
     $scope.backButton = true;
   }
+  $scope.permissions = permissions.supplierBookingPage;
  	$scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},
         {header : 'Area'},
         {header : 'Sub Area'},
+        {header : 'Address'},
+        {header : 'LandMark'},
         {header : 'Flat Count'},
         {header : 'Tower Count'},
         {header : 'Status'},
@@ -88,6 +91,7 @@ angular.module('catalogueApp')
 
     releaseCampaignService.getCampaignReleaseDetails($scope.campaign_id)
     	.then(function onSuccess(response){
+        console.log(response);
     		$scope.releaseDetails = response.data.data;
         console.log($scope.releaseDetails);
         setDataToModel($scope.releaseDetails.shortlisted_suppliers);
@@ -151,5 +155,21 @@ angular.module('catalogueApp')
     }
     $scope.getCampaignState = function(state){
       return constants[state];
+    }
+    $scope.getInventoryPrice = function(price, inventory){
+      if(inventory == 'POSTER')
+        price = price * 0.3;
+      return price;
+    }
+    $scope.getTotalSupplierPrice = function(supplier){      
+      var totalPrice = 0;
+      angular.forEach(supplier.shortlisted_inventories, function(value, key){
+        console.log(key, value);
+        if(key == 'POSTER')
+          totalPrice = totalPrice + value.actual_supplier_price *0.3;
+        else
+          totalPrice += value.actual_supplier_price;
+      })
+      return totalPrice;
     }
 }]);//Controller function ends here

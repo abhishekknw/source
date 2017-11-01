@@ -1,18 +1,21 @@
 angular.module('catalogueApp')
 .controller('AuditReleasePlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare','constants','$filter',
-    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare, constants, $filter) {
+    ['$scope', '$rootScope', '$window', '$location','auditReleasePlanService','$stateParams', 'commonDataShare','constants','$filter','permissions',
+    function ($scope, $rootScope, $window, $location, auditReleasePlanService, $stateParams, commonDataShare, constants, $filter, permissions) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.bd_manager = constants.bd_manager;
       $scope.campaign_manager = constants.campaign_manager;
       if($rootScope.globals.userInfo.is_superuser == true){
         $scope.backButton = true;
       }
+      $scope.permissions = permissions.auditReleasePage;
       $scope.headings = [
         {header : 'Phase'},
         {header : 'Inventory Type'},
-        {header : 'Supplier Id'},
-        {header : 'Supplier Type'},
+        {header : 'Supplier Name'},
+        {header : 'Area'},
+        {header : 'SubArea'},
+        {header : 'Address'},
         {header : 'AdInventory Id'},
         {header : 'Activity Date'},
         {header : 'Comments'},
@@ -319,8 +322,11 @@ angular.module('catalogueApp')
       };
     }
 
-    $scope.showActivityDates = function(inventory){
+    $scope.showActivityDates = function(inventory, supplier, key){
+      console.log(inventory, supplier);
       $scope.ActivityDatesData = inventory;
+      $scope.supplierName = supplier.name;
+      $scope.inventoryName = key;
     }
     //event on modal close i.e - clear invIdList
     $scope.resetData = function(){

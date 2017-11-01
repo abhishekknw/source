@@ -1,13 +1,14 @@
 angular.module('catalogueApp')
 
-.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService','commonDataShare','constants','$timeout',
+.controller('OpsDashCtrl', ['$scope', '$rootScope', '$window', '$location','opsDashBoardService','commonDataShare','constants','$timeout','permissions',
 
-    function ($scope, $rootScope, $window, $location, opsDashBoardService, commonDataShare,constants,$timeout) {
+    function ($scope, $rootScope, $window, $location, opsDashBoardService, commonDataShare,constants,$timeout, permissions) {
     	$scope.proposals = [];
       $scope.reason = null;
       $scope.bucket_url = constants.aws_bucket_url;
       //for loading spinner
       $scope.loadSpinner = true;
+      $scope.permissions = permissions.opsDashBoard;
 
       //Start: code added to show or hide details based on user permissions
       $scope.user_code = $window.localStorage.user_code;

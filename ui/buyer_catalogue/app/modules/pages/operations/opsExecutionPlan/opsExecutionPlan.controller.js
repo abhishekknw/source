@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('OpsExecutionPlanCtrl',
-    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare','constants','$timeout','Upload','cfpLoadingBar',
-    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare,constants,$timeout,Upload,cfpLoadingBar) {
+    ['$scope', '$rootScope', '$window', '$location','opsExecutionPlanService','$stateParams','commonDataShare','constants','$timeout','Upload','cfpLoadingBar','permissions',
+    function ($scope, $rootScope, $window, $location, opsExecutionPlanService, $stateParams,commonDataShare,constants,$timeout,Upload,cfpLoadingBar, permissions) {
       $scope.campaign_id = $stateParams.proposal_id;
       $scope.reAssign = false;
       var sleepTime = 0;
@@ -9,6 +9,7 @@ angular.module('catalogueApp')
       if($rootScope.globals.userInfo.is_superuser == true){
         $scope.backButton = true;
       }
+      $scope.permissions = permissions.opsExecutionPage;
       $scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},

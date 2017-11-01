@@ -4,7 +4,7 @@
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 </br></br></br>
 <!-- <back-Button></back-Button> -->
-<div class="" permission = "[]">
+<div class="">
   <div class="breadcrumb" ncy-breadcrumb></div>
 </div>
 
@@ -41,13 +41,13 @@
               <td class="cellWidth">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
               <td class="cellWidth" style="text-align:left">
                 <div class="radio">
-                       <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)"  data-toggle="modal" ng-loading="loadSpinner">Accept</label>
+                       <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)"  data-toggle="modal" ng-loading="loadSpinner" permission = "[permissions.acceptProposal]">Accept</label>
                 </div>
                 <div class="radio">
-                       <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PNC" ng-click="convertCampaignToProposal(proposal)" data-toggle="modal">Decline</label>
+                       <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PNC" ng-click="convertCampaignToProposal(proposal)" data-toggle="modal" permission = "[permissions.declineProposal]">Decline</label>
                 </div>
                 <div class="radio">
-                       <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#onHoldModal" data-toggle="modal">OnHold</label>
+                       <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#onHoldModal" data-toggle="modal" permission = "[permissions.onHoldPrposal]">OnHold</label>
                 </div>
               </td>
               <td class="cellWidth" ng-if="proposal.proposal.campaign_state == 'PTC'">

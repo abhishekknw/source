@@ -55,8 +55,10 @@
       <!-- <div class="col-md-6">
       </div> -->
       <div style="text-align:right">
-        <div permission = "[]">
-          <button ng-hide="hideData" class="btn btn-danger" ng-disabled="!invoiceStatus" data-target="#invoiceModal" data-toggle="modal"><b>Enter Invoice Details</b></button>
+        <div>
+          <button ng-hide="hideData" class="btn btn-danger" ng-disabled="!invoiceStatus" data-target="#invoiceModal" data-toggle="modal" permission = "[permissions.addInvoiceDetails]">
+            <b>Enter Invoice Details</b>
+          </button>
         </div>
       </div>
   </div>

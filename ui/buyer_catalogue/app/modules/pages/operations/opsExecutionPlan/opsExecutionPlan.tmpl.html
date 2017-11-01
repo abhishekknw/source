@@ -42,10 +42,10 @@
         <tbody>
           <tr ng-repeat="inventory in campaignDataList">
             <td>{{$index+1}}</td>
-            <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(inventory)">{{inventory.supplier_name}}</a></td>
+            <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(inventory)" permission = "[permissions.viewSupplierDetails]">{{inventory.supplier_name}}</a></td>
             <!-- <td class="col-md-1">{{inventory.inv_id}}</td> -->
             <td class="col-md-2">{{inventory.inv_type}}</td>
-            <td class="col-md-2" ng-if="inventory.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(inventory.images)">View Image</a></td>
+            <td class="col-md-2" ng-if="inventory.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(inventory.images)" permission = "[permissions.viewImages]">View Image</a></td>
               <td ng-if="inventory.images.length == 0"><label>No Image<label></td>
             <td class="col-md-2">{{inventory.act_name}}</td>
             <td class="col-md-2">{{inventory.act_date|limitTo:10}}</td>
@@ -53,7 +53,9 @@
             <td class="col-md-2"> <input type="checkbox" ng-model="inventory.status" ng-value="true" ng-click="addActivity($index,inventory)"></td>
             <td class="col-md-2">{{inventory.reAssign_date}}</td>
             <md-progress-linear md-mode="determinate" value="...">
-              <td><button class="btn btn-primary active" ngf-select="uploadImage($file,inventory)">Upload Image</button></td>
+              <td>
+                <button class="btn btn-primary active" ngf-select="uploadImage($file,inventory)" permission = "[permissions.uploadImages]">Upload Image</button>
+              </td>
             </md-progress-linear>
           </tr>
         </tbody>
@@ -63,9 +65,9 @@
 </div>
 </div>
 <div class = "button-panel">
-  <button class="btn btn-danger active notify"  data-target = "#reAssignModal" data-toggle = "modal" ng-disabled="!reAssign">ReAssign</button>
-  <button class="btn btn-danger active notify" ng-click="getSummary()">Summary</button>
-  <button class="btn btn-danger active notify" ng-click="downloadImages()" ng-disabled="buttonDisable">Download</button>
+  <button class="btn btn-danger active notify"  data-target = "#reAssignModal" data-toggle = "modal" ng-disabled="!reAssign" permission = "[permissions.reAssignDates]">ReAssign</button>
+  <button class="btn btn-danger active notify" ng-click="getSummary()" permission = "[permissions.viewSummary]">Summary</button>
+  <button class="btn btn-danger active notify" ng-click="downloadImages()" ng-disabled="buttonDisable" permission = "[permissions.downloadImages]">Download</button>
 </div>
 <!--Start: Code for supplier details Modal Window -->
 <div id="supplierModal" class="modal fade">
