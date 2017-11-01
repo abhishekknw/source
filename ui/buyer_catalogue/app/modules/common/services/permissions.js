@@ -73,8 +73,18 @@ angular
     },
 
     pagePermissions : {
-      homepage        : 'homepage',
-      proposalSummary : 'proposal_summary_page',
-      mapView         : 'mapview',
+      homepage                : 'homePage',
+      proposalSummaryPage     : 'proposalSummaryPage',
+      mapViewPage             : 'mapViewPage',
+      createProposalPage      : 'createProposalPage',
+      showCurrentProposalPage : 'showCurrentProposalPage',
+      managementPage          : 'managementPage',
+      opsDashBoardPage        : 'opsDashBoardPage',
+      CampaignListPage        : 'CampaignListPage',
+      supplierBookingPage     : 'supplierBookingPage',
+      auditReleasePage        : 'auditReleasePage',
+      opsExecutionPage        : 'opsExecutionPage',
+      showProposalHistoryPage : 'showProposalHistoryPage',
+      publicPage              :  'publicPage',
     },
   });
