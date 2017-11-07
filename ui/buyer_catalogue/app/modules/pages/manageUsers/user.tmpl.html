@@ -378,9 +378,11 @@
     </div></br>
     <div class="row">
         <label class="cols-sm-2">Organisation :</label></br>
-        <span ng-if="userInfo.profile.organisation.name != standardOrganisation">{{userInfo.profile.organisation.name}}</span>
-        <select ng-if="(userInfo.profile.organisation.name == standardOrganisation) || userInfo.is_superuser" class="form-control form-user" ng-model="model.organisation" ng-change="getProfiles(model.organisation)">
-          <option ng-repeat="organisation in organisationList" value="{{organisation.organisation_id}}">{{organisation.name}}</option>
+        <span ng-if="userInfo.profile.organisation.name.toUpperCase() != standardOrganisation.toUpperCase()">{{userInfo.profile.organisation.name}}</span>
+        <select ng-if="(userInfo.profile.organisation.name.toUpperCase() == standardOrganisation.toUpperCase()) || userInfo.is_superuser"
+				 class="form-control form-user" ng-model="model.organisation" ng-change="getProfiles(model.organisation)"
+				 ng-options="org.organisation_id as org.name for org in organisationList">
+          <!-- <option value="" hidden>Please Select Organisation</option> -->
         </select>
     </div>
 
