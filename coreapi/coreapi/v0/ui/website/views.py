@@ -2659,6 +2659,7 @@ class CreateInitialProposal(APIView):
                     proposal_data['parent'] = ProposalInfo.objects.get_permission(user=user, proposal_id=parent).proposal_id
 
                 # call the function that saves basic proposal information
+                proposal_data['created_by'] = user
                 response = website_utils.create_basic_proposal(proposal_data)
                 if not response.data['status']:
                     return response
@@ -2783,8 +2784,8 @@ class ProposalViewSet(viewsets.ViewSet):
     This viewset was made instead of creating separate ApiView's because all the api's in this viewset
     are related to Proposal domain. so keeping them at one place makes sense.
     """
-    parser_classes = (JSONParser, FormParser)
-    permission_classes = (v0_permissions.IsProposalAuthenticated, )
+    #parser_classes = (JSONParser, FormParser)
+    #permission_classes = (v0_permissions.IsProposalAuthenticated, )
 
     def retrieve(self, request, pk=None):
         """
@@ -3489,7 +3490,7 @@ class ProposalVersion(APIView):
     6. sends mail to BD head.
     7. Generates excel sheet and send's it as attachment in the mail to BD head.
     """
-    permission_classes = (v0_permissions.IsProposalAuthenticated, )
+    #permission_classes = (v0_permissions.IsProposalAuthenticated, )
 
     def post(self, request, proposal_id):
         """
@@ -3694,32 +3695,12 @@ class AssignCampaign(APIView):
         class_name = self.__class__.__name__
 
         try:
-            assigned_by = request.user
+            user = request.user
 
-            if assigned_by.is_anonymous():
-                return ui_utils.handle_response(class_name, data='Anonymous users can\'t have any campaigns assigned')
-            query = {}
-            if int(request.query_params['fetch_all']) and request.user.is_superuser:
-                # set query to empty dict. we need to fetch all Campaign objects
-                query = {}
+            if user.is_superuser:
+                assigned_objects = models.CampaignAssignment.objects.all()
             else:
-                # this field determined weather to include 'assigned_by' in query or not
-                is_assigned_by = int(request.query_params['include_assigned_by'])
-
-                # to field  must be present  if is_assigned_by is False.
-                if not is_assigned_by:
-                    # 'to' must be present. There should be something to query !
-                    to = request.query_params['to']
-                else:
-                    # if is_assigned_by is False, try to get to, but assigned_by field must be set to request.user
-                    to = request.query_params.get('to')
-                    query['assigned_by'] = request.user
-
-                # if you found to field, fetch the object from BaseUser table.
-                if to:
-                    query['assigned_to'] = models.BaseUser.objects.get(id=to)
-
-            assigned_objects = models.CampaignAssignment.objects.filter(**query)
+                assigned_objects = models.CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
             campaigns = []
             # check each one of them weather they are campaign or not
             for assign_object in assigned_objects:
@@ -3746,7 +3727,6 @@ class AssignCampaign(APIView):
             return ui_utils.handle_response(class_name, data='key Error', exception_object=e, request=request)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
 
 class CampaignInventory(APIView):
     """
