@@ -207,7 +207,7 @@
             </div>
             <div class="form-group">
                 <label for="confirm" class="cols-sm-2 control-label">Organisation :</label>
-                <span ng-if="(userInfo.profile.organisation.name != standardOrganisation)">{{userInfo.profile.organisation.name}}</span>
+                <span ng-if="(userInfo.profile.organisation.name.toUpperCase() != standardOrganisation.toUpperCase())">{{userInfo.profile.organisation.name}}</span>
                 <select ng-if="(userInfo.profile.organisation.name == standardOrganisation) || userInfo.is_superuser" class="form-control" ng-model="model.organisation" ng-change="getProfiles(model.organisation)">
                   <option ng-repeat="organisation in organisationList" value="{{organisation.organisation_id}}">{{organisation.name}}</option>
                 </select>
