@@ -9,6 +9,10 @@ angular
       addNewAccount           : 'can_add_new_account',
       createNewProposal       : 'can_create_new_proposal',
       proposalListView        : 'can_view_proposal_list',
+      campaignStateButtonView : 'can_view_campaign_state_button_on_homepage',
+      mapOrGridViewButton     : 'can_view_map_or_gridview_button_on_homepage',
+      uploadProposalButton    : 'can_upload_proposal_from_homepage',
+      viewImagesButton        : 'can_view_images_of_campaigns_from_homepage',
     },
 
     proposalSummaryPage : {
