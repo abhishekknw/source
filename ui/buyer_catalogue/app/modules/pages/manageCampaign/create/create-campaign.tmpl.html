@@ -211,7 +211,7 @@
                       <span>Declined</span>
                     </button>
                   </td>
-                  <td >
+                  <td>
                     <button class="btn btn-danger detail-button" ng-click="goToMapView(proposal)">View on Map/Grid</button>
                   </td>
                   <!-- <td ng-if="!isUploaded">
@@ -222,8 +222,10 @@
                   <td>
                     <button ng-hide="hideData" class="btn btn-danger active" ngf-select="upload($file,proposal.proposal_id)" ng-loading="uploadfile">Upload</button>
                   </td>
-                  <td>
-                    <a href="" ng-click="showHistory(proposal.proposal_id)">Show History</a>
+                  <td ng-if="proposal.campaign_state == proposalConverted">
+                    <button class="btn btn-primary detail-button" ng-click="showCampaignImages(proposal)">
+                      <span>View Images</span>
+                    </button>
                   </td>
                 </tr>
               </tbody>
