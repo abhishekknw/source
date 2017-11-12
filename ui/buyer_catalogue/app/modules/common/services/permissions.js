@@ -61,7 +61,7 @@ angular
     },
 
     opsExecutionPage : {
-      reAssignDates       :   'can_ReAssign_activity_dates_on_opsexecutionpage',
+      reAssignDates       :   'can_reassign_activity_dates_on_opsexecutionpage',
       viewSupplierDetails :   'can_view_supplier_details_on_opsexecutionpage',
       viewImages          :   'can_view_images_on_opsexecutionpage',
       uploadImages        :   'can_upload_images_on_opsexecutionpage',
