@@ -187,32 +187,32 @@
                   <td>{{proposal.updated_on | limitTo:10}}</td>
                   <td ng-if="proposal.campaign_state == null"></td>
                   <td ng-if="proposal.campaign_state == proposalRequested">
-                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)">
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)" permission="[permList.campaignStateButtonView]">
                       <span>Requested</span>
                     </button>
                   </td>
                   <td ng-if="proposal.campaign_state == proposalFinalized">
-                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)">
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)" permission="[permList.campaignStateButtonView]">
                       <span>Finalized</span>
                     </button>
                   </td>
                   <td ng-if="proposal.campaign_state == proposalConverted">
-                    <button class="btn btn-success detail-button" ng-click="showProposalDetails(proposal)">
+                    <button class="btn btn-success detail-button" ng-click="showProposalDetails(proposal)" permission="[permList.campaignStateButtonView]">
                       <span>Converted</span>
                     </button>
                   </td>
                   <td ng-if="proposal.campaign_state == proposalOnHold">
-                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)">
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)" permission="[permList.campaignStateButtonView]">
                       <span>On-Hold</span>
                     </button>
                   </td>
                   <td ng-if="proposal.campaign_state == proposalDeclined">
-                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)">
+                    <button class="btn btn-danger detail-button" ng-click="showProposalDetails(proposal)" permission="[permList.campaignStateButtonView]">
                       <span>Declined</span>
                     </button>
                   </td>
-                  <td >
-                    <button class="btn btn-danger detail-button" ng-click="goToMapView(proposal)">View on Map/Grid</button>
+                  <td>
+                    <button class="btn btn-danger detail-button" ng-click="goToMapView(proposal)" permission="[permList.mapOrGridViewButton]">View on Map/Grid</button>
                   </td>
                   <!-- <td ng-if="!isUploaded">
                     <button class="btn btn-danger active" ng-click="showProposalDetails(proposal.proposal_id)">
@@ -220,10 +220,12 @@
                     </button>
                   </td> -->
                   <td>
-                    <button ng-hide="hideData" class="btn btn-danger active" ngf-select="upload($file,proposal.proposal_id)" ng-loading="uploadfile">Upload</button>
+                    <button ng-hide="hideData" class="btn btn-danger active" ngf-select="upload($file,proposal.proposal_id)" ng-loading="uploadfile" permission="[permList.uploadProposalButton]">Upload</button>
                   </td>
-                  <td>
-                    <a href="" ng-click="showHistory(proposal.proposal_id)">Show History</a>
+                  <td ng-if="proposal.campaign_state == proposalConverted">
+                    <button class="btn btn-primary detail-button" ng-click="showCampaignImages(proposal)" permission="[permList.viewImagesButton]">
+                      <span>View Images</span>
+                    </button>
                   </td>
                 </tr>
               </tbody>

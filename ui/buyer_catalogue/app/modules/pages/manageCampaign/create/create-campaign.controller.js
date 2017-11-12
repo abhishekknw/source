@@ -477,6 +477,15 @@
             }, 2000);
          };
 
+         //to show images on opsExecution page
+         $scope.showCampaignImages = function(proposal){
+           $window.localStorage.campaignState = constants[proposal.campaign_state];
+           $window.localStorage.campaignId = proposal.proposal_id;
+           $window.localStorage.campaignOwner = proposal.created_by;
+           $window.localStorage.campaignName = proposal.name;
+           
+           $location.path('/' + proposal.proposal_id + '/opsExecutionPlan');
+         }
         //call when page loads
         $scope.getOrganisations();
       // [TODO] implement this
