@@ -658,7 +658,7 @@ class BaseUserUpdateSerializer(ModelSerializer):
 
     class Meta:
         model = models.BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile','is_superuser', 'groups', 'user_permissions', 'profile')
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile','is_superuser', 'groups', 'user_permissions', 'profile', 'role')
        
 
 class SupplierTypeRetailShopSerializer(ModelSerializer):

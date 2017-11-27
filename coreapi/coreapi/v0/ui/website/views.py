@@ -5621,6 +5621,7 @@ class OrganisationMapViewSet(viewsets.ViewSet):
             serializer = website_serializers.OrganisationMapNestedSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
+
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def create(self, request):
@@ -5709,5 +5710,78 @@ class AccountViewSet(viewsets.ViewSet):
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class RoleViewSet(viewsets.ViewSet):
+    """
+    viewset around roles
+    """
+    def create(self,request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            data['codename'] = "".join(data['name'].split()[:2]).upper()
+            serializer = website_serializers.RoleSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                website_utils.create_entry_in_role_hierarchy(serializer.data)
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def list(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            organisation_id = request.query_params['organisation_id']
+            roles = models.Role.objects.filter(organisation=models.Organisation.objects.get(pk=organisation_id))
+            serializer = website_serializers.RoleSerializer(roles, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class RoleHierarchyViewSet(viewsets.ViewSet):
+    """
+    viewset arounnd Role hierarchy, deletes previous hierarchy and create new one
+    """
+    def create(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            child_instance = models.Role.objects.get(pk=data['child'])
+            old_role_hierarchy_objects = models.RoleHierarchy.objects.filter(child=data['child'])
+            old_role_hierarchy_objects.delete()
+            new_role_hierachy_objects = models.RoleHierarchy.objects.filter(child=data['parent'])
+            role_objects = []
+            for instance in new_role_hierachy_objects:
+                role_data = {
+                    'parent' : instance.parent,
+                    'child' : child_instance,
+                    'depth' : instance.depth + 1
+                }
+                role_objects.append(models.RoleHierarchy(**role_data))
+            role_data = {
+            'parent' : child_instance,
+            'child'  : child_instance,
+            }
+            role_objects.append(models.RoleHierarchy(**role_data))
+            models.RoleHierarchy.objects.bulk_create(role_objects)
+            return Response(status=200)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

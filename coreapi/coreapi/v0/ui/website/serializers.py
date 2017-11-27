@@ -456,3 +456,17 @@ class OrganisationMapNestedSerializer(ModelSerializer):
 
     class Meta:
         model = models.OrganisationMap
+
+class RoleSerializer(ModelSerializer):
+    """
+    simple serializer for Role
+    """
+    class Meta:
+        model = models.Role
+
+class RoleHierarchySerializer(ModelSerializer):
+    """
+    simple serializer for RoleHierarchy
+    """
+    class Meta:
+        model = models.RoleHierarchy

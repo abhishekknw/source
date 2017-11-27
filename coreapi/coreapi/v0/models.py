@@ -75,6 +75,7 @@ class BaseUser(AbstractUser):
     user_code = models.CharField(max_length=255, default=settings.DEFAULT_USER_CODE)
     mobile = models.CharField(max_length=20, null=True, blank=True)
     profile = models.ForeignKey('Profile', null=True, blank=True)  # remove null=true once every user has been attached one profile
+    role = models.ForeignKey('Role', null=True, blank=True)
 
     class Meta:
         db_table = 'base_user'
@@ -2560,3 +2561,25 @@ class GeneralUserPermission(BaseModel):
 
     class Meta:
         db_table = 'general_user_permission'
+
+class Role(models.Model):
+    """
+    This model defines roles
+    """
+    name = models.CharField(max_length=255)
+    codename = models.CharField(max_length=255)
+    organisation = models.ForeignKey('Organisation')
+
+    class Meta:
+        db_table = 'role'
+
+class RoleHierarchy(models.Model):
+    """
+    This model defines role hierarchy between roles
+    """
+    parent = models.ForeignKey('Role', related_name='parent')
+    child = models.ForeignKey(Role)
+    depth = models.IntegerField(default=0, null=False, blank=False)
+
+    class Meta:
+        db_table = 'role_hierarchy'

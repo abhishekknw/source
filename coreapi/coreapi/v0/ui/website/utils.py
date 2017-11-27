@@ -6059,3 +6059,23 @@ def get_generic_id(items):
         return object_id
     except Exception as e:
         return  Exception(function, ui_utils.get_system_error(e))
+
+def create_entry_in_role_hierarchy(role):
+    """
+    create role entry in role_hierarchy table
+    :return:
+    """
+    function = create_entry_in_role_hierarchy.__name__
+    try:
+        instance = models.Role.objects.get(codename=role['codename'],organisation=role['organisation'])
+        data = {
+            'parent' : instance.id,
+            'child'  : instance.id
+        }
+        serializer = serializers.RoleHierarchySerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return 1
+        return ui_utils.handle_response(function, data=serializer.errors)
+    except Exception as e:
+        return Exception(function, ui_utils.get_system_error(e))
