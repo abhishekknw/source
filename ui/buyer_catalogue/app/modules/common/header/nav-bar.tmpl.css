@@ -25,3 +25,6 @@
 .modal.right.fade.in .modal-dialog {
 	right: 0;
 }
+.sub-menu{
+	left-margin:20px;
+}

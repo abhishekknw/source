@@ -37,6 +37,7 @@ angular.module('machadaloPages')
      $scope.contentTypeListById = [];
      $scope.cloneProfileNewName = '';
      $scope.mappingData = {};
+     $scope.rolesData = {};
 
 
      $scope.userInfo = $rootScope.globals.userInfo;
@@ -214,6 +215,8 @@ angular.module('machadaloPages')
        {name : 'onBoard'},
        {name : 'aboutYou'},
        {name : 'mapOrganisations'},
+       {name : 'createRoles'},
+       {name : 'assignRole'}
      ];
      $scope.contentItem = {
        createUser  : 'createUser',
@@ -225,10 +228,12 @@ angular.module('machadaloPages')
        profile      : 'profile',
        organisation : 'organisation',
        organisationCommon : 'organisationCommon',
-       profileView : 'profileView',
-       onBoard    :   'onBoard',
-       aboutYou   :   'aboutYou',
+       profileView  : 'profileView',
+       onBoard      :   'onBoard',
+       aboutYou     :   'aboutYou',
        mapOrganisations : 'mapOrganisations',
+       createRoles  : 'createRoles',
+       assignRole   : 'assignRole',
      }
      $scope.getContent = function(item,data){
        console.log(item);
@@ -276,6 +281,12 @@ angular.module('machadaloPages')
             break;
           case $scope.contentItem.mapOrganisations:
             getOrganisationMappingList($scope.userInfo.profile.organisation.organisation_id);
+            break;
+          case $scope.contentItem.createRoles || $scope.contentItem.assignRole:
+            getOrganisations();
+            break;
+          case $scope.contentItem.assignRole:
+            getOrganisations();
             break;
         }
      }
@@ -757,5 +768,41 @@ angular.module('machadaloPages')
       }).catch(function onError(response){
         console.log(response);
       })
+    }
+    $scope.createNewRole = function(){
+      console.log($scope.rolesData);
+      userService.createNewRole($scope.rolesData)
+      .then(function onSuccess(response){
+        console.log(response);
+        swal(constants.name,constants.create_success,constants.success);
+      }).catch(function onError(response){
+        console.log(response);
+        swal(constants.name,constants.errorMsg,constants.error);
+      })
+    }
+    $scope.getRoles = function(){
+      userService.getRoles($scope.rolesData.organisation)
+      .then(function onSuccess(response){
+        console.log(response);
+        $scope.rolesList = response.data.data;
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
+    $scope.assignRole = function(){
+      if($scope.rolesData.parent === $scope.rolesData.child){
+        swal(constants.name,constants.role_assignment_error,constants.warning);
+      }
+      else{
+        userService.assignRole($scope.rolesData)
+        .then(function onSuccess(response){
+          console.log(response);
+          swal(constants.name,constants.update_success,constants.success);
+        }).catch(function onError(response){
+          console.log(response);
+          swal(constants.name,constants.errorMsg,constants.error);
+        })
+      }
+
     }
    }]);//end of controller

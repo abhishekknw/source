@@ -36,7 +36,8 @@ angular
     'scrollable-table',
     'cfp.loadingBar',
     'vcRecaptcha',
-    'ngMaterial'
+    'ngMaterial',
+    'nvd3'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
       $stateProvider
@@ -290,6 +291,11 @@ angular
             url : '/completedCampaigns',
             controller : 'CompletedCampaignCtrl',
             templateUrl : 'modules/pages/campaignStatus/completedCampaigns/completedCampaign.tmpl.html',
+      })
+      .state('dashboard',{
+            url : '/dashboard',
+            controller : 'adminDashboardController',
+            templateUrl : 'modules/pages/DashBoard/adminDashboard/adminDashboard.tmpl.html',
       })
       .state('forbiddenPage',{
             url : '/forbiddenPage',

@@ -141,4 +141,6 @@ angular
     profile_error : 'You do not have profile attached, Please Contact Your Organisation Admin',
     forbidden_error_code : 403,
     forbidden_title : 'FORBIDDEN : 403',
+    //roles
+    role_assignment_error : 'Can not assign same Role to both parent and child',
   });
