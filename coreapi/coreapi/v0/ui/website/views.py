@@ -5785,3 +5785,42 @@ class RoleHierarchyViewSet(viewsets.ViewSet):
             return Response(status=200)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class campaignListAPIVIew(APIView):
+    """
+    API around campaign list
+    """
+    def get(self, request, organisation_id):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            user = request.user
+            date = request.query_params['date']
+            if user.is_superuser:
+                assigned_objects = models.CampaignAssignment.objects.all()
+            else:
+                category = request.query_params['category']
+                if category.upper() == v0_constants.category['business']:
+                    accounts = models.AccountInfo.objects.filter(organisation=organisation_id)
+                else:
+                    accounts = models.AccountInfo.objects.filter_permission(user=request.user,
+                                                organisation=models.Organisation.objects.get(
+                                                                            pk=organisation_id))
+                query = None
+                for account_instance in accounts:
+                    if query is None:
+                        query = Q(campaign__account=account_instance)
+                    else:
+                        query |= Q(campaign__account=account_instance)
+                assigned_objects = models.CampaignAssignment.objects.filter(query)
+            serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
+            response = website_utils.get_campaigns_by_status(serializer.data, date)
+            if not response:
+                return response
+            return ui_utils.handle_response(class_name, data=response, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)

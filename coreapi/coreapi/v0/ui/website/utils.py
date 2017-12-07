@@ -25,6 +25,7 @@ from django.db.models import Count, Sum
 from django.forms.models import model_to_dict
 from django.db import connection
 from django.core.cache import cache
+from django.utils.dateparse import parse_datetime
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -6077,5 +6078,37 @@ def create_entry_in_role_hierarchy(role):
             serializer.save()
             return 1
         return ui_utils.handle_response(function, data=serializer.errors)
+    except Exception as e:
+        return Exception(function, ui_utils.get_system_error(e))
+
+def get_campaigns_by_status(campaigns, current_date):
+    """
+    return campaigns list by arranging in ongoing, upcoming and completed keys
+
+    :param data:
+    :return:
+    """
+    function = get_campaigns_by_status.__name__
+    try:
+        if not current_date:
+            current_date = timezone.now()
+        current_date = parse_datetime(current_date).date()
+        campaign_data = {
+            'ongoing_campaigns'     : [],
+            'upcoming_campaigns'    : [],
+            'completed_campaigns'   : []
+        }
+        for data in campaigns:
+            campaign_start_date = parse_datetime(data['campaign']['tentative_start_date']).date()
+            campaign_end_date = parse_datetime(data['campaign']['tentative_end_date']).date()
+            if not campaign_start_date or not campaign_end_date:
+                continue
+            if campaign_end_date < current_date:
+                campaign_data['completed_campaigns'].append(data)
+            if campaign_start_date > current_date:
+                campaign_data['upcoming_campaigns'].append(data)
+            if campaign_end_date >= current_date and campaign_start_date <= current_date:
+                campaign_data['ongoing_campaigns'].append(data)
+        return campaign_data
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))

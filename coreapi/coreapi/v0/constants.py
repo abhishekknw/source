@@ -1215,3 +1215,9 @@ permission_contants = {
     'UPDATE_ALL': 'update_all',
     'DELETE': 'delete'
 }
+
+#category list
+category = {
+    'business' : 'BUSINESS',
+    'business_agency' : 'BUSINESS AGENCY',
+}
