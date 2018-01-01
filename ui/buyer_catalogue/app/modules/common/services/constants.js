@@ -143,4 +143,9 @@ angular
     forbidden_title : 'FORBIDDEN : 403',
     //roles
     role_assignment_error : 'Can not assign same Role to both parent and child',
+    //DashBoard
+    BK  : 'Booked',
+    NBK : 'Not Booked',
+    no_phase : 'Remaining'
+
   });

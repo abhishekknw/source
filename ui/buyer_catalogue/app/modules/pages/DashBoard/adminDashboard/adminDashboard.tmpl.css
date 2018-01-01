@@ -22,3 +22,27 @@
 .cards{
   max-height: 180px;
 }
+.menu-item{
+  /*align-items: stretch;*/
+  padding-left: 20%;
+}
+h4{
+  font-weight: bold;
+  color : white;
+}
+div.menu-item:hover {
+    background-color: gray;
+}
+.bgcolor{
+  background-color: white;
+}
+.label-release{
+  font-size: 10px;
+  color: green;
+  font-weight: bold;
+}
+.label-unrelease{
+  font-size: 10px;
+  color: black;
+  font-weight: bold;
+}

@@ -37,7 +37,10 @@ angular
     'cfp.loadingBar',
     'vcRecaptcha',
     'ngMaterial',
-    'nvd3'
+    'nvd3',
+    'chart.js',
+    'angularUtils.directives.dirPagination',
+    'percentCircle-directive'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
       $stateProvider
