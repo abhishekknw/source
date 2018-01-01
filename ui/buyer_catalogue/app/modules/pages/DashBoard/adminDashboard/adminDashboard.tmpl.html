@@ -1,0 +1,555 @@
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="modules/pages/DashBoard/adminDashboard/adminDashboard.tmpl.css" />
+<md-content>
+  <md-toolbar>
+    <div class="md-toolbar-tools" style="background-color:#a72b16">
+      <h4 md-truncate flex>Machadalo</h4>
+    </div>
+  </md-toolbar>
+  <!--start: card layout  -->
+  <md-content layout="row" >
+    <md-card class="cards" layout-fill>
+      <md-button ng-click="changeView('todayStatus')">
+       <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+       <md-card-content layout="row">
+
+         <md-button class="md-fab md-danger" aria-label="Use Android">
+             <label style="font-size:50px;">-</label>
+         </md-button>
+         <h2>Today Status</h2>
+         <md-button class="md-fab md-danger" aria-label="Use Android">
+             <label style="font-size:50px;">+</label>
+         </md-button>
+
+         <!-- <p>Card content</p> -->
+       </md-card-content>
+       <md-card-actions layout="row" layout-align="end center">
+         <!-- <md-button>Action 1</md-button> -->
+         <!-- <md-button>Action 2</md-button> -->
+       </md-card-actions>
+     </md-button>
+    </md-card>
+    <md-card layout-fill class="cards">
+    <md-button ng-click="changeView('allCampaigns')">
+       <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+       <md-card-content>
+         <h2>All Campaigns</h2>
+         <!-- <p>Card content</p> -->
+       </md-card-content>
+       <md-card-actions layout="row" layout-align="end center">
+         <!-- <md-button>Action 1</md-button> -->
+         <!-- <md-button>Action 2</md-button> -->
+       </md-card-actions>
+     </md-button>
+    </md-card>
+    <md-card layout-fill class="cards">
+      <md-button ng-click="changeView('performanceMetrix')">
+       <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+       <md-card-content>
+         <h2>Performance Metrics</h2>
+         <!-- <p>Card content</p> -->
+       </md-card-content>
+       <md-card-actions layout="row" layout-align="end center">
+         <!-- <md-button>Action 1</md-button> -->
+         <!-- <md-button>Action 2</md-button> -->
+       </md-card-actions>
+     </md-button>
+    </md-card>
+  </md-content>
+  <!--end: card layout  -->
+  <!-- <md-content>
+    <div class="col-md-12" style="text-align:right">
+      <div class="col-md-6">
+
+      </div>
+      <div class="col-md-6">
+        <input type="search" class="form-control" placeholder="Search" ng-model="searchValue" >
+
+      </div>
+    </div>
+  </md-content> -->
+  <md-content layout="row" flex>
+    <!-- <div class="panel panel-default"> -->
+      <!-- <md-content>
+        <md-sidenav class="md-sidenav-left cards" md-component-id="left" md-is-locked-open="true"
+                     md-whiteframe="4" style="height:180vh">
+          <md-toolbar class="md-theme-indigo">
+            <h1 class="md-toolbar-tools">Menu</h1>
+          </md-toolbar>
+          <md-content layout-margin>
+            <p>
+              This sidenav is not showing any backdrop, where users can click on it, to close the sidenav.
+            </p>
+            <md-button ng-click="toggleLeft()" class="md-accent">
+              Close this Sidenav
+            </md-button>
+          </md-content>
+        </md-sidenav>
+        </md-content> -->
+        <md-content flex layout-padding>
+          <div class="" ng-if="viewContent=='todayStatus'">
+            <!-- <h4>dsadas</h4> -->
+            <div class="hpadding20">
+                <div class="row">
+                   <div class="col-md-12" style="text-align: center;">
+                       <div class="row">
+                      <!-- Start: Carousel added to slide images -->
+                         <div class="carousel" id="slider-Poster">
+                        <div class="carousel-inner" >
+                            <div class="item Image" ng-class="{active:!$index}" ng-repeat="(date,value) in allCampaignsData['POSTER']">
+                              <div class="row">
+                                <md-content layout="row" >
+                                  <md-card layout-fill class="cards inv-title">
+                                  <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>POSTER</h4>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <md-card class="cards inv-count-card" layout-fill>
+                                    <canvas id="doughnut" class="chart chart-doughnut"
+                                      chart-data="data" chart-labels="labels">
+                                    </canvas>
+                                  </md-card>
+                                  <md-card layout-fill class="cards inv-count-card">
+                                  <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>AUDIT</h4>
+                                       <p>{{date}}</p>
+                                       <md-button class="md-fab md-danger" aria-label="Use Android">
+                                          <label>{{value['AUDIT'].actual||'-'}} </label>/<label> {{value['AUDIT'].total }}</label>
+                                       </md-button>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <md-card layout-fill class="cards inv-count-card">
+                                    <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>CLOSURE</h4>
+                                       <p>{{date}}</p>
+                                       <md-button class="md-fab md-danger" aria-label="Use Android">
+                                          <label>{{value['CLOSURE'].actual||'-'}} </label>/<label> {{value['CLOSURE'].total }}</label>
+                                       </md-button>
+
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                </md-content>
+                              </div>
+                              <a class=" carousel-control"  data-toggle="carousel" data-target = "#slider-Poster" role="button" data-slide="prev">
+                               <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                               <span class="sr-only">Previous</span>
+                              </a>
+                              <a class="right carousel-control carousel-item"   data-toggle="carousel" data-target = "#slider-Poster" role="button" data-slide="next">
+                               <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                               <span class="sr-only">Next</span>
+                              </a>
+                            </div>
+                        </div>
+                     </div>
+                  <!-- End: Carousel added to slide images -->
+                       </div>
+                  </div>
+                </div><br>
+            </div>
+
+            <div class="hpadding20">
+                <div class="row">
+                   <div class="col-md-12" style="text-align: center;">
+                       <div class="row">
+                      <!-- Start: Carousel added to slide images -->
+                         <div class="carousel" id="slider-Stall">
+                        <div class="carousel-inner" >
+                            <div class="item Image" ng-class="{active:!$index}" ng-repeat="(date,value) in allCampaignsData['STALL']">
+                              <div class="row">
+                                <md-content layout="row" >
+                                  <md-card layout-fill class="cards inv-title">
+                                  <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>STALL</h4>
+                                       <p></p>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <md-card class="cards inv-count-card" layout-fill>
+                                    <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>RELEASE</h4>
+                                       <p>{{date}}</p>
+                                       <label>{{value['RELEASE'].actual||'-'}} </label>/<label> {{value['RELEASE'].total }}</label>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <md-card layout-fill class="cards inv-count-card">
+
+                                  <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>AUDIT</h4>
+                                       <p>{{date}}</p>
+                                       <label>{{value['AUDIT'].actual||'-'}} </label>/<label> {{value['AUDIT'].total }}</label>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <md-card layout-fill class="cards inv-count-card">
+
+                                    <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>CLOSURE</h4>
+                                       <p>{{date}}</p>
+                                       <label>{{value['CLOSURE'].actual||'-'}} </label>/<label> {{value['CLOSURE'].total }}</label>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                </md-content>
+                              </div>
+                              <a class=" carousel-control"  data-toggle="carousel" data-target = "#slider-Stall" role="button" data-slide="prev">
+                               <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                               <span class="sr-only">Previous</span>
+                              </a>
+                              <a class="right carousel-control carousel-item"   data-toggle="carousel" data-target = "#slider-Stall" role="button" data-slide="next">
+                               <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                               <span class="sr-only">Next</span>
+                              </a>
+                            </div>
+                        </div>
+                     </div>
+                  <!-- End: Carousel added to slide images -->
+                       </div>
+                  </div>
+                </div><br>
+            </div>
+
+
+            <div class="hpadding20">
+                <div class="row">
+                   <div class="col-md-12" style="text-align: center;">
+                       <div class="row">
+                      <!-- Start: Carousel added to slide images -->
+                         <div class="carousel" id="slider-Standee">
+                        <div class="carousel-inner" >
+                            <div class="item Image" ng-class="{active:!$index}" ng-repeat="(date,value) in allCampaignsData['STANDEE']">
+                              <div class="row">
+                                <md-content layout="row" >
+                                  <md-card layout-fill class="cards inv-title">
+                                  <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>STANDEE</h4>
+                                       <p></p>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <md-card class="cards inv-count-card" layout-fill>
+
+                                    <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>RELEASE</h4>
+                                       <p>{{date}}</p>
+                                       <label>{{value['RELEASE'].actual||'-'}} </label>/<label> {{value['RELEASE'].total }}</label>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <md-card layout-fill class="cards inv-count-card">
+
+                                  <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>AUDIT</h4>
+                                       <p>{{date}}</p>
+                                       <label>{{value['AUDIT'].actual||'-'}} </label>/<label> {{value['AUDIT'].total }}</label>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <md-card layout-fill class="cards inv-count-card">
+
+                                    <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>CLOSURE</h4>
+                                       <p>{{date}}</p>
+                                       <label>{{value['CLOSURE'].actual||'-'}} </label>/<label> {{value['CLOSURE'].total }}</label>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                </md-content>
+                              </div>
+                              <a class=" carousel-control"  data-toggle="carousel" data-target = "#slider-Standee" role="button" data-slide="prev">
+                               <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                               <span class="sr-only">Previous</span>
+                              </a>
+                              <a class="right carousel-control carousel-item"   data-toggle="carousel" data-target = "#slider-Standee" role="button" data-slide="next">
+                               <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                               <span class="sr-only">Next</span>
+                              </a>
+                            </div>
+                        </div>
+                     </div>
+                  <!-- End: Carousel added to slide images -->
+                       </div>
+                  </div>
+                </div><br>
+            </div>
+
+
+            <div class="hpadding20">
+                <div class="row">
+                   <div class="col-md-12" style="text-align: center;">
+                       <div class="row">
+                      <!-- Start: Carousel added to slide images -->
+                         <div class="carousel" id="slider-Flier">
+                        <div class="carousel-inner" >
+                            <div class="item Image" ng-class="{active:!$index}" ng-repeat="(date,value) in allCampaignsData['FLIER']">
+                              <div class="row">
+                                <md-content layout="row" >
+                                  <md-card layout-fill class="cards inv-title">
+                                  <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>FLIER</h4>
+                                       <p></p>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <md-card class="cards inv-count-card" layout-fill>
+
+                                    <md-button>
+                                     <!-- <img src="card-image.png" class="md-card-image" alt="image caption"> -->
+                                     <md-card-content>
+                                       <h4>RELEASE</h4>
+                                       <p>{{date}}</p>
+                                       <label>{{value['RELEASE'].actual||'-'}} </label>/<label> {{value['RELEASE'].total }}</label>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <!-- <md-card layout-fill class="cards inv-count-card">
+
+                                  <md-button>
+                                     <img src="card-image.png" class="md-card-image" alt="image caption">
+                                     <md-card-content>
+                                       <h4>AUDIT</h4>
+                                       <p>{{date}}</p>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card>
+                                  <md-card layout-fill class="cards inv-count-card">
+
+                                    <md-button>
+                                     <img src="card-image.png" class="md-card-image" alt="image caption">
+                                     <md-card-content>
+                                       <h4>CLOSURE</h4>
+                                       <p>{{date}}</p>
+                                     </md-card-content>
+                                     <md-card-actions layout="row" layout-align="end center">
+
+                                     </md-card-actions>
+                                   </md-button>
+                                  </md-card> -->
+                                </md-content>
+                              </div>
+                              <a class=" carousel-control"  data-toggle="carousel" data-target = "#slider-Flier" role="button" data-slide="prev">
+                               <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                               <span class="sr-only">Previous</span>
+                              </a>
+                              <a class="right carousel-control carousel-item"   data-toggle="carousel" data-target = "#slider-Flier" role="button" data-slide="next">
+                               <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                               <span class="sr-only">Next</span>
+                              </a>
+                            </div>
+                        </div>
+                     </div>
+                  <!-- End: Carousel added to slide images -->
+                       </div>
+                  </div>
+                </div><br>
+            </div>
+
+          </div>
+          <!--end : today status  -->
+          <!--start : all campaigns  -->
+          <div class="" ng-if="viewContent=='allCampaigns'">
+            <md-content layout="column" layout-fill layout-padding >
+
+              <md-content layout="column" layout-fill layout-padding>
+                <div class="" >
+                <md-content layout="row" layout-fill layout-padding>
+
+                  <md-content layout="column" layout-fill layout-padding>
+                    <md-toolbar>
+                      <h3 style="text-align:center">{{activity}}</h3>
+                    </md-toolbar>
+                    <div class="panel panel-default">
+                      <div class="panel-body">
+                        <div class="col-md-6">
+                          <input type="search" class="form-control" ng-model="searchKeyword" placeholder="search"></br>
+                        </div>
+                        <div class="col-md-6">
+                          <md-menu>
+                            <md-button aria-label="Open menu with custom trigger" md-colors="{background: 'pink'}" ng-mouseenter="$mdMenu.open()">
+                              Select Campaigns
+                            </md-button>
+                            <md-menu-content width="4" ng-mouseleave="$mdMenu.close()">
+                              <md-menu-item ng-repeat="item in campaignStatus">
+                                <md-button ng-click="getCampaignsByStatus(item.value)">
+                                   {{item.header}}
+                                </md-button>
+                              </md-menu-item>
+                            </md-menu-content>
+                          </md-menu>
+                        </div>
+                        <table class="table table-bordered table-responsive">
+                          <thead style="background:gray;color:white">
+                            <th>Sr No</th>
+                            <th  ng-click="orderByField='campaign.name'; reverseSort = !reverseSort">Name of Campaign</th>
+                            <th  ng-click="orderByField='campaign.tentative_start_date'; reverseSort = !reverseSort">Start Date</th>
+                            <th  ng-click="orderByField='campaign.tentative_end_date'; reverseSort = !reverseSort">End Date</th>
+                            <th>Chart</th>
+                            <!-- <th>dasdsa</th> -->
+                          </thead>
+                          <tbody>
+                              <tr dir-paginate="campaign in campaignList|filter:searchKeyword | orderBy:orderByField:reverseSort | itemsPerPage:5 track by $index">
+                                <td>{{$index + 1}}</td>
+                                <td>{{campaign.campaign.name}}</td>
+                                <td>{{campaign.campaign.tentative_start_date|limitTo:10}}</td>
+                                <td>{{campaign.campaign.tentative_end_date|limitTo:10}}</td>
+                                <td>
+                                  <md-button md-colors="{background: 'pink'}" ng-click="getCampaignDetails(campaign.campaign.proposal_id,queries.bookingStatus)">
+                                    Chart
+                                  </md-button>
+                                </td>
+                                <!-- <td>eqwew</td> -->
+                              </tr>
+                          </tbody>
+                        </table>
+                        <dir-pagination-controls max-size="5" direction-links="true" boundary-links="true" ></dir-pagination-controls>
+                      </div>
+                    </div>
+                  </md-content>
+                  <md-content layout="column" layout-fill layout-padding>
+                    <md-toolbar>
+                      <h3 style="text-align:center">Pie Chart</h3>
+                    </md-toolbar>
+                    <div class="panel panel-default">
+                      <canvas id="pie" class="chart chart-pie" chart-colors="colours" chart-series="series"
+                        chart-data="chartData" chart-labels="chartLebels" chart-options="options">
+                      </canvas>
+                      <md-menu>
+                        <md-button aria-label="Open menu with custom trigger" md-colors="{background: 'pink'}" ng-click="$mdMenu.open()" ng-disabled="!campaignId">
+                          Select Chart By
+                        </md-button>
+                        <md-menu-content width="4" ng-click="$mdMenu.close()">
+                          <md-menu-item ng-repeat="item in queries">
+                            <md-button ng-click="getCampaignDetails(campaignId,item)">
+                               {{item}}
+                            </md-button>
+                          </md-menu-item>
+                        </md-menu-content>
+                      </md-menu>
+                    </div>
+                    </md-content>
+               </div>
+              </md-content>
+              </md-content>
+
+              <md-content layout="column" layout-fill layout-padding ng-if="views.chart">
+                  <md-content layout="row" layout-fill layout-padding>
+                    <md-content layout="column" layout-fill layout-padding>
+                      <md-toolbar>
+                        <h3 style="text-align:center">Pie Chart</h3>
+                      </md-toolbar>
+                        <canvas id="pie" class="chart chart-pie" chart-colors="colours" chart-series="series"
+                          chart-data="campaigns" chart-labels="labels" chart-options="options">
+                        </canvas>
+                        <div class="row">
+                          <div flex-gt-xs>
+                            <h4>Select Date
+                              <md-datepicker ng-model="queryDate.date" md-placeholder="Enter date"></md-datepicker>
+                              <md-button class="md-primary md-raised" ng-click="getCampaigns(queryDate.date)">Ok</md-button>
+                            </h4>
+                          </div>
+                        </div>
+                      </md-content>
+                      <md-content layout="row" layout-fill layout-padding>
+                      </md-content>
+                    </md-content>
+                </md-content>
+
+            </md-content>
+          </div>
+          <!--end : all campaigns  -->
+        </md-content>
+    <!-- </div> -->
+  </md-content>
+  <!-- <md-content layout="row" flex>
+    <md-sidenav md-component-id="left" class="md-sidenav-left" md-is-locked-open="true"
+            style="background: #C54033;">
+      <div class="" style="color:white; text-align:center; font-family:-webkit-pictograph; height:12vh" >
+        <h4 >DASHBOARD</h4>
+      </div>
+      <div class="" style="background:#c57474;color:white; text-align:center; font-family:-webkit-pictograph; height:12vh" >
+        <h3>Machadalo</h3> Yogesh Mhetre
+      </div><br>
+      <md-button ng-click="getView('chart')">
+        <md-icon>assessment</md-icon>
+        <label class="side-nav-list">Charts</label>
+      </md-button>
+      <md-menu-item class="side-nav-list" style="margin-left:50px;">
+        <md-menu >
+          <md-button ng-click="$mdMenu.open()">
+            <md-icon>table</md-icon>
+            <label class="side-nav-list">Table</label>
+          </md-button>
+          <md-menu-content style="margin-left:250px;" width="3" ng-click="$mdMenu.close()">
+            <md-menu-item type="radio" ng-model="ctrl.settings.presentationMode" value="'presentation'" ng-click="getCampaignsByStatus('ongoing')">Ongoing Campaigns</md-menu-item>
+            <md-menu-item type="radio" ng-model="ctrl.settings.presentationMode" value="'edit'" ng-click="getCampaignsByStatus('upcoming')">Upcoming Campaigns</md-menu-item>
+            <md-menu-item type="radio" ng-model="ctrl.settings.presentationMode" value="'modifiable'" ng-click="getCampaignsByStatus('completed')">Completed Campaigns</md-menu-item>
+          </md-menu-content>
+        </md-menu>
+      </md-menu-item>
+    </md-sidenav>
+
+</md-content> -->
+</md-content>

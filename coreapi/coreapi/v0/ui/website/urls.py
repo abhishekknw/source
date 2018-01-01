@@ -82,6 +82,8 @@ urlpatterns = [
     url(r'^clone-profile/$', views.CloneProfile.as_view()),
     url(r'^upload-inventory-activity-image-amazon/$', views.UploadInventoryActivityImageAmazon.as_view()),
     url(r'^campaign-list/(?P<organisation_id>[A-Z_a-z0-9-]+)/$', views.campaignListAPIVIew.as_view()),
+    url(r'^campaigns-assigned-inventory-counts/(?P<organisation_id>[A-Z_a-z0-9-]+)/$', views.CampaignsAssignedInventoryCountApiView.as_view()),
+    url(r'^campaigns-assigned-inventory-ids-and-images/(?P<organisation_id>[A-Z_a-z0-9-]+)/$', views.GetAssignedIdImagesListApiView.as_view()),
 
 ]
 
@@ -98,5 +100,6 @@ router.register(r'^organisation-map', views.OrganisationMapViewSet, base_name='o
 router.register(r'^account', views.AccountViewSet, base_name='account')
 router.register(r'^role', views.RoleViewSet, base_name='role')
 router.register(r'^role-hierarchy', views.RoleHierarchyViewSet, base_name='role-hierarchy')
+router.register(r'^dashboard', views.DashBoardViewSet, base_name='dashboard')
 
 urlpatterns += router.urls

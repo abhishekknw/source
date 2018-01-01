@@ -1221,3 +1221,8 @@ category = {
     'business' : 'BUSINESS',
     'business_agency' : 'BUSINESS AGENCY',
 }
+query_status = {
+    'supplier_code' : 'supplier_code',
+    'booking_status': 'booking_status',
+    'phase' : 'phase'
+}

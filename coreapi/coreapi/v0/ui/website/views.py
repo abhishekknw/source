@@ -16,7 +16,7 @@ from django.contrib.auth.models import Permission
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import transaction
-from django.db.models import Q, Sum
+from django.db.models import Q, F, Sum, Count
 from django.db.models import get_model
 from django.forms.models import model_to_dict
 from django.utils.dateparse import parse_datetime
@@ -2311,14 +2311,14 @@ class ImportSupplierDataFromSheet(APIView):
                 if is_created:
                     new_areas_created.append((area_code, area_instance.label))
 
-                subarea_code = row_dict['sub_area_code'].strip()
+                subarea_code = str(row_dict['sub_area_code']).strip()
                 sub_area_instance, is_created = models.CitySubArea.objects.get_or_create(subarea_code=subarea_code, area_code=area_instance)
                 sub_area_instance.subarea_name = row_dict['sub_area']
                 sub_area_instance.save()
                 if is_created:
                     new_subareas_created.append((subarea_code, sub_area_instance.subarea_name))
 
-                supplier_id = row_dict['city_code'].strip() + row_dict['area_code'].strip() + row_dict['sub_area_code'].strip() + supplier_type_code.strip() + row_dict['supplier_code'].strip()
+                supplier_id = row_dict['city_code'].strip() + row_dict['area_code'].strip() + str(row_dict['sub_area_code']).strip() + supplier_type_code.strip() + row_dict['supplier_code'].strip()
                 supplier_id_per_row[index] = supplier_id
 
                 if supplier_id in result.keys():
@@ -3835,7 +3835,7 @@ class CampaignSuppliersInventoryList(APIView):
             if assigned_to:
                 assigned_to_query = Q(assigned_to_id=long(assigned_to))
 
-            cache_key = v0_utils.create_cache_key(class_name, assigned_date_range_query, proposal_query, assigned_to_query)
+            # cache_key = v0_utils.create_cache_key(class_name, assigned_date_range_query, proposal_query, assigned_to_query)
 
             # we do a huge query to fetch everything we need at once.
             inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
@@ -3854,140 +3854,10 @@ class CampaignSuppliersInventoryList(APIView):
                 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
                 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
                 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name',
             )
 
-            total_shortlisted_spaces_list = []  # this is required to fetch supplier details later
-            inv_act_assignment_ids = set()  # this is required to fetch images data later
-            # the idea of this loop is to separate different table data in different keys.
-            for content in inv_act_assignment_objects:
-                if not result.get('shortlisted_suppliers'):
-                    result['shortlisted_suppliers'] = {}
-
-                # fetch data fro shortlisted_suppliers key
-                shortlisted_space_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces']
-                proposal_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id']
-                supplier_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id']
-                supplier_content_type_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type']
-                assigned_to = content['assigned_to']
-
-                result['shortlisted_suppliers'][shortlisted_space_id] = {
-                    'proposal_id': proposal_id,
-                    'supplier_id': supplier_id,
-                    'content_type_id': supplier_content_type_id
-                }
-
-                total_shortlisted_spaces_list.append(
-                    {
-                        'content_type_id': supplier_content_type_id,
-                        'supplier_id': supplier_id
-                    }
-                )
-
-                if not result.get('shortlisted_inventories'):
-                    result['shortlisted_inventories'] = {}
-                # fetch data for shortlisted_inventories key
-                shortlisted_inventory_id = content['inventory_activity__shortlisted_inventory_details']
-                inventory_id = content['inventory_activity__shortlisted_inventory_details__inventory_id']
-                inventory_content_type_id = content['inventory_activity__shortlisted_inventory_details__inventory_content_type']
-                comment = content['inventory_activity__shortlisted_inventory_details__comment']
-                inventory_name = content['inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
-                inventory_duration = content['inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name']
-
-                result['shortlisted_inventories'][shortlisted_inventory_id] = {
-                    'shortlisted_spaces_id': shortlisted_space_id,
-                    'inventory_id': inventory_id,
-                    'inventory_content_type_id': inventory_content_type_id,
-                    'comment': comment,
-                    'inventory_name': inventory_name,
-                    'inventory_duration': inventory_duration
-                }
-
-                if not result.get('inventory_activities'):
-                    result['inventory_activities'] = {}
-
-                # fetch data for inventory activity key
-                inventory_activity_id = content['inventory_activity']
-                activity_type = content['inventory_activity__activity_type']
-
-                result['inventory_activities'][inventory_activity_id] = {
-                    'shortlisted_inventory_id': shortlisted_inventory_id,
-                    'activity_type': activity_type
-                }
-
-                if not result.get('inventory_activity_assignment'):
-                    result['inventory_activity_assignment'] = {}
-                # fetch data for inventory activity assignment
-                inventory_activity_assignment_id = content['id']
-                activity_date = content['activity_date']
-                reassigned_activity_date = content['reassigned_activity_date']
-                inv_act_assignment_ids.add(inventory_activity_assignment_id)
-
-                result['inventory_activity_assignment'][inventory_activity_assignment_id] = {
-                    'activity_date': activity_date.date() if activity_date else None,
-                    'reassigned_activity_date': reassigned_activity_date.date() if reassigned_activity_date else None,
-                    'inventory_activity_id': inventory_activity_id,
-                    'assigned_to': user_map[assigned_to] if assigned_to else v0_constants.default_assigned_to_string
-                }
-
-            # after the result is prepared, here we collect images data
-            inventory_activity_images = models.InventoryActivityImage.objects.filter(inventory_activity_assignment_id__in=inv_act_assignment_ids)
-            images = {}
-            for inv_act_image in inventory_activity_images:
-                image_id = inv_act_image.id
-
-                if not images.get(image_id):
-                    images[image_id] = {}
-
-                images[image_id] = {
-                    'image_path': inv_act_image.image_path,
-                    'comment': inv_act_image.comment,
-                    'actual_activity_date': inv_act_image.actual_activity_date.date() if inv_act_image.actual_activity_date else None,
-                    'inventory_activity_assignment_id': inv_act_image.inventory_activity_assignment_id
-                }
-
-            # # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
-            response = website_utils.get_objects_per_content_type(total_shortlisted_spaces_list)
-            if not response.data['status']:
-                return response
-            content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
-
-            # converts the ids store in previous step to actual objects and adds additional information which is
-            #  supplier specific  like area, name, subarea etc.
-            response = website_utils.map_objects_ids_to_objects(content_type_supplier_id_map)
-            if not response.data['status']:
-                return response
-
-            # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
-            # information for that supplier
-            supplier_detail = response.data['data']
-
-            response = website_utils.get_contact_information(content_type_set, supplier_id_set)
-            if not response.data['status']:
-                return response
-            contact_object_per_content_type_per_supplier = response.data['data']
-
-            # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
-            if result:
-                for shortlisted_space_id, detail in result['shortlisted_suppliers'].iteritems():
-                    key = (detail['content_type_id'], detail['supplier_id'])
-                    try:
-                        detail['supplier_detail'] = supplier_detail[key]
-                    except KeyError:
-                        # ideally every supplier in ss table must also be in the corresponding supplier table. But
-                        # because current data is corrupt as i have manually added suppliers, i have to set this to
-                        # empty when KeyError occurres. #todo change this later.
-                        detail['supplier_detail'] = {}
-                        # set images data to final result
-
-                    # add 'contact' key to each supplier object
-                    try:
-                        contact_object = contact_object_per_content_type_per_supplier[key]
-                        detail['supplier_detail']['contacts'] = contact_object
-                    except KeyError:
-                        detail['supplier_detail']['contacts'] = []
-
-                result['images'] = images
-
+            result = website_utils.organise_supplier_inv_images_data(inv_act_assignment_objects, user_map)
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
@@ -5822,5 +5692,181 @@ class campaignListAPIVIew(APIView):
             if not response:
                 return response
             return ui_utils.handle_response(class_name, data=response, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class DashBoardViewSet(viewsets.ViewSet):
+    """
+    viewset around dashboard activities
+    This will return all the required data to display on dashboard
+    """
+
+    @list_route()
+    def suppliers_booking_status(self, request, pk=None):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id',None)
+            query_value = request.query_params.get('query',None)
+            if v0_constants.query_status['supplier_code'] == query_value:
+                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('supplier_code').annotate(total=Count('object_id'))
+            if v0_constants.query_status['booking_status'] == query_value:
+                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('supplier_code','booking_status').annotate(total=Count('object_id'))
+            if v0_constants.query_status['phase'] == query_value:
+                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('supplier_code','phase','booking_status').annotate(total=Count('object_id'))
+            return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class CampaignsAssignedInventoryCountApiView(APIView):
+    def get(self, request, organisation_id):
+        class_name = self.__class__.__name__
+        try:
+            proposal_query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state = 'PTC')
+            proposal_query_images = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state='PTC')
+            accounts = []
+            query = Q()
+            if not request.user.is_superuser:
+                category = request.query_params.get('category',None)
+                if category.upper() == v0_constants.category['business']:
+                    accounts = models.AccountInfo.objects.filter(organisation=organisation_id)
+                else:
+                    accounts = models.AccountInfo.objects.filter_permission(user=request.user, organisation=models.Organisation.objects.get(pk=organisation_id))
+
+
+
+                if not accounts:
+                    query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=None)
+                else:
+                    for account_instance in accounts:
+                        if query is None:
+                            query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
+                        else:
+                            query |= Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
+
+            inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
+                select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
+                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                       'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal',
+                        'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account'). \
+                filter(proposal_query, query). \
+                annotate(activity_type=F('inventory_activity__activity_type'),
+                     inventory=F('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
+                     ). \
+                values('activity_type', 'inventory', 'activity_date'). \
+                annotate(total=Count('id')). \
+                order_by('-activity_date')
+            inv_act_assignment_objects2 = models.InventoryActivityImage.objects. \
+                select_related('inventory_activity_assignment', 'inventory_activity', 'inventory_activity__shortlisted_inventory_details',
+                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal',
+                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account'). \
+                filter(proposal_query_images, query). \
+                annotate(activity_type=F('inventory_activity_assignment__inventory_activity__activity_type'),
+                         inventory = F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
+                         activity_date = F('inventory_activity_assignment__activity_date'),
+                         ).\
+                values('activity_type', 'inventory', 'activity_date'). \
+                annotate(total=Count('inventory_activity_assignment', distinct=True)). \
+                order_by('-activity_date')
+            # result = [[item.inventory][item.activity_type][item.activity_date.date()] for item in inv_act_assignment_objects2]
+            result = {}
+            for item in inv_act_assignment_objects:
+                inventory = str(item['inventory'])
+                activity_date = str(item['activity_date'].date())
+                activity_type = str(item['activity_type'])
+                if not result.get(item['inventory']):
+                    result[inventory] = {}
+                if not result[inventory].get(activity_date):
+                    result[inventory][activity_date] = {}
+                if not result[inventory][activity_date].get(activity_type):
+                    result[inventory][activity_date][activity_type] = {}
+
+                result[inventory][activity_date][activity_type]['total'] = item['total']
+                result[inventory][activity_date][activity_type]['actual'] = 0
+                # result[item['inventory']][item['activity_type']][item['activity_date']]['actual'] = item['total']
+            for item in inv_act_assignment_objects2:
+                inventory = str(item['inventory'])
+                activity_date = str(item['activity_date'].date())
+                activity_type = str(item['activity_type'])
+
+                result[inventory][activity_date][activity_type]['actual'] = item['total']
+
+            # import pdb
+            # pdb.set_trace()
+            return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class GetAssignedIdImagesListApiView(APIView):
+    def get(self, request, organisation_id):
+
+        class_name = self.__class__.__name__
+
+        try:
+            proposal_query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state='PTC')
+
+            activity_type = request.query_params.get('type', None)
+            activity_type_query = Q(inventory_activity__activity_type=activity_type)
+
+            activity_date = request.query_params.get('date', None)
+            activity_date_query = Q(activity_date=activity_date)
+
+            inventory = request.query_params.get('inventory', None)
+            inv_query = Q(inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name = inventory)
+            all_users = models.BaseUser.objects.all().values('id', 'username')
+            user_map = {detail['id']: detail['username'] for detail in all_users}
+
+            query = Q()
+            if not request.user.is_superuser:
+                category = request.query_params.get('category', None)
+                if category.upper() == v0_constants.category['business']:
+                    accounts = models.AccountInfo.objects.filter(organisation=organisation_id)
+                else:
+                    accounts = models.AccountInfo.objects.filter_permission(user=request.user,
+                                                                            organisation=models.Organisation.objects.get(
+                                                                                pk=organisation_id))
+
+                if not accounts:
+                    query = Q(
+                        inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=None)
+                else:
+                    for account_instance in accounts:
+                        if query is None:
+                            query = Q(
+                                inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
+                        else:
+                            query |= Q(
+                                inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
+
+
+            inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
+                select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
+                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+                filter(proposal_query, query, activity_type_query, activity_date_query, inv_query).values(
+
+                'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity',
+                'inventory_activity__activity_type', 'assigned_to',
+                'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
+                'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
+                'inventory_activity__shortlisted_inventory_details',
+                'inventory_activity__shortlisted_inventory_details__inventory_id',
+                'inventory_activity__shortlisted_inventory_details__inventory_content_type',
+                'inventory_activity__shortlisted_inventory_details__comment',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name',
+            )
+
+            result = website_utils.organise_supplier_inv_images_data(inv_act_assignment_objects, user_map)
+
+            return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
