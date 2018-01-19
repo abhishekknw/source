@@ -64,6 +64,7 @@ module.exports = function(config) {
       'bower_components/chart.js/dist/Chart.js',
       'bower_components/angular-chart.js/dist/angular-chart.js',
       'bower_components/angular-percent-circle-directive/dist/percent-circle-directive.js',
+      'bower_components/angularjs-dropdown-multiselect/src/angularjs-dropdown-multiselect.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",

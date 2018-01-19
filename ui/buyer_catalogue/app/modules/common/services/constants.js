@@ -146,6 +146,8 @@ angular
     //DashBoard
     BK  : 'Booked',
     NBK : 'Not Booked',
-    no_phase : 'Remaining'
+    no_phase : 'Remaining',
+    //proposalToCampaign
+    proposal_to_campaign : 'Campaign Created Successfully',
 
   });

@@ -300,10 +300,16 @@ angular
             controller : 'adminDashboardController',
             templateUrl : 'modules/pages/DashBoard/adminDashboard/adminDashboard.tmpl.html',
       })
+      .state('sheetToCampaign',{
+            url : '/sheetToCampaign',
+            controller : 'sheetToCampaignController',
+            templateUrl : 'modules/pages/sheetToCampaign/sheetToCampaign.tmpl.html',
+      })
       .state('forbiddenPage',{
             url : '/forbiddenPage',
             templateUrl : 'modules/common/forbiddenErrorPage.tmpl.html',
       });
+
       //$qProvider.errorOnUnhandledRejections(false);
       $locationProvider.hashPrefix('');
 })
