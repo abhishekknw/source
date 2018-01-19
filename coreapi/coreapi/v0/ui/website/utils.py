@@ -39,6 +39,7 @@ from boto.s3.key import Key
 from bulk_update.helper import bulk_update
 from celery import group
 from celery.task.sets import TaskSet, subtask
+from collections import namedtuple
 
 import v0.models as models
 from v0.models import PriceMappingDefault
@@ -6263,3 +6264,204 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
         return result
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))
+
+def save_filters(center, supplier_code, proposal_data, proposal):
+    """
+
+    :param center:
+    :param supplier_code:
+    :param proposal_data:
+    :return:
+    """
+    function_name = save_filters.__name__
+    try:
+        content_type = ui_utils.fetch_content_type(supplier_code)
+        selected_filters_list = []
+        for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
+            data = {
+                'center': center,
+                'proposal': proposal,
+                'supplier_type': content_type,
+                'supplier_type_code': supplier_code,
+                'filter_name': 'inventory_type_selected',
+                'filter_code': filter_code['id'],
+                'is_checked': True,
+            }
+            filter_object = models.Filters(**data)
+            selected_filters_list.append(filter_object)
+        now_time = timezone.now()
+        models.Filters.objects.filter(proposal_id=proposal.proposal_id).delete()
+        models.Filters.objects.bulk_create(selected_filters_list)
+        models.Filters.objects.filter(proposal_id=proposal.proposal_id).update(created_at=now_time, updated_at=now_time)
+
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal):
+    """
+
+    :param center:
+    :param supplier_code:
+    :param proposal_data:
+    :return:
+    """
+    function_name = save_shortlisted_suppliers_data.__name__
+    try:
+        content_type = ui_utils.fetch_content_type(supplier_code)
+        shortlisted_suppliers = []
+        for supplier in proposal_data['center_data'][supplier_code]['supplier_data']:
+            data = {
+                'content_type': content_type,
+                'object_id': supplier['id'],
+                'center': center,
+                'proposal': proposal,
+                'supplier_code': supplier_code,
+                'status': supplier['status'],
+            }
+            shortlisted_suppliers.append(models.ShortlistedSpaces(**data))
+
+        now_time = timezone.now()
+
+        models.ShortlistedSpaces.objects.filter(proposal_id=proposal.proposal_id).delete()
+        models.ShortlistedSpaces.objects.bulk_create(shortlisted_suppliers)
+        models.ShortlistedSpaces.objects.filter(proposal_id=proposal.proposal_id).update(created_at=now_time, updated_at=now_time)
+
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def save_shortlisted_inventory_pricing_details_data(center, supplier_code, proposal_data, proposal):
+    """
+
+    :return:
+    """
+    function_name = save_shortlisted_inventory_pricing_details_data.__name__
+    try:
+        supplier_ids = [id['id'] for id in proposal_data['center_data'][supplier_code]['supplier_data']]
+        supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+        supplier_objects_mapping = {sup_obj.supplier_id:sup_obj for sup_obj in supplier_objects}
+        inventory_summary_objects = models.InventorySummary.objects.filter(object_id__in=supplier_ids)
+
+        inventory_summary_objects_mapping = {inv_sum_object.object_id: inv_sum_object for inv_sum_object in
+                                             inventory_summary_objects}
+        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal=proposal.proposal_id)
+        shortlisted_suppliers_mapping = {sup_obj.object_id:sup_obj for sup_obj in shortlisted_suppliers}
+
+        for supplier_id in supplier_ids:
+            if supplier_id not in inventory_summary_objects_mapping:
+                create_inventory_summary_data_for_supplier()
+            for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
+                inventory_objects = getattr(models,v0_constants.model_to_codes[filter_code['id']]).objects.filter(
+                    Q(object_id=supplier_id))
+                if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL':
+                    inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
+                response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
+                if not response.data['status']:
+                    return response
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def create_inventory_summary_data_for_supplier():
+    """
+
+    :return:
+    """
+    function_name = create_inventory_summary_data_for_supplier.__name__
+    try:
+        return 1
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def create_inventory_ids(supplier_object, filter_code):
+    """
+
+    :param supplier_object:
+    :param filter_code:
+    :return:
+    """
+    function_name = create_inventory_ids.__name__
+    try:
+        tower_count = supplier_object.tower_count
+        inventory_ids = []
+        Struct = namedtuple('Struct', 'adinventory_id')
+        data = {}
+        if str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL':
+            tower_count = 1
+        for count in range(tower_count):
+            data = Struct(adinventory_id= 'TESTINVID' + str(filter_code['id']) + '00' + str(count + 1))
+            inventory_ids.append(data)
+        # inventory_objects = namedtuple("Struct", inventory_ids.keys())(*inventory_ids.values())
+
+        return inventory_ids
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def make_final_list(filter_code, inventory_objects, space_id):
+    """
+
+    :return:
+    """
+    function_name = make_final_list.__name__
+    try:
+        ad_inventory = v0_constants.inventory_type_duration_dict_list[filter_code['id']]
+        ad_inventory_type_id = models.AdInventoryType.objects.get(adinventory_name=ad_inventory[0],
+                                                                  adinventory_type=ad_inventory[1])
+        duration_type_id = models.DurationType.objects.get(duration_name=ad_inventory[2])
+        now_time = timezone.now()
+        shortlisted_suppliers = []
+        for inventory in inventory_objects:
+            data = {
+                'ad_inventory_type' : ad_inventory_type_id,
+                'ad_inventory_duration' : duration_type_id,
+                'inventory_id' : inventory.adinventory_id,
+                'shortlisted_spaces' : space_id,
+                'created_at' : now_time,
+                'updated_at' : now_time
+                }
+            shortlisted_suppliers.append(models.ShortlistedInventoryPricingDetails(**data))
+
+        models.ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_suppliers)
+        return ui_utils.handle_response(function_name, data={}, success=True)
+
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def update_proposal_invoice_and_state(proposal_data, proposal):
+    """
+
+    :param invoice_number:
+    :param proposal:
+    :return:
+    """
+    function_name = update_proposal_invoice_and_state
+    try:
+        proposal.invoice_number = proposal_data['invoice_number']
+        proposal.campaign_state = v0_constants.proposal_finalized
+        proposal.tentative_start_date = proposal_data['tentative_start_date']
+        proposal.tentative_end_date = proposal_data['tentative_end_date']
+        proposal.save()
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def create_generic_export_file_data(proposal):
+    """
+
+    :param proposal:
+    :return:
+    """
+    function_name = create_generic_export_file_data
+    try:
+        data = {}
+        data['proposal'] = proposal.proposal_id
+        data['file_name'] = v0_constants.exported_file_name_default
+        data['is_exported'] = False
+        serializer = serializers.GenericExportFileSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return ui_utils.handle_response(function_name, data={}, success=True)
+        return ui_utils.handle_response(function_name, data=serializer.errors)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))

@@ -470,3 +470,11 @@ class RoleHierarchySerializer(ModelSerializer):
     """
     class Meta:
         model = models.RoleHierarchy
+
+class GenericExportFileSerializer(ModelSerializer):
+    """
+    simple serializer for generic export file name
+    """
+
+    class Meta:
+        model = models.GenericExportFileName

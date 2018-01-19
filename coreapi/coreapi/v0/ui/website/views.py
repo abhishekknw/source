@@ -4936,7 +4936,6 @@ class ExportAllSupplierData(APIView):
                     basic_data_dict[key] = value
 
                 result.append(basic_data_dict)
-
             # add pricing headers to current headers.
             headers = v0_constants.basic_supplier_export_headers
             data_keys = v0_constants.basic_supplier_data_keys
@@ -5868,5 +5867,63 @@ class GetAssignedIdImagesListApiView(APIView):
             result = website_utils.organise_supplier_inv_images_data(inv_act_assignment_objects, user_map)
 
             return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class convertDirectProposalToCampaign(APIView):
+    """
+    This will convert proposal to campaign where supplier id's should be provided in sheet
+    """
+    def post(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposal_data = request.data
+            center_id = proposal_data['center_id']
+            proposal = models.ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
+            center = models.ProposalCenterMapping.objects.get(pk=center_id)
+
+            for supplier_code in proposal_data['center_data']:
+                response = website_utils.save_filters(center, supplier_code, proposal_data, proposal)
+                if not response.data['status']:
+                    return response
+                response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal)
+                if not response.data['status']:
+                    return response
+                response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
+                                                                                         proposal_data, proposal)
+                if not response.data['status']:
+                    return response
+            response = website_utils.update_proposal_invoice_and_state(proposal_data, proposal)
+            if not response.data['status']:
+                return response
+            response = website_utils.create_generic_export_file_data(proposal)
+            if not response.data['status']:
+                return response
+
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class proposalCenterMappingViewSet(viewsets.ViewSet):
+    """
+    viewset around centers created by each proposal
+    """
+    def list(self,request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            proposal_id = request.query_params['proposal_id']
+            proposal_centers = models.ProposalCenterMapping.objects.filter(proposal=proposal_id)
+            serializer = website_serializers.ProposalCenterMappingSerializer(proposal_centers, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
