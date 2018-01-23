@@ -48,27 +48,27 @@
 
 
     <section layout="row" flex>
-      <md-button class="md-raised" layout-wrap flex="30">
+      <md-button class="md-raised" layout-wrap flex="30" ng-click="getView('all_campaigns')">
         <md-content layout="row">
           <md-content layout="row" layout-margin>
             <md-button ng-disabled="count == 10" class="md-fab" aria-label="Eat cake" ng-click="getDate(count=count+1)">
-                <i class="fa fa-minus fa-lg"></i>&nbsp;<label class="md-title" ng-if="count != 0">{{count}}</label>
+                <i class="fa fa-caret-left fa-align-center"></i>&nbsp;<label class="md-title" ng-if="count != 0">   {{count}}</label>
             </md-button>
-            <h3 style="color:#ce3a33">{{date}}</h3>
-            <md-button ng-disabled="count == 0" class="md-fab" aria-label="Eat cake" ng-click="getDate(count=count-1)">
-                <i class="fa fa-plus fa-lg"></i>
+            <h3 style="color:#ce3a33;margin-top:25px;">{{date}}</h3>
+            <md-button ng-disabled="count == 0" class="md-fab text-center" aria-label="Eat cake" ng-click="getDate(count=count-1)">
+                <i class="fa fa-caret-right fa-align-center"></i>
             </md-button>
           </md-content>
         </md-content>
       </md-button>
-      <md-button class="md-raised" layout-wrap flex="30">
+      <md-button class="md-raised" layout-wrap flex="30" ng-click="getView('chart')">
         <md-content layout="row">
           <md-content layout="row" layout-margin>
-            <h3 style="color:#ce3a33">All Campaigns</h3>
+            <h3 style="color:#ce3a33">Campaign Chart</h3>
           </md-content>
         </md-content>
       </md-button>
-      <md-button class="md-raised" layout-wrap flex="30">
+      <md-button class="md-raised" layout-wrap flex="30" ng-click="getView('pmetrics')">
         <md-content layout="row">
           <md-content layout="row" layout-margin>
             <h3 style="color:#ce3a33">Performance Metrics</h3>
@@ -76,7 +76,7 @@
         </md-content>
       </md-button>
     </section>
-      <section layout="row" layout-sm="column" layout-align="center center" flex data-ng-repeat="inv in invKeys">
+      <section layout="row" layout-sm="column" layout-align="center center" flex data-ng-repeat="inv in invKeys" ng-if="views.all_campaigns">
         <md-button class="md-raised md-hue-1 btn-primary" flex="15" style="background-color:#ce3a33">
           <h3 class="md-headline" style="color:white">{{inv.header}}</h3>
         </md-button>
@@ -96,7 +96,7 @@
           </md-button>
         </md-button>
      </section>
-     <section ng-if="campaignDataList.length" md-autofocus>
+     <section ng-if="campaignDataList.length && views.all_campaigns" md-autofocus>
        <div class="panel panel-default" style="margin:5%;">
          <div class="panel-heading">
            <h3 style="text-align:center">Table</h3>
@@ -124,18 +124,42 @@
      </section>
   </md-content>
   <!--start: all campaigns pie chart  -->
-  <md-content>
+  <md-content ng-if="views.chart">
     <div class="panel panel-default">
       <div class="panel-heading">
 
       </div>
+      <section>
+
+
+
+      <div layout="row">
+        <md-button aria-label="Open menu with custom trigger" md-colors="{background: 'pink'}" ng-click="$mdMenu.open()" ng-disabled="!campaignId">
+         Select Campaign
+       </md-button>
+        <md-input-container>
+          <label>Campaign</label>
+          <md-select ng-model="selectedItem.value" md-selected-text="getSelectedText()">
+            <md-optgroup label="Campaigns">
+              <md-option ng-value="campaign.campaign" ng-repeat="campaign in getAllCampaignsForDisplay()">{{campaign.campaign.name}}</md-option>
+            </md-optgroup>
+          </md-select>
+        </md-input-container>
+      </div>
+
+      </section>
       <div class="panel-body col-md-4">
           <ul class="list-group menu">
-            <li class="list-group-item menu-item" ng-repeat="item in queryHeaders" ng-click="get()">{{item.header}}</li>
+            <li class="list-group-item menu-item" ng-repeat="item in queryHeaders" ng-click="getCampaignDetails(selectedItem.value.proposal_id,item.value)">{{item.header}}</li>
           </ul>
       </div>
       <div class="panel-body col-md-8">
-        
+        <div class="col-md-8">
+          <canvas id="pie" class="chart chart-pie" chart-colors="colours" chart-series="series"
+            chart-data="chartData" chart-labels="chartLebels" chart-options="options">
+         </canvas>
+        </div>
+
       </div>
     </div>
   </md-content>

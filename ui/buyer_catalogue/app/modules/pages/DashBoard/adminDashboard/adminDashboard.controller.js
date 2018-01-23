@@ -4,6 +4,7 @@ angular.module('catalogueApp')
 
       $scope.viewContent = 'todayStatus';
       $scope.myPercentModel = 40;
+      $scope.selectedItem = {};
       var category = $rootScope.globals.userInfo.profile.organisation.category;
       var orgId = $rootScope.globals.userInfo.profile.organisation.organisation_id;
       $scope.orgInfo = $rootScope.globals.userInfo.profile;
@@ -11,16 +12,22 @@ angular.module('catalogueApp')
       $scope.invActDateList = [];
       $scope.campaignDataList = [];
       $scope.views = {
-        chart : true,
-        table : false,
+        all_campaigns : true,
+        chart : false,
+        pmatrics : false
       }
       $scope.queryHeaders = [
-        {header : 'Supplier Type', value : 'booking_status'},
-        {header : 'Booking Status', value : 'supplier_code'},
-        {header : 'Completed Campaigns', value  : 'phase'},
-        {header : 'Ongoing Campaigns', value  : 'phase'},
-        {header : 'Upcoming Campaigns', value  : 'phase'},
+        {header : 'Supplier Type', value : 'supplier_code'},
+        {header : 'Booking Status', value : 'booking_status'},
+        {header : 'Completed Campaigns', value  : 'completed_campaigns'},
+        {header : 'Ongoing Campaigns', value  : 'ongoing_campaigns'},
+        {header : 'Upcoming Campaigns', value  : 'upcoming_campaigns'},
       ];
+      $scope.queries = {
+        bookingStatus : 'booking_status',
+        supplierCode : 'supplier_code',
+        phase : 'phase'
+      };
       $scope.invKeys = [
         {header : 'POSTER'},
         {header : 'STANDEE'},
@@ -112,16 +119,26 @@ angular.module('catalogueApp')
 
     $scope.getCampaignDetails = function(campaignId,query){
       $scope.campaignId = campaignId;
-      adminDashboardService.getCampaignDetails(campaignId,query)
-      .then(function onSuccess(response){
-        console.log(response);
+      if(query != $scope.queries.supplierCode && query != $scope.queries.bookingStatus){
+        console.log("hello",$scope.campaignData[query].length );
         $scope.chartData = [];
         $scope.chartLebels = [];
+        $scope.chartData.push($scope.campaignData[query].length);
+        $scope.chartLebels.push('count : ' + $scope.campaignData[query].length);
+      }
+      else{
+        adminDashboardService.getCampaignDetails(campaignId,query)
+        .then(function onSuccess(response){
+          console.log(response);
+          $scope.chartData = [];
+          $scope.chartLebels = [];
 
-        setChartData(response.data.data,query);
-      }).catch(function onError(response){
-        console.log(response);
-      })
+          setChartData(response.data.data,query);
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
+
     }
     $scope.chartData = [];
     $scope.chartLebels = [];
@@ -137,10 +154,10 @@ angular.module('catalogueApp')
     }
     var getLabelName = function(item,query){
       if($scope.queries.bookingStatus == query){
-        return constants[item.supplier_code] + " : " + getBookingStatus(item) +" ,Count: " + item.total;
+        return getBookingStatus(item) +" : " + item.total;
       }
       if($scope.queries.supplierCode == query){
-        return constants[item.supplier_code] + " Count: " + item.total;
+        return constants[item.supplier_code] + " : " + item.total;
       }
       if($scope.queries.phase == query){
         return constants[item.supplier_code] + " : "  + ",Phase :"+ getPhase(item) + ", " + getBookingStatus(item) + " ,Count: " + item.total;
@@ -161,14 +178,12 @@ angular.module('catalogueApp')
         $scope.invActDateList = [];
         // $scope.inventoryActivityCountData = response.data.data;
         angular.forEach(response.data.data, function(data,key){
-          console.log(key,data);
             $scope.inventoryActivityCountData[key] = sortObject(data);
             $scope.invActDateList = $scope.invActDateList.concat(Object.keys($scope.inventoryActivityCountData[key]));
         })
         $scope.invActDateList = Array.from(new Set($scope.invActDateList));
         $scope.invActDateList.sort().reverse();
         $scope.getDate($scope.count);
-        console.log($scope.inventoryActivityCountData,$scope.invActDateList);
       }).catch(function onError(response){
         console.log(response);
       })
@@ -176,7 +191,6 @@ angular.module('catalogueApp')
 
     $scope.changeView = function(view){
       $scope.viewContent = view;
-      console.log($scope.viewContent);
     }
     getAllCampaignsData();
 
@@ -252,4 +266,19 @@ angular.module('catalogueApp')
         $scope.imageUrlList.push(imageData);
       }
     }
+
+    $scope.getAllCampaignsForDisplay = function(){
+      var campaignsAll = [];
+      campaignsAll = $scope.campaignData.completed_campaigns.concat($scope.campaignData.upcoming_campaigns,$scope.campaignData.ongoing_campaigns);
+
+      return campaignsAll;
+    }
+    $scope.getSelectedText = function() {
+        if ($scope.selectedItem.value !== undefined) {
+          $scope.getCampaignDetails($scope.selectedItem.value.proposal_id,'supplier_code');
+          return $scope.selectedItem.value.name;
+        } else {
+          return "Please select a campaign";
+        }
+      };
 })
