@@ -16,5 +16,10 @@
          var url = url_base + proposal_id + "/campaign-inventories/";
       return machadaloHttp.put(url,data);
     }
+
+    releaseCampaignService.addSuppliersToCampaign = function(data){
+      var url = url_base + 'add-suppliers-direct-to-campaign/';
+      return machadaloHttp.post(url,data);
+    }
     return releaseCampaignService;
 }]);

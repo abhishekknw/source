@@ -1,14 +1,17 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','constants','permissions',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants, permissions) {
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','constants','permissions','mapViewService',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants, permissions, mapViewService) {
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
   $scope.campaign_manager = constants.campaign_manager;
   if($rootScope.globals.userInfo.is_superuser == true){
     $scope.backButton = true;
   }
+  $scope.supplierSummaryData = {};
+  $scope.shortlistedSuppliersIdList = {}
   $scope.permissions = permissions.supplierBookingPage;
+  $scope.showSummaryTab = false;
  	$scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},
@@ -51,6 +54,12 @@ angular.module('catalogueApp')
     {header : 'IFSC Code'},
     {header : 'Account Number'},
   ];
+  $scope.filters = [
+    {name : 'Poster(PO)',  code : 'PO',   selected : false },
+    {name : 'Standee(ST)', code : 'ST',   selected : false },
+    {name : 'Stall(SL)',   code : 'SL',   selected : false },
+    {name : 'Flyer(FL)',   code : 'FL',   selected : false },
+  ]
   $scope.shortlisted = constants.shortlisted;
   $scope.buffered = constants.buffered;
   $scope.removed = constants.removed;
@@ -95,7 +104,10 @@ angular.module('catalogueApp')
     		$scope.releaseDetails = response.data.data;
         console.log($scope.releaseDetails);
         setDataToModel($scope.releaseDetails.shortlisted_suppliers);
-            $scope.loading = response;
+        $scope.loading = response;
+        angular.forEach($scope.releaseDetails.shortlisted_suppliers, function(supplier){
+          $scope.shortlistedSuppliersIdList[supplier.supplier_id] = supplier;
+        })
     	})
     	.catch(function onError(response){
         console.log(response);
@@ -161,15 +173,131 @@ angular.module('catalogueApp')
         price = price * 0.3;
       return price;
     }
-    $scope.getTotalSupplierPrice = function(supplier){      
+    $scope.getTotalSupplierPrice = function(supplier){
       var totalPrice = 0;
       angular.forEach(supplier.shortlisted_inventories, function(value, key){
-        console.log(key, value);
         if(key == 'POSTER')
           totalPrice = totalPrice + value.actual_supplier_price *0.3;
         else
           totalPrice += value.actual_supplier_price;
       })
       return totalPrice;
+    }
+    //Start: code added to search & show all suppliers on add societies tab
+    $scope.supplier_names = [
+      { name: 'Residential',      code:'RS'},
+      { name: 'Corporate Parks',  code:'CP'},
+      { name: 'Bus Shelter',  code:'BS'},
+      { name: 'Gym',  code:'GY'},
+      { name: 'Saloon',  code:'SA'},
+      { name: 'Retail Store',  code:'RE'},
+      ];
+    $scope.search;
+    $scope.search_status = false;
+    $scope.supplier_type_code;
+    $scope.center_index = null;
+    $scope.searchSuppliers = function(){
+     try{
+      $scope.search_status = false;
+      console.log($scope.supplier_type_code,$scope.search);
+      if($scope.supplier_type_code && $scope.search){
+        mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
+          .then(function onSuccess(response, status){
+            console.log(response);
+              $scope.center_index = null;
+            $scope.supplierData = response.data.data;
+            if($scope.supplierData.length > 0){
+              $scope.search_status = true;
+              $scope.errorMsg = undefined;
+            }
+            else {
+              $scope.errorMsg = "No Results Found, Please enter valid Search Text";
+              $scope.search_status = false;
+            }
+          })
+          .catch(function onError(response, status){
+              console.log("Error Happened while searching");
+              commonDataShare.showErrorMessage(response);
+              // swal(constants.name,constants.errorMsg,constants.error);
+          });
+        }
+        else {
+          $scope.errorMsg = "Please Fill all the details";
+          $scope.supplierData = [];
+          $scope.search_status = false;
+        }
+      }catch(error){
+        console.log(error.message);
+      }
+    }
+      //End: code added to search & show all suppliers on add societies tab
+    $scope.addSuppliersToList = function(supplier){
+      if(!(supplier.supplier_id in $scope.shortlistedSuppliersIdList || supplier.supplier_id in $scope.supplierSummaryData))
+        $scope.supplierSummaryData[supplier.supplier_id] = supplier;
+      else
+        alert("supplier Already Present");
+      console.log($scope.supplierSummaryData);
+    }
+    $scope.removeSupplierToList = function(supplier_id){
+      delete $scope.supplierSummaryData[supplier_id];
+    }
+    //Start: function to clear searched supplier data whenever add suppliers button clicked
+    $scope.clearSearchData = function(){
+      try{
+        $scope.supplierData = [];
+        $scope.search_status = false;
+        $scope.supplier_type_code = null;
+        $scope.search = null;
+        $scope.errorMsg = undefined;
+        $scope.center_index = null;
+
+        $scope.supplierSummaryData = {};
+      }catch(error){
+        console.log(error.message);
+      }
+    }
+    $scope.addSuppliersToCampaign = function(){
+      var supplier_ids = [];
+      var filters = [];
+      angular.forEach($scope.supplierSummaryData, function(supplier){
+        var supplierKeyValueData = {
+          id : supplier.supplier_id,
+          status : 'F',
+        }
+        supplier_ids.push(supplierKeyValueData);
+
+      })
+      angular.forEach($scope.filters, function(filter){
+        if(filter.selected){
+          var filterKeyValuData = {
+            id : filter.code
+          }
+          filters.push(filterKeyValuData);
+        }
+      })
+      console.log(filters);
+      var data = {
+        campaign_id : $scope.releaseDetails.campaign.proposal_id,
+        center_data : {
+          RS : {
+            supplier_data : supplier_ids,
+            filter_codes : filters,
+          },
+
+        },
+      }
+      if(filters.length && supplier_ids.length){
+        releaseCampaignService.addSuppliersToCampaign(data)
+        .then(function onSuccess(response){
+          console.log(response);
+              $('#addNewSocities').modal('hide');
+          swal(constants.name,constants.add_data_success,constants.success);
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }else{
+        alert("Atleast One Supplier and One Filter is required to Continue");
+      }
+
     }
 }]);//Controller function ends here

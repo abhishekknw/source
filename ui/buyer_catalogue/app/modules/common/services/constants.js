@@ -36,6 +36,7 @@ angular
     create_success : 'Created Successfully',
     update_success : 'Updated Successfully',
     standard_organisation : 'MACHADALO',
+    add_data_success : 'Added Successfully',
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
     center_warning : 'Do you want to create only one center ?',
