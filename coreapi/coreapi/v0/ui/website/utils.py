@@ -6323,7 +6323,6 @@ def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, propos
 
         now_time = timezone.now()
 
-        models.ShortlistedSpaces.objects.filter(proposal_id=proposal.proposal_id).delete()
         models.ShortlistedSpaces.objects.bulk_create(shortlisted_suppliers)
         models.ShortlistedSpaces.objects.filter(proposal_id=proposal.proposal_id).update(created_at=now_time, updated_at=now_time)
 
@@ -6331,9 +6330,14 @@ def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, propos
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
 
-def save_shortlisted_inventory_pricing_details_data(center, supplier_code, proposal_data, proposal):
+def save_shortlisted_inventory_pricing_details_data(center, supplier_code, proposal_data, proposal, create_inv_act_data=False):
     """
 
+    :param center:
+    :param supplier_code:
+    :param proposal_data:
+    :param proposal:
+    :param create_inv_act_data:
     :return:
     """
     function_name = save_shortlisted_inventory_pricing_details_data.__name__
@@ -6345,9 +6349,9 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
 
         inventory_summary_objects_mapping = {inv_sum_object.object_id: inv_sum_object for inv_sum_object in
                                              inventory_summary_objects}
-        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal=proposal.proposal_id)
+        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(object_id__in=supplier_ids, proposal=proposal.proposal_id)
         shortlisted_suppliers_mapping = {sup_obj.object_id:sup_obj for sup_obj in shortlisted_suppliers}
-
+        shortlisted_inv_objects = []
         for supplier_id in supplier_ids:
             if supplier_id not in inventory_summary_objects_mapping:
                 create_inventory_summary_data_for_supplier()
@@ -6359,6 +6363,19 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                 response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
                 if not response.data['status']:
                     return response
+                shortlisted_inv_objects.extend(response.data['data'])
+        models.ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
+        import pdb
+        pdb.set_trace()
+        if create_inv_act_data:
+            shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
+            shortlisted_inventory_objects = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__in=shortlisted_supplier_ids,
+                                                                                         shortlisted_spaces__proposal=proposal.proposal_id)
+
+            response = create_inventory_activity_data(shortlisted_inventory_objects)
+            if not response:
+                return response
+
         return ui_utils.handle_response(function_name, data={}, success=True)
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
@@ -6422,8 +6439,7 @@ def make_final_list(filter_code, inventory_objects, space_id):
                 }
             shortlisted_suppliers.append(models.ShortlistedInventoryPricingDetails(**data))
 
-        models.ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_suppliers)
-        return ui_utils.handle_response(function_name, data={}, success=True)
+        return ui_utils.handle_response(function_name, data=shortlisted_suppliers, success=True)
 
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
@@ -6463,5 +6479,26 @@ def create_generic_export_file_data(proposal):
             serializer.save()
             return ui_utils.handle_response(function_name, data={}, success=True)
         return ui_utils.handle_response(function_name, data=serializer.errors)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def create_inventory_activity_data(shortlisted_inventory_objects):
+    """
+
+    :param shortlisted_inventory_objects:
+    :return:
+    """
+    function_name = create_inventory_activity_data.__name__
+    try:
+        inventory_ativity_objects = []
+        for shortlisted_inv_instance in shortlisted_inventory_objects:
+            for inv_activity_type in models.INVENTORY_ACTIVITY_TYPES:
+                data = {
+                    'shortlisted_inventory_details' : shortlisted_inv_instance,
+                    'activity_type' : inv_activity_type[0]
+                }
+                inventory_ativity_objects.append(models.InventoryActivity(**data))
+        models.InventoryActivity.objects.bulk_create(inventory_ativity_objects)
+        return ui_utils.handle_response(function_name, data={}, success=True)
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))

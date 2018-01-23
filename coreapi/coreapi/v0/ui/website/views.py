@@ -5715,7 +5715,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             if v0_constants.query_status['supplier_code'] == query_value:
                 result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('supplier_code').annotate(total=Count('object_id'))
             if v0_constants.query_status['booking_status'] == query_value:
-                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('supplier_code','booking_status').annotate(total=Count('object_id'))
+                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('booking_status').annotate(total=Count('object_id'))
             if v0_constants.query_status['phase'] == query_value:
                 result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('supplier_code','phase','booking_status').annotate(total=Count('object_id'))
             return ui_utils.handle_response(class_name, data=result, success=True)
@@ -5925,5 +5925,31 @@ class proposalCenterMappingViewSet(viewsets.ViewSet):
             proposal_centers = models.ProposalCenterMapping.objects.filter(proposal=proposal_id)
             serializer = website_serializers.ProposalCenterMappingSerializer(proposal_centers, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class addSupplierDirectToCampaign(APIView):
+    """
+
+    """
+    def post(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_data = request.data
+            center = models.ProposalCenterMapping.objects.filter(proposal=campaign_data['campaign_id'])[0]
+            campaign = models.ProposalInfo.objects.get(pk=campaign_data['campaign_id'])
+
+            for supplier_code in campaign_data['center_data']:
+                response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, campaign_data, campaign)
+                if not response.data['status']:
+                    return response
+                response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
+                                                        campaign_data, campaign, create_inv_act_data=True)
+            return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
