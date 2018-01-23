@@ -456,3 +456,25 @@ class OrganisationMapNestedSerializer(ModelSerializer):
 
     class Meta:
         model = models.OrganisationMap
+
+class RoleSerializer(ModelSerializer):
+    """
+    simple serializer for Role
+    """
+    class Meta:
+        model = models.Role
+
+class RoleHierarchySerializer(ModelSerializer):
+    """
+    simple serializer for RoleHierarchy
+    """
+    class Meta:
+        model = models.RoleHierarchy
+
+class GenericExportFileSerializer(ModelSerializer):
+    """
+    simple serializer for generic export file name
+    """
+
+    class Meta:
+        model = models.GenericExportFileName

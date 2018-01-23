@@ -160,5 +160,25 @@ angular.module('machadaloPages')
       return machadaloHttp.get(url);
     }
 
+    userService.createInitialUserHierarchy = function(data){
+      var url = url_base_website + "user-hierarchy/";
+      return machadaloHttp.post(url,data);
+    }
+
+    userService.createNewRole = function(data){
+      var url = url_base_website + "role/";
+      return machadaloHttp.post(url,data);
+    }
+
+    userService.getRoles = function(id){
+      var url = url_base_website + "role/?organisation_id=" + id;
+      return machadaloHttp.get(url);
+    }
+
+    userService.assignRole = function(data){
+      var url = url_base_website + "role-hierarchy/";
+      return machadaloHttp.post(url,data);
+    }
+
   return userService;
 }]);

@@ -1164,6 +1164,9 @@ model_to_codes = {
     'StandeeInventory': 'ST',
     'FlyerInventory': 'FL',
     'PO': 'PosterInventory',
+    'ST': 'StandeeInventory',
+    'SL': 'StallInventory',
+    'FL': 'FlyerInventory',
     'PosterInventory': 'PO',
     'SupplierTypeBusDepot': bus_depot_code
 
@@ -1215,3 +1218,15 @@ permission_contants = {
     'UPDATE_ALL': 'update_all',
     'DELETE': 'delete'
 }
+
+#category list
+category = {
+    'business' : 'BUSINESS',
+    'business_agency' : 'BUSINESS AGENCY',
+}
+query_status = {
+    'supplier_code' : 'supplier_code',
+    'booking_status': 'booking_status',
+    'phase' : 'phase'
+}
+exported_file_name_default = 'direct_ptoc_no_file'

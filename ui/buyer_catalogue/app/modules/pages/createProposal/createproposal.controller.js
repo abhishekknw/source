@@ -175,6 +175,7 @@ angular.module('catalogueApp')
 				$scope.loadingSpinner = false;
 				createProposalService.saveInitialProposal($stateParams.account_id, $scope.requestData)
 				.then(function onSuccess(response){
+					console.log(response);
 					$scope.errormsg = undefined;
 					$scope.proposal_id = response.data.data;
 					$scope.checkProposal = false;
@@ -209,6 +210,7 @@ angular.module('catalogueApp')
 					 $scope.loadingSpinner = false;
 					 createProposalService.saveInitialProposal($stateParams.account_id, $scope.requestData)
 		 			.then(function onSuccess(response){
+						console.log(response);
 		 				$scope.errormsg = undefined;
 		 				$scope.proposal_id = response.data.data;
 		 				$scope.checkProposal = false;

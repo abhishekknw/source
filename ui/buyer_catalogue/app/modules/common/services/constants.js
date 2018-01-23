@@ -36,6 +36,7 @@ angular
     create_success : 'Created Successfully',
     update_success : 'Updated Successfully',
     standard_organisation : 'MACHADALO',
+    add_data_success : 'Added Successfully',
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
     center_warning : 'Do you want to create only one center ?',
@@ -141,4 +142,13 @@ angular
     profile_error : 'You do not have profile attached, Please Contact Your Organisation Admin',
     forbidden_error_code : 403,
     forbidden_title : 'FORBIDDEN : 403',
+    //roles
+    role_assignment_error : 'Can not assign same Role to both parent and child',
+    //DashBoard
+    BK  : 'Booked',
+    NBK : 'Not Booked',
+    no_phase : 'Remaining',
+    //proposalToCampaign
+    proposal_to_campaign : 'Campaign Created Successfully',
+
   });

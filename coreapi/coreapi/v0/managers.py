@@ -190,8 +190,13 @@ class GeneralManager(models.Manager):
                 return self.filter(**kwargs)
             # if single view present, must query based on user
             else:
-                kwargs['user'] = user
-                return self.filter(**kwargs)
+                # kwargs['user'] = user
+                user_query = fetch_users_in_hierarchy(user)
+                if user_query:
+                    return self.filter(user_query,**kwargs)
+                else:
+                    kwargs['user'] = user
+                    return self.filter(user, **kwargs)
         except ObjectDoesNotExist as e:
             raise ObjectDoesNotExist(e, function)
         except PermissionDenied as e:
@@ -287,5 +292,31 @@ def check_object_permission(user, model, permission):
             return True, error
         error = 'This user does not have permission of ' + permission + ' on this model ' + model.__class__.__name__
         return False, error
+    except Exception as e:
+        raise Exception(e, function)
+
+def fetch_users_in_hierarchy(user):
+    """
+    first fetch roles in hierarchy and return users mapped with these roles
+    :param user:
+    :return:
+    """
+    function = fetch_users_in_hierarchy.__name__
+    try:
+        child_roles = v0.models.RoleHierarchy.objects.filter(parent=user.role.id)
+        query = None
+        for role_instance in child_roles:
+            if query is None:
+                query = Q(role=role_instance.child.id)
+            else:
+                query |= Q(role=role_instance.child.id)
+        user_objects = v0.models.BaseUser.objects.filter(query)
+        query = None
+        for user_instance in user_objects:
+            if query is None:
+                query = Q(user=user_instance.id)
+            else:
+                query |= Q(user=user_instance.id)
+        return query
     except Exception as e:
         raise Exception(e, function)

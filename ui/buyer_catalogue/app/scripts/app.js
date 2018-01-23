@@ -36,7 +36,11 @@ angular
     'scrollable-table',
     'cfp.loadingBar',
     'vcRecaptcha',
-    'ngMaterial'
+    'ngMaterial',
+    'nvd3',
+    'chart.js',
+    'angularUtils.directives.dirPagination',
+    'percentCircle-directive'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
       $stateProvider
@@ -291,10 +295,21 @@ angular
             controller : 'CompletedCampaignCtrl',
             templateUrl : 'modules/pages/campaignStatus/completedCampaigns/completedCampaign.tmpl.html',
       })
+      .state('dashboard',{
+            url : '/dashboard',
+            controller : 'adminDashboardController',
+            templateUrl : 'modules/pages/DashBoard/adminDashboard/adminDashboard.tmpl.html',
+      })
+      .state('sheetToCampaign',{
+            url : '/sheetToCampaign',
+            controller : 'sheetToCampaignController',
+            templateUrl : 'modules/pages/sheetToCampaign/sheetToCampaign.tmpl.html',
+      })
       .state('forbiddenPage',{
             url : '/forbiddenPage',
             templateUrl : 'modules/common/forbiddenErrorPage.tmpl.html',
       });
+
       //$qProvider.errorOnUnhandledRejections(false);
       $locationProvider.hashPrefix('');
 })

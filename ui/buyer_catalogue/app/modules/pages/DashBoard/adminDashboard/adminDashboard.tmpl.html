@@ -1,0 +1,198 @@
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="modules/pages/DashBoard/adminDashboard/adminDashboard.tmpl.css" />
+<link rel="stylesheet" type="text/css" href="modules/pages/DashBoard/adminDashboard/percentage-circular-bar.css">
+
+<md-content layout="row" flex >
+  <md-toolbar class="md-hue-2" style="background:#ce3a33">
+        <div class="md-toolbar-tools">
+          <span> <img src="images/logo.png" alt="" style="height:60px;"> </span>
+
+          <!-- <h2 flex md-truncate>Toolbar with Disabled/Enabled Icon Buttons</h2> -->
+
+          <md-button class="md-icon-button" aria-label="Favorite">
+            <md-icon md-svg-icon="img/icons/favorite.svg" style="color: greenyellow;"></md-icon>
+          </md-button>
+
+          <md-button class="md-icon-button" aria-label="More">
+            <md-icon md-svg-icon="img/icons/more_vert.svg"></md-icon>
+          </md-button>
+        </div>
+  </md-toolbar>
+</md-content>
+<md-content layout="row" style="height:85vh">
+  <md-content layout="column" style="background-color:black;">
+    <md-sidenav class="md-sidenav-left" md-component-id="left" md-is-locked-open="true"
+            style="background-color:black;">
+      <md-content layout="row" style="background:black">
+        <md-button class="md-fab" style="background:gray;size:100px;">
+            <label style="font-size:30px;">M</label>
+        </md-button>
+        <md-toolbar class="md-tall" style="background:black">
+          <h1 class="md-headline" >{{orgInfo.organisation.name}}</h1>
+        </md-toolbar >
+      </md-content></br>
+        <div layout-margin ng-click="toggleLeft()" class="md-accent menu-item">
+          <h4> <i class="fa fa-dashboard fa-lg"></i> DashBoard </h4>
+        </div>
+        <div layout-margin ng-click="toggleLeft()" class="md-accent menu-item">
+          <h4><i class="fa fa-pie-chart fa-lg"></i> Charts</h4>
+        </div>
+        <div layout-margin ng-click="toggleLeft()" class="md-accent menu-item">
+          <h4> <i class="fa fa-bar-chart fa-lg"></i> Analysis </h4>
+        </div>
+    </md-sidenav>
+  </md-content>
+  <!--start : content  -->
+  <md-content layout="column" layout-fill>
+    <md-content>
+
+
+    <section layout="row" flex>
+      <md-button class="md-raised" layout-wrap flex="30" ng-click="getView('all_campaigns')">
+        <md-content layout="row">
+          <md-content layout="row" layout-margin>
+            <md-button ng-disabled="count == 10" class="md-fab" aria-label="Eat cake" ng-click="getDate(count=count+1)">
+                <i class="fa fa-caret-left fa-align-center"></i>&nbsp;<label class="md-title" ng-if="count != 0">   {{count}}</label>
+            </md-button>
+            <h3 style="color:#ce3a33;margin-top:25px;">{{date}}</h3>
+            <md-button ng-disabled="count == 0" class="md-fab text-center" aria-label="Eat cake" ng-click="getDate(count=count-1)">
+                <i class="fa fa-caret-right fa-align-center"></i>
+            </md-button>
+          </md-content>
+        </md-content>
+      </md-button>
+      <md-button class="md-raised" layout-wrap flex="30" ng-click="getView('chart')">
+        <md-content layout="row">
+          <md-content layout="row" layout-margin>
+            <h3 style="color:#ce3a33">Campaign Chart</h3>
+          </md-content>
+        </md-content>
+      </md-button>
+      <md-button class="md-raised" layout-wrap flex="30" ng-click="getView('pmetrics')">
+        <md-content layout="row">
+          <md-content layout="row" layout-margin>
+            <h3 style="color:#ce3a33">Performance Metrics</h3>
+          </md-content>
+        </md-content>
+      </md-button>
+    </section>
+      <section layout="row" layout-sm="column" layout-align="center center" flex data-ng-repeat="inv in invKeys" ng-if="views.all_campaigns">
+        <md-button class="md-raised md-hue-1 btn-primary" flex="15" style="background-color:#ce3a33">
+          <h3 class="md-headline" style="color:white">{{inv.header}}</h3>
+        </md-button>
+        <md-button class="md-raised" layout="row" data-ng-repeat="act in actKeys" ng-hide="inv.header == 'FLIER' && (act.header == 'AUDIT' || act.header == 'CLOSURE')" ng-click="getAssignedIdsAndImages(date,act.header,inv.header)">
+          <md-content layout="column">
+            <h6 class="label-release" style="color:green">{{inventoryActivityCountData[inv.header][date][act.header].actual||'0'}}</h6>
+            <span class="label-release">Released</span>
+          </md-content>&nbsp;&nbsp;&nbsp;
+          <md-content layout="column">
+            <h6 class="label-unrelease" style="color:black">{{(inventoryActivityCountData[inv.header][date][act.header].total -
+              inventoryActivityCountData[inv.header][date][act.header].actual)||'0'}}</h6>
+            <span class="label-unrelease">UnReleased</span>
+          </md-content>
+          <md-button ng-init="percent=0">
+            <percent-circle ng-if="inventoryActivityCountData[inv.header][date][act.header].actual > 0" percent="getPercent(inventoryActivityCountData[inv.header][date][act.header].actual,inventoryActivityCountData[inv.header][date][act.header].total)" colors="{center:'white',highlight:'green'}"></percent-circle>
+            <percent-circle ng-if="!(inventoryActivityCountData[inv.header][date][act.header].actual > 0)" percent="0" colors="{center:'white'}"></percent-circle>
+          </md-button>
+        </md-button>
+     </section>
+     <section ng-if="campaignDataList.length && views.all_campaigns" md-autofocus>
+       <div class="panel panel-default" style="margin:5%;">
+         <div class="panel-heading">
+           <h3 style="text-align:center">Table</h3>
+         </div>
+         <div class="panel-body">
+           <table class="table table-bordered table-responsive">
+             <thead>
+               <tr>
+                 <th ng-repeat="header in supHeaders">{{header.header}}</th>
+               </tr>
+             </thead>
+             <tbody>
+               <tr ng-repeat="item in campaignDataList">
+                 <td>{{item.proposal_name}}</td>
+                 <td>{{item.supplier_name}}</td>
+                 <td>{{item.inv_type}}</td>
+                 <td>{{item.act_name}}</td>
+                 <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Image</a></td>
+                   <td ng-if="item.images.length == 0"><label>No Image<label></td>
+               </tr>
+             </tbody>
+           </table>
+         </div>
+       </div>
+     </section>
+  </md-content>
+  <!--start: all campaigns pie chart  -->
+  <md-content ng-if="views.chart">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+
+      </div>
+      <section>
+
+
+
+      <div layout="row">
+        <md-button aria-label="Open menu with custom trigger" md-colors="{background: 'pink'}" ng-click="$mdMenu.open()" ng-disabled="!campaignId">
+         Select Campaign
+       </md-button>
+        <md-input-container>
+          <label>Campaign</label>
+          <md-select ng-model="selectedItem.value" md-selected-text="getSelectedText()">
+            <md-optgroup label="Campaigns">
+              <md-option ng-value="campaign.campaign" ng-repeat="campaign in getAllCampaignsForDisplay()">{{campaign.campaign.name}}</md-option>
+            </md-optgroup>
+          </md-select>
+        </md-input-container>
+      </div>
+
+      </section>
+      <div class="panel-body col-md-4">
+          <ul class="list-group menu">
+            <li class="list-group-item menu-item" ng-repeat="item in queryHeaders" ng-click="getCampaignDetails(selectedItem.value.proposal_id,item.value)">{{item.header}}</li>
+          </ul>
+      </div>
+      <div class="panel-body col-md-8">
+        <div class="col-md-8">
+          <canvas id="pie" class="chart chart-pie" chart-colors="colours" chart-series="series"
+            chart-data="chartData" chart-labels="chartLebels" chart-options="options">
+         </canvas>
+        </div>
+
+      </div>
+    </div>
+  </md-content>
+  <!--end: all campaigns pie chart  -->
+</md-content>
+  <!--End: end of campaigns inventory status  -->
+</md-content>
+<!--Start: Code for showing image Modal Window -->
+<div id="imageModal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">View Image</h4>
+        <hr/>
+        <div class = "modal-body">
+          <div class="carousel" id="slider" >
+             <div class="carousel-inner">
+                 <div class="item" ng-class="{active:!$index}" ng-repeat="image in imageUrlList">
+                    <img ng-src="{{image.image_url}}" style="width:600px; height:400px;" class="img-responsive" alt="No Image Found"/></br>
+                    Comment : {{image.comment}}
+                 </div>
+             </div>
+              <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider" role="button" data-slide="prev">
+                 <span class="glyphicon glyphicon-chevron-left"></span>
+              </a>
+             <a class="right carousel-control" data-toggle = "carousel" data-target = "#slider" role="button" data-slide="next">
+               <span class="glyphicon glyphicon-chevron-right"></span>
+             </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for showing image Modal  Window -->

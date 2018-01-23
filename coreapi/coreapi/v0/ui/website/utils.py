@@ -25,6 +25,7 @@ from django.db.models import Count, Sum
 from django.forms.models import model_to_dict
 from django.db import connection
 from django.core.cache import cache
+from django.utils.dateparse import parse_datetime
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -38,6 +39,7 @@ from boto.s3.key import Key
 from bulk_update.helper import bulk_update
 from celery import group
 from celery.task.sets import TaskSet, subtask
+from collections import namedtuple
 
 import v0.models as models
 from v0.models import PriceMappingDefault
@@ -5472,6 +5474,7 @@ def validate_supplier_headers(supplier_type_code, row, data_import_type):
     function = validate_supplier_headers.__name__
     try:
         lowercase_sheet_header_list_with_underscores = ['_'.join(field.value.lower().split(' ')) for field in row if field.value]
+
         supplier_headers_per_import_type = v0_constants.supplier_headers[data_import_type]
         basic_headers = supplier_headers_per_import_type['basic_data']
 
@@ -6059,3 +6062,443 @@ def get_generic_id(items):
         return object_id
     except Exception as e:
         return  Exception(function, ui_utils.get_system_error(e))
+
+def create_entry_in_role_hierarchy(role):
+    """
+    create role entry in role_hierarchy table
+    :return:
+    """
+    function = create_entry_in_role_hierarchy.__name__
+    try:
+        instance = models.Role.objects.get(codename=role['codename'],organisation=role['organisation'])
+        data = {
+            'parent' : instance.id,
+            'child'  : instance.id
+        }
+        serializer = serializers.RoleHierarchySerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return 1
+        return ui_utils.handle_response(function, data=serializer.errors)
+    except Exception as e:
+        return Exception(function, ui_utils.get_system_error(e))
+
+def get_campaigns_by_status(campaigns, current_date):
+    """
+    return campaigns list by arranging in ongoing, upcoming and completed keys
+
+    :param data:
+    :return:
+    """
+    function = get_campaigns_by_status.__name__
+    try:
+        if not current_date:
+            current_date = timezone.now()
+        current_date = parse_datetime(current_date).date()
+        campaign_data = {
+            'ongoing_campaigns'     : [],
+            'upcoming_campaigns'    : [],
+            'completed_campaigns'   : []
+        }
+        for data in campaigns:
+            campaign_start_date = parse_datetime(data['campaign']['tentative_start_date']).date()
+            campaign_end_date = parse_datetime(data['campaign']['tentative_end_date']).date()
+            if not campaign_start_date or not campaign_end_date:
+                continue
+            if campaign_end_date < current_date:
+                campaign_data['completed_campaigns'].append(data)
+            if campaign_start_date > current_date:
+                campaign_data['upcoming_campaigns'].append(data)
+            if campaign_end_date >= current_date and campaign_start_date <= current_date:
+                campaign_data['ongoing_campaigns'].append(data)
+        return campaign_data
+    except Exception as e:
+        return Exception(function, ui_utils.get_system_error(e))
+
+def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
+    """
+
+    :param inv_act_assignment_objects:
+    :return:
+    """
+    function = organise_supplier_inv_images_data.__name__
+    try:
+        result = {}
+        shortlisted_supplier_id_set = set()
+        total_shortlisted_spaces_list = []  # this is required to fetch supplier details later
+        inv_act_assignment_ids = set()  # this is required to fetch images data later
+        # the idea of this loop is to separate different table data in different keys.
+        for content in inv_act_assignment_objects:
+            if not result.get('shortlisted_suppliers'):
+                result['shortlisted_suppliers'] = {}
+
+            # fetch data fro shortlisted_suppliers key
+            shortlisted_space_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces']
+            proposal_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id']
+            proposal_name = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name']
+            supplier_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id']
+            supplier_content_type_id = content[
+                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type']
+            assigned_to = content['assigned_to']
+
+            result['shortlisted_suppliers'][shortlisted_space_id] = {
+                'proposal_id': proposal_id,
+                'proposal_name' : proposal_name,
+                'supplier_id': supplier_id,
+                'content_type_id': supplier_content_type_id
+            }
+
+            total_shortlisted_spaces_list.append(
+                {
+                    'content_type_id': supplier_content_type_id,
+                    'supplier_id': supplier_id
+                }
+            )
+
+            if not result.get('shortlisted_inventories'):
+                result['shortlisted_inventories'] = {}
+            # fetch data for shortlisted_inventories key
+            shortlisted_inventory_id = content['inventory_activity__shortlisted_inventory_details']
+            inventory_id = content['inventory_activity__shortlisted_inventory_details__inventory_id']
+            inventory_content_type_id = content['inventory_activity__shortlisted_inventory_details__inventory_content_type']
+            comment = content['inventory_activity__shortlisted_inventory_details__comment']
+            inventory_name = content[
+                'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
+            inventory_duration = content[
+                'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name']
+
+            result['shortlisted_inventories'][shortlisted_inventory_id] = {
+                'shortlisted_spaces_id': shortlisted_space_id,
+                'inventory_id': inventory_id,
+                'inventory_content_type_id': inventory_content_type_id,
+                'comment': comment,
+                'inventory_name': inventory_name,
+                'inventory_duration': inventory_duration
+            }
+
+            if not result.get('inventory_activities'):
+                result['inventory_activities'] = {}
+
+            # fetch data for inventory activity key
+            inventory_activity_id = content['inventory_activity']
+            activity_type = content['inventory_activity__activity_type']
+
+            result['inventory_activities'][inventory_activity_id] = {
+                'shortlisted_inventory_id': shortlisted_inventory_id,
+                'activity_type': activity_type
+            }
+
+            if not result.get('inventory_activity_assignment'):
+                result['inventory_activity_assignment'] = {}
+            # fetch data for inventory activity assignment
+            inventory_activity_assignment_id = content['id']
+            activity_date = content['activity_date']
+            reassigned_activity_date = content['reassigned_activity_date']
+            inv_act_assignment_ids.add(inventory_activity_assignment_id)
+
+            result['inventory_activity_assignment'][inventory_activity_assignment_id] = {
+                'activity_date': activity_date.date() if activity_date else None,
+                'reassigned_activity_date': reassigned_activity_date.date() if reassigned_activity_date else None,
+                'inventory_activity_id': inventory_activity_id,
+                'assigned_to': user_map[assigned_to] if assigned_to else v0_constants.default_assigned_to_string
+            }
+
+        # after the result is prepared, here we collect images data
+        inventory_activity_images = models.InventoryActivityImage.objects.filter(
+            inventory_activity_assignment_id__in=inv_act_assignment_ids)
+        images = {}
+        for inv_act_image in inventory_activity_images:
+            image_id = inv_act_image.id
+
+            if not images.get(image_id):
+                images[image_id] = {}
+
+            images[image_id] = {
+                'image_path': inv_act_image.image_path,
+                'comment': inv_act_image.comment,
+                'actual_activity_date': inv_act_image.actual_activity_date.date() if inv_act_image.actual_activity_date else None,
+                'inventory_activity_assignment_id': inv_act_image.inventory_activity_assignment_id
+            }
+
+        # # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
+        response = get_objects_per_content_type(total_shortlisted_spaces_list)
+        if not response.data['status']:
+            return response
+        content_type_supplier_id_map, content_type_set, supplier_id_set = response.data['data']
+
+        # converts the ids store in previous step to actual objects and adds additional information which is
+        #  supplier specific  like area, name, subarea etc.
+        response = map_objects_ids_to_objects(content_type_supplier_id_map)
+        if not response.data['status']:
+            return response
+
+        # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
+        # information for that supplier
+        supplier_detail = response.data['data']
+
+        response = get_contact_information(content_type_set, supplier_id_set)
+        if not response.data['status']:
+            return response
+        contact_object_per_content_type_per_supplier = response.data['data']
+
+        # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
+        if result:
+            for shortlisted_space_id, detail in result['shortlisted_suppliers'].iteritems():
+                key = (detail['content_type_id'], detail['supplier_id'])
+                try:
+                    detail['supplier_detail'] = supplier_detail[key]
+                except KeyError:
+                    # ideally every supplier in ss table must also be in the corresponding supplier table. But
+                    # because current data is corrupt as i have manually added suppliers, i have to set this to
+                    # empty when KeyError occurres. #todo change this later.
+                    detail['supplier_detail'] = {}
+                    # set images data to final result
+
+                # add 'contact' key to each supplier object
+                try:
+                    contact_object = contact_object_per_content_type_per_supplier[key]
+                    detail['supplier_detail']['contacts'] = contact_object
+                except KeyError:
+                    detail['supplier_detail']['contacts'] = []
+            result['images'] = images
+        return result
+    except Exception as e:
+        return Exception(function, ui_utils.get_system_error(e))
+
+def save_filters(center, supplier_code, proposal_data, proposal):
+    """
+
+    :param center:
+    :param supplier_code:
+    :param proposal_data:
+    :return:
+    """
+    function_name = save_filters.__name__
+    try:
+        content_type = ui_utils.fetch_content_type(supplier_code)
+        selected_filters_list = []
+        for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
+            data = {
+                'center': center,
+                'proposal': proposal,
+                'supplier_type': content_type,
+                'supplier_type_code': supplier_code,
+                'filter_name': 'inventory_type_selected',
+                'filter_code': filter_code['id'],
+                'is_checked': True,
+            }
+            filter_object = models.Filters(**data)
+            selected_filters_list.append(filter_object)
+        now_time = timezone.now()
+        models.Filters.objects.filter(proposal_id=proposal.proposal_id).delete()
+        models.Filters.objects.bulk_create(selected_filters_list)
+        models.Filters.objects.filter(proposal_id=proposal.proposal_id).update(created_at=now_time, updated_at=now_time)
+
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal):
+    """
+
+    :param center:
+    :param supplier_code:
+    :param proposal_data:
+    :return:
+    """
+    function_name = save_shortlisted_suppliers_data.__name__
+    try:
+        content_type = ui_utils.fetch_content_type(supplier_code)
+        shortlisted_suppliers = []
+        for supplier in proposal_data['center_data'][supplier_code]['supplier_data']:
+            data = {
+                'content_type': content_type,
+                'object_id': supplier['id'],
+                'center': center,
+                'proposal': proposal,
+                'supplier_code': supplier_code,
+                'status': supplier['status'],
+            }
+            shortlisted_suppliers.append(models.ShortlistedSpaces(**data))
+
+        now_time = timezone.now()
+
+        models.ShortlistedSpaces.objects.bulk_create(shortlisted_suppliers)
+        models.ShortlistedSpaces.objects.filter(proposal_id=proposal.proposal_id).update(created_at=now_time, updated_at=now_time)
+
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def save_shortlisted_inventory_pricing_details_data(center, supplier_code, proposal_data, proposal, create_inv_act_data=False):
+    """
+
+    :param center:
+    :param supplier_code:
+    :param proposal_data:
+    :param proposal:
+    :param create_inv_act_data:
+    :return:
+    """
+    function_name = save_shortlisted_inventory_pricing_details_data.__name__
+    try:
+        supplier_ids = [id['id'] for id in proposal_data['center_data'][supplier_code]['supplier_data']]
+        supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+        supplier_objects_mapping = {sup_obj.supplier_id:sup_obj for sup_obj in supplier_objects}
+        inventory_summary_objects = models.InventorySummary.objects.filter(object_id__in=supplier_ids)
+
+        inventory_summary_objects_mapping = {inv_sum_object.object_id: inv_sum_object for inv_sum_object in
+                                             inventory_summary_objects}
+        shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(object_id__in=supplier_ids, proposal=proposal.proposal_id)
+        shortlisted_suppliers_mapping = {sup_obj.object_id:sup_obj for sup_obj in shortlisted_suppliers}
+        shortlisted_inv_objects = []
+        for supplier_id in supplier_ids:
+            if supplier_id not in inventory_summary_objects_mapping:
+                create_inventory_summary_data_for_supplier()
+            for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
+                inventory_objects = getattr(models,v0_constants.model_to_codes[filter_code['id']]).objects.filter(
+                    Q(object_id=supplier_id))
+                if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL':
+                    inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
+                response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
+                if not response.data['status']:
+                    return response
+                shortlisted_inv_objects.extend(response.data['data'])
+        models.ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
+        import pdb
+        pdb.set_trace()
+        if create_inv_act_data:
+            shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
+            shortlisted_inventory_objects = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__in=shortlisted_supplier_ids,
+                                                                                         shortlisted_spaces__proposal=proposal.proposal_id)
+
+            response = create_inventory_activity_data(shortlisted_inventory_objects)
+            if not response:
+                return response
+
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def create_inventory_summary_data_for_supplier():
+    """
+
+    :return:
+    """
+    function_name = create_inventory_summary_data_for_supplier.__name__
+    try:
+        return 1
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def create_inventory_ids(supplier_object, filter_code):
+    """
+
+    :param supplier_object:
+    :param filter_code:
+    :return:
+    """
+    function_name = create_inventory_ids.__name__
+    try:
+        tower_count = supplier_object.tower_count
+        inventory_ids = []
+        Struct = namedtuple('Struct', 'adinventory_id')
+        data = {}
+        if str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL':
+            tower_count = 1
+        for count in range(tower_count):
+            data = Struct(adinventory_id= 'TESTINVID' + str(filter_code['id']) + '00' + str(count + 1))
+            inventory_ids.append(data)
+        # inventory_objects = namedtuple("Struct", inventory_ids.keys())(*inventory_ids.values())
+
+        return inventory_ids
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def make_final_list(filter_code, inventory_objects, space_id):
+    """
+
+    :return:
+    """
+    function_name = make_final_list.__name__
+    try:
+        ad_inventory = v0_constants.inventory_type_duration_dict_list[filter_code['id']]
+        ad_inventory_type_id = models.AdInventoryType.objects.get(adinventory_name=ad_inventory[0],
+                                                                  adinventory_type=ad_inventory[1])
+        duration_type_id = models.DurationType.objects.get(duration_name=ad_inventory[2])
+        now_time = timezone.now()
+        shortlisted_suppliers = []
+        for inventory in inventory_objects:
+            data = {
+                'ad_inventory_type' : ad_inventory_type_id,
+                'ad_inventory_duration' : duration_type_id,
+                'inventory_id' : inventory.adinventory_id,
+                'shortlisted_spaces' : space_id,
+                'created_at' : now_time,
+                'updated_at' : now_time
+                }
+            shortlisted_suppliers.append(models.ShortlistedInventoryPricingDetails(**data))
+
+        return ui_utils.handle_response(function_name, data=shortlisted_suppliers, success=True)
+
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def update_proposal_invoice_and_state(proposal_data, proposal):
+    """
+
+    :param invoice_number:
+    :param proposal:
+    :return:
+    """
+    function_name = update_proposal_invoice_and_state
+    try:
+        proposal.invoice_number = proposal_data['invoice_number']
+        proposal.campaign_state = v0_constants.proposal_finalized
+        proposal.tentative_start_date = proposal_data['tentative_start_date']
+        proposal.tentative_end_date = proposal_data['tentative_end_date']
+        proposal.save()
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def create_generic_export_file_data(proposal):
+    """
+
+    :param proposal:
+    :return:
+    """
+    function_name = create_generic_export_file_data
+    try:
+        data = {}
+        data['proposal'] = proposal.proposal_id
+        data['file_name'] = v0_constants.exported_file_name_default
+        data['is_exported'] = False
+        serializer = serializers.GenericExportFileSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return ui_utils.handle_response(function_name, data={}, success=True)
+        return ui_utils.handle_response(function_name, data=serializer.errors)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def create_inventory_activity_data(shortlisted_inventory_objects):
+    """
+
+    :param shortlisted_inventory_objects:
+    :return:
+    """
+    function_name = create_inventory_activity_data.__name__
+    try:
+        inventory_ativity_objects = []
+        for shortlisted_inv_instance in shortlisted_inventory_objects:
+            for inv_activity_type in models.INVENTORY_ACTIVITY_TYPES:
+                data = {
+                    'shortlisted_inventory_details' : shortlisted_inv_instance,
+                    'activity_type' : inv_activity_type[0]
+                }
+                inventory_ativity_objects.append(models.InventoryActivity(**data))
+        models.InventoryActivity.objects.bulk_create(inventory_ativity_objects)
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))

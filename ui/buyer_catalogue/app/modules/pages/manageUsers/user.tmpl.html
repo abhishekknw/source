@@ -33,46 +33,78 @@
               <div class="brand">Menu</div>
               <i class="fa fa-bars fa-2x toggle-btn"></i>
               <div class="menu-list">
-                  <ul id="menu-content" class="menu-content collapse out">
-											<li ng-class="{active: isActive('/manageCampaign/create')}">
-												<a class="lipadding" ng-click="getContent(contentItem.aboutYou)">
-													<i class="fa fa-tasks fa-lg"></i>About You</a>
-											</li>
-                      <li ng-class="{active: isActive('/manageCampaign/create')}">
-                        <a class="lipadding" ng-click="getContent(contentItem.createUser)">
-                          <i class="fa fa-tasks fa-lg"></i>Create User</a>
-                      </li>
-                 <!--     <li ng-class="{active: isActive('/OpsDashBoard')}">
-                        <a class=" lipadding" ng-click="getContent(contentItem.createGroup)">
-                          <i class="fa fa-dashboard fa-lg"></i>Create Group</a>
-                     </li>-->
-                     <li ng-class="{active: isActive('/OpsDashBoard')}">
-                       <a class=" lipadding" ng-click="getContent(contentItem.viewUsers)">
-                         <i class="fa fa-dashboard fa-lg"></i>View Users</a>
-                    </li>
-                    <!-- <li ng-class="{active: isActive('/OpsDashBoard')}">
-                      <a class=" lipadding" ng-click="getContent(contentItem.viewGroups)">
-                        <i class="fa fa-dashboard fa-lg"></i>View Groups</a>
-                   </li> -->
+                <ul id="menu-content" class="menu-content collapse out">
                   <li ng-class="{active: isActive('/OpsDashBoard')}">
                     <a class=" lipadding" ng-click="getContent(contentItem.profileView)">
                       <i class="fa fa-dashboard fa-lg"></i>View Profiles</a>
                  </li>
-                 <li ng-class="{active: isActive('/OpsDashBoard')}">
-                   <a class=" lipadding" ng-click="getContent(contentItem.organisationCommon)">
-                     <i class="fa fa-dashboard fa-lg"></i>View Organisations
-                   </a>
-                </li>
-                <li ng-class="{active: isActive('/OpsDashBoard')}">
-                  <a class=" lipadding" ng-click="getContent(contentItem.onBoard)">
-                    <i class="fa fa-dashboard fa-lg"></i>OnBoard Organisation
-                  </a>
-               </li>
-							 <li ng-class="{active: isActive('/OpsDashBoard')}">
-								 <a class=" lipadding" ng-click="getContent(contentItem.mapOrganisations)">
-									 <i class="fa fa-dashboard fa-lg"></i>Map Organisations
-								 </a>
-							</li>
+								 <li ng-mouseover="userDropDown = true" ng-mouseleave="userDropDown = false">
+	 								<a class=" lipadding">
+	 									<i class="fa fa-dashboard fa-lg"></i>User
+	 								</a>
+	 								<ul ng-if = "userDropDown" class="sub-menu">
+	 									<li ng-click="getContent(contentItem.aboutYou)">
+	 										<a class=" lipadding">
+	 											<i class="fa fa-dashboard fa-lg"></i>About
+	 										</a>
+	 									</li>
+	 									<li ng-click="getContent(contentItem.viewUsers)">
+	 										<a class=" lipadding">
+	 											<i class="fa fa-dashboard fa-lg"></i>View
+	 										</a>
+	 									</li>
+	 									<li ng-click="getContent(contentItem.createUser)">
+	 										<a class=" lipadding">
+	 											<i class="fa fa-dashboard fa-lg"></i>Create
+	 										</a>
+	 									</li>
+	 								</ul>
+	 						 </li>
+							<li ng-mouseover="orgDropDown = true" ng-mouseleave="orgDropDown = false">
+								<a class=" lipadding">
+									<i class="fa fa-dashboard fa-lg"></i>Organisation
+								</a>
+								<ul ng-if = "orgDropDown" class="sub-menu">
+									<li ng-click="getContent(contentItem.organisationCommon)">
+										<a class=" lipadding">
+											<i class="fa fa-dashboard fa-lg"></i>View
+										</a>
+									</li>
+									<li ng-click="getContent(contentItem.onBoard)">
+										<a class=" lipadding">
+											<i class="fa fa-dashboard fa-lg"></i>OnBoard
+										</a>
+									</li>
+									<li ng-click="getContent(contentItem.mapOrganisations)">
+										<a class=" lipadding">
+											<i class="fa fa-dashboard fa-lg"></i>Mapping
+										</a>
+									</li>
+								</ul>
+						 </li>
+							<li ng-mouseover="rolesDropDown = true" ng-mouseleave="rolesDropDown = false">
+								<a class=" lipadding">
+									<i class="fa fa-dashboard fa-lg"></i>Roles
+								</a>
+								<ul ng-if = "rolesDropDown" class="sub-menu">
+									<li ng-click="getContent(contentItem.createRoles)">
+										<a class=" lipadding">
+											<i class="fa fa-dashboard fa-lg"></i>Create
+										</a>
+									</li>
+									<li ng-click="getContent(contentItem.assignRole)">
+										<a class=" lipadding">
+											<i class="fa fa-dashboard fa-lg"></i>Assign
+										</a>
+									</li>
+									<li ng-click="getContent(contentItem.viewRoles)">
+										<a class=" lipadding">
+											<i class="fa fa-dashboard fa-lg"></i>View
+										</a>
+									</li>
+								</ul>
+
+						 </li>
                   </ul>
               </div>
           </div>
@@ -208,7 +240,8 @@
             <div class="form-group">
                 <label for="confirm" class="cols-sm-2 control-label">Organisation :</label>
                 <span ng-if="(userInfo.profile.organisation.name.toUpperCase() != standardOrganisation.toUpperCase())">{{userInfo.profile.organisation.name}}</span>
-                <select ng-if="(userInfo.profile.organisation.name == standardOrganisation) || userInfo.is_superuser" class="form-control" ng-model="model.organisation" ng-change="getProfiles(model.organisation)">
+                <select ng-if="(userInfo.profile.organisation.name == standardOrganisation) || userInfo.is_superuser" class="form-control" ng-model="model.organisation"
+								 				ng-change="getProfiles(model.organisation); getRoles(model.organisation)">
                   <option ng-repeat="organisation in organisationList" value="{{organisation.organisation_id}}">{{organisation.name}}</option>
                 </select>
             </div>
@@ -231,8 +264,15 @@
               </select>
             </div>
 
+						<div class=" dropup">
+              <label for="confirm" class="cols-sm-2 control-label">Assign Role</label>
+              <select class="form-control" name="" ng-model="model.role">
+                <option ng-repeat="role in rolesList" ng-value="{{role.id}}" >{{role.name}}</option>
+              </select>
+            </div>
+
             <div class="form-group ">
-              <button type="submit" id="button" class="btn btn-primary btn-lg btn-block login-button" ng-disabled="!isValid">Create User</button>
+              <button type="submit" id="button" class="btn btn-danger btn-lg btn-block login-button" ng-disabled="!isValid">Create User</button>
             </div>
           </form>
         </div>
@@ -380,7 +420,7 @@
         <label class="cols-sm-2">Organisation :</label></br>
         <span ng-if="userInfo.profile.organisation.name.toUpperCase() != standardOrganisation.toUpperCase()">{{userInfo.profile.organisation.name}}</span>
         <select ng-if="(userInfo.profile.organisation.name.toUpperCase() == standardOrganisation.toUpperCase()) || userInfo.is_superuser"
-				 class="form-control form-user" ng-model="model.organisation" ng-change="getProfiles(model.organisation)"
+				 class="form-control form-user" ng-model="model.organisation" ng-change="getProfiles(model.organisation);getRoles(model.organisation)"
 				 ng-options="org.organisation_id as org.name for org in organisationList">
           <!-- <option value="" hidden>Please Select Organisation</option> -->
         </select>
@@ -402,11 +442,13 @@
         <option ng-repeat="profile in profilesList" ng-value="{{profile.id}}" >{{profile.name}}</option>
       </select>
     </div>
-    <div class="form-group ">
-      <ul class="">
-          <li ng-repeat="group in userDetails.groups">{{group.name}}</li>
-      </ul>
+		<div class=" row dropup">
+      <label for="confirm" class="cols-sm-2 control-label">Assign Role</label><br>
+      <select class="form-control form-user" ng-model="userDetails.role">
+        <option ng-repeat="role in rolesList" ng-value="{{role.id}}" >{{role.name}}</option>
+      </select>
     </div>
+
     <div class="form-group">
       <button type="submit" id="button" class="btn btn-primary active" ng-click="updateUserDetails(userDetails)">Update</button>
     </div>
@@ -753,6 +795,85 @@
     </div>
   </div>
   <!--End: profile view tab -->
+	<div ng-switch-when="createRoles" id="createRoles">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 style="text-align:center">Create New Role</h3>
+			</div>
+			<div class="panel-body">
+			  <div class="form-group is-focused">
+			    <label class="control-label col-sm-2">Role Name*:</label>
+			    <div class="col-sm-10">
+			      <input type="text" class="form-control" ng-model="rolesData.name" placeholder="Enter Role Name">
+			    </div>
+			  </div>
+				<div class="form-group is-focused" ng-if="userInfo.is_superuser">
+			    <label class="control-label col-sm-2">Organisation:</label>
+			    <div class="col-sm-10">
+			      <select class="form-control" ng-model="rolesData.organisation">
+							<option  ng-repeat="org in organisationList" value="{{org.organisation_id}}">{{org.name}}</option>
+			      </select>
+			    </div>
+			  </div>
+				<div class="form-group is-focused" ng-if="!userInfo.is_superuser">
+			    <label class="control-label col-sm-2">Organisation:</label>
+			    <div class="col-sm-10">
+			      {{orgName}}
+			    </div>
+			  </div>
+			  <div class="form-group">
+			    <div class="col-sm-offset-2 col-sm-10">
+			      <button ng-click="createNewRole()" class="btn btn-danger" ng-disabled="!rolesData.name">Create Role</button>
+			    </div>
+			  </div>
+			</div>
+		</div>
+	</div>
+	<!--start: assign role  -->
+	<div ng-switch-when="assignRole" id="assignRole">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 style="text-align:center">Role Assignment</h3>
+			</div>
+			<div class="panel-body">
+				<div class="form-group is-focused" ng-if="userInfo.is_superuser">
+			    <label class="control-label col-sm-2">Organisation:</label>
+			    <div class="col-sm-10">
+			      <select class="form-control" ng-model="rolesData.organisation" ng-change="getRoles(rolesData.organisation)">
+							<option  ng-repeat="org in organisationList" value="{{org.organisation_id}}">{{org.name}}</option>
+			      </select>
+			    </div>
+			  </div>
+				<div class="form-group is-focused" ng-if="!userInfo.is_superuser">
+			    <label class="control-label col-sm-2">Organisation:</label>
+			    <div class="col-sm-10">
+			      {{orgName}}
+			    </div>
+			  </div>
+				<div class="form-group is-focused">
+			    <label class="control-label col-sm-2">Select Parent Role:</label>
+			    <div class="col-sm-10">
+			      <select class="form-control" ng-model="rolesData.parent">
+							<option  ng-repeat="role in rolesList" value="{{role.id}}">{{role.name}}</option>
+			      </select>
+			    </div>
+			  </div>
+				<div class="form-group is-focused">
+			    <label class="control-label col-sm-2">Select Child Role:</label>
+			    <div class="col-sm-10">
+			      <select class="form-control" ng-model="rolesData.child">
+							<option  ng-repeat="role in rolesList" value="{{role.id}}">{{role.name}}</option>
+			      </select>
+			    </div>
+			  </div>
+			  <div class="form-group">
+			    <div class="col-sm-offset-2 col-sm-10">
+			      <button ng-click="assignRole()" class="btn btn-danger" ng-disabled="!rolesData.parent || !rolesData.child">Assign Role</button>
+			    </div>
+			  </div>
+			</div>
+		</div>
+	</div>
   <!--start: wizard tab  -->
   <div ng-switch-when="onBoard" id="onBoard">
   <body>
@@ -986,6 +1107,8 @@
 	<!-- </div> -->
 
 </body>
+<!-- </div> -->
+
 <!--   Core JS Files   -->
 	<script src="assets/js/jquery-2.2.4.min.js" type="text/javascript"></script>
 	<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
@@ -1191,7 +1314,7 @@
         <form>
           <div class="form-group">
             <label for="email">Enter New Name</label>
-            <input type="text" class="form-control" ng-model="cloneProfileNewName">
+            <input type="text" class="form-control" placeholder="Click here to Enter Name" ng-model="cloneProfileNewName">
           </div>
           <button type="submit" class="btn btn-default"ng-click="cloneProfileGeneral(modalData.id, modalData.organisation.organisation_id,  cloneProfileNewName)">Clone Profile</button>
         </form>
