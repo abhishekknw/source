@@ -5796,8 +5796,6 @@ class CampaignsAssignedInventoryCountApiView(APIView):
 
                 result[inventory][activity_date][activity_type]['actual'] = item['total']
 
-            # import pdb
-            # pdb.set_trace()
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

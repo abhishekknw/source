@@ -6365,8 +6365,6 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                     return response
                 shortlisted_inv_objects.extend(response.data['data'])
         models.ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
-        import pdb
-        pdb.set_trace()
         if create_inv_act_data:
             shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
             shortlisted_inventory_objects = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__in=shortlisted_supplier_ids,
