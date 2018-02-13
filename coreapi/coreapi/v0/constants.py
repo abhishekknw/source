@@ -702,7 +702,7 @@ proposal_id_limit = 5
 
 # a list ot tuples where each tuple says the inventory_type, duration, and  column indexes where pricing information of
 #  inventories is stored. These are used to populate price_mapping_default() table.
-current_inventories = [('poster_a4', 'campaign_weekly', 13), ('standee_small', 'campaign_weekly', 25), ('stall_small', 'unit_daily', 30), ('car_display_standard', 'unit_daily', 37), ('flier_door_to_door', 'unit_daily', 48)]
+current_inventories = [('poster_a4', 'campaign_weekly', 6), ('standee_small', 'campaign_weekly', 18), ('stall_small', 'unit_daily', 23), ('car_display_standard', 'unit_daily', 30), ('flier_door_to_door', 'unit_daily', 41)]
 
 # shortlisted_inventory_pricing_keys
 shortlisted_inventory_pricing_keys = ['supplier_id', 'supplier_type_code', 'inventory_price', 'inventory_count', 'factor']
@@ -934,7 +934,8 @@ supplier_headers = {
         },
 
         'amenities': ['Amenity Swimming Pool Present', 'Amenity Play Area Present', 'Amenity Garden Present', 'Amenity Gym Present', 'Amenity Open Area Present',
-                      'Amenity Parking Area Present', 'Amenity Steam Bath Present'],
+                      'Amenity Parking Area Present', 'Amenity Steam Bath Present', 'Amenity Club House Present', 'Amenity Community Hall Present',
+                      'Amenity Steam Bath / Sauna  / Jaccuzzi Present'],
 
 
         'events': ['Event Holi', 'event Diwali', 'event Independence day', 'event republic day', 'event christmas',
@@ -1071,8 +1072,8 @@ price_mapping_default_headers = {
     car_display: [(allowed,), (standard, unit_daily), (standard, two_days), (premium, unit_daily), (premium, two_days)]
 }
 
-keys = [
-    'city', 'city_code',  'area', 'area_code', 'subarea', 'subarea_code',  'supplier_type', 'supplier_name', 'supplier_code', \
+keys_old = [
+    'city', 'city_code',  'area', 'area_code', 'subarea',  'supplier_type', 'supplier_name', 'supplier_code', \
     'poster_allowed_nb', 'nb_A4_allowed', 'nb_A3_allowed', 'nb_count', 'poster_price_week_nb', \
     'nb_price_confidence', 'poster_allowed_lift', 'lift_count', 'total_posters_lift_count', 'poster_price_week_lift', \
     'lift_price_confidence', 'poster_count_per_tower', 'standee_allowed', 'standee_small', 'standee_medium',
@@ -1081,6 +1082,20 @@ keys = [
     'stall_small', 'stall_price_day_small', 'smallStall_price_confidence', 'stall_large', 'stall_price_day_large', \
     'largeStall_price_confidence', 'car_display_allowed', 'cd_standard', 'cd_price_day_standard',
     'standard_price_confidence  ', \
+    'cd_premium', 'cd_price_day_premium', 'premium_price_confidence', 'total_stall_count', 'flier_allowed',
+    'mailbox_allowed', \
+    'd2d_allowed', 'flier_lobby_allowed', 'flier_frequency', 'flier_price_day', 'flier_price_confidence'
+]
+keys = [
+    'supplier_id', 'poster_allowed_nb', \
+    'nb_A4_allowed', 'nb_A3_allowed', 'nb_count', 'poster_price_week_nb', \
+    'nb_price_confidence', 'poster_allowed_lift', 'lift_count', 'total_poster_count', 'poster_price_week_lift', \
+    'lift_price_confidence', 'poster_count_per_tower', 'standee_allowed', 'standee_small', 'standee_medium',
+    'total_standee_count', \
+    'standee_price_week', 'standee_price_confidence', 'standee_count_per_tower', 'stall_allowed', \
+    'stall_small', 'stall_price_day_small', 'smallStall_price_confidence', 'stall_large', 'stall_price_day_large', \
+    'largeStall_price_confidence', 'car_display_allowed', 'cd_standard', 'cd_price_day_standard',
+    'standard_price_confidence', \
     'cd_premium', 'cd_price_day_premium', 'premium_price_confidence', 'total_stall_count', 'flier_allowed',
     'mailbox_allowed', \
     'd2d_allowed', 'flier_lobby_allowed', 'flier_frequency', 'flier_price_day', 'flier_price_confidence'

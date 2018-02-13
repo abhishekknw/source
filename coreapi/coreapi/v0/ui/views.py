@@ -963,30 +963,43 @@ class ImportSummaryData(APIView):
                             data[key] = row[index]
 
                     # make the data in order to make supplier_id
-                    supplier_id_data = {
-                        'city_code': data['city_code'],
-                        'area_code': data['area_code'],
-                        'subarea_code': data['subarea_code'],
-                        'supplier_type': data['supplier_type'],
-                        'supplier_code': data['supplier_code']
-                    }
+                    # supplier_id_data = {
+                    #     'city_code': data['city_code'],
+                    #     'area_code': data['area_code'],
+                    #     'subarea_code': data['subarea_code'],
+                    #     'supplier_type': data['supplier_type'],
+                    #     'supplier_code': data['supplier_code']
+                    # }
 
-                    data['supplier_id'] = ui_utils.get_supplier_id(request, supplier_id_data)
-                    data['supplier_type_code'] = 'RS'
+
+                    data['supplier_id'] = row[0]
+                    supplier_type_code = 'RS'
 
                     # save pricing information in price_mapping_default table
-                    response = save_price_mapping_default(data['supplier_id'], data['supplier_type_code'], row)
+                    response = save_price_mapping_default(data['supplier_id'], supplier_type_code, row)
                     if not response.data['status']:
                         return response
 
                     request = InventoryPricingAPIView.as_view()
+                    content_type_response = ui_utils.get_content_type(supplier_type_code)
+                    if not content_type_response.data['status']:
+                        return None
+                    data['content_type'] = content_type_response.data['data']
+                    try:
+                        supplier_instance = models.SupplierTypeSociety.objects.get(supplier_id=data['supplier_id'])
+                    except ObjectDoesNotExist:
+                        supplier_instance = None
+                    if not supplier_instance:
+                        continue
 
-                    view = InventorySummaryAPIView.as_view()
-                    response = view(data, {'id': data['supplier_id']})
-                    if not response.data['status']:
-                        error_list.append(response.data['data'])
+                    data['object_id'] = data['supplier_id']
+                    obj, created = models.InventorySummary.objects.update_or_create(supplier_id=supplier_instance, defaults=data)
+                    obj.save()
+                    # view = InventorySummaryAPIView.as_view()
+                    # response = view(data, {'id': data['supplier_id']})
 
             source_file.close()
+
             return ui_utils.handle_response(class_name, data=error_list, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

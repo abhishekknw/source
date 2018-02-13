@@ -2271,13 +2271,11 @@ class ImportSupplierDataFromSheet(APIView):
             invalid_rows_detail['detail'] = {}
 
             base_headers = ['city', 'city_code', 'area', 'area_code', 'sub_area', 'sub_area_code',  'supplier_code', 'supplier_name']
-
             # iterate through all rows and populate result array
             for index, row in enumerate(ws.iter_rows()):
                 if index == 0:
                     website_utils.validate_supplier_headers(supplier_type_code, row, data_import_type)
                     continue
-
                 possible_suppliers += 1
                 supplier_id_per_row[index] = ''
 
@@ -5947,7 +5945,7 @@ class addSupplierDirectToCampaign(APIView):
                 if not response.data['status']:
                     return response
                 response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
-                                                        campaign_data, campaign, create_inv_act_data=True)
+                                                            campaign_data, campaign, create_inv_act_data=True)
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

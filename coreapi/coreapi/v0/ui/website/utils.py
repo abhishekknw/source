@@ -3406,6 +3406,7 @@ def save_price_mapping_default(supplier_id, supplier_type_code, row):
         with transaction.atomic():
             # for each predefined inventories. each 'inventory' is actually a tuple. look in constants for more details.
             for inventory in v0_constants.current_inventories:
+
                 inventory_type = inventory[0]  # at index 0 we have inventory_type
                 inventory_duration = inventory[1]  # at index 1 we have inventory_duration
                 if not row[inventory[2]]:
@@ -5706,10 +5707,11 @@ def handle_supplier_data_from_sheet(result, supplier_instance_map, content_type,
 
         # once the maps are prepared we loop over each supplier and collect the required objects on the fly.
         # we update, create or delete in bulk outside of the loop.
+        count = 0
         for supplier_id, detail in result.iteritems():
-
+            count = count +1
             instance = supplier_instance_map[supplier_id]
-
+            print count
             if supplier_type_code == v0_constants.society_code:
                 # get additional tower instance to be added if any first before setting new attributes
                 tower_created_list = handle_society_towers(instance, detail, tower_count_map,  content_type)
