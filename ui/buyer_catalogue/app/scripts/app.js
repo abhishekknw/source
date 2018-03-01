@@ -305,6 +305,11 @@ angular
             controller : 'sheetToCampaignController',
             templateUrl : 'modules/pages/sheetToCampaign/sheetToCampaign.tmpl.html',
       })
+      .state('campaignLeads',{
+            url : '/campaignLeads',
+            controller : 'CampaignLeadsCtrl',
+            templateUrl : 'modules/pages/leads/campaignLeads.tmpl.html',
+      })
       .state('forbiddenPage',{
             url : '/forbiddenPage',
             templateUrl : 'modules/common/forbiddenErrorPage.tmpl.html',
