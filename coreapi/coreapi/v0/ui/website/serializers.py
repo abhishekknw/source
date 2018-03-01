@@ -478,3 +478,19 @@ class GenericExportFileSerializer(ModelSerializer):
 
     class Meta:
         model = models.GenericExportFileName
+
+class LeadAliasSerializer(ModelSerializer):
+    """
+    simple serializer for LeadAlias
+    """
+
+    class Meta:
+        model = models.LeadAlias
+
+class LeadsSerializer(ModelSerializer):
+    """
+
+    """
+
+    class Meta:
+        model = models.Leads
