@@ -1957,6 +1957,11 @@ class InventorySummary(BaseModel):
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
+    gateway_arch_allowed = models.BooleanField(default=False)
+    lit = models.BooleanField(default=False)
+    non_lit = models.BooleanField(default=False)
+    gateway_arch_length = models.FloatField(default=0.0, null=True)
+    gateway_arch_breadth = models.FloatField(default=0.0, null=True)
 
     class Meta:
 
