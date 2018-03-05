@@ -1363,6 +1363,8 @@ class InventorySummaryAPIView(APIView):
 
                         except KeyError as e:
                             raise KeyError(e.message)
+                if request.data.get('gateway_arch_allowed'):
+                    ui_utils.save_gateway_arch_location(supplier_object, supplier_type_code)
 
                 serializer = InventorySummarySerializer(inventory_object, data=data)
 

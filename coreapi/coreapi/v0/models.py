@@ -2631,3 +2631,17 @@ class LeadAlias(BaseModel):
 
     class Meta:
         db_table = 'lead_alias'
+
+class GatewayArchInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'gateway_arch_inventory'
