@@ -659,7 +659,8 @@ inventory_type_duration_dict_list = {
     'ST': ['STANDEE', 'Small', 'Campaign Weekly'],
     'SL': ['STALL', 'Small', 'Unit Daily'],
     'FL': ['FLIER', 'Door-to-Door', 'Unit Daily'],
-    'CD': ['CAR DISPLAY', 'Standard', 'Unit Daily']
+    'CD': ['CAR DISPLAY', 'Standard', 'Unit Daily'],
+    'GA': ['Gateway Arch', 'Non Lit', 'Unit Quaterly']
 }
 
 # this dict maps keys directly to db values. do not change
@@ -1182,6 +1183,7 @@ model_to_codes = {
     'ST': 'StandeeInventory',
     'SL': 'StallInventory',
     'FL': 'FlyerInventory',
+    'GA': 'GatewayArchInventory',
     'PosterInventory': 'PO',
     'SupplierTypeBusDepot': bus_depot_code
 
