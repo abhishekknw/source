@@ -665,3 +665,7 @@ class SupplierTypeRetailShopSerializer(ModelSerializer):
 
     class Meta:
         model = models.SupplierTypeRetailShop
+
+class GatewatArchInventorySerializer(ModelSerializer):
+    class Meta:
+        model = models.GatewayArchInventory

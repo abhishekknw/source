@@ -895,3 +895,21 @@ def send_email(email_data, attachment=None):
         raise Exception(function, "Error " + get_system_error(e))
     except Exception as e:
         raise Exception(function, "Error " + get_system_error(e))
+
+def save_gateway_arch_location(supplier, supplier_type_code):
+    """
+
+    :param supplier:
+    :param supplier_type_code:
+    :return:
+    """
+    function = save_gateway_arch_location.__name__
+    try:
+        gateway_arch_id = supplier.supplier_id + "GA01"
+        data = {
+            'adinventory_id': gateway_arch_id,
+        }
+        gateway_arch = v0.models.GatewayArchInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
+        gateway_arch.save()
+    except Exception as e:
+        raise Exception(function, "Error " + get_system_error(e))

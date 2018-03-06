@@ -38,6 +38,7 @@ angular.module('catalogueApp')
         {name : 'Standee(ST)', code : 'ST',   selected : false },
         {name : 'Stall(SL)',   code : 'SL',   selected : false },
         {name : 'Flyer(FL)',   code : 'FL',   selected : false },
+        {name : 'GateWay Arch(GA)',   code : 'GA',   selected : false },
       ]
       $scope.model = {
         centers : [

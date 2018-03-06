@@ -104,6 +104,8 @@ router.register(r'^role', views.RoleViewSet, base_name='role')
 router.register(r'^role-hierarchy', views.RoleHierarchyViewSet, base_name='role-hierarchy')
 router.register(r'^dashboard', views.DashBoardViewSet, base_name='dashboard')
 router.register(r'^proposal-center-mapping', views.proposalCenterMappingViewSet, base_name='proposal-center-mapping')
+router.register(r'^lead-alias', views.LeadAliasViewSet, base_name='lead-alias')
+router.register(r'^leads', views.LeadsViewSet, base_name='leads')
 
 
 urlpatterns += router.urls

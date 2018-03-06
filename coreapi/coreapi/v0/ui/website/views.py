@@ -2271,13 +2271,11 @@ class ImportSupplierDataFromSheet(APIView):
             invalid_rows_detail['detail'] = {}
 
             base_headers = ['city', 'city_code', 'area', 'area_code', 'sub_area', 'sub_area_code',  'supplier_code', 'supplier_name']
-
             # iterate through all rows and populate result array
             for index, row in enumerate(ws.iter_rows()):
                 if index == 0:
                     website_utils.validate_supplier_headers(supplier_type_code, row, data_import_type)
                     continue
-
                 possible_suppliers += 1
                 supplier_id_per_row[index] = ''
 
@@ -3019,7 +3017,7 @@ class ProposalViewSet(viewsets.ViewSet):
     def shortlisted_suppliers_status(self, request, pk=None):
         """
         Update shortlisted suppliers based on their status value.
-        Response looks like :
+        Response looks like :def list
         {
            'status': true,
            'data' : [
@@ -5947,7 +5945,73 @@ class addSupplierDirectToCampaign(APIView):
                 if not response.data['status']:
                     return response
                 response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
-                                                        campaign_data, campaign, create_inv_act_data=True)
+                                                            campaign_data, campaign, create_inv_act_data=True)
             return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class LeadAliasViewSet(viewsets.ViewSet):
+    """
+    This class is associated with the alias names we are creating for Lead fields
+    """
+    def create(self, request):
+        """
+        This class creates lead alias data
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data
+            alias_list = []
+            campaign_instance = models.ProposalInfo.objects.get(proposal_id=data['campaign'])
+            for item in data['alias_data']:
+                alias_data = {
+                    'campaign' : campaign_instance,
+                    'original_name' : item['original_name'],
+                    'alias' : item['alias']
+                }
+                alias_list.append(models.LeadAlias(**alias_data))
+            models.LeadAlias.objects.filter(campaign=campaign_instance).delete()
+            models.LeadAlias.objects.bulk_create(alias_list)
+            return ui_utils.handle_response(class_name, data={}, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def list(self, request):
+        """
+        To get list of fields by campaign id
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id')
+            campaign_instance = models.ProposalInfo.objects.get(proposal_id=campaign_id)
+            data = models.LeadAlias.objects.filter(campaign=campaign_instance)
+            serializer = website_serializers.LeadAliasSerializer(data, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class LeadsViewSet(viewsets.ViewSet):
+    """
+    This class is around leads
+    """
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id')
+            campaign_instance = models.CampaignAssignment.objects.filter(campaign=campaign_id)
+            lead_alias = models.LeadAlias.objects.filter(campaign=campaign_instance)
+            serializer_lead_alias = website_serializers.LeadAliasSerializer(lead_alias, many=True)
+            leads = models.Leads.objects.filter(campaign=campaign_instance)
+            serializer_leads = website_serializers.LeadsSerializer(leads, many=True)
+            data = {
+                'alias_data' : serializer_lead_alias.data,
+                'leads' : serializer_leads.data
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

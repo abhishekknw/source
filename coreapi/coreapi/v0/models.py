@@ -42,7 +42,8 @@ AD_INVENTORY_CHOICES = (
     ('PILLAR', 'PILLAR'),
     ('TROLLEY', 'TROLLEY'),
     ('WALL_INVENTORY', 'WALL_INVENTORY'),
-    ('FLOOR_INVENTORY', 'FLOOR_INVENTORY')
+    ('FLOOR_INVENTORY', 'FLOOR_INVENTORY'),
+    ('GATEWAY ARCH', 'GATEWAY ARCH')
 )
 
 RETAIL_SHOP_TYPE = (
@@ -1957,6 +1958,11 @@ class InventorySummary(BaseModel):
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
+    gateway_arch_allowed = models.BooleanField(default=False)
+    lit = models.BooleanField(default=False)
+    non_lit = models.BooleanField(default=False)
+    gateway_arch_length = models.FloatField(default=0.0, null=True)
+    gateway_arch_breadth = models.FloatField(default=0.0, null=True)
 
     class Meta:
 
@@ -2583,3 +2589,60 @@ class RoleHierarchy(models.Model):
 
     class Meta:
         db_table = 'role_hierarchy'
+
+class Leads(BaseModel):
+    """
+    This model defines Leads
+    """
+    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False)
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=supplier_id_max_length)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+    firstname1 = models.CharField(max_length=20, blank=True, null=True)
+    lastname1 = models.CharField(max_length=20, blank=True, null=True)
+    firstname2 = models.CharField(max_length=20, blank=True, null=True)
+    lastname2 = models.CharField(max_length=20, blank=True, null=True)
+    mobile1 = models.BigIntegerField(blank=True, null=True)
+    mobile2 = models.BigIntegerField(blank=True, null=True)
+    phone = models.BigIntegerField(blank=True, null=True)
+    email1 = models.EmailField(max_length=50, blank=True, null=True)
+    email2 = models.EmailField(max_length=50, blank=True, null=True)
+    address = models.CharField(max_length=250, null=True, blank=True)
+    alphanumeric1 = models.CharField(max_length=50, null=True, blank=True)
+    alphanumeric2 = models.CharField(max_length=50, null=True, blank=True)
+    alphanumeric3 = models.CharField(max_length=50, null=True, blank=True)
+    alphanumeric4 = models.CharField(max_length=50, null=True, blank=True)
+    boolean1 = models.BooleanField(default=False)
+    boolean2 = models.BooleanField(default=False)
+    boolean3 = models.BooleanField(default=False)
+    boolean4 = models.BooleanField(default=False)
+    float1 = models.FloatField(null=True, blank=True)
+    float2 = models.FloatField(null=True, blank=True)
+    class Meta:
+        db_table = 'leads'
+
+class LeadAlias(BaseModel):
+    """
+    This model defines aliases of leads model fields
+    """
+    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False)
+    original_name = models.CharField(max_length=255, null=False, blank=False)
+    alias = models.CharField(max_length=255, null=False, blank=False)
+
+    class Meta:
+        db_table = 'lead_alias'
+
+class GatewayArchInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'gateway_arch_inventory'

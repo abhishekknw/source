@@ -1,0 +1,93 @@
+<link rel="stylesheet" href="/modules/pages/leads/campaignLeads.tmpl.css">
+
+<div class="panel panel-default" ng-if="views.campaigns">
+  <div class="panel-heading">
+    <h3>Campaign Details</h3>
+  </div>
+  <div class="panel-body">
+    <div >
+      <table class="table table-bordered table-responsive">
+        <thead>
+          <tr>
+            <th ng-repeat="header in campaignHeaders">{{header.header}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="campaign in campaigns">
+            <td>{{campaign.campaign.name}}</td>
+            <td>{{campaign.campaign.tentative_start_date|limitTo:10}}</td>
+            <td>{{campaign.campaign.tentative_end_date|limitTo:10}}</td>
+            <td>
+              <button class="btn btn-danger" ng-click="changeView('viewLeads',campaign)">View Leads</button>
+            </td>
+            <td>
+              <button class="btn btn-danger" ng-click="changeView('createForm',campaign)">Create Lead Form</button>
+            </td>
+            <td>
+              <button class="btn btn-danger" ng-click="changeView('addLeads',campaign)">Enter Leads</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!--start: leads  -->
+<div class="panel panel-default" ng-if="views.viewLeads">
+  <div class="panel-heading">
+    <h3>Leads</h3>
+  </div>
+  <div class="panel-body">
+    <div >
+      <table class="table table-bordered table-responsive">
+        <thead>
+          <tr>
+            <th ng-repeat="header in campaignHeaders">{{header.header}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="campaign in campaigns">
+            <td>{{campaign.campaign.name}}</td>
+            <td>{{campaign.campaign.tentative_start_date|limitTo:10}}</td>
+            <td>{{campaign.campaign.tentative_end_date|limitTo:10}}</td>
+            <td>
+              <button class="btn btn-danger">View Leads</button>
+            </td>
+            <td>
+              <button class="btn btn-danger">Create Lead Form</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!--end: leads  -->
+<!--start: create form  -->
+<div class="panel panel-default" ng-if="views.createForm">
+  <div class="panel-heading">
+    <h3>Create/Edit Form</h3>
+  </div>
+  <div class="panel-body">
+    <form name="fieldForm">
+      <div ng-repeat="model in modelData.alias_data">
+        <div class="form-group col-md-6">
+          <label for="email">FieldName:</label>
+          <select class="form-control" ng-model="model.original_name" required>
+            <option ng-repeat="field in formFields" value="{{field.name}}" ng-disabled="savedFormFields[field.name]">{{field.name}}</option>
+          </select>
+        </div>
+        <div class="form-group col-md-6">
+          <label for="pwd">Suggested Name:</label>
+          <input type="text" class="form-control" ng-model="model.alias" required>
+        </div>
+        <hr>
+      </div>
+      <div class="form-group col-md-12">
+        <button style="text-align:left" class="btn btn-danger" ng-click="addField($index)">Add</button>
+        <button ng-click="create()" style="text-align:right" class="btn btn-danger" ng-disabled="fieldForm.$invalid">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!--end: create form  -->
