@@ -6360,7 +6360,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
             for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
                 inventory_objects = getattr(models,v0_constants.model_to_codes[filter_code['id']]).objects.filter(
                     Q(object_id=supplier_id))
-                if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL':
+                if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(filter_code['id']) == 'GA':
                     inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
                 response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
                 if not response.data['status']:
@@ -6404,7 +6404,7 @@ def create_inventory_ids(supplier_object, filter_code):
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
         data = {}
-        if str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL':
+        if str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(filter_code['id']) == 'GA':
             tower_count = 1
         for count in range(tower_count):
             data = Struct(adinventory_id= 'TESTINVID' + str(filter_code['id']) + '00' + str(count + 1))
