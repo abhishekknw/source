@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="/modules/pages/leads/campaignLeads.tmpl.css">
 <div><nav-bar></nav-bar></div><br/><br/><br/>
 <div class="" ng-show="!views.campaigns">
-  <button type="button" class="btn btn-primary" ng-click="views.campaigns=true">Back To Campaign Details Page</button>
+  <button type="button" class="btn btn-primary" ng-click="changeView('campaigns',campaign)">Back To Campaign Details Page</button>
 </div>
 <div class="panel panel-default" ng-if="views.campaigns">
   <div class="panel-heading">
