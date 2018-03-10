@@ -40,7 +40,8 @@ angular
     'nvd3',
     'chart.js',
     'angularUtils.directives.dirPagination',
-    'percentCircle-directive'
+    'percentCircle-directive',
+    'ngTableToCsv'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
       $stateProvider
@@ -309,6 +310,11 @@ angular
             url : '/campaignLeads',
             controller : 'CampaignLeadsCtrl',
             templateUrl : 'modules/pages/leads/campaignLeads.tmpl.html',
+      })
+      .state('enterLeads',{
+            url : '/leadsForm/:supplierCode/:campaignId/:supplierId',
+            controller : 'LeadFormCtrl',
+            templateUrl : 'modules/pages/leadForm/leadsForm.tmpl.html',
       })
       .state('forbiddenPage',{
             url : '/forbiddenPage',

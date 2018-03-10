@@ -35,6 +35,8 @@ angular.module('catalogueApp')
         createForm : false,
         campaigns : true,
         addLeads : false,
+        enterLeads : false,
+        selectSuppliers : false,
       }
       $scope.create = function(){
         $scope.modelData['campaign'] = $scope.campaignId;
@@ -42,6 +44,7 @@ angular.module('catalogueApp')
         campaignLeadsService.create($scope.modelData)
         .then(function onSuccess(response){
           console.log(response);
+          swal(constants.name,constants.create_success,constants.success);
         }).catch(function onError(response){
           console.log(response);
         })
@@ -52,14 +55,16 @@ angular.module('catalogueApp')
           $scope.savedFormFields[field.original_name] = field;
         })
       }
+      var getLeads = function(campaignId){
+        campaignLeadsService.getLeads(campaignId)
+        .then(function onSuccess(response){
+          console.log(response);
+          $scope.leadsData = response.data.data;
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
 
-      campaignLeadsService.getLeads('LODLODCA10')
-      .then(function onSuccess(response){
-        console.log(response);
-        $scope.leadsData = response.data.data;
-      }).catch(function onError(response){
-        console.log(response);
-      })
       $scope.addField = function(){
         var data = {
           alias : '',
@@ -86,6 +91,8 @@ angular.module('catalogueApp')
           viewLeads : false,
           campaigns : false,
           addLeads : false,
+          enterLeads : false,
+          selectSuppliers : false,
         }
         $scope.views[view] = true;
         console.log(view,$scope.views.createForm);
@@ -95,6 +102,16 @@ angular.module('catalogueApp')
             getCampaignLeadAliasData($scope.campaignId);
             console.log($scope.campaignId);
             break;
+          case $scope.views.selectSuppliers:
+            $scope.campaignId = campaign.campaign.proposal_id;
+            getShortlistedSuppliers($scope.campaignId);
+            break;
+          case $scope.views.viewLeads:
+            $scope.campaignId = campaign.campaign.proposal_id;
+            $scope.campaignName = campaign.campaign.name;
+            getLeads($scope.campaignId);
+            break;
+            // $location.path('/selectSuppliers');
         }
       }
       var getCampaignLeadAliasData = function(campaignId){
@@ -103,9 +120,31 @@ angular.module('catalogueApp')
           console.log(response,$scope.modelData);
           $scope.modelData.alias_data = response.data.data;
           checkSavedFields();
-
         }).catch(function onError(response){
           console.log(response);
         })
+      }
+
+      var getShortlistedSuppliers = function(campaignId){
+        campaignLeadsService.getShortlistedSuppliers(campaignId)
+        .then(function onSuccess(response){
+          $scope.suppliers = [];
+          $scope.shortlisted_suppliers = response.data.data;
+          for(var centerId in $scope.shortlisted_suppliers){
+            for(var supplierType in $scope.shortlisted_suppliers[centerId].suppliers){
+              angular.forEach($scope.shortlisted_suppliers[centerId].suppliers[supplierType], function(supplier){
+                supplier['supplierCode'] = supplierType;
+              })
+              angular.extend($scope.suppliers,$scope.shortlisted_suppliers[centerId].suppliers[supplierType]);
+            }
+          }
+          console.log($scope.suppliers);
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
+
+      $scope.getLeadForm = function(supplier){
+        $location.path('/leadsForm/' + supplier.supplierCode + '/' + $scope.campaignId + '/' + supplier.supplier_id);
       }
     });//Controller ends here

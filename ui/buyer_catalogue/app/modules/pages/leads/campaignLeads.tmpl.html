@@ -1,5 +1,8 @@
 <link rel="stylesheet" href="/modules/pages/leads/campaignLeads.tmpl.css">
-
+<div><nav-bar></nav-bar></div><br/><br/><br/>
+<div class="" ng-show="!views.campaigns">
+  <button type="button" class="btn btn-primary" ng-click="views.campaigns=true">Back To Campaign Details Page</button>
+</div>
 <div class="panel panel-default" ng-if="views.campaigns">
   <div class="panel-heading">
     <h3>Campaign Details</h3>
@@ -21,10 +24,10 @@
               <button class="btn btn-danger" ng-click="changeView('viewLeads',campaign)">View Leads</button>
             </td>
             <td>
-              <button class="btn btn-danger" ng-click="changeView('createForm',campaign)">Create Lead Form</button>
+              <button class="btn btn-danger" ng-click="changeView('createForm',campaign)">Create/Edit Lead Form</button>
             </td>
             <td>
-              <button class="btn btn-danger" ng-click="changeView('addLeads',campaign)">Enter Leads</button>
+              <button class="btn btn-danger" ng-click="changeView('selectSuppliers',campaign)">Enter Leads</button>
             </td>
           </tr>
         </tbody>
@@ -35,31 +38,27 @@
 <!--start: leads  -->
 <div class="panel panel-default" ng-if="views.viewLeads">
   <div class="panel-heading">
-    <h3>Leads</h3>
+    <h3>{{campaignName}} Leads</h3>
   </div>
   <div class="panel-body">
-    <div >
-      <table class="table table-bordered table-responsive">
+    <div>
+      <table class="table table-bordered table-responsive" export-csv="csv" separator=";">
         <thead>
           <tr>
-            <th ng-repeat="header in campaignHeaders">{{header.header}}</th>
+            <th ng-repeat="header in leadsData.alias_data">{{header.alias}}</th>
           </tr>
         </thead>
-        <tbody>
-          <tr ng-repeat="campaign in campaigns">
-            <td>{{campaign.campaign.name}}</td>
-            <td>{{campaign.campaign.tentative_start_date|limitTo:10}}</td>
-            <td>{{campaign.campaign.tentative_end_date|limitTo:10}}</td>
-            <td>
-              <button class="btn btn-danger">View Leads</button>
-            </td>
-            <td>
-              <button class="btn btn-danger">Create Lead Form</button>
-            </td>
+        <tbody >
+          <tr ng-repeat="lead in leadsData.leads">
+            <td ng-repeat="alias in leadsData.alias_data">{{lead[alias.original_name]}}</td>
           </tr>
         </tbody>
       </table>
     </div>
+    <a class="btn btn-danger" title="{{campaignName}} Leads" ng-click='csv.generate()' ng-href="{{ csv.link() }}"
+         download="{{campaignName}}_leads.csv">
+        <i class="glyphicon glyphicon-new-window"></i> &#160;Download As Excel
+    </a>
   </div>
 </div>
 <!--end: leads  -->
@@ -91,3 +90,38 @@
   </div>
 </div>
 <!--end: create form  -->
+<!--start: enter leads data -->
+<div class="panel panel-default" ng-if="views.selectSuppliers">
+  <div class="panel-heading">
+    <h3>Select Supplier</h3>
+  </div>
+  <div class="panel-body">
+    <div>
+      <table class="table table-bordered table-responsive">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>Supplier Name</th>
+            <th>Area</th>
+            <th>Subarea</th>
+            <th>Address</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="supplier in suppliers">
+            <td>{{$index+1}}</td>
+            <td>{{supplier.name}}</td>
+            <td>{{supplier.area}}</td>
+            <td>{{supplier.subarea}}</td>
+            <td>{{supplier.address1}} {{supplier.address2}}</td>
+            <td>
+              <button class="btn btn-danger" ng-click="getLeadForm(supplier)">Enter Leads</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!--end: enter leads data  -->

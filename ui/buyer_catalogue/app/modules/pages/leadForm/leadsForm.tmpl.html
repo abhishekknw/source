@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<body class="container">
+  <div><nav-bar></nav-bar></div></br></br>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 style="text-align:center">Lead Form</h3><br />
+      <h5>Proposal Name : {{proposalInfo.name}}</h5>
+      <h5>Society Name : {{supplierInfo.society_name}}</h5>
+    </div>
+
+    <div class="panel-body">
+
+    </div>
+    <form class="form-horizontal" role="form">
+        <div class="form-group" ng-repeat="model in alias_data">
+            &nbsp;
+            <label  class="col-sm-3 control-label">{{model.alias}}</label>
+            <div class="col-sm-6">
+                <input type="{{getFieldType(model.original_name)}}" id="firstName" class="form-control"
+                    ng-if="checkValidFields(model.original_name)" ng-model="modelData[model.original_name]" style="margin-left:10px;"/>
+                <input type="{{getFieldType(model.original_name)}}" name="booleanField" ng-value="true"
+                    ng-hide="checkValidFields(model.original_name)" ng-model="modelData[model.original_name]" style="margin-left:20px;"/>
+            </div>
+            <div class="col-sm-3"></div>
+        </div>
+        <div class="col-sm-3">
+
+        </div>
+        <input ng-click="saveLeads()" value="Save" class="btn btn-primary" style="margin:10px;"/>
+
+    </form>
+    </div></div>
+</body>
+</html>
