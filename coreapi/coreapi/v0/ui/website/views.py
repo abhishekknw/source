@@ -3016,7 +3016,7 @@ class ProposalViewSet(viewsets.ViewSet):
     @detail_route(methods=['PUT'])
     def shortlisted_suppliers_status(self, request, pk=None):
         """
-        Update shortlisted suppliers based on their status value.
+            Update shortlisted suppliers based on their status value.
         Response looks like :def list
         {
            'status': true,
@@ -6003,7 +6003,7 @@ class LeadsViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
-            campaign_instance = models.CampaignAssignment.objects.filter(campaign=campaign_id)
+            campaign_instance = models.ProposalInfo.objects.filter(proposal_id=campaign_id)
             lead_alias = models.LeadAlias.objects.filter(campaign=campaign_instance)
             serializer_lead_alias = website_serializers.LeadAliasSerializer(lead_alias, many=True)
             leads = models.Leads.objects.filter(campaign=campaign_instance)
@@ -6013,5 +6013,28 @@ class LeadsViewSet(viewsets.ViewSet):
                 'leads' : serializer_leads.data
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.get('lead_data')
+            supplier_type_code = request.data.get('supplierCode')
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response:
+                return response
+            content_type = response.data.get('data')
+            data['content_type'] = content_type.id
+            serializer = website_serializers.LeadsSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

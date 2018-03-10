@@ -29,6 +29,11 @@
           return machadaloHttp.get(url);
         }
 
+        campaignLeadsService.getShortlistedSuppliers = function(campaignId){
+            var url = url_base + "proposal/"+ campaignId + "/shortlisted_suppliers/";
+        	return machadaloHttp.get(url);
+        }
+
         return campaignLeadsService;
 
  }]);
