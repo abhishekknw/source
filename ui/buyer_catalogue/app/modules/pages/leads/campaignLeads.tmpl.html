@@ -5,7 +5,7 @@
 </div>
 <div class="panel panel-default" ng-if="views.campaigns">
   <div class="panel-heading">
-    <h3>Campaign Details</h3>
+    <h3>List Of All Campaign Details</h3>
   </div>
   <div class="panel-body">
     <div >
@@ -38,25 +38,30 @@
 <!--start: leads  -->
 <div class="panel panel-default" ng-if="views.viewLeads">
   <div class="panel-heading">
-    <h3>{{campaignName}} Leads</h3>
+    <h3>Leads Data Of Campaign {{campaignName}} </h3>
   </div>
   <div class="panel-body">
     <div>
-      <table class="table table-bordered table-responsive" export-csv="csv" separator=";">
+      <table class="table table-bordered table-responsive" export-csv="csv" separator=";" ng-if="leadsData.leads.length">
         <thead>
           <tr>
+            <th>Index</th>
             <th ng-repeat="header in leadsData.alias_data">{{header.alias}}</th>
           </tr>
         </thead>
         <tbody >
           <tr ng-repeat="lead in leadsData.leads">
+            <td>{{$index + 1}}</td>
             <td ng-repeat="alias in leadsData.alias_data">{{lead[alias.original_name]}}</td>
           </tr>
         </tbody>
       </table>
+      <div ng-if="!leadsData.leads.length">
+        <label>No Leads Found</label>
+      </div>
     </div>
     <a class="btn btn-danger" title="{{campaignName}} Leads" ng-click='csv.generate()' ng-href="{{ csv.link() }}"
-         download="{{campaignName}}_leads.csv">
+         download="{{campaignName}}_leads.csv" ng-if="leadsData.leads.length">
         <i class="glyphicon glyphicon-new-window"></i> &#160;Download As Excel
     </a>
   </div>
@@ -93,7 +98,7 @@
 <!--start: enter leads data -->
 <div class="panel panel-default" ng-if="views.selectSuppliers">
   <div class="panel-heading">
-    <h3>Select Supplier</h3>
+    <h3>List Of All Suppliers Of Campaign {{campaignName}}</h3>
   </div>
   <div class="panel-body">
     <div>
@@ -116,7 +121,7 @@
             <td>{{supplier.subarea}}</td>
             <td>{{supplier.address1}} {{supplier.address2}}</td>
             <td>
-              <button class="btn btn-danger" ng-click="getLeadForm(supplier)">Enter Leads</button>
+              <button class="btn btn-danger" ng-click="getLeadForm(supplier)">Click Here To Enter Leads</button>
             </td>
           </tr>
         </tbody>

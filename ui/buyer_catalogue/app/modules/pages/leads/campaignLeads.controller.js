@@ -105,6 +105,7 @@ angular.module('catalogueApp')
           case $scope.views.selectSuppliers:
             $scope.campaignId = campaign.campaign.proposal_id;
             getShortlistedSuppliers($scope.campaignId);
+            $scope.campaignName = campaign.campaign.name;
             break;
           case $scope.views.viewLeads:
             $scope.campaignId = campaign.campaign.proposal_id;
