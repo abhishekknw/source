@@ -29,6 +29,9 @@
             <td>
               <button class="btn btn-danger" ng-click="changeView('selectSuppliers',campaign)">Enter Leads</button>
             </td>
+            <td>
+              <button class="btn btn-danger" ng-click="changeView('importLeads',campaign)">Import Leads</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -130,3 +133,36 @@
   </div>
 </div>
 <!--end: enter leads data  -->
+<!--start : import leads  -->
+<div class="panel panel-default" ng-show="views.importLeads">
+  <div class="panel-heading">
+    Import Leads for {{campaignName}} Campaign
+  </div>
+  <div class="panel-body">
+    <label>Select Lead Sheet</label>
+    <js-xls onread="read" onerror="error"></js-xls></br>
+    <button class="btn btn-danger " ng-click="resetData()" >Reset</button>
+  </div>
+  <div class="panel-body" >
+    <table class="table table-bordered table-responsive" ng-if="showImportTable">
+      <thead>
+        <tr>
+          <th>Index</th>
+          <th ng-repeat="header in aliasData">
+              {{header.alias}}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="data in importLeadsData">
+          <td>{{$index +1}}</td>
+          <td ng-repeat="alias in aliasData">{{data[alias.alias]}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="">
+      <button ng-click="saveLeadsDataBySheet()" class="btn btn-danger">Submit</button>
+    </div>
+  </div>
+</div>
+<!--end : import leads  -->

@@ -34,6 +34,10 @@
         	return machadaloHttp.get(url);
         }
 
+        campaignLeadsService.getAliasData = function(campaignId){
+          var url = url_base + "lead-alias/?campaign_id=" + campaignId;
+          return machadaloHttp.get(url);
+        }
         return campaignLeadsService;
 
  }]);
