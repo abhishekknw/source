@@ -3100,7 +3100,7 @@ class ImageMappingViewSet(viewsets.ViewSet):
     """
     Image Mapping View Set
     """
-    def list(self, request):
+    def list(self, request, pk=None):
         """
         Lists all images
         :param request:
@@ -3108,9 +3108,10 @@ class ImageMappingViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            supplier_type_code = request.query_params['supplier_type_code']
+            supplier_id = request.query_params.get('supplier_id',None)
+            supplier_type_code = request.query_params.get('supplier_type_code',None)
             content_type = ui_utils.fetch_content_type(supplier_type_code)
-            instances = models.ImageMapping.objects.filter(content_type=content_type)
+            instances = models.ImageMapping.objects.filter(location_id=supplier_id,content_type=content_type)
             serializer = ImageMappingSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -3139,7 +3140,26 @@ class ImageMappingViewSet(viewsets.ViewSet):
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
+            return ui_utils.handle_response(class_name, data=serializer.    errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route(methods=['POST'])
+    def save_image_tag(self, request, pk=None):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data
+            image_instance = models.ImageMapping.objects.get(pk=data['id'])
+            serializer = ImageMappingSerializer(image_instance,data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.    errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
