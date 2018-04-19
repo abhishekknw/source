@@ -4,6 +4,9 @@ angular.module('catalogueApp')
       $scope.modelData = {};
       $scope.modelData['alias_data'] = [];
       $scope.savedFormFields = [];
+      $scope.importLeadsData = [];
+      $scope.showImportTable = false;
+      var formatedLeadsList = [];
       console.log("hello");
       $scope.campaignHeaders = [
         {header : 'Campaign Name'},
@@ -93,6 +96,7 @@ angular.module('catalogueApp')
           addLeads : false,
           enterLeads : false,
           selectSuppliers : false,
+          importLeads : false
         }
         $scope.views[view] = true;
         console.log(view,$scope.views.createForm);
@@ -105,13 +109,21 @@ angular.module('catalogueApp')
           case $scope.views.selectSuppliers:
             $scope.campaignId = campaign.campaign.proposal_id;
             getShortlistedSuppliers($scope.campaignId);
+            $scope.campaignName = campaign.campaign.name;
             break;
           case $scope.views.viewLeads:
             $scope.campaignId = campaign.campaign.proposal_id;
             $scope.campaignName = campaign.campaign.name;
             getLeads($scope.campaignId);
             break;
-            // $location.path('/selectSuppliers');
+          case $scope.views.importLeads:
+            $scope.campaignId = campaign.campaign.proposal_id;
+            $scope.campaignName = campaign.campaign.name;
+            $scope.aliasData = [];
+            getAliasData($scope.campaignId);
+            $scope.importLeadsData = [];
+            $scope.showImportTable = false;
+            break;
         }
       }
       var getCampaignLeadAliasData = function(campaignId){
@@ -147,4 +159,78 @@ angular.module('catalogueApp')
       $scope.getLeadForm = function(supplier){
         $location.path('/leadsForm/' + supplier.supplierCode + '/' + $scope.campaignId + '/' + supplier.supplier_id);
       }
+      // start : to read excel sheet while importing lead sheet
+      $scope.read = function(workbook){
+        console.log(workbook);
+        var headerNames = XLSX.utils.sheet_to_json( workbook.Sheets[workbook.SheetNames[0]], { header: 1 })[0];
+				var data = XLSX.utils.sheet_to_json( workbook.Sheets[workbook.SheetNames[0]]);
+        $scope.importLeadsData = data;
+        if($scope.importLeadsData.length && $scope.aliasData){
+          $scope.$apply(function(){
+            $scope.showImportTable = true;
+            checkHeaders(headerNames);
+            createBulkLeadsList($scope.importLeadsData,$scope.aliasData);
+           });
+
+          console.log("hello");
+        }
+        console.log($scope.importLeadsData);
+      }
+      var getAliasData = function(campaign){
+        campaignLeadsService.getAliasData(campaign)
+        .then(function onSuccess(response){
+          $scope.aliasData = response.data.data;
+          console.log(response);
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
+
+      // START : check sheet headers with aliasData headers
+      var checkHeaders = function(headersList){
+        var error = false;
+        var headers = [];
+        angular.forEach($scope.aliasData, function(alias,index){
+          if(!(alias.alias == headersList[index])){
+            console.log(headers);
+            alert("error in header field " + alias.alias + 'and' + headersList[index]);
+            error = true;
+          }
+          headers.push(alias.alias);
+          console.log(alias,index);
+        })
+        if(error){
+          alert("Header Sequence should be :" + headers);
+        }
+      }
+      // END : check sheet headers with aliasData headers
+
+      //START : to reset sheet data
+      $scope.resetData = function(){
+        $scope.importLeadsData = [];
+        $scope.showImportTable = false;
+      }
+      //END : to reset sheet data
+
+      // START : create list of leads to bulk insert
+      var createBulkLeadsList = function(importLeadsData, aliasData){
+        formatedLeadsList = [];
+        for(var i=0; i<importLeadsData.length; i++){
+          var data = {};
+          if(!(importLeadsData[i].hasOwnProperty('SUPPLIER_ID'))){
+            alert('There is No SUPPLIER_ID Column, Please Add and ReInsert the Sheet');
+            $scope.resetData(); 
+            break;
+          }
+
+          data['supplier_id'] = importLeadsData[j].SUPPLIER_ID;
+          for(var j=0; j<aliasData.length; j++){
+            data[aliasData[j].original_name] = importLeadsData[i][aliasData[j].alias];
+          }
+          formatedLeadsList.push(data);
+        }
+        console.log(formatedLeadsList);
+      }
+      // END : create list of leads to bulk insert
+
     });//Controller ends here

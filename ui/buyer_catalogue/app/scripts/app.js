@@ -41,7 +41,9 @@ angular
     'chart.js',
     'angularUtils.directives.dirPagination',
     'percentCircle-directive',
-    'ngTableToCsv'
+    'ngTableToCsv',
+    'ui.grid',
+    'angular-js-xlsx'
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
       $stateProvider

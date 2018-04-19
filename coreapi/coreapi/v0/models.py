@@ -2619,6 +2619,10 @@ class Leads(BaseModel):
     boolean4 = models.BooleanField(default=False)
     float1 = models.FloatField(null=True, blank=True)
     float2 = models.FloatField(null=True, blank=True)
+    number1 = models.IntegerField(null=True, blank=True)
+    number2 = models.IntegerField(null=True, blank=True)
+    date1 = models.DateField(null=True, blank=True)
+    date2 = models.DateField(null=True, blank=True)
     class Meta:
         db_table = 'leads'
 
