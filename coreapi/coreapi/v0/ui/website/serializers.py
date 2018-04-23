@@ -279,7 +279,6 @@ class AuditDateSerializer(ModelSerializer):
 class InventoryActivityImageSerializer(ModelSerializer):
     class Meta:
         model = models.InventoryActivityImage
-        exclude = ('created_at', 'updated_at')
 
 
 class InventoryActivityAssignmentSerializerWithImages(ModelSerializer):
@@ -288,7 +287,6 @@ class InventoryActivityAssignmentSerializerWithImages(ModelSerializer):
 
     class Meta:
         model = models.InventoryActivityAssignment
-        exclude = ('created_at', 'updated_at')
 
 
 class InventoryActivitySerializerWithInventoryAssignmentsAndImages(ModelSerializer):

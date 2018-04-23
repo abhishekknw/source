@@ -8,6 +8,8 @@ import time
 import openpyxl
 import os
 import requests
+import gpxpy.geo
+
 from bulk_update.helper import bulk_update
 from celery.result import GroupResult, AsyncResult
 from django.conf import settings
@@ -5711,14 +5713,229 @@ class DashBoardViewSet(viewsets.ViewSet):
             campaign_id = request.query_params.get('campaign_id',None)
             query_value = request.query_params.get('query',None)
             if v0_constants.query_status['supplier_code'] == query_value:
-                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('supplier_code').annotate(total=Count('object_id'))
+                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+                    values('supplier_code').annotate(total=Count('object_id'))
             if v0_constants.query_status['booking_status'] == query_value:
-                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('booking_status').annotate(total=Count('object_id'))
+                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+                    values('booking_status').annotate(total=Count('object_id'))
             if v0_constants.query_status['phase'] == query_value:
-                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('supplier_code','phase','booking_status').annotate(total=Count('object_id'))
+                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+                    values('supplier_code','phase','booking_status').annotate(total=Count('object_id'))
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route()
+    def get_count_of_supplier_types_by_campaign_status(self, request):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_status = request.query_params.get('status',None)
+            current_date = timezone.now()
+            if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
+                query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
+
+                supplier_code_data =  models.ProposalCenterSuppliers.objects.filter(query). \
+                    values('supplier_type_code').annotate(total=Count('supplier_type_code'))
+
+                supplier_data = models.ShortlistedSpaces.objects.filter(query). \
+                    values('supplier_code').annotate(total=Count('supplier_code'))
+
+            if campaign_status == v0_constants.campaign_status['completed_campaigns']:
+                query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
+
+                supplier_code_data = models.ProposalCenterSuppliers.objects.filter(query). \
+                    values('supplier_type_code').annotate(total=Count('supplier_type_code'))
+
+                supplier_data = models.ShortlistedSpaces.objects.filter(query). \
+                    values('supplier_code').annotate(total=Count('supplier_code'))
+
+            if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
+                query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
+
+                supplier_code_data = models.ProposalCenterSuppliers.objects.filter(query). \
+                    values('supplier_type_code').annotate(total=Count('supplier_type_code'))
+
+                supplier_data = models.ShortlistedSpaces.objects.filter(query). \
+                    values('supplier_code').annotate(total=Count('supplier_code'))
+            data = {
+                'supplier_data' : supplier_data,
+                'supplier_code_data' : supplier_code_data
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route()
+    def get_suppliers_current_status(self, request):
+        """
+        This function gives supplier's current status like - ongoing,upcoming,completed
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id',None)
+            current_date = timezone.now()
+            object_id_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
+
+            shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id)
+            shortlisted_suppliers_id_list = [supplier.object_id for supplier in shortlisted_suppliers]
+
+            suppliers_instances = models.SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
+            supplier_serializer = v0_serializers.SupplierTypeSocietySerializer(suppliers_instances,many=True)
+            suppliers = supplier_serializer.data
+
+            supplier_objects_id_list = {supplier['supplier_id']:supplier for supplier in suppliers}
+            # supplier_objects_id_list = list(supplier_objects_id_list)
+
+            ongoing_suppliers = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                                    'inventory_activity_assignment__inventory_activity','inventory_activity_assignment__inventory_activity',
+                                    'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                    'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+                                    filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
+                                           inventory_activity_assignment__inventory_activity__activity_type='RELEASE',
+                                           inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__is_completed=False). \
+                                    values(object_id_alias). \
+                                    distinct()
+
+            ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
+
+            completed_suppliers = models.ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,is_completed=True).values('object_id')
+            completed_supplier_id_list = [supplier.object_id for supplier in completed_suppliers]
+
+            upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(ongoing_supplier_id_list + completed_supplier_id_list)
+
+            ongoing_suppliers_list = []
+            for id in ongoing_supplier_id_list:
+                ongoing_suppliers_list.append(supplier_objects_id_list[id])
+
+            completed_suppliers_list = []
+            for id in completed_suppliers_list:
+                completed_suppliers_list.append(supplier_objects_id_list[id])
+
+            upcoming_suppliers_list = []
+            for id in upcoming_supplier_id_list:
+                upcoming_suppliers_list.append(supplier_objects_id_list[id])
+
+            data = {
+                'ongoing' : ongoing_suppliers_list,
+                'completed' : completed_suppliers_list,
+                'upcoming' : upcoming_suppliers_list
+            }
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route()
+    def get_campaign_filters(self,request):
+        """
+
+        :param self:
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id',None)
+            filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id)
+            serializer = website_serializers.FiltersSerializer(filters, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route()
+    def get_performance_metrics_data(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id', None)
+            inv_code = request.query_params.get('inv', None)
+            content_type = ui_utils.fetch_content_type(inv_code)
+            content_type_id = content_type.id
+
+            total_release = website_utils.get_total_activity_data('RELEASE',campaign_id, content_type_id)
+            actual_release = website_utils.get_actual_activity_data('RELEASE',campaign_id, content_type_id)
+
+            total_audit = website_utils.get_total_activity_data('AUDIT', campaign_id, content_type_id)
+            actual_audit = website_utils.get_actual_activity_data('AUDIT', campaign_id, content_type_id)
+
+            total_closure = website_utils.get_total_activity_data('CLOSURE', campaign_id, content_type_id)
+            actual_closure = website_utils.get_actual_activity_data('CLOSURE', campaign_id, content_type_id)
+
+            data = {
+                'release' : {
+                    'total' : total_release,
+                    'actual': actual_release
+                },
+                'audit': {
+                    'total': total_audit,
+                    'actual': actual_audit
+                },
+                'closure': {
+                    'total': total_closure,
+                    'actual': actual_closure
+                }
+            }
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route()
+    def get_location_difference_of_inventory(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id',None)
+            inv_code = request.query_params.get('inv', None)
+            content_type = ui_utils.fetch_content_type(inv_code)
+            content_type_id = content_type.id
+
+            result = website_utils.get_all_activity_data(campaign_id,content_type_id)
+
+            supplier_ids = [supplier['object_id'] for supplier in result]
+            supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+            serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects,many=True)
+            suppliers = serializer.data
+            supplier_objects_id_map = {supplier['supplier_id']:supplier for supplier in suppliers}
+
+
+            for item in result:
+                lat1 = item['latitude']
+                lon1 = item['longitude']
+                # need to be changed for other suppliers
+                lat2 = supplier_objects_id_map[item['object_id']]['society_latitude']
+                lon2 = supplier_objects_id_map[item['object_id']]['society_longitude']
+
+                if lat1 and lon1 and lat2 and lon2:
+                    distance = gpxpy.geo.haversine_distance(lat1, lon1, lat2, lon2)
+                    item['distance'] = distance
+
+            return ui_utils.handle_response(class_name, data=result, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
@@ -6036,5 +6253,37 @@ class LeadsViewSet(viewsets.ViewSet):
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @detail_route(methods=['POST'])
+    def import_leads(self, request, pk=None):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.get('leads')
+            campaign_id = pk
+            leads = []
+
+            supplier_type_code = 'RS'
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response:
+                return response
+            content_type = response.data.get('data')
+
+            for lead_instance in data:
+                lead_instance['content_type'] = content_type
+                lead_instance['is_from_sheet'] = True
+                lead_data = models.Leads(**lead_instance)
+                leads.append(lead_data)
+            models.Leads.objects.filter(campaign=campaign_id, is_from_sheet=True).delete()
+            models.Leads.objects.bulk_create(leads)
+            now_time = timezone.now()
+            models.Leads.objects.filter(campaign=campaign_id).update(created_at=now_time,updated_at=now_time)
+            return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
