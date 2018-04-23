@@ -988,6 +988,8 @@ class SupplierTypeSociety(BaseModel):
     car_display_allowed = models.BooleanField(db_column='CAR_DISPLAY_ALLOWED', default=False)
     banner_allowed = models.BooleanField(db_column='BANNER_ALLOWED',default=False)
     total_tenant_flat_count = models.IntegerField(null=True, blank=True)
+    landmark = models.CharField(max_length=255, null=True, blank=True)
+    feedback = models.CharField(max_length=255, null=True, blank=True)
 
     def get_society_image(self):
         try:
