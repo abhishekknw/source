@@ -1,0 +1,68 @@
+.commentBox{
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.updateButton{
+	text-align:right;
+	padding-right:100px
+}
+th{
+  	background: #808080;
+    text-align: center;
+  	color: #fff;
+}
+body{
+	background: #f2f2f2;
+	font-family: Source Sans Pro;
+	color: #707070;
+  /*text-align: center;*/
+}
+.checkboxes-btn{
+  text-align: left;
+}
+.breadcrumb{
+	background-color: transparent;
+  /*width: 82%;*/
+  margin-left: auto;
+  margin-right: auto;
+  font-size : x-large;
+}
+.labels{
+	margin-left: 55px;
+}
+.panel-breadcrumb{
+  margin-left: 5%;
+  margin-right: 5%;
+}
+.panel-heading{
+  text-align: center;
+  background-color: #808080 !important;
+	color: white !important;
+}
+.panel{
+  margin-left: 5%;
+  margin-right: 5%;
+}
+.panel-table{
+  height:60vh;
+  overflow: auto;
+}
+.button-style{
+  text-align: right;
+  padding-top: 20px;
+  margin-right: 2%;
+	margin-bottom: 2%;
+	/*margin-left: 10%;*/
+}
+.assign-date{
+	margin-left: 5%;
+}
+.form-inline{
+	margin: 2%;
+}
+.date-panel{
+	padding: 10px;
+	margin-left: 5%;
+	margin-right: 5%;
+}

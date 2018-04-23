@@ -1,0 +1,24 @@
+.label {
+  border-radius: 0;
+}
+
+.label-primary {
+  background: #209e91;
+}
+
+.label-info {
+  background: #63bbb2;
+}
+
+.label-success {
+  background: #90b900;
+}
+
+.label-warning {
+  background: #dfb81c;
+}
+
+.label-danger {
+  background: #e85656;
+}
+

@@ -1,0 +1,172 @@
+/** Different tabs positions, which were removed from bootstrap */
+.tabs-below .nav-tabs, .tabs-right .nav-tabs, .tabs-left .nav-tabs {
+  border-bottom: 0;
+}
+
+.tabs-right .nav-tabs, .tabs-left .nav-tabs {
+  min-width: 100px;
+}
+.tabs-right .tab-content, .tabs-left .tab-content {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.tabs-right .tab-content {
+  margin-right: 100px;
+}
+
+.tabs-left .tab-content {
+  margin-left: 100px;
+}
+
+.tab-content > .tab-pane,
+.pill-content > .pill-pane {
+  display: none;
+}
+
+.tab-content > .active,
+.pill-content > .active {
+  display: block;
+}
+
+.tabs-below > .nav-tabs > li {
+  margin-top: -1px;
+  margin-bottom: 0;
+}
+
+.tabs-left, .tabs-right {
+  height: 100%;
+}
+.tabs-left > .nav-tabs > li, .tabs-right > .nav-tabs > li {
+  float: none;
+  margin-bottom: 0;
+}
+.tabs-left > .nav-tabs > li > a, .tabs-right > .nav-tabs > li > a {
+  min-width: 74px;
+  margin-right: 0;
+  margin-bottom: 3px;
+}
+
+.tabs-left > .nav-tabs {
+  float: left;
+  border-bottom-left-radius: 5px;
+}
+.tabs-left > .nav-tabs > li > a {
+  margin-right: -1px;
+}
+
+.tabs-right > .nav.nav-tabs {
+  float: right;
+  border-top-left-radius: 0;
+  border-bottom-right-radius: 5px;
+}
+.tabs-right > .nav.nav-tabs > li:first-of-type a {
+  border-top-left-radius: 0;
+}
+
+/** /Different tabs positions, which were removed from bootstrap */
+.nav-tabs > li.with-dropdown > a {
+  padding: 0;
+}
+.nav-tabs > li.with-dropdown .dropdown-toggle {
+  padding: 10px 15px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.tab-content {
+  padding: 15px 15px 5px 15px;
+  background: transparent;
+  color: #ffffff;
+}
+.tab-content .tab-pane p {
+  color: #ffffff;
+}
+
+.nav.nav-tabs {
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom: 1px solid transparent;
+  background-color: #63bbb2;
+}
+.nav.nav-tabs a {
+  color: #ffffff;
+}
+.nav.nav-tabs a:hover {
+  color: #ffffff;
+}
+.nav.nav-tabs > li > a {
+  margin-right: 0;
+  margin-bottom: 0;
+  border-radius: 0;
+  border: none;
+}
+.nav.nav-tabs > li > a:hover, .nav.nav-tabs > li > a:focus {
+  border: none;
+  background-color: #c70202;
+}
+.nav.nav-tabs > li.active > a {
+  color: #ffffff;
+  background: #8e1921  !important;
+}
+.nav.nav-tabs > li:first-of-type a {
+  border-top-left-radius: 5px;
+}
+.nav.nav-tabs .dropdown-menu > li > a {
+  color: #7d7d7d;
+}
+.nav.nav-tabs .dropdown-menu > li > a:hover {
+  color: #7d7d7d;
+}
+
+.blur-theme .nav.nav-tabs {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+.blur-theme .nav.nav-tabs a {
+  color: #ffffff;
+}
+.blur-theme .nav.nav-tabs a:hover {
+  color: #ffffff;
+}
+.blur-theme .nav.nav-tabs > li > a:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+.blur-theme .nav.nav-tabs > li.active > a {
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+.nav .open > a, .nav .open > a:hover, .nav .open > a:focus {
+  background-color: transparent;
+}
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus {
+  border: none;
+}
+
+.accordion-panel .panel-heading {
+  border-radius: 3px;
+}
+.accordion-panel.panel-open .panel-heading {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.accordion-panel:not(.panel-open) .panel-heading {
+  transition-delay: .3s;
+}
+.accordion-panel > .panel-heading + .panel-collapse > .panel-body {
+  border-top: none;
+}
+
+.accordion-panel .panel-heading {
+  padding: 0;
+}
+.accordion-panel .panel-heading .accordion-toggle {
+  display: inline-block;
+  width: 100%;
+  padding: 14px 22px;
+}
+.nav-tabs > li {
+    background: #cb3328;
+}

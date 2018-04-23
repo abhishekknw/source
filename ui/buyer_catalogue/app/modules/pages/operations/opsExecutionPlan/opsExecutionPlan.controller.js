@@ -260,7 +260,7 @@ angular.module('catalogueApp')
 
           var token = $rootScope.globals.currentUser.token;
           if (file) {
-             $("#progressBarModal").modal();
+             // $("#progressBarModal").modal();
             cfpLoadingBar.start();
             // cfpLoadingBar.inc();
             Upload.upload({
@@ -278,7 +278,7 @@ angular.module('catalogueApp')
                   uploaded_image = {'image_path': response.data.data };
                   inventory.images.push(uploaded_image);
                   cfpLoadingBar.complete();
-                  $("#progressBarModal").modal('hide');
+                  // $("#progressBarModal").modal('hide');
             })
             .catch(function onError(response) {
               cfpLoadingBar.complete();

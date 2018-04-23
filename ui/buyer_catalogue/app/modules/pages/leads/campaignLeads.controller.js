@@ -169,7 +169,7 @@ angular.module('catalogueApp')
           $scope.$apply(function(){
             $scope.showImportTable = true;
             checkHeaders(headerNames);
-            createBulkLeadsList($scope.importLeadsData,$scope.aliasData);
+            createBulkLeadsList($scope.importLeadsData,$scope.aliasData,headerNames);
            });
 
           console.log("hello");
@@ -213,17 +213,18 @@ angular.module('catalogueApp')
       //END : to reset sheet data
 
       // START : create list of leads to bulk insert
-      var createBulkLeadsList = function(importLeadsData, aliasData){
+      var createBulkLeadsList = function(importLeadsData, aliasData, headers){
         formatedLeadsList = [];
+        console.log(headers);
         for(var i=0; i<importLeadsData.length; i++){
           var data = {};
-          if(!(importLeadsData[i].hasOwnProperty('SUPPLIER_ID'))){
+          if(!(headers.indexOf('SUPPLIER_ID') > -1)){
             alert('There is No SUPPLIER_ID Column, Please Add and ReInsert the Sheet');
-            $scope.resetData(); 
+            $scope.resetData();
             break;
           }
-
-          data['supplier_id'] = importLeadsData[j].SUPPLIER_ID;
+          data['campaign_id'] = $scope.campaignId;
+          data['object_id'] = importLeadsData[i].SUPPLIER_ID;
           for(var j=0; j<aliasData.length; j++){
             data[aliasData[j].original_name] = importLeadsData[i][aliasData[j].alias];
           }
@@ -233,4 +234,18 @@ angular.module('catalogueApp')
       }
       // END : create list of leads to bulk insert
 
+      // START: call to create leads API through sheet
+      $scope.importLeadsThroughSheet = function(){
+        var data = {
+          leads : formatedLeadsList
+        };
+        console.log(data);
+        campaignLeadsService.importLeadsThroughSheet($scope.campaignId, data)
+        .then(function onSuccess(reset){
+          console.log(response);
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
+      // END:   call to create leads API through sheet
     });//Controller ends here
