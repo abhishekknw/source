@@ -1,0 +1,510 @@
+<link href="css/main.css" rel="stylesheet" media="screen">
+<link href="css/preloader.css" rel="stylesheet" media="screen">
+<link href="css/blur_admin_theme.css" rel="stylesheet" media="screen">
+<link href="css/buttons.css" rel="stylesheet" media="screen">
+<link href="css/datepicker.css" rel="stylesheet" media="screen">
+<link href="css/icons.css" rel="stylesheet" media="screen">
+<link href="css/layout.css" rel="stylesheet" media="screen">
+<link href="css/socicon.css" rel="stylesheet" media="screen">
+<link href="css/table.css" rel="stylesheet" media="screen">
+<link href="css/pageTop.css" rel="stylesheet" media="screen">
+<link href="css/backTop.css" rel="stylesheet" media="screen">
+<link href="css/baWizard.css" rel="stylesheet" media="screen">
+<link href="css/contentTop.css" rel="stylesheet" media="screen">
+<link href="css/msgCenter.css" rel="stylesheet" media="screen">
+<link href="css/progressRound.css" rel="stylesheet" media="screen">
+<link href="css/sidebar.css" rel="stylesheet" media="screen">
+<link href="css/widgets.css" rel="stylesheet" media="screen">
+<link href="css/panel.css" rel="stylesheet">
+<link href="css/tabs.css" rel="stylesheet" media="screen">
+<link href="css/accordion.css" rel="stylesheet" media="screen">
+<link href="css/dashboard-theme.css" rel="stylesheet" media="screen">
+<link href="css/sass-app.css" rel="stylesheet" media="screen">
+<link href="css/sass-app-map.css" rel="stylesheet" media="screen">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="assets/img/favicon-96x96.png">
+<link href='https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900italic,900&subset=latin,greek,greek-ext,vietnamese,cyrillic-ext,latin-ext,cyrillic' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" type="text/css" href="modules/pages/DashBoard/adminDashboard/percentage-circular-bar.css">
+
+
+<!-- <link href="css/auth1.css" rel="stylesheet" media="screen"> -->
+<!-- <link href="css/auth.css" rel="stylesheet" media="screen"> -->
+<!-- <link href="css/404.css" rel="stylesheet" media="screen"> -->
+
+<div class="body-bg"></div>
+
+<main ng-if="$pageFinishedLoading" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }">
+<ba-sidebar></ba-sidebar>
+<page-Top></page-Top>
+<div class="al-main">
+    <div class="al-content">
+      <uib-tabset class="dashboard-tab" active="$tabSetStatus.activeTab">
+          <uib-tab>
+            <uib-tab-heading>
+              <h3>
+           <span style="color:#ffffff;" class="glyphicon glyphicon-chevron-left" ng-click="getDate(count=count+1)"></span>
+           <span style="margin-left:10px;margin-right:10px;">{{date|date : "dd-MM-yyyy"}}</span>
+           <span style="color:#ffffff;" class="glyphicon glyphicon-chevron-right" ng-click="getDate(count=count-1)"></span>
+
+         </h3>
+          </uib-tab-heading>
+              <div  class="row panel-hide" ng-init="myVar = '/#/dashboard'">
+                  <div class="row">
+                      <div class="col-xlg-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 dashboard-side-label">
+                      </div>
+                      <div class="col-xlg-10 col-lg-10 col-md-10 col-sm-10 col-xs-10">
+                          <!--<dashboard-pie-chart></dashboard-pie-chart>-->
+                          <div class="row">
+                              <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
+                                  <h4 class="date-tab-heading">Release</h4>
+                              </div>
+                              <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
+                                  <h4 class="date-tab-heading">Audit</h4>
+                              </div>
+                              <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
+                                  <h4 class="date-tab-heading">Closure</h4>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="row" ng-repeat="inv in invKeys">
+                      <div class="col-xlg-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 dashboard-side-label">
+                          <h4>{{inv.header}}</h4>
+                      </div>
+                      <div class="col-xlg-10 col-lg-10 col-md-10 col-sm-10 col-xs-10">
+                          <!--<dashboard-pie-chart></dashboard-pie-chart>-->
+                          <div class="row">
+                              <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center" ng-repeat="act in actKeys">
+                                  <div class="form-group has-success">
+                                      <div class="pie-chart-item-container ng-scope">
+                                          <div class="custom-panel">
+                                              <uib-accordion close-others="oneAtATime">
+                                                  <div uib-accordion-group  panel-class="panel panel-blur date-grid-tab custom-panel" ng-click="getAssignedIdsAndImages(date,act.header,inv.header)">
+                                                      <div uib-accordion-heading class="container">
+                                                          <div class="pie-chart-item ng-scope">
+                                                              <div class="row">
+                                                                  <div class="col-md-4">
+                                                                      <h4>{{inventoryActivityCountData[inv.header][date][act.header].actual||'0'}}</h4>
+                                                                      <h5>Released</h5>
+                                                                  </div>
+                                                                  <div class="col-md-4 ">
+                                                                      <h4>{{(inventoryActivityCountData[inv.header][date][act.header].total -
+                                                                        inventoryActivityCountData[inv.header][date][act.header].actual)||'0'}}</h4>
+                                                                      <h5>UnReleased</h5>
+                                                                  </div>
+                                                                  <div class="col-md-3 percent-circle">
+
+                                                                    <percent-circle ng-if="inventoryActivityCountData[inv.header][date][act.header].actual > 0" percent="getPercent(inventoryActivityCountData[inv.header][date][act.header].actual,inventoryActivityCountData[inv.header][date][act.header].total)" colors="{center:'#c70202',highlight:'green'}"></percent-circle>
+                                                                    <percent-circle ng-if="!(inventoryActivityCountData[inv.header][date][act.header].actual > 0)" percent="0" colors="{center:'#c70202'}"></percent-circle>
+                                                                  </div>
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                      This is just some content to illustrate fancy headings.
+                                                  </div>
+                                              </uib-accordion>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div scroll-position="scrolled" class="row dashboard-table" ng-class="{'scrolled': scrolled}">
+                  <div class="col-md-12">
+                      <div ba-panel ba-panel-title="Table" ba-panel-class="with-scroll table-design">
+                          <div class="horizontal-scroll">
+                              <div class="form-group select-page-size-wrap ">
+                              </div>
+                              <table class="table" st-table="smartTableData">
+                                  <thead>
+                                      <tr class="sortable">
+                                          <th class="table-id" st-sort="id" st-sort-default="true">Sr No</th>
+                                          <th ng-repeat="header in supHeaders" st-sort="{{header.key}}">{{header.header}}</th>
+                                      </tr>
+                                      <tr>
+                                          <th></th>
+                                          <th ng-repeat="header in supHeaders"><input st-search="{{header.key}}" placeholder="Search {{header.header}}" class="input-sm form-control search-input"
+                                                      type="search"/>
+                                          </th>
+
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <tr ng-repeat="item in campaignDataList" >
+                                          <td class="table-id">{{$index + 1}}</td>
+                                          <td>{{item.proposal_name}}</td>
+                                          <td>{{item.supplier_name}}</td>
+                                          <td>{{item.inv_type}}</td>
+                                          <td>{{item.act_name}}</td>
+                                          <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Image</a></td>
+                                            <td ng-if="item.images.length == 0"><label>No Image<label></td>
+                                      </tr>
+                                  </tbody>
+                                  <tfoot>
+                                      <tr>
+                                          <td colspan="6" class="text-center">
+                                              <div st-pagination="" st-items-by-page="tablePageSize" st-displayed-pages="5"></div>
+                                          </td>
+                                      </tr>
+                                  </tfoot>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </uib-tab>
+          <uib-tab ng-click="getCampaigns()">
+              <uib-tab-heading>
+                <h3> Campaigns</h3>
+              </uib-tab-heading>
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="panel panel-default" style="color:'0000ff'">
+                    <div class="col-md-12">
+
+                        <div class="panel-headding campaign-header">
+                          <h3>Campaign Details</h3>
+                        </div>
+
+                        <div class="col-md-4">
+
+
+                          <div class="panel-group" id="accordion">
+                              <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.ongoing.status)">
+                                  <div class="panel-heading">
+                                      <h4 class="panel-title">
+                                          Ongoing-Campaigns
+                                      </h4>
+                                  </div>
+                                  <div id="ongoing" class="animate-show" ng-show="campaignStatus.ongoing.value">
+                                      <div class="panel-body menu-content">
+                                          <table class="table">
+                                              <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
+                                                <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
+                                                  {{campaign.campaign.name}}
+                                                </td>
+                                              </tr>
+                                          </table>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.completed.status)">
+                                  <div class="panel-heading">
+                                      <h4 class="panel-title">
+                                          Completed Campaigns
+                                      </h4>
+                                  </div>
+                                  <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
+                                      <div class="panel-body menu-content">
+                                          <table class="table">
+                                              <tr ng-repeat="campaign in campaignData.completed_campaigns">
+                                                <td>
+                                                  {{campaign.campaign.name}}
+                                                </td>
+                                              </tr>
+                                          </table>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="panel panel-default">
+                                  <div class="panel-heading" ng-click="getCampaignsMenu(campaignStatus.upcoming.status)">
+                                      <h4 class="panel-title">
+                                          Upcoming Campaigns
+                                      </h4>
+                                  </div>
+                                  <div id="upcoming" class="animate-show" ng-show="campaignStatus.upcoming.value">
+                                      <div class="panel-body menu-content">
+                                          <table class="table">
+                                              <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
+                                                <td>
+                                                  {{campaign.campaign.name}}
+                                                </td>
+                                              </tr>
+                                          </table>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+
+                        </div>
+
+                        <div class="col-md-8">
+                          <div class="panel-heading content-title">
+                            <div class="col-md-7">
+                              <h4> Details Of All Campaigns</h4>
+                            </div>
+                            <uib-tab-heading uib-dropdown>
+                                <button class="btn btn-primary btn-sm" uib-dropdown-toggle ng-click="$event.stopPropagation()">
+                                    Select Chart<i class="caret"></i>
+                                </button>
+                                <ul class="dropdown-menu" uib-dropdown-menu>
+                                    <li ng-repeat="(key,chart) in charts">
+                                      <a ng-click="$dropdownTabActive = $index+1; $tabLeftSetStatus.activeTab = 0;getChart(chart.value)">{{chart.name}}</a>
+                                    </li>
+                                </ul>
+                            </uib-tab-heading>
+                          </div>
+                          <nvd3 options="options" data="campaignChartdata"></nvd3>
+                          <!-- <canvas id="base" class="chart-base" chart-type="type" series="series"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions">
+                          </canvas> -->
+                          <!-- <canvas id="pie" class="chart chart-doughnut" ng-if="charts.doughnut.value"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
+                            chart-click="pieChartClick">
+                          </canvas>
+                          <canvas id="pie" class="chart chart-pie" ng-if="charts.pie.value"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
+                            chart-click="pieChartClick">
+                          </canvas>
+                          <canvas id="pie" class="chart chart-bar" ng-if="charts.bar.value"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
+                            chart-click="pieChartClick">
+                          </canvas> -->
+                        </div>
+                        <!-- <div class="col-md-3">
+                          <div class="panel-heading content-title">
+                            <h5 style="background:'red'">Details</h5>
+                          </div>
+                          <table class="table-responsive table table-bordered pieChart-table">
+                            <tr>
+                              <td>Ongoing Campaigns : {{campaignData.ongoing_campaigns.length}}</td>
+                            </tr>
+                            <tr>
+                              <td>Completed Campaigns : {{campaignData.completed_campaigns.length}}</td>
+                            </tr>
+                            <tr>
+                              <td>Upcoming Campaigns : {{campaignData.upcoming_campaigns.length}}</td>
+                            </tr>
+                          </table>
+                        </div> -->
+                      </div>
+                    </div>
+
+                    <div class="panel panel-default" ng-if="showSupplierTypeCountChart">
+                        <div class="col-md-12">
+                          <!-- <div class="col-md-2">
+
+                          </div> -->
+                          <div class="col-md-6">
+                            <div class="panel-heading content-title">
+                              <h5 style="background:'red'">Details Of Supplier Types Present In {{campaignStatusName}}</h5>
+                            </div>
+                            <nvd3 options="supplierCodeCountOptions" data="supplierCodeCountData"></nvd3>
+                          </div>
+                          <div class="col-md-6">
+                            <div class="panel-heading content-title">
+                              <h5 style="background:'red'">Total Suppliers In {{campaignStatusName}}</h5>
+                            </div>
+                            <nvd3 options="supplierCodeCountOptions" data="supplierCountData"></nvd3>
+                            <!-- <table class="table-responsive table table-bordered pieChart-table">
+                              <tr ng-repeat="supplier in supplierCountData">
+                                <td>{{supplier.supplier_code}} : {{supplier.total}}</td>
+                              </tr>
+                            </table> -->
+                          </div>
+                        </div>
+                    </div>
+
+                </div>
+              </div>
+          </uib-tab>
+
+          <!--START : Performance Metrics -->
+          <uib-tab ng-click="getCampaigns()">
+              <uib-tab-heading>
+                <h3> Performance Metrics</h3>
+              </uib-tab-heading>
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="panel panel-default" style="color:'0000ff'">
+                    <div class="col-md-12">
+
+                        <div class="panel-headding campaign-header">
+                          <h3>Performance Details</h3>
+                        </div>
+
+                        <div class="col-md-4">
+
+
+                          <div class="panel-group" id="accordion">
+                              <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.ongoing.status)">
+                                  <div class="panel-heading">
+                                      <h4 class="panel-title">
+                                          Ongoing-Campaigns
+                                      </h4>
+                                  </div>
+                                  <div id="ongoing" class="animate-show" ng-show="campaignStatus.ongoing.value">
+                                      <div class="panel-body menu-content">
+                                          <table class="table">
+                                              <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
+                                                <td ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                  {{campaign.campaign.name}}
+                                                </td>
+                                              </tr>
+                                          </table>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.completed.status)">
+                                  <div class="panel-heading">
+                                      <h4 class="panel-title">
+                                          Completed Campaigns
+                                      </h4>
+                                  </div>
+                                  <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
+                                      <div class="panel-body menu-content">
+                                          <table class="table">
+                                              <tr ng-repeat="campaign in campaignData.completed_campaigns">
+                                                <td ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                  {{campaign.campaign.name}}
+                                                </td>
+                                              </tr>
+                                          </table>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="panel panel-default">
+                                  <div class="panel-heading" ng-click="getCampaignsMenu(campaignStatus.upcoming.status)">
+                                      <h4 class="panel-title">
+                                          Upcoming Campaigns
+                                      </h4>
+                                  </div>
+                                  <div id="upcoming" class="animate-show" ng-show="campaignStatus.upcoming.value">
+                                      <div class="panel-body menu-content">
+                                          <table class="table">
+                                              <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
+                                                <td ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                  {{campaign.campaign.name}}
+                                                </td>
+                                              </tr>
+                                          </table>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+
+                        </div>
+                        <div class="col-md-2">
+                          <table class="table table-responsive table-bordered menu-content">
+                            <tr ng-repeat="inv in campaignInventories">
+                              <td ng-click="getPerformanceMetricsData(inv.filter_code)">
+                                {{inventories[inv.filter_code]}}
+                              </td>
+                            </tr>
+                          </table>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="panel-heading content-title">
+                            <div class="col-md-7">
+                              <h4> Details Of All Campaigns</h4>
+                            </div>
+                          </div>
+                          <nvd3 options="options" data="campaignChartdata"></nvd3>
+                          <!-- <canvas id="base" class="chart-base" chart-type="type" series="series"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions">
+                          </canvas> -->
+                          <!-- <canvas id="pie" class="chart chart-doughnut" ng-if="charts.doughnut.value"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
+                            chart-click="pieChartClick">
+                          </canvas>
+                          <canvas id="pie" class="chart chart-pie" ng-if="charts.pie.value"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
+                            chart-click="pieChartClick">
+                          </canvas>
+                          <canvas id="pie" class="chart chart-bar" ng-if="charts.bar.value"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
+                            chart-click="pieChartClick">
+                          </canvas> -->
+                        </div>
+                        <!-- <div class="col-md-3">
+                          <div class="panel-heading content-title">
+                            <h5 style="background:'red'">Details</h5>
+                          </div>
+                          <table class="table-responsive table table-bordered pieChart-table">
+                            <tr>
+                              <td>Ongoing Campaigns : {{campaignData.ongoing_campaigns.length}}</td>
+                            </tr>
+                            <tr>
+                              <td>Completed Campaigns : {{campaignData.completed_campaigns.length}}</td>
+                            </tr>
+                            <tr>
+                              <td>Upcoming Campaigns : {{campaignData.upcoming_campaigns.length}}</td>
+                            </tr>
+                          </table>
+                        </div> -->
+                      </div>
+                    </div>
+
+                    <div class="panel panel-default" ng-if="showSupplierTypeCountChart">
+                        <div class="col-md-12">
+                          <!-- <div class="col-md-2">
+
+                          </div> -->
+                          <div class="col-md-6">
+                            <div class="panel-heading content-title">
+                              <h5 style="background:'red'">Details Of Supplier Types Present In {{campaignStatusName}}</h5>
+                            </div>
+                            <nvd3 options="supplierCodeCountOptions" data="supplierCodeCountData"></nvd3>
+                          </div>
+                          <div class="col-md-6">
+                            <div class="panel-heading content-title">
+                              <h5 style="background:'red'">Total Suppliers In {{campaignStatusName}}</h5>
+                            </div>
+                            <nvd3 options="supplierCodeCountOptions" data="supplierCountData"></nvd3>
+                            <!-- <table class="table-responsive table table-bordered pieChart-table">
+                              <tr ng-repeat="supplier in supplierCountData">
+                                <td>{{supplier.supplier_code}} : {{supplier.total}}</td>
+                              </tr>
+                            </table> -->
+                          </div>
+                        </div>
+                    </div>
+
+                </div>
+              </div>
+          </uib-tab>
+          <!--END : Performance Metrics  -->
+      </uib-tabset>
+
+      <!--content-top></content-top-->
+      <div ui-view autoscroll="true" autoscroll-body-top></div>
+    </div>
+  </div>
+  <back-top></back-top>
+</main>
+<div id="preloader" ng-show="!$pageFinishedLoading">
+  <div></div>
+</div>
+
+<!--Start: Code for showing image Modal Window -->
+<div id="imageModal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">View Image</h4>
+        <hr/>
+        <div class = "modal-body">
+          <div class="carousel" id="slider" >
+             <div class="carousel-inner">
+                 <div class="item" ng-class="{active:!$index}" ng-repeat="image in imageUrlList">
+                    <img ng-src="{{image.image_url}}" style="width:600px; height:400px;" class="img-responsive" alt="No Image Found"/></br>
+                    Comment : {{image.comment}}
+                 </div>
+             </div>
+              <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider" role="button" data-slide="prev">
+                 <span class="glyphicon glyphicon-chevron-left"></span>
+              </a>
+             <a class="right carousel-control" data-toggle = "carousel" data-target = "#slider" role="button" data-slide="next">
+               <span class="glyphicon glyphicon-chevron-right"></span>
+             </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for showing image Modal  Window -->

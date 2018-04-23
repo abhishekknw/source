@@ -13,6 +13,7 @@ var APIBaseUrl = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk
 // var APIBaseUrl = 'http://localhost:8000/';
 
 angular.module('Authentication', []);
+
 angular
   .module('catalogueApp', [
     // 'ngAnimate',
@@ -43,7 +44,19 @@ angular
     'percentCircle-directive',
     'ngTableToCsv',
     'ui.grid',
-    'angular-js-xlsx'
+    'angular-js-xlsx',
+    'toastr',
+    'smart-table',
+    'angular-chartist',
+    'angular.morris-chart',
+    'textAngular',
+    'ngJsTree',
+    'xeditable',
+    'angular-progress-button-styles',
+    'catalogueApp.theme.components',
+    'catalogueApp.theme.inputs',
+    'catalogueApp.theme',
+
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
       $stateProvider
@@ -300,8 +313,12 @@ angular
       })
       .state('dashboard',{
             url : '/dashboard',
-            controller : 'adminDashboardController',
-            templateUrl : 'modules/pages/DashBoard/adminDashboard/adminDashboard.tmpl.html',
+            controller : 'DashboardCtrl',
+            templateUrl : 'modules/pages/dashboard/dashboard.html',
+            sidebarMeta: {
+            icon: 'ion-android-home',
+            order: 0,
+          },
       })
       .state('sheetToCampaign',{
             url : '/sheetToCampaign',
@@ -321,7 +338,13 @@ angular
       .state('forbiddenPage',{
             url : '/forbiddenPage',
             templateUrl : 'modules/common/forbiddenErrorPage.tmpl.html',
+      }).state('dashboard1',{
+            url : '/dashboard1',
+            // controller : 'DashboardCtrl',
+            templateUrl : 'modules/pages/dashboard-gulp/admin/release/index.html',
+
       });
+
 
       //$qProvider.errorOnUnhandledRejections(false);
       $locationProvider.hashPrefix('');

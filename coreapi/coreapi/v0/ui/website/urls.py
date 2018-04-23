@@ -17,7 +17,7 @@ urlpatterns = [
 
     url(r'^getCampaigns/$', views.CampaignAPIView.as_view()),
     url(r'^manageCampaign/(?P<id>[A-Z_a-z0-9]+)/proposal/$', views.CreateProposalAPIView.as_view()),
-    url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/inventories/$', views.CampaignInventoryAPIView.as_view()),
+        url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/inventories/$', views.CampaignInventoryAPIView.as_view()),
 
     url(r'campaign/(?P<id>[A-Z_a-z0-9]+)/society/count/$',views.ShortlistSocietyCountAPIView.as_view()),
 

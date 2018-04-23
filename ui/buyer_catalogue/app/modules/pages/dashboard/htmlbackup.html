@@ -1,0 +1,99 @@
+<div ba-panel ba-panel-class="tabs-panel with-scroll">
+  <div class="container-fluid" style="background:'#fff'">
+    <div class="row">
+      <div class="col-md-4">
+       <uib-tabset class="tabs-left dashboard-tab-left">
+         <uib-tab ng-click="getCampaignsMenu(campaignStatus.ongoing.status)">
+           <uib-tab-heading>
+               <div>
+                 <h4>Ongoing Campaigns</h4>
+               </div>
+             <ul class="animate-show" ng-show="campaignStatus.ongoing.value">
+               <li ng-repeat="campaign in campaignData.ongoing_campaigns"><h5>{{campaign.campaign.name}}</h5></li>
+             </ul>
+            </uib-tab-heading>
+         </uib-tab>
+         <uib-tab ng-click="getCampaignsMenu(campaignStatus.completed.status)">
+           <uib-tab-heading >
+               <div >
+                 <h4>Completed Campaigns</h4>
+               </div>
+             <ul class="animate-show" ng-show="campaignStatus.completed.value" ng-click="setSelected()" class="{{selected}}">
+               <li class="selected" ng-repeat="campaign in campaignData.completed_campaigns"><h5>{{campaign.campaign.name}}</h5></li>
+             </ul>
+            </uib-tab-heading>
+         </uib-tab>
+         <uib-tab ng-click="getCampaignsMenu(campaignStatus.upcoming.status)">
+           <uib-tab-heading>
+               <div>
+                 <h4>Upcoming Campaigns</h4>
+               </div>
+             <ul class="animate-show" ng-show="campaignStatus.upcoming.value">
+               <li ng-repeat="campaign in campaignData.upcoming_campaigns"><h5>{{campaign.campaign.name}}</h5></li>
+             </ul>
+            </uib-tab-heading>
+         </uib-tab>
+       </uib-tabset>
+     </div>
+     <div class="col-md-8">
+       <div ba-panel-class="medium-panel traffic-panel"><traffic-chart></traffic-chart></div>
+     </div>
+     </div>
+ </div>
+
+ <br /><br />
+ <h3 class="text-center">Name of Campaign</h3>
+    <div ba-panel ba-panel-title="Table" ba-panel-class="with-scroll custom-panel table-design campaign-table-design">
+        <div class="horizontal-scroll">
+            <div class="form-group select-page-size-wrap ">
+            <!--label>Rows on page
+                <select class="form-control selectpicker show-tick" title="Rows on page" selectpicker
+                        ng-model="smartTablePageSize" ng-options="i for i in [5,10,15,20,25]">
+                </select>
+            </label-->
+            </div>
+            <table class="table" st-table="smartTableData">
+            <thead>
+            <tr class="sortable ">
+                <th class="table-id" st-sort="id" st-sort-default="true">#</th>
+                <th st-sort="firstName">First Name</th>
+                <th st-sort="lastName">Last Name</th>
+                <th st-sort="username">Username</th>
+                <th st-sort="email">Email</th>
+                <th st-sort="age">Age</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th><input st-search="firstName" placeholder="Search First Name" class="input-sm form-control search-input"
+                        type="search"/></th>
+                <th><input st-search="lastName" placeholder="Search Last Name" class="input-sm form-control search-input"
+                        type="search"/></th>
+                <th><input st-search="username" placeholder="Search Username" class="input-sm form-control search-input"
+                        type="search"/></th>
+                <th><input st-search="email" placeholder="Search Email" class="input-sm form-control search-input" type="search"/>
+                </th>
+                <th><input st-search="age" placeholder="Search Age" class="input-sm form-control search-input" type="search"/>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="item in smartTableData">
+                <td class="table-id">{{item.id}}</td>
+                <td>{{item.firstName}}</td>
+                <td>{{item.lastName}}</td>
+                <td>{{item.username}}</td>
+                <td><a class="email-link" ng-href="mailto:{{item.email}}">{{item.email}}</a></td>
+                <td>{{item.age}}</td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="6" class="text-center">
+                <div st-pagination="" st-items-by-page="smartTablePageSize" st-displayed-pages="5"></div>
+                </td>
+            </tr>
+            </tfoot>
+            </table>
+        </div>
+    </div>
+</div>

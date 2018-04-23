@@ -38,6 +38,11 @@
           var url = url_base + "lead-alias/?campaign_id=" + campaignId;
           return machadaloHttp.get(url);
         }
+
+        campaignLeadsService.importLeadsThroughSheet = function(campaignId,data){
+          var url = url_base + "leads/" + campaignId + "/import_leads/";
+          return machadaloHttp.post(url,data);
+        }
         return campaignLeadsService;
 
  }]);

@@ -10,6 +10,9 @@
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.css" />
+    <link rel="stylesheet" href="bower_components/fullcalendar/dist/fullcalendar.css" />
+    <link rel="stylesheet" href="bower_components/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="bower_components/slick-carousel/slick/slick.css" />
     <link rel="stylesheet" href="bower_components/angular-rangeslider/angular.rangeSlider.css" />
     <link rel="stylesheet" href="bower_components/angularjs-slider/dist/rzslider.css" />
@@ -19,6 +22,20 @@
     <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
     <link rel="stylesheet" href="bower_components/nvd3/build/nv.d3.css" />
     <link rel="stylesheet" href="bower_components/angular-ui-grid/ui-grid.css" />
+    <link rel="stylesheet" href="bower_components/toastr/toastr.css" />
+    <link rel="stylesheet" href="bower_components/angular-xeditable/dist/css/xeditable.css" />
+    <link rel="stylesheet" href="bower_components/jstree/dist/themes/default/style.css" />
+    <link rel="stylesheet" href="bower_components/angular-progress-button-styles/dist/angular-progress-button-styles.min.css" />
+    <link rel="stylesheet" href="bower_components/angular-toastr/dist/angular-toastr.css" />
+    <link rel="stylesheet" href="bower_components/AngularJS-Toaster/toaster.css" />
+    <link rel="stylesheet" href="bower_components/morris.js/morris.css" />
+    <link rel="stylesheet" href="bower_components/Ionicons/css/ionicons.css" />
+    <link rel="stylesheet" href="bower_components/animate.css/animate.css" />
+    <link rel="stylesheet" href="bower_components/chartist/dist/chartist.min.css" />
+    <link rel="stylesheet" href="bower_components/ionrangeslider/css/ion.rangeSlider.css" />
+    <link rel="stylesheet" href="bower_components/ionrangeslider/css/ion.rangeSlider.skinFlat.css" />
+    <link rel="stylesheet" href="bower_components/textAngular/dist/textAngular.css" />
+    <link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.css" />
     <!-- endbower -->
     <!-- Fonts -->
   	<link href='http://fonts.googleapis.com/css?family=Lato:400,100,100italic,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>
@@ -46,7 +63,13 @@
     <!-- bower:js -->
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/bootstrap/js/dropdown.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
+    <script src="bower_components/fullcalendar/dist/fullcalendar.js"></script>
+    <script src="bower_components/leaflet/dist/leaflet-src.js"></script>
+    <script src="bower_components/slimScroll/jquery.slimscroll.js"></script>
     <script src="bower_components/angular-cookies/angular-cookies.js"></script>
     <script src="bower_components/angular-resource/angular-resource.js"></script>
     <script src="bower_components/angular-route/angular-route.js"></script>
@@ -57,7 +80,6 @@
     <script src="bower_components/angular-slick-carousel/dist/angular-slick.js"></script>
     <script src="bower_components/angular-rangeslider/angular.rangeSlider.js"></script>
     <script src="bower_components/angularjs-slider/dist/rzslider.js"></script>
-    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
     <script src="bower_components/angular-filter/dist/angular-filter.js"></script>
     <script src="bower_components/angularUtils-pagination/dirPagination.js"></script>
     <script src="bower_components/myforce-angularjs-dropdown-multiselect/dist/angularjs-dropdown-multiselect.min.js"></script>
@@ -91,6 +113,42 @@
     <script src="bower_components/angular-ui-grid/ui-grid.js"></script>
     <script src="bower_components/js-xlsx/dist/xlsx.core.min.js"></script>
     <script src="bower_components/angular-js-xlsx/angular-js-xlsx.js"></script>
+    <script src="bower_components/toastr/toastr.js"></script>
+    <script src="bower_components/angular-smart-table/dist/smart-table.js"></script>
+    <script src="bower_components/angular-xeditable/dist/js/xeditable.js"></script>
+    <script src="bower_components/angular-slimscroll/angular-slimscroll.js"></script>
+    <script src="bower_components/jstree/dist/jstree.js"></script>
+    <script src="bower_components/ng-js-tree/dist/ngJsTree.js"></script>
+    <script src="bower_components/angular-progress-button-styles/dist/angular-progress-button-styles.min.js"></script>
+    <script src="bower_components/jquery-ui/jquery-ui.js"></script>
+    <script src="bower_components/angular-ui-sortable/sortable.js"></script>
+    <script src="bower_components/angular-toastr/dist/angular-toastr.tpls.js"></script>
+    <script src="bower_components/AngularJS-Toaster/toaster.js"></script>
+    <script src="bower_components/amcharts3/amcharts/amcharts.js"></script>
+    <script src="bower_components/amcharts-stock/dist/amcharts/amstock.js"></script>
+    <script src="bower_components/eve-raphael/eve.js"></script>
+    <script src="bower_components/raphael/raphael.min.js"></script>
+    <script src="bower_components/mocha/mocha.js"></script>
+    <script src="bower_components/morris.js/morris.js"></script>
+    <script src="bower_components/angular-morris/build/module/angular-morris/angular-morris.min.js"></script>
+    <script src="bower_components/ammap/dist/ammap/ammap.js"></script>
+    <script src="bower_components/ammap/dist/ammap/maps/js/worldLow.js"></script>
+    <script src="bower_components/chartist/dist/chartist.min.js"></script>
+    <script src="bower_components/angular-chartist.js/dist/angular-chartist.js"></script>
+    <script src="bower_components/angular-morris-chart/src/angular-morris-chart.min.js"></script>
+    <script src="bower_components/ionrangeslider/js/ion.rangeSlider.js"></script>
+    <script src="bower_components/rangy/rangy-core.js"></script>
+    <script src="bower_components/rangy/rangy-classapplier.js"></script>
+    <script src="bower_components/rangy/rangy-highlighter.js"></script>
+    <script src="bower_components/rangy/rangy-selectionsaverestore.js"></script>
+    <script src="bower_components/rangy/rangy-serializer.js"></script>
+    <script src="bower_components/rangy/rangy-textrange.js"></script>
+    <script src="bower_components/textAngular/dist/textAngular.js"></script>
+    <script src="bower_components/textAngular/dist/textAngular-sanitize.js"></script>
+    <script src="bower_components/textAngular/dist/textAngularSetup.js"></script>
+    <script src="bower_components/angular-ui-select/dist/select.js"></script>
+    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="bower_components/aws-sdk/dist/aws-sdk.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
@@ -128,7 +186,60 @@
         <script src="modules/common/charts/donut-chart.directive.js"></script>
         <script src="modules/common/directives/importExcelSheet.directive.js"></script>
 
+        <!--dashboard theme files  -->
 
+        <script src="modules/theme/theme.module.js"></script>
+        <script src="modules/theme/theme.config.js"></script>
+        <script src="modules/theme/theme.configProvider.js"></script>
+        <script src="modules/theme/theme.constants.js"></script>
+
+        <script src="modules/theme/theme.run.js"></script>
+        <script src="modules/theme/theme.service.js"></script>
+        <script src="modules/theme/components/components.module.js"></script>
+        <script src="modules/theme/inputs/inputs.module.js"></script>
+        <script src="modules/theme/components/toastrLibConfig.js"></script>
+        <!-- <script src="modules/theme/components/backTop/backTop.directive.js"></script> -->
+        <script src="modules/theme/components/backTop/backTop.directive.js"></script>
+        <script src="modules/theme/components/backTop/lib/jquery.backTop.min.js"></script>
+        <script src="modules/theme/components/baPanel/baPanel.directive.js"></script>
+        <script src="modules/theme/components/baPanel/baPanel.service.js"></script>
+        <script src="modules/theme/components/baPanel/baPanelBlur.directive.js"></script>
+        <script src="modules/theme/components/baPanel/baPanelBlurHelper.service.js"></script>
+        <script src="modules/theme/components/baPanel/baPanelSelf.directive.js"></script>
+        <script src="modules/theme/components/baSidebar/baSidebar.directive.js"></script>
+        <script src="modules/theme/components/baSidebar/baSidebar.service.js"></script>
+        <script src="modules/theme/components/baSidebar/BaSidebarCtrl.js"></script>
+        <script src="modules/theme/components/baSidebar/baSidebarHelpers.directive.js"></script>
+        <script src="modules/theme/components/baWizard/baWizard.directive.js"></script>
+        <script src="modules/theme/components/baWizard/baWizardCtrl.js"></script>
+        <script src="modules/theme/components/baWizard/baWizardStep.directive.js"></script>
+        <script src="modules/theme/components/contentTop/contentTop.directive.js"></script>
+        <script src="modules/theme/components/msgCenter/msgCenter.directive.js"></script>
+        <script src="modules/theme/components/msgCenter/MsgCenterCtrl.js"></script>
+        <script src="modules/theme/components/pageTop/pageTop.directive.js"></script>
+        <script src="modules/theme/components/progressBarRound/progressBarRound.directive.js"></script>
+        <script src="modules/theme/components/widgets/widgets.directive.js"></script>
+        <script src="modules/theme/services/preloader.js"></script>
+        <script src="modules/theme/services/baUtil.js"></script>
+        <script src="modules/theme/services/fileReader.js"></script>
+        <script src="modules/theme/services/baProgressModal.js"></script>
+        <script src="modules/theme/services/stopableInterval.js"></script>
+        <script src="modules/theme/filters/image/appImage.js"></script>
+        <script src="modules/theme/filters/image/kameleonImg.js"></script>
+        <script src="modules/theme/filters/image/profilePicture.js"></script>
+        <script src="modules/theme/filters/text/removeHtml.js"></script>
+        <script src="modules/theme/directives/animatedChange.js"></script>
+        <script src="modules/theme/directives/autoExpand.js"></script>
+        <script src="modules/theme/directives/autoFocus.js"></script>
+        <script src="modules/theme/directives/includeWithScope.js"></script>
+        <script src="modules/theme/directives/ionSlider.js"></script>
+        <script src="modules/theme/directives/ngFileSelect.js"></script>
+        <script src="modules/theme/directives/scrollPosition.js"></script>
+        <script src="modules/theme/directives/trackWidth.js"></script>
+        <script src="modules/theme/directives/zoomIn.js"></script>
+
+        <script src="modules/pages/dashboard/trafficChart/trafficChart.directive.js"></script>
+        <script src="modules/pages/dashboard/trafficChart/TrafficChartCtrl.js"></script>
 
         <!-- Page files -->
         <script src="modules/pages/pages.js"></script>
@@ -162,6 +273,7 @@
         <script src="modules/pages/sheetToCampaign/sheetToCampaign.services.js"></script>
         <script src="modules/pages/leads/campaignLeads.services.js"></script>
         <script src="modules/pages/leadForm/leadsForm.service.js"></script>
+        <script src="modules/pages/dashboard/dashboard.service.js"></script>
 
         <script src="modules/common/filters/checklist-model.js"></script>
         <script src="modules/pages/mapview/mapview.controller.js"></script>
@@ -190,7 +302,7 @@
         <script src="modules/pages/campaignStatus/ongoingCampaigns/ongoingCampaign.controller.js"></script>
         <script src="modules/pages/campaignStatus/upcomingCampaigns/upcomingCampaign.controller.js"></script>
         <script src="modules/pages/campaignStatus/completedCampaigns/completedCampaign.controller.js"></script>
-        <script src="modules/pages/DashBoard/adminDashboard/adminDashboard.controller.js"></script>
+        <script src="modules/pages/dashboard/DashboardCtrl.js"></script>
         <script src="modules/pages/sheetToCampaign/sheetToCampaign.controller.js"></script>
         <script src="modules/pages/leads/campaignLeads.controller.js"></script>
         <script src="modules/pages/leadForm/leadsForm.controller.js"></script>

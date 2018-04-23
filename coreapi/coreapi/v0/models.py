@@ -988,6 +988,8 @@ class SupplierTypeSociety(BaseModel):
     car_display_allowed = models.BooleanField(db_column='CAR_DISPLAY_ALLOWED', default=False)
     banner_allowed = models.BooleanField(db_column='BANNER_ALLOWED',default=False)
     total_tenant_flat_count = models.IntegerField(null=True, blank=True)
+    landmark = models.CharField(max_length=255, null=True, blank=True)
+    feedback = models.CharField(max_length=255, null=True, blank=True)
 
     def get_society_image(self):
         try:
@@ -2290,6 +2292,7 @@ class ShortlistedSpaces(BaseModel):
     payment_method = models.CharField(max_length=255, null=True, blank=True)
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
     booking_status = models.CharField(max_length=10, null=True, blank=True)
+    is_completed = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'shortlisted_spaces'
@@ -2623,6 +2626,7 @@ class Leads(BaseModel):
     number2 = models.IntegerField(null=True, blank=True)
     date1 = models.DateField(null=True, blank=True)
     date2 = models.DateField(null=True, blank=True)
+    is_from_sheet = models.BooleanField(default=False)
     class Meta:
         db_table = 'leads'
 

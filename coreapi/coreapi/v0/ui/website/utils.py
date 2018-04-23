@@ -6426,6 +6426,7 @@ def make_final_list(filter_code, inventory_objects, space_id):
         ad_inventory_type_id = models.AdInventoryType.objects.get(adinventory_name=ad_inventory[0],
                                                                   adinventory_type=ad_inventory[1])
         duration_type_id = models.DurationType.objects.get(duration_name=ad_inventory[2])
+        content_type = ui_utils.fetch_content_type(filter_code['id'])
         now_time = timezone.now()
         shortlisted_suppliers = []
         for inventory in inventory_objects:
@@ -6435,7 +6436,8 @@ def make_final_list(filter_code, inventory_objects, space_id):
                 'inventory_id' : inventory.adinventory_id,
                 'shortlisted_spaces' : space_id,
                 'created_at' : now_time,
-                'updated_at' : now_time
+                'updated_at' : now_time,
+                'inventory_content_type_id' : content_type.id
                 }
             shortlisted_suppliers.append(models.ShortlistedInventoryPricingDetails(**data))
 
@@ -6500,5 +6502,71 @@ def create_inventory_activity_data(shortlisted_inventory_objects):
                 inventory_ativity_objects.append(models.InventoryActivity(**data))
         models.InventoryActivity.objects.bulk_create(inventory_ativity_objects)
         return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_total_activity_data(activity, campaign_id, content_type_id):
+    """
+
+    :param activity:
+    :param campaign_id:
+    :return:
+    """
+    function_name = get_total_activity_data.__name__
+    try:
+        result = models.InventoryActivityAssignment.objects.select_related('inventory_activity',
+                                'inventory_activity__shortlisted_inventory_details'). \
+            filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
+                   inventory_activity__activity_type=activity,
+                   inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id)
+        serializer = serializers.InventoryActivityAssignmentSerializer(result,many=True)
+        return serializer.data;
+
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+
+def get_actual_activity_data(activity, campaign_id, content_type_id):
+    """
+
+    :param activity:
+    :param campaign_id:
+    :return:
+    """
+    function_name = get_total_activity_data.__name__
+    try:
+        result = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+               'inventory_activity_assignment__inventory_activity',
+               'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'). \
+            filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
+            inventory_activity_assignment__inventory_activity__activity_type=activity,
+            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id)
+        serializer = serializers.InventoryActivityImageSerializer(result, many=True)
+        return serializer.data;
+
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_all_activity_data(campaign_id, content_type_id):
+    """
+
+    :param activity:
+    :param campaign_id:
+    :return:
+    """
+    function_name = get_total_activity_data.__name__
+    try:
+        result = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                            'inventory_activity_assignment__inventory_activity',
+                            'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                            'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+            filter(
+            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
+            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
+            annotate(object_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
+            values('object_id', 'latitude', 'longitude')
+
+        return result;
+
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))

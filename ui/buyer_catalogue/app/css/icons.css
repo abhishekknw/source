@@ -1,0 +1,36 @@
+.i-face {
+  display: inline-block;
+  background: url("../assets/img/face.svg") no-repeat center;
+  background-size: contain;
+  vertical-align: middle;
+  width: 80px;
+  height: 80px;
+}
+
+.i-money {
+  display: inline-block;
+  background: url("../assets/img/money.svg") no-repeat center;
+  background-size: contain;
+  vertical-align: middle;
+  width: 80px;
+  height: 80px;
+}
+
+.i-person {
+  display: inline-block;
+  background: url("../assets/img/person.svg") no-repeat center;
+  background-size: contain;
+  vertical-align: middle;
+  width: 80px;
+  height: 80px;
+}
+
+.i-refresh {
+  display: inline-block;
+  background: url("../assets/img/refresh.svg") no-repeat center;
+  background-size: contain;
+  vertical-align: middle;
+  width: 80px;
+  height: 80px;
+}
+

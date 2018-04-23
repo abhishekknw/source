@@ -150,5 +150,12 @@ angular
     no_phase : 'Remaining',
     //proposalToCampaign
     proposal_to_campaign : 'Campaign Created Successfully',
-
+    //dashboard
+    inventories : {
+      GA : 'Gateway Arch',
+      PO : 'Poster',
+      ST : 'Standee',
+      SL : 'Stall',
+      FL : 'Flyer'
+    },
   });

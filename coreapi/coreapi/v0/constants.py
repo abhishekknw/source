@@ -1166,7 +1166,8 @@ codes_to_model_names = {
     standee_inventory_code: 'StandeeInventory',
     flier_inventory_code: 'FlyerInventory',
     poster_inventory_code: 'PosterInventory',
-    car_display_inventory_code: 'StallInventory'
+    car_display_inventory_code: 'StallInventory',
+    'GA' : 'GatewayArchInventory',
 }
 # model to codes
 model_to_codes = {
@@ -1247,3 +1248,9 @@ query_status = {
     'phase' : 'phase'
 }
 exported_file_name_default = 'direct_ptoc_no_file'
+
+campaign_status = {
+    'ongoing_campaigns' : 'ongoing',
+    'completed_campaigns' : 'completed',
+    'upcoming_campaigns' : 'upcoming'
+}
