@@ -245,8 +245,8 @@ BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'bd@machadalo.com'
-EMAIL_HOST_PASSWORD = 'vijaikirti@bdjune'
+EMAIL_HOST_USER = 'businessdevelopment@machadalo.com'
+EMAIL_HOST_PASSWORD = 'career1231@'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER
