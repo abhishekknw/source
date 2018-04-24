@@ -21,6 +21,7 @@
 <link href="css/dashboard-theme.css" rel="stylesheet" media="screen">
 <link href="css/sass-app.css" rel="stylesheet" media="screen">
 <link href="css/sass-app-map.css" rel="stylesheet" media="screen">
+<link href="css/customstyle.css" rel="stylesheet" media="screen">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="96x96" href="assets/img/favicon-96x96.png">
@@ -49,7 +50,7 @@
 
          </h3>
           </uib-tab-heading>
-              <div  class="row panel-hide" ng-init="myVar = '/#/dashboard'">
+              <div  class="row panel-hide"  ng-init="myVar = '/#/dashboard'">
                   <div class="row">
                       <div class="col-xlg-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 dashboard-side-label">
                       </div>
@@ -84,19 +85,19 @@
                                                       <div uib-accordion-heading class="container">
                                                           <div class="pie-chart-item ng-scope">
                                                               <div class="row">
-                                                                  <div class="col-md-4">
+                                                                  <div class="col-6 col-md-4">
                                                                       <h4>{{inventoryActivityCountData[inv.header][date][act.header].actual||'0'}}</h4>
                                                                       <h5>Released</h5>
                                                                   </div>
-                                                                  <div class="col-md-4 ">
+                                                                  <div class="col-6 col-md-4">
                                                                       <h4>{{(inventoryActivityCountData[inv.header][date][act.header].total -
                                                                         inventoryActivityCountData[inv.header][date][act.header].actual)||'0'}}</h4>
                                                                       <h5>UnReleased</h5>
                                                                   </div>
                                                                   <div class="col-md-3 percent-circle">
 
-                                                                    <percent-circle ng-if="inventoryActivityCountData[inv.header][date][act.header].actual > 0" percent="getPercent(inventoryActivityCountData[inv.header][date][act.header].actual,inventoryActivityCountData[inv.header][date][act.header].total)" colors="{center:'#c70202',highlight:'green'}"></percent-circle>
-                                                                    <percent-circle ng-if="!(inventoryActivityCountData[inv.header][date][act.header].actual > 0)" percent="0" colors="{center:'#c70202'}"></percent-circle>
+                                                                    <percent-circle ng-if="inventoryActivityCountData[inv.header][date][act.header].actual > 0" percent="getPercent(inventoryActivityCountData[inv.header][date][act.header].actual,inventoryActivityCountData[inv.header][date][act.header].total)" colors="{center:'#FFA880',highlight:'#350906'}" style="width:45px;height:45px;margin-top:-10px;margin-left:10px;"></percent-circle>
+                                                                    <percent-circle ng-if="!(inventoryActivityCountData[inv.header][date][act.header].actual > 0)" percent="0" colors="{center:'#FFA880 '}" style="width:45px;height:45px;margin-top:-10px;margin-left:10px;"></percent-circle>
                                                                   </div>
                                                               </div>
                                                           </div>

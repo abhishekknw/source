@@ -23,7 +23,8 @@ a.collapse-menu-link:hover {
 }
 .dashboard-tab .tab-content {
   padding: 30px 15px 5px 15px;
-}
+
+  }
 .dashboard-tab .custom-panel.panel {
   box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.25);
 }
@@ -68,7 +69,8 @@ a.collapse-menu-link:hover {
   padding-top: 5px;
 }
 .dashboard-side-label h4 {
-  margin: 36px 0px 52px;
+  margin: 10px 60px 52px;
+
 }
 
 .dashboard-table {
