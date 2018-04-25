@@ -7,7 +7,8 @@
 
   angular.module('catalogueApp')
       .controller('DashboardCtrl',function($scope, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants) {
-
+ $scope.itemsByPage=15;
+ $scope.rowCollection = [];
         $scope.invKeys = [
           {header : 'POSTER'},
           {header : 'STANDEE'},
@@ -199,7 +200,7 @@
           })
         }
 
-      $scope.tablePageSize = 10;
+
       $scope.pieChartClick = function(label){
         $scope.campaignStatusName = label;
         var campaignStatus = _.findKey($scope.campaignStatus, {'name' : label});

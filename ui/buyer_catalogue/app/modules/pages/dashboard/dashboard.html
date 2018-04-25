@@ -114,27 +114,27 @@
                   </div>
               </div>
               <div scroll-position="scrolled" class="row dashboard-table" ng-class="{'scrolled': scrolled}">
-                  <div class="col-md-12">
+                  <div class="col-md-12" id="ba-panel-title">
                       <div ba-panel ba-panel-title="Table" ba-panel-class="with-scroll table-design">
                           <div class="horizontal-scroll">
                               <div class="form-group select-page-size-wrap ">
                               </div>
-                              <table class="table" st-table="smartTableData">
-                                  <thead>
+                              <table st-safe-src="rowCollection" st-table="displayed" st-pipe="callServer" class="table table-bordered">
+                                  <thead class="thead">
                                       <tr class="sortable">
                                           <th class="table-id" st-sort="id" st-sort-default="true">Sr No</th>
-                                          <th ng-repeat="header in supHeaders" st-sort="{{header.key}}">{{header.header}}</th>
+                                          <th ng-repeat="header in supHeaders | filter:query" st-sort="{{header.key}}">{{header.header}}</th>
                                       </tr>
                                       <tr>
                                           <th></th>
-                                          <th ng-repeat="header in supHeaders"><input st-search="{{header.key}}" placeholder="Search {{header.header}}" class="input-sm form-control search-input"
+                                          <th ng-repeat="header in supHeaders | filter:query"><input st-search="{{header.key}}" placeholder="Search {{header.header}}" ng-model="query" class="input-sm form-control search-input"
                                                       type="search"/>
                                           </th>
 
                                       </tr>
                                   </thead>
                                   <tbody>
-                                      <tr ng-repeat="item in campaignDataList" >
+                                      <tr ng-repeat="item in campaignDataList | orderBy " >
                                           <td class="table-id">{{$index + 1}}</td>
                                           <td>{{item.proposal_name}}</td>
                                           <td>{{item.supplier_name}}</td>
@@ -146,8 +146,11 @@
                                   </tbody>
                                   <tfoot>
                                       <tr>
-                                          <td colspan="6" class="text-center">
+                                          <!-- <td colspan="6" class="text-center">
                                               <div st-pagination="" st-items-by-page="tablePageSize" st-displayed-pages="5"></div>
+                                          </td> -->
+                                          <td colspan="5" class="text-center">
+                                          <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="7"></div>
                                           </td>
                                       </tr>
                                   </tfoot>
