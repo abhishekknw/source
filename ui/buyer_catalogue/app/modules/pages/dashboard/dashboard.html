@@ -119,8 +119,9 @@
                           <div class="horizontal-scroll">
                               <div class="form-group select-page-size-wrap ">
                               </div>
-                              <table st-safe-src="rowCollection" st-table="displayed" st-pipe="callServer" class="table table-bordered">
-                                  <thead class="thead">
+                              <div class="InventoryTable">
+                              <table st-safe-src="rowCollection" st-table="displayed" st-pipe="callServer" class="table table-bordered" >
+                                  <thead>
                                       <tr class="sortable">
                                           <th class="table-id" st-sort="id" st-sort-default="true">Sr No</th>
                                           <th ng-repeat="header in supHeaders | filter:query" st-sort="{{header.key}}">{{header.header}}</th>
@@ -155,6 +156,7 @@
                                       </tr>
                                   </tfoot>
                               </table>
+                            </div>
                           </div>
                       </div>
                   </div>

@@ -289,7 +289,7 @@ ul.animate-show li.selected {
   padding: 10px !important;
 }
 #ba-panel-title{
-  text-align: center !important;
+    text-align: center !important;
   text-transform : none !important;
   font-weight : bolder !important;
   padding: 10px !important;
@@ -305,14 +305,14 @@ ul.animate-show li.selected {
   border-top: 1px solid #ddd !important;
   }
 
-table{
+.InventoryTable{
     height: 500px;
     display:block;
     overflow-y: auto;
     overflow-x: hidden;
 
 }
-th{
+.InventoryTable th{
   font-weight: bold !important;
     color:#ffffff;
     background-color: #5C5C5C  ;
@@ -321,12 +321,12 @@ th{
 text-align: center;
   }
 
-tr{
+.InventoryTable  tr{
   font-weight: normal !important;
   color:#000000;
 
 }
-td{
+.InventoryTable  td{
   font-weight: normal !important;
   color:#000000;
 
