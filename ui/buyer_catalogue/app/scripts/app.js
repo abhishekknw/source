@@ -56,6 +56,7 @@ angular
     'catalogueApp.theme.components',
     'catalogueApp.theme.inputs',
     'catalogueApp.theme',
+    'angular-circular-progress',
 
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {

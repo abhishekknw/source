@@ -66,7 +66,8 @@
     "angular-ui-select": "^0.19.6",
     "angular-ui-bootstrap": "^2.5.6",
     "angular-bootstrap": "^2.5.0",
-    "aws-sdk": "aws-sdk-js#^2.224.1"
+    "aws-sdk": "aws-sdk-js#^2.224.1",
+    "angular-circular-progress": "^0.0.2"
   },
   "devDependencies": {
     "angular-mocks": "~1.4.0"

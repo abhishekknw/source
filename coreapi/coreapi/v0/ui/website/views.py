@@ -5897,44 +5897,55 @@ class DashBoardViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-    @list_route()
-    def get_location_difference_of_inventory(self, request):
-        """
-
-        :param request:
-        :return:
-        """
-        class_name = self.__class__.__name__
-        try:
-            campaign_id = request.query_params.get('campaign_id',None)
-            inv_code = request.query_params.get('inv', None)
-            content_type = ui_utils.fetch_content_type(inv_code)
-            content_type_id = content_type.id
-
-            result = website_utils.get_all_activity_data(campaign_id,content_type_id)
-
-            supplier_ids = [supplier['object_id'] for supplier in result]
-            supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
-            serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects,many=True)
-            suppliers = serializer.data
-            supplier_objects_id_map = {supplier['supplier_id']:supplier for supplier in suppliers}
-
-
-            for item in result:
-                lat1 = item['latitude']
-                lon1 = item['longitude']
-                # need to be changed for other suppliers
-                lat2 = supplier_objects_id_map[item['object_id']]['society_latitude']
-                lon2 = supplier_objects_id_map[item['object_id']]['society_longitude']
-
-                if lat1 and lon1 and lat2 and lon2:
-                    distance = gpxpy.geo.haversine_distance(lat1, lon1, lat2, lon2)
-                    item['distance'] = distance
-
-            return ui_utils.handle_response(class_name, data=result, success=True)
-
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+    # @list_route()
+    # def get_location_difference_of_inventory(self, request):
+    #     """
+    #
+    #     :param request:
+    #     :return:
+    #     """
+    #     class_name = self.__class__.__name__
+    #     try:
+    #         campaign_id = request.query_params.get('campaign_id',None)
+    #         inv_code = request.query_params.get('inv', None)
+    #         content_type = ui_utils.fetch_content_type(inv_code)
+    #         content_type_id = content_type.id
+    #
+    #         # result = website_utils.get_all_activity_data(campaign_id,content_type_id)
+    #         import pdb
+    #         pdb.set_trace()
+    #         actual_release = website_utils.get_activity_data_by_values('RELEASE', campaign_id, content_type_id)
+    #         actual_audit = website_utils.get_activity_data_by_values('AUDIT', campaign_id, content_type_id)
+    #         actual_closure= website_utils.get_activity_data_by_values('CLOSURE', campaign_id, content_type_id)
+    #
+    #
+    #         result = actual_release + actual_audit + actual_closure
+    #
+    #         supplier_ids = models.ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id).values_list('object_id')
+    #         supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+    #         serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects,many=True)
+    #         suppliers = serializer.data
+    #         supplier_objects_id_map = {supplier['supplier_id']:supplier for supplier in suppliers}
+    #
+    #         inv_assignemnt_objects = {}
+    #         for item in result:
+    #             lat1 = item['latitude']
+    #             lon1 = item['longitude']
+    #             # need to be changed for other suppliers
+    #             lat2 = supplier_objects_id_map[item['object_id']]['society_latitude']
+    #             lon2 = supplier_objects_id_map[item['object_id']]['society_longitude']
+    #
+    #             if lat1 and lon1 and lat2 and lon2:
+    #                 distance = gpxpy.geo.haversine_distance(lat1, lon1, lat2, lon2)
+    #                 item['distance'] = distance
+    #             if not (item['inventory_activity_assignment_id'] in inv_assignemnt_objects):
+    #                 inv_assignemnt_objects[item['inventory_activity_assignment_id']] = []
+    #             inv_assignemnt_objects[item['inventory_activity_assignment_id']].append(item)
+    #
+    #         return ui_utils.handle_response(class_name, data=inv_assignemnt_objects, success=True)
+    #
+    #     except Exception as e:
+    #         return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CampaignsAssignedInventoryCountApiView(APIView):
