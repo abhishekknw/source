@@ -158,4 +158,5 @@ angular
       SL : 'Stall',
       FL : 'Flyer'
     },
+    distanceLimit : 80,
   });

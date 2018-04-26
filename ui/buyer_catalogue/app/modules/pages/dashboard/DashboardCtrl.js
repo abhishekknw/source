@@ -16,9 +16,9 @@
           {header : 'FLIER'},
         ];
         $scope.actKeys = [
-          {header : 'RELEASE'},
-          {header : 'AUDIT'},
-          {header : 'CLOSURE'},
+          {header : 'RELEASE', key : 'release'},
+          {header : 'AUDIT', key : 'audit'},
+          {header : 'CLOSURE', key : 'closure'},
         ];
         $scope.supHeaders = [
           {header : 'Campaign Name', key : 'proposal_name'},
@@ -44,7 +44,13 @@
           doughnut : { name : 'Doughnut Chart', value : 'doughnut' },
           // polarArea : { name : 'PolarArea Chart', value : 'polarArea' },
           // HorizontalBar : { name : 'horizontalBar Chart', value : 'horizontalBar' },
-        }
+        };
+        $scope.perfMetrics = {
+          inv : 'inv',
+          ontime : 'onTime',
+          location : 'onLocation'
+        };
+        $scope.showPerfMetrics = false;
         $scope.inventories = constants.inventories;
         $scope.campaignStatusLabels = [$scope.campaignStatus.ongoing.name,$scope.campaignStatus.completed.name, $scope.campaignStatus.upcoming.name];
         $scope.pieChartDefaulOptions = { legend: { display: true, position: 'right',padding: '10px' } };
@@ -383,10 +389,11 @@
 
        // START : get Performance metrics data
        $scope.getPerformanceMetricsData = function(inv){
+         $scope.inv = inv;
          DashboardService.getPerformanceMetricsData($scope.campaignId,inv)
          .then(function onSuccess(response){
-           console.log(response);
            $scope.performanceMetricsData = response.data.data;
+           $scope.showPerfMetrics = $scope.perfMetrics.inv;
            setOntimeData($scope.performanceMetricsData);
          }).catch(function onError(response){
            console.log(response);
@@ -409,5 +416,34 @@
           console.log(data);
         }
        // END : create on time data on activities
+       $scope.getOnTimeData = function(){
+         $scope.showPerfMetrics = $scope.perfMetrics.ontime;
+       }
+
+       $scope.getLocationData = function(){
+         DashboardService.getLocationData($scope.campaignId,$scope.inv)
+         .then(function onSuccess(response){
+           console.log(response);
+           $scope.locationData = response.data.data;
+           getOnLocationData($scope.locationData);
+           $scope.showPerfMetrics = $scope.perfMetrics.onlocation;
+         }).catch(function onError(response){
+           console.log(response);
+         })
+       }
+       var getOnLocationData = function(data){
+         $scope.onLocation = 0;
+         angular.forEach(data, function(key,item){
+
+           console.log(key);
+           for(var i=0;i<key.length; i++){
+             if(key[i].hasOwnProperty('distance') && key[i].distance <= constants.distanceLimit){
+               $scope.onLocation += 1;
+               break;
+             }
+           }
+         })
+         console.log($scope.onLocation);
+       }
     })
   })();

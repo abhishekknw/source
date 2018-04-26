@@ -53,6 +53,11 @@
       return machadaloHttp.get(url);
     }
 
+    DashboardService.getLocationData = function(campaignId,inv){
+      var url = url_base + "dashboard/get_location_difference_of_inventory/?campaign_id=" + campaignId + "&inv=" + inv;
+      return machadaloHttp.get(url);
+    }
+
     return DashboardService;
 
  }]);
