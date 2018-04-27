@@ -58,13 +58,13 @@
                           <!--<dashboard-pie-chart></dashboard-pie-chart>-->
                           <div class="row">
                               <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
-                                  <h4 class="date-tab-heading">Release</h4>
+                                  <h4 class="date-tab-heading" style="color:rgb(53, 9, 6)">Release</h4>
                               </div>
                               <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
-                                  <h4 class="date-tab-heading">Audit</h4>
+                                  <h4 class="date-tab-heading" style="color:rgb(53, 9, 6)">Audit</h4>
                               </div>
                               <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
-                                  <h4 class="date-tab-heading">Closure</h4>
+                                  <h4 class="date-tab-heading" style="color:rgb(53, 9, 6)">Closure</h4>
                               </div>
                           </div>
                       </div>
@@ -172,7 +172,7 @@
                     <div class="col-md-12">
 
                         <div class="panel-headding campaign-header">
-                          <h3>Campaign Details</h3>
+                          <h3 style="color:rgb(53, 9, 6)">Campaign Details</h3>
                         </div>
 
                         <div class="col-md-4">
@@ -207,7 +207,7 @@
                                       <div class="panel-body menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.completed_campaigns">
-                                                <td>
+                                                <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
                                                   {{campaign.campaign.name}}
                                                 </td>
                                               </tr>
@@ -225,7 +225,7 @@
                                       <div class="panel-body menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
-                                                <td>
+                                                <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
                                                   {{campaign.campaign.name}}
                                                 </td>
                                               </tr>
@@ -237,7 +237,7 @@
 
                         </div>
 
-                        <div class="col-md-8">
+                        <div class="col-md-8" ng-if="showPerfPanel == perfPanel.all">
                           <div class="panel-heading content-title">
                             <div class="col-md-7">
                               <h4> Details Of All Campaigns</h4>
@@ -254,6 +254,40 @@
                             </uib-tab-heading>
                           </div>
                           <nvd3 options="options" data="campaignChartdata"></nvd3>
+                          <!-- <canvas id="base" class="chart-base" chart-type="type" series="series"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions">
+                          </canvas> -->
+                          <!-- <canvas id="pie" class="chart chart-doughnut" ng-if="charts.doughnut.value"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
+                            chart-click="pieChartClick">
+                          </canvas>
+                          <canvas id="pie" class="chart chart-pie" ng-if="charts.pie.value"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
+                            chart-click="pieChartClick">
+                          </canvas>
+                          <canvas id="pie" class="chart chart-bar" ng-if="charts.bar.value"
+                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
+                            chart-click="pieChartClick">
+                          </canvas> -->
+                        </div>
+
+                        <div class="col-md-8" ng-if="showPerfPanel == perfPanel.respective">
+                          <div class="panel-heading content-title" >
+                            <div class="col-md-7" ng-class="{active:!$index}">
+                              <h4>Details Of All Campaigns</h4>
+                            </div>
+                            <uib-tab-heading uib-dropdown>
+                                <button class="btn btn-primary btn-sm" uib-dropdown-toggle ng-click="$event.stopPropagation()">
+                                    Select Chart<i class="caret"></i>
+                                </button>
+                                <ul class="dropdown-menu" uib-dropdown-menu>
+                                    <li ng-repeat="(key,chart) in charts">
+                                      <a ng-click="$dropdownTabActive = $index+1; $tabLeftSetStatus.activeTab = 0;getChart(chart.value)">{{chart.name}}</a>
+                                    </li>
+                                </ul>
+                            </uib-tab-heading>
+                          </div>
+                          <nvd3 options="options" data="supplierChartdata"></nvd3>
                           <!-- <canvas id="base" class="chart-base" chart-type="type" series="series"
                             chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions">
                           </canvas> -->
@@ -321,7 +355,7 @@
           <!--START : Performance Metrics -->
           <uib-tab ng-click="getCampaigns()">
               <uib-tab-heading>
-                <h3> Performance Metrics</h3>
+                <h3 style="color:rgb(53, 9, 6)"> Performance Metrics</h3>
               </uib-tab-heading>
               <div class="container-fluid">
                 <div class="row">
