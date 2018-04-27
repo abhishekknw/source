@@ -147,8 +147,11 @@
                                   </tbody>
                                   <tfoot>
                                       <tr>
+
+
                                           <td colspan="6" class="text-center">
                                               <div st-pagination="5" st-items-by-page="tablePageSize" st-displayed-pages="5"></div>
+
                                           </td>
                                       </tr>
                                   </tfoot>
@@ -343,14 +346,20 @@
                                       <div class="panel-body menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
-                                                <td ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
-                                                  {{campaign.campaign.name}}
+                                              <td >
+                                                <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
+                                                <md-option>Lead </md-option>
+                                                <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                  Inventory </md-option>
+                                                <md-option>Supplier</md-option>
+                                              </md-select>
                                                 </td>
                                               </tr>
                                           </table>
+
                                       </div>
                                   </div>
-                              </div>
+                                </div>
                               <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.completed.status)">
                                   <div class="panel-heading">
                                       <h4 class="panel-title">
@@ -359,13 +368,18 @@
                                   </div>
                                   <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
                                       <div class="panel-body menu-content">
-                                          <table class="table">
-                                              <tr ng-repeat="campaign in campaignData.completed_campaigns">
-                                                <td ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
-                                                  {{campaign.campaign.name}}
-                                                </td>
-                                              </tr>
-                                          </table>
+                                        <table class="table">
+                                            <tr ng-repeat="campaign in campaignData.completed_campaigns">
+                                            <td >
+                                              <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
+                                              <md-option>Lead </md-option>
+                                              <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                Inventory </md-option>
+                                              <md-option>Supplier</md-option>
+                                            </md-select>
+                                              </td>
+                                            </tr>
+                                        </table>
                                       </div>
                                   </div>
                               </div>
@@ -377,13 +391,18 @@
                                   </div>
                                   <div id="upcoming" class="animate-show" ng-show="campaignStatus.upcoming.value">
                                       <div class="panel-body menu-content">
-                                          <table class="table">
-                                              <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
-                                                <td ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
-                                                  {{campaign.campaign.name}}
-                                                </td>
-                                              </tr>
-                                          </table>
+                                        <table class="table">
+                                            <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
+                                            <td >
+                                              <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
+                                              <md-option>Lead </md-option>
+                                              <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                Inventory </md-option>
+                                              <md-option>Supplier</md-option>
+                                            </md-select>
+                                              </td>
+                                            </tr>
+                                        </table>
                                       </div>
                                   </div>
                               </div>
