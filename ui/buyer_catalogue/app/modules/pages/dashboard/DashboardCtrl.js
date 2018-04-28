@@ -7,7 +7,10 @@
 
   angular.module('catalogueApp')
       .controller('DashboardCtrl',function($scope, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants) {
+ $scope.itemsByPage=15;
+ $scope.query = "";
 
+ $scope.rowCollection = [];
         $scope.invKeys = [
           {header : 'POSTER'},
           {header : 'STANDEE'},
@@ -50,6 +53,11 @@
           location : 'onLocation'
         };
         $scope.showPerfMetrics = false;
+       $scope.perfPanel = {
+          all : 'all',
+          respective : 'respective'
+          };
+        $scope.showPerfPanel = false;
         $scope.inventories = constants.inventories;
         $scope.campaignStatusLabels = [$scope.campaignStatus.ongoing.name,$scope.campaignStatus.completed.name, $scope.campaignStatus.upcoming.name];
         $scope.pieChartDefaulOptions = { legend: { display: true, position: 'right',padding: '10px' } };
@@ -192,6 +200,7 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.campaignData = response.data.data;
+
             $scope.campaigns = [$scope.campaignData.ongoing_campaigns.length,$scope.campaignData.completed_campaigns.length,$scope.campaignData.upcoming_campaigns.length];
             $scope.campaignChartdata = [
               { label : $scope.campaignStatus.ongoing.campaignLabel, value : $scope.campaignData.ongoing_campaigns.length },
@@ -202,12 +211,13 @@
             $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.pieChartClick(e.data.label); };
             // $scope.getCampaignsByStatus($scope.campaignStatus.all_campaigns.value);
             console.log($scope.campaignLength);
+            $scope.showPerfPanel = $scope.perfPanel.all;
           }).catch(function onError(response){
             console.log(response);
           })
         }
 
-      $scope.tablePageSize = 10;
+
       $scope.pieChartClick = function(label){
         $scope.campaignStatusName = label;
         var campaignStatus = _.findKey($scope.campaignStatus, {'campaignLabel' : label});

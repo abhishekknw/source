@@ -21,6 +21,7 @@
 <link href="css/dashboard-theme.css" rel="stylesheet" media="screen">
 <link href="css/sass-app.css" rel="stylesheet" media="screen">
 <link href="css/sass-app-map.css" rel="stylesheet" media="screen">
+<link href="css/customstyle.css" rel="stylesheet" media="screen">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="96x96" href="assets/img/favicon-96x96.png">
@@ -49,7 +50,7 @@
 
          </h3>
           </uib-tab-heading>
-              <div  class="row panel-hide" ng-init="myVar = '/#/dashboard'">
+              <div  class="row panel-hide"  ng-init="myVar = '/#/dashboard'">
                   <div class="row">
                       <div class="col-xlg-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 dashboard-side-label">
                       </div>
@@ -57,13 +58,13 @@
                           <!--<dashboard-pie-chart></dashboard-pie-chart>-->
                           <div class="row">
                               <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
-                                  <h4 class="date-tab-heading">Release</h4>
+                                  <h4 class="date-tab-heading" style="color:rgb(53, 9, 6)">Release</h4>
                               </div>
                               <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
-                                  <h4 class="date-tab-heading">Audit</h4>
+                                  <h4 class="date-tab-heading" style="color:rgb(53, 9, 6)">Audit</h4>
                               </div>
                               <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
-                                  <h4 class="date-tab-heading">Closure</h4>
+                                  <h4 class="date-tab-heading" style="color:rgb(53, 9, 6)">Closure</h4>
                               </div>
                           </div>
                       </div>
@@ -88,15 +89,15 @@
                                                                     <h4>{{inventoryActivityCountData[inv.header][date][act.header].actual||'0'}}</h4>
                                                                     <h5>Released</h5>
                                                                   </div>
-                                                                  <div class="col-md-4 ">
+                                                                  <div class="col-6 col-md-4">
                                                                       <h4>{{(inventoryActivityCountData[inv.header][date][act.header].total -
                                                                         inventoryActivityCountData[inv.header][date][act.header].actual)||'0'}}</h4>
                                                                       <h5>UnReleased</h5>
                                                                   </div>
                                                                   <div class="col-md-3 percent-circle">
 
-                                                                    <percent-circle ng-if="inventoryActivityCountData[inv.header][date][act.header].actual > 0" percent="getPercent(inventoryActivityCountData[inv.header][date][act.header].actual,inventoryActivityCountData[inv.header][date][act.header].total)" colors="{center:'#c70202',highlight:'green'}"></percent-circle>
-                                                                    <percent-circle ng-if="!(inventoryActivityCountData[inv.header][date][act.header].actual > 0)" percent="0" colors="{center:'#c70202'}"></percent-circle>
+                                                                    <percent-circle ng-if="inventoryActivityCountData[inv.header][date][act.header].actual > 0" percent="getPercent(inventoryActivityCountData[inv.header][date][act.header].actual,inventoryActivityCountData[inv.header][date][act.header].total)" colors="{center:'#FFA880',highlight:'#350906'}" style="width:45px;height:45px;margin-top:-10px;margin-left:10px;"></percent-circle>
+                                                                    <percent-circle ng-if="!(inventoryActivityCountData[inv.header][date][act.header].actual > 0)" percent="0" colors="{center:'#FFA880 '}" style="width:45px;height:45px;margin-top:-10px;margin-left:10px;"></percent-circle>
                                                                   </div>
                                                               </div>
                                                           </div>
@@ -112,28 +113,26 @@
                       </div>
                   </div>
               </div>
+
               <div scroll-position="scrolled" class="row dashboard-table" ng-class="{'scrolled': scrolled}" ng-if="showAssignedInvTable">
                   <div class="col-md-12">
                       <div ba-panel ba-panel-title="Table" ba-panel-class="with-scroll table-design">
                           <div class="horizontal-scroll">
                               <div class="form-group select-page-size-wrap ">
                               </div>
-                              <table class="table" st-table="smartTableData">
+                              <div class="InventoryTable">
+                              <table st-safe-src="rowCollection" st-table="displayed" st-pipe="callServer" class="table table-bordered" >
                                   <thead>
-                                      <tr class="sortable">
+                                      <tr class="sortable" >
                                           <th class="table-id" st-sort="id" st-sort-default="true">Sr No</th>
                                           <th ng-repeat="header in supHeaders" st-sort="{{header.key}}">{{header.header}}</th>
                                       </tr>
-                                      <tr>
-                                          <th></th>
-                                          <th ng-repeat="header in supHeaders"><input st-search="{{header.key}}" placeholder="Search {{header.header}}" class="input-sm form-control search-input"
-                                                      type="search"/>
-                                          </th>
 
-                                      </tr>
-                                  </thead>
+                                  </thead><br><br>
+                                  <input placeholder="Search Your Input Here" type="form-control" ng-model="query" class="input-sm form-control search-input"
+                                  type="search" style="width:300px;margin-left:22px;margin-top:-20px;"/><br><br>
                                   <tbody>
-                                      <tr ng-repeat="item in campaignDataList" >
+                                      <tr ng-repeat="item in campaignDataList |filter:query" >
                                         <td class="table-id">{{$index + 1}}</td>
                                         <td>{{item.proposal_name}}</td>
                                         <td>{{item.supplier_name}}</td>
@@ -145,12 +144,16 @@
                                   </tbody>
                                   <tfoot>
                                       <tr>
+
+
                                           <td colspan="6" class="text-center">
                                               <div st-pagination="5" st-items-by-page="tablePageSize" st-displayed-pages="5"></div>
+
                                           </td>
                                       </tr>
                                   </tfoot>
                               </table>
+                            </div>
                           </div>
                       </div>
                   </div>
@@ -166,7 +169,7 @@
                     <div class="col-md-12">
 
                         <div class="panel-headding campaign-header">
-                          <h3>Campaign Details</h3>
+                          <h3 style="color:rgb(53, 9, 6)">Campaign Details</h3>
                         </div>
 
                         <div class="col-md-3">
@@ -256,6 +259,7 @@
                             </uib-tab-heading>
                           </div>
                           <nvd3 options="options" data="campaignChartdata"></nvd3>
+
                         </div>
                         <div class="col-md-3">
                           <table class="table table-responsive table-bordered pieChart-table">
@@ -311,7 +315,7 @@
                     <div class="col-md-12">
 
                         <div class="panel-headding campaign-header">
-                          <h3>Performance Details</h3>
+                          <h3 style="color:rgb(53, 9, 6)">Performance Details</h3>
                         </div>
 
                         <div class="col-md-4">
@@ -328,14 +332,20 @@
                                       <div class="panel-body menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
-                                                <td ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
-                                                  {{campaign.campaign.name}}
+                                              <td >
+                                                <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
+                                                <md-option>Lead </md-option>
+                                                <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                  Inventory </md-option>
+                                                <md-option>Supplier</md-option>
+                                              </md-select>
                                                 </td>
                                               </tr>
                                           </table>
+
                                       </div>
                                   </div>
-                              </div>
+                                </div>
                               <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.completed.status)">
                                   <div class="panel-heading">
                                       <h4 class="panel-title">
@@ -344,13 +354,18 @@
                                   </div>
                                   <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
                                       <div class="panel-body menu-content">
-                                          <table class="table">
-                                              <tr ng-repeat="campaign in campaignData.completed_campaigns">
-                                                <td ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
-                                                  {{campaign.campaign.name}}
-                                                </td>
-                                              </tr>
-                                          </table>
+                                        <table class="table">
+                                            <tr ng-repeat="campaign in campaignData.completed_campaigns">
+                                            <td >
+                                              <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
+                                              <md-option>Lead </md-option>
+                                              <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                Inventory </md-option>
+                                              <md-option>Supplier</md-option>
+                                            </md-select>
+                                              </td>
+                                            </tr>
+                                        </table>
                                       </div>
                                   </div>
                               </div>
@@ -362,13 +377,18 @@
                                   </div>
                                   <div id="upcoming" class="animate-show" ng-show="campaignStatus.upcoming.value">
                                       <div class="panel-body menu-content">
-                                          <table class="table">
-                                              <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
-                                                <td ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
-                                                  {{campaign.campaign.name}}
-                                                </td>
-                                              </tr>
-                                          </table>
+                                        <table class="table">
+                                            <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
+                                            <td >
+                                              <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
+                                              <md-option>Lead </md-option>
+                                              <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                Inventory </md-option>
+                                              <md-option>Supplier</md-option>
+                                            </md-select>
+                                              </td>
+                                            </tr>
+                                        </table>
                                       </div>
                                   </div>
                               </div>
