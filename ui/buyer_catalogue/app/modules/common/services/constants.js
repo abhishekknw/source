@@ -158,4 +158,8 @@ angular
       SL : 'Stall',
       FL : 'Flyer'
     },
+    distanceLimit : 80,
+    release : 'RELEASE',
+    closure : 'CLOSURE',
+    audit : 'AUDIT'
   });

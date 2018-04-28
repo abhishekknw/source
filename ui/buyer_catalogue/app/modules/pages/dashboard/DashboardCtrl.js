@@ -7,7 +7,10 @@
 
   angular.module('catalogueApp')
       .controller('DashboardCtrl',function($scope, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants) {
+ $scope.itemsByPage=15;
+ $scope.query = "";
 
+ $scope.rowCollection = [];
         $scope.invKeys = [
           {header : 'POSTER'},
           {header : 'STANDEE'},
@@ -15,9 +18,9 @@
           {header : 'FLIER'},
         ];
         $scope.actKeys = [
-          {header : 'RELEASE'},
-          {header : 'AUDIT'},
-          {header : 'CLOSURE'},
+          {header : 'RELEASE', key : 'release'},
+          {header : 'AUDIT', key : 'audit'},
+          {header : 'CLOSURE', key : 'closure'},
         ];
         $scope.supHeaders = [
           {header : 'Campaign Name', key : 'proposal_name'},
@@ -28,13 +31,13 @@
         ];
         $scope.campaignStatus = {
           ongoing : {
-            status : 'ongoing', value : false, name : 'Ongoing Campaigns'
+            status : 'ongoing', value : false, campaignLabel : 'Ongoing Campaigns', supplierLabel : 'Ongoing Suppliers'
           },
           completed : {
-            status : 'completed', value : false, name : 'Completed Campaigns'
+            status : 'completed', value : false, campaignLabel : 'Completed Campaigns', supplierLabel : 'Completed Suppliers'
           },
           upcoming : {
-            status : 'upcoming', value : false, name : 'Upcoming Campaigns'
+            status : 'upcoming', value : false, campaignLabel : 'Upcoming Campaigns', supplierLabel : 'Upcoming Suppliers'
           },
         };
         $scope.charts = {
@@ -43,7 +46,18 @@
           doughnut : { name : 'Doughnut Chart', value : 'doughnut' },
           // polarArea : { name : 'PolarArea Chart', value : 'polarArea' },
           // HorizontalBar : { name : 'horizontalBar Chart', value : 'horizontalBar' },
-        }
+        };
+        $scope.perfMetrics = {
+          inv : 'inv',
+          ontime : 'onTime',
+          location : 'onLocation'
+        };
+        $scope.showPerfMetrics = false;
+       $scope.perfPanel = {
+          all : 'all',
+          respective : 'respective'
+          };
+        $scope.showPerfPanel = false;
         $scope.inventories = constants.inventories;
         $scope.campaignStatusLabels = [$scope.campaignStatus.ongoing.name,$scope.campaignStatus.completed.name, $scope.campaignStatus.upcoming.name];
         $scope.pieChartDefaulOptions = { legend: { display: true, position: 'right',padding: '10px' } };
@@ -115,6 +129,7 @@
 
         $scope.getAssignedIdsAndImages = function(date,type,inventory){
           console.log(date,type,inventory);
+          $scope.showAssignedInvTable = true;
           DashboardService.getAssignedIdsAndImages(orgId, category, type, date, inventory)
           .then(function onSuccess(response){
             console.log(response);
@@ -174,6 +189,7 @@
         }
 
         $scope.getCampaigns = function(date){
+            $scope.showSupplierTypeCountChart = false;
           if(!date)
             date = new Date();
           date = commonDataShare.formatDate(date);
@@ -184,25 +200,27 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.campaignData = response.data.data;
+
             $scope.campaigns = [$scope.campaignData.ongoing_campaigns.length,$scope.campaignData.completed_campaigns.length,$scope.campaignData.upcoming_campaigns.length];
             $scope.campaignChartdata = [
-              { label : $scope.campaignStatus.ongoing.name, value : $scope.campaignData.ongoing_campaigns.length },
-              { label : $scope.campaignStatus.completed.name, value : $scope.campaignData.completed_campaigns.length },
-              { label : $scope.campaignStatus.upcoming.name, value : $scope.campaignData.upcoming_campaigns.length }
+              { label : $scope.campaignStatus.ongoing.campaignLabel, value : $scope.campaignData.ongoing_campaigns.length },
+              { label : $scope.campaignStatus.completed.campaignLabel, value : $scope.campaignData.completed_campaigns.length },
+              { label : $scope.campaignStatus.upcoming.campaignLabel, value : $scope.campaignData.upcoming_campaigns.length }
             ];
             $scope.options = angular.copy(doughnutChartOptions);
             $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.pieChartClick(e.data.label); };
             // $scope.getCampaignsByStatus($scope.campaignStatus.all_campaigns.value);
             console.log($scope.campaignLength);
+            $scope.showPerfPanel = $scope.perfPanel.all;
           }).catch(function onError(response){
             console.log(response);
           })
         }
 
-      $scope.tablePageSize = 10;
+
       $scope.pieChartClick = function(label){
         $scope.campaignStatusName = label;
-        var campaignStatus = _.findKey($scope.campaignStatus, {'name' : label});
+        var campaignStatus = _.findKey($scope.campaignStatus, {'campaignLabel' : label});
         console.log(campaignStatus);
         getCountOfSupplierTypesByCampaignStatus(campaignStatus);
       }
@@ -361,6 +379,13 @@
          DashboardService.getSuppliersOfCampaignWithStatus(campaignId)
          .then(function onSuccess(response){
            console.log(response);
+           $scope.campaignStatusData = response.data.data;
+           $scope.campaignChartdata = [
+             { label : $scope.campaignStatus.ongoing.supplierLabel, value : $scope.campaignStatusData.ongoing.length },
+             { label : $scope.campaignStatus.completed.supplierLabel, value : $scope.campaignStatusData.completed.length },
+             { label : $scope.campaignStatus.upcoming.supplierLabel, value : $scope.campaignStatusData.upcoming.length }
+           ];
+           $scope.options = angular.copy(doughnutChartOptions);
          }).catch(function onError(response){
            console.log(response);
          })
@@ -382,10 +407,11 @@
 
        // START : get Performance metrics data
        $scope.getPerformanceMetricsData = function(inv){
+         $scope.inv = inv;
          DashboardService.getPerformanceMetricsData($scope.campaignId,inv)
          .then(function onSuccess(response){
-           console.log(response);
            $scope.performanceMetricsData = response.data.data;
+           $scope.showPerfMetrics = $scope.perfMetrics.inv;
            setOntimeData($scope.performanceMetricsData);
          }).catch(function onError(response){
            console.log(response);
@@ -408,5 +434,53 @@
           console.log(data);
         }
        // END : create on time data on activities
+       $scope.getOnTimeData = function(){
+         $scope.showPerfMetrics = $scope.perfMetrics.ontime;
+       }
+
+       $scope.getLocationData = function(){
+         DashboardService.getLocationData($scope.campaignId,$scope.inv)
+         .then(function onSuccess(response){
+           console.log(response);
+           $scope.locationData = response.data.data;
+           getOnLocationData($scope.locationData);
+           $scope.showPerfMetrics = $scope.perfMetrics.onlocation;
+         }).catch(function onError(response){
+           console.log(response);
+         })
+       }
+       var getOnLocationData = function(data){
+         $scope.onLocation = 0;
+         $scope.onLocationData = {
+           [constants.release] : {
+             actual : [],
+             total : 0
+           },
+           [constants.audit] : {
+             actual : [],
+             total : 0
+           },
+           [constants.closure] : {
+             actual : [],
+             total : 0
+           }
+         };
+         angular.forEach(data, function(items,key){
+           console.log(key,Object.keys(items).length);
+
+           $scope.onLocationData[key].total = Object.keys(items).length;
+             angular.forEach(items, function(activities,id){
+               for(var i=0; i<activities.length; i++){
+                 if(activities[i].hasOwnProperty('distance') && activities[i].distance <= constants.distanceLimit){
+                   $scope.onLocationData[key].actual.push(activities[i]);
+                 }
+               }
+             })
+         })
+         console.log($scope.onLocationData);
+       }
+       $scope.initializePerfMetrix = function(){
+         $scope.showSupplierTypeCountChart = false;
+       }
     })
   })();

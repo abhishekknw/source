@@ -2,8 +2,9 @@
   padding: 0;
 }
 .panel-group > .panel > .panel-heading > h4.panel-title {
-  height: 50px;
+  height: 45px;
   width: 100%;
+  background: #cb1925 !important;
   padding: 0;
 }
 .panel-group > .panel > .panel-heading > h4.panel-title > a {
