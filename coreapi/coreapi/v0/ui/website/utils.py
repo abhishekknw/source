@@ -6547,7 +6547,7 @@ def get_actual_activity_data(activity, campaign_id, content_type_id):
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
 
-def get_activity_data_by_values(activity,campaign_id, content_type_id):
+def get_activity_data_by_values(campaign_id, content_type_id):
     """
 
     :param activity:
@@ -6556,14 +6556,14 @@ def get_activity_data_by_values(activity,campaign_id, content_type_id):
     """
     function_name = get_activity_data_by_values.__name__
     try:
-        result = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+        result = list(models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                'inventory_activity_assignment__inventory_activity',
                'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'). \
             filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
-            inventory_activity_assignment__inventory_activity__activity_type=activity,
             inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
-            annotate(object_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
-            values('object_id', 'latitude', 'longitude','inventory_activity_assignment_id')
+            annotate(object_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'),
+                     activity=F('inventory_activity_assignment__inventory_activity__activity_type')). \
+            values('object_id', 'latitude', 'longitude','inventory_activity_assignment_id','activity'))
 
         return result;
 
