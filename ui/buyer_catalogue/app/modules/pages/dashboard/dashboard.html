@@ -122,20 +122,16 @@
                               <div class="InventoryTable">
                               <table st-safe-src="rowCollection" st-table="displayed" st-pipe="callServer" class="table table-bordered" >
                                   <thead>
-                                      <tr class="sortable">
+                                      <tr class="sortable" >
                                           <th class="table-id" st-sort="id" st-sort-default="true">Sr No</th>
-                                          <th ng-repeat="header in supHeaders | filter:query" st-sort="{{header.key}}">{{header.header}}</th>
+                                          <th ng-repeat="header in supHeaders" st-sort="{{header.key}}">{{header.header}}</th>
                                       </tr>
-                                      <tr>
-                                          <th></th>
-                                          <th ng-repeat="header in supHeaders | filter:query"><input st-search="{{header.key}}" placeholder="Search {{header.header}}" ng-model="query" class="input-sm form-control search-input"
-                                                      type="search"/>
-                                          </th>
 
-                                      </tr>
-                                  </thead>
+                                  </thead><br><br>
+                                  <input placeholder="Search Your Input Here" type="form-control" ng-model="query" class="input-sm form-control search-input"
+                                  type="search" style="width:300px;margin-left:22px;margin-top:-20px;"/><br><br>
                                   <tbody>
-                                      <tr ng-repeat="item in campaignDataList" >
+                                      <tr ng-repeat="item in campaignDataList |filter:query" >
                                         <td class="table-id">{{$index + 1}}</td>
                                         <td>{{item.proposal_name}}</td>
                                         <td>{{item.supplier_name}}</td>
@@ -273,8 +269,8 @@
 
                         <div class="col-md-8" ng-if="showPerfPanel == perfPanel.respective">
                           <div class="panel-heading content-title" >
-                            <div class="col-md-7" ng-class="{active:!$index}">
-                              <h4>Details Of All Campaigns</h4>
+                            <div class="col-md-7">
+                              <h4>  Of All Campaigns</h4>
                             </div>
                             <uib-tab-heading uib-dropdown>
                                 <button class="btn btn-primary btn-sm" uib-dropdown-toggle ng-click="$event.stopPropagation()">
@@ -355,7 +351,7 @@
           <!--START : Performance Metrics -->
           <uib-tab ng-click="getCampaigns()">
               <uib-tab-heading>
-                <h3 style="color:rgb(53, 9, 6)"> Performance Metrics</h3>
+                <h3> Performance Metrics</h3>
               </uib-tab-heading>
               <div class="container-fluid">
                 <div class="row">
@@ -363,7 +359,7 @@
                     <div class="col-md-12">
 
                         <div class="panel-headding campaign-header">
-                          <h3>Performance Details</h3>
+                          <h3 style="color:rgb(53, 9, 6)">Performance Details</h3>
                         </div>
 
                         <div class="col-md-4">

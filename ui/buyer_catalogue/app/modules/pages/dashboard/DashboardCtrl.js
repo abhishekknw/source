@@ -8,6 +8,8 @@
   angular.module('catalogueApp')
       .controller('DashboardCtrl',function($scope, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants) {
  $scope.itemsByPage=15;
+ $scope.query = "";
+
  $scope.rowCollection = [];
         $scope.invKeys = [
           {header : 'POSTER'},
@@ -51,8 +53,7 @@
           location : 'onLocation'
         };
         $scope.showPerfMetrics = false;
-
-        $scope.perfPanel = {
+       $scope.perfPanel = {
           all : 'all',
           respective : 'respective'
           };
@@ -197,6 +198,7 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.campaignData = response.data.data;
+
             $scope.campaigns = [$scope.campaignData.ongoing_campaigns.length,$scope.campaignData.completed_campaigns.length,$scope.campaignData.upcoming_campaigns.length];
             $scope.campaignChartdata = [
               { label : $scope.campaignStatus.ongoing.name, value : $scope.campaignData.ongoing_campaigns.length },
@@ -377,19 +379,21 @@
            console.log(response);
 
            $scope.supplierData = response.data.data;
+
            $scope.supplier = [$scope.supplierData.ongoing.length,$scope.supplierData.completed.length,$scope.supplierData.upcoming.length];
            $scope.supplierChartdata = [
              { label : $scope.campaignStatus.ongoing.name, value : $scope.supplierData.ongoing.length },
              { label : $scope.campaignStatus.completed.name, value : $scope.supplierData.completed.length },
              { label : $scope.campaignStatus.upcoming.name, value : $scope.supplierData.upcoming.length }
            ];
+           console.log($scope.supplierChartdata);
            $scope.options = angular.copy(doughnutChartOptions);
            $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.pieChartClick(e.data.label); };
            // $scope.getCampaignsByStatus($scope.campaignStatus.all_campaigns.value);
 
            console.log($scope.supplierData.ongoing);
             $scope.showPerfPanel = $scope.perfPanel.respective;
-         }).catch(function onError(response){
+           }).catch(function onError(response){
            console.log(response);
          })
        }
