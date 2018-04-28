@@ -101,7 +101,7 @@
                                                               </div>
                                                           </div>
                                                       </div>
-                                                      This is just some content to illustrate fancy headings.
+                                                      <!-- This is just some content to illustrate fancy headings. -->
                                                   </div>
                                               </uib-accordion>
                                           </div>
@@ -112,7 +112,7 @@
                       </div>
                   </div>
               </div>
-              <div scroll-position="scrolled" class="row dashboard-table" ng-class="{'scrolled': scrolled}">
+              <div scroll-position="scrolled" class="row dashboard-table" ng-class="{'scrolled': scrolled}" ng-if="showAssignedInvTable">
                   <div class="col-md-12">
                       <div ba-panel ba-panel-title="Table" ba-panel-class="with-scroll table-design">
                           <div class="horizontal-scroll">
@@ -169,7 +169,7 @@
                           <h3>Campaign Details</h3>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
 
 
                           <div class="panel-group" id="accordion">
@@ -201,7 +201,7 @@
                                       <div class="panel-body menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.completed_campaigns">
-                                                <td>
+                                                <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
                                                   {{campaign.campaign.name}}
                                                 </td>
                                               </tr>
@@ -219,7 +219,7 @@
                                       <div class="panel-body menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
-                                                <td>
+                                                <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
                                                   {{campaign.campaign.name}}
                                                 </td>
                                               </tr>
@@ -227,11 +227,19 @@
                                       </div>
                                   </div>
                               </div>
+                              <div class="panel panel-default">
+                                  <div class="panel-heading" ng-click="getCampaigns()">
+                                      <h4 class="panel-title">
+                                          All Campaigns
+                                      </h4>
+                                  </div>
+                              </div>
+
                           </div>
 
                         </div>
 
-                        <div class="col-md-8">
+                        <div class="col-md-6">
                           <div class="panel-heading content-title">
                             <div class="col-md-7">
                               <h4> Details Of All Campaigns</h4>
@@ -248,38 +256,19 @@
                             </uib-tab-heading>
                           </div>
                           <nvd3 options="options" data="campaignChartdata"></nvd3>
-                          <!-- <canvas id="base" class="chart-base" chart-type="type" series="series"
-                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions">
-                          </canvas> -->
-                          <!-- <canvas id="pie" class="chart chart-doughnut" ng-if="charts.doughnut.value"
-                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
-                            chart-click="pieChartClick">
-                          </canvas>
-                          <canvas id="pie" class="chart chart-pie" ng-if="charts.pie.value"
-                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
-                            chart-click="pieChartClick">
-                          </canvas>
-                          <canvas id="pie" class="chart chart-bar" ng-if="charts.bar.value"
-                            chart-data="campaigns" chart-labels="campaignStatusLabels" chart-options="pieChartDefaulOptions"
-                            chart-click="pieChartClick">
-                          </canvas> -->
                         </div>
-                        <!-- <div class="col-md-3">
-                          <div class="panel-heading content-title">
-                            <h5 style="background:'red'">Details</h5>
-                          </div>
-                          <table class="table-responsive table table-bordered pieChart-table">
-                            <tr>
-                              <td>Ongoing Campaigns : {{campaignData.ongoing_campaigns.length}}</td>
-                            </tr>
-                            <tr>
-                              <td>Completed Campaigns : {{campaignData.completed_campaigns.length}}</td>
-                            </tr>
-                            <tr>
-                              <td>Upcoming Campaigns : {{campaignData.upcoming_campaigns.length}}</td>
-                            </tr>
+                        <div class="col-md-3">
+                          <table class="table table-responsive table-bordered pieChart-table">
+                            <tbody>
+                              <tr>
+                                <td>Details</td>
+                              </tr>
+                              <tr ng-repeat="item in campaignChartdata">
+                                <td>{{item.label}} : {{item.value}}</td>
+                              </tr>
+                            </tbody>
                           </table>
-                        </div> -->
+                        </div>
                       </div>
                     </div>
 
@@ -307,7 +296,6 @@
                           </div>
                         </div>
                     </div>
-
                 </div>
               </div>
           </uib-tab>
@@ -461,15 +449,15 @@
                         <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.onlocation">
                           <div class="panel-heading content-title">
                             <div class="col-md-10">
-                              <h4> On Location All Inventory Details </h4>
+                              <h4> On Location Release Details </h4>
                             </div>
                           </div>
                           <div class="col-md-8">
-                            <circular-progress value="performanceMetricsData.release.ontime" max="performanceMetricsData.release.actual.length"
+                            <circular-progress value="onLocationData.RELEASE.actual.length" max="onLocationData.RELEASE.total"
                              orientation="1" radius="80"
                                 stroke="20" base-color="#ffff00" progress-color="#00ff00"
                                 iterations="100" animation="easeInOutCubic"
-                                label="{{performanceMetricsData.release.ontime / performanceMetricsData.release.actual.length * 100|limitTo:3}}%">
+                                label="{{onLocationData.RELEASE.actual.length / onLocationData.RELEASE.total * 100|limitTo:3}}%">
                             </circular-progress>
                           </div>
                           <div class="col-md-4">
@@ -479,7 +467,7 @@
                                   <td>OnTime / Released</td>
                                 </tr>
                                 <tr>
-                                  <td>{{performanceMetricsData.release.ontime}} / {{performanceMetricsData.release.actual.length}}</td>
+                                  <td>{{onLocationData.RELEASE.actual.length}} / {{onLocationData.RELEASE.total}}</td>
                                 </tr>
                               </tbody>
                             </table>
@@ -592,6 +580,90 @@
                               </tr>
                               <tr>
                                 <td>{{performanceMetricsData.closure.ontime}} / {{performanceMetricsData.closure.actual.length}}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime">
+                        <div class="panel-heading content-title">
+                          <div class="col-md-10">
+                            <h4> On Time Closure Inventory Details </h4>
+                          </div>
+                        </div>
+                        <div class="col-md-8">
+                          <circular-progress value="performanceMetricsData.closure.ontime" max="performanceMetricsData.closure.actual.length"
+                           orientation="1" radius="80"
+                              stroke="20" base-color="#ffff00" progress-color="#00ff00"
+                              iterations="100" animation="easeInOutCubic"
+                              label="{{performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3}}%">
+                          </circular-progress>
+                        </div>
+                        <div class="col-md-4">
+                          <table class="table table-responsive table-bordered pieChart-table">
+                            <tbody>
+                              <tr>
+                                <td>OnTime / Closure</td>
+                              </tr>
+                              <tr>
+                                <td>{{performanceMetricsData.closure.ontime}} / {{performanceMetricsData.closure.actual.length}}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.onlocation">
+                        <div class="panel-heading content-title">
+                          <div class="col-md-10">
+                            <h4> On Location Audit Inventory Details </h4>
+                          </div>
+                        </div>
+                        <div class="col-md-8">
+                          <circular-progress value="onLocationData.AUDIT.actual.length" max="onLocationData.AUDIT.total"
+                           orientation="1" radius="80"
+                              stroke="20" base-color="#ffff00" progress-color="#00ff00"
+                              iterations="100" animation="easeInOutCubic"
+                              label="{{onLocationData.AUDIT.actual.length / onLocationData.AUDIT.total * 100|limitTo:3}}%">
+                          </circular-progress>
+                        </div>
+                        <div class="col-md-4">
+                          <table class="table table-responsive table-bordered pieChart-table">
+                            <tbody>
+                              <tr>
+                                <td>OnLocation / Audit</td>
+                              </tr>
+                              <tr>
+                                <td>{{onLocationData.AUDIT.actual.length}} / {{onLocationData.AUDIT.total}}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.onlocation">
+                        <div class="panel-heading content-title">
+                          <div class="col-md-10">
+                            <h4> On Location Closure Inventory Details </h4>
+                          </div>
+                        </div>
+                        <div class="col-md-8">
+                          <circular-progress value="onLocationData.CLOSURE.actual.length" max="onLocationData.CLOSURE.total"
+                           orientation="1" radius="80"
+                              stroke="20" base-color="#ffff00" progress-color="#00ff00"
+                              iterations="100" animation="easeInOutCubic"
+                              label="{{onLocationData.CLOSURE.actual.length / onLocationData.CLOSURE.total * 100|limitTo:3}}%">
+                          </circular-progress>
+                        </div>
+                        <div class="col-md-4">
+                          <table class="table table-responsive table-bordered pieChart-table">
+                            <tbody>
+                              <tr>
+                                <td>OnLocation / Closure</td>
+                              </tr>
+                              <tr>
+                                <td>{{onLocationData.CLOSURE.actual.length}} / {{onLocationData.CLOSURE.total}}</td>
                               </tr>
                             </tbody>
                           </table>

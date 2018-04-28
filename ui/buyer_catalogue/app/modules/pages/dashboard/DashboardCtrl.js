@@ -28,13 +28,13 @@
         ];
         $scope.campaignStatus = {
           ongoing : {
-            status : 'ongoing', value : false, name : 'Ongoing Campaigns'
+            status : 'ongoing', value : false, campaignLabel : 'Ongoing Campaigns', supplierLabel : 'Ongoing Suppliers'
           },
           completed : {
-            status : 'completed', value : false, name : 'Completed Campaigns'
+            status : 'completed', value : false, campaignLabel : 'Completed Campaigns', supplierLabel : 'Completed Suppliers'
           },
           upcoming : {
-            status : 'upcoming', value : false, name : 'Upcoming Campaigns'
+            status : 'upcoming', value : false, campaignLabel : 'Upcoming Campaigns', supplierLabel : 'Upcoming Suppliers'
           },
         };
         $scope.charts = {
@@ -121,6 +121,7 @@
 
         $scope.getAssignedIdsAndImages = function(date,type,inventory){
           console.log(date,type,inventory);
+          $scope.showAssignedInvTable = true;
           DashboardService.getAssignedIdsAndImages(orgId, category, type, date, inventory)
           .then(function onSuccess(response){
             console.log(response);
@@ -180,6 +181,7 @@
         }
 
         $scope.getCampaigns = function(date){
+            $scope.showSupplierTypeCountChart = false;
           if(!date)
             date = new Date();
           date = commonDataShare.formatDate(date);
@@ -192,9 +194,9 @@
             $scope.campaignData = response.data.data;
             $scope.campaigns = [$scope.campaignData.ongoing_campaigns.length,$scope.campaignData.completed_campaigns.length,$scope.campaignData.upcoming_campaigns.length];
             $scope.campaignChartdata = [
-              { label : $scope.campaignStatus.ongoing.name, value : $scope.campaignData.ongoing_campaigns.length },
-              { label : $scope.campaignStatus.completed.name, value : $scope.campaignData.completed_campaigns.length },
-              { label : $scope.campaignStatus.upcoming.name, value : $scope.campaignData.upcoming_campaigns.length }
+              { label : $scope.campaignStatus.ongoing.campaignLabel, value : $scope.campaignData.ongoing_campaigns.length },
+              { label : $scope.campaignStatus.completed.campaignLabel, value : $scope.campaignData.completed_campaigns.length },
+              { label : $scope.campaignStatus.upcoming.campaignLabel, value : $scope.campaignData.upcoming_campaigns.length }
             ];
             $scope.options = angular.copy(doughnutChartOptions);
             $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.pieChartClick(e.data.label); };
@@ -208,7 +210,7 @@
       $scope.tablePageSize = 10;
       $scope.pieChartClick = function(label){
         $scope.campaignStatusName = label;
-        var campaignStatus = _.findKey($scope.campaignStatus, {'name' : label});
+        var campaignStatus = _.findKey($scope.campaignStatus, {'campaignLabel' : label});
         console.log(campaignStatus);
         getCountOfSupplierTypesByCampaignStatus(campaignStatus);
       }
@@ -367,6 +369,13 @@
          DashboardService.getSuppliersOfCampaignWithStatus(campaignId)
          .then(function onSuccess(response){
            console.log(response);
+           $scope.campaignStatusData = response.data.data;
+           $scope.campaignChartdata = [
+             { label : $scope.campaignStatus.ongoing.supplierLabel, value : $scope.campaignStatusData.ongoing.length },
+             { label : $scope.campaignStatus.completed.supplierLabel, value : $scope.campaignStatusData.completed.length },
+             { label : $scope.campaignStatus.upcoming.supplierLabel, value : $scope.campaignStatusData.upcoming.length }
+           ];
+           $scope.options = angular.copy(doughnutChartOptions);
          }).catch(function onError(response){
            console.log(response);
          })
@@ -432,17 +441,36 @@
        }
        var getOnLocationData = function(data){
          $scope.onLocation = 0;
-         angular.forEach(data, function(key,item){
-
-           console.log(key);
-           for(var i=0;i<key.length; i++){
-             if(key[i].hasOwnProperty('distance') && key[i].distance <= constants.distanceLimit){
-               $scope.onLocation += 1;
-               break;
-             }
+         $scope.onLocationData = {
+           [constants.release] : {
+             actual : [],
+             total : 0
+           },
+           [constants.audit] : {
+             actual : [],
+             total : 0
+           },
+           [constants.closure] : {
+             actual : [],
+             total : 0
            }
+         };
+         angular.forEach(data, function(items,key){
+           console.log(key,Object.keys(items).length);
+
+           $scope.onLocationData[key].total = Object.keys(items).length;
+             angular.forEach(items, function(activities,id){
+               for(var i=0; i<activities.length; i++){
+                 if(activities[i].hasOwnProperty('distance') && activities[i].distance <= constants.distanceLimit){
+                   $scope.onLocationData[key].actual.push(activities[i]);
+                 }
+               }
+             })
          })
-         console.log($scope.onLocation);
+         console.log($scope.onLocationData);
+       }
+       $scope.initializePerfMetrix = function(){
+         $scope.showSupplierTypeCountChart = false;
        }
     })
   })();
