@@ -59,6 +59,7 @@ angular.module('catalogueApp')
     {name : 'Standee(ST)', code : 'ST',   selected : false },
     {name : 'Stall(SL)',   code : 'SL',   selected : false },
     {name : 'Flyer(FL)',   code : 'FL',   selected : false },
+    {name : 'Gateway Arch',   code : 'GA',   selected : false },
   ]
   $scope.shortlisted = constants.shortlisted;
   $scope.buffered = constants.buffered;
