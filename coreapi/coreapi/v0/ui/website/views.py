@@ -5740,33 +5740,27 @@ class DashBoardViewSet(viewsets.ViewSet):
             if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
                 query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
 
-                supplier_code_data =  models.ProposalCenterSuppliers.objects.filter(query). \
-                    values('supplier_type_code').annotate(total=Count('supplier_type_code'))
-
-                supplier_data = models.ShortlistedSpaces.objects.filter(query). \
-                    values('supplier_code').annotate(total=Count('supplier_code'))
+                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code', 'proposal__name'). \
+                    annotate(total=Count('object_id'))
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
                 query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
 
-                supplier_code_data = models.ProposalCenterSuppliers.objects.filter(query). \
-                    values('supplier_type_code').annotate(total=Count('supplier_type_code'))
-
-                supplier_data = models.ShortlistedSpaces.objects.filter(query). \
-                    values('supplier_code').annotate(total=Count('supplier_code'))
+                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code','proposal__name'). \
+                    annotate(total=Count('object_id'))
 
             if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
                 query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
 
-                supplier_code_data = models.ProposalCenterSuppliers.objects.filter(query). \
-                    values('supplier_type_code').annotate(total=Count('supplier_type_code'))
+                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code','proposal__name'). \
+                    annotate(total=Count('object_id'))
 
-                supplier_data = models.ShortlistedSpaces.objects.filter(query). \
-                    values('supplier_code').annotate(total=Count('supplier_code'))
-            data = {
-                'supplier_data' : supplier_data,
-                'supplier_code_data' : supplier_code_data
-            }
+            data = {}
+            for proposal in proposal_data:
+                if proposal['supplier_code'] not in data:
+                    data[proposal['supplier_code']] = []
+                data[proposal['supplier_code']].append(proposal)
+
             return ui_utils.handle_response(class_name, data=data, success=True)
 
         except Exception as e:
