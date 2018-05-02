@@ -5740,19 +5740,19 @@ class DashBoardViewSet(viewsets.ViewSet):
             if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
                 query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code', 'proposal__name'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code', 'proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
                 query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code','proposal__name'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code','proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
 
             if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
                 query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code','proposal__name'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code','proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
 
             data = {}
@@ -5841,9 +5841,8 @@ class DashBoardViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id',None)
-            filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id)
-            serializer = website_serializers.FiltersSerializer(filters, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            filters = get_filters_by_campaign(campaign_id)
+            return ui_utils.handle_response(class_name, data=filters, success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5935,6 +5934,27 @@ class DashBoardViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    @list_route()
+    def get_supplier_data_by_campaign(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id',None)
+            supplier_id_list = models.ShortlistedSpaces.objects.filter(proposal=campaign_id).values_list('object_id')
+            suppliers = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
+            serializer = v0_serializers.SupplierTypeSocietySerializer(suppliers, many=True)
+            filters = website_utils.get_filters_by_campaign(campaign_id)
+            data = {
+                'supplier_data' : serializer.data,
+                'filters' : filters
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
