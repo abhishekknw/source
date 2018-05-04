@@ -228,18 +228,16 @@
          DashboardService.getCountOfSupplierTypesByCampaignStatus(campaignStatus)
          .then(function onSuccess(response){
            console.log(response);
-           if(response.data.data.supplier_code_data.length){
+           if(response.data.data){
 
-              $scope.supplierCodeCountData = formatCountData(response.data.data.supplier_code_data);
+              $scope.supplierCodeCountData = formatCountData(response.data.data);
 
               // $scope.supplierCodeLabelData = formatLabelData(response.data.data.supplier_code_data,'supplier_type_code');
               $scope.supplierCodeCountOptions = angular.copy(doughnutChartOptions);
+              $scope.supplierCodeCountOptions.chart.tooltip['contentGenerator'] = function(e){ return getTooltipData(e); };
               $scope.showSupplierTypeCountChart = true;
            }
-           if(response.data.data.supplier_data.length){
-             $scope.supplierCountData = formatSupplierCountData(response.data.data.supplier_data);
 
-           }
          }).catch(function onError(response){
            console.log(response);
          })
@@ -247,10 +245,11 @@
 
        var formatCountData = function(data){
          var countData = [];
-         angular.forEach(data, function(item){
+         angular.forEach(data, function(items,key){
            var temp_data = {
-             label : constants[item.supplier_type_code] + ' Campaigns',
-             value : item.total,
+             label : constants[key] + ' Campaigns',
+             value : items.length,
+             campaigns : items
            }
            countData.push(temp_data);
          })
@@ -323,6 +322,9 @@
                     }
                 },
                 legendPosition : 'right',
+                tooltip: {
+              },
+              interactive : true
             }
         };
         $scope.pieChartOptions = {
@@ -481,6 +483,44 @@
        }
        $scope.initializePerfMetrix = function(){
          $scope.showSupplierTypeCountChart = false;
+       }
+       var getTooltipData = function(e){
+         console.log(e);
+
+         var rows = [];
+         var count = 0;
+          angular.forEach(e.data.campaigns, function(campaign){
+            count++;
+            rows= rows +
+            "<tr>" +
+              "<td class='key'>" + count  + "</td>" +
+              "<td class='key'>" + campaign.proposal__name + "</td>" +
+              "<td class='x-value'>" + constants[campaign.supplier_code] + "</td>" +
+              "<td class='x-value'>" + campaign.total + "</td>" +
+            "</tr>"
+          })
+
+                 var header =
+                   "<thead>" +
+                   "<tr>" +
+                       "<td class='legend-color-guide'><div style='background-color: " + e.color + ";'></div></td>" +
+                       "<td class='key'><strong>" + e.data.label + "</strong></td>" +
+                     "</tr>" +
+                     "<tr>" +
+                       "<td class='key'><strong>" + 'Index' + "</strong></td>" +
+                       "<td class='key'><strong>" + 'Campaign Name' + "</strong></td>" +
+                       "<td class='key'><strong>" + 'Supplier Name' + "</strong></td>" +
+                       "<td class='key'><strong>" + 'Total Count' + "</strong></td>" +                       
+                     "</tr>" +
+                   "</thead>";
+
+                 return "<table>" +
+                     header +
+                     "<tbody>" +
+                       rows +
+                     "</tbody>" +
+                   "</table>";
+
        }
     })
   })();
