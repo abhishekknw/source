@@ -235,6 +235,8 @@
               // $scope.supplierCodeLabelData = formatLabelData(response.data.data.supplier_code_data,'supplier_type_code');
               $scope.supplierCodeCountOptions = angular.copy(doughnutChartOptions);
               $scope.supplierCodeCountOptions.chart.tooltip['contentGenerator'] = function(e){ return getTooltipData(e); };
+              $scope.supplierCodeCountOptions.chart.pie.dispatch['elementClick'] = function(e){ $scope.getCampaignInvTableData(e.data); };
+
               $scope.showSupplierTypeCountChart = true;
            }
 
@@ -485,8 +487,6 @@
          $scope.showSupplierTypeCountChart = false;
        }
        var getTooltipData = function(e){
-         console.log(e);
-
          var rows = [];
          var count = 0;
           angular.forEach(e.data.campaigns, function(campaign){
@@ -497,7 +497,7 @@
               "<td class='key'>" + campaign.proposal__name + "</td>" +
               "<td class='x-value'>" + constants[campaign.supplier_code] + "</td>" +
               "<td class='x-value'>" + campaign.total + "</td>" +
-            "</tr>"
+"</tr>"
           })
 
                  var header =
@@ -510,7 +510,7 @@
                        "<td class='key'><strong>" + 'Index' + "</strong></td>" +
                        "<td class='key'><strong>" + 'Campaign Name' + "</strong></td>" +
                        "<td class='key'><strong>" + 'Supplier Name' + "</strong></td>" +
-                       "<td class='key'><strong>" + 'Total Count' + "</strong></td>" +                       
+                       "<td class='key'><strong>" + 'Total Count' + "</strong></td>" +
                      "</tr>" +
                    "</thead>";
 
@@ -522,5 +522,46 @@
                    "</table>";
 
        }
+
+       $scope.getCampaignInvTableData = function(campaigns){
+         $scope.campaignInvData = campaigns.campaigns;
+         $scope.showCampaignInvTable = true;
+         $scope.$apply();
+         console.log($scope.campaignInvData);
+
+     }
+
+     $scope.getCampaignInvTypesData = function(campaign){
+       $scope.proposal_id = campaign.proposal_id;
+       $scope.campaignName = campaign.proposal__name;
+       DashboardService.getCampaignInvTypesData($scope.proposal_id)
+       .then(function onSuccess(response){
+         console.log(response);
+        $scope.campaignInventoryTypesData = response.data.data;
+        console.log($scope.campaignInventoryTypesData.supplier_data);
+        $scope.getSupplierInvTableData($scope.campaignInventoryTypesData);
+        $scope.campaignInventoryData = response.data.data;
+        $scope.totalTowerCount = 0;
+        $scope.totalFlatCount = 0;
+        $scope.totalSupplierCount = response.data.data.supplier_data.length;
+        angular.forEach(response.data.data.supplier_data, function(data,key){
+
+          $scope.totalTowerCount += data.tower_count;
+          $scope.totalFlatCount += data.flat_count;
+
+        })
+
+     }).catch(function onError(response){
+       console.log(response);
+     })
+    }
+
+    $scope.getSupplierInvTableData = function(supplier){
+      $scope.supplierInvData = supplier;
+      console.log(  $scope.supplierInvData );
+      $scope.showSupplierInvTable = true;
+
+    }
+
     })
   })();

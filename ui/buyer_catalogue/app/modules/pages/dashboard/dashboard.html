@@ -176,6 +176,13 @@
 
 
                           <div class="panel-group" id="accordion">
+                            <div class="panel panel-default">
+                                <div class="panel-heading" ng-click="getCampaigns()">
+                                    <h4 class="panel-title">
+                                        All Campaigns
+                                    </h4>
+                                </div>
+                            </div>
                               <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.ongoing.status)">
                                   <div class="panel-heading">
                                       <h4 class="panel-title">
@@ -230,13 +237,7 @@
                                       </div>
                                   </div>
                               </div>
-                              <div class="panel panel-default">
-                                  <div class="panel-heading" ng-click="getCampaigns()">
-                                      <h4 class="panel-title">
-                                          All Campaigns
-                                      </h4>
-                                  </div>
-                              </div>
+
 
                           </div>
 
@@ -276,29 +277,70 @@
                       </div>
                     </div>
 
-                    <div class="panel panel-default" ng-if="showSupplierTypeCountChart">
+                    <div class="panel panel-default" >
                         <div class="col-md-12">
                           <!-- <div class="col-md-2">
 
                           </div> -->
-                          <div class="col-md-6">
+                          <div class="col-md-6" ng-if="showSupplierTypeCountChart">
                             <div class="panel-heading content-title">
                               <h5 style="background:'red'">Details Of Supplier Types Present In {{campaignStatusName}}</h5>
                             </div>
                             <nvd3 options="supplierCodeCountOptions" data="supplierCodeCountData"></nvd3>
                           </div>
-                          <div class="col-md-6">
+                          <div class="col-md-6" ng-if="showCampaignInvTable">
                             <div class="panel-heading content-title">
                               <h5 style="background:'red'">Total Suppliers In {{campaignStatusName}}</h5>
                             </div>
-                            <nvd3 options="supplierCodeCountOptions" data="supplierCountData"></nvd3>
-                            <!-- <table class="table-responsive table table-bordered pieChart-table">
-                              <tr ng-repeat="supplier in supplierCountData">
-                                <td>{{supplier.supplier_code}} : {{supplier.total}}</td>
-                              </tr>
-                            </table> -->
+                            <div class="campaignInvTable">
+                            <table class="table-responsive table table-bordered">
+                              <thead>
+                                <th>Proposal Name</th>
+                                <th>Total</th>
+                                <th>Links</th>
+                              </thead>
+                              <tbody>
+                                <tr ng-repeat="campaign in campaignInvData">
+                                  <td>{{campaign.proposal__name}}</td>
+                                 <td>{{campaign.total}}</td>
+                                 <td><a ng-click="getCampaignInvTypesData(campaign)" class="btn btn-danger">CLICK ME</a>
+                                 </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
                           </div>
                         </div>
+                        <div class="panel panel-default" >
+
+                        <div class="col-md-6" ng-if="showSupplierInvTable">
+                          <div class="panel-heading content-title">
+                            <h5 style="background:'red'">Inventory Count Table Of {{campaignName}}</h5>
+                          </div>
+                          <div class="supplierInvTable">
+                          <table class="table-responsive table table-bordered" ng-if="campaignInventoryData.filters.length">
+                            <thead>
+                              <th>Inventory Type</th>
+                                <th>Inventory Count </th>
+
+                            </thead>
+                            <tbody>
+                              <tr ng-repeat="filter in campaignInventoryData.filters">
+                                <td>{{filter.filter_code}}</td>
+
+                                  <td ng-if="filter.filter_code=='PO' || filter.filter_code=='ST'"><a href="www.google.com">{{totalTowerCount}}</a></td>
+                                  <td ng-if="filter.filter_code=='SL' || filter.filter_code=='GA'"><a href="www.google.com">{{totalSupplierCount}}</a></td>
+                                  <td ng-if="filter.filter_code=='FL'"><a href="www.google.com">{{totalFlatCount}}</a></td>
+                               </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <div ng-if="!campaignInventoryData.filters.length">
+                            <p style="text-align:center;">No Filters Found</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     </div>
                 </div>
               </div>

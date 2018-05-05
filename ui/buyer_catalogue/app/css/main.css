@@ -331,3 +331,27 @@ text-align: center;
   color:#000000;
 
 }
+
+.campaignInvTable {
+  max-height: 300px !important;
+  overflow: auto !important;
+  background-color: #9d9090;
+  color: black;
+  }
+
+.campaignInvTable  thead {
+    background-color: #c3452f;
+    }
+
+
+.supplierInvTable {
+  max-height: 300px !important;
+  overflow: auto !important;
+  background-color: #9d9090;
+  color: black;
+  }
+
+
+  .supplierInvTable  thead {
+  background-color: #c3452f;
+  }
