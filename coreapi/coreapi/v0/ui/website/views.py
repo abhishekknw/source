@@ -5788,8 +5788,8 @@ class DashBoardViewSet(viewsets.ViewSet):
             suppliers = supplier_serializer.data
 
             supplier_objects_id_list = {supplier['supplier_id']:supplier for supplier in suppliers}
-            # supplier_objects_id_list = list(supplier_objects_id_list)
 
+            leads = website_utils.get_campaign_leads(campaign_id)
             ongoing_suppliers = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                     'inventory_activity_assignment__inventory_activity','inventory_activity_assignment__inventory_activity',
                                     'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
@@ -5808,16 +5808,37 @@ class DashBoardViewSet(viewsets.ViewSet):
             upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(ongoing_supplier_id_list + completed_supplier_id_list)
 
             ongoing_suppliers_list = []
+
             for id in ongoing_supplier_id_list:
-                ongoing_suppliers_list.append(supplier_objects_id_list[id])
+                data = {
+                    'supplier' : supplier_objects_id_list[id],
+                    'leads_data' : []
+                }
+                if leads and (id in leads):
+                    data['leads_data'] = leads[id]
+                ongoing_suppliers_list.append(data)
+
 
             completed_suppliers_list = []
             for id in completed_suppliers_list:
-                completed_suppliers_list.append(supplier_objects_id_list[id])
+                data = {
+                    'supplier': supplier_objects_id_list[id],
+                    'leads_data': {}
+                }
+                if leads and (id in leads):
+                    data['leads_data'] = leads[id]
+                completed_suppliers_list.append(data)
 
             upcoming_suppliers_list = []
             for id in upcoming_supplier_id_list:
-                upcoming_suppliers_list.append(supplier_objects_id_list[id])
+                data = {
+                    'supplier': supplier_objects_id_list[id],
+                    'leads_data': {}
+                }
+                if leads and (id in leads):
+                    data['leads_data'] = leads[id]
+                upcoming_suppliers_list.append(data)
+
 
             data = {
                 'ongoing' : ongoing_suppliers_list,
@@ -5937,7 +5958,6 @@ class DashBoardViewSet(viewsets.ViewSet):
     @list_route()
     def get_supplier_data_by_campaign(self, request):
         """
-
         :param request:
         :return:
         """
@@ -5955,6 +5975,8 @@ class DashBoardViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+    
+
 
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
