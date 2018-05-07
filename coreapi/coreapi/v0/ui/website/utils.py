@@ -6583,3 +6583,24 @@ def get_filters_by_campaign(campaign_id):
         return serializer.data
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_campaign_leads(campaign_id):
+    """
+
+    :param campaign_id:
+    :return:
+    """
+    function_name = get_campaign_leads.__name__
+    try:
+        leads_instance = models.Leads.objects.filter(campaign__proposal_id=campaign_id)
+        serializer = serializers.LeadsSerializer(leads_instance, many=True)
+        leads = serializer.data
+        leads_data = {}
+        if leads:
+            for lead in leads:
+                if lead['object_id'] not in leads_data:
+                    leads_data[lead['object_id']] = []
+                leads_data[lead['object_id']].append(lead)
+        return leads_data
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
