@@ -6604,3 +6604,33 @@ def get_campaign_leads(campaign_id):
         return leads_data
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_campaign_inventory_activity_data(campaign_id):
+    """
+
+    :param campaign_id:
+    :return:
+    """
+    function_name = get_campaign_inventory_activity_data.__name__
+    try:
+        result = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                                                             'inventory_activity_assignment__inventory_activity',
+                                                             'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                                             'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                                                             'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal'). \
+            filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id). \
+            annotate(activity_type=F('inventory_activity_assignment__inventory_activity__activity_type'), inventory=F(
+                'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')). \
+            values('activity_type','inventory'). \
+            annotate(total=Count('inventory_activity_assignment', distinct=True))
+        data = {}
+        for object in result:
+            if object['inventory'] not in data:
+                data[object['inventory']] = {}
+            if object['activity_type'] not in data[object['inventory']]:
+                data[object['inventory']][object['activity_type']] = {}
+            data[object['inventory']][object['activity_type']] = object['total']
+        return data
+
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))

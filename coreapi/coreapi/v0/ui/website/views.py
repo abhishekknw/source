@@ -5823,7 +5823,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             for id in completed_suppliers_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
-                    'leads_data': {}
+                    'leads_data': []
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
@@ -5833,7 +5833,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             for id in upcoming_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
-                    'leads_data': {}
+                    'leads_data': []
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
@@ -5862,7 +5862,7 @@ class DashBoardViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id',None)
-            filters = get_filters_by_campaign(campaign_id)
+            filters = website_utils.get_filters_by_campaign(campaign_id)
             return ui_utils.handle_response(class_name, data=filters, success=True)
 
         except Exception as e:
@@ -5975,7 +5975,21 @@ class DashBoardViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-    
+
+    @list_route()
+    def get_campaign_inventory_activity_details(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id', None)
+            result = website_utils.get_campaign_inventory_activity_data(campaign_id)
+            return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CampaignsAssignedInventoryCountApiView(APIView):

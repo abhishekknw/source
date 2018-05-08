@@ -16,7 +16,7 @@
           {header : 'STANDEE'},
           {header : 'STALL'},
           {header : 'FLIER'},
-            {header : 'GATEWAY ARCH'},
+          {header : 'GATEWAY ARCH'},
         ];
         $scope.actKeys = [
           {header : 'RELEASE', key : 'release'},
