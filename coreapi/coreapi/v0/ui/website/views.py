@@ -5862,7 +5862,7 @@ class DashBoardViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id',None)
-            filters = get_filters_by_campaign(campaign_id)
+            filters = website_utils.get_filters_by_campaign(campaign_id)
             return ui_utils.handle_response(class_name, data=filters, success=True)
 
         except Exception as e:
