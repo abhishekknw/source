@@ -6613,8 +6613,6 @@ def get_campaign_inventory_activity_data(campaign_id):
     """
     function_name = get_campaign_inventory_activity_data.__name__
     try:
-        import pdb
-        pdb.set_trace()
         result = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                                              'inventory_activity_assignment__inventory_activity',
                                                              'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
@@ -6625,7 +6623,14 @@ def get_campaign_inventory_activity_data(campaign_id):
                 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')). \
             values('activity_type','inventory'). \
             annotate(total=Count('inventory_activity_assignment', distinct=True))
-        return result
+        data = {}
+        for object in result:
+            if object['inventory'] not in data:
+                data[object['inventory']] = {}
+            if object['activity_type'] not in data[object['inventory']]:
+                data[object['inventory']][object['activity_type']] = {}
+            data[object['inventory']][object['activity_type']] = object['total']
+        return data
 
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
