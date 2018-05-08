@@ -16,12 +16,15 @@
           {header : 'STANDEE'},
           {header : 'STALL'},
           {header : 'FLIER'},
+            {header : 'GATEWAY ARCH'},
         ];
         $scope.actKeys = [
           {header : 'RELEASE', key : 'release'},
           {header : 'AUDIT', key : 'audit'},
           {header : 'CLOSURE', key : 'closure'},
         ];
+
+
         $scope.supHeaders = [
           {header : 'Campaign Name', key : 'proposal_name'},
           {header : 'Supplier Name', key : 'supplier_name'},
@@ -47,6 +50,17 @@
           // polarArea : { name : 'PolarArea Chart', value : 'polarArea' },
           // HorizontalBar : { name : 'horizontalBar Chart', value : 'horizontalBar' },
         };
+        $scope.LeadsHeader = [
+          {header : 'Ongoing'},
+          {header : 'Completed'},
+
+        ];
+        $scope.perfLeads = {
+          all : 'all',
+          invleads : 'invleads',
+        };
+        $scope.showPerfLeads = false;
+
         $scope.perfMetrics = {
           inv : 'inv',
           ontime : 'onTime',
@@ -91,14 +105,16 @@
             $scope.count = 0;
             $scope.invActDateList = [];
             $scope.inventoryActivityCountData = response.data.data;
+            console.log($scope.inventoryActivityCountData);
             angular.forEach(response.data.data, function(data,key){
-                $scope.inventoryActivityCountData[key] = sortObject(data);
-                $scope.invActDateList = $scope.invActDateList.concat(Object.keys($scope.inventoryActivityCountData[key]));
+            $scope.inventoryActivityCountData[key] = sortObject(data);
+            console.log($scope.inventoryActivityCountData[key]);
+            $scope.invActDateList = $scope.invActDateList.concat(Object.keys($scope.inventoryActivityCountData[key]));
             })
             $scope.invActDateList = Array.from(new Set($scope.invActDateList));
             $scope.invActDateList.sort().reverse();
             $scope.getDate($scope.count);
-          }).catch(function onError(response){
+            }).catch(function onError(response){
             console.log(response);
           })
         }
@@ -119,7 +135,7 @@
         $scope.getDate = function(count){
           console.log(count);
           $scope.date =  $scope.invActDateList[count];
-          console.log($scope.date);
+
         }
 
         $scope.getPercent = function(num1,num2){
@@ -128,7 +144,7 @@
         }
 
         $scope.getAssignedIdsAndImages = function(date,type,inventory){
-          console.log(date,type,inventory);
+          console.log($scope.getAssignedIdsAndImages);
           $scope.showAssignedInvTable = true;
           DashboardService.getAssignedIdsAndImages(orgId, category, type, date, inventory)
           .then(function onSuccess(response){
@@ -378,16 +394,52 @@
            }
        };
 
+
        // START : service call to get suppliers as campaign status
        $scope.getSuppliersOfCampaignWithStatus = function(campaignId){
+         getCampaignInventoryActivitydetails(campaignId);
          DashboardService.getSuppliersOfCampaignWithStatus(campaignId)
          .then(function onSuccess(response){
+           $scope.showLeadsDetails = true;
            console.log(response);
            $scope.campaignStatusData = response.data.data;
+           console.log($scope.campaignStatusData);
+           var totalFlats=0,totalLeads=0,totalSuppliers=0,hotLeads=0;
+           // $scope.totalLeadsCount = response.data.data.supplier_data.length;
+           angular.forEach($scope.campaignStatusData, function(data,key){
+              if($scope.campaignStatusData[key].length){
+                $scope.campaignStatusData[key]['totalFlats'] = 0;
+                $scope.campaignStatusData[key]['totalLeads'] = 0;
+                $scope.campaignStatusData['totalSuppliers'] = 0;
+                $scope.campaignStatusData[key]['hotLeads'] = 0;
+                $scope.campaignStatusData['totalSuppliers'] += $scope.campaignStatusData[key].length;
+                angular.forEach(data, function(supplierData){
+                  $scope.campaignStatusData[key]['totalFlats'] += supplierData.supplier.flat_count;
+                  $scope.campaignStatusData[key]['totalLeads'] += supplierData.leads_data.length;
+                  if(supplierData.leads_data.length){
+                    angular.forEach(supplierData.leads_data, function(lead) {
+                      if(lead.is_interested){
+                        $scope.campaignStatusData[key]['hotLeads'] += 1;
+
+                      }
+                    })
+                  }
+                })
+                totalLeads += $scope.campaignStatusData[key].totalLeads;
+                totalFlats += $scope.campaignStatusData[key].totalFlats;
+                // totalSuppliers += $scope.campaignStatusData.totalSuppliers;
+              }
+         })
+            $scope.avgLeadsPerFlat = totalLeads/totalFlats * 100;
+            $scope.avgLeadsPerSupplier = totalLeads/$scope.campaignStatusData.totalSuppliers * 100;
+            $scope.avgHotLeadsPerFlat = hotLeads/totalFlats * 100;
+              $scope.avgHotLeadsPerSupplier = hotLeads/$scope.campaignStatusData.totalSuppliers * 100;
+           console.log($scope.campaignStatusData);
+
            $scope.campaignChartdata = [
-             { label : $scope.campaignStatus.ongoing.supplierLabel, value : $scope.campaignStatusData.ongoing.length },
-             { label : $scope.campaignStatus.completed.supplierLabel, value : $scope.campaignStatusData.completed.length },
-             { label : $scope.campaignStatus.upcoming.supplierLabel, value : $scope.campaignStatusData.upcoming.length }
+             { label : $scope.campaignStatus.ongoing.supplierLabel, value : $scope.campaignStatusData.ongoing.length, status : $scope.campaignStatus.ongoing.status },
+             { label : $scope.campaignStatus.completed.supplierLabel, value : $scope.campaignStatusData.completed.length, status : $scope.campaignStatus.completed.status },
+             { label : $scope.campaignStatus.upcoming.supplierLabel, value : $scope.campaignStatusData.upcoming.length, status : $scope.campaignStatus.upcoming.status }
            ];
            $scope.options = angular.copy(doughnutChartOptions);
          }).catch(function onError(response){
@@ -563,5 +615,14 @@
 
     }
 
+    var getCampaignInventoryActivitydetails = function(campaignId){
+    DashboardService.getCampaignInventoryActivitydetails(campaignId)
+      .then(function onSuccess(response){
+        console.log(response);
+        }).catch(function onError(response){
+      console.log(response);
     })
+   }
+
+  })//END
   })();

@@ -243,13 +243,13 @@
 
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                           <div class="panel-heading content-title">
-                            <div class="col-md-7">
-                              <h4> Details Of All Campaigns</h4>
-                            </div>
+
+                              <h4 style="text-align:left">Details Of All Campaigns
+
                             <uib-tab-heading uib-dropdown>
-                                <button class="btn btn-primary btn-sm" uib-dropdown-toggle ng-click="$event.stopPropagation()">
+                                <button class="btn btn-primary btn-sm pull-right" uib-dropdown-toggle ng-click="$event.stopPropagation()">
                                     Select Chart<i class="caret"></i>
                                 </button>
                                 <ul class="dropdown-menu" uib-dropdown-menu>
@@ -257,23 +257,39 @@
                                       <a ng-click="$dropdownTabActive = $index+1; $tabLeftSetStatus.activeTab = 0;getChart(chart.value)">{{chart.name}}</a>
                                     </li>
                                 </ul>
-                            </uib-tab-heading>
+                            </uib-tab-heading></h4>
                           </div>
                           <nvd3 options="options" data="campaignChartdata"></nvd3>
 
                         </div>
-                        <div class="col-md-3">
-                          <table class="table table-responsive table-bordered pieChart-table">
-                            <tbody>
-                              <tr>
-                                <td>Details</td>
-                              </tr>
+                        <div class="col-md-4 LeadsTable">
+                        <table class="table-responsive table table-bordered">
+                          <thead>
+                            <tr>
+                              <td>Supplier Status</td>
+                              <td>Leads</td>
+                              <td ng-if="showLeadsDetails">Total Leads (High Quality Leads)</td>
+                            </tr>
+                          </thead>
+                              <tbody>
                               <tr ng-repeat="item in campaignChartdata">
-                                <td>{{item.label}} : {{item.value}}</td>
+                                <td>{{item.label}}</td>
+                                <td> {{item.value}}</td>
+                                <td ng-if="showLeadsDetails">{{campaignStatusData[item.status].totalLeads||0}}({{campaignStatusData[item.status].hotLeads}})</td>
+                              </tr>
+
+                            </tbody>
+                            </table>
+                            <table class="table-responsive table table-bordered">
+                            <tbody>
+                              <tr ng-if="showLeadsDetails">
+                                <td>Avg Leads Per Flat : {{avgLeadsPerFlat| limitTo:3 }} % ({{avgHotLeadsPerFlat|limitTo:3}} %)</td>
+                                <td>Avg Leads Per Supplier : {{avgLeadsPerSupplier|limitTo:3}} % ({{avgHotLeadsPerSupplier|limitTo:3}} %)</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
+
                       </div>
                     </div>
 
