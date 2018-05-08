@@ -16,6 +16,7 @@
           {header : 'STANDEE'},
           {header : 'STALL'},
           {header : 'FLIER'},
+          {header : 'GATEWAY ARCH'},
         ];
         $scope.actKeys = [
           {header : 'RELEASE', key : 'release'},
@@ -510,7 +511,7 @@
                        "<td class='key'><strong>" + 'Index' + "</strong></td>" +
                        "<td class='key'><strong>" + 'Campaign Name' + "</strong></td>" +
                        "<td class='key'><strong>" + 'Supplier Name' + "</strong></td>" +
-                       "<td class='key'><strong>" + 'Total Count' + "</strong></td>" +                       
+                       "<td class='key'><strong>" + 'Total Count' + "</strong></td>" +
                      "</tr>" +
                    "</thead>";
 

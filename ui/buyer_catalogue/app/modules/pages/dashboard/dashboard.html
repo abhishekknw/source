@@ -70,10 +70,10 @@
                       </div>
                   </div>
                   <div class="row" ng-repeat="inv in invKeys">
-                      <div class="col-xlg-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 dashboard-side-label">
+                      <div class="col-xlg-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 dashboard-side-label" ng-if="inventoryActivityCountData[inv.header][date]">
                           <h4>{{inv.header}}</h4>
                       </div>
-                      <div class="col-xlg-10 col-lg-10 col-md-10 col-sm-10 col-xs-10">
+                      <div class="col-xlg-10 col-lg-10 col-md-10 col-sm-10 col-xs-10" ng-if="inventoryActivityCountData[inv.header][date]">
                           <!--<dashboard-pie-chart></dashboard-pie-chart>-->
                           <div class="row">
                               <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center" ng-repeat="act in actKeys">
@@ -84,7 +84,7 @@
                                                   <div uib-accordion-group  panel-class="panel panel-blur date-grid-tab custom-panel" ng-click="getAssignedIdsAndImages(date,act.header,inv.header)">
                                                       <div uib-accordion-heading class="container">
                                                           <div class="pie-chart-item ng-scope">
-                                                              <div class="row">
+                                                              <div class="row" ng-if="inventoryActivityCountData[inv.header][date][act.header]">
                                                                   <div class="col-md-4">
                                                                     <h4>{{inventoryActivityCountData[inv.header][date][act.header].actual||'0'}}</h4>
                                                                     <h5>Released</h5>
@@ -99,6 +99,9 @@
                                                                     <percent-circle ng-if="inventoryActivityCountData[inv.header][date][act.header].actual > 0" percent="getPercent(inventoryActivityCountData[inv.header][date][act.header].actual,inventoryActivityCountData[inv.header][date][act.header].total)" colors="{center:'#FFA880',highlight:'#350906'}" style="width:45px;height:45px;margin-top:-10px;margin-left:10px;"></percent-circle>
                                                                     <percent-circle ng-if="!(inventoryActivityCountData[inv.header][date][act.header].actual > 0)" percent="0" colors="{center:'#FFA880 '}" style="width:45px;height:45px;margin-top:-10px;margin-left:10px;"></percent-circle>
                                                                   </div>
+                                                              </div>
+                                                              <div ng-if="!inventoryActivityCountData[inv.header][date][act.header]">
+                                                                NO {{act.header}}
                                                               </div>
                                                           </div>
                                                       </div>
