@@ -267,7 +267,7 @@
                           <thead>
                             <tr>
                               <td>Supplier Status</td>
-                              <td>Leads</td>
+                              <td>Supplier Count</td>
                               <td ng-if="showLeadsDetails">Total Leads (High Quality Leads)</td>
                             </tr>
                           </thead>
@@ -290,6 +290,33 @@
                           </table>
                         </div>
 
+                      </div>
+
+                      <div class="col-md-12">
+                        <div class="col-md-4 LeadsTable" ng-if="showLeadsDetails">
+                        <table class="table-responsive table table-bordered">
+                          <thead>
+                            <tr>
+                              <td>Inventory Type</td>
+                              <td>RELEASE</td>
+                              <td>AUDIT</td>
+                              <td>CLOSURE</td>
+                            </tr>
+                          </thead>
+                              <tbody>
+                              <tr ng-repeat="inv in campaignInventories">
+                                <td>{{inventories[inv.filter_code] | uppercase}}</td>
+                                  <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].RELEASE||0}}</td>
+                                  <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].AUDIT||0}}</td>
+                                  <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].CLOSURE||0}}</td>
+                                  <td ng-if="list.activity_type == 'CLOSURE' && list.inventory == 'STALL' ">{{list.total}}
+                                    </td>
+
+                              </tr>
+
+                            </tbody>
+                            </table>
+                          </div>
                       </div>
                     </div>
 

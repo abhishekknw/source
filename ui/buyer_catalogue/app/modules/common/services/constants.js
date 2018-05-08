@@ -152,11 +152,11 @@ angular
     proposal_to_campaign : 'Campaign Created Successfully',
     //dashboard
     inventories : {
-      GA : 'Gateway Arch',
-      PO : 'Poster',
-      ST : 'Standee',
-      SL : 'Stall',
-      FL : 'Flyer'
+      GA : 'GATEWAY ARCH',
+      PO : 'POSTER',
+      ST : 'STANDEE',
+      SL : 'STALL',
+      FL : 'FLYER'
     },
     distanceLimit : 80,
     release : 'RELEASE',

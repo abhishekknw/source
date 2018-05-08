@@ -398,6 +398,7 @@
        // START : service call to get suppliers as campaign status
        $scope.getSuppliersOfCampaignWithStatus = function(campaignId){
          getCampaignInventoryActivitydetails(campaignId);
+         $scope.getCampaignFilters(campaignId);
          DashboardService.getSuppliersOfCampaignWithStatus(campaignId)
          .then(function onSuccess(response){
            $scope.showLeadsDetails = true;
@@ -619,6 +620,8 @@
     DashboardService.getCampaignInventoryActivitydetails(campaignId)
       .then(function onSuccess(response){
         console.log(response);
+        $scope.campaignInventoryActivityData = response.data.data;
+        console.log($scope.campaignInventoryActivityData);
         }).catch(function onError(response){
       console.log(response);
     })
