@@ -135,10 +135,10 @@
                                   <input placeholder="Search Your Input Here" type="form-control" ng-model="query" class="input-sm form-control search-input"
                                   type="search" style="width:300px;margin-left:22px;margin-top:-20px;"/><br><br>
                                   <tbody>
-                                      <tr ng-repeat="item in campaignDataList |filter:query" >
+                                      <tr ng-repeat="item in campaignReleaseData  |filter:query" >
                                         <td class="table-id">{{$index + 1}}</td>
-                                        <td>{{item.proposal_name}}</td>
-                                        <td>{{item.supplier_name}}</td>
+                                        <td>{{item}}</td>
+                                        <td>{{data}}</td>
                                         <td>{{item.inv_type}}</td>
                                         <td>{{item.act_name}}</td>
                                         <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Image</a></td>
