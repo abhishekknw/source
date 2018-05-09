@@ -154,11 +154,13 @@
             $scope.campaignReleaseData = [];
             var campaignReleaseData = [];
             campaignReleaseData['totalOnTimeCount'] = 0;
-            campaignReleaseData['totalOfftimeCount'] = 0;
+            campaignReleaseData['totalOffTimeCount'] = 0;
             campaignReleaseData['totalOnLocationCount'] = 0;
             campaignReleaseData['totalOffLocationCount'] = 0;
             campaignReleaseData['totalOffLocationDistance'] = 0;
             campaignReleaseData['totalOffTimeDays'] = 0;
+            campaignReleaseData['totalInvCount'] = 0;
+
             angular.forEach(response.data.data, function(data,campaignName){
               console.log(data);
               var campaignData = {};
@@ -221,10 +223,11 @@
 
               })
               campaignReleaseData['totalOnTimeCount'] += campaignData['onTimeCount'];
-              campaignReleaseData['totalOfftimeCount'] += campaignData['offTimeCount'];
+              campaignReleaseData['totalOffTimeCount'] += campaignData['offTimeCount'];
               campaignReleaseData['totalOnLocationCount'] += campaignData['onLocationCount'];
               campaignReleaseData['totalOffLocationCount'] += campaignData['offLocationCount'];
               campaignReleaseData['totalOffLocationDistance'] += campaignData['offLocationDistance'];
+              campaignReleaseData['totalInvCount'] += campaignData['inv_count'];
               campaignReleaseData['totalOffTimeDays'] += campaignData['offTimeDays'];
 
               campaignReleaseData.push(campaignData);
@@ -688,6 +691,21 @@
     })
    }
 
+   $scope.OntimeOnlocation = {
+     ontime : {
+       status : 'ontime', value : false
+     },
+     onlocation : {
+       status : 'onlocation', value : false
+     },
+   };
+
+   $scope.showOntimeOnlocation = function(status){
+     $scope.OntimeOnlocation.ontime.value = false;
+     $scope.OntimeOnlocation.onlocation.value = false;
+
+     $scope.OntimeOnlocation[status].value = !$scope.OntimeOnlocation[status].value;
+   }
 
     })//END
   })();

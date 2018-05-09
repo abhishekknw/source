@@ -81,7 +81,8 @@
                                       <div class="pie-chart-item-container ng-scope">
                                           <div class="custom-panel">
                                               <uib-accordion close-others="oneAtATime">
-                                                  <div uib-accordion-group  panel-class="panel panel-blur date-grid-tab custom-panel" ng-click="getAssignedIdsAndImages(date,act.header,inv.header)">
+                                                  <div uib-accordion-group  panel-class="panel panel-blur date-grid-tab custom-panel" ng-click="getAssignedIdsAndImages(date,act.header,inv.header)"
+                                                      is-disabled="!inventoryActivityCountData[inv.header][date][act.header] || inventoryActivityCountData[inv.header][date][act.header].actual==0">
                                                       <div uib-accordion-heading class="container">
                                                           <div class="pie-chart-item ng-scope">
                                                               <div class="row" ng-if="inventoryActivityCountData[inv.header][date][act.header]">
@@ -96,7 +97,7 @@
                                                                   </div>
                                                                   <div class="col-md-3 percent-circle">
 
-                                                                    <percent-circle ng-if="inventoryActivityCountData[inv.header][date][act.header].actual > 0" percent="getPercent(inventoryActivityCountData[inv.header][date][act.header].actual,inventoryActivityCountData[inv.header][date][act.header].total)" colors="{center:'#FFA880',highlight:'#350906'}" style="width:45px;height:45px;margin-top:-10px;margin-left:10px;"></percent-circle>
+                                                                    <percent-circle ng-if="inventoryActivityCountData[inv.header][date][act.header].actual > 0" percent="getPercent(inventoryActivityCountData[inv.header][date][act.header].actual,inventoryActivityCountData[inv.header][date][act.header].total)" colors="{center:'#FFA880',highlight:'yellow'}" style="width:45px;height:45px;margin-top:-10px;margin-left:10px;"></percent-circle>
                                                                     <percent-circle ng-if="!(inventoryActivityCountData[inv.header][date][act.header].actual > 0)" percent="0" colors="{center:'#FFA880 '}" style="width:45px;height:45px;margin-top:-10px;margin-left:10px;"></percent-circle>
                                                                   </div>
                                                               </div>
@@ -106,6 +107,51 @@
                                                           </div>
                                                       </div>
                                                       <!-- This is just some content to illustrate fancy headings. -->
+
+                                                      <div class="panel-group RELEASETable" id="accordion">
+                                                              <div class="panel panel-default" ng-click="showOntimeOnlocation(OntimeOnlocation.ontime.status)">
+                                                              <div class="panel-heading">
+                                                                  <h4 class="panel-title" style="background-color:#8e1921  !important">
+                                                                      Time Details
+                                                                  </h4>
+                                                              </div>
+                                                              </div>
+                                                              <table class="table-responsive table table-bordered" ng-show="OntimeOnlocation.ontime.value">
+
+                                                                <tbody>
+                                                                  <tr><td style="font:bold 12px/30px Georgia, serif;">On Time : Off Time</td>
+                                                                    <td>{{campaignReleaseData.totalOnTimeCount}} : {{campaignReleaseData.totalOffTimeCount}}</td>
+                                                                  </tr>
+                                                                  <tr><td style="font:bold 12px/30px Georgia, serif;">Delay Days</td>
+                                                                    <td>{{campaignReleaseData.totalOffTimeDays}} ({{campaignReleaseData.totalOffTimeDays / campaignReleaseData.totalInvCount * 100  |limitTo:4}} %)</td>
+                                                                  </tr>
+
+
+                                                                </tbody>
+                                                              </table>
+
+                                                          <div class="panel panel-default" ng-click="showOntimeOnlocation(OntimeOnlocation.onlocation.status)">
+                                                              <div class="panel-heading" >
+                                                                  <h4 class="panel-title" style="background-color:#8e1921  !important">
+                                                                      Location Details
+                                                                  </h4>
+                                                              </div>
+                                                          </div>
+                                                          <table class="table-responsive table table-bordered" ng-show="OntimeOnlocation.onlocation.value">
+
+                                                            <tbody>
+                                                              <tr><td style="font:bold 12px/30px Georgia, serif;">On Loc. : Off Loc.</td>
+                                                                <td>{{campaignReleaseData.totalOnLocationCount}} : {{campaignReleaseData.totalOffLocationCount}}</td>
+                                                              </tr>
+                                                              <tr><td style="font:bold 12px/30px Georgia, serif;">Avg Off Loc. (Mts)</td>
+                                                                <td>{{campaignReleaseData.totalOffLocationDistance / campaignReleaseData.totalInvCount |limitTo:4}} %</td>
+                                                              </tr>
+
+
+                                                            </tbody>
+                                                          </table>
+                                                      </div>
+
                                                   </div>
                                               </uib-accordion>
                                           </div>
@@ -119,48 +165,42 @@
 
               <div scroll-position="scrolled" class="row dashboard-table" ng-class="{'scrolled': scrolled}" ng-if="showAssignedInvTable">
                   <div class="col-md-12">
-                      <div ba-panel ba-panel-title="Table" ba-panel-class="with-scroll table-design">
-                          <div class="horizontal-scroll">
+
                               <div class="form-group select-page-size-wrap ">
                               </div>
-                              <div class="InventoryTable">
-                              <table st-safe-src="rowCollection" st-table="displayed" st-pipe="callServer" class="table table-bordered" >
-                                  <thead>
-                                      <tr class="sortable" >
-                                          <th class="table-id" st-sort="id" st-sort-default="true">Sr No</th>
-                                          <th ng-repeat="header in supHeaders" st-sort="{{header.key}}">{{header.header}}</th>
-                                      </tr>
-
-                                  </thead><br><br>
-                                  <input placeholder="Search Your Input Here" type="form-control" ng-model="query" class="input-sm form-control search-input"
-                                  type="search" style="width:300px;margin-left:22px;margin-top:-20px;"/><br><br>
-                                  <tbody>
-                                      <tr ng-repeat="item in campaignReleaseData  |filter:query" >
-                                        <td class="table-id">{{$index + 1}}</td>
-                                        <td>{{item.name}}</td>
-                                        <td>{{invName}}</td>
-                                        <td>{{item.inv_count}}</td>
-                                        <td>{{item.offTimeDays/item.inv_count|limitTo:4||0}} X </td>
-                                        <td>{{item.offLocationDistance/item.inv_count||0}}</td>
-
-                                        <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Image</a></td>
-                                        <td ng-if="item.images.length == 0"><label>No Image<label></td>
-                                      </tr>
-                                  </tbody>
-                                  <tfoot>
-                                      <tr>
 
 
-                                          <td colspan="6" class="text-center">
-                                              <div st-pagination="5" st-items-by-page="tablePageSize" st-displayed-pages="5"></div>
+                            <div class="col-md-12" ng-if="showAssignedInvTable">
+                            <div class="col-md-12 InventoryTable1">
+                              <div class="panel-heading content-title">
+                                <h5 style="background:'red';color:white;">Campaign Details</h5>
+                              </div>
+                            <table st-safe-src="rowCollection" st-table="displayed" st-pipe="callServer" class="table-responsive table table-bordered">
+                              <thead>
+                                  <tr class="sortable" >
+                                      <th class="table-id" st-sort="id" st-sort-default="true" >Sr No</th>
+                                      <th ng-repeat="header in supHeaders" st-sort="{{header.key}}">{{header.header}}</th>
+                                  </tr>
 
-                                          </td>
-                                      </tr>
-                                  </tfoot>
-                              </table>
+                              </thead>
+                              <tbody>
+                                  <tr ng-repeat="item in campaignReleaseData  |filter:query" >
+                                    <td class="table-id">{{$index + 1}}</td>
+                                    <td>{{item.name}}</td>
+                                    <td>{{invName}}</td>
+                                    <td>{{item.inv_count}}</td>
+                                    <td>{{item.offTimeDays/item.inv_count|limitTo:4||0}} X </td>
+                                    <td>{{item.offLocationDistance/item.inv_count|limitTo:4||0}}</td>
+
+                                    <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Image</a></td>
+                                    <td ng-if="item.images.length == 0"><label>No Image<label></td>
+                                  </tr>
+                              </tbody>
+                                </table>
+                              </div>
                             </div>
-                          </div>
-                      </div>
+
+
                   </div>
               </div>
           </uib-tab>
@@ -269,7 +309,7 @@
                         </div>
                         <div class="col-md-4 LeadsTable">
                           <div class="panel-heading content-title">
-                            <h5 style="background:'red'">LEADS</h5>
+                            <h5 style="background:'red';color:white;">Inventory + Leads Details</h5>
                           </div>
                         <table class="table-responsive table table-bordered">
                           <thead>
@@ -288,7 +328,7 @@
 
                             </tbody>
                             </table>
-                            <table class="table-responsive table table-bordered">
+                            <table class="table-responsive table table-bordered AvgLeadsTable">
                             <tbody>
                               <tr ng-if="showLeadsDetails">
                                 <td>Avg Leads Per Flat : {{avgLeadsPerFlat| limitTo:3 }} % ({{avgHotLeadsPerFlat|limitTo:3}} %)</td>
@@ -299,11 +339,12 @@
                         </div>
 
                       </div>
+  </div>
 
                       <div class="col-md-12">
-                        <div class="col-md-4 LeadsTable" ng-if="showLeadsDetails">
+                        <div class="col-md-5 LeadsTable" ng-if="showLeadsDetails">
                           <div class="panel-heading content-title">
-                            <h5 style="background:'red'">CAMPAIGN EXECUTION DETAILS</h5>
+                            <h5 style="background:'red'">INVENTORY DETAILS</h5>
                           </div>
                         <table class="table-responsive table table-bordered">
                           <thead>
@@ -326,9 +367,9 @@
                             </table>
                           </div>
 
-                            <div class="col-md-6 LeadsTable" ng-show="showSupplierSocietywiseInvTable" >
+                            <div class="col-md-7 LeadsTable" ng-show="showSupplierSocietywiseInvTable" >
                               <div class="panel-heading content-title">
-                                <h5 style="background:'red'">CAMPAIGN EXECUTION DETAILS</h5>
+                                <h5 style="background:'red'">SOCEITY DETAILS</h5>
                               </div>
                             <table class="table-responsive table table-bordered">
                               <thead>
@@ -345,17 +386,13 @@
                                   <tr ng-repeat="societies in SocietyInvTable">
                                     <td>{{societies[item.status].supplier.society_name}}</td>
                                     </tr>
-                                    <tr>
-                                      <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].RELEASE||0}} <a ng-click="showSupplierInvdDataTable()">({{countallsupplier}})</a></td>
-                                      <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].AUDIT||0}} ({{countallsupplier}})</td>
-                                      <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].CLOSURE||0}} ({{countallsupplier}})</td>
 
-                                    </tr>
                                 </tbody>
                                 </table>
                               </div>
                       </div>
-                    </div>
+
+
 
                     <div class="panel panel-default" >
                         <div class="col-md-12">
@@ -364,13 +401,13 @@
                           </div> -->
                           <div class="col-md-6" ng-if="showSupplierTypeCountChart">
                             <div class="panel-heading content-title">
-                              <h5 style="background:'red'">Details Of Supplier Types Present In {{campaignStatusName}}</h5>
+                              <h5 style="background:'red'">Graphical Representation {{campaignStatusName}}</h5>
                             </div>
                             <nvd3 options="supplierCodeCountOptions" data="supplierCodeCountData"></nvd3>
                           </div>
                           <div class="col-md-6" ng-if="showCampaignInvTable">
                             <div class="panel-heading content-title">
-                              <h5 style="background:'red'">Total Suppliers In {{campaignStatusName}}</h5>
+                              <h5 style="background:'red'">Campaign Wise Data In {{campaignStatusName}}</h5>
                             </div>
                             <div class="campaignInvTable">
                             <table class="table-responsive table table-bordered">
@@ -821,13 +858,13 @@
                           </div> -->
                           <div class="col-md-6">
                             <div class="panel-heading content-title">
-                              <h5 style="background:'red'">Details Of Supplier Types Present In {{campaignStatusName}}</h5>
+                              <h5 style="background:'red'">Graphical Representation In {{campaignStatusName}}</h5>
                             </div>
                             <nvd3 options="supplierCodeCountOptions" data="supplierCodeCountData"></nvd3>
                           </div>
                           <div class="col-md-6">
                             <div class="panel-heading content-title">
-                              <h5 style="background:'red'">Total Suppliers In {{campaignStatusName}}</h5>
+                              <h5 style="background:'red'">Campaign Wise Data In {{campaignStatusName}}</h5>
                             </div>
                             <nvd3 options="supplierCodeCountOptions" data="supplierCountData"></nvd3>
                             <!-- <table class="table-responsive table table-bordered pieChart-table">
