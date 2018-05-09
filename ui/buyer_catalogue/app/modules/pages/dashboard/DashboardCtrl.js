@@ -177,6 +177,8 @@
                       campaignData[inv]['onLocation'] = true;
                       campaignData[inv]['minDistance'] = items[i].distance;
                       break;
+
+
                     }
                     else if(items[i].hasOwnProperty('distance')){
                       if(items[i].distance < campaignData[inv]['minDistance']){
@@ -200,6 +202,7 @@
                   }
                   else{
                     campaignData['offLocationCount'] += 1;
+
                     campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
                   }
 
@@ -435,6 +438,20 @@
            console.log(response);
            $scope.campaignStatusData = response.data.data;
            console.log($scope.campaignStatusData);
+           $scope.showSupplierSocietywiseInvTable = false;
+           $scope.showSupplierInvdDataTable = function(invData){
+             $scope.SocietyInvTable = $scope.campaignStatusData;
+             console.log($scope.campaignStatusData.ongoing);
+             // $scope.SocietyInvTable = [
+             //   { SocietyTitle : $scope.campaignStatus.ongoing.campaignLabel},
+             //   { SocietyTitle : $scope.campaignStatus.completed.campaignLabel},
+             //   { SocietyTitle : $scope.campaignStatus.upcoming.campaignLabel}
+             // ];
+             console.log($scope.SocietyInvTable.ongoing.supplier);
+             $scope.showSupplierSocietywiseInvTable = true;
+           };
+           $scope.countallsupplier = $scope.campaignStatusData.completed.length+$scope.campaignStatusData.ongoing.length+$scope.campaignStatusData.upcoming.length;
+           // console.log($scope.countallsupplier);
            var totalFlats=0,totalLeads=0,totalSuppliers=0,hotLeads=0;
            // $scope.totalLeadsCount = response.data.data.supplier_data.length;
            angular.forEach($scope.campaignStatusData, function(data,key){
@@ -465,7 +482,7 @@
             $scope.avgLeadsPerSupplier = totalLeads/$scope.campaignStatusData.totalSuppliers * 100;
             $scope.avgHotLeadsPerFlat = hotLeads/totalFlats * 100;
               $scope.avgHotLeadsPerSupplier = hotLeads/$scope.campaignStatusData.totalSuppliers * 100;
-           console.log($scope.campaignStatusData);
+           // console.log($scope.campaignStatusData);
 
            $scope.campaignChartdata = [
              { label : $scope.campaignStatus.ongoing.supplierLabel, value : $scope.campaignStatusData.ongoing.length, status : $scope.campaignStatus.ongoing.status },
@@ -608,9 +625,10 @@
 
        $scope.getCampaignInvTableData = function(campaigns){
          $scope.campaignInvData = campaigns.campaigns;
+         console.log($scope.campaignInvData);
          $scope.showCampaignInvTable = true;
          $scope.$apply();
-         console.log($scope.campaignInvData);
+         // console.log($scope.campaignInvData);
 
      }
 
@@ -621,7 +639,7 @@
        .then(function onSuccess(response){
          console.log(response);
         $scope.campaignInventoryTypesData = response.data.data;
-        console.log($scope.campaignInventoryTypesData.supplier_data);
+        // console.log($scope.campaignInventoryTypesData.supplier_data);
         $scope.getSupplierInvTableData($scope.campaignInventoryTypesData);
         $scope.campaignInventoryData = response.data.data;
         $scope.totalTowerCount = 0;
@@ -641,7 +659,7 @@
 
     $scope.getSupplierInvTableData = function(supplier){
       $scope.supplierInvData = supplier;
-      console.log(  $scope.supplierInvData );
+      // console.log(  $scope.supplierInvData );
       $scope.showSupplierInvTable = true;
 
     }
@@ -651,11 +669,12 @@
       .then(function onSuccess(response){
         console.log(response);
         $scope.campaignInventoryActivityData = response.data.data;
-        console.log($scope.campaignInventoryActivityData);
+        // console.log($scope.campaignInventoryActivityData);
         }).catch(function onError(response){
       console.log(response);
     })
    }
 
-  })//END
+
+    })//END
   })();
