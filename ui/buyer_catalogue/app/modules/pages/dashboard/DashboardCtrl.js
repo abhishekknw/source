@@ -202,10 +202,8 @@
                   }
                   else{
                     campaignData['offLocationCount'] += 1;
-
                     campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
                   }
-
 
                   if(campaignData[inv]['onTime'])
                     campaignData['onTimeCount'] += 1;
