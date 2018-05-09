@@ -144,7 +144,7 @@
                                                                 <td>{{campaignReleaseData.totalOnLocationCount}} : {{campaignReleaseData.totalOffLocationCount}}</td>
                                                               </tr>
                                                               <tr><td style="font:bold 12px/30px Georgia, serif;">Avg Off Loc. (Mts)</td>
-                                                                <td>{{campaignReleaseData.totalOffLocationDistance / campaignReleaseData.totalInvCount |limitTo:4}} %</td>
+                                                                <td>{{campaignReleaseData.totalOffLocationDistance / campaignReleaseData.totalInvCount |limitTo:5}} %</td>
                                                               </tr>
 
 
@@ -161,46 +161,41 @@
                           </div>
                       </div>
                   </div>
-              </div>
-
-              <div scroll-position="scrolled" class="row dashboard-table" ng-class="{'scrolled': scrolled}" ng-if="showAssignedInvTable">
                   <div class="col-md-12">
-
-                              <div class="form-group select-page-size-wrap ">
-                              </div>
-
-
-                            <div class="col-md-12" ng-if="showAssignedInvTable">
+                  <div class="form-group select-page-size-wrap ">
+                  </div>
+                    <div class="col-md-12" ng-if="showAssignedInvTable">
                             <div class="col-md-12 InventoryTable1">
-                              <div class="panel-heading content-title">
-                                <h5 style="background:'red';color:white;">Campaign Details</h5>
-                              </div>
-                            <table st-safe-src="rowCollection" st-table="displayed" st-pipe="callServer" class="table-responsive table table-bordered">
-                              <thead>
-                                  <tr class="sortable" >
-                                      <th class="table-id" st-sort="id" st-sort-default="true" >Sr No</th>
-                                      <th ng-repeat="header in supHeaders" st-sort="{{header.key}}">{{header.header}}</th>
-                                  </tr>
+                            <div class="panel-heading content-title">
+                            <h5 style="background:'red';color:white;">Campaign Details</h5>
+                    </div>
+                          <table st-safe-src="rowCollection" st-table="displayed" st-pipe="callServer" class="table-responsive table table-bordered">
+                            <thead>
+                            <tr class="sortable" >
+                                <th class="table-id" st-sort="id" st-sort-default="true" >Sr No</th>
+                                <th ng-repeat="header in supHeaders" st-sort="{{header.key}}">{{header.header}}</th>
+                                </tr>
 
                               </thead>
                               <tbody>
-                                  <tr ng-repeat="item in campaignReleaseData  |filter:query" >
-                                    <td class="table-id">{{$index + 1}}</td>
-                                    <td>{{item.name}}</td>
-                                    <td>{{invName}}</td>
-                                    <td>{{item.inv_count}}</td>
-                                    <td>{{item.offTimeDays/item.inv_count|limitTo:4||0}} X </td>
-                                    <td>{{item.offLocationDistance/item.inv_count|limitTo:4||0}}</td>
-
-                                    <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Image</a></td>
-                                    <td ng-if="item.images.length == 0"><label>No Image<label></td>
-                                  </tr>
+                                <tr ng-repeat="item in campaignReleaseData  |filter:query" >
+                                <td class="table-id">{{$index + 1}}</td>
+                                <td>{{item.name}}</td>
+                                <td>{{invName}}</td>
+                                <td>{{item.inv_count}}</td>
+                                <td>{{item.offTimeDays/item.inv_count|limitTo:4||0}} X </td>
+                                <td>{{item.offLocationDistance/item.inv_count|limitTo:5||0}}</td>
+                                <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Image</a></td>
+                                <td ng-if="item.images.length == 0"><label>No Image<label></td>
+                                </tr>
                               </tbody>
-                                </table>
-                              </div>
-
+                          </table>
+                      </div>
                   </div>
-              </div>
+            </div>
+        </div>
+
+
           </uib-tab>
           <uib-tab ng-click="getCampaigns()">
               <uib-tab-heading>
@@ -342,6 +337,8 @@
   </div>
 
                       <div class="col-md-12">
+                        <br><br><br><br>
+
                         <div class="col-md-5 LeadsTable" ng-if="showLeadsDetails">
                           <div class="panel-heading content-title">
                             <h5 style="background:'red'">INVENTORY DETAILS</h5>
@@ -388,6 +385,7 @@
                                   <tr ng-repeat="societies in SocietyInvTable">
                                     <td>{{societies[item.status].supplier.society_name}}</td>
                                     </tr>
+
                                 </tbody>
                                 </table>
                               </div>

@@ -187,7 +187,6 @@
                       campaignData[inv]['minDistance'] = items[i].distance;
                       break;
 
-
                     }
                     else if(items[i].hasOwnProperty('distance')){
                       if(items[i].distance < campaignData[inv]['minDistance']){
@@ -211,6 +210,12 @@
                   }
                   else{
                     campaignData['offLocationCount'] += 1;
+                    campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
+                  }
+
+                  if(campaignData[inv]['onLocation'])
+                    campaignData['onLocationCount'] += 1;
+                  else{
                     campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
                   }
 
