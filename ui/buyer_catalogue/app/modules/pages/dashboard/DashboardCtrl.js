@@ -19,16 +19,16 @@
           {header : 'GATEWAY ARCH'},
         ];
         $scope.actKeys = [
-          {header : 'RELEASE', key : 'release'},
-          {header : 'AUDIT', key : 'audit'},
-          {header : 'CLOSURE', key : 'closure'},
+          {header : 'RELEASE', key : 'release', label1 : 'Released', label2 : 'UnReleased'},
+          {header : 'AUDIT', key : 'audit', label1 : 'Audited', label2 : 'UnAudited'},
+          {header : 'CLOSURE', key : 'closure', label1 : 'Closured', label2 : 'UnClosured' },
         ];
         $scope.supHeaders = [
           {header : 'Campaign Name', key : 'proposal_name'},
-          {header : 'Supplier Name', key : 'supplier_name'},
-          {header : 'Inventory Name', key : 'inv_type'},
-          {header : 'Activity Name', key : 'act_name'},
-          {header : 'Images', key : ''},
+          {header : 'Inventory', key : 'supplier_name'},
+          {header : 'Today Released', key : 'inv_type'},
+          {header : 'Average Delay(X)', key : 'act_name'},
+          {header : 'Average Off Location(Meters)', key : 'act_name'},          
         ];
         $scope.campaignStatus = {
           ongoing : {
@@ -130,6 +130,7 @@
 
         $scope.getAssignedIdsAndImages = function(date,type,inventory){
           console.log(date,type,inventory);
+          $scope.invName = inventory;
           $scope.showAssignedInvTable = true;
           DashboardService.getAssignedIdsAndImages(orgId, category, type, date, inventory)
           .then(function onSuccess(response){
@@ -152,14 +153,14 @@
                 console.log(items);
                 campaignData[inv]['onLocation'] = false;
                 campaignData[inv]['onTime'] = false;
-                campaignData[inv]['minDistance'] = 1000;
+                campaignData[inv]['minDistance'] = 100;
                 campaignData[inv]['dayCount'] = 100;
 
                   for(var i=0; i<items.length; i++){
                     if(items[i].hasOwnProperty('distance') && items[i].distance <= constants.distanceLimit){
                       campaignData[inv]['onLocation'] = true;
+                      campaignData[inv]['minDistance'] = items[i].distance;
                       break;
-
                     }
                     else if(items[i].hasOwnProperty('distance')){
                       if(items[i].distance < campaignData[inv]['minDistance']){
@@ -177,8 +178,10 @@
                       campaignData[inv]['dayCount'] = days;
                     }
                   }
-                  if(campaignData[inv]['onLocation'])
+                  if(campaignData[inv]['onLocation']){
                     campaignData['onLocationCount'] += 1;
+                    campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
+                  }
                   else{
                     campaignData['offLocationCount'] += 1;
                     campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
