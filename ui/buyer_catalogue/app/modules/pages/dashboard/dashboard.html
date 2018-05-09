@@ -87,12 +87,12 @@
                                                               <div class="row" ng-if="inventoryActivityCountData[inv.header][date][act.header]">
                                                                   <div class="col-md-4">
                                                                     <h4>{{inventoryActivityCountData[inv.header][date][act.header].actual||'0'}}</h4>
-                                                                    <h5>Released</h5>
+                                                                    <h5>{{act.label1}}</h5>
                                                                   </div>
                                                                   <div class="col-6 col-md-4">
                                                                       <h4>{{(inventoryActivityCountData[inv.header][date][act.header].total -
                                                                         inventoryActivityCountData[inv.header][date][act.header].actual)||'0'}}</h4>
-                                                                      <h5>UnReleased</h5>
+                                                                      <h5>{{act.label2}}</h5>
                                                                   </div>
                                                                   <div class="col-md-3 percent-circle">
 
@@ -135,12 +135,13 @@
                                   <input placeholder="Search Your Input Here" type="form-control" ng-model="query" class="input-sm form-control search-input"
                                   type="search" style="width:300px;margin-left:22px;margin-top:-20px;"/><br><br>
                                   <tbody>
-                                      <tr ng-repeat="item in campaignDataList |filter:query" >
+                                      <tr ng-repeat="item in campaignReleaseData  |filter:query" >
                                         <td class="table-id">{{$index + 1}}</td>
-                                        <td>{{item.proposal_name}}</td>
-                                        <td>{{item.supplier_name}}</td>
-                                        <td>{{item.inv_type}}</td>
-                                        <td>{{item.act_name}}</td>
+                                        <td>{{item.name}}</td>
+                                        <td>{{invName}}</td>
+                                        <td>{{item.inv_count}}</td>
+                                        <td>{{item.offTimeDays/item.inv_count|limitTo:4||0}} X </td>
+                                        <td>{{item.offLocationDistance/item.inv_count||0}}</td>
                                         <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Image</a></td>
                                         <td ng-if="item.images.length == 0"><label>No Image<label></td>
                                       </tr>

@@ -19,18 +19,18 @@
           {header : 'GATEWAY ARCH'},
         ];
         $scope.actKeys = [
-          {header : 'RELEASE', key : 'release'},
-          {header : 'AUDIT', key : 'audit'},
-          {header : 'CLOSURE', key : 'closure'},
+          {header : 'RELEASE', key : 'release', label1 : 'Released', label2 : 'UnReleased'},
+          {header : 'AUDIT', key : 'audit', label1 : 'Audited', label2 : 'UnAudited'},
+          {header : 'CLOSURE', key : 'closure', label1 : 'Closured', label2 : 'UnClosured' },
         ];
 
 
         $scope.supHeaders = [
           {header : 'Campaign Name', key : 'proposal_name'},
-          {header : 'Supplier Name', key : 'supplier_name'},
-          {header : 'Inventory Name', key : 'inv_type'},
-          {header : 'Activity Name', key : 'act_name'},
-          {header : 'Images', key : ''},
+          {header : 'Inventory', key : 'supplier_name'},
+          {header : 'Today Released', key : 'inv_type'},
+          {header : 'Average Delay(X)', key : 'act_name'},
+          {header : 'Average Off Location(Meters)', key : 'act_name'},
         ];
         $scope.campaignStatus = {
           ongoing : {
@@ -144,54 +144,84 @@
         }
 
         $scope.getAssignedIdsAndImages = function(date,type,inventory){
-          console.log($scope.getAssignedIdsAndImages);
+
+          console.log(date,type,inventory);
+          $scope.invName = inventory;
           $scope.showAssignedInvTable = true;
           DashboardService.getAssignedIdsAndImages(orgId, category, type, date, inventory)
           .then(function onSuccess(response){
             console.log(response);
-            $scope.campaignData = response.data.data;
+            $scope.campaignReleaseData = [];
+            angular.forEach(response.data.data, function(data,campaignName){
+              console.log(data);
+              var campaignData = {};
+              campaignData['name'] = campaignName;
+              campaignData['inv_count'] = 0;
+              campaignData['onLocationCount'] = 0;
+              campaignData['offLocationCount'] = 0;
+              campaignData['onTimeCount'] = 0;
+              campaignData['offTimeCount'] = 0;
+              campaignData['offTimeDays'] = 0;
+              campaignData['offLocationDistance'] = 0;
+              angular.forEach(data, function(items,inv){
+                campaignData.inv_count += 1;
+                campaignData[inv] = {};
+                console.log(items);
+                campaignData[inv]['onLocation'] = false;
+                campaignData[inv]['onTime'] = false;
+                campaignData[inv]['minDistance'] = 100;
+                campaignData[inv]['dayCount'] = 100;
+
+                  for(var i=0; i<items.length; i++){
+                    if(items[i].hasOwnProperty('distance') && items[i].distance <= constants.distanceLimit){
+                      campaignData[inv]['onLocation'] = true;
+                      campaignData[inv]['minDistance'] = items[i].distance;
+                      break;
+                    }
+                    else if(items[i].hasOwnProperty('distance')){
+                      if(items[i].distance < campaignData[inv]['minDistance']){
+                        campaignData[inv]['minDistance'] = items[i].distance;
+                      }
+                    }
+                  }
+                  //onTime
+                  for(var i=0; i<items.length; i++){
+                    var days = Math.floor((new Date(items[i].created_at) - new Date(items[i].actual_activity_date)) / (1000 * 60 * 60 * 24));
+                    if(days == 0){
+                      campaignData[inv]['onTime'] = true;
+                      break;
+                    }else if(days < campaignData[inv]['dayCount']){
+                      campaignData[inv]['dayCount'] = days;
+                    }
+                  }
+                  if(campaignData[inv]['onLocation']){
+                    campaignData['onLocationCount'] += 1;
+                    campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
+                  }
+                  else{
+                    campaignData['offLocationCount'] += 1;
+                    campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
+                  }
+
+
+                  if(campaignData[inv]['onTime'])
+                    campaignData['onTimeCount'] += 1;
+                  else{
+                    campaignData['offTimeCount'] += 1;
+                    campaignData['offTimeDays'] += campaignData[inv]['dayCount'];
+                  }
+
+              })
+              $scope.campaignReleaseData.push(campaignData);
+            })
+            console.log($scope.campaignReleaseData);
             $scope.campaignDataList = [];
-            createList();
+            // createList();
             console.log($scope.campaignDataList);
           }).catch(function onError(response){
             console.log(response);
           })
         }
-
-        function createList(){
-          angular.forEach($scope.campaignData.shortlisted_suppliers,function(suppliers,spaceId){
-            angular.forEach($scope.campaignData.shortlisted_inventories,function(inventories,invId){
-              if($scope.campaignData.shortlisted_inventories[invId].shortlisted_spaces_id == spaceId){
-                angular.forEach($scope.campaignData.inventory_activities,function(activities,actId){
-                  if($scope.campaignData.inventory_activities[actId].shortlisted_inventory_id == invId){
-                    angular.forEach($scope.campaignData.inventory_activity_assignment,function(invAssignments,assignId){
-                      if($scope.campaignData.inventory_activity_assignment[assignId].inventory_activity_id == actId){
-                        var data = angular.copy(campaignDataStruct);
-                        data.id = assignId;
-                        data.supplier_id = $scope.campaignData.shortlisted_suppliers[spaceId].supplier_id;
-                        data.supplier_name = $scope.campaignData.shortlisted_suppliers[spaceId].supplier_detail.name;
-                        data.proposal_name = $scope.campaignData.shortlisted_suppliers[spaceId].proposal_name;
-                        data.inv_id = $scope.campaignData.shortlisted_inventories[invId].inventory_id;
-                        data.inv_type = $scope.campaignData.shortlisted_inventories[invId].inventory_name;
-                        data.act_name = $scope.campaignData.inventory_activities[actId].activity_type;
-                        data.act_date = $scope.campaignData.inventory_activity_assignment[assignId].activity_date;
-                        data.assigned_to = $scope.campaignData.inventory_activity_assignment[assignId].assigned_to;
-                        data.reAssign_date = $scope.campaignData.inventory_activity_assignment[assignId].reassigned_activity_date;
-                        angular.forEach($scope.campaignData.images, function(images,imgKey){
-                          if($scope.campaignData.images[imgKey].inventory_activity_assignment_id == assignId){
-                            data.images.push($scope.campaignData.images[imgKey]);
-                          }
-                        });
-                        // data.reAssigner_user = $scope.campaignData.inventory_activity_assignment[assignId].assigned_to;
-                        $scope.campaignDataList.push(data);
-                      }
-                    });
-                  }
-                });
-              }
-            });
-          });
-        } // end of createList() function
 
         $scope.setImageUrl = function(images){
           $scope.imageUrlList = [];

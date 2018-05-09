@@ -40,6 +40,7 @@ from bulk_update.helper import bulk_update
 from celery import group
 from celery.task.sets import TaskSet, subtask
 from collections import namedtuple
+import gpxpy.geo
 
 import v0.models as models
 from v0.models import PriceMappingDefault
@@ -6632,5 +6633,30 @@ def get_campaign_inventory_activity_data(campaign_id):
             data[object['inventory']][object['activity_type']] = object['total']
         return data
 
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def calculate_location_difference_between_inventory_and_supplier(data, suppliers):
+    """
+
+    :param data:
+    :param suppliers:
+    :return:
+    """
+    function_name = calculate_location_difference_between_inventory_and_supplier.__name__
+    try:
+        supplier_objects_id_map = {supplier['supplier_id']: supplier for supplier in suppliers}
+
+        for item in data:
+            lat1 = item['latitude']
+            lon1 = item['longitude']
+            # need to be changed for other suppliers i.e society_latitude
+            lat2 = supplier_objects_id_map[item['object_id']]['society_latitude']
+            lon2 = supplier_objects_id_map[item['object_id']]['society_longitude']
+
+            if lat1 and lon1 and lat2 and lon2:
+                distance = gpxpy.geo.haversine_distance(lat1, lon1, lat2, lon2)
+                item['distance'] = distance
+        return data
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
