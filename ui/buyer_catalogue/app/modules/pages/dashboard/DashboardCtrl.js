@@ -152,6 +152,7 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.campaignReleaseData = [];
+<<<<<<< Updated upstream
             var campaignReleaseData = [];
             campaignReleaseData['totalOnTimeCount'] = 0;
             campaignReleaseData['totalOffTimeCount'] = 0;
@@ -161,6 +162,8 @@
             campaignReleaseData['totalOffTimeDays'] = 0;
             campaignReleaseData['totalInvCount'] = 0;
 
+=======
+>>>>>>> Stashed changes
             angular.forEach(response.data.data, function(data,campaignName){
               console.log(data);
               var campaignData = {};
@@ -178,16 +181,25 @@
                 console.log(items);
                 campaignData[inv]['onLocation'] = false;
                 campaignData[inv]['onTime'] = false;
+<<<<<<< Updated upstream
                 campaignData[inv]['minDistance'] = 100;
+=======
+                campaignData[inv]['minDistance'] = 1000;
+>>>>>>> Stashed changes
                 campaignData[inv]['dayCount'] = 100;
 
                   for(var i=0; i<items.length; i++){
                     if(items[i].hasOwnProperty('distance') && items[i].distance <= constants.distanceLimit){
                       campaignData[inv]['onLocation'] = true;
+<<<<<<< Updated upstream
                       campaignData[inv]['minDistance'] = items[i].distance;
                       break;
 
 
+=======
+                      break;
+
+>>>>>>> Stashed changes
                     }
                     else if(items[i].hasOwnProperty('distance')){
                       if(items[i].distance < campaignData[inv]['minDistance']){
@@ -205,6 +217,7 @@
                       campaignData[inv]['dayCount'] = days;
                     }
                   }
+<<<<<<< Updated upstream
                   if(campaignData[inv]['onLocation']){
                     campaignData['onLocationCount'] += 1;
                     campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
@@ -214,6 +227,15 @@
                     campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
                   }
 
+=======
+                  if(campaignData[inv]['onLocation'])
+                    campaignData['onLocationCount'] += 1;
+                  else{
+                    campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
+                  }
+
+
+>>>>>>> Stashed changes
                   if(campaignData[inv]['onTime'])
                     campaignData['onTimeCount'] += 1;
                   else{
@@ -222,6 +244,7 @@
                   }
 
               })
+<<<<<<< Updated upstream
               campaignReleaseData['totalOnTimeCount'] += campaignData['onTimeCount'];
               campaignReleaseData['totalOffTimeCount'] += campaignData['offTimeCount'];
               campaignReleaseData['totalOnLocationCount'] += campaignData['onLocationCount'];
@@ -233,6 +256,10 @@
               campaignReleaseData.push(campaignData);
             })
             $scope.campaignReleaseData = campaignReleaseData;
+=======
+              $scope.campaignReleaseData.push(campaignData);
+            })
+>>>>>>> Stashed changes
             console.log($scope.campaignReleaseData);
             $scope.campaignDataList = [];
             // createList();
@@ -691,6 +718,7 @@
     })
    }
 
+<<<<<<< Updated upstream
    $scope.OntimeOnlocation = {
      ontime : {
        status : 'ontime', value : false
@@ -706,6 +734,8 @@
 
      $scope.OntimeOnlocation[status].value = !$scope.OntimeOnlocation[status].value;
    }
+=======
+>>>>>>> Stashed changes
 
     })//END
   })();
