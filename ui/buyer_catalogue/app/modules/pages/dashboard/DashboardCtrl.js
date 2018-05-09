@@ -180,6 +180,7 @@
                   if(campaignData[inv]['onLocation'])
                     campaignData['onLocationCount'] += 1;
                   else{
+                    campaignData['offLocationCount'] += 1;
                     campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
                   }
 
