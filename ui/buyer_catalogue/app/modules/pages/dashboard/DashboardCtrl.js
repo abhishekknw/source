@@ -28,7 +28,7 @@
           {header : 'Inventory', key : 'supplier_name'},
           {header : 'Today Released', key : 'inv_type'},
           {header : 'Average Delay(X)', key : 'act_name'},
-          {header : 'Average Off Location(Meters)', key : 'act_name'},          
+          {header : 'Average Off Location(Meters)', key : 'act_name'},
         ];
         $scope.campaignStatus = {
           ongoing : {
@@ -136,6 +136,13 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.campaignReleaseData = [];
+            var campaignReleaseData = [];
+            campaignReleaseData['totalOnTimeCount'] = 0;
+            campaignReleaseData['totalOfftimeCount'] = 0;
+            campaignReleaseData['totalOnLocationCount'] = 0;
+            campaignReleaseData['totalOffLocationCount'] = 0;
+            campaignReleaseData['totalOffLocationDistance'] = 0;
+            campaignReleaseData['totalOffTimeDays'] = 0;
             angular.forEach(response.data.data, function(data,campaignName){
               console.log(data);
               var campaignData = {};
@@ -196,8 +203,16 @@
                   }
 
               })
-              $scope.campaignReleaseData.push(campaignData);
+              campaignReleaseData['totalOnTimeCount'] += campaignData['onTimeCount'];
+              campaignReleaseData['totalOfftimeCount'] += campaignData['offTimeCount'];
+              campaignReleaseData['totalOnLocationCount'] += campaignData['onLocationCount'];
+              campaignReleaseData['totalOffLocationCount'] += campaignData['offLocationCount'];
+              campaignReleaseData['totalOffLocationDistance'] += campaignData['offLocationDistance'];
+              campaignReleaseData['totalOffTimeDays'] += campaignData['offTimeDays'];
+
+              campaignReleaseData.push(campaignData);
             })
+            $scope.campaignReleaseData = campaignReleaseData;
             console.log($scope.campaignReleaseData);
             $scope.campaignDataList = [];
             // createList();
