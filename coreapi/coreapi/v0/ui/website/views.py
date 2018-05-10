@@ -5740,33 +5740,27 @@ class DashBoardViewSet(viewsets.ViewSet):
             if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
                 query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
 
-                supplier_code_data =  models.ProposalCenterSuppliers.objects.filter(query). \
-                    values('supplier_type_code').annotate(total=Count('supplier_type_code'))
-
-                supplier_data = models.ShortlistedSpaces.objects.filter(query). \
-                    values('supplier_code').annotate(total=Count('supplier_code'))
+                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code', 'proposal__name','proposal_id'). \
+                    annotate(total=Count('object_id'))
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
                 query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
 
-                supplier_code_data = models.ProposalCenterSuppliers.objects.filter(query). \
-                    values('supplier_type_code').annotate(total=Count('supplier_type_code'))
-
-                supplier_data = models.ShortlistedSpaces.objects.filter(query). \
-                    values('supplier_code').annotate(total=Count('supplier_code'))
+                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code','proposal__name','proposal_id'). \
+                    annotate(total=Count('object_id'))
 
             if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
                 query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
 
-                supplier_code_data = models.ProposalCenterSuppliers.objects.filter(query). \
-                    values('supplier_type_code').annotate(total=Count('supplier_type_code'))
+                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code','proposal__name','proposal_id'). \
+                    annotate(total=Count('object_id'))
 
-                supplier_data = models.ShortlistedSpaces.objects.filter(query). \
-                    values('supplier_code').annotate(total=Count('supplier_code'))
-            data = {
-                'supplier_data' : supplier_data,
-                'supplier_code_data' : supplier_code_data
-            }
+            data = {}
+            for proposal in proposal_data:
+                if proposal['supplier_code'] not in data:
+                    data[proposal['supplier_code']] = []
+                data[proposal['supplier_code']].append(proposal)
+
             return ui_utils.handle_response(class_name, data=data, success=True)
 
         except Exception as e:
@@ -5794,8 +5788,8 @@ class DashBoardViewSet(viewsets.ViewSet):
             suppliers = supplier_serializer.data
 
             supplier_objects_id_list = {supplier['supplier_id']:supplier for supplier in suppliers}
-            # supplier_objects_id_list = list(supplier_objects_id_list)
 
+            leads = website_utils.get_campaign_leads(campaign_id)
             ongoing_suppliers = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                     'inventory_activity_assignment__inventory_activity','inventory_activity_assignment__inventory_activity',
                                     'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
@@ -5814,16 +5808,37 @@ class DashBoardViewSet(viewsets.ViewSet):
             upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(ongoing_supplier_id_list + completed_supplier_id_list)
 
             ongoing_suppliers_list = []
+
             for id in ongoing_supplier_id_list:
-                ongoing_suppliers_list.append(supplier_objects_id_list[id])
+                data = {
+                    'supplier' : supplier_objects_id_list[id],
+                    'leads_data' : []
+                }
+                if leads and (id in leads):
+                    data['leads_data'] = leads[id]
+                ongoing_suppliers_list.append(data)
+
 
             completed_suppliers_list = []
             for id in completed_suppliers_list:
-                completed_suppliers_list.append(supplier_objects_id_list[id])
+                data = {
+                    'supplier': supplier_objects_id_list[id],
+                    'leads_data': []
+                }
+                if leads and (id in leads):
+                    data['leads_data'] = leads[id]
+                completed_suppliers_list.append(data)
 
             upcoming_suppliers_list = []
             for id in upcoming_supplier_id_list:
-                upcoming_suppliers_list.append(supplier_objects_id_list[id])
+                data = {
+                    'supplier': supplier_objects_id_list[id],
+                    'leads_data': []
+                }
+                if leads and (id in leads):
+                    data['leads_data'] = leads[id]
+                upcoming_suppliers_list.append(data)
+
 
             data = {
                 'ongoing' : ongoing_suppliers_list,
@@ -5847,9 +5862,8 @@ class DashBoardViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id',None)
-            filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id)
-            serializer = website_serializers.FiltersSerializer(filters, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            filters = website_utils.get_filters_by_campaign(campaign_id)
+            return ui_utils.handle_response(class_name, data=filters, success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5941,6 +5955,42 @@ class DashBoardViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    @list_route()
+    def get_supplier_data_by_campaign(self, request):
+        """
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id',None)
+            supplier_id_list = models.ShortlistedSpaces.objects.filter(proposal=campaign_id).values_list('object_id')
+            suppliers = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
+            serializer = v0_serializers.SupplierTypeSocietySerializer(suppliers, many=True)
+            filters = website_utils.get_filters_by_campaign(campaign_id)
+            data = {
+                'supplier_data' : serializer.data,
+                'filters' : filters
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route()
+    def get_campaign_inventory_activity_details(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id', None)
+            result = website_utils.get_campaign_inventory_activity_data(campaign_id)
+            return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
@@ -6026,16 +6076,16 @@ class GetAssignedIdImagesListApiView(APIView):
         class_name = self.__class__.__name__
 
         try:
-            proposal_query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state='PTC')
+            proposal_query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state='PTC')
 
             activity_type = request.query_params.get('type', None)
-            activity_type_query = Q(inventory_activity__activity_type=activity_type)
+            activity_type_query = Q(inventory_activity_assignment__inventory_activity__activity_type=activity_type)
 
             activity_date = request.query_params.get('date', None)
-            activity_date_query = Q(activity_date=activity_date)
+            activity_date_query = Q(inventory_activity_assignment__activity_date=activity_date)
 
             inventory = request.query_params.get('inventory', None)
-            inv_query = Q(inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name = inventory)
+            inv_query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name = inventory)
             all_users = models.BaseUser.objects.all().values('id', 'username')
             user_map = {detail['id']: detail['username'] for detail in all_users}
 
@@ -6051,39 +6101,63 @@ class GetAssignedIdImagesListApiView(APIView):
 
                 if not accounts:
                     query = Q(
-                        inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=None)
+                        inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=None)
                 else:
                     for account_instance in accounts:
                         if query is None:
                             query = Q(
-                                inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
+                                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
                         else:
                             query |= Q(
-                                inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
+                                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
 
+            proposal_alias_name ='inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name'
+            shortlisted_inv_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'
+            supplier_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
 
-            inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
-                select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
-                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
-                filter(proposal_query, query, activity_type_query, activity_date_query, inv_query).values(
+            inv_act_image_objects = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                                                                     'inventory_activity_assignment__inventory_activity',
+                                                                     'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                                                     'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+                filter(proposal_query, query, activity_type_query, activity_date_query, inv_query). \
+                annotate(name=F(proposal_alias_name),inv_id=F(shortlisted_inv_alias),object_id=F(supplier_id)). \
+                values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date')
+            # inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
+            #     select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
+            #                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+            #     filter(proposal_query, query, activity_type_query, activity_date_query, inv_query).values(
+            #
+            #     'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity',
+            #     'inventory_activity__activity_type', 'assigned_to',
+            #     'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
+            #     'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
+            #     'inventory_activity__shortlisted_inventory_details',
+            #     'inventory_activity__shortlisted_inventory_details__inventory_id',
+            #     'inventory_activity__shortlisted_inventory_details__inventory_content_type',
+            #     'inventory_activity__shortlisted_inventory_details__comment',
+            #     'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+            #     'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
+            #     'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
+            #     'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
+            #     'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name',
+            # )
 
-                'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity',
-                'inventory_activity__activity_type', 'assigned_to',
-                'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
-                'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
-                'inventory_activity__shortlisted_inventory_details',
-                'inventory_activity__shortlisted_inventory_details__inventory_id',
-                'inventory_activity__shortlisted_inventory_details__inventory_content_type',
-                'inventory_activity__shortlisted_inventory_details__comment',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
-                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name',
-            )
+            # result = website_utils.organise_supplier_inv_images_data(inv_act_assignment_objects, user_map)
 
-            result = website_utils.organise_supplier_inv_images_data(inv_act_assignment_objects, user_map)
+            supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
+            supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
+            serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects, many=True)
+            suppliers = serializer.data
 
+            inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(inv_act_image_objects, suppliers)
+
+            result = {}
+            for object in inv_act_image_objects:
+                if object['name'] not in result:
+                    result[object['name']] = {}
+                if object['inv_id'] not in result[object['name']]:
+                    result[object['name']][object['inv_id']] = []
+                result[object['name']][object['inv_id']].append(object)
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

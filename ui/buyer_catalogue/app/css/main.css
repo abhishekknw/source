@@ -312,10 +312,15 @@ ul.animate-show li.selected {
     overflow-x: hidden;
 
 }
+
+.InventoryTable  thead {
+    background-color: #c3452f;
+    }
+
 .InventoryTable th{
   font-weight: bold !important;
     color:#ffffff;
-    background-color: #5C5C5C  ;
+    background-color: #4E6D8C  ;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 17px;
 text-align: center;
@@ -331,3 +336,96 @@ text-align: center;
   color:#000000;
 
 }
+
+
+.InventoryTable1 {
+  height: 500px;
+  display:block;
+  overflow-y: auto;
+  overflow-x: hidden;
+  }
+
+.InventoryTable1  thead {
+  background-color: #c3452f;
+  font:bold 13px/30px Arial, serif;
+  color: white;
+  }
+
+
+.InventoryTable1  tbody {
+  background-color: #fcfc5f;
+  color: black;
+  }
+
+
+.campaignInvTable {
+  max-height: 300px !important;
+  overflow: auto !important;
+  }
+
+.campaignInvTable  thead {
+    background-color: #c3452f;
+    color: white;
+    }
+
+
+  .campaignInvTable  tbody {
+  background-color: #fcfc5f;
+  color: black;
+      }
+
+
+
+.LeadsTable {
+  color: white;
+  }
+
+.LeadsTable  thead {
+  background-color: #c3452f;
+  color: white;
+  }
+
+
+.LeadsTable  tbody {
+  background-color: #fcfc5f;
+  color: black;
+
+  }
+.AvgLeadsTable tbody {
+  background-color: #c3452f;
+  color: white;
+
+}
+.supplierInvTable {
+  max-height: 300px !important;
+  overflow: auto !important;
+
+  }
+
+
+  .supplierInvTable  thead {
+  background-color: #c3452f;
+  color: white;
+  }
+
+
+  .supplierInvTable  tbody {
+    background-color: #fcfc5f;
+    color: black;
+    }
+
+  .RELEASETable {
+    background-color: #fcfc5f;
+    color: black;
+    }
+
+
+    .RELEASETable  thead {
+    background-color: #c3452f;
+    color: white;
+    width: 100%;
+    }
+
+    .RELEASETable  tbody > td{
+    font:bold 12px/30px Georgia, serif;
+    }

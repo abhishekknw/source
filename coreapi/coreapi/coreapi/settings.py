@@ -115,7 +115,6 @@ WSGI_APPLICATION = 'coreapi.wsgi.application'
 #
 
 
-
 # if 'RDS_HOSTNAME' in os.environ:
 #     DATABASES = {
 #         'default': {

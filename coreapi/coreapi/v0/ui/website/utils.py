@@ -40,6 +40,7 @@ from bulk_update.helper import bulk_update
 from celery import group
 from celery.task.sets import TaskSet, subtask
 from collections import namedtuple
+import gpxpy.geo
 
 import v0.models as models
 from v0.models import PriceMappingDefault
@@ -6567,5 +6568,95 @@ def get_activity_data_by_values(campaign_id, content_type_id):
 
         return result;
 
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_filters_by_campaign(campaign_id):
+    """
+
+    :param campaign_id:
+    :return:
+    """
+    function_name = get_filters_by_campaign.__name__
+    try:
+        filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id)
+        serializer = serializers.FiltersSerializer(filters, many=True)
+        return serializer.data
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_campaign_leads(campaign_id):
+    """
+
+    :param campaign_id:
+    :return:
+    """
+    function_name = get_campaign_leads.__name__
+    try:
+        leads_instance = models.Leads.objects.filter(campaign__proposal_id=campaign_id)
+        serializer = serializers.LeadsSerializer(leads_instance, many=True)
+        leads = serializer.data
+        leads_data = {}
+        if leads:
+            for lead in leads:
+                if lead['object_id'] not in leads_data:
+                    leads_data[lead['object_id']] = []
+                leads_data[lead['object_id']].append(lead)
+        return leads_data
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_campaign_inventory_activity_data(campaign_id):
+    """
+
+    :param campaign_id:
+    :return:
+    """
+    function_name = get_campaign_inventory_activity_data.__name__
+    try:
+        result = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                                                             'inventory_activity_assignment__inventory_activity',
+                                                             'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                                             'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                                                             'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal'). \
+            filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id). \
+            annotate(activity_type=F('inventory_activity_assignment__inventory_activity__activity_type'), inventory=F(
+                'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')). \
+            values('activity_type','inventory'). \
+            annotate(total=Count('inventory_activity_assignment', distinct=True))
+        data = {}
+        for object in result:
+            if object['inventory'] not in data:
+                data[object['inventory']] = {}
+            if object['activity_type'] not in data[object['inventory']]:
+                data[object['inventory']][object['activity_type']] = {}
+            data[object['inventory']][object['activity_type']] = object['total']
+        return data
+
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def calculate_location_difference_between_inventory_and_supplier(data, suppliers):
+    """
+
+    :param data:
+    :param suppliers:
+    :return:
+    """
+    function_name = calculate_location_difference_between_inventory_and_supplier.__name__
+    try:
+        supplier_objects_id_map = {supplier['supplier_id']: supplier for supplier in suppliers}
+
+        for item in data:
+            lat1 = item['latitude']
+            lon1 = item['longitude']
+            # need to be changed for other suppliers i.e society_latitude
+            lat2 = supplier_objects_id_map[item['object_id']]['society_latitude']
+            lon2 = supplier_objects_id_map[item['object_id']]['society_longitude']
+
+            if lat1 and lon1 and lat2 and lon2:
+                distance = gpxpy.geo.haversine_distance(lat1, lon1, lat2, lon2)
+                item['distance'] = distance
+        return data
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))

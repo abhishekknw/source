@@ -58,6 +58,16 @@
       return machadaloHttp.get(url);
     }
 
+    DashboardService.getCampaignInvTypesData = function(campaignId){
+      var url = url_base + "dashboard/get_supplier_data_by_campaign/?campaign_id=" + campaignId;
+      return machadaloHttp.get(url);
+    }
+
+    DashboardService.getCampaignInventoryActivitydetails = function(campaignId){
+      var url = url_base + "dashboard/get_campaign_inventory_activity_details/?campaign_id=" + campaignId;
+      return machadaloHttp.get(url);
+    }
+
     return DashboardService;
 
  }]);

@@ -2627,6 +2627,7 @@ class Leads(BaseModel):
     date1 = models.DateField(null=True, blank=True)
     date2 = models.DateField(null=True, blank=True)
     is_from_sheet = models.BooleanField(default=False)
+    is_interested = models.BooleanField(default=False)
     class Meta:
         db_table = 'leads'
 
