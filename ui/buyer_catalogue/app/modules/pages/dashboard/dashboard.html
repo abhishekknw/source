@@ -50,14 +50,21 @@
                               <thead>
                                 <tr>
                                   <td>DATE</td>
-                                  <td>% RELEASED</td>
+                                  <td>RELEASED (%)</td>
+                                  <td>AUDITED (%)</td>
+                                  <td>CLOSURED (%)</td>
 
                                 </tr>
                               </thead>
                                   <tbody>
-                                  <tr ng-repeat="item in campaignChartdata">
-                                    <td>{{item.label}}</td>
-                                    <td> {{item.value}}</td>
+                                  <tr ng-repeat="(key,item) in historyData">
+                                    <td><a ng-click="getDateData(key)">{{key}}</a></td>
+                                    <td ng-if="item['RELEASE']">{{item['RELEASE'].actual/item['RELEASE'].total*100|limitTo:4||NA}}</td>
+                                    <td ng-if="!item['RELEASE']">NA</td>
+                                    <td ng-if="item['AUDIT']">{{item['AUDIT'].actual/item['AUDIT'].total*100|limitTo:4||NA}}</td>
+                                    <td ng-if="!item['AUDIT']">NA</td>
+                                    <td ng-if="item['CLOSURE']">{{item['CLOSURE'].actual/item['CLOSURE'].total*100|limitTo:4||NA}}</td>
+                                    <td ng-if="!item['CLOSURE']">NA</td>
                                   </tr>
 
                                 </tbody>
@@ -213,7 +220,7 @@
                                   <td>{{item.name}}</td>
                                   <td>{{invName}}</td>
                                   <td>{{item.inv_count}}</td>
-                                  <td>{{item.offTimeDays/item.inv_count|limitTo:4||0}} X </td>
+                                  <td>{{item.offTimeDays/item.inv_count*100|limitTo:4||0}} </td>
                                   <td>{{item.offLocationDistance/item.inv_count|limitTo:5||0}}</td>
                                   <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Image</a></td>
                                   <td ng-if="item.images.length == 0"><label>No Image<label></td>

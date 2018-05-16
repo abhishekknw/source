@@ -29,7 +29,7 @@
           {header : 'Campaign Name', key : 'proposal_name'},
           {header : 'Inventory', key : 'supplier_name'},
           {header : 'Today Released', key : 'inv_type'},
-          {header : 'Average Delay(X)', key : 'act_name'},
+          {header : 'Average Delay(%)', key : 'act_name'},
           {header : 'Average Off Location(Meters)', key : 'act_name'},
         ];
         $scope.campaignStatus = {
@@ -755,7 +755,7 @@
    }
 
    var getHistory = function(data){
-     $scope.historyData = [];
+     $scope.historyData = {};
      angular.forEach(data, function(dates,invKey){
        console.log(dates);
        angular.forEach(dates, function(activities,dateKey){
@@ -776,5 +776,9 @@
      console.log($scope.historyData);
    }
 
+
+   $scope.getDateData = function(date){
+     $scope.date = date;
+   }
     })//END
   })();
