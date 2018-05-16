@@ -107,14 +107,18 @@
             $scope.inventoryActivityCountData = response.data.data;
             console.log($scope.inventoryActivityCountData);
             angular.forEach(response.data.data, function(data,key){
-            $scope.inventoryActivityCountData[key] = sortObject(data);
-            console.log($scope.inventoryActivityCountData[key]);
-            $scope.invActDateList = $scope.invActDateList.concat(Object.keys($scope.inventoryActivityCountData[key]));
+              $scope.inventoryActivityCountData[key] = sortObject(data);
+              console.log($scope.inventoryActivityCountData[key]);
+              $scope.invActDateList = $scope.invActDateList.concat(Object.keys($scope.inventoryActivityCountData[key]));
             })
             $scope.invActDateList = Array.from(new Set($scope.invActDateList));
             $scope.invActDateList.sort().reverse();
-            $scope.getDate($scope.count);
-            }).catch(function onError(response){
+            $scope.dateListKeys = {};
+            angular.forEach($scope.invActDateList, function(date){
+              $scope.dateListKeys[date] = date;
+            })
+            getHistory(response.data.data);
+          }).catch(function onError(response){
             console.log(response);
           })
         }
@@ -132,10 +136,39 @@
         }
 
         $scope.count = 0;
-        $scope.getDate = function(count){
-          console.log(count);
-          $scope.date =  $scope.invActDateList[count];
+        $scope.date = new Date();
+        $scope.pre = -1;
+        $scope.next = 1;
+        $scope.getDate = function(day){
+          $scope.date = new Date($scope.date);
+          $scope.date.setDate($scope.date.getDate() + day);
+          $scope.date = commonDataShare.formatDate($scope.date);
+          console.log($scope.dateListKeys);
+          // $scope.date =  $scope.invActDateList[count];
+        }
+        $scope.getRecentActivity = function(day){
+          console.log(day);
+          var initialDate = $scope.date;
+          var date = new Date($scope.date);
+          var counter = 100;
+          date.setDate(date.getDate() + day);
+          date = commonDataShare.formatDate(date);
 
+          while($scope.dateListKeys[date] != date){
+            date = new Date(date);
+            date.setDate(date.getDate() + day);
+            date = commonDataShare.formatDate(date);
+            counter--;
+            if(counter < 0){
+              alert("No Activity");
+              break;
+            }
+            console.log("ji",date,counter);
+          }
+          if(counter < 0)
+            $scope.date = initialDate;
+          else
+            $scope.date = date;
         }
 
         $scope.getPercent = function(num1,num2){
@@ -147,7 +180,7 @@
 
           console.log(date,type,inventory);
           $scope.invName = inventory;
-          $scope.showAssignedInvTable = true;
+          $scope.actType = type;
           DashboardService.getAssignedIdsAndImages(orgId, category, type, date, inventory)
           .then(function onSuccess(response){
             console.log(response);
@@ -238,8 +271,11 @@
               campaignReleaseData.push(campaignData);
             })
             $scope.campaignReleaseData = campaignReleaseData;
-
-            console.log($scope.campaignReleaseData);
+            if($scope.campaignReleaseData.length){
+                $scope.showAssignedInvTable = true;
+            }else{
+                $scope.showAssignedInvTable = false;
+            }
             $scope.campaignDataList = [];
             // createList();
             console.log($scope.campaignDataList);
@@ -718,9 +754,27 @@
      $scope.OntimeOnlocation[status].value = !$scope.OntimeOnlocation[status].value;
    }
 
-
-
-
+   var getHistory = function(data){
+     $scope.historyData = [];
+     angular.forEach(data, function(dates,invKey){
+       console.log(dates);
+       angular.forEach(dates, function(activities,dateKey){
+         if(!$scope.historyData.hasOwnProperty(dateKey)){
+           $scope.historyData[dateKey] = {};
+         }
+         angular.forEach(activities, function(count,actKey){
+           if(!$scope.historyData[dateKey].hasOwnProperty(actKey)){
+             $scope.historyData[dateKey][actKey] = {};
+             $scope.historyData[dateKey][actKey]['actual'] = 0;
+             $scope.historyData[dateKey][actKey]['total'] = 0;
+           }
+           $scope.historyData[dateKey][actKey].actual += data[invKey][dateKey][actKey].actual;
+           $scope.historyData[dateKey][actKey].total += data[invKey][dateKey][actKey].total;
+         })
+       })
+     })
+     console.log($scope.historyData);
+   }
 
     })//END
   })();

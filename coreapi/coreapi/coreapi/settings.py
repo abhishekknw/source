@@ -105,11 +105,11 @@ DATABASES = {
             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         },
         'default': {
-            'NAME': 'test',
+            'NAME': 'machadalotech',
             'ENGINE': 'django.db.backends.mysql',
             'HOST': 'localhost',
             'USER': 'root',
-            'PASSWORD': 'vyomamac',
+            'PASSWORD': 'yo@123',   
         }
 }
 
@@ -246,8 +246,8 @@ BASE_URL = 'http://192.168.1.117:8000/'
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'bd@machadalo.com'
-EMAIL_HOST_PASSWORD = 'vijaikirti@bdjune'
+EMAIL_HOST_USER = 'yogesh.mhetre@machadalo.com'
+EMAIL_HOST_PASSWORD = 'mtechcse@2014'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER

@@ -446,3 +446,8 @@ text-align: center;
       .sidePanelTable  tbody > td{
       font:bold 12px/30px Georgia, serif;
       }
+
+.zeroCampAct{
+  color: rgb(195, 69, 47);
+  padding-left : 30%;
+}
