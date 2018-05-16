@@ -178,7 +178,7 @@
                 console.log(items);
                 campaignData[inv]['onLocation'] = false;
                 campaignData[inv]['onTime'] = false;
-                campaignData[inv]['minDistance'] = 1000;
+                campaignData[inv]['minDistance'] = 100;
                 campaignData[inv]['dayCount'] = 100;
 
                   for(var i=0; i<items.length; i++){
@@ -400,6 +400,7 @@
               interactive : true
             }
         };
+
         $scope.pieChartOptions = {
            chart: {
                type: 'pieChart',
@@ -512,6 +513,8 @@
              { label : $scope.campaignStatus.upcoming.supplierLabel, value : $scope.campaignStatusData.upcoming.length, status : $scope.campaignStatus.upcoming.status }
            ];
            $scope.options = angular.copy(doughnutChartOptions);
+           $scope.barChartoptions = angular.copy(doughnutChartOptions);
+
          }).catch(function onError(response){
            console.log(response);
          })
@@ -697,6 +700,8 @@
     })
    }
 
+
+
    $scope.OntimeOnlocation = {
      ontime : {
        status : 'ontime', value : false
@@ -712,6 +717,10 @@
 
      $scope.OntimeOnlocation[status].value = !$scope.OntimeOnlocation[status].value;
    }
+
+
+
+
 
     })//END
   })();

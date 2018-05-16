@@ -22,6 +22,8 @@
 <link href="css/sass-app.css" rel="stylesheet" media="screen">
 <link href="css/sass-app-map.css" rel="stylesheet" media="screen">
 <link href="css/customstyle.css" rel="stylesheet" media="screen">
+<link href="css/sidePanel.css" rel="stylesheet" media="screen">
+
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="96x96" href="assets/img/favicon-96x96.png">
@@ -38,8 +40,31 @@
 <main ng-if="$pageFinishedLoading" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }">
 <ba-sidebar></ba-sidebar>
 <page-Top></page-Top>
+
 <div class="al-main">
     <div class="al-content">
+
+                          <button class="fa fa-hand-o-left panelButton" ng-click="visible=!visible;">
+                          <div ng-class="{'is-visible':visible}" class="menu">
+                            <table class="table-responsive table table-bordered sidePanelTable">
+                              <thead>
+                                <tr>
+                                  <td>DATE</td>
+                                  <td>% RELEASED</td>
+
+                                </tr>
+                              </thead>
+                                  <tbody>
+                                  <tr ng-repeat="item in campaignChartdata">
+                                    <td>{{item.label}}</td>
+                                    <td> {{item.value}}</td>
+                                  </tr>
+
+                                </tbody>
+                                </table>
+                          </div>
+                          </button>
+
       <uib-tabset class="dashboard-tab" active="$tabSetStatus.activeTab">
           <uib-tab>
             <uib-tab-heading>
@@ -82,7 +107,7 @@
                                           <div class="custom-panel">
                                               <uib-accordion close-others="oneAtATime">
                                                   <div uib-accordion-group  panel-class="panel panel-blur date-grid-tab custom-panel" ng-click="getAssignedIdsAndImages(date,act.header,inv.header)"
-                                                      is-disabled="!inventoryActivityCountData[inv.header][date][act.header] || inventoryActivityCountData[inv.header][date][act.header].actual==0">
+                                                      is-disabled="!inventoryActivityCountData[inv.header][date][act.header] || inventoryActivityCountData[inv.header][date][act.header].actual==0" >
                                                       <div uib-accordion-heading class="container">
                                                           <div class="pie-chart-item ng-scope">
                                                               <div class="row" ng-if="inventoryActivityCountData[inv.header][date][act.header]">
@@ -108,7 +133,7 @@
                                                       </div>
                                                       <!-- This is just some content to illustrate fancy headings. -->
 
-                                                      <div class="panel-group RELEASETable" id="accordion">
+                                                      <div class="panel-group RELEASETable" id="accordion" >
                                                               <div class="panel panel-default" ng-click="showOntimeOnlocation(OntimeOnlocation.ontime.status)">
                                                               <div class="panel-heading">
                                                                   <h4 class="panel-title" style="background-color:#8e1921  !important">
@@ -167,7 +192,7 @@
                     <div class="col-md-12" ng-if="showAssignedInvTable">
                             <div class="col-md-12 InventoryTable1">
                             <div class="panel-heading content-title">
-                            <h5 style="background:'red';color:white;">Campaign Details</h5>
+                            <h5>Campaign Details</h5>
                     </div>
                           <table st-safe-src="rowCollection" st-table="displayed" st-pipe="callServer" class="table-responsive table table-bordered">
                             <thead>
@@ -846,8 +871,19 @@
                             </tbody>
                           </table>
                         </div>
+
                       </div>
 
+                      <div class="panel panel-default" ng-if="showPerfMetrics == perfMetrics.onlocation">
+                          <div class="col-md-12">
+                            <div class="col-md-6">
+                              <div class="panel-heading content-title">
+                                <h5 style="background:'red'">Graphical Representation In {{campaignStatusName}}</h5>
+                              </div>
+                              <nvd3 options="supplierCodeCountOptions" data="campaignChartdata"></nvd3>
+                            </div>
+                          </div>
+                      </div>
                     </div>
                     <!--End : Performance metrics  -->
                     <div class="panel panel-default" ng-if="showSupplierTypeCountChart">
@@ -874,12 +910,13 @@
                           </div>
                         </div>
                     </div>
-
-                </div>
+                  </div>
               </div>
+
           </uib-tab>
-          <!--END : Performance Metrics  -->
+      <!--END : Performance Metrics  -->
       </uib-tabset>
+
 
       <!--content-top></content-top-->
       <div ui-view autoscroll="true" autoscroll-body-top></div>

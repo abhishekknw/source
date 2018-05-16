@@ -296,7 +296,7 @@ ul.animate-show li.selected {
 }
 .content-title{
   text-align: center;
-  background: #c3452f !important;
+  background: #cb1925 !important;
 }
 .pieChart-table{
   background: #c3452f !important;
@@ -346,7 +346,7 @@ text-align: center;
   }
 
 .InventoryTable1  thead {
-  background-color: #c3452f;
+  background-color: #cb1925;
   font:bold 13px/30px Arial, serif;
   color: white;
   }
@@ -358,13 +358,14 @@ text-align: center;
   }
 
 
+
 .campaignInvTable {
   max-height: 300px !important;
   overflow: auto !important;
   }
 
 .campaignInvTable  thead {
-    background-color: #c3452f;
+    background-color: #cb1925 ;
     color: white;
     }
 
@@ -381,7 +382,7 @@ text-align: center;
   }
 
 .LeadsTable  thead {
-  background-color: #c3452f;
+  background-color: #cb1925 ;
   color: white;
   }
 
@@ -404,7 +405,7 @@ text-align: center;
 
 
   .supplierInvTable  thead {
-  background-color: #c3452f;
+  background-color: #cb1925 ;
   color: white;
   }
 
@@ -421,7 +422,7 @@ text-align: center;
 
 
     .RELEASETable  thead {
-    background-color: #c3452f;
+    background-color: #cb1925 ;
     color: white;
     width: 100%;
     }
@@ -429,3 +430,19 @@ text-align: center;
     .RELEASETable  tbody > td{
     font:bold 12px/30px Georgia, serif;
     }
+
+    .sidePanelTable {
+      background-color: #fcfc5f;
+      color: black;
+      }
+
+
+      .sidePanelTable  thead {
+      background-color: #40434F;
+      color: white;
+      width: 100%;
+      }
+
+      .sidePanelTable  tbody > td{
+      font:bold 12px/30px Georgia, serif;
+      }
