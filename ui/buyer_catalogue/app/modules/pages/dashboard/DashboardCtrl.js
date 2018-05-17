@@ -6,7 +6,7 @@
     'use strict';
 
   angular.module('catalogueApp')
-      .controller('DashboardCtrl',function($scope, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants) {
+      .controller('DashboardCtrl',function($scope, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants,$location) {
  $scope.itemsByPage=15;
  $scope.query = "";
 
@@ -215,6 +215,7 @@
                 campaignData[inv]['dayCount'] = 100;
 
                   for(var i=0; i<items.length; i++){
+                    campaignData['proposalId'] = items[i].proposal_id;
                     if(items[i].hasOwnProperty('distance') && items[i].distance <= constants.distanceLimit){
                       campaignData[inv]['onLocation'] = true;
                       campaignData[inv]['minDistance'] = items[i].distance;
@@ -278,7 +279,7 @@
             }
             $scope.campaignDataList = [];
             // createList();
-            console.log($scope.campaignDataList);
+            console.log($scope.campaignReleaseData);
           }).catch(function onError(response){
             console.log(response);
           })
@@ -769,6 +770,10 @@
        })
      })
      console.log($scope.historyData);
+   }
+   $scope.goToExecutionPage = function(proposalId){
+     console.log(proposalId);
+     $location.path('/' + proposalId + '/opsExecutionPlan');
    }
 
     })//END

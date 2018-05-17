@@ -185,7 +185,7 @@
                               <tbody>
                                 <tr ng-repeat="item in campaignReleaseData  |filter:query" >
                                   <td class="table-id">{{$index + 1}}</td>
-                                  <td>{{item.name}}</td>
+                                  <td><a ng-click="goToExecutionPage(item.proposalId)">{{item.name}}</a></td>
                                   <td>{{invName}}</td>
                                   <td>{{item.inv_count}}</td>
                                   <td>{{item.offTimeDays/item.inv_count|limitTo:4||0}} X </td>
