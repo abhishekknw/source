@@ -5991,6 +5991,54 @@ class DashBoardViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    @list_route()
+    def get_leads_by_campaign(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id', None)
+
+            leads = models.Leads.objects.filter(campaign__proposal_id=campaign_id). \
+                    values('object_id','campaign','is_interested'). \
+                    annotate(total=Count('object_id'))
+            leads_by_date = models.Leads.objects.filter(campaign__proposal_id=campaign_id). \
+                values('is_interested','created_at'). \
+                annotate(total=Count('created_at'))
+            supplier_ids_list = models.Leads.objects.filter(campaign__proposal_id=campaign_id).values('object_id').distinct()
+            supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids_list).values()
+
+            supplier_id_object_list = { supplier['supplier_id']:supplier for supplier in supplier_objects }
+            supplier_data = {}
+            for supplier in leads:
+                if supplier['object_id'] not in supplier_data:
+                    supplier_data[supplier['object_id']] = supplier
+                    supplier_data[supplier['object_id']]['interested'] = 0
+                    supplier_data[supplier['object_id']]['data'] = supplier_id_object_list[supplier['object_id']]
+
+                if supplier['is_interested']:
+                    supplier_data[supplier['object_id']]['interested'] += supplier['total']
+
+            date_data = {}
+            for supplier in leads_by_date:
+                if str(supplier['created_at']) not in date_data:
+                    date_data[str(supplier['created_at'])] = supplier
+                    date_data[str(supplier['created_at'])]['interested'] = 0
+                if supplier['is_interested']:
+                    date_data[str(supplier['created_at'])]['interested'] += supplier['total']
+
+            data = {
+                'supplier_data' : supplier_data,
+                'date_data' : date_data
+            }
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
