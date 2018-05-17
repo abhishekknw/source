@@ -360,15 +360,17 @@
 
                             </tbody>
                             </table>
-                            <table class="table-responsive table table-bordered AvgLeadsTable">
-                            <tbody>
-                              <tr ng-if="showLeadsDetails">
-                                <td>Avg Leads Per Flat : {{avgLeadsPerFlat| limitTo:3 }} % ({{avgHotLeadsPerFlat|limitTo:3}} %)</td>
-                                <td>Avg Leads Per Supplier : {{avgLeadsPerSupplier|limitTo:3}} % ({{avgHotLeadsPerSupplier|limitTo:3}} %)</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
+                                <table class="table-responsive table table-bordered AvgLeadsTable" >
+                                <tbody>
+                                  <tr ng-if="showLeadsDetails">
+                                    <td>Avg Leads Per Flat (High Quality): {{avgLeadsPerFlat| limitTo:3 }} % ({{avgHotLeadsPerFlat|limitTo:3}} %)</td>
+                                    <td>Avg Leads Per Supplier (High Quality): {{avgLeadsPerSupplier|limitTo:3}} % ({{avgHotLeadsPerSupplier|limitTo:3}} %)</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                              </div>
+
+
 
                       </div>
   </div>
@@ -376,7 +378,7 @@
                       <div class="col-md-12">
                         <br><br><br><br>
 
-                        <div class="col-md-5 LeadsTable" ng-if="showLeadsDetails">
+                        <div class="col-md-5 LeadsTable" ng-if="showLeadsDetailsDataTable">
                           <div class="panel-heading content-title">
                             <h5 style="background:'red'">INVENTORY DETAILS</h5>
 
@@ -450,13 +452,13 @@
                               <thead>
                                 <th>Proposal Name</th>
                                 <th>Total</th>
-                                <th>Links</th>
+                                <th>Go to Inventory</th>
                               </thead>
                               <tbody>
                                 <tr ng-repeat="campaign in campaignInvData">
                                   <td>{{campaign.proposal__name}}</td>
                                  <td>{{campaign.total}}</td>
-                                 <td><a ng-click="getCampaignInvTypesData(campaign)" class="btn btn-danger">CLICK ME</a>
+                                 <td><a ng-click="getCampaignInvTypesData(campaign)" class="btn btn-danger">Go To Inventory</a>
                                  </td>
                                 </tr>
                               </tbody>
@@ -468,7 +470,7 @@
 
                         <div class="col-md-6" ng-if="showSupplierInvTable">
                           <div class="panel-heading content-title">
-                            <h5 style="background:'red'">Inventory Count Table Of {{campaignName}}</h5>
+                            <h5 style="background:'red'">Inventory Table Of {{campaignName}}</h5>
                           </div>
                           <div class="supplierInvTable">
                           <table class="table-responsive table table-bordered" ng-if="campaignInventoryData.filters.length">
