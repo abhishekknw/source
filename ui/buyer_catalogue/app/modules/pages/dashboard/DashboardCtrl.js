@@ -64,7 +64,8 @@
         $scope.perfMetrics = {
           inv : 'inv',
           ontime : 'onTime',
-          location : 'onLocation'
+          location : 'onLocation',
+          leads : 'leads'
         };
         $scope.showPerfMetrics = false;
        $scope.perfPanel = {
@@ -486,6 +487,35 @@
            }
        };
 
+       var stackedBarChart = {
+          "chart": {
+            "type": "multiBarChart",
+            "height": 450,
+            // "labelType" : "11",
+            "margin": {
+              "top": 50,
+              "right": 20,
+              "bottom": 145,
+              "left": 45
+            },
+            "clipEdge": true,
+            "duration": 500,
+            "stacked": true,
+            "xAxis": {
+              "axisLabel": "",
+              "showMaxMin": false,
+              "rotateLabels" : -30
+            },
+            "yAxis": {
+              "axisLabel": "",
+              "axisLabelDistance": -20,
+
+              "ticks" : 8
+            },
+            "reduceXTicks" : false
+          }
+        }
+
 
        // START : service call to get suppliers as campaign status
        $scope.getSuppliersOfCampaignWithStatus = function(campaignId){
@@ -774,6 +804,73 @@
    $scope.goToExecutionPage = function(proposalId){
      console.log(proposalId);
      $location.path('/' + proposalId + '/opsExecutionPlan');
+   }
+   $scope.getLeadsByCampaign = function(campaignId){
+     DashboardService.getLeadsByCampaign(campaignId)
+     .then(function onSuccess(response){
+       console.log(response);
+       $scope.stackedBarChartOptions = angular.copy(stackedBarChart);
+       $scope.stackedBarChartSupplierData = formatMultiBarChartDataForSuppliers(response.data.data.supplier_data);
+       $scope.stackedBarChartDateData = formatMultiBarChartDataByDate(response.data.data.date_data);
+       $scope.campaignLeadsData = response.data.data;
+       $scope.showPerfMetrics = $scope.perfMetrics.leads;
+     }).catch(function onError(response){
+       console.log(response);
+     })
+   }
+   var formatMultiBarChartDataForSuppliers = function(data){
+     var values1 = [];
+     var values2 = [];
+     angular.forEach(data, function(supplier){
+       console.log(supplier);
+        var value1 =
+           { x : supplier.data.society_name, y : supplier.total - supplier.interested};
+        var value2 =
+           { x : supplier.data.society_name, y : supplier.interested};
+        values1.push(value1);
+        values2.push(value2);
+     })
+     var temp_data = [
+       {
+         key : "Normal Leads",
+         color : constants.colorKey1,
+         values : values1
+       },
+       {
+         key : "High Potential Leads",
+         color : constants.colorKey2,
+         values : values2
+       }
+     ];
+     console.log(temp_data);
+     return temp_data;
+   }
+   var formatMultiBarChartDataByDate = function(data){
+     var values1 = [];
+     var values2 = [];
+     angular.forEach(data, function(date){
+       var tempDate = commonDataShare.formatDate(date.created_at);
+        var value1 =
+           { x : tempDate, y : date.total - date.interested};
+        var value2 =
+           { x : tempDate, y : date.interested};
+        values1.push(value1);
+        values2.push(value2);
+     })
+     var temp_data = [
+       {
+         key : "Normal Leads",
+         color : constants.colorKey1,
+         values : values1
+       },
+       {
+         key : "High Potential Leads",
+         color : constants.colorKey2,
+         values : values2
+       }
+     ];
+     console.log(temp_data);
+     return temp_data;
    }
 
     })//END

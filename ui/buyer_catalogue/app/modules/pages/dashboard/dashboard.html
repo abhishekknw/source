@@ -497,7 +497,7 @@
                                               <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
                                               <td >
                                                 <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
-                                                <md-option>Lead </md-option>
+                                                <md-option ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">Lead </md-option>
                                                 <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
                                                   Inventory </md-option>
                                                 <md-option>Supplier</md-option>
@@ -852,6 +852,28 @@
                           </table>
                         </div>
                       </div>
+                      <!--leads perf metrics  -->
+                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.leads">
+                        <div class="panel-heading content-title">
+                          <div class="col-md-7">
+                            <h4> Leads Per Society</h4>
+                          </div>
+                        </div>
+                        <div class="col-md-12">
+                          <nvd3 options="stackedBarChartOptions" data="stackedBarChartSupplierData"></nvd3>
+                        </div>
+                      </div>
+                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.leads">
+                        <div class="panel-heading content-title">
+                          <div class="col-md-7">
+                            <h4> Leads By Date</h4>
+                          </div>
+                        </div>
+                        <div class="col-md-12">
+                          <nvd3 options="stackedBarChartOptions" data="stackedBarChartDateData"></nvd3>
+                        </div>
+                      </div>
+
 
                     </div>
                     <!--End : Performance metrics  -->
