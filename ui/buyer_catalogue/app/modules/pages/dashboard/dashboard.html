@@ -217,7 +217,7 @@
                               <tbody>
                                 <tr ng-repeat="item in campaignReleaseData  |filter:query" >
                                   <td class="table-id">{{$index + 1}}</td>
-                                  <td>{{item.name}}</td>
+                                  <td><a ng-click="goToExecutionPage(item.proposalId)">{{item.name}}</a></td>
                                   <td>{{invName}}</td>
                                   <td>{{item.inv_count}}</td>
                                   <td>{{item.offTimeDays/item.inv_count*100|limitTo:4||0}} </td>
@@ -531,7 +531,7 @@
                                               <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
                                               <td >
                                                 <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
-                                                <md-option>Lead </md-option>
+                                                <md-option ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">Lead </md-option>
                                                 <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
                                                   Inventory </md-option>
                                                 <md-option>Supplier</md-option>
@@ -887,6 +887,28 @@
                         </div>
 
                       </div>
+                      <!--leads perf metrics  -->
+                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.leads">
+                        <div class="panel-heading content-title">
+                          <div class="col-md-7">
+                            <h4> Leads Per Society</h4>
+                          </div>
+                        </div>
+                        <div class="col-md-12">
+                          <nvd3 options="stackedBarChartOptions" data="stackedBarChartSupplierData"></nvd3>
+                        </div>
+                      </div>
+                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.leads">
+                        <div class="panel-heading content-title">
+                          <div class="col-md-7">
+                            <h4> Leads By Date</h4>
+                          </div>
+                        </div>
+                        <div class="col-md-12">
+                          <nvd3 options="stackedBarChartOptions" data="stackedBarChartDateData"></nvd3>
+                        </div>
+                      </div>
+
 
                       <div class="panel panel-default" ng-if="showPerfMetrics == perfMetrics.onlocation">
                           <div class="col-md-12">

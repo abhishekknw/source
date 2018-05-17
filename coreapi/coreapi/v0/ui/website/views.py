@@ -5991,6 +5991,54 @@ class DashBoardViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    @list_route()
+    def get_leads_by_campaign(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id', None)
+
+            leads = models.Leads.objects.filter(campaign__proposal_id=campaign_id). \
+                    values('object_id','campaign','is_interested'). \
+                    annotate(total=Count('object_id'))
+            leads_by_date = models.Leads.objects.filter(campaign__proposal_id=campaign_id). \
+                values('is_interested','created_at'). \
+                annotate(total=Count('created_at'))
+            supplier_ids_list = models.Leads.objects.filter(campaign__proposal_id=campaign_id).values('object_id').distinct()
+            supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids_list).values()
+
+            supplier_id_object_list = { supplier['supplier_id']:supplier for supplier in supplier_objects }
+            supplier_data = {}
+            for supplier in leads:
+                if supplier['object_id'] not in supplier_data:
+                    supplier_data[supplier['object_id']] = supplier
+                    supplier_data[supplier['object_id']]['interested'] = 0
+                    supplier_data[supplier['object_id']]['data'] = supplier_id_object_list[supplier['object_id']]
+
+                if supplier['is_interested']:
+                    supplier_data[supplier['object_id']]['interested'] += supplier['total']
+
+            date_data = {}
+            for supplier in leads_by_date:
+                if str(supplier['created_at']) not in date_data:
+                    date_data[str(supplier['created_at'])] = supplier
+                    date_data[str(supplier['created_at'])]['interested'] = 0
+                if supplier['is_interested']:
+                    date_data[str(supplier['created_at'])]['interested'] += supplier['total']
+
+            data = {
+                'supplier_data' : supplier_data,
+                'date_data' : date_data
+            }
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
@@ -6112,6 +6160,7 @@ class GetAssignedIdImagesListApiView(APIView):
                                 inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
 
             proposal_alias_name ='inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name'
+            proposal_alias_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id'
             shortlisted_inv_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'
             supplier_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
 
@@ -6120,8 +6169,8 @@ class GetAssignedIdImagesListApiView(APIView):
                                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
                                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
                 filter(proposal_query, query, activity_type_query, activity_date_query, inv_query). \
-                annotate(name=F(proposal_alias_name),inv_id=F(shortlisted_inv_alias),object_id=F(supplier_id)). \
-                values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date')
+                annotate(name=F(proposal_alias_name),inv_id=F(shortlisted_inv_alias),object_id=F(supplier_id),proposal_id=F(proposal_alias_id)). \
+                values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id')
             # inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
             #     select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
             #                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
