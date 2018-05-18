@@ -1,6 +1,7 @@
 # python core imports
 import csv
 import json
+import openpyxl
 
 # django imports
 from django.contrib.contenttypes.models import ContentType
@@ -3226,5 +3227,39 @@ class BusDepotViewSet(viewsets.ViewSet):
             instance = models.SupplierTypeBusDepot.objects.get(pk=pk)
             serializer = BusDepotSerializer(instance=instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class ImportSocietyPaymentDetails(APIView):
+    """
+    API which will save payment details of society by sheet
+    """
+    def post(self, request, pk=None):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            if not request.FILES:
+                return ui_utils.handle_response(class_name, data='No File Found')
+            my_file = request.FILES['file']
+            wb = openpyxl.load_workbook(my_file)
+            sheet = wb['society_payment_sheet']
+            data = []
+            for index, row in enumerate(sheet.iter_rows()):
+                if index == 0:
+                    response = ui_utils.check_payment_headers(row)
+                    if not response:
+                        return ui_utils.handle_response(class_name, data='No Headers Matching')
+                else:
+                    data.append(row)
+
+            if data:
+                response = ui_utils.save_society_payment_details(data)
+                if not response:
+                    return ui_utils.handle_response(class_name, data='Error')
+            return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
