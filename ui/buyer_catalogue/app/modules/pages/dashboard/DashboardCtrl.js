@@ -196,6 +196,7 @@
 
             angular.forEach(response.data.data, function(data,campaignName){
               console.log(data);
+              $scope.campaignData = [];
               var campaignData = {};
               campaignData['name'] = campaignName;
               campaignData['inv_count'] = 0;
@@ -307,8 +308,23 @@
           DashboardService.getCampaigns(orgId, category, date)
           .then(function onSuccess(response){
             console.log(response);
-            $scope.campaignData = response.data.data;
 
+            $scope.searchSelectAllModel = [];
+            console.log($scope.searchSelectAllModel);
+            angular.forEach($scope.searchSelectAllModel, function(data){
+              $scope.modelData = $scope.searchSelectAllModel;
+              console.log($scope.modelData);
+            })
+            $scope.campaignData = response.data.data;
+            console.log($scope.campaignData);
+            $scope.mergedarray = {};
+            $scope.mergedData = {};
+            $scope.mergedarray = angular.extend(response.data.data.ongoing_campaigns, response.data.data.completed_campaigns,response.data.data.upcoming_campaigns);
+            console.log($scope.mergedarray);
+            angular.forEach($scope.mergedarray, function(data){
+              $scope.mergedData[data.proposal_id] = data;
+              console.log($scope.mergedData[data.proposal_id]);
+            })
             $scope.campaigns = [$scope.campaignData.ongoing_campaigns.length,$scope.campaignData.completed_campaigns.length,$scope.campaignData.upcoming_campaigns.length];
             $scope.campaignChartdata = [
               { label : $scope.campaignStatus.ongoing.campaignLabel, value : $scope.campaignData.ongoing_campaigns.length },
@@ -765,6 +781,7 @@
      $scope.OntimeOnlocation[status].value = !$scope.OntimeOnlocation[status].value;
    }
 
+
    var getHistory = function(data){
      $scope.historyData = {};
      angular.forEach(data, function(dates,invKey){
@@ -863,6 +880,66 @@
      $scope.date = date;
    }
 
+
+   $scope.graphicalComparision = {
+     leads : {
+       status : 'leads', value : false
+     },
+     inventory : {
+       status : 'inventory', value : false
+     },
+   };
+   $scope.getGraphicalComparision = function(status){
+     $scope.graphicalComparision.leads.value = false;
+     $scope.graphicalComparision.inventory.value = false;
+
+     $scope.graphicalComparision[status].value = !$scope.graphicalComparision[status].value;
+   }
+
+   $scope.searchSelectAllSettings = { enableSearch: true,
+       keyboardControls: true ,idProp : "campaign",
+       template: '{{option.campaign.name}}', smartButtonTextConverter(skip, option) { return option; },
+       selectionLimit: 4,
+       showCheckAll : true,
+       scrollableHeight: '300px', scrollable: true};
+
+ $scope.selected_baselines_customTexts = {buttonDefaultText: 'Select Campaigns'};
+
+ //   $scope.events = {
+ //   onItemSelect : function(item){
+ //       console.log(item);
+ //       console.log($scope.searchSelectAllModel);
+ //   }
+ //
+ // }
+ //
+
+    $scope.compCampaigns = {
+      campaigns : {
+        status : 'campaigns', value : false
+      }
+    };
+    $scope.getCompareCampaigns = function(status){
+      $scope.compCampaigns.value = false;
+      $scope.compCampaigns[status].value = !$scope.compCampaigns[status].value;
+    }
+
+
+    $scope.compareCampaignChart = function(campaignChartData){
+      console.log(campaignChartData);
+      var proposalIdData = [];
+      angular.forEach($scope.searchSelectAllModel,function(data){
+        proposalIdData.push(data.id.proposal_id);
+        console.log(data);
+      })
+      DashboardService.getCompareCampaignChartData(proposalIdData)
+      .then(function onSuccess(response){
+        console.log(response);
+
+      }).catch(function onError(response){
+        console.log(response);
+      })
+    }
 
 
     })//END

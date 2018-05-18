@@ -451,3 +451,27 @@ text-align: center;
   color: rgb(195, 69, 47);
   padding-left : 30%;
 }
+.multiselect-parent {
+  color: black !important;
+  border-color: black !important;
+}
+
+.multiselect-parent .dropdown-toggle {
+  color: black !important;
+  border-color: black !important;
+
+
+}
+
+.multiselect-parent .dropdown-menu {
+  color: black !important;
+  border-color: black !important;
+
+
+}
+
+#displayedFocus button:focus{
+  transform: scale(1.2) !important;
+  background: #800000 !important;
+
+}

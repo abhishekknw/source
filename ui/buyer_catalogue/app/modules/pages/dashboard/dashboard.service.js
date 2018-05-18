@@ -73,6 +73,11 @@
       return machadaloHttp.get(url);
     }
 
+    DashboardService.getCompareCampaignChartData = function(data){
+      var url = url_base + "dashboard/proposal_id/get_leads_by_multiple_campaigns/";
+      return machadaloHttp.post(url,data);
+    }
+
     return DashboardService;
 
  }]);
