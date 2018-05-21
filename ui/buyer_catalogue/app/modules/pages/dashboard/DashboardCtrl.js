@@ -317,6 +317,9 @@
             })
             $scope.campaignData = response.data.data;
             console.log($scope.campaignData);
+            angular.forEach($scope.mergedarray, function(data){
+
+            })
             $scope.mergedarray = {};
             $scope.mergedData = {};
             $scope.mergedarray = angular.extend(response.data.data.ongoing_campaigns, response.data.data.completed_campaigns,response.data.data.upcoming_campaigns);

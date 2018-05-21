@@ -15,10 +15,9 @@ angular.module('catalogueApp')
  	$scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},
-        {header : 'Area'},
-        {header : 'Sub Area'},
+        {header : 'Area,(Sub Area)'},
         {header : 'Address'},
-        {header : 'LandMark'},
+        {header : 'Relationship Data'},
         {header : 'Flat Count'},
         {header : 'Tower Count'},
         {header : 'Status'},
@@ -26,7 +25,7 @@ angular.module('catalogueApp')
         {header : 'Inventory Type'},
         {header : 'Inventory Count'},
         {header : 'Inventory Supplier Price'},
-        {header : 'Total Supplier Price'},
+        {header : 'Total Supplier Price(Per Flat)  '},
         {header : 'Negotiated Price'},
         {header : 'Booking Status'},
         {header : 'Phase'},
@@ -104,6 +103,17 @@ angular.module('catalogueApp')
         console.log(response);
     		$scope.releaseDetails = response.data.data;
         console.log($scope.releaseDetails);
+
+        angular.forEach($scope.releaseDetails.shortlisted_suppliers, function(supplier){
+          $scope.mapViewLat = supplier.latitude;
+          $scope.mapViewLong = supplier.longitude;
+          // console.log($scope.mapViewLat);
+          // console.log($scope.mapViewLong);
+
+
+        })
+
+
         setDataToModel($scope.releaseDetails.shortlisted_suppliers);
         $scope.loading = response;
         angular.forEach($scope.releaseDetails.shortlisted_suppliers, function(supplier){
@@ -301,4 +311,19 @@ angular.module('catalogueApp')
       }
 
     }
+
+
+$scope.orderProperty = "f";
+$scope.setOrderProperty = function(propertyName) {
+        if ($scope.orderProperty === propertyName) {
+            $scope.orderProperty = '-' + propertyName;
+        } else if ($scope.orderProperty === '-' + propertyName) {
+            $scope.orderProperty = propertyName;
+        } else {
+            $scope.orderProperty = propertyName;
+        }
+    };
+
+
+
 }]);//Controller function ends here
