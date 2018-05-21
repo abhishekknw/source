@@ -63,7 +63,8 @@
           inv : 'inv',
           ontime : 'onTime',
           location : 'onLocation',
-          leads : 'leads'
+          leads : 'leads',
+          multipleLeads : 'multipleLeads'
         };
         $scope.showPerfMetrics = false;
 
@@ -317,13 +318,14 @@
             })
             $scope.campaignData = response.data.data;
             console.log($scope.campaignData);
-            $scope.mergedarray = {};
-            $scope.mergedData = {};
-            $scope.mergedarray = angular.extend(response.data.data.ongoing_campaigns, response.data.data.completed_campaigns,response.data.data.upcoming_campaigns);
-            console.log($scope.mergedarray);
-            angular.forEach($scope.mergedarray, function(data){
-              $scope.mergedData[data.proposal_id] = data;
-              console.log($scope.mergedData[data.proposal_id]);
+            $scope.mergedarray = [];
+            // $scope.mergedarray.push.apply($scope.campaignData.ongoing_campaigns,$scope.campaignData.completed_campaigns,$scope.campaignData.upcoming_campaigns);
+            angular.forEach($scope.campaignData, function(data){
+              console.log(data);
+              angular.forEach(data,function(campaign){
+                  $scope.mergedarray.push(campaign);
+              })
+
             })
             $scope.campaigns = [$scope.campaignData.ongoing_campaigns.length,$scope.campaignData.completed_campaigns.length,$scope.campaignData.upcoming_campaigns.length];
             $scope.campaignChartdata = [
@@ -502,7 +504,26 @@
             },
             "reduceXTicks" : false
           }
-        }
+        };
+
+        var lineChart = {
+          "chart": {
+            "type": "lineChart",
+            "height": 450,
+            "useInteractiveGuideline": true,
+            "dispatch": {},
+            "xAxis": {
+              "axisLabel": "Campaigns",
+              tickFormat: function(d) {
+                console.log(d);
+                return d.y;
+              }
+            },
+            "yAxis": {
+              "axisLabel": "",
+            }
+          }
+        };
 
 
        // START : service call to get suppliers as campaign status
@@ -905,14 +926,11 @@
 
  $scope.selected_baselines_customTexts = {buttonDefaultText: 'Select Campaigns'};
 
- //   $scope.events = {
- //   onItemSelect : function(item){
- //       console.log(item);
- //       console.log($scope.searchSelectAllModel);
- //   }
- //
- // }
- //
+   $scope.events = {
+   onItemSelect : function(item){
+       console.log(item);
+   }
+ }
 
     $scope.compCampaigns = {
       campaigns : {
@@ -925,22 +943,101 @@
     }
 
 
-    $scope.compareCampaignChart = function(campaignChartData){
+    $scope.getCompareCampaignChartData = function(campaignChartData){
       console.log(campaignChartData);
       var proposalIdData = [];
+      var proposalIdDataNames = {};
       angular.forEach($scope.searchSelectAllModel,function(data){
         proposalIdData.push(data.id.proposal_id);
+        proposalIdDataNames[data.id.proposal_id] = {
+          name : data.id.name,
+        };
         console.log(data);
       })
       DashboardService.getCompareCampaignChartData(proposalIdData)
       .then(function onSuccess(response){
         console.log(response);
 
+        var campaignIds = Object.keys(response.data.data);
+        angular.forEach(proposalIdData, function(campaignId){
+          if(!(campaignIds.indexOf(campaignId) > -1)){
+            response.data.data[campaignId] = {};
+            response.data.data[campaignId]['data'] = {};
+            response.data.data[campaignId]['total'] = 0;
+            response.data.data[campaignId]['interested'] = 0;
+            response.data.data[campaignId]['data']['name'] = proposalIdDataNames[campaignId].name;
+          }
+        });
+        formatLineChartData(response.data.data);
+        $scope.stackedBarChartOptions = angular.copy(stackedBarChart);
+        $scope.stackedBarChartcampaignsData = formatMultiBarChartDataByMultCampaigns(response.data.data);
+        $scope.showPerfMetrics = $scope.perfMetrics.multipleLeads;
+
       }).catch(function onError(response){
         console.log(response);
       })
     }
-
+    var formatMultiBarChartDataByMultCampaigns = function(data){
+      var values1 = [];
+      var values2 = [];
+      angular.forEach(data, function(campaign){
+         var value1 =
+            { x : campaign.data.name, y : campaign.total - campaign.interested};
+         var value2 =
+            { x : campaign.data.name, y : campaign.interested};
+         values1.push(value1);
+         values2.push(value2);
+      })
+      var temp_data = [
+        {
+          key : "Normal Leads",
+          color : constants.colorKey1,
+          values : values1
+        },
+        {
+          key : "High Potential Leads",
+          color : constants.colorKey2,
+          values : values2
+        }
+      ];
+      console.log(temp_data);
+      return temp_data;
+    };
+    var formatLineChartData = function(data){
+      $scope.lineChartLabels = [];
+      $scope.lineChartValues = [];
+      var values1 = [];
+      var values2 = [];
+      $scope.series = ['Normal','Hot'];
+      var count = Object.keys(data).length;
+      console.log(data,count);
+      angular.forEach(data, function(campaign){
+        $scope.lineChartLabels.push(campaign.data.name);
+        values1.push(campaign.total/count);
+        values2.push((campaign.interested)/count);
+      });
+      $scope.lineChartValues.push(values1);
+      $scope.lineChartValues.push(values2);
+      console.log($scope.lineChartLabels,$scope.lineChartValues);
+    }
+    $scope.lineChartOptions = {
+    scales: {
+      yAxes: [
+        {
+          id: 'y-axis-1',
+          type: 'linear',
+          display: true,
+          position: 'left'
+        },
+        {
+          id: 'y-axis-2',
+          type: 'linear',
+          display: true,
+          position: 'right'
+        }
+      ]
+    }
+  };
 
     })//END
   })();
