@@ -533,24 +533,36 @@
                                       <div class="panel-body menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
-                                              <td >
-                                                <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
-                                                <md-option ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">Lead </md-option>
-                                                <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
-                                                  Inventory </md-option>
-                                                <md-option>Supplier</md-option>
-                                              </md-select>
+                                              <td>
+                                                <md-menu>
+                                                   <div class="" ng-click="openMenu($mdMenu, $event)">
+                                                     {{campaign.campaign.name}}
+                                                   </div>
+                                                   <md-menu-content width="4">
+                                                     <md-menu-item>
+                                                       <md-button ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">
+                                                         Lead
+                                                       </md-button>
+                                                     </md-menu-item>
+                                                     <md-menu-divider></md-menu-divider>
+                                                     <md-menu-item>
+                                                       <md-button ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                         Inventory
+                                                       </md-button>
+                                                     </md-menu-item>
+                                                     <md-menu-divider></md-menu-divider>
+                                                   </md-menu-content>
+                                                 </md-menu>
                                                 </td>
                                               </tr>
                                           </table>
-
                                       </div>
                                   </div>
                                 </div>
                               <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.completed.status)">
                                   <div class="panel-heading">
                                       <h4 class="panel-title">
-                                          Completed Campaigns
+                                        Completed Campaigns
                                       </h4>
                                   </div>
                                   <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
@@ -558,12 +570,25 @@
                                         <table class="table">
                                             <tr ng-repeat="campaign in campaignData.completed_campaigns">
                                             <td >
-                                              <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
-                                              <md-option ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">Lead </md-option>
-                                              <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
-                                                Inventory </md-option>
-                                              <md-option>Supplier</md-option>
-                                            </md-select>
+                                              <md-menu>
+                                                 <div class="" ng-click="openMenu($mdMenu, $event)">
+                                                   {{campaign.campaign.name}}
+                                                 </div>
+                                                 <md-menu-content width="4">
+                                                   <md-menu-item>
+                                                     <md-button ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">
+                                                       Lead
+                                                     </md-button>
+                                                   </md-menu-item>
+                                                   <md-menu-divider></md-menu-divider>
+                                                   <md-menu-item>
+                                                     <md-button ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                       Inventory
+                                                     </md-button>
+                                                   </md-menu-item>
+                                                   <md-menu-divider></md-menu-divider>
+                                                 </md-menu-content>
+                                               </md-menu>
                                               </td>
                                             </tr>
                                         </table>
@@ -581,12 +606,25 @@
                                         <table class="table">
                                             <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
                                             <td >
-                                              <md-select placeholder="{{campaign.campaign.name}}" ng-model="campaign.campaign.name" style="height:16px;width:240px;" >
-                                              <md-option ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">Lead </md-option>
-                                              <md-option ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
-                                                Inventory </md-option>
-                                              <md-option>Supplier</md-option>
-                                            </md-select>
+                                              <md-menu>
+                                                 <div class="" ng-click="openMenu($mdMenu, $event)">
+                                                   {{campaign.campaign.name}}
+                                                 </div>
+                                                 <md-menu-content width="4">
+                                                   <md-menu-item>
+                                                     <md-button ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">
+                                                       Lead
+                                                     </md-button>
+                                                   </md-menu-item>
+                                                   <md-menu-divider></md-menu-divider>
+                                                   <md-menu-item>
+                                                     <md-button ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                       Inventory
+                                                     </md-button>
+                                                   </md-menu-item>
+                                                   <md-menu-divider></md-menu-divider>
+                                                 </md-menu-content>
+                                               </md-menu>
                                               </td>
                                             </tr>
                                         </table>
@@ -611,24 +649,22 @@
                                   </div>
                               </div>
                           </div>
-
                     </div>
-
-                        <div class="col-md-2">
-                          <table class="table table-responsive table-bordered menu-content">
-                            <tr ng-repeat="inv in campaignInventories">
-                              <td ng-click="getPerformanceMetricsData(inv.filter_code)">
-                                {{inventories[inv.filter_code]}}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td ng-click="getOnTimeData()">On Time</td>
-                            </tr>
-                            <tr>
-                              <td ng-click="getLocationData()">On Location</td>
-                            </tr>
-                          </table>
-                        </div>
+                    <div class="col-md-2">
+                      <table class="table table-responsive table-bordered menu-content">
+                        <tr ng-repeat="inv in campaignInventories">
+                          <td ng-click="getPerformanceMetricsData(inv.filter_code)">
+                            {{inventories[inv.filter_code]}}
+                          </td>
+                        </tr>
+                        <!-- <tr>
+                          <td ng-click="getOnTimeData()">On Time</td>
+                        </tr>
+                        <tr>
+                          <td ng-click="getLocationData()">On Location</td>
+                        </tr> -->
+                      </table>
+                    </div>
                         <div class="col-md-12" ng-show="compCampaigns.campaigns.value">
                           <span style="color:red;width:100%;" ng-dropdown-multiselect="" options="mergedarray" class="col-md-6"  extra-settings="searchSelectAllSettings"
                           selected-model="searchSelectAllModel" translation-texts="selected_baselines_customTexts" events="events"></span>

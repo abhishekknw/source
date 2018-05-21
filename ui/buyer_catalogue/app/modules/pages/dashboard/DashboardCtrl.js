@@ -1038,6 +1038,9 @@
       ]
     }
   };
+  $scope.openMenu = function($mdMenu, ev) {
+      $mdMenu.open(ev);
+    };
 
     })//END
   })();
