@@ -56,7 +56,7 @@
                                   <td>DATE</td>
                                   <td>RELEASED (%)</td>
                                   <td>AUDITED (%)</td>
-                                  <td>CLOSURED (%)</td>
+                                  <td>CLOSED (%)</td>
 
                                 </tr>
                               </thead>
@@ -106,7 +106,7 @@
                               </div>
                           </div>
                           <div class="row zeroCampAct" ng-if="!dateListKeys[date]">
-                            <h1>No Campaign Activity !!</h1>
+                            <h1>NO CAMPAIGN ACTIVITY !!</h1>
                           </div>
                       </div>
                   </div>
@@ -581,7 +581,7 @@
                                                      </md-button>
                                                    </md-menu-item>
                                                    <md-menu-divider></md-menu-divider>
-                                                   <md-menu-item>
+                                                   <md-menu-item ng-click="getontimelocation(ontimelocation.showdrop.status)">
                                                      <md-button ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
                                                        Inventory
                                                      </md-button>
@@ -617,7 +617,7 @@
                                                      </md-button>
                                                    </md-menu-item>
                                                    <md-menu-divider></md-menu-divider>
-                                                   <md-menu-item>
+                                                   <md-menu-item ng-click="getontimelocation(ontimelocation.showdrop.status)">
                                                      <md-button ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
                                                        Inventory
                                                      </md-button>
@@ -650,50 +650,55 @@
                               </div>
                           </div>
                     </div>
+
+                      <div class="row" ng-if="showPerfMetrics == perfMetrics.blank">
+
+                      </div>
+
                     <div class="col-md-2">
                       <table class="table table-responsive table-bordered menu-content">
-                        <tr ng-repeat="inv in campaignInventories">
-                          <td ng-click="getPerformanceMetricsData(inv.filter_code)">
-                            {{inventories[inv.filter_code]}}
+                        <md-input-container style="margin-right: 10px;" ng-if="campaignInventories.length">
+                          <label>Select Inventory</label>
+                          <md-select ng-model="size">
+                            <md-option ng-repeat="inv in campaignInventories" value="{{inventories[inv.filter_code]}}"  ng-click="getPerformanceMetricsData(inv.filter_code)">
+                              <md-button class="md-raised">
+                                 {{inventories[inv.filter_code]}}
+                                </md-button>
+                            </md-option>
+                          </md-select>
+                        </md-input-container>
+                        <div class="row notassigned" ng-if="!campaignInventories.length">
+                          <!-- No Inventory Found -->
+                        </div>
+                         <tr ng-if="showTimeLocBtn">
+                          <td id="ontimeonlocFocus">
+                            <md-button class="md-raised md-warn" ng-click="getOnTimeData()">
+                              OnTime
+                              </md-button>
                           </td>
                         </tr>
-                        <!-- <tr>
-                          <td ng-click="getOnTimeData()">On Time</td>
+
+                        <tr  ng-if="showTimeLocBtn">
+                          <td id="ontimeonlocFocus">
+                            <md-button class="md-raised md-warn" ng-click="getLocationData()">
+                              OnLocation
+                              </md-button>
+                          </td>
                         </tr>
-                        <tr>
-                          <td ng-click="getLocationData()">On Location</td>
-                        </tr> -->
+
                       </table>
                     </div>
                         <div class="col-md-12" ng-show="compCampaigns.campaigns.value">
-                          <span style="color:red;width:100%;" ng-dropdown-multiselect="" options="mergedarray" class="col-md-6"  extra-settings="searchSelectAllSettings"
-                          selected-model="searchSelectAllModel" translation-texts="selected_baselines_customTexts" events="events"></span>
-                        </div>
-                        <button class="btn btn-primary"  ng-click="getCompareCampaignChartData()">SUBMIT</button>
+                          <div class="col-md-2">
+                            <span style="color:red;width:100%;" ng-dropdown-multiselect="" options="mergedarray" class="col-md-6"  extra-settings="searchSelectAllSettings"
+                            selected-model="searchSelectAllModel" translation-texts="selected_baselines_customTexts" events="events"></span>
 
-                          <!--compare leads  -->
-                          <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime">
-                            <div class="panel-heading content-title">
-                              <div class="col-md-10">
-                                <h4> On Time Release Inventory Details </h4>
-                              </div>
-                            </div>
-                            <div class="col-md-8">
-
-                            </div>
-                            <div class="col-md-4">
-                              <table class="table table-responsive table-bordered pieChart-table">
-                                <tbody>
-                                  <tr>
-                                    <td>OnTime / Released</td>
-                                  </tr>
-                                  <tr>
-                                    <td>{{performanceMetricsData.release.ontime}} / {{performanceMetricsData.release.actual.length}}</td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </div>
                           </div>
+                            <div class="col-md-1">
+                            <button class="btn btn-primary"  ng-click="getCompareCampaignChartData()">COMPARE</button>
+                          </div>
+                      </div>
+
 
 
                         <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv">
@@ -702,7 +707,7 @@
                               <h4> Release Inventory Details </h4>
                             </div>
                           </div>
-                          <div class="col-md-8">
+                          <div class="col-md-8" ng-if="performanceMetricsData.release.actual.length / performanceMetricsData.release.total.length * 100|limitTo:3==0">
                             <circular-progress value="performanceMetricsData.release.actual.length" max="performanceMetricsData.release.total.length"
                              orientation="1" radius="80"
                                 stroke="20" base-color="#ffff00" progress-color="#00ff00"
@@ -710,7 +715,7 @@
                                 label="{{performanceMetricsData.release.actual.length / performanceMetricsData.release.total.length * 100|limitTo:3}}%">
                             </circular-progress>
                           </div>
-                          <div class="col-md-4">
+                          <div class="col-md-4" ng-if="performanceMetricsData.release.actual.length / performanceMetricsData.release.total.length * 100|limitTo:3==0">
                             <table class="table table-responsive table-bordered pieChart-table">
                               <tbody>
                                 <tr>
@@ -722,15 +727,18 @@
                               </tbody>
                             </table>
                           </div>
+                          <div class="row notassigned" ng-if="!performanceMetricsData.release.actual.length / performanceMetricsData.release.total.length * 100|limitTo:3==0">
+                            <h1>NOT ASSIGNED !!</h1>
+                          </div>
                         </div>
 
-                        <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime">
+                        <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime" is-disabled="performanceMetricsData.release.actual==0" >
                           <div class="panel-heading content-title">
                             <div class="col-md-10">
                               <h4> On Time Release Inventory Details </h4>
                             </div>
                           </div>
-                          <div class="col-md-8">
+                          <div class="col-md-8" ng-if="performanceMetricsData.release.ontime / performanceMetricsData.release.actual.length * 100|limitTo:3==0">
                             <circular-progress value="performanceMetricsData.release.ontime" max="performanceMetricsData.release.actual.length"
                              orientation="1" radius="80"
                                 stroke="20" base-color="#ffff00" progress-color="#00ff00"
@@ -738,7 +746,7 @@
                                 label="{{performanceMetricsData.release.ontime / performanceMetricsData.release.actual.length * 100|limitTo:3}}%">
                             </circular-progress>
                           </div>
-                          <div class="col-md-4">
+                          <div class="col-md-4" ng-if="performanceMetricsData.release.ontime / performanceMetricsData.release.actual.length * 100|limitTo:3==0">
                             <table class="table table-responsive table-bordered pieChart-table">
                               <tbody>
                                 <tr>
@@ -750,6 +758,9 @@
                               </tbody>
                             </table>
                           </div>
+                          <div class="row notassigned" ng-if="!performanceMetricsData.release.ontime / performanceMetricsData.release.actual.length * 100|limitTo:3==0">
+                            <h1>NOT ASSIGNED !!</h1>
+                          </div>
                         </div>
 
                         <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.onlocation">
@@ -758,7 +769,7 @@
                               <h4> On Location Release Details </h4>
                             </div>
                           </div>
-                          <div class="col-md-8">
+                          <div class="col-md-8" ng-if="onLocationData.RELEASE.actual.length / onLocationData.RELEASE.total * 100|limitTo:3==0">
                             <circular-progress value="onLocationData.RELEASE.actual.length" max="onLocationData.RELEASE.total"
                              orientation="1" radius="80"
                                 stroke="20" base-color="#ffff00" progress-color="#00ff00"
@@ -766,7 +777,7 @@
                                 label="{{onLocationData.RELEASE.actual.length / onLocationData.RELEASE.total * 100|limitTo:3}}%">
                             </circular-progress>
                           </div>
-                          <div class="col-md-4">
+                          <div class="col-md-4" ng-if="onLocationData.RELEASE.actual.length / onLocationData.RELEASE.total * 100|limitTo:3==0">
                             <table class="table table-responsive table-bordered pieChart-table">
                               <tbody>
                                 <tr>
@@ -778,6 +789,9 @@
                               </tbody>
                             </table>
                           </div>
+                          <div class="row notassigned" ng-if="!onLocationData.RELEASE.actual.length / onLocationData.RELEASE.total * 100|limitTo:3==0">
+                            <h1>NOT ASSIGNED !!</h1>
+                          </div>
                         </div>
 
                       </div>
@@ -788,7 +802,7 @@
                             <h4> Audit Inventory Details </h4>
                           </div>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-8" ng-if="performanceMetricsData.audit.actual.length / performanceMetricsData.audit.total.length * 100|limitTo:3==0">
                           <circular-progress value="performanceMetricsData.audit.actual.length" max="performanceMetricsData.audit.total.length"
                            orientation="1" radius="80"
                               stroke="20" base-color="#ffff00" progress-color="#00ff00"
@@ -796,7 +810,7 @@
                               label="{{performanceMetricsData.audit.actual.length / performanceMetricsData.audit.total.length * 100|limitTo:3}}%">
                           </circular-progress>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" ng-if="performanceMetricsData.audit.actual.length / performanceMetricsData.audit.total.length * 100|limitTo:3==0">
                           <table class="table table-responsive table-bordered pieChart-table">
                             <tbody>
                               <tr>
@@ -808,6 +822,9 @@
                             </tbody>
                           </table>
                         </div>
+                        <div class="row notassigned" ng-if="!performanceMetricsData.audit.actual.length / performanceMetricsData.audit.total.length * 100|limitTo:3==0">
+                          <h1>NOT ASSIGNED !!</h1>
+                        </div>
                       </div>
                       <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv">
                         <div class="panel-heading content-title">
@@ -815,7 +832,7 @@
                             <h4> Closure Inventory Details </h4>
                           </div>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-8" ng-if="performanceMetricsData.closure.actual.length / performanceMetricsData.closure.total.length * 100|limitTo:3==0">
                           <circular-progress value="performanceMetricsData.closure.actual.length" max="performanceMetricsData.closure.total.length"
                            orientation="1" radius="80"
                               stroke="20" base-color="#ffff00" progress-color="#00ff00"
@@ -823,7 +840,7 @@
                               label="{{performanceMetricsData.closure.actual.length / performanceMetricsData.closure.total.length * 100|limitTo:3}}%">
                           </circular-progress>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" ng-if="performanceMetricsData.closure.actual.length / performanceMetricsData.closure.total.length * 100|limitTo:3==0">
                           <table class="table table-responsive table-bordered pieChart-table">
                             <tbody>
                               <tr>
@@ -835,15 +852,18 @@
                             </tbody>
                           </table>
                         </div>
+                        <div class="row notassigned" ng-if="!performanceMetricsData.closure.actual.length / performanceMetricsData.closure.total.length * 100|limitTo:3==0">
+                          <h1>NOT ASSIGNED !!</h1>
+                        </div>
                       </div>
 
-                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime">
+                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime" >
                         <div class="panel-heading content-title">
                           <div class="col-md-10">
                             <h4> On Time Audit Inventory Details </h4>
                           </div>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-8" ng-if="performanceMetricsData.audit.ontime / performanceMetricsData.audit.actual.length * 100|limitTo:3==0">
                           <circular-progress value="performanceMetricsData.audit.ontime" max="performanceMetricsData.audit.actual.length"
                            orientation="1" radius="80"
                               stroke="20" base-color="#ffff00" progress-color="#00ff00"
@@ -851,7 +871,7 @@
                               label="{{performanceMetricsData.audit.ontime / performanceMetricsData.audit.actual.length * 100|limitTo:3}}%">
                           </circular-progress>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" ng-if="performanceMetricsData.audit.ontime / performanceMetricsData.audit.actual.length * 100|limitTo:3==0">
                           <table class="table table-responsive table-bordered pieChart-table">
                             <tbody>
                               <tr>
@@ -863,14 +883,17 @@
                             </tbody>
                           </table>
                         </div>
+                        <div class="row notassigned" ng-if="!performanceMetricsData.audit.ontime / performanceMetricsData.audit.actual.length * 100|limitTo:3==0">
+                          <h1>NOT ASSIGNED !!</h1>
+                        </div>
                       </div>
-                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime">
+                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime" is-disabled="performanceMetricsData.closure.actual==0">
                         <div class="panel-heading content-title">
                           <div class="col-md-10">
                             <h4> On Time Closure Inventory Details </h4>
                           </div>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-8" ng-if="performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3==0">
                           <circular-progress value="performanceMetricsData.closure.ontime" max="performanceMetricsData.closure.actual.length"
                            orientation="1" radius="80"
                               stroke="20" base-color="#ffff00" progress-color="#00ff00"
@@ -878,7 +901,7 @@
                               label="{{performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3}}%">
                           </circular-progress>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" ng-if="performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3==0">
                           <table class="table table-responsive table-bordered pieChart-table">
                             <tbody>
                               <tr>
@@ -889,36 +912,13 @@
                               </tr>
                             </tbody>
                           </table>
+                        </div>
+                        <div class="row notassigned" ng-if="!performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3==0">
+                          <h1>NOT ASSIGNED !!</h1>
                         </div>
                       </div>
 
-                      <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime">
-                        <div class="panel-heading content-title">
-                          <div class="col-md-10">
-                            <h4> On Time Closure Inventory Details </h4>
-                          </div>
-                        </div>
-                        <div class="col-md-8">
-                          <circular-progress value="performanceMetricsData.closure.ontime" max="performanceMetricsData.closure.actual.length"
-                           orientation="1" radius="80"
-                              stroke="20" base-color="#ffff00" progress-color="#00ff00"
-                              iterations="100" animation="easeInOutCubic"
-                              label="{{performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3}}%">
-                          </circular-progress>
-                        </div>
-                        <div class="col-md-4">
-                          <table class="table table-responsive table-bordered pieChart-table">
-                            <tbody>
-                              <tr>
-                                <td>OnTime / Closure</td>
-                              </tr>
-                              <tr>
-                                <td>{{performanceMetricsData.closure.ontime}} / {{performanceMetricsData.closure.actual.length}}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
+
 
                       <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.onlocation">
                         <div class="panel-heading content-title">
@@ -926,7 +926,7 @@
                             <h4> On Location Audit Inventory Details </h4>
                           </div>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-8" ng-if="onLocationData.AUDIT.actual.length / onLocationData.AUDIT.total * 100|limitTo:3==0">
                           <circular-progress value="onLocationData.AUDIT.actual.length" max="onLocationData.AUDIT.total"
                            orientation="1" radius="80"
                               stroke="20" base-color="#ffff00" progress-color="#00ff00"
@@ -934,7 +934,7 @@
                               label="{{onLocationData.AUDIT.actual.length / onLocationData.AUDIT.total * 100|limitTo:3}}%">
                           </circular-progress>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" ng-if="onLocationData.AUDIT.actual.length / onLocationData.AUDIT.total * 100|limitTo:3==0">
                           <table class="table table-responsive table-bordered pieChart-table">
                             <tbody>
                               <tr>
@@ -946,6 +946,9 @@
                             </tbody>
                           </table>
                         </div>
+                        <div class="row notassigned" ng-if="!onLocationData.AUDIT.actual.length / onLocationData.AUDIT.total * 100|limitTo:3==0">
+                          <h1>NOT ASSIGNED !!</h1>
+                        </div>
                       </div>
 
                       <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.onlocation">
@@ -954,7 +957,7 @@
                             <h4> On Location Closure Inventory Details </h4>
                           </div>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-8" ng-if="onLocationData.CLOSURE.actual.length / onLocationData.CLOSURE.total * 100|limitTo:3==0">
                           <circular-progress value="onLocationData.CLOSURE.actual.length" max="onLocationData.CLOSURE.total"
                            orientation="1" radius="80"
                               stroke="20" base-color="#ffff00" progress-color="#00ff00"
@@ -962,7 +965,7 @@
                               label="{{onLocationData.CLOSURE.actual.length / onLocationData.CLOSURE.total * 100|limitTo:3}}%">
                           </circular-progress>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" ng-if="onLocationData.CLOSURE.actual.length / onLocationData.CLOSURE.total * 100|limitTo:3==0">
                           <table class="table table-responsive table-bordered pieChart-table">
                             <tbody>
                               <tr>
@@ -974,7 +977,9 @@
                             </tbody>
                           </table>
                         </div>
-
+                        <div class="row notassigned" ng-if="!onLocationData.CLOSURE.actual.length / onLocationData.CLOSURE.total * 100|limitTo:3==0">
+                          <h1>NOT ASSIGNED !!</h1>
+                        </div>
                       </div>
                       <!--leads perf metrics  -->
                       <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.leads">
@@ -1015,7 +1020,7 @@
                         </div>
                         <div class="col-md-12">
                           <!-- <nvd3 options="stackedBarChartOptions" data="stackedBarChartcampaignsData"></nvd3> -->
-                          <canvas id="line" class="chart chart-line" chart-data="lineChartValues"
+                          <canvas id="line" height="220" class="chart chart-line" chart-data="lineChartValues"
                             chart-labels="lineChartLabels" chart-series="series" chart-options="lineChartOptions"
                             chart-dataset-override="datasetOverride" chart-click="onClick">
                           </canvas>
@@ -1023,7 +1028,7 @@
                       </div>
 
 
-                      <div class="panel panel-default" ng-if="showPerfMetrics == perfMetrics.onlocation">
+                      <!-- <div class="panel panel-default" ng-if="showPerfMetrics == perfMetrics.onlocation">
                           <div class="col-md-12">
                             <div class="col-md-6">
                               <div class="panel-heading content-title">
@@ -1032,7 +1037,7 @@
                               <nvd3 options="supplierCodeCountOptions" data="campaignChartdata"></nvd3>
                             </div>
                           </div>
-                      </div>
+                      </div> -->
                     </div>
                     <!--End : Performance metrics  -->
                     <div class="panel panel-default" ng-if="showSupplierTypeCountChart">

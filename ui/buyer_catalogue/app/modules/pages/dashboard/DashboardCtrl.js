@@ -18,10 +18,17 @@
           {header : 'FLIER'},
           {header : 'GATEWAY ARCH'},
         ];
+        $scope.invCodes = {
+          PO : 'PO',
+          ST : 'ST',
+          SL : 'SL',
+          FL : 'FL',
+          GA : 'GA'
+        };
         $scope.actKeys = [
           {header : 'RELEASE', key : 'release', label1 : 'Released', label2 : 'UnReleased'},
           {header : 'AUDIT', key : 'audit', label1 : 'Audited', label2 : 'UnAudited'},
-          {header : 'CLOSURE', key : 'closure', label1 : 'Closured', label2 : 'UnClosured' },
+          {header : 'CLOSURE', key : 'closure', label1 : 'Closed', label2 : 'UnClosed' },
         ];
 
 
@@ -64,7 +71,8 @@
           ontime : 'onTime',
           location : 'onLocation',
           leads : 'leads',
-          multipleLeads : 'multipleLeads'
+          multipleLeads : 'multipleLeads',
+          blank : 'blank'
         };
         $scope.showPerfMetrics = false;
 
@@ -141,6 +149,9 @@
         $scope.pre = -1;
         $scope.next = 1;
         $scope.getDate = function(day){
+          $scope.showAssignedInvTable = false;
+          $scope.OntimeOnlocation.ontime.value = false;
+          $scope.OntimeOnlocation.onlocation.value = false;
           $scope.date = new Date($scope.date);
           $scope.date.setDate($scope.date.getDate() + day);
           $scope.date = commonDataShare.formatDate($scope.date);
@@ -149,6 +160,9 @@
         }
         $scope.getRecentActivity = function(day){
           console.log(day);
+          $scope.showAssignedInvTable = false;
+          $scope.OntimeOnlocation.ontime.value = false;
+          $scope.OntimeOnlocation.onlocation.value = false;
           var initialDate = $scope.date;
           var date = new Date($scope.date);
           var counter = 100;
@@ -249,11 +263,6 @@
                     campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
                   }
 
-                  if(campaignData[inv]['onLocation'])
-                    campaignData['onLocationCount'] += 1;
-                  else{
-                    campaignData['offLocationDistance'] += campaignData[inv]['minDistance'];
-                  }
 
                   if(campaignData[inv]['onTime'])
                     campaignData['onTimeCount'] += 1;
@@ -607,11 +616,24 @@
 
        // START : get campaign filters
        $scope.getCampaignFilters = function(campaignId){
+         $scope.showTimeLocBtn = false;
          $scope.campaignId = campaignId;
+         $scope.showPerfMetrics = $scope.perfMetrics.blank;
          DashboardService.getCampaignFilters(campaignId)
          .then(function onSuccess(response){
            console.log(response);
-           $scope.campaignInventories = response.data.data;
+           $scope.campaignInventories = [];
+           angular.forEach(response.data.data, function(inv){
+             if($scope.invCodes.hasOwnProperty(inv.filter_code)){
+               $scope.campaignInventories.push(inv);
+             }
+           })
+           $scope.performanceMetricsData = [];
+           if($scope.campaignInventories.length){
+             $scope.showPerfMetrics = $scope.perfMetrics.inv;
+           }
+           // $scope.campaignInventories = response.data.data;
+           console.log($scope.campaignInventories);
 
          }).catch(function onError(response){
            console.log(response);
@@ -624,8 +646,10 @@
          $scope.inv = inv;
          DashboardService.getPerformanceMetricsData($scope.campaignId,inv)
          .then(function onSuccess(response){
+           console.log(response);
            $scope.performanceMetricsData = response.data.data;
            $scope.showPerfMetrics = $scope.perfMetrics.inv;
+           $scope.showTimeLocBtn = true;
            setOntimeData($scope.performanceMetricsData);
          }).catch(function onError(response){
            console.log(response);
@@ -830,6 +854,8 @@
      $location.path('/' + proposalId + '/opsExecutionPlan');
    }
    $scope.getLeadsByCampaign = function(campaignId){
+     $scope.showTimeLocBtn = false;
+     $scope.showPerfMetrics = $scope.perfMetrics.blank;
      DashboardService.getLeadsByCampaign(campaignId)
      .then(function onSuccess(response){
        console.log(response);
@@ -943,6 +969,19 @@
       $scope.compCampaigns[status].value = !$scope.compCampaigns[status].value;
     }
 
+    $scope.ontimelocation = {
+      ontimeloc : {
+        status : 'ontimeloc', value : false
+      },
+      showdrop : {
+        status : 'showdrop', value : false
+      }
+    };
+    $scope.getontimelocation = function(status){
+      $scope.ontimelocation.value = false;
+      $scope.ontimelocation[status].value = !$scope.ontimelocation[status].value;
+    }
+
 
     $scope.getCompareCampaignChartData = function(campaignChartData){
       console.log(campaignChartData);
@@ -1036,7 +1075,9 @@
           display: true,
           position: 'right'
         }
-      ]
+      ],
+      responsive: true,
+      maintainAspectRatio: false,
     }
   };
   $scope.openMenu = function($mdMenu, ev) {

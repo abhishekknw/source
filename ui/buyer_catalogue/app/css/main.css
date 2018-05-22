@@ -475,3 +475,17 @@ text-align: center;
   background: #800000 !important;
 
 }
+
+
+#ontimeonlocFocus button:focus{
+  transform: scale(1.2) !important;
+  background: #6DE726 !important;
+
+}
+
+
+.notassigned{
+  color: rgb(195, 69, 47);
+  padding-left : 30%;
+  margin-top: 30px;
+}
