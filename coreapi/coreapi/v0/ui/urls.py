@@ -69,6 +69,7 @@ urlpatterns = [
     url(r'^(?P<id>[A-Z_a-z0-9]+)/bus-shelter/$', views.BusShelter.as_view()),
     url(r'^suppliers-meta/$', views.SuppliersMeta.as_view()),
     url(r'^supplier/(?P<id>[A-Z_a-z0-9]+)/image_details/$', views.SupplierImageDetails.as_view()),
+    url(r'^import_society_payment_details/$', views.ImportSocietyPaymentDetails.as_view()),
 
 ]
 

@@ -1254,3 +1254,12 @@ campaign_status = {
     'completed_campaigns' : 'completed',
     'upcoming_campaigns' : 'upcoming'
 }
+
+society_payment_headers = {
+    'Index' : True,
+    'Society Id' : True,
+    'Name For Payment' : True,
+    'IFSC Code' : True,
+    'Bank Name' : True,
+    'Account Number' : True
+}

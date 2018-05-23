@@ -974,7 +974,7 @@ class SupplierTypeSociety(BaseModel):
     name_for_payment = models.CharField(db_column='NAME_FOR_PAYMENT', max_length=100, blank=True, null=True)  # Field name made lowercase.
     ifsc_code = models.CharField(db_column='IFSC_CODE', max_length=100, blank=True, null=True)  # Field name made lowercase.
     bank_name = models.CharField(db_column='BANK_NAME', max_length=100, blank=True, null=True)  # Field name made lowercase.
-    account_no = models.IntegerField(db_column='ACCOUNT_NUMBER', blank=True, null=True)  # Field name made lowercase.
+    account_no = models.BigIntegerField (db_column='ACCOUNT_NUMBER', blank=True, null=True)  # Field name made lowercase.
     street_furniture_available = models.BooleanField(db_column='STREET_FURNITURE_AVAILABLE', default=False)  # Field name made lowercase. This field type is a guess.
     stall_timing = models.CharField(db_column='STALL_TIMING',max_length=10,blank=True, null=True)
     electricity_available  = models.BooleanField(db_column='ELECTRICITY_AVAILABLE',  default=False)

@@ -161,5 +161,7 @@ angular
     distanceLimit : 80,
     release : 'RELEASE',
     closure : 'CLOSURE',
-    audit : 'AUDIT'
+    audit : 'AUDIT',
+    colorKey1 : '#3f53d5',
+    colorKey2 : '#ff5733'
   });

@@ -33,17 +33,19 @@
       <table class="table-bordered table-responsive table-scroll table-striped" style="text-align: center;word-wrap:break-word;">
         <thead>
           <tr>
-            <th ng-repeat="header in headings">{{header.header}}</th>
+            <th ng-click="setOrderProperty('flat_count')" ng-repeat="header in headings | orderBy:orderProperty">
+              {{header.header}}
+            </th>
           </tr>
         </thead>
-        <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
+        <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers | orderBy:orderProperty">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
             <td rowspan="{{key.length}}" ng-show="$first">{{$parent.$index + 1}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.object_id}})</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.area}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.subarea}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">
+            <a href="https://www.google.com/maps/?q=+{{supplier.latitude}}+{{supplier.longitude}}" target="_blank" style="text-decoration: underline; cursor: pointer;color:blue;">{{supplier.area}}, ({{supplier.subarea}}) {{supplier.address2}}</a></td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.address1}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.address2}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first"></td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.flat_count}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.tower_count}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
@@ -57,7 +59,7 @@
             <td class="" ng-if="key=='FLIER'">{{supplier.flat_count}}</td>
             <td class="" ng-if="key!='FLIER'">{{filter.total_count}}</td>
             <td class="">{{getInventoryPrice(filter.actual_supplier_price,key)}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first">{{getTotalSupplierPrice(supplier)}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{getTotalSupplierPrice(supplier)}} ({{getTotalSupplierPrice(supplier)/supplier.flat_count|limitTo:4}})</td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="priceform">
               <span class="error" ng-show="priceform.price.$error.min">{{positiveNoError}}</span>
               <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing input-width" min="0" permission = "[permissions.addNegotiatedPrice,permissions.viewNegotiatedPrice]">

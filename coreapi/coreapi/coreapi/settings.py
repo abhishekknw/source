@@ -98,21 +98,20 @@ WSGI_APPLICATION = 'coreapi.wsgi.application'
 #         }
 # }
 
-#
-# DATABASES = {
-#         'sqlite': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#         },
-#         'default': {
-#             'NAME': 'mdtestnew',
-#             'ENGINE': 'django.db.backends.mysql',
-#             'HOST': 'localhost',
-#             'USER': 'root',
-#             'PASSWORD': 'root',
-#         }
-# }
-#
+
+DATABASES = {
+        'sqlite': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        },
+        'default': {
+            'NAME': 'machadalotech',
+            'ENGINE': 'django.db.backends.mysql',
+            'HOST': 'localhost',
+            'USER': 'root',
+            'PASSWORD': 'yo@123',   
+        }
+}
 
 
 # if 'RDS_HOSTNAME' in os.environ:
@@ -244,8 +243,13 @@ BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
+<<<<<<< HEAD
 EMAIL_HOST_USER = 'businessdevelopment@machadalo.com'
 EMAIL_HOST_PASSWORD = 'career1231@'
+=======
+EMAIL_HOST_USER = 'yogesh.mhetre@machadalo.com'
+EMAIL_HOST_PASSWORD = 'mtechcse@2014'
+>>>>>>> dev
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER

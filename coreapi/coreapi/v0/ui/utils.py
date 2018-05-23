@@ -27,6 +27,7 @@ from django.db.models import Q
 from smtplib import SMTPException
 from rest_framework.response import Response
 from rest_framework import status
+from bulk_update.helper import bulk_update
 
 import v0.models
 import v0.serializers
@@ -911,5 +912,42 @@ def save_gateway_arch_location(supplier, supplier_type_code):
         }
         gateway_arch = v0.models.GatewayArchInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
         gateway_arch.save()
+    except Exception as e:
+        raise Exception(function, "Error " + get_system_error(e))
+
+def check_payment_headers(headers):
+    """
+
+    :param headers:
+    :return:
+    """
+    function = check_payment_headers.__name__
+    try:
+        for header in headers:
+            if not v0_constants.society_payment_headers[header.value]:
+                return False
+        return True
+    except Exception as e:
+        raise Exception(function, "Error " + get_system_error(e))
+
+def save_society_payment_details(data):
+    """
+
+    :param headers:
+    :return:
+    """
+    function = check_payment_headers.__name__
+    try:
+        society_ids = [cell[1].value for cell in data]
+        data_by_society_ids = {cell[1].value:cell for cell in data}
+        society_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=society_ids)
+        for society in society_objects:
+            society.name_for_payment = data_by_society_ids[society.supplier_id][2].value
+            society.ifsc_code = data_by_society_ids[society.supplier_id][3].value
+            society.bank_name = data_by_society_ids[society.supplier_id][4].value
+            society.account_no = data_by_society_ids[society.supplier_id][5].value
+        bulk_update(society_objects)
+
+        return True
     except Exception as e:
         raise Exception(function, "Error " + get_system_error(e))

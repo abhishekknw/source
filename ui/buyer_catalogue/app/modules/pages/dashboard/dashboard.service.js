@@ -68,6 +68,16 @@
       return machadaloHttp.get(url);
     }
 
+    DashboardService.getLeadsByCampaign = function(campaignId){
+      var url = url_base + "dashboard/get_leads_by_campaign/?campaign_id=" + campaignId;
+      return machadaloHttp.get(url);
+    }
+
+    DashboardService.getCompareCampaignChartData = function(data){
+      var url = url_base + "dashboard/proposal_id/get_leads_by_multiple_campaigns/";
+      return machadaloHttp.post(url,data);
+    }
+
     return DashboardService;
 
  }]);

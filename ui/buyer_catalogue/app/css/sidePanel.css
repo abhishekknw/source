@@ -1,0 +1,36 @@
+
+    .menu{
+      height: 70%;
+     width: 0;
+     position: fixed;
+     z-index: 1;
+     margin-top: 35px;
+     right: 0;
+     background-color: #061035;
+     overflow-x: hidden;
+     transition: 0.5s;
+     -webkit-transition: width 0.5s ease-in-out;
+     -moz-transition: width 0.5s ease-in-out;
+     -o-transition: width 0.5s ease-in-out;
+     transition: width 0.5s ease-in-out;
+    }
+
+    .menu.is-visible{
+      width:500px;
+      -webkit-transition: width 0.5s ease-in-out;
+      -moz-transition: width 0.5s ease-in-out;
+      -o-transition: width 0.5s ease-in-out;
+      transition: width 0.5s ease-in-out;
+    }
+
+    .panelButton{
+    margin-left: 1090px;
+    border-radius: 50%;
+    background-color: #DA4444;
+    padding: 15px 25px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    }
+
+    
