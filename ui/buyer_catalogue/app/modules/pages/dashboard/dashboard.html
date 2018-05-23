@@ -297,6 +297,24 @@
                                     </h4>
                                 </div>
                             </div>
+                            <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.completed.status)">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        Completed Campaigns
+                                    </h4>
+                                </div>
+                                <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
+                                    <div class="panel-body menu-content">
+                                        <table class="table">
+                                            <tr ng-repeat="campaign in campaignData.completed_campaigns">
+                                              <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
+                                                {{campaign.campaign.name}}
+                                              </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                               <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.ongoing.status)">
                                   <div class="panel-heading">
                                       <h4 class="panel-title">
@@ -315,24 +333,7 @@
                                       </div>
                                   </div>
                               </div>
-                              <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.completed.status)">
-                                  <div class="panel-heading">
-                                      <h4 class="panel-title">
-                                          Completed Campaigns
-                                      </h4>
-                                  </div>
-                                  <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
-                                      <div class="panel-body menu-content">
-                                          <table class="table">
-                                              <tr ng-repeat="campaign in campaignData.completed_campaigns">
-                                                <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
-                                                  {{campaign.campaign.name}}
-                                                </td>
-                                              </tr>
-                                          </table>
-                                      </div>
-                                  </div>
-                              </div>
+
                               <div class="panel panel-default">
                                   <div class="panel-heading" ng-click="getCampaignsMenu(campaignStatus.upcoming.status)">
                                       <h4 class="panel-title">
@@ -555,6 +556,42 @@
 
 
                           <div class="panel-group" id="accordion">
+                            <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.completed.status)">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                      Completed Campaigns
+                                    </h4>
+                                </div>
+                                <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
+                                    <div class="panel-body menu-content">
+                                      <table class="table">
+                                          <tr ng-repeat="campaign in campaignData.completed_campaigns">
+                                          <td >
+                                            <md-menu>
+                                               <div class="" ng-click="openMenu($mdMenu, $event)">
+                                                 {{campaign.campaign.name}}
+                                               </div>
+                                               <md-menu-content width="4">
+                                                 <md-menu-item>
+                                                   <md-button ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">
+                                                     Lead
+                                                   </md-button>
+                                                 </md-menu-item>
+                                                 <md-menu-divider></md-menu-divider>
+                                                 <md-menu-item ng-click="getontimelocation(ontimelocation.showdrop.status)">
+                                                   <md-button ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                     Inventory
+                                                   </md-button>
+                                                 </md-menu-item>
+                                                 <md-menu-divider></md-menu-divider>
+                                               </md-menu-content>
+                                             </md-menu>
+                                            </td>
+                                          </tr>
+                                      </table>
+                                    </div>
+                                </div>
+                            </div>
                               <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.ongoing.status)">
                                   <div class="panel-heading">
                                       <h4 class="panel-title">
@@ -591,42 +628,7 @@
                                       </div>
                                   </div>
                                 </div>
-                              <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.completed.status)">
-                                  <div class="panel-heading">
-                                      <h4 class="panel-title">
-                                        Completed Campaigns
-                                      </h4>
-                                  </div>
-                                  <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
-                                      <div class="panel-body menu-content">
-                                        <table class="table">
-                                            <tr ng-repeat="campaign in campaignData.completed_campaigns">
-                                            <td >
-                                              <md-menu>
-                                                 <div class="" ng-click="openMenu($mdMenu, $event)">
-                                                   {{campaign.campaign.name}}
-                                                 </div>
-                                                 <md-menu-content width="4">
-                                                   <md-menu-item>
-                                                     <md-button ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">
-                                                       Lead
-                                                     </md-button>
-                                                   </md-menu-item>
-                                                   <md-menu-divider></md-menu-divider>
-                                                   <md-menu-item ng-click="getontimelocation(ontimelocation.showdrop.status)">
-                                                     <md-button ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
-                                                       Inventory
-                                                     </md-button>
-                                                   </md-menu-item>
-                                                   <md-menu-divider></md-menu-divider>
-                                                 </md-menu-content>
-                                               </md-menu>
-                                              </td>
-                                            </tr>
-                                        </table>
-                                      </div>
-                                  </div>
-                              </div>
+
                               <div class="panel panel-default">
                                   <div class="panel-heading" ng-click="getCampaignsMenu(campaignStatus.upcoming.status)">
                                       <h4 class="panel-title">

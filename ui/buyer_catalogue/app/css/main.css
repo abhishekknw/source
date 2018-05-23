@@ -444,9 +444,9 @@ text-align: center;
       width: 100%;
       }
 
-      /* .sidePanelTable  tbody > td{
-      font:bold 12px/30px Georgia, serif;
-      } */
+      .sidePanelTable  tbody > tr > td{
+        border:3px solid rgba(255, 255, 255, 0.2) !important;
+      }
 
 .zeroCampAct{
   color: rgb(195, 69, 47);
