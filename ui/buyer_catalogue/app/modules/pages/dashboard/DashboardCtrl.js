@@ -38,6 +38,7 @@
           {header : 'Today Released', key : 'inv_type'},
           {header : 'Average Delay(%)', key : 'act_name'},
           {header : 'Average Off Location(Meters)', key : 'act_name'},
+          {header : 'Images', key : ''},
         ];
         $scope.campaignStatus = {
           ongoing : {
@@ -201,6 +202,7 @@
             console.log(response);
             $scope.campaignReleaseData = [];
             var campaignReleaseData = [];
+            l
             campaignReleaseData['totalOnTimeCount'] = 0;
             campaignReleaseData['totalOffTimeCount'] = 0;
             campaignReleaseData['totalOnLocationCount'] = 0;
@@ -290,13 +292,14 @@
             }
             $scope.campaignDataList = [];
             // createList();
+            console.log(  $scope.campaignDataList);
             console.log($scope.campaignReleaseData);
           }).catch(function onError(response){
             console.log(response);
           })
         }
 
-        $scope.setImageUrl = function(images){
+        $scope.goToExecutionPage = function(images){
           $scope.imageUrlList = [];
           for(var i=0; i<images.length; i++){
             var imageData = {
@@ -632,6 +635,9 @@
          .then(function onSuccess(response){
            console.log(response);
            $scope.campaignInventories = [];
+           $scope.select = {
+            campaignInventories: ""
+          };
            angular.forEach(response.data.data, function(inv){
              if($scope.invCodes.hasOwnProperty(inv.filter_code)){
                $scope.campaignInventories.push(inv);
@@ -651,13 +657,16 @@
        // END : get campaign filters
 
        // START : get Performance metrics data
+        $scope.getPerformanceMetricsData = {};
        $scope.getPerformanceMetricsData = function(inv){
          $scope.inv = inv;
+         $scope.select.campaignInventories = "";
+         // console.log($scope.getPerformanceMetricsData.size);
          DashboardService.getPerformanceMetricsData($scope.campaignId,inv)
          .then(function onSuccess(response){
            console.log(response);
            $scope.performanceMetricsData = response.data.data;
-           $scope.showPerfMetrics = $scope.perfMetrics.inv;
+           // $scope.showPerfMetrics = $scope.perfMetrics.inv;
            $scope.showTimeLocBtn = true;
            setOntimeData($scope.performanceMetricsData);
          }).catch(function onError(response){

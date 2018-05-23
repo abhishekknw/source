@@ -17,7 +17,6 @@ angular.module('catalogueApp')
         {header : 'Supplier Name'},
         {header : 'Area,(Sub Area)'},
         {header : 'Address'},
-        {header : 'Relationship Data'},
         {header : 'Flat Count'},
         {header : 'Tower Count'},
         {header : 'Status'},

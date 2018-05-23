@@ -71,7 +71,7 @@
                </thead>
                    <tbody>
                    <tr ng-repeat="(key,item) in historyData">
-                     <td style="background-color: #49971C;"><a ng-click="getDateData(key)">{{key}}</a></td>
+                     <td style="background-color: #8e1921;"><a ng-click="getDateData(key)">{{key}}</a></td>
                      <td id="greenColor" ng-if="item['RELEASE'].actual/item['RELEASE'].total*100==100">
                        {{item['RELEASE'].actual/item['RELEASE'].total*100|limitTo:4||NA}}  &#10004;
                      </td>
@@ -220,7 +220,7 @@
                                                                 <td>{{campaignReleaseData.totalOnLocationCount}} : {{campaignReleaseData.totalOffLocationCount}}</td>
                                                               </tr>
                                                               <tr><td style="font:bold 12px/30px Georgia, serif;">Avg Off Loc. (Mts)</td>
-                                                                <td>{{campaignReleaseData.totalOffLocationDistance / campaignReleaseData.totalInvCount |limitTo:5}} %</td>
+                                                                <td>{{campaignReleaseData.totalOffLocationDistance / campaignReleaseData.totalInvCount |limitTo:5}} </td>
                                                               </tr>
 
 
@@ -261,9 +261,9 @@
                                   <td>{{item.inv_count}}</td>
                                   <td>{{item.offTimeDays/item.inv_count*100|limitTo:4||0}} </td>
                                   <td>{{item.offLocationDistance/item.inv_count|limitTo:5||0}}</td>
-                                  <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Image</a></td>
-                                  <td ng-if="item.images.length == 0"><label>No Image<label></td>
-                                </tr>
+                                  <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="goToExecutionPage(item.images)">View Image</a></td>
+                                <td ng-if="item.images.length == 0"><label>No Image<label></td>
+                                      </tr>
                               </tbody>
                           </table>
                       </div>
@@ -691,8 +691,8 @@
                       <table class="table table-responsive table-bordered menu-content">
                         <md-input-container style="margin-right: 10px;" ng-if="campaignInventories.length">
                           <label>Select Inventory</label>
-                          <md-select ng-model="size">
-                            <md-option ng-repeat="inv in campaignInventories" value="{{inventories[inv.filter_code]}}"  ng-click="getPerformanceMetricsData(inv.filter_code)">
+                          <md-select ng-model="select.campaignInventories">
+                            <md-option ng-repeat="inv in campaignInventories" ng-value="inventories[inv.filter_code]"  ng-click="getPerformanceMetricsData(inv.filter_code)">
                               <md-button class="md-raised">
                                  {{inventories[inv.filter_code]}}
                                 </md-button>
@@ -702,6 +702,13 @@
                         <div class="row notassigned" ng-if="!campaignInventories.length">
                           <!-- No Inventory Found -->
                         </div>
+                        <tr ng-if="showTimeLocBtn">
+                         <td id="ontimeonlocFocus" >
+                           <md-button class="md-raised md-warn" ng-click="getPerformanceMetricsData(inv)">
+                             <span>{{inventories[inv]}}</span>
+                             </md-button>
+                         </td>
+                       </tr>
                          <tr ng-if="showTimeLocBtn">
                           <td id="ontimeonlocFocus">
                             <md-button class="md-raised md-warn" ng-click="getOnTimeData()">

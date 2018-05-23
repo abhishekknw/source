@@ -432,21 +432,21 @@ text-align: center;
     }
 
     .sidePanelTable {
-      background-color: #fcfc5f;
+      background-color: #FFC300;
       color: black;
       font-size: 15px;
       }
 
 
       .sidePanelTable  thead {
-      background-color: #49971C;
+      background-color: #8e1921;
       color: white;
       width: 100%;
       }
 
-      .sidePanelTable  tbody > td{
+      /* .sidePanelTable  tbody > td{
       font:bold 12px/30px Georgia, serif;
-      }
+      } */
 
 .zeroCampAct{
   color: rgb(195, 69, 47);
