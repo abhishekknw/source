@@ -493,7 +493,7 @@
             "height": 450,
             // "labelType" : "11",
             "margin": {
-              "top": 50,
+              "top": 100,
               "right": 20,
               "bottom": 145,
               "left": 45
@@ -501,7 +501,7 @@
             "clipEdge": true,
             "duration": 500,
             "stacked": true,
-            "xAxis": {
+              "xAxis": {
               "axisLabel": "",
               "showMaxMin": false,
               "rotateLabels" : -30
@@ -512,6 +512,15 @@
 
               "ticks" : 8
             },
+            "legend" : {
+                    "margin": {
+                    "top": 5,
+                    "right": 3,
+                    "bottom": 5,
+                    "left": 15
+                },
+            },
+
             "reduceXTicks" : false
           }
         };
@@ -1048,7 +1057,7 @@
       $scope.lineChartValues = [];
       var values1 = [];
       var values2 = [];
-      $scope.series = ['Normal','Hot'];
+
       var count = Object.keys(data).length;
       console.log(data,count);
       angular.forEach(data, function(campaign){
@@ -1069,17 +1078,38 @@
           display: true,
           position: 'left'
         },
-        {
-          id: 'y-axis-2',
-          type: 'linear',
-          display: true,
-          position: 'right'
-        }
+
       ],
+      xAxes: [{
+        ticks: {
+        autoSkip: false
+        }
+      }],
       responsive: true,
       maintainAspectRatio: false,
-    }
+    },
+    series: ['Normal','High Potential'],
+    legend: {display: true},
+    colors: ['#d7525b', '#fcfc5f'],
+
   };
+  $scope.datasetOverride =  [
+            {
+                fill: true,
+                backgroundColor: [
+               "#d7525b",
+
+                ]
+            },
+            {
+                fill: true,
+                backgroundColor: [
+               "#fcfc5f",
+
+                ]
+            },
+            ];
+
   $scope.openMenu = function($mdMenu, ev) {
       $mdMenu.open(ev);
     };
