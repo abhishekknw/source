@@ -23,6 +23,7 @@
 <link href="css/sass-app-map.css" rel="stylesheet" media="screen">
 <link href="css/customstyle.css" rel="stylesheet" media="screen">
 <link href="css/sidePanel.css" rel="stylesheet" media="screen">
+<link href="css/custom.css" rel="stylesheet" media="screen">
 
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
@@ -72,15 +73,48 @@
                    <tr ng-repeat="(key,item) in historyData">
                      <td style="background-color: #49971C;"><a ng-click="getDateData(key)">{{key}}</a></td>
 
-                     <td ng-style="item['RELEASE'].actual/item['RELEASE'].total*100==100 && {'background-color': '#145407'}" ng-if="item['RELEASE'].actual/item['RELEASE'].total*100==100">{{item['RELEASE'].actual/item['RELEASE'].total*100|limitTo:4||NA}}  &#10004;</td>
-                     <td ng-if="item['RELEASE'].actual/item['RELEASE'].total*100!=100">{{item['RELEASE'].actual/item['RELEASE'].total*100|limitTo:4||NA}}</td>
+                     <td id="greenColor" ng-if="item['RELEASE'].actual/item['RELEASE'].total*100==100">
+                       {{item['RELEASE'].actual/item['RELEASE'].total*100|limitTo:4||NA}}  &#10004;
+                     </td>
+                     <td id="yellowColor" ng-if="item['RELEASE'].actual/item['RELEASE'].total*100 >= 75 &&
+                       item['RELEASE'].actual/item['RELEASE'].total*100 < 100" >
+                       {{item['RELEASE'].actual/item['RELEASE'].total*100|limitTo:4||NA}}
+                     </td>
+                     <td id="redColor" ng-if="item['RELEASE'].actual/item['RELEASE'].total*100 < 75" >
+                       {{item['RELEASE'].actual/item['RELEASE'].total*100|limitTo:4||NA}}
+                     </td>
+                     <td ng-if="!item['RELEASE'].total">
+                       NA
+                     </td>
 
-                     <td ng-style="item['AUDIT'].actual/item['AUDIT'].total*100===100 && {'background-color': '#145407'}" ng-if="item['AUDIT'].actual/item['AUDIT'].total*100==100">{{item['AUDIT'].actual/item['AUDIT'].total*100|limitTo:4||NA}}  &#10004;</td>
-                     <td ng-if="item['AUDIT'].actual/item['AUDIT'].total*100!=100">{{item['AUDIT'].actual/item['AUDIT'].total*100|limitTo:4||NA}}</td>
+                     <td id="greenColor" ng-if="item['AUDIT'].actual/item['AUDIT'].total*100==100">
+                       {{item['AUDIT'].actual/item['AUDIT'].total*100|limitTo:4||NA}}  &#10004;
+                     </td>
+                     <td id="yellowColor" ng-if="item['AUDIT'].actual/item['AUDIT'].total*100 >= 75 &&
+                       item['AUDIT'].actual/item['AUDIT'].total*100 < 100">
+                       {{item['AUDIT'].actual/item['AUDIT'].total*100|limitTo:4||NA}}
+                     </td>
+                     <td id="redColor" ng-if="item['AUDIT'].actual/item['AUDIT'].total*100 < 75">
+                       {{item['AUDIT'].actual/item['AUDIT'].total*100|limitTo:4||NA}}
+                     </td>
 
-                     <td ng-style="item['CLOSURE'].actual/item['CLOSURE'].total*100===100 && {'background-color': '#145407'} ||
-                  item['CLOSURE'].actual/item['CLOSURE'].total*100===0 && {'background-color': '#E0A809'}" ng-if="item['CLOSURE'].actual/item['CLOSURE'].total*100==100">{{item['CLOSURE'].actual/item['CLOSURE'].total*100|limitTo:4||NA}}  &#10004;</td>
-                     <td ng-if="item['CLOSURE'].actual/item['CLOSURE'].total*100!=100">{{item['CLOSURE'].actual/item['CLOSURE'].total*100|limitTo:4||NA}}</td>
+                     <td ng-if="!item['AUDIT'].total">
+                       NA
+                     </td>
+
+                     <td id="greenColor" ng-if="item['CLOSURE'].actual/item['CLOSURE'].total*100 == 100">
+                       {{item['CLOSURE'].actual/item['CLOSURE'].total*100|limitTo:4||NA}}  &#10004;
+                     </td>
+                     <td id="yellowColor" ng-if="item['CLOSURE'].actual/item['CLOSURE'].total*100 >= 75 &&
+                       item['CLOSURE'].actual/item['CLOSURE'].total*100 < 100">
+                       {{item['CLOSURE'].actual/item['CLOSURE'].total*100|limitTo:4||NA}}
+                     </td>
+                     <td id="redColor" ng-if="item['CLOSURE'].actual/item['CLOSURE'].total*100 < 75">
+                       {{item['CLOSURE'].actual/item['CLOSURE'].total*100|limitTo:4||NA}}
+                     </td>
+                     <td ng-if="!item['CLOSURE'].total">
+                       NA
+                     </td>
                    </tr>
 
                  </tbody>
@@ -375,11 +409,8 @@
                                 </tbody>
                               </table>
                               </div>
-
-
-
                       </div>
-  </div>
+                      </div>
 
                       <div class="col-md-12">
                         <br><br><br><br>
