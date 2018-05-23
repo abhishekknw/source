@@ -434,11 +434,12 @@ text-align: center;
     .sidePanelTable {
       background-color: #fcfc5f;
       color: black;
+      font-size: 15px;
       }
 
 
       .sidePanelTable  thead {
-      background-color: #40434F;
+      background-color: #49971C;
       color: white;
       width: 100%;
       }

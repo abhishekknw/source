@@ -47,35 +47,6 @@
 
 <div class="al-main">
     <div class="al-content">
-
-                          <button class="fa fa-hand-o-left panelButton" ng-click="visible=!visible;">
-                          <div ng-class="{'is-visible':visible}" class="menu">
-                            <table class="table-responsive table table-bordered sidePanelTable">
-                              <thead>
-                                <tr>
-                                  <td>DATE</td>
-                                  <td>RELEASED (%)</td>
-                                  <td>AUDITED (%)</td>
-                                  <td>CLOSED (%)</td>
-
-                                </tr>
-                              </thead>
-                                  <tbody>
-                                  <tr ng-repeat="(key,item) in historyData">
-                                    <td><a ng-click="getDateData(key)">{{key}}</a></td>
-                                    <td ng-if="item['RELEASE']">{{item['RELEASE'].actual/item['RELEASE'].total*100|limitTo:4||NA}}</td>
-                                    <td ng-if="!item['RELEASE']">NA</td>
-                                    <td ng-if="item['AUDIT']">{{item['AUDIT'].actual/item['AUDIT'].total*100|limitTo:4||NA}}</td>
-                                    <td ng-if="!item['AUDIT']">NA</td>
-                                    <td ng-if="item['CLOSURE']">{{item['CLOSURE'].actual/item['CLOSURE'].total*100|limitTo:4||NA}}</td>
-                                    <td ng-if="!item['CLOSURE']">NA</td>
-                                  </tr>
-
-                                </tbody>
-                                </table>
-                          </div>
-                          </button>
-
       <uib-tabset class="dashboard-tab" active="$tabSetStatus.activeTab">
           <uib-tab>
             <uib-tab-heading>
@@ -85,8 +56,39 @@
            <span style="margin-left:10px;margin-right:10px;">{{date|date : "dd-MM-yyyy"}}</span>
            <span style="color:#ffffff;" class="glyphicon glyphicon-chevron-right" ng-click="getDate(next)"></span>
            <span style="color:#ffffff;" class="glyphicon glyphicon-forward" ng-click="getRecentActivity(next)" data-toggle="tooltip" title="Go To Next Activity!"></span>
+           <span style="color:#ffffff;margin-left:55px;" class="glyphicon glyphicon-calendar" ng-click="visible=!visible;">
+           <div ng-class="{'is-visible':visible}" class="menu">
+             <table class="table-responsive table table-bordered sidePanelTable">
+               <thead>
+                 <tr>
+                   <td>DATE</td>
+                   <td>RELEASED (%)</td>
+                   <td>AUDITED (%)</td>
+                   <td>CLOSED (%)</td>
 
+                 </tr>
+               </thead>
+                   <tbody>
+                   <tr ng-repeat="(key,item) in historyData">
+                     <td style="background-color: #49971C;"><a ng-click="getDateData(key)">{{key}}</a></td>
+
+                     <td ng-style="item['RELEASE'].actual/item['RELEASE'].total*100==100 && {'background-color': '#145407'}" ng-if="item['RELEASE'].actual/item['RELEASE'].total*100==100">{{item['RELEASE'].actual/item['RELEASE'].total*100|limitTo:4||NA}}  &#10004;</td>
+                     <td ng-if="item['RELEASE'].actual/item['RELEASE'].total*100!=100">{{item['RELEASE'].actual/item['RELEASE'].total*100|limitTo:4||NA}}</td>
+
+                     <td ng-style="item['AUDIT'].actual/item['AUDIT'].total*100===100 && {'background-color': '#145407'}" ng-if="item['AUDIT'].actual/item['AUDIT'].total*100==100">{{item['AUDIT'].actual/item['AUDIT'].total*100|limitTo:4||NA}}  &#10004;</td>
+                     <td ng-if="item['AUDIT'].actual/item['AUDIT'].total*100!=100">{{item['AUDIT'].actual/item['AUDIT'].total*100|limitTo:4||NA}}</td>
+
+                     <td ng-style="item['CLOSURE'].actual/item['CLOSURE'].total*100===100 && {'background-color': '#145407'} ||
+                  item['CLOSURE'].actual/item['CLOSURE'].total*100===0 && {'background-color': '#E0A809'}" ng-if="item['CLOSURE'].actual/item['CLOSURE'].total*100==100">{{item['CLOSURE'].actual/item['CLOSURE'].total*100|limitTo:4||NA}}  &#10004;</td>
+                     <td ng-if="item['CLOSURE'].actual/item['CLOSURE'].total*100!=100">{{item['CLOSURE'].actual/item['CLOSURE'].total*100|limitTo:4||NA}}</td>
+                   </tr>
+
+                 </tbody>
+                 </table>
+           </div>
+         </span>
          </h3>
+
           </uib-tab-heading>
               <div  class="row panel-hide"  ng-init="myVar = '/#/dashboard'">
                   <div class="row">
