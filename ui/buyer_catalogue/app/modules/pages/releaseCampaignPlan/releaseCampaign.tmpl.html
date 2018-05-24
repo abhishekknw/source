@@ -45,13 +45,12 @@
             <td class="" rowspan="{{key.length}}" ng-show="$first">
             <a href="https://www.google.com/maps/?q=+{{supplier.latitude}}+{{supplier.longitude}}" target="_blank" style="text-decoration: underline; cursor: pointer;color:blue;">{{supplier.area}}, ({{supplier.subarea}}) {{supplier.address2}}</a></td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.address1}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first"></td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.flat_count}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.tower_count}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
+            <!-- <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.buffered">{{buffered}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.removed">{{removed}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.finalized">{{finalized}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.finalized">{{finalized}}</td> -->
 
             <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
             <td class="" ng-if="key=='NA'">{{key}}</td>

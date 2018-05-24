@@ -19,7 +19,7 @@ angular.module('catalogueApp')
         {header : 'Address'},
         {header : 'Flat Count'},
         {header : 'Tower Count'},
-        {header : 'Status'},
+        // {header : 'Status'},
         // {header : 'Supplier ID'},
         {header : 'Inventory Type'},
         {header : 'Inventory Count'},

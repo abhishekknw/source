@@ -269,9 +269,9 @@
 
 
 <!-- Map Starts here -->
-<div class="col-md-3 map-width" ng-if="!show_societies">
+<div class="col-md-3 map-width"  ng-if="!show_societies">
 <style type="text/css">
-    .angular-google-map-container { height: 550px; width: 840px;}
+    .angular-google-map-container { height: 550px; width: 740px;}
 </style>
 <div class = "mapPosition">
   <div>
@@ -294,7 +294,7 @@
  </div>
 </div>
   <!-- Start: grid view -->
-  <div class="col-md-4 table-responsive" ng-if="show_societies" style="width: 800px; height: 550px">
+  <div class="col-md-4 table-responsive gridViewTable" ng-if="show_societies" style="height: 550px">
       <h2>Grid View
       <select class="drop-width box-spacing form-control" ng-model="supplierListCode" ng-click="selectSupplierList(supplier)">
         <option ng-repeat="supplier in unique_suppliersCode" value="{{supplier}}" ng-selected="$last">{{supplier}}</option>
@@ -675,11 +675,11 @@
         <div>
          <!-- <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button> -->
          <!-- <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button> -->
-         <button class="btn btn-danger active"  ng-show="!show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button>
+         <button class="btn btn-danger active" style="width:100%;"  ng-show="!show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button>
        </div>
       </div>
       <!-- Start: Summary Section of Gridview-->
-      <div class="col-md-2"  ng-if = "show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
+      <div class="col-md-2 Comprehensive"  ng-if = "show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
         <div class="panel panel-info">
           <div class="panel-body filterscroll" id="searchBody">
             <div class="filterPanel">
@@ -759,13 +759,11 @@
           <div>
             <!-- <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button> -->
             <!-- <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button><br> -->
-            <button id="spacing" data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested" permission="[permissions.addSuppliers]">Add Suppliers</button>&nbsp;<br>
-            <button id="spacing" class="btn btn-danger active"  ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport" permission="[permissions.requestProposal]">
-              Request Proposal
-              </button>
-              <button id="spacing" class="btn btn-success" name="button" ng-disabled="isRequested" ng-if="isRequested">Requested</button><br>
-            <button id="spacing" class="btn btn-danger active"  ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button><br>
-            <button id="spacing" ng-hide="hideData || isGuestUser" class="btn btn-danger active" ngf-select="upload($file)" ng-disabled="isRequested" permission="[permissions.uploadProposal]">Upload</button>
+            <button id="spacing" style="width:100%;" data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested" permission="[permissions.addSuppliers]">Add Suppliers</button>&nbsp;<br>
+            <button id="spacing" style="width:100%;" class="btn btn-danger active"  ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport" permission="[permissions.requestProposal]">Request Proposal</button>
+            <button id="spacing" style="width:100%;" class="btn btn-success" name="button" ng-disabled="isRequested" ng-if="isRequested">Requested</button>&nbsp;<br>
+            <button id="spacing" style="width:100%;" class="btn btn-danger active"  ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button><br>
+            <!-- <button id="spacing" ng-hide="hideData || isGuestUser" class="btn btn-danger active" ngf-select="upload($file)" ng-disabled="isRequested" permission="[permissions.uploadProposal]">Upload</button> -->
         </div>
         </div>
     </div><!-- row div ends here-->
