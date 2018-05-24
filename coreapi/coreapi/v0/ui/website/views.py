@@ -6212,7 +6212,7 @@ class GetAssignedIdImagesListApiView(APIView):
                                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
                 filter(proposal_query, query, activity_type_query, activity_date_query, inv_query). \
                 annotate(name=F(proposal_alias_name),inv_id=F(shortlisted_inv_alias),object_id=F(supplier_id),proposal_id=F(proposal_alias_id)). \
-                values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id')
+                values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id','image_path')
             # inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
             #     select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
             #                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \

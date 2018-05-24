@@ -38,6 +38,7 @@
           {header : 'Today Released', key : 'inv_type'},
           {header : 'Average Delay(%)', key : 'act_name'},
           {header : 'Average Off Location(Meters)', key : 'act_name'},
+          {header : 'Images', key : ',images'},
         ];
         $scope.campaignStatus = {
           ongoing : {
@@ -236,7 +237,6 @@
                       campaignData[inv]['onLocation'] = true;
                       campaignData[inv]['minDistance'] = items[i].distance;
                       break;
-
                     }
                     else if(items[i].hasOwnProperty('distance')){
                       if(items[i].distance < campaignData[inv]['minDistance']){
@@ -246,6 +246,7 @@
                   }
                   //onTime
                   for(var i=0; i<items.length; i++){
+                    console.log(items);
                     var days = Math.floor((new Date(items[i].created_at) - new Date(items[i].actual_activity_date)) / (1000 * 60 * 60 * 24));
                     if(days == 0){
                       campaignData[inv]['onTime'] = true;
@@ -270,6 +271,7 @@
                     campaignData['offTimeCount'] += 1;
                     campaignData['offTimeDays'] += campaignData[inv]['dayCount'];
                   }
+                  campaignData['images'] = items;
 
               })
               campaignReleaseData['totalOnTimeCount'] += campaignData['onTimeCount'];
