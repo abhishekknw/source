@@ -241,7 +241,7 @@
             pagesService.setAccountId(account.account_id);
             $window.localStorage.organisation_name = $scope.model.organisation.name;
             $window.localStorage.editAccount = true;
-            $location.path("/manageCampaign/editAccount/" + account.account_id);
+            $location.path("/editAccount/" + account.account_id);
       };
 
       $scope.newBusiness = function() {
@@ -260,7 +260,7 @@
               pagesService.setAccountId(undefined);
               $window.localStorage.editAccount = false;
               $window.localStorage.organisationInfo = JSON.stringify($scope.model.organisation);
-              $location.path("/manageCampaign/createAccount/" + $scope.bsSelect);
+              $location.path("/createAccount/" + $scope.bsSelect);
       };
 
       $scope.getProposals = function(sel_account_id,index){
@@ -483,7 +483,7 @@
            $window.localStorage.campaignId = proposal.proposal_id;
            $window.localStorage.campaignOwner = proposal.created_by;
            $window.localStorage.campaignName = proposal.name;
-           
+
            $location.path('/' + proposal.proposal_id + '/opsExecutionPlan');
          }
         //call when page loads

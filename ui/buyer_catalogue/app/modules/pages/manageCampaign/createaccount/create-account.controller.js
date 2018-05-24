@@ -6,48 +6,17 @@ angular.module('machadaloPages')
       $scope.model.account = {};
       $scope.organisationData = {};
     	$scope.accounts = [];
-      $scope.supplier_types = ['Society', 'Corporate', 'Club', 'Mall', 'School/College']
-    	$scope.campaign_types = ['Poster', 'Standee', 'Stall', 'CarDisplay', 'Fliers']
-    	$scope.campaign_sub_types = {
-    		'Poster': ['A4', 'A3'],
-    		'Standee': ['Small', 'Medium', 'Large'],
-    		'Stall':['Small', 'Medium', 'Large','Canopy'],
-    		'CarDisplay':['Normal', 'Premium'],
-            'Fliers': ['Normal']
-    	}
 
-        $scope.clear = function() {
-        $scope.dt = null;
-      };
       $scope.organisationData = JSON.parse($window.localStorage.organisationInfo);
       console.log($scope.organisationData);
-      $scope.maxDate = new Date(2020, 5, 22);
-      $scope.today = new Date();
-      $scope.popup1 = false;
-      $scope.popup2 = false;
 
-      $scope.setDate = function(year, month, day) {
-        $scope.dt = new Date(year, month, day);
-      };
-
-      $scope.dateOptions = {
-        formatYear: 'yy',
-        startingDay: 1
-      };
-
-      $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
-      $scope.format = $scope.formats[1];
-      $scope.altInputFormats = ['M!/d!/yyyy'];
-
-      //$scope.phoneNumberPattern = /^[1-9]{1}[0-9]{9}$/
-    	$scope.campaign_type = {}
 
       $scope.contact = {
         name: '',
         designation: '',
         department: '',
         email: '',
-        phone: '',
+        mobile: undefined,
         spoc: ''
       };
 
@@ -60,7 +29,7 @@ angular.module('machadaloPages')
         $scope.setContact=false;
         $scope.model.account.contacts.push({
         name: '',     designation: '',    department: '',
-        email: '',    phone: '',      spoc: ''
+        email: '',    mobile: undefined,      spoc: ''
       });
 
 
@@ -81,26 +50,11 @@ angular.module('machadaloPages')
         }
       }
 
-    	$scope.getAccount = function() {
-    		pagesService.getAccount($scope.selectAcc)
-	    	.then(function onSuccess(response) {
-	            $scope.model.account = response.data.account;
-              $scope.model.business = response.data.business;
-              $scope.model.business.contacts = response.data.business.contacts;
-              $scope.model.business = JSON.parse($window.localStorage.business);
-              $scope.model.account.business_id = response.data.business.business_id.toString();
-	            $scope.choice = "selected";
-	       })
-         .catch(function onError(response){
-           commonDataShare.showErrorMessage(response);
-          //  swal(constants.name,constants.errorMsg,constants.error);
-         });
-      };
 
       var accId = pagesService.getAccountId();
       if($stateParams.accountId){
         $scope.selectAcc = $stateParams.accountId;
-        $scope.getAccount();
+        // $scope.getAccount();
       }
       // else{
       //   // $scope.model.business = pagesService.getBusinessObject();
@@ -125,7 +79,7 @@ angular.module('machadaloPages')
                 designation: '',
                 department: '',
                 email: '',
-                phone: '',
+                mobile: undefined,
                 spoc: ''
               };
 
@@ -166,7 +120,7 @@ angular.module('machadaloPages')
         $scope.model.account.contacts[index].designation = $scope.model.business.contacts[0].designation;
         $scope.model.account.contacts[index].department = $scope.model.business.contacts[0].department;
         $scope.model.account.contacts[index].email = $scope.model.business.contacts[0].email;
-        $scope.model.account.contacts[index].phone = $scope.model.business.contacts[0].phone;
+        $scope.model.account.contacts[index].mobile = $scope.model.business.contacts[0].mobile;
 
         $scope.setContact=true;
       }else{
@@ -174,49 +128,11 @@ angular.module('machadaloPages')
         $scope.model.account.contacts[index].designation = "";
         $scope.model.account.contacts[index].department = "";
         $scope.model.account.contacts[index].email = "";
-        $scope.model.account.contacts[index].phone = "";
+        $scope.model.account.contacts[index].mobile = undefined;
         $scope.setContact=false;
       }
     };
 
-
-
-    	$scope.create = function() {
-            pagesService.createAccountCampaign($scope.model)
-            .then(function onSuccess(response) {
-
-              console.log("\n\nresponse is : ");
-
-              var business_id = $scope.model.account.business_id
-
-              if (response.status == '200'){
-                pagesService.setBusinessId(business_id);
-                $scope.model.account = response.data.account;
-                $scope.model.account.contacts = response.data.contacts;
-                $scope.model.account.business_id = business_id;
-                $location.path("/manageCampaign/create");
-                // $scope.successMsg = "Successfully Saved"
-                $scope.errorMsg = undefined;
-                $scope.choice = "selected";
-                swal(constants.name,constants.account_success,constants.success);
-              }
-          }).catch(function onError(response){
-            commonDataShare.showErrorMessage(response);
-              // swal(constants.name,constants.account_error,constants.error);
-            // status = 406 comes from backend if some information is missing with info in response.message
-             // response = response ? JSON.parse(response) : {}
-             // console.log(response.message);
-             // $scope.successMsg = undefined;
-             // $scope.errorMsg = response.message ;
-             // console.log(status);
-             if (typeof response != 'number'){
-               $scope.successMsg = undefined;
-               $scope.errorMsg = response.message;
-               console.log($scope.errorMsg);
-            }
-
-        })
-        };
 
         //after adding organisation instead of business
         var organisationId = $stateParams.organisationId;
@@ -231,11 +147,13 @@ angular.module('machadaloPages')
           })
         }
         $scope.createAccount = function(){
+          console.log($scope.model);
           $scope.model.account['organisation'] = $scope.organisationData.organisation_id;
           pagesService.createAccount($scope.model.account)
           .then(function onSuccess(response){
             console.log(response);
             swal(constants.name, constants.create_success, constants.success);
+            $location.path("/manageCampaign/create");
           }).catch(function onError(response){
             console.log(response);
             commonDataShare.checkPermission(response);
@@ -246,13 +164,14 @@ angular.module('machadaloPages')
           pagesService.getAccount(accountId)
           .then(function onSuccess(response){
             console.log(response);
-            $scope.model.account = response.data.data;
+            $scope.model.account = response.data.data.account;
+            $scope.model.account.contacts = response.data.data.contacts;
             $scope.organisationData['name'] = $window.localStorage.organisation_name;
           }).catch(function onError(response){
             console.log(response);
             commonDataShare.checkPermission(response);
           })
-        }      
+        }
         if(accountId){
           $scope.editAccountField = true;
           getAccount();
