@@ -374,7 +374,7 @@
 
               // $scope.supplierCodeLabelData = formatLabelData(response.data.data.supplier_code_data,'supplier_type_code');
               $scope.supplierCodeCountOptions = angular.copy(doughnutChartOptions);
-              $scope.supplierCodeCountOptions.chart.tooltip['contentGenerator'] = function(e){ return getTooltipData(e); };
+              // $scope.supplierCodeCountOptions.chart.tooltip['contentGenerator'] = function(e){ return getTooltipData(e); };
               $scope.supplierCodeCountOptions.chart.pie.dispatch['elementClick'] = function(e){ $scope.getCampaignInvTableData(e.data); };
 
               $scope.showSupplierTypeCountChart = true;
@@ -479,14 +479,15 @@
                labelThreshold: 0.01,
                labelSunbeamLayout: true,
                legend: {
-                   margin: {
-                       top: 5,
-                       right: 35,
-                       bottom: 5,
-                       left: 0
-                   }
+                 rightAlign:false,
+                   // margin: {
+                   //     top: 5,
+                   //     right: 35,
+                   //     bottom: 5,
+                   //     left: 0
+                   // }
                },
-               legendPosition : 'right',
+               legendPosition : 'bottom',
            }
        };
 
@@ -644,9 +645,9 @@
              }
            })
            $scope.performanceMetricsData = [];
-           if($scope.campaignInventories.length){
-             $scope.showPerfMetrics = $scope.perfMetrics.inv;
-           }
+           // if($scope.campaignInventories.length){
+           //   // $scope.showPerfMetrics = $scope.perfMetrics.inv;
+           // }
            // $scope.campaignInventories = response.data.data;
            console.log($scope.campaignInventories);
 
@@ -661,12 +662,13 @@
        $scope.getPerformanceMetricsData = function(inv){
          $scope.inv = inv;
          $scope.select.campaignInventories = "";
+
          // console.log($scope.getPerformanceMetricsData.size);
          DashboardService.getPerformanceMetricsData($scope.campaignId,inv)
          .then(function onSuccess(response){
            console.log(response);
            $scope.performanceMetricsData = response.data.data;
-           // $scope.showPerfMetrics = $scope.perfMetrics.inv;
+           $scope.showPerfMetrics = $scope.perfMetrics.inv;
            $scope.showTimeLocBtn = true;
            setOntimeData($scope.performanceMetricsData);
          }).catch(function onError(response){
@@ -738,42 +740,42 @@
        $scope.initializePerfMetrix = function(){
          $scope.showSupplierTypeCountChart = false;
        }
-       var getTooltipData = function(e){
-         var rows = [];
-         var count = 0;
-          angular.forEach(e.data.campaigns, function(campaign){
-            count++;
-            rows= rows +
-            "<tr>" +
-              "<td class='key'>" + count  + "</td>" +
-              "<td class='key'>" + campaign.proposal__name + "</td>" +
-              "<td class='x-value'>" + constants[campaign.supplier_code] + "</td>" +
-              "<td class='x-value'>" + campaign.total + "</td>" +
-"</tr>"
-          })
-
-                 var header =
-                   "<thead>" +
-                   "<tr>" +
-                       "<td class='legend-color-guide'><div style='background-color: " + e.color + ";'></div></td>" +
-                       "<td class='key'><strong>" + e.data.label + "</strong></td>" +
-                     "</tr>" +
-                     "<tr>" +
-                       "<td class='key'><strong>" + 'Index' + "</strong></td>" +
-                       "<td class='key'><strong>" + 'Campaign Name' + "</strong></td>" +
-                       "<td class='key'><strong>" + 'Supplier Name' + "</strong></td>" +
-                       "<td class='key'><strong>" + 'Total Count' + "</strong></td>" +
-                     "</tr>" +
-                   "</thead>";
-
-                 return "<table>" +
-                     header +
-                     "<tbody>" +
-                       rows +
-                     "</tbody>" +
-                   "</table>";
-
-       }
+//        var getTooltipData = function(e){
+//          var rows = [];
+//          var count = 0;
+//           angular.forEach(e.data.campaigns, function(campaign){
+//             count++;
+//             rows= rows +
+//             "<tr>" +
+//               "<td class='key'>" + count  + "</td>" +
+//               "<td class='key'>" + campaign.proposal__name + "</td>" +
+//               "<td class='x-value'>" + constants[campaign.supplier_code] + "</td>" +
+//               "<td class='x-value'>" + campaign.total + "</td>" +
+// "</tr>"
+//           })
+//
+//                  var header =
+//                    "<thead>" +
+//                    "<tr>" +
+//                        "<td class='legend-color-guide'><div style='background-color: " + e.color + ";'></div></td>" +
+//                        "<td class='key'><strong>" + e.data.label + "</strong></td>" +
+//                      "</tr>" +
+//                      "<tr>" +
+//                        "<td class='key'><strong>" + 'Index' + "</strong></td>" +
+//                        "<td class='key'><strong>" + 'Campaign Name' + "</strong></td>" +
+//                        "<td class='key'><strong>" + 'Supplier Name' + "</strong></td>" +
+//                        "<td class='key'><strong>" + 'Total Count' + "</strong></td>" +
+//                      "</tr>" +
+//                    "</thead>";
+//
+//                  return "<table>" +
+//                      header +
+//                      "<tbody>" +
+//                        rows +
+//                      "</tbody>" +
+//                    "</table>";
+//
+//        }
 
        $scope.getCampaignInvTableData = function(campaigns){
          $scope.campaignInvData = campaigns.campaigns;
@@ -794,6 +796,7 @@
         // console.log($scope.campaignInventoryTypesData.supplier_data);
         $scope.getSupplierInvTableData($scope.campaignInventoryTypesData);
         $scope.campaignInventoryData = response.data.data;
+        console.log($scope.campaignInventoryData);
         $scope.totalTowerCount = 0;
         $scope.totalFlatCount = 0;
         $scope.totalSupplierCount = response.data.data.supplier_data.length;

@@ -26,6 +26,7 @@ angular.module('catalogueApp')
         {header : 'Inventory Supplier Price'},
         {header : 'Total Supplier Price(Per Flat)  '},
         {header : 'Negotiated Price'},
+        {header : 'Freebies'},
         {header : 'Booking Status'},
         {header : 'Phase'},
         {header : 'Mode Of Payment'},
@@ -323,6 +324,34 @@ $scope.setOrderProperty = function(propertyName) {
         }
     };
 
+$scope.searchSelectAllModel=[];
+
+$scope.multiSelect =
+[{
+        name: "Whatsapp Group",
+        id: "1",
+
+      }, {
+        name: "Email Group",
+        id: "2",
+
+      }, {
+        name: "Building ERP",
+        id: "3",
+
+      }, {
+        name: "Door To Door",
+        id: "4",
+
+      }];
+      $scope.selected_baseline_settings = {
+       template: '<b>{{option.name}}</b>',
+       selectedToTop: true // Doesn't work
+     };
+
+
+
+      $scope.selected_baselines_customTexts = {buttonDefaultText: 'Select Freebies'};
 
 
 }]);//Controller function ends here

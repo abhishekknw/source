@@ -44,6 +44,7 @@
 
 <main ng-if="$pageFinishedLoading" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }">
 <ba-sidebar></ba-sidebar>
+
 <page-Top></page-Top>
 
 <div class="al-main">
@@ -185,13 +186,15 @@
                                                       <!-- This is just some content to illustrate fancy headings. -->
 
                                                       <div class="panel-group RELEASETable" id="accordion" >
-                                                              <div class="panel panel-default" ng-click="showOntimeOnlocation(OntimeOnlocation.ontime.status)">
+                                                              <div class="panel panel-default" style="border-radius:0!important;" ng-click="showOntimeOnlocation(OntimeOnlocation.ontime.status)">
                                                               <div class="panel-heading">
-                                                                  <h4 class="panel-title" style="background-color:#8e1921  !important">
+                                                                  <h4 class="panel-title" style="background-color:#8e1921  !important;">
                                                                       Time Details
                                                                   </h4>
                                                               </div>
                                                               </div>
+                                                              <!-- <button class="panel panel-default" type="button" style="background-color:#8e1921!important;width:100%;border-radius:0!important;" name="button" ng-click="showOntimeOnlocation(OntimeOnlocation.ontime.status)">Time Details</button> -->
+
                                                               <table class="table-responsive table table-bordered" ng-show="OntimeOnlocation.ontime.value">
 
                                                                 <tbody>
@@ -206,7 +209,7 @@
                                                                 </tbody>
                                                               </table>
 
-                                                          <div class="panel panel-default" ng-click="showOntimeOnlocation(OntimeOnlocation.onlocation.status)">
+                                                          <div class="panel panel-default" style="border-radius:0!important;"  ng-click="showOntimeOnlocation(OntimeOnlocation.onlocation.status)">
                                                               <div class="panel-heading" >
                                                                   <h4 class="panel-title" style="background-color:#8e1921  !important">
                                                                       Location Details
@@ -364,7 +367,7 @@
                               <h4 style="text-align:left">Details Of All Campaigns
 
                             <uib-tab-heading uib-dropdown>
-                                <button class="btn btn-primary btn-sm pull-right" uib-dropdown-toggle ng-click="$event.stopPropagation()">
+                                <button class="btn btn-warning btn-sm pull-right" uib-dropdown-toggle ng-click="$event.stopPropagation()">
                                     Select Chart<i class="caret"></i>
                                 </button>
                                 <ul class="dropdown-menu" uib-dropdown-menu>
@@ -374,26 +377,26 @@
                                 </ul>
                             </uib-tab-heading></h4>
                           </div>
-                          <nvd3 options="options" data="campaignChartdata"></nvd3>
+                          <nvd3 options="options" data="campaignChartdata" config="{refreshDataOnly: true, deepWatchData: true}" ></nvd3>
 
                         </div>
                         <div class="col-md-4 LeadsTable">
                           <div class="panel-heading content-title">
 
-                            <h5 style="background:'red';color:white;">Inventory + Leads Details</h5>
+                            <h5 style="background:'red';color:white;">Inventory / Leads Details</h5>
 
                           </div>
                         <table class="table-responsive table table-bordered">
                           <thead>
                             <tr>
-                              <td>Supplier Status</td>
-                              <td>Supplier Count</td>
-                              <td ng-if="showLeadsDetails">Total Leads (High Quality Leads)</td>
+                              <td>Status</td>
+                              <td>Count</td>
+                              <td ng-if="showLeadsDetails">Total Leads <br><small>(High Quality Leads)</small></td>
                             </tr>
                           </thead>
                               <tbody>
                               <tr ng-repeat="item in campaignChartdata">
-                                <td>{{item.label}}</td>
+                                <td style="text-align:left;">{{item.label}}</td>
                                 <td> {{item.value}}</td>
                                 <td ng-if="showLeadsDetails">{{campaignStatusData[item.status].totalLeads||0}}({{campaignStatusData[item.status].hotLeads}})</td>
                               </tr>
@@ -476,19 +479,19 @@
                           </div> -->
                           <div class="col-md-6" ng-if="showSupplierTypeCountChart">
                             <div class="panel-heading content-title">
-                              <h5 style="background:'red'">Graphical Representation {{campaignStatusName}}</h5>
+                              <h5 style="background:'red'">Graphical Representation of {{campaignStatusName}}</h5>
                             </div>
                             <nvd3 options="supplierCodeCountOptions" data="supplierCodeCountData"></nvd3>
                           </div>
                           <div class="col-md-6" ng-if="showCampaignInvTable">
                             <div class="panel-heading content-title">
-                              <h5 style="background:'red'">Campaign Wise Data In {{campaignStatusName}}</h5>
+                              <h5 style="background:'red'">{{campaignStatusName}}</h5>
                             </div>
                             <div class="campaignInvTable">
                             <table class="table-responsive table table-bordered">
                               <thead>
                                 <th>Proposal Name</th>
-                                <th>Total</th>
+                                <th>Inventory Count</th>
                                 <th>Go to Inventory</th>
                               </thead>
                               <tbody>
@@ -507,7 +510,7 @@
 
                         <div class="col-md-6" ng-if="showSupplierInvTable">
                           <div class="panel-heading content-title">
-                            <h5 style="background:'red'">Inventory Table Of {{campaignName}}</h5>
+                            <h5 style="background:'red'">Inventory Details Of {{campaignName}}</h5>
                           </div>
                           <div class="supplierInvTable">
                           <table class="table-responsive table table-bordered" ng-if="campaignInventoryData.filters.length">
@@ -518,7 +521,7 @@
                             </thead>
                             <tbody>
                               <tr ng-repeat="filter in campaignInventoryData.filters">
-                                <td>{{filter.filter_code}}</td>
+                                <td>{{inventories[filter.filter_code]}}</td>
 
                                   <td ng-if="filter.filter_code=='PO' || filter.filter_code=='ST'"><a href="www.google.com">{{totalTowerCount}}</a></td>
                                   <td ng-if="filter.filter_code=='SL' || filter.filter_code=='GA'"><a href="www.google.com">{{totalSupplierCount}}</a></td>
@@ -685,13 +688,11 @@
                           </div>
                     </div>
 
-                      <div class="row" ng-if="showPerfMetrics == perfMetrics.blank">
 
-                      </div>
 
                     <div class="col-md-2">
-                      <table class="table table-responsive table-bordered menu-content">
-                        <md-input-container style="margin-right: 10px;" ng-if="campaignInventories.length">
+                      <table class="table table-responsive table-bordered">
+                        <md-input-container ng-if="campaignInventories.length">
                           <label>Select Inventory</label>
                           <md-select ng-model="select.campaignInventories">
                             <md-option ng-repeat="inv in campaignInventories" ng-value="inventories[inv.filter_code]"  ng-click="getPerformanceMetricsData(inv.filter_code)">
@@ -701,9 +702,7 @@
                             </md-option>
                           </md-select>
                         </md-input-container>
-                        <div class="row notassigned" ng-if="!campaignInventories.length">
-                          <!-- No Inventory Found -->
-                        </div>
+
                         <tr ng-if="showTimeLocBtn">
                          <td id="ontimeonlocFocus" >
                            <md-button class="md-raised md-warn" ng-click="getPerformanceMetricsData(inv)">
@@ -728,6 +727,16 @@
                         </tr>
 
                       </table>
+                    </div>
+                      <div class="row zeroInventory" ng-if="campaignInventories.length == 0">
+                        <h1> No Inventory Found</h1>
+                      </div>
+
+                    <div class="row zeroInventory" ng-if="!campaignInventories">
+                      <h1>Please Select Campaign</h1>
+                    </div>
+                    <div class="row" ng-if="showPerfMetrics == perfMetrics.blank">
+
                     </div>
                         <div class="col-md-12" ng-show="compCampaigns.campaigns.value">
                           <div class="col-md-2">

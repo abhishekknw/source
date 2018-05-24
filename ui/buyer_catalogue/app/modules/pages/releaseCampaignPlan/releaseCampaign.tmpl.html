@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
+
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div>
 </br></br></br>
@@ -63,6 +64,10 @@
               <span class="error" ng-show="priceform.price.$error.min">{{positiveNoError}}</span>
               <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing input-width" min="0" permission = "[permissions.addNegotiatedPrice,permissions.viewNegotiatedPrice]">
             </td>
+            <td style="text-align:left;" rowspan="{{key.length}}" ng-show="$first">
+              <span ng-dropdown-multiselect="" options="multiSelect"  extra-settings="selected_baseline_settings"
+              selected-model="searchSelectAllModel"></span>
+  </td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first">
               <select class="form-control spacing input-width" ng-model="supplier.booking_status" permission = "[permissions.changeBookingStatus,permissions.viewBookingStatus]">
                 <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
