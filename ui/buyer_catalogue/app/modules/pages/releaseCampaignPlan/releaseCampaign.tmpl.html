@@ -37,15 +37,16 @@
             <th ng-click="setOrderProperty('flat_count')" ng-repeat="header in headings | orderBy:orderProperty">
               {{header.header}}
             </th>
+
           </tr>
         </thead>
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers | orderBy:orderProperty">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
             <td rowspan="{{key.length}}" ng-show="$first">{{$parent.$index + 1}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.object_id}})</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">
             <a href="https://www.google.com/maps/?q=+{{supplier.latitude}}+{{supplier.longitude}}" target="_blank" style="text-decoration: underline; cursor: pointer;color:blue;">{{supplier.area}}, ({{supplier.subarea}}) {{supplier.address2}}</a></td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.address1}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first" width="200">{{supplier.address1}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.flat_count}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.tower_count}}</td>
             <!-- <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
@@ -55,25 +56,31 @@
 
             <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
             <td class="" ng-if="key=='NA'">{{key}}</td>
-            <td class="" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)" permission = "[permissions.viewInventoryIds]"><b>{{key}}</b></a></td>
+            <!-- <td class="" ng-if="key=='STALL'">{{key}}
+              <span ng-dropdown-multiselect="" options="stallLoc"  extra-settings="selected_baseline"
+              selected-model="selectAllLocation"   translation-texts="selected_customTexts"></span>
+            </td> -->
+            <td class="" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)" permission = "[permissions.viewInventoryIds]"><b>{{key}}</b></a>
+
+            </td>
             <td class="" ng-if="key=='FLIER'">{{supplier.flat_count}}</td>
             <td class="" ng-if="key!='FLIER'">{{filter.total_count}}</td>
-            <td class="">{{getInventoryPrice(filter.actual_supplier_price,key)}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first">{{getTotalSupplierPrice(supplier)}} ({{getTotalSupplierPrice(supplier)/supplier.flat_count|limitTo:4}})</td>
+            <td class="">{{getInventoryPrice(filter.actual_supplier_price,key)| currency : "₹"}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{getTotalSupplierPrice(supplier)| currency : "₹"}} ({{getTotalSupplierPrice(supplier)/supplier.flat_count|limitTo:4| currency : "₹"}})</td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="priceform">
               <span class="error" ng-show="priceform.price.$error.min">{{positiveNoError}}</span>
               <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing input-width" min="0" permission = "[permissions.addNegotiatedPrice,permissions.viewNegotiatedPrice]">
-            </td>
+          <br>{{getTotalSupplierPrice(supplier)/supplier.flat_count|limitTo:4}}  </td>
             <td style="text-align:left;" rowspan="{{key.length}}" ng-show="$first">
               <span ng-dropdown-multiselect="" options="multiSelect"  extra-settings="selected_baseline_settings"
-              selected-model="searchSelectAllModel"></span>
+              selected-model="searchSelectAllModel"   translation-texts="selected_baselines_customTexts"></span>
   </td>
-            <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first">
-              <select class="form-control spacing input-width" ng-model="supplier.booking_status" permission = "[permissions.changeBookingStatus,permissions.viewBookingStatus]">
-                <option ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
+            <td class="col-md-4" rowspan="{{key.length}}" ng-show="$first">
+              <select  class="form-control spacing input-width" ng-model="supplier.booking_status" permission = "[permissions.changeBookingStatus,permissions.viewBookingStatus]">
+                <option style="width:100%;" ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
               </select>
             </td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
+            <td  class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
               <input type="number" name="phase" class="form-control spacing input-width-phase" ng-model="supplier.phase" min="1" ng-disabled="supplier.booking_status != 'BK'" permission = "[permissions.addPhase, permissions.viewPhase]">
               <span class="error" ng-show="phaseform.phase.$error.min">{{positiveNoError}}</span>
             </td>
@@ -97,7 +104,10 @@
             </td>
             <!--for payment status  -->
             <td class="" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
-              <div class="radio" permission = "[permissions.viewPaymentDetails]">
+              <select class="form-control spacing input-width" ng-model="supplier.payment_status" permission = "[permissions.viewPaymentDetails]">
+                <option style="width:100%;" ng-repeat="item in payment_status" value="{{item.code}}" ng-click="updateSupplierStatus()"  ng-disabled="supplier.booking_status != 'BK'">{{item.name}}</option>
+              </select>
+              <!-- <div class="radio" permission = "[permissions.viewPaymentDetails]">
                      <label><input type="radio" ng-model="supplier.payment_status" value="PD" ng-click="updateSupplierStatus()" ng-disabled="supplier.booking_status != 'BK'">Paid</label>
               </div>
               <div class="radio" permission = "[permissions.viewPaymentDetails]">
@@ -105,7 +115,7 @@
               </div>
               <div class="radio" ng-if="supplier.status != 'X'" permission = "[permissions.viewPaymentDetails]">
                      <label><input type="radio" ng-model="supplier.payment_status" value="PNI" ng-click="updateSupplierStatus()" ng-disabled="supplier.booking_status != 'BK'">Not Paid</label>
-              </div>
+              </div> -->
             </td>
           </tr>
         </tbody>
@@ -139,10 +149,10 @@
         <hr/>
         <div class = "modal-body" style = "width: 650px; height: 300px;">
           <div class="modal-body col-md-4 table-responsive" style="width: 650px; height: 350px">
-              <table class="table table-bordered">
+              <table class="table table-bordered" style="width:100%">
                 <thead>
                   <tr>
-                    <th ng-repeat="header in contact_headings" class="col-md-2" style="text-align: center;"><b>{{header.header}}</b></th>
+                    <th ng-repeat="header in contact_headings" style="text-align: center;"><b>{{header.header}}</b></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -153,7 +163,9 @@
                     <td>{{contact.email}}</td>
                     <td>{{contact.std_code}}</td>
                     <td>{{contact.landline}}</td>
-                    <td>{{contact.mobile}}</td>
+                    <td class="col-md-3">
+                      <input type="tel"  placeholder="{{contact.mobile}}"  min="0" maxlength="10" class="form-control col-md-3" ng-model="supplier.mobile">
+                    </td>
                   </tr>
                 </tbody>
               </table>

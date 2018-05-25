@@ -702,6 +702,7 @@
            console.log(response);
            $scope.locationData = response.data.data;
            getOnLocationData($scope.locationData);
+           console.log($scope.locationData);
            $scope.showPerfMetrics = $scope.perfMetrics.onlocation;
          }).catch(function onError(response){
            console.log(response);

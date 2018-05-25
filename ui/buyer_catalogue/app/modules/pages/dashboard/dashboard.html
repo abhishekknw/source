@@ -21,7 +21,7 @@
 <link href="css/dashboard-theme.css" rel="stylesheet" media="screen">
 <link href="css/sass-app.css" rel="stylesheet" media="screen">
 <link href="css/sass-app-map.css" rel="stylesheet" media="screen">
-<link href="css/customstyle.css" rel="stylesheet" media="screen">
+<!-- <link href="css/customstyle.css" rel="stylesheet" media="screen"> -->
 <link href="css/sidePanel.css" rel="stylesheet" media="screen">
 <link href="css/custom.css" rel="stylesheet" media="screen">
 
@@ -367,8 +367,8 @@
                               <h4 style="text-align:left">Details Of All Campaigns
 
                             <uib-tab-heading uib-dropdown>
-                                <button class="btn btn-warning btn-sm pull-right" uib-dropdown-toggle ng-click="$event.stopPropagation()">
-                                    Select Chart<i class="caret"></i>
+                                <button class="btn btn-warning btn-sm pull-right" style="background-color:#fcfc5f;color:black;margin-top:-6px;" uib-dropdown-toggle ng-click="$event.stopPropagation()">
+                                    Select Chart <i class="caret"></i>
                                 </button>
                                 <ul class="dropdown-menu" uib-dropdown-menu>
                                     <li ng-repeat="(key,chart) in charts">
@@ -694,7 +694,7 @@
                       <table class="table table-responsive table-bordered">
                         <md-input-container ng-if="campaignInventories.length">
                           <label>Select Inventory</label>
-                          <md-select ng-model="select.campaignInventories">
+                          <md-select ng-model="select.campaignInventories" style="width:155px;">
                             <md-option ng-repeat="inv in campaignInventories" ng-value="inventories[inv.filter_code]"  ng-click="getPerformanceMetricsData(inv.filter_code)">
                               <md-button class="md-raised">
                                  {{inventories[inv.filter_code]}}
@@ -705,23 +705,23 @@
 
                         <tr ng-if="showTimeLocBtn">
                          <td id="ontimeonlocFocus" >
-                           <md-button class="md-raised md-warn" ng-click="getPerformanceMetricsData(inv)">
+                           <md-button class="md-raised md-warn" style="width:100%" ng-click="getPerformanceMetricsData(inv)">
                              <span>{{inventories[inv]}}</span>
                              </md-button>
                          </td>
                        </tr>
                          <tr ng-if="showTimeLocBtn">
                           <td id="ontimeonlocFocus">
-                            <md-button class="md-raised md-warn" ng-click="getOnTimeData()">
-                              OnTime
+                            <md-button class="md-raised md-warn"  style="width:100%" ng-click="getOnTimeData()">
+                              On Time
                               </md-button>
                           </td>
                         </tr>
 
                         <tr  ng-if="showTimeLocBtn">
                           <td id="ontimeonlocFocus">
-                            <md-button class="md-raised md-warn" ng-click="getLocationData()">
-                              OnLocation
+                            <md-button class="md-raised md-warn" style="width:100%" ng-click="getLocationData()">
+                              On Location
                               </md-button>
                           </td>
                         </tr>
@@ -754,7 +754,7 @@
                         <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv">
                           <div class="panel-heading content-title">
                             <div class="col-md-7">
-                              <h4> Release Inventory Details </h4>
+                              <h4> Release Inventory </h4>
                             </div>
                           </div>
                           <div class="col-md-8" ng-if="performanceMetricsData.release.actual.length / performanceMetricsData.release.total.length * 100|limitTo:3==0">
@@ -785,7 +785,7 @@
                         <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime" is-disabled="performanceMetricsData.release.actual==0" >
                           <div class="panel-heading content-title">
                             <div class="col-md-10">
-                              <h4> On Time Release Inventory Details </h4>
+                              <h4> On Time for Release Inventory </h4>
                             </div>
                           </div>
                           <div class="col-md-8" ng-if="performanceMetricsData.release.ontime / performanceMetricsData.release.actual.length * 100|limitTo:3==0">
@@ -816,7 +816,7 @@
                         <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.onlocation">
                           <div class="panel-heading content-title">
                             <div class="col-md-10">
-                              <h4> On Location Release Details </h4>
+                              <h4> On Location for Release Inventory  </h4>
                             </div>
                           </div>
                           <div class="col-md-8" ng-if="onLocationData.RELEASE.actual.length / onLocationData.RELEASE.total * 100|limitTo:3==0">
@@ -831,7 +831,7 @@
                             <table class="table table-responsive table-bordered pieChart-table">
                               <tbody>
                                 <tr>
-                                  <td>OnTime / Released</td>
+                                  <td>OnLocation / Released</td>
                                 </tr>
                                 <tr>
                                   <td>{{onLocationData.RELEASE.actual.length}} / {{onLocationData.RELEASE.total}}</td>
@@ -849,7 +849,7 @@
                       <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv">
                         <div class="panel-heading content-title">
                           <div class="col-md-10">
-                            <h4> Audit Inventory Details </h4>
+                            <h4> Audit Inventory  </h4>
                           </div>
                         </div>
                         <div class="col-md-8" ng-if="performanceMetricsData.audit.actual.length / performanceMetricsData.audit.total.length * 100|limitTo:3==0">
@@ -879,7 +879,7 @@
                       <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv">
                         <div class="panel-heading content-title">
                           <div class="col-md-10">
-                            <h4> Closure Inventory Details </h4>
+                            <h4> Closure Inventory  </h4>
                           </div>
                         </div>
                         <div class="col-md-8" ng-if="performanceMetricsData.closure.actual.length / performanceMetricsData.closure.total.length * 100|limitTo:3==0">
@@ -910,7 +910,7 @@
                       <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime" >
                         <div class="panel-heading content-title">
                           <div class="col-md-10">
-                            <h4> On Time Audit Inventory Details </h4>
+                            <h4> On Time for Audit Inventory  </h4>
                           </div>
                         </div>
                         <div class="col-md-8" ng-if="performanceMetricsData.audit.ontime / performanceMetricsData.audit.actual.length * 100|limitTo:3==0">
@@ -940,7 +940,7 @@
                       <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.ontime" is-disabled="performanceMetricsData.closure.actual==0">
                         <div class="panel-heading content-title">
                           <div class="col-md-10">
-                            <h4> On Time Closure Inventory Details </h4>
+                            <h4> On Time for Closure Inventory  </h4>
                           </div>
                         </div>
                         <div class="col-md-8" ng-if="performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3==0">
@@ -973,7 +973,7 @@
                       <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.onlocation">
                         <div class="panel-heading content-title">
                           <div class="col-md-10">
-                            <h4> On Location Audit Inventory Details </h4>
+                            <h4> On Location for Audit Inventory  </h4>
                           </div>
                         </div>
                         <div class="col-md-8" ng-if="onLocationData.AUDIT.actual.length / onLocationData.AUDIT.total * 100|limitTo:3==0">
@@ -1004,7 +1004,7 @@
                       <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.onlocation">
                         <div class="panel-heading content-title">
                           <div class="col-md-10">
-                            <h4> On Location Closure Inventory Details </h4>
+                            <h4> On Location for Closure Inventory  </h4>
                           </div>
                         </div>
                         <div class="col-md-8" ng-if="onLocationData.CLOSURE.actual.length / onLocationData.CLOSURE.total * 100|limitTo:3==0">
