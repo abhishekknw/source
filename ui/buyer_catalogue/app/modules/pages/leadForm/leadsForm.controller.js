@@ -37,6 +37,7 @@ angular.module('catalogueApp')
         })
       }
       var campaignId = $stateParams.campaignId;
+      var supplierId = $stateParams.supplierId;
       getCampaignLeadAliasData(campaignId);
 
       $scope.getFieldType = function(field){
@@ -89,4 +90,35 @@ angular.module('catalogueApp')
           console.log(response);
         })
       }
+
+      $scope.getLeads = function(){
+        LeadFormService.getLeads(campaignId,supplierId)
+        .then(function onSuccess(response){
+          console.log(response);
+          $scope.showLeads = true;
+          $scope.leadsData = response.data.data;
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
+
+      $scope.changeView = function(){
+        $scope.showLeads = false;
+      };
+
+      $scope.editView = function(lead){
+         $scope.showLeads = false;
+         $scope.modelData = lead;
+         $scope.editLead = true;
+      }
+      $scope.updateLeads = function(){
+        LeadFormService.updateLeads($scope.modelData.id,$scope.modelData)
+        .then(function onSuccess(response){
+          console.log(response);
+          $scope.getLeads();
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
+
     });
