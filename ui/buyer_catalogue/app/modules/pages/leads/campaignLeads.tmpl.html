@@ -55,7 +55,9 @@
         <tbody >
           <tr ng-repeat="lead in leadsData.leads">
             <td>{{$index + 1}}</td>
-            <td ng-repeat="alias in leadsData.alias_data">{{lead[alias.original_name]}}</td>
+            <td ng-repeat="alias in leadsData.alias_data" ng-if="lead[alias.original_name] != true && lead[alias.original_name] != false">{{lead[alias.original_name]}}</td>
+            <td ng-repeat="alias in leadsData.alias_data" ng-if="lead[alias.original_name] == true">Yes</td>
+            <td ng-repeat="alias in leadsData.alias_data" ng-if="lead[alias.original_name] == false">No</td>
           </tr>
         </tbody>
       </table>
@@ -78,17 +80,21 @@
   <div class="panel-body">
     <form name="fieldForm">
       <div ng-repeat="model in modelData.alias_data">
-        <div class="form-group col-md-6">
+        <div class="form-group col-md-5">
           <label for="email">FieldName:</label>
           <select class="form-control" ng-model="model.original_name" required>
             <option ng-repeat="field in formFields" value="{{field.name}}" ng-disabled="savedFormFields[field.name]">{{field.name}}</option>
           </select>
         </div>
-        <div class="form-group col-md-6">
+        <div class="form-group col-md-5">
           <label for="pwd">Suggested Name:</label>
           <input type="text" class="form-control" ng-model="model.alias" required>
         </div>
-        <hr>
+        <div class="form-group col-md-2">
+          <label></label>
+          <button type="button" class="form-control btn btn-danger" ng-click="removeField($index)" ng-disabled="leadsData.leads.length">Remove</button>
+        </div>
+
       </div>
       <div class="form-group col-md-12">
         <button style="text-align:left" class="btn btn-danger" ng-click="addField($index)">Add</button>

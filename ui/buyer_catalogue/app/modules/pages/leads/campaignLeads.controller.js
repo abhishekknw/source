@@ -29,8 +29,19 @@ angular.module('catalogueApp')
         {name : 'address' , value : false},
         {name : 'alphanumeric1', value : false},
         {name : 'alphanumeric2', value : false},
+        {name : 'alphanumeric3', value : false},
+        {name : 'alphanumeric4', value : false},
         {name : 'boolean1', value : false},
         {name : 'boolean2', value : false},
+        {name : 'boolean3', value : false},
+        {name : 'boolean4', value : false},
+        {name : 'float1', value : false},
+        {name : 'float2', value : false},
+        {name : 'number1', value : false},
+        {name : 'number2', value : false},
+        {name : 'date1', value : false},
+        {name : 'date2', value : false},
+        {name : 'is_interested', value : false},       
       ];
       $scope.formFields = angular.copy(formFieldsStruct);
       $scope.views = {
@@ -76,6 +87,10 @@ angular.module('catalogueApp')
         $scope.modelData.alias_data.push(data);
         checkSavedFields();
       }
+      $scope.removeField = function(index){
+        delete $scope.savedFormFields[$scope.modelData.alias_data[index].original_name];
+        $scope.modelData.alias_data.splice(index,1);
+      }
       var assigned_by = '0';
       var fetch_all = '0';
       var userId = $rootScope.globals.currentUser.user_id;
@@ -103,6 +118,7 @@ angular.module('catalogueApp')
         switch(true){
           case $scope.views.createForm:
             $scope.campaignId = campaign.campaign.proposal_id;
+            $scope.savedFormFields = [];
             getCampaignLeadAliasData($scope.campaignId);
             console.log($scope.campaignId);
             break;
@@ -130,6 +146,7 @@ angular.module('catalogueApp')
         campaignLeadsService.getCampaignLeadAliasData(campaignId)
         .then(function onSuccess(response){
           console.log(response,$scope.modelData);
+          getLeads(campaignId);
           $scope.modelData.alias_data = response.data.data;
           checkSavedFields();
         }).catch(function onError(response){
