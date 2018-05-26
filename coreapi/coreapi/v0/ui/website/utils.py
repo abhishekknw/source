@@ -49,6 +49,7 @@ import serializers
 from v0 import errors
 import tasks
 import v0.constants as v0_constants
+import v0.serializers as v0_serializers
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -6658,5 +6659,50 @@ def calculate_location_difference_between_inventory_and_supplier(data, suppliers
                 distance = gpxpy.geo.haversine_distance(lat1, lon1, lat2, lon2)
                 item['distance'] = distance
         return data
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def create_contact_details(account_id,contacts):
+    """
+    this function creates multiple contacts of one account in single hit
+    :param contacts:
+    :return:
+    """
+    function_name = create_contact_details.__name__
+    try:
+        for contact in contacts:
+            contact['object_id'] = account_id
+            serializer = v0_serializers.ContactDetailsSerializer(data=contact)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return ui_utils.handle_response(function_name, data=serializer.errors)
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def update_contact_details(account_id,contacts):
+    """
+    this function will update contacts
+    :param account_id:
+    :param contacts:
+    :return:
+    """
+    function_name = update_contact_details.__name__
+    try:
+        for contact in contacts:
+            id = None
+            if 'id' in contact:
+                id = contact['id']
+            instance,is_created = models.ContactDetails.objects.get_or_create(id=id)
+            if is_created:
+                instance.object_id = account_id
+                instance.content_type = ContentType.objects.get_for_model(models.AccountInfo)
+            serializer = v0_serializers.ContactDetailsSerializer(data=contact,instance=instance)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return ui_utils.handle_response(function_name, data=serializer.errors)
+        return ui_utils.handle_response(function_name, data={}, success=True)
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))

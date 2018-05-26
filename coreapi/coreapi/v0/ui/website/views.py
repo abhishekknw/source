@@ -5539,8 +5539,14 @@ class AccountViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             account = models.AccountInfo.objects.get_permission(user=request.user, pk=pk)
-            serializer = AccountInfoSerializer(account)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            account_serializer = AccountInfoSerializer(account)
+            contacts = models.ContactDetails.objects.filter(object_id=pk)
+            contact_serializer = v0_serializers.ContactDetailsSerializer(contacts, many=True)
+            data = {
+                'account' : account_serializer.data,
+                'contacts' : contact_serializer.data
+            }
+            return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -5559,6 +5565,9 @@ class AccountViewSet(viewsets.ViewSet):
             serializer = AccountInfoSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
+                response = website_utils.create_contact_details(data['account_id'],data['contacts'])
+                if not response.data['status']:
+                    return response
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
@@ -5573,10 +5582,14 @@ class AccountViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
+            data = request.data.copy()
             account = models.AccountInfo.objects.get_permission(user=request.user, check_update_permissions=True, pk=pk)
-            serializer = AccountInfoSerializer(data=request.data, instance=account)
+            serializer = AccountInfoSerializer(data=data, instance=account)
             if serializer.is_valid():
                 serializer.save()
+                response = website_utils.update_contact_details(pk, data['contacts'])
+                if not response.data['status']:
+                    return response
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
@@ -6199,7 +6212,7 @@ class GetAssignedIdImagesListApiView(APIView):
                                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
                 filter(proposal_query, query, activity_type_query, activity_date_query, inv_query). \
                 annotate(name=F(proposal_alias_name),inv_id=F(shortlisted_inv_alias),object_id=F(supplier_id),proposal_id=F(proposal_alias_id)). \
-                values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id')
+                values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id','image_path')
             # inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
             #     select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
             #                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \

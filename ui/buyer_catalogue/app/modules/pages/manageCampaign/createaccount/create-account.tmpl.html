@@ -9,8 +9,8 @@
 <form name = "form" class="">
   <!-- <div class="breadcrumb" ncy-breadcrumb></div> -->
   <div class = "panel panel-default business-panel">
-    <h3 class = "panel-heading" ng-if = "!editAccountField">Create Account</h3>
-    <h3 class = "panel-heading" ng-if = "editAccountField">Edit Account</h3>
+    <h3 class = "panel-heading" ng-if = "!editAccountField">Create Account (* Fields are Mandatory)</h3>
+    <h3 class = "panel-heading" ng-if = "editAccountField">Edit Account (* Fields are Mandatory)</h3>
      <div class = "table">
        <div class="form-group">
          <!-- <div class = "row">
@@ -19,7 +19,7 @@
          </div></br> -->
 
           <div class = "row">
-            <div class = "col-md-3"><label>Account Name* </label></div>
+            <div class = "col-md-3"><label>Account Name * </label></div>
             <div class = "col-md-3"><input type="text" class="form-control" ng-pattern= "/^[a-zA-Z0-9\-\s]+$/" ng-model="model.account.name" ng-required="true" /></div>
             <!--<span class="show-error" ng-show="form.businessname.$error.pattern">Please Enter Valid Business Name</span> </div>-->
 
@@ -67,13 +67,13 @@
            <div class = "col-md-6"><textarea name="comments" id="comments" class="form-control" ng-model="model.account.comments"></textarea></div>
           </div>
        </div>
-       <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="createAccount()" ng-if="!editAccountField">Save</button>
-       <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="editAccount()" ng-if="editAccountField">Update</button>
+       <!-- <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="createAccount()" ng-if="!editAccountField">Save</button> -->
+       <!-- <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="editAccount()" ng-if="editAccountField">Update</button> -->
      </div>
    </div>
 
  <div class="panel panel-default business-panel">
-   <h3 class = "panel-heading">Account Contact</h3>
+   <h3 class = "panel-heading">Account Contact (* Fields are Mandatory)</h3>
       <!--<div ng-repeat="contact in business.contacts track by $index">-->
 
       <div ng-repeat="contact in model.account.contacts track by $index">
@@ -85,8 +85,8 @@
               </div></br> -->
 
               <div class = "row">
-                  <div class = "col-md-3"><label>Name</label></div>
-                  <div class = "col-md-3"><input type="text" name="contact_name" id="contact_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/" ng-model="contact.name" />
+                  <div class = "col-md-3"><label>Name *</label></div>
+                  <div class = "col-md-3"><input type="text" name="contact_name" id="contact_name" class="form-control" ng-pattern= "/^[a-zA-Z\-\s]+$/" ng-model="contact.name" required/>
                   <!--<span class="show-error" ng-show="form.contact_name.$error.pattern">Please Enter Valid Name</span>--></div>
 
                   <div class = "col-md-3"><label >Designation</label></div>
@@ -109,9 +109,9 @@
 
         <div class="form-group">
           <div class = "row">
-              <div class = "col-md-3"><label>Phone</label></div>
-              <div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="contact.phone"/>
-               <span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Phone Number</span>
+              <div class = "col-md-3"><label>Mobile</label></div>
+              <div class = "col-md-3"><input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-pattern="/^(\d{8}|\d{10})$/" ng-model="contact.mobile"/>
+               <span class="show-error" ng-show="form.contact_phone.$error.pattern">Please Enter Valid Mobile Number</span>
               </div>
 
               <div class = "col-md-3"><label>Single Point of Contact?</label></div>
@@ -133,5 +133,6 @@
         </div>
       </div>
     </div>
-    <button type="submit" class="btn btn-danger" ng-disabled="form.$invalid" ng-click="create()">Save Details</button>
+    <button type="submit" class="btn btn-danger" ng-disabled="form.$invalid" ng-if="!editAccountField" ng-click="createAccount()">Save Details</button>
+    <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="editAccount()" ng-if="editAccountField">Update</button>
   </form>
