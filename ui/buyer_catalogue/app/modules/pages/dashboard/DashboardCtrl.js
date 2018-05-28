@@ -38,7 +38,7 @@
           {header : 'Today Released', key : 'inv_type'},
           {header : 'Average Delay(%)', key : 'act_name'},
           {header : 'Average Off Location(Meters)', key : 'act_name'},
-          {header : 'Images', key : ',images'},
+          {header : 'Images', key : 'images'},
         ];
         $scope.campaignStatus = {
           ongoing : {
@@ -166,7 +166,7 @@
           $scope.OntimeOnlocation.onlocation.value = false;
           var initialDate = $scope.date;
           var date = new Date($scope.date);
-          var counter = 100;
+          var counter = 100000;
           date.setDate(date.getDate() + day);
           date = commonDataShare.formatDate(date);
 
@@ -215,6 +215,7 @@
               $scope.campaignData = [];
               var campaignData = {};
               campaignData['name'] = campaignName;
+              campaignData['images'] = [];
               campaignData['inv_count'] = 0;
               campaignData['onLocationCount'] = 0;
               campaignData['offLocationCount'] = 0;
@@ -271,7 +272,7 @@
                     campaignData['offTimeCount'] += 1;
                     campaignData['offTimeDays'] += campaignData[inv]['dayCount'];
                   }
-                  campaignData['images'] = items;
+                  campaignData['images'].push(items);
 
               })
               campaignReleaseData['totalOnTimeCount'] += campaignData['onTimeCount'];
@@ -300,13 +301,16 @@
 
         $scope.setImageUrl = function(images){
           $scope.imageUrlList = [];
-          for(var i=0; i<images.length; i++){
-            var imageData = {
-              image_url : 'http://androidtokyo.s3.amazonaws.com/' + images[i].image_path,
-              comment : images[i].comment,
-            };
-            $scope.imageUrlList.push(imageData);
-          }
+          angular.forEach(images, function(imageObjects){
+            for(var i=0; i<imageObjects.length; i++){
+              var imageData = {
+                image_url : 'http://androidtokyo.s3.amazonaws.com/' + imageObjects[i].image_path,
+                comment : imageObjects[i].comment,
+              };
+              $scope.imageUrlList.push(imageData);
+            }
+          })
+
         }
 
         $scope.getCampaigns = function(date){

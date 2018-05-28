@@ -1240,7 +1240,8 @@ permission_contants = {
 #category list
 category = {
     'business' : 'BUSINESS',
-    'business_agency' : 'BUSINESS AGENCY',
+    'business_agency' : 'BUSINESS_AGENCY',
+    'supplier_agency' : 'SUPPLIER_AGENCY'
 }
 query_status = {
     'supplier_code' : 'supplier_code',
