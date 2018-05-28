@@ -6,7 +6,7 @@
     'use strict';
 
   angular.module('catalogueApp')
-      .controller('DashboardCtrl',function($scope, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants,$location) {
+      .controller('DashboardCtrl',function($scope, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants,$location,$anchorScroll) {
  $scope.itemsByPage=15;
  $scope.query = "";
 
@@ -364,6 +364,9 @@
 
       $scope.pieChartClick = function(label){
 
+        $anchorScroll('bottom');
+
+
         $scope.campaignStatusName = label;
         var campaignStatus = _.findKey($scope.campaignStatus, {'campaignLabel' : label});
         console.log(campaignStatus);
@@ -390,6 +393,12 @@
            console.log(response);
          })
        }
+
+
+          $scope.doughnutChartOptions = function(){
+               $anchorScroll('bottom');
+          }
+
 
        var formatCountData = function(data){
          var countData = [];
@@ -635,6 +644,7 @@
              { label : $scope.campaignStatus.upcoming.supplierLabel, value : $scope.campaignStatusData.upcoming.length, status : $scope.campaignStatus.upcoming.status }
            ];
            $scope.options = angular.copy(doughnutChartOptions);
+
 
          }).catch(function onError(response){
            console.log(response);
