@@ -294,7 +294,7 @@
 
                           <div class="panel-group" id="accordion">
                             <div class="panel panel-default">
-                                <div class="panel-heading" ng-click="getCampaigns()">
+                                <div ng-if="showCampaignGraph" class="panel-heading" ng-click="getCampaigns()">
                                     <h4 class="panel-title">
                                         All Campaigns
                                     </h4>
@@ -377,7 +377,10 @@
                                 </ul>
                             </uib-tab-heading></h4>
                           </div>
-                          <nvd3 options="options" data="campaignChartdata" config="{refreshDataOnly: true, deepWatchData: true}" ></nvd3>
+                          <div class="row">
+                            <nvd3 options="options" data="campaignChartdata" config="{refreshDataOnly: true, deepWatchData: true}" ></nvd3>
+
+                          </div>
 
                         </div>
                         <div class="col-md-4 LeadsTable">
@@ -477,7 +480,7 @@
                           <!-- <div class="col-md-2">
 
                           </div> -->
-                          <div class="col-md-6" ng-if="showSupplierTypeCountChart">
+                          <div class="col-md-6" id="bottom" ng-if="showSupplierTypeCountChart">
                             <div class="panel-heading content-title">
                               <h5 style="background:'red'">Graphical Representation of {{campaignStatusName}}</h5>
                             </div>
@@ -1096,7 +1099,7 @@
                           <!-- <div class="col-md-2">
 
                           </div> -->
-                          <div class="col-md-6">
+                          <div class="col-md-6" >
                             <div class="panel-heading content-title">
                               <h5 style="background:'red'">Graphical Representation In {{campaignStatusName}}</h5>
                             </div>

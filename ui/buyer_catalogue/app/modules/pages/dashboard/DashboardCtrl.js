@@ -317,6 +317,9 @@
             date = new Date();
           date = commonDataShare.formatDate(date);
           date = date + ' 00:00:00';
+          $scope.showCampaignGraph = true;
+          $scope.showLeadsDetails = false;
+          $scope.showLeadsDetailsDataTable = false;
 
           console.log(date);
           DashboardService.getCampaigns(orgId, category, date)
@@ -360,6 +363,7 @@
 
 
       $scope.pieChartClick = function(label){
+
         $scope.campaignStatusName = label;
         var campaignStatus = _.findKey($scope.campaignStatus, {'campaignLabel' : label});
         console.log(campaignStatus);
@@ -379,6 +383,7 @@
               $scope.supplierCodeCountOptions.chart.pie.dispatch['elementClick'] = function(e){ $scope.getCampaignInvTableData(e.data); };
 
               $scope.showSupplierTypeCountChart = true;
+
            }
 
          }).catch(function onError(response){
@@ -424,7 +429,11 @@
          console.log(chartType);
          if(chartType == 'doughnut'){
            $scope.options = angular.copy(doughnutChartOptions);
-           $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.pieChartClick(e.data.label); };
+           $scope.options.chart.pie.dispatch['elementClick'] = function(e){
+             $scope.pieChartClick(e.data.label);
+
+
+            };
 
          }
          if(chartType == 'pie'){
@@ -557,11 +566,16 @@
          DashboardService.getSuppliersOfCampaignWithStatus(campaignId)
          .then(function onSuccess(response){
            $scope.showLeadsDetails = false;
-           $scope.showLeadsDetailsDataTable = true;
+           $scope.showLeadsDetailsDataTable = false;
+             $scope.showSupplierTypeCountChart = false;
+             $scope.showCampaignInvTable = false;
+             $scope.showSupplierInvTable = false;
+
 
            for(var i=0;i<$scope.campaignInventories.length;i++){
               if($scope.campaignInventories[i].filter_code=='SL'){
                   $scope.showLeadsDetails = true;
+                   $scope.showLeadsDetailsDataTable = true;
                   }
          }
            console.log($scope.showLeadsDetails);
