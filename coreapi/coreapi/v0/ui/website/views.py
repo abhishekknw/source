@@ -6390,10 +6390,14 @@ class LeadsViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
-            campaign_instance = models.ProposalInfo.objects.filter(proposal_id=campaign_id)
-            lead_alias = models.LeadAlias.objects.filter(campaign=campaign_instance)
+            supplier_id = request.query_params.get('supplier_id',None)
+            if supplier_id:
+                q = Q(campaign__proposal_id=campaign_id) & Q(object_id=supplier_id)
+            else:
+                q = Q(campaign__proposal_id=campaign_id)
+            lead_alias = models.LeadAlias.objects.filter(campaign__proposal_id=campaign_id)
             serializer_lead_alias = website_serializers.LeadAliasSerializer(lead_alias, many=True)
-            leads = models.Leads.objects.filter(campaign=campaign_instance)
+            leads = models.Leads.objects.filter(q)
             serializer_leads = website_serializers.LeadsSerializer(leads, many=True)
             data = {
                 'alias_data' : serializer_lead_alias.data,
@@ -6419,6 +6423,26 @@ class LeadsViewSet(viewsets.ViewSet):
             content_type = response.data.get('data')
             data['content_type'] = content_type.id
             serializer = website_serializers.LeadsSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk=None):
+        """
+        This function updates single lead
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data= request.data
+            pk = data['id']
+            lead = models.Leads.objects.get(pk=pk)
+            serializer = website_serializers.LeadsSerializer(lead,data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
