@@ -202,7 +202,7 @@
             console.log(response);
             $scope.campaignReleaseData = [];
             var campaignReleaseData = [];
-            l
+            
             campaignReleaseData['totalOnTimeCount'] = 0;
             campaignReleaseData['totalOffTimeCount'] = 0;
             campaignReleaseData['totalOnLocationCount'] = 0;

@@ -407,8 +407,8 @@
                                 <table class="table-responsive table table-bordered AvgLeadsTable" >
                                 <tbody>
                                   <tr ng-if="showLeadsDetails">
-                                    <td>Avg Leads Per Flat (High Quality): {{avgLeadsPerFlat| limitTo:3 }} % ({{avgHotLeadsPerFlat|limitTo:3}} %)</td>
-                                    <td>Avg Leads Per Supplier (High Quality): {{avgLeadsPerSupplier|limitTo:3}} % ({{avgHotLeadsPerSupplier|limitTo:3}} %)</td>
+                                    <td>Avg Leads Per Flat (High Quality): {{avgLeadsPerFlat| limitTo:3 || NA }} % ({{avgHotLeadsPerFlat|limitTo:3 || NA}} %)</td>
+                                    <td>Avg Leads Per Supplier (High Quality): {{avgLeadsPerSupplier|limitTo:3 || NA}} % ({{avgHotLeadsPerSupplier|limitTo:3 || NA }} %)</td>
                                   </tr>
                                 </tbody>
                               </table>
@@ -492,7 +492,7 @@
                             <table class="table-responsive table table-bordered">
                               <thead>
                                 <th>Proposal Name</th>
-                                <th>Inventory Count</th>
+                                <th>Count</th>
                                 <th>Go to Inventory</th>
                               </thead>
                               <tbody>
