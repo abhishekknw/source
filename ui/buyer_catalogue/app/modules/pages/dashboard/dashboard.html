@@ -524,9 +524,9 @@
                               <tr ng-repeat="filter in campaignInventoryData.filters">
                                 <td>{{inventories[filter.filter_code]}}</td>
 
-                                  <td ng-if="filter.filter_code=='PO' || filter.filter_code=='ST'"><a href="www.google.com">{{totalTowerCount}}</a></td>
-                                  <td ng-if="filter.filter_code=='SL' || filter.filter_code=='GA'"><a href="www.google.com">{{totalSupplierCount}}</a></td>
-                                  <td ng-if="filter.filter_code=='FL'"><a href="www.google.com">{{totalFlatCount}}</a></td>
+                                  <td ng-if="filter.filter_code=='PO' || filter.filter_code=='ST'"><a>{{totalTowerCount}}</a></td>
+                                  <td ng-if="filter.filter_code=='SL' || filter.filter_code=='GA'"><a>{{totalSupplierCount}}</a></td>
+                                  <td ng-if="filter.filter_code=='FL'"><a>{{totalFlatCount}}</a></td>
                                </td>
                               </tr>
                             </tbody>
@@ -1078,44 +1078,9 @@
                           </canvas>
                         </div>
                       </div>
-
-
-                      <!-- <div class="panel panel-default" ng-if="showPerfMetrics == perfMetrics.onlocation">
-                          <div class="col-md-12">
-                            <div class="col-md-6">
-                              <div class="panel-heading content-title">
-                                <h5 style="background:'red'">Graphical Representation In {{campaignStatusName}}</h5>
-                              </div>
-                              <nvd3 options="supplierCodeCountOptions" data="campaignChartdata"></nvd3>
-                            </div>
-                          </div>
-                      </div> -->
-                    </div>
+                  </div>
                     <!--End : Performance metrics  -->
-                    <div class="panel panel-default" ng-if="showSupplierTypeCountChart">
-                        <div class="col-md-12">
-                          <!-- <div class="col-md-2">
 
-                          </div> -->
-                          <div class="col-md-6">
-                            <div class="panel-heading content-title">
-                              <h5 style="background:'red'">Graphical Representation In {{campaignStatusName}}</h5>
-                            </div>
-                            <nvd3 options="supplierCodeCountOptions" data="supplierCodeCountData"></nvd3>
-                          </div>
-                          <div class="col-md-6">
-                            <div class="panel-heading content-title">
-                              <h5 style="background:'red'">Campaign Wise Data In {{campaignStatusName}}</h5>
-                            </div>
-                            <nvd3 options="supplierCodeCountOptions" data="supplierCountData"></nvd3>
-                            <!-- <table class="table-responsive table table-bordered pieChart-table">
-                              <tr ng-repeat="supplier in supplierCountData">
-                                <td>{{supplier.supplier_code}} : {{supplier.total}}</td>
-                              </tr>
-                            </table> -->
-                          </div>
-                        </div>
-                    </div>
                   </div>
               </div>
 

@@ -295,10 +295,19 @@
 </div>
   <!-- Start: grid view -->
   <div class="col-md-4 table-responsive gridViewTable" ng-if="show_societies" style="height: 550px">
-      <h2>Grid View
-      <select class="drop-width box-spacing form-control" ng-model="supplierListCode" ng-click="selectSupplierList(supplier)">
-        <option ng-repeat="supplier in unique_suppliersCode" value="{{supplier}}" ng-selected="$last">{{supplier}}</option>
-      </select></h2>
+
+
+          <h2>Grid View  </h2>
+          <div class="col-md-12">
+                <select class="drop-width box-spacing form-control" ng-model="supplierListCode" ng-click="selectSupplierList(supplier)">
+                <option ng-repeat="supplier in unique_suppliersCode" value="{{supplier}}" ng-selected="$last">{{supplier}}</option>
+              </select>
+        <div style="margin-top:-40px;" class="col-md-6 pull-right">
+          <input type="text" class="form-control" ng-model="query" placeholder="Search"><br />
+
+        </div>
+        </div>
+
       <table class="table table-bordered"  ng-if = "society_allowed_gridview && ((supplierListCode == supplierName.society) || (supplierListCode == supplierName.all))">
         <h2 ng-if = "society_allowed_gridview && ((supplierListCode == supplierName.society) || (supplierListCode == supplierName.all))">Society</h2>
         <thead>
@@ -325,8 +334,8 @@
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
-        <tbody ng-repeat = "center in center_data" >
-          <tr ng-repeat = "supplier in center.suppliers['RS']">
+        <tbody ng-repeat = "center in center_data | filter : query">
+          <tr ng-repeat = "supplier in center.suppliers['RS'] | filter : query">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
             <td><a ng-href="" data-target = "#societyDetails" data-toggle="modal" ng-click="getSocietyDetails(supplier,center,$index)">{{supplier.name}}</a></td>
@@ -391,8 +400,8 @@
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
-        <tbody ng-repeat = "center in center_data" >
-        <tr ng-repeat = "supplier in center.suppliers['CP']">
+        <tbody ng-repeat = "center in center_data | filter : query">
+        <tr ng-repeat = "supplier in center.suppliers['CP'] | filter : query">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
             <td>{{supplier.name}}</td>
@@ -446,8 +455,8 @@
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
-      <tbody ng-repeat = "center in center_data" >
-      <tr ng-repeat = "supplier in center.suppliers[supplierCode.busShelter]">
+      <tbody ng-repeat = "center in center_data | filter : query" >
+      <tr ng-repeat = "supplier in center.suppliers[supplierCode.busShelter] | filter : query">
           <td>{{$index+1}}</td>
           <td>{{center.center.center_name}}</td>
           <td>{{supplier.name}}</td>
@@ -488,8 +497,8 @@
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
-      <tbody ng-repeat = "center in center_data" >
-      <tr ng-repeat = "supplier in center.suppliers[supplierCode.gym]">
+      <tbody ng-repeat = "center in center_data | filter : query" >
+      <tr ng-repeat = "supplier in center.suppliers[supplierCode.gym] | filter : query">
           <td>{{$index+1}}</td>
           <td>{{center.center.center_name}}</td>
           <td>{{supplier.name}}</td>
@@ -528,8 +537,8 @@
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
-      <tbody ng-repeat = "center in center_data" >
-      <tr ng-repeat = "supplier in center.suppliers[supplierCode.saloon]">
+      <tbody ng-repeat = "center in center_data | filter : query" >
+      <tr ng-repeat = "supplier in center.suppliers[supplierCode.saloon] | filter : query">
           <td>{{$index+1}}</td>
           <td>{{center.center.center_name}}</td>
           <td>{{supplier.name}}</td>
@@ -570,8 +579,8 @@
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
-      <tbody ng-repeat = "center in center_data" >
-      <tr ng-repeat = "supplier in center.suppliers[supplierCode.retailStore]">
+      <tbody ng-repeat = "center in center_data | filter : query" >
+      <tr ng-repeat = "supplier in center.suppliers[supplierCode.retailStore] | filter : query">
           <td>{{$index+1}}</td>
           <td>{{center.center.center_name}}</td>
           <td>{{supplier.name}}</td>

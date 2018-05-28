@@ -42,13 +42,13 @@
         ];
         $scope.campaignStatus = {
           ongoing : {
-            status : 'ongoing', value : false, campaignLabel : 'Ongoing Campaigns', supplierLabel : 'Ongoing Suppliers'
+            status : 'ongoing', value : false, campaignLabel : 'Ongoing Campaigns', supplierLabel : 'Ongoing Societies'
           },
           completed : {
-            status : 'completed', value : false, campaignLabel : 'Completed Campaigns', supplierLabel : 'Completed Suppliers'
+            status : 'completed', value : false, campaignLabel : 'Completed Campaigns', supplierLabel : 'Completed Societies'
           },
           upcoming : {
-            status : 'upcoming', value : false, campaignLabel : 'Upcoming Campaigns', supplierLabel : 'Upcoming Suppliers'
+            status : 'upcoming', value : false, campaignLabel : 'Upcoming Campaigns', supplierLabel : 'Upcoming Societies'
           },
         };
         $scope.charts = {
@@ -350,6 +350,7 @@
               { label : $scope.campaignStatus.completed.campaignLabel, value : $scope.campaignData.completed_campaigns.length },
               { label : $scope.campaignStatus.upcoming.campaignLabel, value : $scope.campaignData.upcoming_campaigns.length }
             ];
+            console.log(  $scope.campaignChartdata );
             $scope.options = angular.copy(doughnutChartOptions);
             $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.pieChartClick(e.data.label); };
 
@@ -379,6 +380,7 @@
            if(response.data.data){
 
               $scope.supplierCodeCountData = formatCountData(response.data.data);
+              console.log($scope.supplierCodeCountData );
 
               // $scope.supplierCodeLabelData = formatLabelData(response.data.data.supplier_code_data,'supplier_type_code');
               $scope.supplierCodeCountOptions = angular.copy(doughnutChartOptions);
@@ -594,13 +596,16 @@
            $scope.showSupplierSocietywiseInvTable = false;
            $scope.showSupplierInvdDataTable = function(invData){
              $scope.SocietyInvTable = $scope.campaignStatusData;
-             console.log($scope.campaignStatusData.ongoing);
+             console.log($scope.SocietyInvTable);
+             // angular.forEach($scope.SocietyInvTable,function(data){
+             //
+             //   console.log(data);
+             // })
              // $scope.SocietyInvTable = [
              //   { SocietyTitle : $scope.campaignStatus.ongoing.campaignLabel},
              //   { SocietyTitle : $scope.campaignStatus.completed.campaignLabel},
              //   { SocietyTitle : $scope.campaignStatus.upcoming.campaignLabel}
              // ];
-             console.log($scope.SocietyInvTable.ongoing.supplier);
              $scope.showSupplierSocietywiseInvTable = true;
            };
            $scope.countallsupplier = $scope.campaignStatusData.completed.length+$scope.campaignStatusData.ongoing.length+$scope.campaignStatusData.upcoming.length;
