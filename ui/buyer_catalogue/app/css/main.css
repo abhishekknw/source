@@ -432,26 +432,45 @@ text-align: center;
     }
 
     .sidePanelTable {
-      background-color: #fcfc5f;
+      background-color: #FFC300;
       color: black;
       font-size: 15px;
       }
 
 
       .sidePanelTable  thead {
-      background-color: #49971C;
+      background-color: #8e1921;
       color: white;
       width: 100%;
       }
 
-      .sidePanelTable  tbody > td{
-      font:bold 12px/30px Georgia, serif;
+      .sidePanelTable  tbody > tr > td{
+        border:3px solid rgba(255, 255, 255, 0.2) !important;
       }
 
 .zeroCampAct{
   color: rgb(195, 69, 47);
   padding-left : 30%;
 }
+
+
+.zeroInventory{
+  color: rgb(195, 69, 47);
+  font-size: 180px;
+  margin-top: 100px;
+
+}
+
+
+.zeroInventory > h1{
+
+  font-size: 15px;
+  /* margin-top: 100px; */
+  left: 100px;
+
+}
+
+
 .multiselect-parent {
   color: black !important;
   border-color: black !important;

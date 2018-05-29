@@ -164,6 +164,6 @@ angular
     release : 'RELEASE',
     closure : 'CLOSURE',
     audit : 'AUDIT',
-    colorKey1 : '#3f53d5',
-    colorKey2 : '#ff5733'
-  });
+    colorKey1 : '#cb1925',
+    colorKey2 : '#fcfc5f'
+    });
