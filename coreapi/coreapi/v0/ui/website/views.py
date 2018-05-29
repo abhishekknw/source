@@ -5687,7 +5687,7 @@ class campaignListAPIVIew(APIView):
             else:
                 category = request.query_params['category']
                 if category.upper() == v0_constants.category['business']:
-                    assigned_objects = models.CampaignAssignment.objects.select_related('campaign__account','campaign__account__organisaion'). \
+                    assigned_objects = models.CampaignAssignment.objects.select_related('campaign__account','campaign__account__organisation'). \
                         filter(campaign__account__organisation__organisation_id=organisation_id)
                 if category.upper() == v0_constants.category['business_agency']:
                     assigned_objects = models.CampaignAssignment.objects.filter(campaign__user=user)
