@@ -6042,11 +6042,13 @@ class DashBoardViewSet(viewsets.ViewSet):
 
             date_data = {}
             for supplier in leads_by_date:
-                if str(supplier['created_at']) not in date_data:
-                    date_data[str(supplier['created_at'])] = supplier
-                    date_data[str(supplier['created_at'])]['interested'] = 0
+                if str(supplier['created_at'].date()) not in date_data:
+                    date_data[str(supplier['created_at'].date())] = supplier
+                    date_data[str(supplier['created_at'].date())]['interested'] = 0
+                else:
+                    date_data[str(supplier['created_at'].date())]['total']+=supplier['total']
                 if supplier['is_interested']:
-                    date_data[str(supplier['created_at'])]['interested'] += supplier['total']
+                    date_data[str(supplier['created_at'].date())]['interested'] += supplier['total']
 
             data = {
                 'supplier_data' : supplier_data,
@@ -6101,7 +6103,8 @@ class CampaignsAssignedInventoryCountApiView(APIView):
             proposal_query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state = 'PTC')
             proposal_query_images = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state='PTC')
             accounts = []
-            query = Q()
+            q1 = Q()
+            q2 = Q()
             if not request.user.is_superuser:
                 category = request.query_params.get('category',None)
                 if category.upper() == v0_constants.category['business']:
