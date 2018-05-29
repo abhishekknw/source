@@ -17,16 +17,17 @@ angular.module('catalogueApp')
         {header : 'Supplier Name'},
         {header : 'Area,(Sub Area)'},
         {header : 'Address'},
-        {header : 'Relationship Data'},
         {header : 'Flat Count'},
         {header : 'Tower Count'},
-        {header : 'Status'},
+        // {header : 'Status'},
         // {header : 'Supplier ID'},
         {header : 'Inventory Type'},
+        // {header : 'Stall Location'},
         {header : 'Inventory Count'},
         {header : 'Inventory Supplier Price'},
-        {header : 'Total Supplier Price(Per Flat)  '},
+        {header : 'Total Supplier Price   (Per Flat)  '},
         {header : 'Negotiated Price'},
+        {header : 'Freebies'},
         {header : 'Booking Status'},
         {header : 'Phase'},
         {header : 'Mode Of Payment'},
@@ -34,9 +35,26 @@ angular.module('catalogueApp')
         {header : 'Payment Status'},
       ];
   $scope.booking_status = [
-    {name:'Booked', code : 'BK'},
-    {name:'Not Booked', code : 'NB'},
+    {name:'Confirmed Booking', code : 'BK'},
+    {name:'Tentative Booking', code : 'NB'},
+    {name:'Phone Booked' , code : 'PB'},
+    {name:'Visit Booked', code : 'VB'},
+    {name:'Rejected', code : 'R'},
+    {name:'Send Email', code : 'SE'},
+    {name:'Visit Required', code : 'VR'},
+    {name:'Call Required', code : 'CR'},
+    {name:'Decision Pending', code : 'DP'},
   ];
+
+  $scope.payment_status = [
+    {name:'Not Initiated', code : 'NI'},
+    {name:'Pending', code : 'P'},
+    {name:'Cheque Released' , code : 'CR'},
+    {name:'Paid', code : 'PD'},
+    {name:'Rejected', code : 'R'},
+
+  ];
+
   $scope.contact_headings = [
     {header : 'Salutation'},
     {header : 'Name'},
@@ -324,6 +342,85 @@ $scope.setOrderProperty = function(propertyName) {
         }
     };
 
+$scope.searchSelectAllModel=[];
+
+$scope.multiSelect =
+[{
+        name: "Whatsapp Group",
+        id: "1",
+
+      }, {
+        name: "Email Group",
+        id: "2",
+
+      }, {
+        name: "Building ERP",
+        id: "3",
+
+      }, {
+        name: "Door To Door",
+        id: "4",
+
+      }];
+      $scope.selected_baseline_settings = {
+       template: '<b>{{option.name}}</b>',
+       selectedToTop: true // Doesn't work
+     };
+
+
+
+    $scope.selected_baselines_customTexts = {buttonDefaultText: 'Select Freebies'};
+
+    $scope.selectAllLocation=[];
+
+    $scope.stallLoc =
+    [{
+            name: "Near Entry Gate",
+            id: "1",
+
+          }, {
+            name: "Near Exit Gate",
+            id: "2",
+
+          }, {
+            name: "In Front of Tower",
+            id: "3",
+
+          }, {
+            name: "Near Garden",
+            id: "4",
+
+          },
+          {
+            name: "Near Play Area",
+            id: "5",
+
+          },
+          {
+            name: "Near Club House",
+            id: "6",
+
+          },
+          {
+            name: "Near Swimming Pool",
+            id: "7",
+
+          },{
+            name: "Near Parking Area",
+            id: "8",
+
+          },
+          {
+            name: "Near Shopping Area",
+            id: "9",
+
+          }];
+          $scope.selected_baseline = {
+           template: '<b>{{option.name}}</b>',
+           selectedToTop: true // Doesn't work
+         };
+
+        $scope.selected_customTexts = {buttonDefaultText: 'Stall Location'};
 
 
 }]);//Controller function ends here

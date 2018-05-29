@@ -2,7 +2,7 @@
 
 
  angular.module('catalogueApp')
- .factory('LeadFormService', ['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location',
+ .factory('LeadFormService',['machadaloHttp','$stateParams','$rootScope','$routeParams', '$location',
   function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
 
     var url_base = 'v0/ui/website/';
@@ -30,6 +30,18 @@
       return machadaloHttp.post(url,data);
     }
 
+    LeadFormService.updateLeads = function(id,data){
+      var url = url_base + "leads/" + id + "/";
+      return machadaloHttp.put(url,data);
+    }
+
+    LeadFormService.getLeads = function(campaignId , supplierId){
+      var url = url_base + "leads/?campaign_id=" + campaignId + "&supplierId=" + supplierId;
+      return machadaloHttp.get(url);
+    }
+
+
     return LeadFormService;
+    return campaignLeadsService;
 
 }]);

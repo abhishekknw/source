@@ -1,0 +1,46 @@
+.header-nav-bar-a {color:#4A4A4A !important;}
+.header-nav-bar-icons {margin-right: 5px;font-size:1.8rem}
+.aligntop{
+	margin-top: -7px;
+}
+
+.modal.right .modal-dialog {
+	position: fixed;
+	margin: auto;
+	width: 320px;
+	height: 100%;
+	-webkit-transform: translate3d(0%, 0, 0);
+	    -ms-transform: translate3d(0%, 0, 0);
+	     -o-transform: translate3d(0%, 0, 0);
+	        transform: translate3d(0%, 0, 0);
+}
+.menutoggle {
+background: white;
+border-radius: 60%;
+color: #4e0303 !important;
+cursor: pointer;
+font-size: 16px;
+height: 40px;
+line-height: 44px;
+margin: -2px 20px 0 -57px;
+text-align: center;
+width: 43px;
+}
+
+.fa.fa-tasks {
+    font-size: 20px;
+}
+
+.modal.right.fade .modal-dialog {
+	right: -320px;
+	-webkit-transition: opacity 0.3s linear, right 0.3s ease-out;
+	   -moz-transition: opacity 0.3s linear, right 0.3s ease-out;
+	     -o-transition: opacity 0.3s linear, right 0.3s ease-out;
+	        transition: opacity 0.3s linear, right 0.3s ease-out;
+}
+.modal.right.fade.in .modal-dialog {
+	right: 0;
+}
+.sub-menu{
+	left-margin:20px;
+}

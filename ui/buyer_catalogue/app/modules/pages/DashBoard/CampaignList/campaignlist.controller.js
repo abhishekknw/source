@@ -11,8 +11,8 @@ angular.module('catalogueApp')
         {header : 'Assigned Date'},
         {header : 'Start Date'},
         {header : 'End Date'},
-        {header : 'View Release Details'},
-        {header : 'View Execution Details'}
+        {header : 'View Booking Details'},
+        {header : 'View Execution Image'}
       ];
 
       $scope.is_Superuser = $window.localStorage.isSuperUser;
@@ -87,7 +87,7 @@ angular.module('catalogueApp')
           $window.localStorage.campaignId = proposal.proposal_id;
           $window.localStorage.campaignOwner = proposal.created_by;
           $window.localStorage.campaignName = proposal.name;
-          
+
           $location.path('/' + proposal.proposal_id + '/opsExecutionPlan');
         }
 

@@ -269,9 +269,9 @@
 
 
 <!-- Map Starts here -->
-<div class="col-md-3 map-width" ng-if="!show_societies">
+<div class="col-md-3 map-width"  ng-if="!show_societies">
 <style type="text/css">
-    .angular-google-map-container { height: 550px; width: 840px;}
+    .angular-google-map-container { height: 550px; width: 740px;}
 </style>
 <div class = "mapPosition">
   <div>
@@ -294,11 +294,20 @@
  </div>
 </div>
   <!-- Start: grid view -->
-  <div class="col-md-4 table-responsive" ng-if="show_societies" style="width: 800px; height: 550px">
-      <h2>Grid View
-      <select class="drop-width box-spacing form-control" ng-model="supplierListCode" ng-click="selectSupplierList(supplier)">
-        <option ng-repeat="supplier in unique_suppliersCode" value="{{supplier}}" ng-selected="$last">{{supplier}}</option>
-      </select></h2>
+  <div class="col-md-4 table-responsive gridViewTable" ng-if="show_societies" style="height: 550px">
+
+
+          <h2>Grid View  </h2>
+          <div class="col-md-12">
+                <select class="drop-width box-spacing form-control" ng-model="supplierListCode" ng-click="selectSupplierList(supplier)">
+                <option ng-repeat="supplier in unique_suppliersCode" value="{{supplier}}" ng-selected="$last">{{supplier}}</option>
+              </select>
+        <div style="margin-top:-40px;" class="col-md-6 pull-right">
+          <input type="text" class="form-control" ng-model="query" placeholder="Search"><br />
+
+        </div>
+        </div>
+
       <table class="table table-bordered"  ng-if = "society_allowed_gridview && ((supplierListCode == supplierName.society) || (supplierListCode == supplierName.all))">
         <h2 ng-if = "society_allowed_gridview && ((supplierListCode == supplierName.society) || (supplierListCode == supplierName.all))">Society</h2>
         <thead>
@@ -325,8 +334,8 @@
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
-        <tbody ng-repeat = "center in center_data" >
-          <tr ng-repeat = "supplier in center.suppliers['RS']">
+        <tbody ng-repeat = "center in center_data | filter : query">
+          <tr ng-repeat = "supplier in center.suppliers['RS'] | filter : query">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
             <td><a ng-href="" data-target = "#societyDetails" data-toggle="modal" ng-click="getSocietyDetails(supplier,center,$index)">{{supplier.name}}</a></td>
@@ -391,8 +400,8 @@
           </tr>
         </thead>
         <!--Changes for displaying all center's societies in gridView  -->
-        <tbody ng-repeat = "center in center_data" >
-        <tr ng-repeat = "supplier in center.suppliers['CP']">
+        <tbody ng-repeat = "center in center_data | filter : query">
+        <tr ng-repeat = "supplier in center.suppliers['CP'] | filter : query">
             <td>{{$index+1}}</td>
             <td>{{center.center.center_name}}</td>
             <td>{{supplier.name}}</td>
@@ -446,8 +455,8 @@
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
-      <tbody ng-repeat = "center in center_data" >
-      <tr ng-repeat = "supplier in center.suppliers[supplierCode.busShelter]">
+      <tbody ng-repeat = "center in center_data | filter : query" >
+      <tr ng-repeat = "supplier in center.suppliers[supplierCode.busShelter] | filter : query">
           <td>{{$index+1}}</td>
           <td>{{center.center.center_name}}</td>
           <td>{{supplier.name}}</td>
@@ -488,8 +497,8 @@
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
-      <tbody ng-repeat = "center in center_data" >
-      <tr ng-repeat = "supplier in center.suppliers[supplierCode.gym]">
+      <tbody ng-repeat = "center in center_data | filter : query" >
+      <tr ng-repeat = "supplier in center.suppliers[supplierCode.gym] | filter : query">
           <td>{{$index+1}}</td>
           <td>{{center.center.center_name}}</td>
           <td>{{supplier.name}}</td>
@@ -528,8 +537,8 @@
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
-      <tbody ng-repeat = "center in center_data" >
-      <tr ng-repeat = "supplier in center.suppliers[supplierCode.saloon]">
+      <tbody ng-repeat = "center in center_data | filter : query" >
+      <tr ng-repeat = "supplier in center.suppliers[supplierCode.saloon] | filter : query">
           <td>{{$index+1}}</td>
           <td>{{center.center.center_name}}</td>
           <td>{{supplier.name}}</td>
@@ -570,8 +579,8 @@
         </tr>
       </thead>
       <!--Changes for displaying all center's societies in gridView  -->
-      <tbody ng-repeat = "center in center_data" >
-      <tr ng-repeat = "supplier in center.suppliers[supplierCode.retailStore]">
+      <tbody ng-repeat = "center in center_data | filter : query" >
+      <tr ng-repeat = "supplier in center.suppliers[supplierCode.retailStore] | filter : query">
           <td>{{$index+1}}</td>
           <td>{{center.center.center_name}}</td>
           <td>{{supplier.name}}</td>
@@ -675,11 +684,11 @@
         <div>
          <!-- <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button> -->
          <!-- <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button> -->
-         <button class="btn btn-danger active"  ng-show="!show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button>
+         <button class="btn btn-danger active" style="width:100%;"  ng-show="!show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button>
        </div>
       </div>
       <!-- Start: Summary Section of Gridview-->
-      <div class="col-md-2"  ng-if = "show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
+      <div class="col-md-2 Comprehensive"  ng-if = "show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
         <div class="panel panel-info">
           <div class="panel-body filterscroll" id="searchBody">
             <div class="filterPanel">
@@ -759,13 +768,11 @@
           <div>
             <!-- <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button> -->
             <!-- <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button><br> -->
-            <button id="spacing" data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested" permission="[permissions.addSuppliers]">Add Suppliers</button>&nbsp;<br>
-            <button id="spacing" class="btn btn-danger active"  ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport" permission="[permissions.requestProposal]">
-              Request Proposal
-              </button>
-              <button id="spacing" class="btn btn-success" name="button" ng-disabled="isRequested" ng-if="isRequested">Requested</button><br>
-            <button id="spacing" class="btn btn-danger active"  ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button><br>
-            <button id="spacing" ng-hide="hideData || isGuestUser" class="btn btn-danger active" ngf-select="upload($file)" ng-disabled="isRequested" permission="[permissions.uploadProposal]">Upload</button>
+            <button id="spacing" style="width:100%;" data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested" permission="[permissions.addSuppliers]">Add Suppliers</button>&nbsp;<br>
+            <button id="spacing" style="width:100%;" class="btn btn-danger active"  ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport" permission="[permissions.requestProposal]">Request Proposal</button>
+            <button id="spacing" style="width:100%;" class="btn btn-success" name="button" ng-disabled="isRequested" ng-if="isRequested">Requested</button>&nbsp;<br>
+            <button id="spacing" style="width:100%;" class="btn btn-danger active"  ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button><br>
+            <!-- <button id="spacing" ng-hide="hideData || isGuestUser" class="btn btn-danger active" ngf-select="upload($file)" ng-disabled="isRequested" permission="[permissions.uploadProposal]">Upload</button> -->
         </div>
         </div>
     </div><!-- row div ends here-->

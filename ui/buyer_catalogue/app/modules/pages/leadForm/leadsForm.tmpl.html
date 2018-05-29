@@ -1,35 +1,121 @@
 <!DOCTYPE html>
 <html>
+<link rel="stylesheet" href="/modules/pages/leadForm/leadsForm.tmpl.css">
 <body class="container">
   <div><nav-bar></nav-bar></div></br></br>
   <div class="panel panel-default">
     <div class="panel-heading">
-      <h3 style="text-align:center">Lead Form</h3><br />
-      <h5>Proposal Name : {{proposalInfo.name}}</h5>
+      <h3 ng-if="!showLeads">Lead Form</h3><br />
+      <h3 ng-if="showLeads">Leads Data Of Campaign {{campaignName}} </h3>
+      <h5>Campaign Name : {{proposalInfo.name}}</h5>
       <h5>Society Name : {{supplierInfo.society_name}}</h5>
     </div>
 
     <div class="panel-body">
 
     </div>
-    <form class="form-horizontal" role="form">
+    <form class="form-horizontal" role="form" ng-if="!showLeads">
         <div class="form-group" ng-repeat="model in alias_data">
             &nbsp;
             <label  class="col-sm-3 control-label">{{model.alias}}</label>
             <div class="col-sm-6">
                 <input type="{{getFieldType(model.original_name)}}" id="firstName" class="form-control"
                     ng-if="checkValidFields(model.original_name)" ng-model="modelData[model.original_name]" style="margin-left:10px;"/>
-                <input type="{{getFieldType(model.original_name)}}" name="booleanField" ng-value="true"
-                    ng-hide="checkValidFields(model.original_name)" ng-model="modelData[model.original_name]" style="margin-left:20px;"/>
+
+                    <div class="" ng-hide="checkValidFields(model.original_name)">Yes
+                      <input type="{{getFieldType(model.original_name)}}"  ng-value="true"
+                        ng-model="modelData[model.original_name]" style="margin-left:20px;"/>
+                    </div>
+                    <div class="" ng-hide="checkValidFields(model.original_name)">No
+                      <input type="{{getFieldType(model.original_name)}}"  ng-value="false"
+                        ng-model="modelData[model.original_name]" style="margin-left:20px;"/>
+                    </div>
+
             </div>
-            <div class="col-sm-3"></div>
+            <div class="col-sm-3">
+
+            </div>
         </div>
         <div class="col-sm-3">
 
         </div>
-        <button ng-click="saveLeads()" class="btn btn-primary" style="margin:10px;">Save</button>
+        <button ng-if="!editLead" ng-click="saveLeads()" class="btn btn-primary" style="margin:10px;">Save</button>
+        <button ng-if="editLead" ng-click="updateLeads()" class="btn btn-primary" style="margin:10px;">Update</button>
+
+          <button ng-click="getLeads()" class="btn btn-danger pull-center" style="margin:10px;">View Leads</button>
 
     </form>
+    <div class="" ng-if="showLeads && !editLeads">
+        <div class="panel-body">
+          <div>
+            <div class="col-md-6">
+                <input type="text" class="form-control" ng-model="query" placeholder="Search"><br />
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-danger pull-right" ng-click="changeView()">  Create New Lead</button><br />
+            </div>
+
+
+            <div class="col-md-12 scroll">
+              <table class="table table-bordered table-responsive" export-csv="csv" separator=";" ng-if="leadsData.leads.length">
+                <br /><thead>
+                  <tr>
+                    <th>Index</th>
+                    <th ng-repeat="header in leadsData.alias_data">{{header.alias}}</th>
+                  </tr>
+                </thead>
+                <tbody >
+                  <tr ng-repeat="lead in leadsData.leads | filter : query">
+                    <td>{{$index + 1}}</td>
+                    <td ng-repeat="alias in leadsData.alias_data">{{lead[alias.original_name]}}</td>
+                    <!-- <td ng-repeat="alias in leadsData.alias_data" ng-if="!lead[alias.original_name] && alias.original_name">No</td> -->
+
+                    <td><button type="button" class="btn btn-danger" ng-click="editView(lead)">EDIT</button></td>
+                  </tr>
+                </tbody>
+              </table><br />
+              <a class="btn btn-danger" title="{{campaignName}} Leads" ng-click='csv.generate()' ng-href="{{ csv.link() }}"
+                   download="{{campaignName}}_leads.csv" ng-if="leadsData.leads.length">
+                  <i class="glyphicon glyphicon-new-window"></i> Download As Excel
+              </a>
+            </div>
+
+            <div ng-if="!leadsData.leads.length">
+              <label>No Leads Found</label>
+            </div>
+          </div>
+
+        </div>
+    </div>
+
+    <!-- <form class="form-horizontal" role="form" ng-if="editLeads">
+        <div class="form-group" ng-repeat="model in alias_data">
+            &nbsp;
+            <label  class="col-sm-3 control-label">{{model.alias}}</label>
+            <div class="col-sm-6">
+                <input type="{{getFieldType(model.original_name)}}" id="firstName" class="form-control"
+                    ng-if="checkValidFields(model.original_name)" ng-model="modelData[model.original_name]" style="margin-left:10px;"/>
+                    <div class="" ng-hide="checkValidFields(model.original_name)">Yes
+                      <input type="{{getFieldType(model.original_name)}}"  ng-value="true"
+                        ng-model="modelData[model.original_name]" style="margin-left:20px;"/>
+                    </div>
+                    <div class="" ng-hide="checkValidFields(model.original_name)">No
+                      <input type="{{getFieldType(model.original_name)}}"  ng-value="false"
+                        ng-model="modelData[model.original_name]" style="margin-left:20px;"/>
+                    </div>
+
+            </div>
+            <div class="col-sm-3">
+
+            </div>
+        </div>
+        <div class="col-sm-3">
+
+        </div>
+        <button ng-click="saveLeads()" class="btn btn-primary" style="margin:10px;">Update</button>
+        <button ng-click="" class="btn btn-danger" style="margin:10px;">Cancel</button>
+
+    </form> -->
     </div></div>
 </body>
 </html>

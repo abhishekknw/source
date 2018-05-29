@@ -22,6 +22,9 @@ angular.module('catalogueApp')
         boolean4 : 'radio',
         float1 : 'number',
         float2 : 'number',
+        date1 : 'date',
+        date2 : 'date',
+        is_interested : 'radio'
       };
       $scope.modelData = {};
       var getCampaignLeadAliasData = function(campaignId){
@@ -34,13 +37,14 @@ angular.module('catalogueApp')
         })
       }
       var campaignId = $stateParams.campaignId;
+      var supplierId = $stateParams.supplierId;
       getCampaignLeadAliasData(campaignId);
 
       $scope.getFieldType = function(field){
         return fieldType[field];
       }
       $scope.checkValidFields = function(field){
-        if (field == 'boolean1' || field == 'boolean2' || field == 'boolean3' || field == 'boolean4')
+        if (field == 'boolean1' || field == 'boolean2' || field == 'boolean3' || field == 'boolean4' || field == 'is_interested')
           return false;
         else
           return true;
@@ -67,7 +71,7 @@ angular.module('catalogueApp')
         })
       }
       getSupplierDetails(supplierId);
-      var supplierCode = $stateParams.supplierCode;
+      var supplierCode = $stateParams.supplierCode;0
       $scope.saveLeads = function(){
         $scope.modelData['campaign'] = campaignId;
         $scope.modelData['object_id'] = supplierId;
@@ -86,4 +90,35 @@ angular.module('catalogueApp')
           console.log(response);
         })
       }
+
+      $scope.getLeads = function(){
+        LeadFormService.getLeads(campaignId,supplierId)
+        .then(function onSuccess(response){
+          console.log(response);
+          $scope.showLeads = true;
+          $scope.leadsData = response.data.data;
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
+
+      $scope.changeView = function(){
+        $scope.showLeads = false;
+      };
+
+      $scope.editView = function(lead){
+         $scope.showLeads = false;
+         $scope.modelData = lead;
+         $scope.editLead = true;
+      }
+      $scope.updateLeads = function(){
+        LeadFormService.updateLeads($scope.modelData.id,$scope.modelData)
+        .then(function onSuccess(response){
+          console.log(response);
+          $scope.getLeads();
+        }).catch(function onError(response){
+          console.log(response);
+        })
+      }
+
     });

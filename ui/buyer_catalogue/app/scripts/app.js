@@ -150,7 +150,7 @@ angular
             label: 'Homepage'
           },
         })
-      .state('manageCampaign.editAccount', {
+      .state('editAccount', {
             url : '/editAccount/:accountId',
             controller: 'CreateAccountCtrl',
             templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',
@@ -159,7 +159,7 @@ angular
               parent : 'manageCampaign.create'
             }
         })
-        .state('manageCampaign.createaccount', {
+        .state('createaccount', {
               url : '/createAccount/:organisationId',
               controller: 'CreateAccountCtrl',
               templateUrl: 'modules/pages/manageCampaign/createaccount/create-account.tmpl.html',

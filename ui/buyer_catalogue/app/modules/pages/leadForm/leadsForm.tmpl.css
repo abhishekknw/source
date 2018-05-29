@@ -1,0 +1,15 @@
+h3{
+  text-align: center;
+}
+
+table{
+  margin-top: 40px;
+
+}
+
+.scroll{
+  max-height: 600px;
+
+
+  overflow-y: scroll;
+}
