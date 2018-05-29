@@ -6036,6 +6036,8 @@ class DashBoardViewSet(viewsets.ViewSet):
                     supplier_data[supplier['object_id']] = supplier
                     supplier_data[supplier['object_id']]['interested'] = 0
                     supplier_data[supplier['object_id']]['data'] = supplier_id_object_list[supplier['object_id']]
+                else:
+                    supplier_data[supplier['object_id']]['total'] += supplier['total']
 
                 if supplier['is_interested']:
                     supplier_data[supplier['object_id']]['interested'] += supplier['total']
