@@ -4,13 +4,16 @@
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 </br></br></br>
 <!-- <back-Button></back-Button> -->
-<div class="">
-  <div class="breadcrumb" ncy-breadcrumb></div>
+<div class="row">
+  <div class="col-md-6 pull-left">
+    <div class="breadcrumb" ncy-breadcrumb></div>
+  </div>
+  <div class="col-md-2 pull-right">
+    <div><button class="btn btn-primary active notify" style="text-align:right" ng-click="goToCampaignList()">List Campaigns</button>
+    </div>
+  </div>
 </div>
 
-<div style="margin-left:auto;margin-right:100px;width:7%;">
-  <button class="btn btn-primary active notify" style="text-align:right" ng-click="goToCampaignList()">List Campaigns</button>
-</div>
 <div ng-show="isEmpty" class="panel panel-default" style="font-size:24px;text-align:center;"><span>{{msg}}</span></div>
 <div class="panel-heading">
     <h2 ng-hide="hideData || isEmpty" style = "text-align:center;">Machadalo Operations Dashboard</h2>
@@ -20,8 +23,7 @@
   <div class="" ng-hide="hideData || isEmpty">
     <div class="row">
       <div class="table-responsive panel panel-default">
-        <scrollable-table watch="proposals">
-        <table class="table table-hover  table-bordered">
+        <table st-table="proposals" st-safe-src="Data" class="table table-striped">
           <thead>
             <tr>
               <th  ng-repeat="header in headings">{{header.header}}</th>
@@ -61,8 +63,14 @@
               </td>
             </tr>
           </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="13" class="text-center">
+                <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="3"></div>
+              </td>
+            </tr>
+          </tfoot>
         </table>
-        </scrollable-table>
       </div>
     </div>
   </div>

@@ -115,11 +115,14 @@ angular.module('catalogueApp')
     $scope.saveDetails = function(){
       // alert("vidhi");
     };
-
+      $scope.Data = [];
     releaseCampaignService.getCampaignReleaseDetails($scope.campaign_id)
     	.then(function onSuccess(response){
         console.log(response);
+
     		$scope.releaseDetails = response.data.data;
+        $scope.Data = $scope.releaseDetails.shortlisted_suppliers;
+        console.log($scope.Data);
         console.log($scope.releaseDetails);
 
         angular.forEach($scope.releaseDetails.shortlisted_suppliers, function(supplier){

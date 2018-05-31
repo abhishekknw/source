@@ -31,7 +31,7 @@
 <!-- <div class="container"> -->
   <!-- <div class="row" style="margin-left:10px;"> -->
     <div class=" panel panel-default table-style" >
-      <table class="table-bordered table-responsive table-scroll table-striped" style="text-align: center;word-wrap:break-word;">
+      <table st-table="releaseDetails.shortlisted_suppliers" st-safe-src="Data" class="table table-bordered">
         <thead>
           <tr>
             <th ng-click="setOrderProperty('flat_count')" ng-repeat="header in headings | orderBy:orderProperty">
@@ -119,6 +119,13 @@
             </td>
           </tr>
         </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="20" class="text-center">
+              <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="7"></div>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   <!-- </div> -->
@@ -149,7 +156,7 @@
         <hr/>
         <div class = "modal-body" style = "width: 650px; height: 300px;">
           <div class="modal-body col-md-4 table-responsive" style="width: 650px; height: 350px">
-              <table class="table table-bordered" style="width:100%">
+              <table  class="table table-bordered" style="width:100%">
                 <thead>
                   <tr>
                     <th ng-repeat="header in contact_headings" style="text-align: center;"><b>{{header.header}}</b></th>

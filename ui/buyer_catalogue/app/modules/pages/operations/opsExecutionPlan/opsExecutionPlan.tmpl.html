@@ -22,10 +22,17 @@
     </div>
 
             <div class="panel-body">
-              <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{campaignId}}</span>
-              <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{campaignName}}</span>
-              <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{bdOwner}}</span>
-              <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{campaignState}}</span>
+              <div class="row">
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{campaignId}}</span>
+                    <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{campaignName}}</span>
+                    <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{bdOwner}}</span>
+                    <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{campaignState}}</span>
+
+                  </div>
+                </div>
+              </div>
             </div>
 
     </div>
@@ -33,14 +40,14 @@
   <div class="" ng-hide="hideData">
   <div class="">
     <div class="">
-      <table class="table table-condensed table-striped table-bordered table-hover" style="text-align: center;" >
+      <table st-table="campaignDataList" st-safe-src="Data" class="table table-striped">
         <thead>
           <tr>
             <th ng-repeat="header in headings" class="col-md-1" style="text-align: center;">{{header.header}}</th>
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="inventory in campaignDataList">
+          <tr style="text-align: center;" ng-repeat="inventory in campaignDataList">
             <td>{{$index+1}}</td>
             <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(inventory)" permission = "[permissions.viewSupplierDetails]">{{inventory.supplier_name}}</a></td>
             <!-- <td class="col-md-1">{{inventory.inv_id}}</td> -->
@@ -59,6 +66,13 @@
             </md-progress-linear>
           </tr>
         </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="10" class="text-center">
+              <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="3"></div>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   </div>
@@ -85,7 +99,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr style="text-align: center;">
                 <td>{{supplierData.supplier_id}}</td>
                 <td>{{supplierData.name}}</td>
                 <td>{{supplierData.area}}</td>
@@ -146,7 +160,7 @@
               <th ng-repeat="header in dates">{{header.header}}</th>
             </thead>
             <tbody>
-              <tr ng-repeat="header in summaryHeaders">
+              <tr style="text-align: center;" ng-repeat="header in summaryHeaders">
                 <td><label>{{header.header}}</label></td>
                 <td>{{summaryData.Total[header.key]}}</td>
                 <td>{{summaryData.Actual[header.key]||0}}</td>
@@ -190,6 +204,6 @@
 </div>
 <!-- <div ng-class="{footer1:campaignDataList.length == 0 }"><footer-bar></footer-bar></div> -->
 <!--Start: Code for loading progress bar -->
-<div id="progressBarModal" class="modal fade" data-backdrop="static" data-keyboard="false">
-</div>
+<!-- <div id="progressBarModal" class="modal fade" data-backdrop="static" data-keyboard="false">
+</div> -->
 <!--End: Code for loading progress bar -->

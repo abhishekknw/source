@@ -15,6 +15,7 @@ angular.module('catalogueApp')
         {header : 'Action'},
         {header : 'Action'},
         {header : 'Action'},
+          {header : 'Action'},
       ];
       var formFieldsStruct = [
         {name : 'firstname1' , value : false},
@@ -94,10 +95,13 @@ angular.module('catalogueApp')
       var assigned_by = '0';
       var fetch_all = '0';
       var userId = $rootScope.globals.currentUser.user_id;
+      $scope.Data = [];
       campaignLeadsService.getCampaignDetails(assigned_by,userId,fetch_all)
         .then(function onSuccess(response){
           console.log(response);
           $scope.campaigns = response.data.data;
+          $scope.Data = $scope.campaigns;
+          console.log($scope.Data);
           $scope.loading = response.data.data;
 
         })

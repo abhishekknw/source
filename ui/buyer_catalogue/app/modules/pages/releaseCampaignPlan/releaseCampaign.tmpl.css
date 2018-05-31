@@ -4,6 +4,7 @@ html{
 body{
 	width: 100%;
 	background: #f2f2f2;
+  background-color: #ffffff;
 	font-family: Source Sans Pro;
 	color: #707070;
 	padding-bottom: 10px;
@@ -68,8 +69,7 @@ td{
 	 font-size: x-large;
  }
  .table-style{
-	 height: 60vh;
-	 overflow: auto;
+	 overflow-y: auto;
  }
 .input-width{
 	min-width: 120px !important;
@@ -79,6 +79,12 @@ td{
 }
 .panel-heading{
 	text-align: center;
-	background-color: #808080 !important;
+background-color: #d9534f !important;
 	color: white !important;
 }
+
+th {
+  background-color: #8e1921;
+  color: white;
+
+  }

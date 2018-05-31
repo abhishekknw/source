@@ -30,10 +30,13 @@ angular.module('catalogueApp')
       ];
 
   var getProposalDetails = function(){
+    $scope.Data = [];
     opsDashBoardService.getProposalDetails()
     	.then(function onSuccess(response){
         console.log(response);
     		$scope.proposals = response.data.data;
+        $scope.Data = $scope.proposals;
+        console.log($scope.Data);
         if($scope.proposals.length == 0){
           $scope.isEmpty = true;
           $scope.msg = constants.emptyProposalMsg;

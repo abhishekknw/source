@@ -6,23 +6,26 @@
 <div ng-show="isEmpty" style="text-align:center;"><h2>{{msg}}</h2></div>
 <main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }">
 <br/><br/><br/>
+<br/><br/>
+
 <div class="" ng-show="!views.campaigns">
   <button type="button" class="btn btn-primary" ng-click="changeView('campaigns',campaign)">Back To Campaign Details Page</button>
 </div>
+<br/><br/>
 <div class="panel panel-default" ng-if="views.campaigns">
   <div class="panel-heading">
     <h3>List Of All Campaign Details</h3>
   </div>
   <div class="panel-body">
     <div >
-      <table class="table table-bordered table-responsive">
+      <table st-table="campaigns" st-safe-src="Data" class="table table-striped">
         <thead>
           <tr>
             <th ng-repeat="header in campaignHeaders">{{header.header}}</th>
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="campaign in campaigns">
+          <tr style="text-align:center" ng-repeat="campaign in campaigns">
             <td>{{campaign.campaign.name}}</td>
             <td>{{campaign.campaign.tentative_start_date|limitTo:10}}</td>
             <td>{{campaign.campaign.tentative_end_date|limitTo:10}}</td>
@@ -40,6 +43,13 @@
             </td>
           </tr>
         </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="10" class="text-center">
+              <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="3"></div>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   </div>

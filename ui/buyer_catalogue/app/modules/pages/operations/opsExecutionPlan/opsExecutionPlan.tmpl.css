@@ -15,11 +15,12 @@
 	background-color: transparent;
   font-size : x-large;
 }
-th{
-  	background: #808080;
-    text-align: center;
-  	color: #fff;
-}
+
+th {
+  background-color: #8e1921;
+  color: white;
+
+  }
 body{
 	background: #f2f2f2;
 	font-family: Source Sans Pro;
@@ -33,20 +34,20 @@ body{
 	margin-left: 55px;
 }
 .header-panel{
-  margin-left: 10%;
-  margin-right: 10%;
+  /* margin-left: 10%;
+  margin-right: 10%; */
 }
 .panel-heading{
   text-align: center;
-  background-color: #808080;
-  color: white;
+  background-color: #d9534f !important;
+  color: white !important;
 }
 
 .table-panel{
-  margin-left: 10%;
+  /* margin-left: 10%;
   margin-right: 10%;
   height: 60vh;
-  overflow-y: auto;
+  overflow-y: auto; */
 
 }
 .button-panel{

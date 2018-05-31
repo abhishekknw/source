@@ -94,7 +94,7 @@
    <!--End: assign dates form  -->
 
    <div class="panel-body panel-table">
-         <table class="table table-responsive table-bordered">
+         <table st-table="releaseDetails.shortlisted_suppliers" st-safe-src="Data" class="table table-striped">
            <thead>
              <tr>
                <th ng-repeat="header in headings" >{{header.header}}</th>
@@ -127,6 +127,13 @@
                  <textarea rows="4" cols="50" name="comments"  ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing"  permission = "[permissions.addComments]"></textarea></td>
              </tr>
            </tbody>
+           <tfoot>
+             <tr>
+               <td colspan="10" class="text-center">
+                 <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="3"></div>
+               </td>
+             </tr>
+           </tfoot>
          </table>
        </br>
      </div>
