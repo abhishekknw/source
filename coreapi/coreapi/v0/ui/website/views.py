@@ -5682,22 +5682,13 @@ class campaignListAPIVIew(APIView):
         try:
             user = request.user
             date = request.query_params['date']
+            result = []
             if user.is_superuser:
-                assigned_objects = models.CampaignAssignment.objects.all()
+                result = models.CampaignAssignment.objects.all().values()
             else:
                 category = request.query_params['category']
-                if category.upper() == v0_constants.category['business']:
-                    assigned_objects = models.CampaignAssignment.objects.select_related('campaign__account','campaign__account__organisation'). \
-                        filter(campaign__account__organisation__organisation_id=organisation_id)
-                if category.upper() == v0_constants.category['business_agency']:
-                    assigned_objects = models.CampaignAssignment.objects.filter(campaign__user=user)
-                if category.upper() == v0_constants.category['supplier_agency']:
-                    assigned_objects = models.CampaignAssignment.objects.filter(assigned_to=user)
-            serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
-            response = website_utils.get_campaigns_by_status(serializer.data, date)
-            if not response:
-                return response
-            return ui_utils.handle_response(class_name, data=response, success=True)
+                result = website_utils.get_campaigns_with_status(category,user)
+            return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -5758,7 +5749,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
                 query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code', 'proposal__name','proposal_id'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(perm_query,query).values('supplier_code', 'proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
