@@ -4,7 +4,6 @@ angular.module('catalogueApp')
     function ($scope, $rootScope, $window, $location , commonDataShare,constants,campaignListService) {
 
       $scope.campaignHeadings = [
-        {header : 'Campaign Id'},
         {header : 'Campaign Name'},
         {header : 'Assgined To'},
         {header : 'Assgined By'},
@@ -16,6 +15,8 @@ angular.module('catalogueApp')
       ];
 
       $scope.is_Superuser = $window.localStorage.isSuperUser;
+      // var vm = this;
+
       var getCampaignDetails = function(){
         if($scope.is_Superuser == 'true'){
           var fetch_all = '1';
@@ -39,10 +40,13 @@ angular.module('catalogueApp')
           var assigned_by = '0';
           var fetch_all = '0';
           var userId = $rootScope.globals.currentUser.user_id;
+          $scope.Data = [];
           campaignListService.getCampaignDetails(assigned_by,userId,fetch_all)
             .then(function onSuccess(response){
               console.log(response);
               $scope.campaignData = response.data.data;
+              $scope.Data = $scope.campaignData;
+              console.log($scope.Data);
               if($scope.campaignData.length == 0){
                 $scope.isEmpty = true;
                 $scope.msg = constants.emptyCampaignList;
@@ -90,5 +94,6 @@ angular.module('catalogueApp')
 
           $location.path('/' + proposal.proposal_id + '/opsExecutionPlan');
         }
+
 
     }]);

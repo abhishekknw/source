@@ -1,15 +1,16 @@
 <link rel="stylesheet" href="modules/theme/components/pageTop/menu-bar.css"/>
 <link rel="stylesheet" href="modules/theme/components/pageTop/nav-bar.css"/>
 
-<div class="page-top clearfix" scroll-position="scrolled" max-height="50" ng-class="{'scrolled': scrolled}">
-  <a href="#/dashboard" class="al-logo clearfix"><!--<span>Blur</span>-->Admin</a>
-  <a href class="collapse-menu-link fa fa-tasks menutoggle " ba-sidebar-toggle-menu></a>
-  <div class="user-profile custom-menu clearfix">
+<body id="top">
+<div class="navbar-wrapper2 navbar-fixed-top" style="height: 65px;">
+  <div class="container" style="margin-top:10px">
+    <a class="navbar-brand aligntop"><img src="images/logo.png" alt="Machadalo" class="logo"/></a>
     <div class="navbar-collapse collapse" >
       <ul class="nav navbar-nav navbar-right">
+
         <li class="dropdown active">
-        <div style="margin-left:35px;margin-top:14px;">
-          <span class="glyphicon glyphicon-menu-hamburger" ng-click="getMenu()" data-toggle="modal" data-target="#menuModal"></span>
+        <div style="margin-left:25px;margin-top:12px;font-size:20px;color:#8e1921;">
+          <span class="glyphicon glyphicon-menu-hamburger" ng-click="getMenu()" data-toggle="modal" data-target="#menuModal"> Menu</span>
         </div>
       </li>
 
@@ -18,7 +19,7 @@
     </div>
   </div>
 </div>
-
+</body>
 
 <!-- modal -->
 	<div class="modal right fade" id="menuModal" tabindex="-1" role="dialog">
@@ -43,6 +44,10 @@
                                   <a ng-href="/#/manageCampaign/create" class="lipadding" ng-click="closeModal()">
                                     <i class="fa fa-tasks fa-lg"></i> Home</a>
                                 </li>
+                                <li ng-class="{active: isActive('/dashboard')}" permission = "[perm.viewManagement]">
+                                  <a href="/#/manageUser" class=" lipadding" ng-click="closeModal()">
+                                  <i class="fa fa-outdent fa-lg"></i> Management</a></li>
+
                                 <li ng-class="{active: isActive('/OpsDashBoard')}" permission = "[perm.menuOpsDashBoard]">
                                   <a ng-href="/#/OpsDashBoard" class=" lipadding" ng-click="closeModal()">
                                     <i class="fa fa-dashboard fa-lg"></i> OpsDashBoard</a>
@@ -56,8 +61,11 @@
                                     <i class="fa fa-columns fa-lg"></i> Campaign Leads</a>
                               </li>
                               <li ng-class="{active: isActive('/dashboard')}">
-                                <a href="/#/logout" class=" lipadding">
+                                <a href="/#/logout" class=" lipadding" ng-click="closeModal()">
                                   <i class="fa fa-sign-out fa-lg"></i> Logout</a></li>
+
+
+
 
                                <!-- <li data-toggle="collapse" data-target="#new" class="collapsed">
                                  &nbsp;&nbsp;&nbsp;<i class="fa fa-th fa-lg"></i>&nbsp;Campaign Status <span class="caret"></span>

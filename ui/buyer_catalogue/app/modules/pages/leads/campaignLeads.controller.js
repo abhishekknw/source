@@ -41,7 +41,7 @@ angular.module('catalogueApp')
         {name : 'number2', value : false},
         {name : 'date1', value : false},
         {name : 'date2', value : false},
-        {name : 'is_interested', value : false},       
+        {name : 'is_interested', value : false},
       ];
       $scope.formFields = angular.copy(formFieldsStruct);
       $scope.views = {
@@ -98,6 +98,8 @@ angular.module('catalogueApp')
         .then(function onSuccess(response){
           console.log(response);
           $scope.campaigns = response.data.data;
+          $scope.loading = response.data.data;
+
         })
         .catch(function onError(response){
           console.log(response);

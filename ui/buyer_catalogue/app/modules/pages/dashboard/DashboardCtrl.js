@@ -111,6 +111,7 @@
         var getAllCampaignsData = function(){
           DashboardService.getAllCampaignsData(orgId, category)
           .then(function onSuccess(response){
+            $scope.loading = response.data.data;
             console.log(response);
             $scope.count = 0;
             $scope.invActDateList = [];
@@ -128,6 +129,7 @@
               $scope.dateListKeys[date] = date;
             })
             getHistory(response.data.data);
+
           }).catch(function onError(response){
             console.log(response);
           })
@@ -325,7 +327,7 @@
           DashboardService.getCampaigns(orgId, category, date)
           .then(function onSuccess(response){
             console.log(response);
-
+            $scope.loading = response.data.data;
             $scope.searchSelectAllModel = [];
             console.log($scope.searchSelectAllModel);
             angular.forEach($scope.searchSelectAllModel, function(data){
@@ -613,11 +615,11 @@
            var totalFlats=0,totalLeads=0,totalSuppliers=0,hotLeads=0;
            console.log($scope.campaignStatusData);
            // $scope.totalLeadsCount = response.data.data.supplier_data.length;
+           $scope.campaignStatusData['totalSuppliers'] = 0;
            angular.forEach($scope.campaignStatusData, function(data,key){
               if($scope.campaignStatusData[key].length){
                 $scope.campaignStatusData[key]['totalFlats'] = 0;
                 $scope.campaignStatusData[key]['totalLeads'] = 0;
-                $scope.campaignStatusData['totalSuppliers'] = 0;
                 $scope.campaignStatusData[key]['hotLeads'] = 0;
                 $scope.campaignStatusData['totalSuppliers'] += $scope.campaignStatusData[key].length;
                 angular.forEach(data, function(supplierData){
@@ -665,7 +667,10 @@
          DashboardService.getCampaignFilters(campaignId)
          .then(function onSuccess(response){
            console.log(response);
+           // $scope.loading = response.data.data;
+
            $scope.campaignInventories = [];
+           $scope.showinv = true;
            $scope.select = {
             campaignInventories: ""
           };
@@ -824,6 +829,7 @@
        .then(function onSuccess(response){
          console.log(response);
         $scope.campaignInventoryTypesData = response.data.data;
+        $scope.loading = response.data.data;
         // console.log($scope.campaignInventoryTypesData.supplier_data);
         $scope.getSupplierInvTableData($scope.campaignInventoryTypesData);
         $scope.campaignInventoryData = response.data.data;
@@ -907,6 +913,7 @@
    }
    $scope.getLeadsByCampaign = function(campaignId){
      $scope.showTimeLocBtn = false;
+     $scope.showinv = false;
      $scope.showPerfMetrics = $scope.perfMetrics.blank;
      DashboardService.getLeadsByCampaign(campaignId)
      .then(function onSuccess(response){
@@ -992,7 +999,9 @@
    $scope.getGraphicalComparision = function(status){
      $scope.graphicalComparision.leads.value = false;
      $scope.graphicalComparision.inventory.value = false;
-
+     $scope.showPerfMetrics = false;
+     $scope.campaignInventories = [];
+     $scope.showTimeLocBtn = false;
      $scope.graphicalComparision[status].value = !$scope.graphicalComparision[status].value;
    }
 
@@ -1018,6 +1027,7 @@
     };
     $scope.getCompareCampaigns = function(status){
       $scope.compCampaigns.value = false;
+      $scope.showPerfMetrics = false;
       $scope.compCampaigns[status].value = !$scope.compCampaigns[status].value;
     }
 

@@ -1,9 +1,17 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
+<link href="css/sidePanel.css" rel="stylesheet" media="screen">
+
+<!-- <div><nav-bar></nav-bar></div> -->
+<div ng-loading="loading"></div> <!--For displaying loading icon-->
+<div ng-show="isEmpty" style="text-align:center;"><h2>{{msg}}</h2></div>
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }">
+<br/><br/><br/>
+
 <div class="panel-panel-default">
   <div class=""><div class="breadcrumb" ncy-breadcrumb></div></div>
 </div>
-  <div class="panel panel-default choicePanel">
+<div class="bodyClass">
     <!-- <div class="breadcrumb" ncy-breadcrumb></div> -->
    <!-- <div> -->
     <!-- <span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span><br>
@@ -131,7 +139,8 @@
     <form name="existingAccount"permission = "[permList.accountListView]" >
         <div class="panel panel-default business-panel">
           <h4 class="panel-heading">
-            <a ng-click="getAccounts()">Click Here To View Existing Accounts</a>
+             <button type="button" name="button" class="btn btn-primary businessButton"><a ng-click="getAccounts()">Click Here To View Existing Accounts</a></button>
+
             <span ng-if="showAccountsMessage">No Accounts Found!!</span>
           </h4>
           <div class="table-responsive tableBodyList">
@@ -160,9 +169,9 @@
             </table>
           </div>
       <button class="btn btn-danger" ng-click="addNewAccount()" permission="[permList.addNewAccount]">Add New Account</button>
-        </div>
-      </form>
 
+      </form>
+</div>
       <form name="existingProposal" permission="[permList.proposalListView]">
         <div class="panel panel-default business-panel">
           <h4 class="panel-heading">Existing Proposals</h4>
@@ -612,3 +621,5 @@
     </div>
   </form>-->
 </div>
+
+</main>

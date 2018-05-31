@@ -1,18 +1,18 @@
-th{
-  	background: #808080;
-    text-align: center;
-  	color: #fff;
+html{
+  background-color: #ffffff;
 }
 body{
-	background: #f2f2f2;
+	/* background-color: #ffffff !important; */
+  overflow-x: visible !important;
+
 	font-family: Source Sans Pro;
 	color: #707070;
-  min-width:100%;
 }
-.content{
-  min-height: 400px;
-}
+th {
+  background-color: #8e1921;
+  color: white;
 
+  }
 .breadcrumb{
   /*width: 65%;*/
   margin-left: auto;
@@ -21,20 +21,17 @@ body{
   font-size : x-large;
 }
 .panel{
-  margin-left: 10%;
-  margin-right: 10%;
   /*height: 80vh;*/
 }
 .panel1{
-  margin-left: 10%;
-  margin-right: 10%;
+  /* margin-left: 5%;
+  margin-right: 5%; */
 }
 .panel-heading{
   text-align: center;
-  background-color: #808080;
+  background-color: #d9534f;
   color: white;
 }
-.panel-table{
-  overflow: auto;
-  height: 60vh;
+.table-responsive{
+  overflow-x: visible !important;
 }

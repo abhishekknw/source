@@ -24,6 +24,7 @@
 <!-- <link href="css/customstyle.css" rel="stylesheet" media="screen"> -->
 <link href="css/sidePanel.css" rel="stylesheet" media="screen">
 <link href="css/custom.css" rel="stylesheet" media="screen">
+<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
@@ -41,8 +42,10 @@
 <!-- <link href="css/404.css" rel="stylesheet" media="screen"> -->
 
 <div class="body-bg"></div>
+<div ng-loading="loading" ng-if="showPerfMetrics == perfMetrics.blank"></div> <!--For displaying loading icon-->
+<div ng-show="isEmpty" style="text-align:center;"><h2>{{msg}}</h2></div>
 
-<main ng-if="$pageFinishedLoading" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }">
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }">
 <ba-sidebar></ba-sidebar>
 
 <page-Top></page-Top>
@@ -64,9 +67,9 @@
                <thead>
                  <tr>
                    <td>DATE</td>
-                   <td>RELEASED (%)</td>
-                   <td>AUDITED (%)</td>
-                   <td>CLOSED (%)</td>
+                   <td>R (%)</td>
+                   <td>A (%)</td>
+                   <td>C (%)</td>
 
                  </tr>
                </thead>
@@ -669,7 +672,7 @@
                                       </div>
                                   </div>
                               </div>
-                              <div class="panel panel-default">
+                              <div class="panel panel-default" >
                                   <div class="panel-heading" ng-click="getGraphicalComparision(graphicalComparision.leads.status)">
                                       <h4 class="panel-title">
                                           Compare Campaigns
@@ -730,7 +733,7 @@
                       </table>
                     </div>
                       <div class="row zeroInventory" ng-if="campaignInventories.length == 0">
-                        <h1> No Inventory Found</h1>
+                        <h1 ng-if="showinv"> No Inventory Found</h1>
                       </div>
 
                     <div class="row zeroInventory" ng-if="!campaignInventories">
@@ -741,12 +744,12 @@
                     </div>
                         <div class="col-md-12" ng-show="compCampaigns.campaigns.value">
                           <div class="col-md-2">
-                            <span style="color:red;width:100%;" ng-dropdown-multiselect="" options="mergedarray" class="col-md-6"  extra-settings="searchSelectAllSettings"
+                            <span style="color:red;width:100%;margin-left:-20px;" ng-dropdown-multiselect="" options="mergedarray" class="col-md-6"  extra-settings="searchSelectAllSettings"
                             selected-model="searchSelectAllModel" translation-texts="selected_baselines_customTexts" events="events"></span>
 
                           </div>
-                            <div class="col-md-1">
-                            <button class="btn btn-primary"  ng-click="getCompareCampaignChartData()">COMPARE</button>
+                            <div class="col-md-2">
+                            <button class="btn btn-primary" style="margin-left:20px" ng-click="getCompareCampaignChartData()">COMPARE</button>
                           </div>
                       </div>
 
@@ -1095,9 +1098,6 @@
   </div>
   <back-top></back-top>
 </main>
-<div id="preloader" ng-show="!$pageFinishedLoading">
-  <div></div>
-</div>
 
 <!--Start: Code for showing image Modal Window -->
 <div id="imageModal" class="modal fade">
@@ -1127,4 +1127,5 @@
     </div>
   </div>
 </div>
+</main>
 <!--End: Code for showing image Modal  Window -->
