@@ -3899,21 +3899,21 @@ class ProposalToCampaign(APIView):
             #     return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id), request=request)
 
             # these are the current inventories assigned. These are inventories assigned to this proposal when sheet was imported.
-            current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
+            # current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
 
             # assign default dates when you have some inventories assigned
-            if current_assigned_inventories:
-                current_assigned_inventories_map = {}
-
-                for inv in current_assigned_inventories:
-                    inv_tuple = (inv.inventory_content_type, inv.inventory_id)
-                    current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
-
-                # currently set the R.D and C.D of all inventories to proposal's start and end date.
-                inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
-                response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
-                if not response.data['status']:
-                    return response
+            # if current_assigned_inventories:
+            #     current_assigned_inventories_map = {}
+            #
+            #     for inv in current_assigned_inventories:
+            #         inv_tuple = (inv.inventory_content_type, inv.inventory_id)
+            #         current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
+            #
+            #     # currently set the R.D and C.D of all inventories to proposal's start and end date.
+            #     inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
+            #     response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
+            #     if not response.data['status']:
+            #         return response
 
             # convert to campaign and return
             proposal.campaign_state = v0_constants.proposal_converted_to_campaign
