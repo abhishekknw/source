@@ -9,14 +9,14 @@
 <br/><br/>
 
 <div class="" ng-show="!views.campaigns">
-  <button type="button" class="btn btn-primary" ng-click="changeView('campaigns',campaign)">Back To Campaign Details Page</button>
+  <button type="button" class="btn btn-primary" style="margin-left:23px;" ng-click="changeView('campaigns',campaign)">Back To Campaign Details Page</button>
 </div>
 <br/><br/>
-<div class="panel panel-default" ng-if="views.campaigns">
-  <div class="panel-heading">
+<div class="panel" ng-if="views.campaigns">
+  <div class="pageTitle">
     <h3>List Of All Campaign Details</h3>
   </div>
-  <div class="panel-body">
+  <div class="panel-body" style="margin-top:10px;">
     <div >
       <table st-table="campaigns" st-safe-src="Data" class="table table-striped">
         <thead>
@@ -55,8 +55,8 @@
   </div>
 </div>
 <!--start: leads  -->
-<div class="panel panel-default" ng-if="views.viewLeads">
-  <div class="panel-heading">
+<div class="panel" ng-if="views.viewLeads">
+  <div class="pageTitle">
     <h3>Leads Data Of Campaign {{campaignName}} </h3>
   </div>
   <div class="panel-body">
@@ -89,8 +89,8 @@
 </div>
 <!--end: leads  -->
 <!--start: create form  -->
-<div class="panel panel-default" ng-if="views.createForm">
-  <div class="panel-heading">
+<div class="panel " ng-if="views.createForm">
+  <div class="pageTitle">
     <h3>Create/Edit Form</h3>
   </div>
   <div class="panel-body">
@@ -121,8 +121,8 @@
 </div>
 <!--end: create form  -->
 <!--start: enter leads data -->
-<div class="panel panel-default" ng-if="views.selectSuppliers">
-  <div class="panel-heading">
+<div class="panel " ng-if="views.selectSuppliers">
+  <div class="pageTitle">
     <h3>List Of All Suppliers Of Campaign {{campaignName}}</h3>
   </div>
   <div class="panel-body">
@@ -156,10 +156,10 @@
 </div>
 <!--end: enter leads data  -->
 <!--start : import leads  -->
-<div class="panel panel-default" ng-show="views.importLeads">
-  <div class="panel-heading">
-    Import Leads for {{campaignName}} Campaign
-  </div>
+<div class="panel" ng-show="views.importLeads">
+  <div class="pageTitle">
+      <h3>  Import Leads for {{campaignName}} Campaign</h3>
+      </div>
   <div class="panel-body">
     <label>Select Lead Sheet</label>
     <js-xls onread="read" onerror="error"></js-xls></br>
@@ -182,6 +182,7 @@
         </tr>
       </tbody>
     </table>
+    <br />
     <div class="">
       <button ng-click="importLeadsThroughSheet()" class="btn btn-danger">Submit</button>
     </div>

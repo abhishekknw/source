@@ -38,7 +38,7 @@
           {header : 'Today Released', key : 'inv_type'},
           {header : 'Average Delay(%)', key : 'act_name'},
           {header : 'Average Off Location(Meters)', key : 'act_name'},
-          {header : 'Images', key : ',images'},
+          {header : 'Images', key : 'images'},
         ];
         $scope.campaignStatus = {
           ongoing : {

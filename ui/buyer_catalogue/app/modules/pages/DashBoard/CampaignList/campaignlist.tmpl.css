@@ -13,25 +13,38 @@ th {
   color: white;
 
   }
-.breadcrumb{
-  /*width: 65%;*/
-  margin-left: auto;
-  margin-right: auto;
-	background-color: transparent;
-  font-size : x-large;
-}
-.panel{
-  /*height: 80vh;*/
-}
-.panel1{
-  /* margin-left: 5%;
-  margin-right: 5%; */
-}
+
+/*
 .panel-heading{
   text-align: center;
   background-color: #d9534f;
   color: white;
-}
+} */
+
 .table-responsive{
   overflow-x: visible !important;
 }
+
+
+/* .pageTitle{
+  margin: 2%;
+  margin-left: -100px;
+  margin-right: -100px;
+  width: 1000px;
+  text-align: center;
+  background-color: #d9534f !important;
+	color: white !important;
+  padding: 10px 15px;
+  border-bottom: 1px solid transparent;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+
+
+.panel-body{
+  margin-left:50px;
+  margin-right:50px;
+  margin: 2%;
+	overflow-x: visible !important;
+	padding: 15px 0px 0px 0px;
+} */

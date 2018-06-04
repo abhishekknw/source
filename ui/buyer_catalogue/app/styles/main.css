@@ -1,0 +1,106 @@
+html{
+  background-color: #ffffff;
+  overflow-x: visible !important;
+  /* margin: 10%; */
+}
+
+
+th{
+  	background: #8e1921;
+    text-align: center;
+  	color: #fff;
+}
+
+
+body{
+	background-color: #ffffff !important;
+  overflow-x: visible !important;
+	font-family: Source Sans Pro;
+	color: #ffffff !important;
+}
+
+.breadcrumb{
+	background-color: transparent;
+  /*width: 82%;*/
+  margin-left: auto;
+  margin-right: auto;
+  /* font-size : x-large; */
+}
+
+.pageTitle{
+  margin: 2%;
+  margin-top: -15px;
+
+  /* margin-left: -100px;
+  margin-right: -100px; */
+  /* width: 1000px; */
+  text-align: center;
+  background-color: #d9534f !important;
+	color: white !important;
+  padding: 10px 15px;
+  border-bottom: 1px solid transparent;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+
+
+.panel-body{
+  margin-left:50px;
+  margin-right:50px;
+  margin-top: -15px;
+  /* margin: 2%; */
+	overflow-x: visible !important;
+	padding: 15px 0px 0px 0px;
+}
+
+.panelTable{
+  /* margin-left:50px;
+  margin-right:50px;
+  margin-top: -15px; */
+  /* margin: 2%; */
+	/* overflow-x: visible !important;
+	padding: 15px 0px 0px 0px; */
+}
+
+.panel-bodyDashboard{
+  /* margin-left:50px;
+  margin-right:50px; */
+  /* margin-top: -15px; */
+  /* margin: 2%; */
+	overflow: auto ;
+	/* padding: 15px 0px 0px 0px; */
+}
+
+/* .pageTitleOperation{
+  margin: 1%;
+  text-align: center;
+  background-color: #d9534f !important;
+	color: white !important;
+  padding: 10px 15px;
+  border-bottom: 1px solid transparent;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+} */
+
+
+/* .panel-bodyOperation{
+  margin: 3%;
+  margin-top: -1px;
+	overflow-x: visible !important;
+	padding: 15px 0px 0px 0px; */
+/* } */
+
+tr, td {
+  color: #000000 !important;
+}
+
+
+h3 {
+  text-align: center;
+}
+
+.panel-heading{
+  text-align: center;
+  background-color: #d9534f;
+  color: white;
+}

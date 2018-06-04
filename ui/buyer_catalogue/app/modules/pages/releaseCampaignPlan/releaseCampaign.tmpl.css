@@ -65,9 +65,6 @@ td{
  .error{
 	 color: #c9302c;
  }
- .breadcrumb{
-	 font-size: x-large;
- }
  .table-style{
 	 overflow-y: auto;
  }
@@ -77,12 +74,6 @@ td{
 .input-width-phase{
 	min-width: 60px !important;
 }
-.panel-heading{
-	text-align: center;
-background-color: #d9534f !important;
-	color: white !important;
-}
-
 th {
   background-color: #8e1921;
   color: white;

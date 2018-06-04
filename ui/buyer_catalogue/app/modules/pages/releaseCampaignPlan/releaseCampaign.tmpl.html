@@ -10,11 +10,10 @@
 <div class="" permission = "[]">
   <div class="breadcrumb" ncy-breadcrumb></div>
 </div>
-<div class="panel panel-default">
-  <div class="panel-heading">
+  <div class="pageTitle">
       <h3>Campaign Release and Audit Plan</h3>
   </div>
-    <div class = "panel-body">
+    <div class = "panel-body" style="text-align:center;margin-top:-20px">
         <div class="row">
           <div class="panel panel-default">
             <div class="panel-heading">
@@ -26,12 +25,10 @@
           </div>
         </div>
       </div>
-</div>
 
 <!-- <div class="container"> -->
-  <!-- <div class="row" style="margin-left:10px;"> -->
-    <div class=" panel panel-default table-style" >
-      <table st-table="releaseDetails.shortlisted_suppliers" st-safe-src="Data" class="table table-bordered">
+  <div class="panel-body table-style">
+      <table st-table="releaseDetails.shortlisted_suppliers" st-safe-src="Data" class="table table-striped">
         <thead>
           <tr>
             <th ng-click="setOrderProperty('flat_count')" ng-repeat="header in headings | orderBy:orderProperty">
@@ -127,9 +124,8 @@
           </tr>
         </tfoot>
       </table>
-    </div>
-  <!-- </div> -->
-  <div class = "row">
+  </div>
+  <div class = "panel-body">
     <span class = "col-md-4">
       <button class="btn btn-danger active notify" style="text-align:left; margin-left:10px" ng-click="updateData()" permission = "[permissions.updateData]">Update</button>
     </span>
@@ -143,7 +139,7 @@
 
   </div>
 
-
+<br /><br />
   <!-- </div> -->
 <!-- </div> -->
 <!--Start: Code for contacts Modal Window -->

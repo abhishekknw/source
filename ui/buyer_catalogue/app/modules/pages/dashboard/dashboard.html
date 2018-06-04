@@ -310,7 +310,7 @@
                                     </h4>
                                 </div>
                                 <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
-                                    <div class="panel-body menu-content">
+                                    <div class="panel-bodyDashboard menu-content">
                                         <table class="table">
                                             <tr ng-repeat="campaign in campaignData.completed_campaigns">
                                               <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
@@ -328,7 +328,7 @@
                                       </h4>
                                   </div>
                                   <div id="ongoing" class="animate-show" ng-show="campaignStatus.ongoing.value">
-                                      <div class="panel-body menu-content">
+                                      <div class="panel-bodyDashboard menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
                                                 <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
@@ -347,7 +347,7 @@
                                       </h4>
                                   </div>
                                   <div id="upcoming" class="animate-show" ng-show="campaignStatus.upcoming.value">
-                                      <div class="panel-body menu-content">
+                                      <div class="panel-bodyDashboard menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
                                                 <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
@@ -570,7 +570,7 @@
                                     </h4>
                                 </div>
                                 <div id="completed" class="animate-show" ng-show="campaignStatus.completed.value">
-                                    <div class="panel-body menu-content">
+                                    <div class="panel-bodyDashboard menu-content">
                                       <table class="table">
                                           <tr ng-repeat="campaign in campaignData.completed_campaigns">
                                           <td >
@@ -606,7 +606,7 @@
                                       </h4>
                                   </div>
                                   <div id="ongoing" class="animate-show" ng-show="campaignStatus.ongoing.value">
-                                      <div class="panel-body menu-content">
+                                      <div class="panel-bodyDashboard menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
                                               <td>
@@ -643,7 +643,7 @@
                                       </h4>
                                   </div>
                                   <div id="upcoming" class="animate-show" ng-show="campaignStatus.upcoming.value">
-                                      <div class="panel-body menu-content">
+                                      <div class="panel-bodyDashboard menu-content">
                                         <table class="table">
                                             <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
                                             <td >
@@ -679,7 +679,7 @@
                                       </h4>
                                   </div>
                                   <div  class="animate-show" ng-show="graphicalComparision.leads.value">
-                                      <div class="panel-body menu-content">
+                                      <div class="panel-bodyDashboard menu-content">
                                         <div id="displayedFocus" class="panel panel-danger" style="width:60%;margin-left:50px;">
                                           <button class="btn btn-danger" name="button" style="width:100%;" ng-click="getCompareCampaigns(compCampaigns.campaigns.status)">LEADS</button>
                                         </div>

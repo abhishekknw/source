@@ -1,5 +1,5 @@
 html{
-  background-color: #ffffff !important; 
+  background-color: #ffffff !important;
 }
 body.blur-theme::before {
   background: #ffff;
@@ -421,6 +421,9 @@ text-align: center;
   .RELEASETable {
     background-color: #fcfc5f;
     color: black;
+  margin-left:-50px;
+  margin-right:-50px;
+  margin-top: 15px;
     }
 
 
@@ -428,10 +431,16 @@ text-align: center;
     background-color: #cb1925 ;
     color: white;
     width: 100%;
+    margin-left:-50px;
+    margin-right:-50px;
+    margin-top: 15px;
     }
 
     .RELEASETable  tbody > td{
     font:bold 12px/30px Georgia, serif;
+    margin-left:-50px;
+    margin-right:-50px;
+    margin-top: 15px;
     }
 
     .sidePanelTable {
