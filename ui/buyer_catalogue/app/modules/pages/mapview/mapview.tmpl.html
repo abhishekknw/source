@@ -5,8 +5,9 @@
 <div class="loading" ng-if="!hideSpinner" ng-loading="loadIcon1 || loadIcon2"></div> <!--For displaying loading icon-->
 <html>
 <body>
+  <br /><br />
 <!-- Start: Center and Radius Detail Section -->
-<div class="navbar-default nav-subtab space">
+<div class="navbar nav-subtab space">
   <div class="table">
     <div class="breadcrumb" ncy-breadcrumb></div>
     <div class="row">
@@ -49,7 +50,7 @@
   <div class = "row">
    <div class="col-md-2 search-bin" id="searchBinHolder">
     <div class="panel panel-info filterscroll ">
-     <div class="panel-body" id="searchBody">
+     <div class="panel-bodyMapView" id="searchBody">
       <span><h4> Organisation Name : {{organisationName}}</h4></span>
       <span ng-if="proposalState"><h4> Proposal State : {{proposalState}}</h4></span>
       <div class="filterPanel" permission = "[permissions.viewFilters]">
@@ -609,7 +610,7 @@
   <!-- Start: Summary Section - mapview-->
     <div class="col-md-2"  ng-if = "!show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
       <div class="panel panel-info">
-        <div class="panel-body filterscroll" id="searchBody">
+        <div class="panel-bodyMapView filterscroll" id="searchBody">
           <div class="filterPanel">
             <span class="filterHeader"> Summary for {{center_data[current_center_index].center.center_name}}</span></div>
             <hr>
@@ -686,11 +687,12 @@
          <!-- <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button> -->
          <button class="btn btn-danger active" style="width:100%;"  ng-show="!show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button>
        </div>
+       <br /><br />
       </div>
       <!-- Start: Summary Section of Gridview-->
       <div class="col-md-2 Comprehensive"  ng-if = "show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
         <div class="panel panel-info">
-          <div class="panel-body filterscroll" id="searchBody">
+          <div class="panel-bodyMapView filterscroll" id="searchBody">
             <div class="filterPanel">
               <span class="filterHeader">Comprehensive Summary </span></div>
               <hr>

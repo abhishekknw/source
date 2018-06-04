@@ -24,13 +24,6 @@ body{
 .checkboxes-btn{
   text-align: left;
 }
-.breadcrumb{
-	background-color: transparent;
-  /*width: 82%;*/
-  margin-left: auto;
-  margin-right: auto;
-  font-size : x-large;
-}
 .labels{
 	/* margin-left: 55px; */
 }
@@ -38,12 +31,10 @@ body{
   margin-left: 5%;
   margin-right: 5%;
 }
-.panel-heading{
-  text-align: center;
-  background-color: #d9534f !important;
-	color: white !important;
-}
 
+td{
+	padding: 5px;
+}
 th {
   background-color: #8e1921;
   color: white;
@@ -71,9 +62,9 @@ th {
 	/* margin: 2%; */
 }
 .date-panel{
-	/* padding: 10px; */
-	/* margin-left: 5%;
-	margin-right: 5%; */
+	padding: 10px;
+	margin-left: 3%;
+	margin-right: 3%;
 }
 .panel-body{
 	overflow-x: visible !important;

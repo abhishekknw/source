@@ -40,6 +40,7 @@
               <tbody>
                 <tr style="text-align: center;" ng-repeat="proposal in campaignData">
                   <!-- <td class="col-md-1">{{proposal.campaign.proposal_id}}</td> -->
+                  <td class="col-md-2">{{$index + 1}}</td>
                   <td class="col-md-2">{{proposal.campaign.name}}</td>
                   <td class="col-md-2">{{proposal.assigned_to.first_name||proposal.assigned_to.username}}</td>
                   <td class="col-md-2">{{proposal.assigned_by.first_name||proposal.assigned_by.username}}</td>

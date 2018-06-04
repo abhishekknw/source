@@ -18,7 +18,7 @@ html{
 	padding: 10px;
 border-color: #000000;
 	align-self : center;
-
+color:#000000;
 }
 .businessButton a{
 	color: #ffffff;
@@ -64,13 +64,15 @@ border-color: #000000;
 .modal-open {
   overflow-y: scroll;
 }
-.breadcrumb{
+
+/* .breadcrumb{ */
 	/*width:50%;*/
-	margin-right: auto;
+	/* margin-right: auto;
 	margin-left: auto;
 	background-color: transparent;
 	font-size : x-large;
-}
+} */
+
 .detailModal{
 	width : 1000px;
 }

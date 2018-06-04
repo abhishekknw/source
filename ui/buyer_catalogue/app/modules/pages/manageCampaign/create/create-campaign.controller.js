@@ -8,6 +8,7 @@
       $scope.bd_manager = constants.bd_manager;
       $scope.campaign_manager = constants.campaign_manager;
       $scope.userInfo = $rootScope.globals.userInfo;
+      $scope.display = false;
 
       //End:code added to show or hide details based on user permissions
       $scope.uploadfile = true; // added for loading spinner active/deactive
@@ -78,6 +79,7 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.model.accounts = response.data.data;
+            $scope.display = true;
             $scope.loading = response.data.data;
             if(savedState){
               $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;

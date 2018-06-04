@@ -4,6 +4,7 @@ angular.module('catalogueApp')
     function ($scope, $rootScope, $window, $location , commonDataShare,constants,campaignListService) {
 
       $scope.campaignHeadings = [
+        {header : 'Sr No'},
         {header : 'Campaign Name'},
         {header : 'Assgined To'},
         {header : 'Assgined By'},

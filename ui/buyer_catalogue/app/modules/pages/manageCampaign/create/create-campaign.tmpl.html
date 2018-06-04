@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <link href="css/sidePanel.css" rel="stylesheet" media="screen">
 
-<!-- <div><nav-bar></nav-bar></div> -->
+<div style="margin-top:-50px;"><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
 <div ng-show="isEmpty" style="text-align:center;"><h2>{{msg}}</h2></div>
 <main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }">
@@ -23,7 +23,7 @@
         <div class="row">
             <div class="col-md-10">
               <div><span >{{errorMsg.message}}</span></div>
-              <label for="existing">In order to create accounts, you need to select an organisation you are working with. By default, your own organisation is selected :</label>
+              <label style="color:#000000;" for="existing">In order to create accounts, you need to select an organisation you are working with. By default, your own organisation is selected :</label>
               <!-- <input id="existing" type="radio" name="choice" ng-model="choice" value="existing" ng-click="getAllBusinesses()"> -->
             </div>
           <!-- <div class="col-md-4">
@@ -144,7 +144,7 @@
             <span ng-if="showAccountsMessage">No Accounts Found!!</span>
           </h4>
           <div class="table-responsive tableBodyList">
-            <table class="table table-hover ">
+            <table class="table table-hover" ng-if="display">
               <thead>
                 <tr>
                   <th></th>
@@ -184,6 +184,10 @@
                   <th class="col-md-2 table-heading">Created Date</th>
                   <th class="col-md-2 table-heading">Edited By</th>
                   <th class="col-md-2 table-heading">Last Edited</th>
+                  <th class="col-md-2 table-heading">Status</th>
+                  <th class="col-md-2 table-heading">Map View</th>
+                  <th class="col-md-2 table-heading">Upload</th>
+                  <th class="col-md-2 table-heading">View Image</th>
                   <th class="col-md-2 table-heading"></th>
                 </tr>
               </thead>

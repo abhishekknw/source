@@ -6,11 +6,11 @@
     <span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span>
   </div>
 <!-- <back-Button></back-Button> -->
-<form name = "form" class="">
+<form name = "form" class="panel-body">
   <!-- <div class="breadcrumb" ncy-breadcrumb></div> -->
   <div class = "panel panel-default business-panel">
-    <h3 class = "panel-heading" ng-if = "!editAccountField">Create Account (* Fields are Mandatory)</h3>
-    <h3 class = "panel-heading" ng-if = "editAccountField">Edit Account (* Fields are Mandatory)</h3>
+    <h3 class = "pageTitle" ng-if = "!editAccountField">Create Account (* Fields are Mandatory)</h3>
+    <h3 class = "pageTitle" ng-if = "editAccountField">Edit Account (* Fields are Mandatory)</h3>
      <div class = "table">
        <div class="form-group">
          <!-- <div class = "row">
@@ -73,7 +73,7 @@
    </div>
 
  <div class="panel panel-default business-panel">
-   <h3 class = "panel-heading">Account Contact (* Fields are Mandatory)</h3>
+   <h3 class = "pageTitle">Account Contact (* Fields are Mandatory)</h3>
       <!--<div ng-repeat="contact in business.contacts track by $index">-->
 
       <div ng-repeat="contact in model.account.contacts track by $index">
@@ -134,5 +134,6 @@
       </div>
     </div>
     <button type="submit" class="btn btn-danger" ng-disabled="form.$invalid" ng-if="!editAccountField" ng-click="createAccount()">Save Details</button>
+    <br ><br />
     <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="editAccount()" ng-if="editAccountField">Update</button>
   </form>

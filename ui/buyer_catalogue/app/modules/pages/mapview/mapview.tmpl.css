@@ -1,3 +1,13 @@
+html{
+  background-color: #ffffff;
+}
+body{
+	/* background-color: #ffffff !important; */
+  overflow-x: visible !important;
+
+	font-family: Source Sans Pro;
+	color: #707070;
+}
 #supplierMap {
     height:420px;
     width:360px;
@@ -177,10 +187,10 @@ text-shadow: 0 1px 0 #;
 filter: alpha(opacity=0);
 opacity: .5;
 }
-.breadcrumb{
+/* .breadcrumb{
 	background-color: transparent;
 	font-size : x-large;
-}
+} */
 /*on summary*/
 .panelSubHeader{
   color: initial;
