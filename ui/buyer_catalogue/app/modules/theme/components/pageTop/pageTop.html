@@ -39,13 +39,13 @@
                         <div class="brand">Menu</div>
                         <i class="fa fa-bars fa-2x toggle-btn"></i>
                         <div class="menu-list">
-                            <ul id="menu-content" class="menu-content collapse out">
-                                <li ng-class="{active: isActive('/manageCampaign/create')}" permission = "[perm.menuHome]">
-                                  <a ng-href="/#/manageCampaign/create" class="lipadding" ng-click="closeModal()">
+                            <ul id="menu-content" class="menu-content collapse">
+                               <li  ng-class="{active: isActive('/manageCampaign/create')}" permission = "[perm.menuHome]">
+                                <a ng-href="/#/manageCampaign/create" class="lipadding" ng-click="closeModal()">
                                     <i class="fa fa-tasks fa-lg"></i> Home</a>
                                 </li>
                                 <li ng-class="{active: isActive('/dashboard')}" permission = "[perm.viewManagement]">
-                                  <a href="/#/manageUser" class=" lipadding" ng-click="closeModal()">
+                                  <a ng-href="/#/manageUser" class=" lipadding" ng-click="closeModal()">
                                   <i class="fa fa-outdent fa-lg"></i> Management</a></li>
 
                                 <li ng-class="{active: isActive('/OpsDashBoard')}" permission = "[perm.menuOpsDashBoard]">
