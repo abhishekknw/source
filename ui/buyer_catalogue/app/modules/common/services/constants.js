@@ -37,6 +37,8 @@ angular
     update_success : 'Updated Successfully',
     standard_organisation : 'MACHADALO',
     add_data_success : 'Added Successfully',
+    captcha_error : 'Please resolve the captcha and submit!',
+    login_error : 'Username or Password is Incorrect',
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
     center_warning : 'Do you want to create only one center ?',

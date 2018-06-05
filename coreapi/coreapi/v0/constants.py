@@ -1240,7 +1240,8 @@ permission_contants = {
 #category list
 category = {
     'business' : 'BUSINESS',
-    'business_agency' : 'BUSINESS AGENCY',
+    'business_agency' : 'BUSINESS_AGENCY',
+    'supplier_agency' : 'SUPPLIER_AGENCY'
 }
 query_status = {
     'supplier_code' : 'supplier_code',
@@ -1262,4 +1263,16 @@ society_payment_headers = {
     'IFSC Code' : True,
     'Bank Name' : True,
     'Account Number' : True
+}
+business_category_campaign_query = {
+    'campaign' : 'campaign__account__organisation'
+}
+bus_agency_campaign_query = {
+    'campaign' : 'campaign__user'
+}
+sup_agency_campaign_query = {
+    'campaign' : 'campaign__assigned_to'
+}
+category_query_status = {
+    'campaign_query' : 'campaign'
 }

@@ -6087,34 +6087,31 @@ def create_entry_in_role_hierarchy(role):
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))
 
-def get_campaigns_by_status(campaigns, current_date):
+def get_campaigns_with_status(category,user):
     """
     return campaigns list by arranging in ongoing, upcoming and completed keys
 
     :param data:
     :return:
     """
-    function = get_campaigns_by_status.__name__
+    function = get_campaigns_with_status.__name__
     try:
-        if not current_date:
-            current_date = timezone.now()
-        current_date = parse_datetime(current_date).date()
+        current_date = timezone.now()
         campaign_data = {
             'ongoing_campaigns'     : [],
             'upcoming_campaigns'    : [],
             'completed_campaigns'   : []
         }
-        for data in campaigns:
-            campaign_start_date = parse_datetime(data['campaign']['tentative_start_date']).date()
-            campaign_end_date = parse_datetime(data['campaign']['tentative_end_date']).date()
-            if not campaign_start_date or not campaign_end_date:
-                continue
-            if campaign_end_date < current_date:
-                campaign_data['completed_campaigns'].append(data)
-            if campaign_start_date > current_date:
-                campaign_data['upcoming_campaigns'].append(data)
-            if campaign_end_date >= current_date and campaign_start_date <= current_date:
-                campaign_data['ongoing_campaigns'].append(data)
+        campaign_query = get_query_by_organisation_category(category,v0_constants.category_query_status['campaign_query'],user)
+        campaign_data['completed_campaigns'] = models.CampaignAssignment.objects. \
+            filter(campaign_query,campaign__tentative_end_date__lt=current_date). \
+            annotate(name=F('campaign__name')).values('campaign','name')
+        campaign_data['upcoming_campaigns'] = models.CampaignAssignment.objects. \
+            filter(campaign_query, campaign__tentative_start_date__gt=current_date). \
+            annotate(name=F('campaign__name')).values('campaign','name')
+        campaign_data['ongoing_campaigns'] = models.CampaignAssignment.objects. \
+            filter(campaign_query,Q(campaign__tentative_start_date__lte=current_date) & Q(campaign__tentative_end_date__gte=current_date)). \
+            annotate(name=F('campaign__name')).values('campaign', 'name')
         return campaign_data
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))
@@ -6542,9 +6539,12 @@ def get_actual_activity_data(activity, campaign_id, content_type_id):
                'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'). \
             filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
             inventory_activity_assignment__inventory_activity__activity_type=activity,
-            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id)
-        serializer = serializers.InventoryActivityImageSerializer(result, many=True)
-        return serializer.data;
+            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
+            annotate(activity_date=F('inventory_activity_assignment__inventory_activity__activity_date'),
+                     assignment_id=F('inventory_activity_assignemnt__id')). \
+            values('activity_date','created_at','image_path','assignment_id')
+        # serializer = serializers.InventoryActivityImageSerializer(result, many=True)
+        return result;
 
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
@@ -6704,5 +6704,25 @@ def update_contact_details(account_id,contacts):
             else:
                 return ui_utils.handle_response(function_name, data=serializer.errors)
         return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_query_by_organisation_category(category,campaign_query,user):
+    """
+    THis fun will return the query based on category provided
+    :param category:
+    :return:
+    """
+    function_name = get_query_by_organisation_category.__name__
+    try:
+        query = Q()
+        organisation_id = user.profile.organisation.organisation_id
+        if category.upper() == v0_constants.category['business']:
+            query = Q(**{v0_constants.business_category_campaign_query[campaign_query] : organisation_id})
+        if category.upper() == v0_constants.category['business_agency']:
+            query = Q(**{v0_constants.bus_agency_campaign_query[campaign_query] : user})
+        if category.upper() == v0_constants.category['supplier_agency']:
+            query = Q(**{v0_constants.sup_agency_campaign_query[campaign_query] : user})
+        return query
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))

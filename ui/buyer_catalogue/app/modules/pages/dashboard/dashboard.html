@@ -314,8 +314,8 @@
                                     <div class="panel-bodyDashboard menu-content">
                                         <table class="table">
                                             <tr ng-repeat="campaign in campaignData.completed_campaigns">
-                                              <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
-                                                {{campaign.campaign.name}}
+                                              <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign)">
+                                                {{campaign.name}}
                                               </td>
                                             </tr>
                                         </table>
@@ -332,8 +332,8 @@
                                       <div class="panel-bodyDashboard menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
-                                                <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
-                                                  {{campaign.campaign.name}}
+                                                <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign)">
+                                                  {{campaign.name}}
                                                 </td>
                                               </tr>
                                           </table>
@@ -351,8 +351,8 @@
                                       <div class="panel-bodyDashboard menu-content">
                                           <table class="table">
                                               <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
-                                                <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign.proposal_id)">
-                                                  {{campaign.campaign.name}}
+                                                <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign)">
+                                                  {{campaign.name}}
                                                 </td>
                                               </tr>
                                           </table>
@@ -577,17 +577,17 @@
                                           <td >
                                             <md-menu>
                                                <div class="" ng-click="openMenu($mdMenu, $event)">
-                                                 {{campaign.campaign.name}}
+                                                 {{campaign.name}}
                                                </div>
                                                <md-menu-content width="4">
                                                  <md-menu-item>
-                                                   <md-button ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">
+                                                   <md-button ng-click="getLeadsByCampaign(campaign.campaign)">
                                                      Lead
                                                    </md-button>
                                                  </md-menu-item>
                                                  <md-menu-divider></md-menu-divider>
                                                  <md-menu-item ng-click="getontimelocation(ontimelocation.showdrop.status)">
-                                                   <md-button ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                   <md-button ng-click="getCampaignFilters(campaign.campaign)">
                                                      Inventory
                                                    </md-button>
                                                  </md-menu-item>
@@ -613,17 +613,17 @@
                                               <td>
                                                 <md-menu>
                                                    <div class="" ng-click="openMenu($mdMenu, $event)">
-                                                     {{campaign.campaign.name}}
+                                                     {{campaign.name}}
                                                    </div>
                                                    <md-menu-content width="4">
                                                      <md-menu-item>
-                                                       <md-button ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">
+                                                       <md-button ng-click="getLeadsByCampaign(campaign.campaign)">
                                                          Lead
                                                        </md-button>
                                                      </md-menu-item>
                                                      <md-menu-divider></md-menu-divider>
                                                      <md-menu-item>
-                                                       <md-button ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                       <md-button ng-click="getCampaignFilters(campaign.campaign)">
                                                          Inventory
                                                        </md-button>
                                                      </md-menu-item>
@@ -650,17 +650,17 @@
                                             <td >
                                               <md-menu>
                                                  <div class="" ng-click="openMenu($mdMenu, $event)">
-                                                   {{campaign.campaign.name}}
+                                                   {{campaign.name}}
                                                  </div>
                                                  <md-menu-content width="4">
                                                    <md-menu-item>
-                                                     <md-button ng-click="getLeadsByCampaign(campaign.campaign.proposal_id)">
+                                                     <md-button ng-click="getLeadsByCampaign(campaign.campaign)">
                                                        Lead
                                                      </md-button>
                                                    </md-menu-item>
                                                    <md-menu-divider></md-menu-divider>
                                                    <md-menu-item ng-click="getontimelocation(ontimelocation.showdrop.status)">
-                                                     <md-button ng-click="getCampaignFilters(campaign.campaign.proposal_id)">
+                                                     <md-button ng-click="getCampaignFilters(campaign.campaign)">
                                                        Inventory
                                                      </md-button>
                                                    </md-menu-item>

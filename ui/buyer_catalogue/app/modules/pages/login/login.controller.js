@@ -1,7 +1,7 @@
 angular.module('machadaloPages')
 .controller('LoginCtrl',
-    ['$scope', '$rootScope', '$window', '$location', 'AuthService','$state','userService','constants','AuthService',
-    function ($scope, $rootScope, $window, $location, AuthService, $state,userService,constants, AuthService) {
+    ['$scope', '$rootScope', '$window', '$location', 'AuthService','$state','userService','constants','AuthService','vcRecaptchaService',
+    function ($scope, $rootScope, $window, $location, AuthService, $state,userService,constants, AuthService, vcRecaptchaService) {
         // reset login status
 
         AuthService.Clear();
@@ -9,23 +9,30 @@ angular.module('machadaloPages')
         angular.element("title").text("Login");
 
         $scope.login = function () {
-          $scope.loadingSpinner = true;
-            AuthService.Login($scope.username, $scope.password, function(response) {
-                if(response.logged_in) {
-                  var path = "/";                  
-                  AuthService.getUserData(function(response){
-                    if(!response.data.profile){
-                      swal(constants.name, constants.profile_error, constants.error);
-                      $location.path("/logout");
-                    }else {
-                      $location.path(path);
+          if(vcRecaptchaService.getResponse() === ""){ //if string is empty
+                swal(constants.name,constants.captcha_error,constants.error);
+            }
+            else {
+              $scope.loadingSpinner = true;
+                AuthService.Login($scope.username, $scope.password, function(response) {
+                    if(response.logged_in) {
+                      var path = "/";
+                      AuthService.getUserData(function(response){
+                        if(!response.data.profile){
+                          swal(constants.name, constants.profile_error, constants.error);
+                          $location.path("/logout");
+                        }else {
+                          $location.path(path);
+                        }
+                      })
+                    } else {
+                      $scope.loadingSpinner = false;
+                        $scope.error = response.message;
+                        swal(constants.name,constants.login_error,constants.error);
                     }
-                  })
-                } else {
-                  $scope.loadingSpinner = false;
-                    $scope.error = response.message;
-                }
-            });
+                });
+            }
+
         };
         $scope.guestPage = function(){
           var userData = {

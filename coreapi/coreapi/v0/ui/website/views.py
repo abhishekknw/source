@@ -2383,7 +2383,7 @@ class GenericExportData(APIView):
         The request is in form:
         [
              {
-                  center : { id : 1 , center_name: c1, ...   } ,    
+                  center : { id : 1 , center_name: c1, ...   } ,
                   suppliers: { 'RS' : [ { 'supplier_type_code': 'RS', 'status': 'R', 'supplier_id' : '1'}, {...}, {...} }
                   suppliers_meta: {
                                      'RS': { 'inventory_type_selected' : [ 'PO', 'POST', 'ST' ]  },
@@ -3899,21 +3899,21 @@ class ProposalToCampaign(APIView):
             #     return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id), request=request)
 
             # these are the current inventories assigned. These are inventories assigned to this proposal when sheet was imported.
-            current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
+            # current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
 
             # assign default dates when you have some inventories assigned
-            if current_assigned_inventories:
-                current_assigned_inventories_map = {}
-
-                for inv in current_assigned_inventories:
-                    inv_tuple = (inv.inventory_content_type, inv.inventory_id)
-                    current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
-
-                # currently set the R.D and C.D of all inventories to proposal's start and end date.
-                inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
-                response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
-                if not response.data['status']:
-                    return response
+            # if current_assigned_inventories:
+            #     current_assigned_inventories_map = {}
+            #
+            #     for inv in current_assigned_inventories:
+            #         inv_tuple = (inv.inventory_content_type, inv.inventory_id)
+            #         current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
+            #
+            #     # currently set the R.D and C.D of all inventories to proposal's start and end date.
+            #     inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
+            #     response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
+            #     if not response.data['status']:
+            #         return response
 
             # convert to campaign and return
             proposal.campaign_state = v0_constants.proposal_converted_to_campaign
@@ -5682,28 +5682,13 @@ class campaignListAPIVIew(APIView):
         try:
             user = request.user
             date = request.query_params['date']
+            result = []
             if user.is_superuser:
-                assigned_objects = models.CampaignAssignment.objects.all()
+                result = models.CampaignAssignment.objects.all().values()
             else:
                 category = request.query_params['category']
-                if category.upper() == v0_constants.category['business']:
-                    accounts = models.AccountInfo.objects.filter(organisation=organisation_id)
-                else:
-                    accounts = models.AccountInfo.objects.filter_permission(user=request.user,
-                                                organisation=models.Organisation.objects.get(
-                                                                            pk=organisation_id))
-                query = None
-                for account_instance in accounts:
-                    if query is None:
-                        query = Q(campaign__account=account_instance)
-                    else:
-                        query |= Q(campaign__account=account_instance)
-                assigned_objects = models.CampaignAssignment.objects.filter(query)
-            serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
-            response = website_utils.get_campaigns_by_status(serializer.data, date)
-            if not response:
-                return response
-            return ui_utils.handle_response(class_name, data=response, success=True)
+                result = website_utils.get_campaigns_with_status(category,user)
+            return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -5748,24 +5733,35 @@ class DashBoardViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
+            user = request.user
             campaign_status = request.query_params.get('status',None)
+            perm_query = Q()
+            if not request.user.is_superuser:
+                category = user.profile.organisation.category
+                organisation_id = user.profile.organisation.organisation_id
+                if category.upper() == v0_constants.category['business']:
+                    perm_query = Q(proposal__account__organisation__organisation_id=organisation_id)
+                if category.upper() == v0_constants.category['business_agency']:
+                    perm_query = Q(proposal__user=user)
+                if category.upper() == v0_constants.category['supplier_agency']:
+                    perm_query = Q(proposal__campaignassignemnt__assigned_to=user)
             current_date = timezone.now()
             if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
                 query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code', 'proposal__name','proposal_id'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(perm_query,query).values('supplier_code', 'proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
                 query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code','proposal__name','proposal_id'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
 
             if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
                 query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query).values('supplier_code','proposal__name','proposal_id'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
 
             data = {}
@@ -6031,17 +6027,21 @@ class DashBoardViewSet(viewsets.ViewSet):
                     supplier_data[supplier['object_id']] = supplier
                     supplier_data[supplier['object_id']]['interested'] = 0
                     supplier_data[supplier['object_id']]['data'] = supplier_id_object_list[supplier['object_id']]
+                else:
+                    supplier_data[supplier['object_id']]['total'] += supplier['total']
 
                 if supplier['is_interested']:
                     supplier_data[supplier['object_id']]['interested'] += supplier['total']
 
             date_data = {}
             for supplier in leads_by_date:
-                if str(supplier['created_at']) not in date_data:
-                    date_data[str(supplier['created_at'])] = supplier
-                    date_data[str(supplier['created_at'])]['interested'] = 0
+                if str(supplier['created_at'].date()) not in date_data:
+                    date_data[str(supplier['created_at'].date())] = supplier
+                    date_data[str(supplier['created_at'].date())]['interested'] = 0
+                else:
+                    date_data[str(supplier['created_at'].date())]['total']+=supplier['total']
                 if supplier['is_interested']:
-                    date_data[str(supplier['created_at'])]['interested'] += supplier['total']
+                    date_data[str(supplier['created_at'].date())]['interested'] += supplier['total']
 
             data = {
                 'supplier_data' : supplier_data,
@@ -6084,36 +6084,38 @@ class DashBoardViewSet(viewsets.ViewSet):
 
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
+        """
+
+        :param request:
+        :param organisation_id:
+        :return:
+        """
         class_name = self.__class__.__name__
         try:
+            user = request.user
             proposal_query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state = 'PTC')
             proposal_query_images = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state='PTC')
             accounts = []
-            query = Q()
+            q1 = Q()
+            q2 = Q()
             if not request.user.is_superuser:
                 category = request.query_params.get('category',None)
                 if category.upper() == v0_constants.category['business']:
-                    accounts = models.AccountInfo.objects.filter(organisation=organisation_id)
-                else:
-                    accounts = models.AccountInfo.objects.filter_permission(user=request.user, organisation=models.Organisation.objects.get(pk=organisation_id))
-
-
-
-                if not accounts:
-                    query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=None)
-                else:
-                    for account_instance in accounts:
-                        if query is None:
-                            query = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
-                        else:
-                            query |= Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
+                    q1 = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account__organisation__organisation_id=organisation_id)
+                    q2 = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account__organisation__organisation_id=organisation_id)
+                if category.upper() == v0_constants.category['business_agency']:
+                    q1 = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
+                    q2 = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
+                if category.upper() == v0_constants.category['supplier_agency']:
+                    q1 = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignemnt__assigned_to=user)
+                    q2 = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignemnt__assigned_to=user)
 
             inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
                 select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
                        'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal',
                         'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account'). \
-                filter(proposal_query, query). \
+                filter(proposal_query, q1). \
                 annotate(activity_type=F('inventory_activity__activity_type'),
                      inventory=F('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
                      ). \
@@ -6125,7 +6127,7 @@ class CampaignsAssignedInventoryCountApiView(APIView):
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account'). \
-                filter(proposal_query_images, query). \
+                filter(proposal_query_images, q2). \
                 annotate(activity_type=F('inventory_activity_assignment__inventory_activity__activity_type'),
                          inventory = F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
                          activity_date = F('inventory_activity_assignment__activity_date'),
@@ -6166,6 +6168,7 @@ class GetAssignedIdImagesListApiView(APIView):
         class_name = self.__class__.__name__
 
         try:
+            user = request.user
             proposal_query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state='PTC')
 
             activity_type = request.query_params.get('type', None)
@@ -6183,24 +6186,12 @@ class GetAssignedIdImagesListApiView(APIView):
             if not request.user.is_superuser:
                 category = request.query_params.get('category', None)
                 if category.upper() == v0_constants.category['business']:
-                    accounts = models.AccountInfo.objects.filter(organisation=organisation_id)
-                else:
-                    accounts = models.AccountInfo.objects.filter_permission(user=request.user,
-                                                                            organisation=models.Organisation.objects.get(
-                                                                                pk=organisation_id))
+                    query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account__organisation__organisation_id=organisation_id)
+                if category.upper() == v0_constants.category['business_agency']:
+                    query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
 
-                if not accounts:
-                    query = Q(
-                        inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=None)
-                else:
-                    for account_instance in accounts:
-                        if query is None:
-                            query = Q(
-                                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
-                        else:
-                            query |= Q(
-                                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account=account_instance)
-
+                if category.upper() == v0_constants.category['supplier_agency']:
+                    query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignemnt__assigned_to=user)
             proposal_alias_name ='inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name'
             proposal_alias_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id'
             shortlisted_inv_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'
@@ -6213,27 +6204,7 @@ class GetAssignedIdImagesListApiView(APIView):
                 filter(proposal_query, query, activity_type_query, activity_date_query, inv_query). \
                 annotate(name=F(proposal_alias_name),inv_id=F(shortlisted_inv_alias),object_id=F(supplier_id),proposal_id=F(proposal_alias_id)). \
                 values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id','image_path')
-            # inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
-            #     select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
-            #                    'inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
-            #     filter(proposal_query, query, activity_type_query, activity_date_query, inv_query).values(
-            #
-            #     'id', 'activity_date', 'reassigned_activity_date', 'inventory_activity',
-            #     'inventory_activity__activity_type', 'assigned_to',
-            #     'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
-            #     'inventory_activity__shortlisted_inventory_details__ad_inventory_duration__duration_name',
-            #     'inventory_activity__shortlisted_inventory_details',
-            #     'inventory_activity__shortlisted_inventory_details__inventory_id',
-            #     'inventory_activity__shortlisted_inventory_details__inventory_content_type',
-            #     'inventory_activity__shortlisted_inventory_details__comment',
-            #     'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
-            #     'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
-            #     'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id',
-            #     'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type',
-            #     'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name',
-            # )
 
-            # result = website_utils.organise_supplier_inv_images_data(inv_act_assignment_objects, user_map)
 
             supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
             supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
@@ -6390,10 +6361,14 @@ class LeadsViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
-            campaign_instance = models.ProposalInfo.objects.filter(proposal_id=campaign_id)
-            lead_alias = models.LeadAlias.objects.filter(campaign=campaign_instance)
+            supplier_id = request.query_params.get('supplier_id',None)
+            if supplier_id:
+                q = Q(campaign__proposal_id=campaign_id) & Q(object_id=supplier_id)
+            else:
+                q = Q(campaign__proposal_id=campaign_id)
+            lead_alias = models.LeadAlias.objects.filter(campaign__proposal_id=campaign_id)
             serializer_lead_alias = website_serializers.LeadAliasSerializer(lead_alias, many=True)
-            leads = models.Leads.objects.filter(campaign=campaign_instance)
+            leads = models.Leads.objects.filter(q)
             serializer_leads = website_serializers.LeadsSerializer(leads, many=True)
             data = {
                 'alias_data' : serializer_lead_alias.data,
@@ -6419,6 +6394,26 @@ class LeadsViewSet(viewsets.ViewSet):
             content_type = response.data.get('data')
             data['content_type'] = content_type.id
             serializer = website_serializers.LeadsSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk=None):
+        """
+        This function updates single lead
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data= request.data
+            pk = data['id']
+            lead = models.Leads.objects.get(pk=pk)
+            serializer = website_serializers.LeadsSerializer(lead,data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
