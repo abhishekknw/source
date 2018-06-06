@@ -1276,3 +1276,12 @@ sup_agency_campaign_query = {
 category_query_status = {
     'campaign_query' : 'campaign'
 }
+
+perf_metrics_types = {
+    'inv_type' : 'inv',
+    'lead_type' : 'lead'
+}
+perf_metrics_param = {
+    'on_time' : 'on_time',
+    'on_location' : 'on_location'
+}

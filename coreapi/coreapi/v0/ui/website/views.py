@@ -5683,10 +5683,10 @@ class campaignListAPIVIew(APIView):
             user = request.user
             date = request.query_params['date']
             result = []
+            category = request.query_params['category']
             if user.is_superuser:
-                result = models.CampaignAssignment.objects.all().values()
+                result = website_utils.get_campaigns_with_status(category, user)
             else:
-                category = request.query_params['category']
                 result = website_utils.get_campaigns_with_status(category,user)
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
@@ -5887,35 +5887,40 @@ class DashBoardViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id', None)
-            inv_code = request.query_params.get('inv', None)
-            content_type = ui_utils.fetch_content_type(inv_code)
-            content_type_id = content_type.id
+            if not campaign_id:
+                return Response("Campaign Id is Not Provided", status=status.HTTP_200_OK)
+            type = request.query_params.get('type', None)
+            result = {}
+            if type == v0_constants.perf_metrics_types['inv_type']:
+                result = website_utils.get_performance_metrics_data_for_inventory(campaign_id,request)
+            # content_type = ui_utils.fetch_content_type(inv_code)
+            # content_type_id = content_type.id
 
-            total_release = website_utils.get_total_activity_data('RELEASE',campaign_id, content_type_id)
-            actual_release = website_utils.get_actual_activity_data('RELEASE',campaign_id, content_type_id)
+            # total_release = website_utils.get_total_activity_data('RELEASE',campaign_id, content_type_id)
+            # actual_release = website_utils.get_actual_activity_data('RELEASE',campaign_id, content_type_id)
+            #
+            # total_audit = website_utils.get_total_activity_data('AUDIT', campaign_id, content_type_id)
+            # actual_audit = website_utils.get_actual_activity_data('AUDIT', campaign_id, content_type_id)
+            #
+            # total_closure = website_utils.get_total_activity_data('CLOSURE', campaign_id, content_type_id)
+            # actual_closure = website_utils.get_actual_activity_data('CLOSURE', campaign_id, content_type_id)
+            #
+            # data = {
+            #     'release' : {
+            #         'total' : total_release,
+            #         'actual': actual_release
+            #     },
+            #     'audit': {
+            #         'total': total_audit,
+            #         'actual': actual_audit
+            #     },
+            #     'closure': {
+            #         'total': total_closure,
+            #         'actual': actual_closure
+            #     }
+            # }
 
-            total_audit = website_utils.get_total_activity_data('AUDIT', campaign_id, content_type_id)
-            actual_audit = website_utils.get_actual_activity_data('AUDIT', campaign_id, content_type_id)
-
-            total_closure = website_utils.get_total_activity_data('CLOSURE', campaign_id, content_type_id)
-            actual_closure = website_utils.get_actual_activity_data('CLOSURE', campaign_id, content_type_id)
-
-            data = {
-                'release' : {
-                    'total' : total_release,
-                    'actual': actual_release
-                },
-                'audit': {
-                    'total': total_audit,
-                    'actual': actual_audit
-                },
-                'closure': {
-                    'total': total_closure,
-                    'actual': actual_closure
-                }
-            }
-
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
