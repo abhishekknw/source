@@ -30,7 +30,7 @@
 <div  class="container-fluid">
   <!-- <div class="row"> -->
       <div class="col-sm-4">
-          <div class="nav-side-menu" style="width:20%;margin-left:-30px;margin-top:48px;">
+          <div class="nav-left-side-menu" style="width:20%;margin-left:-30px;margin-top:48px;">
               <div class="brand">Menu</div>
               <i class="fa fa-bars fa-2x toggle-btn"></i>
               <div class="menu-list">
@@ -39,11 +39,11 @@
                     <a class=" lipadding" ng-click="getContent(contentItem.profileView)">
                       <i class="fa fa-dashboard fa-lg"></i>View Profiles</a>
                  </li>
-								 <li ng-mouseover="userDropDown = true" ng-mouseleave="userDropDown = false">
+								 <li ng-mouseover="userDropDown = true" ng-mouseleave="userDropDown = false" >
 	 								<a class=" lipadding">
 	 									<i class="fa fa-dashboard fa-lg"></i>User
 	 								</a>
-	 								<ul ng-if = "userDropDown" class="sub-menu">
+	 								<ul ng-if = "userDropDown" class="sub-left-menu">
 	 									<li ng-click="getContent(contentItem.aboutYou)">
 	 										<a class=" lipadding">
 	 											<i class="fa fa-dashboard fa-lg"></i>About
@@ -65,7 +65,7 @@
 								<a class=" lipadding">
 									<i class="fa fa-dashboard fa-lg"></i>Organisation
 								</a>
-								<ul ng-if = "orgDropDown" class="sub-menu">
+								<ul ng-if = "orgDropDown" class="sub-left-menu">
 									<li ng-click="getContent(contentItem.organisationCommon)">
 										<a class=" lipadding">
 											<i class="fa fa-dashboard fa-lg"></i>View
@@ -87,7 +87,7 @@
 								<a class=" lipadding">
 									<i class="fa fa-dashboard fa-lg"></i>Roles
 								</a>
-								<ul ng-if = "rolesDropDown" class="sub-menu">
+								<ul ng-if = "rolesDropDown" class="sub-left-menu">
 									<li ng-click="getContent(contentItem.createRoles)">
 										<a class=" lipadding">
 											<i class="fa fa-dashboard fa-lg"></i>Create
