@@ -695,16 +695,24 @@
         $scope.getPerformanceMetricsData = {};
        $scope.getPerformanceMetricsData = function(inv){
          $scope.inv = inv;
+         var type = 'inv';
+         var perf_param = 'on_time';
          $scope.select.campaignInventories = "";
 
          // console.log($scope.getPerformanceMetricsData.size);
-         DashboardService.getPerformanceMetricsData($scope.campaignId,inv)
+         DashboardService.getPerformanceMetricsData($scope.campaignId,type,inv,perf_param )
          .then(function onSuccess(response){
            console.log(response);
            $scope.performanceMetricsData = response.data.data;
+           $scope.activityInvPerfData = {
+             release : Object.keys($scope.performanceMetricsData.actual.release).length,
+             audit : Object.keys($scope.performanceMetricsData.actual.audit).length,
+             closure : Object.keys($scope.performanceMetricsData.actual.closure).length
+           }
+           console.log($scope.releaseInvPerfData);
            $scope.showPerfMetrics = $scope.perfMetrics.inv;
            $scope.showTimeLocBtn = true;
-           setOntimeData($scope.performanceMetricsData);
+           setOntimeData($scope.performanceMetricsData.actual);
          }).catch(function onError(response){
            console.log(response);
          })
@@ -713,15 +721,20 @@
 
        // START : create on time data on activities
         var setOntimeData = function(data){
-          angular.forEach(data, function(activity){
+          angular.forEach(data, function(activity,key){
+            console.log(activity,key);
             activity['ontime'] = 0;
-            for(var i=0;i<activity['actual'].length;i++){
-              var days = Math.floor((new Date(activity.actual[i].created_at) - new Date(activity.actual[i].actual_activity_date)) / (1000 * 60 * 60 * 24));
-              if(days == 0){
-                activity['ontime'] += 1;
+            angular.forEach(activity, function(imageData){
+              for(var i=0;i<imageData.length;i++){
+                var days = Math.floor((new Date(imageData[i].created_at) - new Date(imageData[i].activity_date)) / (1000 * 60 * 60 * 24));
+                if(days == 0){
+                  activity['ontime'] += 1;
+                  break;
+                }
+                console.log(days);
               }
-              console.log(days);
-            }
+            })
+
           })
           console.log(data);
         }
@@ -731,10 +744,12 @@
        }
 
        $scope.getLocationData = function(){
-         DashboardService.getLocationData($scope.campaignId,$scope.inv)
+         var type = 'inv';
+         var perf_param = 'on_location';
+         DashboardService.getPerformanceMetricsData($scope.campaignId,type,$scope.inv,perf_param)
          .then(function onSuccess(response){
            console.log(response);
-           $scope.locationData = response.data.data;
+           $scope.locationData = response.data.data.actual;
            getOnLocationData($scope.locationData);
            console.log($scope.locationData);
            $scope.showPerfMetrics = $scope.perfMetrics.onlocation;
@@ -743,34 +758,27 @@
          })
        }
        var getOnLocationData = function(data){
-         $scope.onLocation = 0;
-         $scope.onLocationData = {
-           [constants.release] : {
-             actual : [],
-             total : 0
-           },
-           [constants.audit] : {
-             actual : [],
-             total : 0
-           },
-           [constants.closure] : {
-             actual : [],
-             total : 0
-           }
-         };
-         angular.forEach(data, function(items,key){
-           console.log(key,Object.keys(items).length);
 
-           $scope.onLocationData[key].total = Object.keys(items).length;
-             angular.forEach(items, function(activities,id){
-               for(var i=0; i<activities.length; i++){
-                 if(activities[i].hasOwnProperty('distance') && activities[i].distance <= constants.distanceLimit){
-                   $scope.onLocationData[key].actual.push(activities[i]);
+
+
+
+             angular.forEach(data, function(activity,key){
+               data[key]['onLocation'] = 0;
+               console.log(activity);
+               angular.forEach(activity, function(imageData){
+                 for(var i=0; i<imageData.length; i++){
+                   console.log(imageData[i].inventory_id);
+                   if(imageData[i].hasOwnProperty('distance') && imageData[i].distance <= constants.distanceLimit){
+                     data[key].onLocation += 1;
+                     break;
+                   }
                  }
-               }
+               })
+
              })
-         })
-         console.log($scope.onLocationData);
+
+
+         console.log(data);
        }
        $scope.initializePerfMetrix = function(){
          $scope.showSupplierTypeCountChart = false;

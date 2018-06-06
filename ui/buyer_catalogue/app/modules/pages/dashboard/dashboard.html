@@ -758,27 +758,27 @@
                               <h4> Release Inventory </h4>
                             </div>
                           </div>
-                          <div class="col-md-8" ng-if="performanceMetricsData.release.actual.length / performanceMetricsData.release.total.length * 100|limitTo:3==0">
-                            <circular-progress value="performanceMetricsData.release.actual.length" max="performanceMetricsData.release.total.length"
+                          <div class="col-md-8" ng-if="performanceMetricsData.total.release != 0">
+                            <circular-progress value="activityInvPerfData.release" max="performanceMetricsData.total.release"
                              orientation="1" radius="80"
                                 stroke="20" base-color="#ffff00" progress-color="#00ff00"
                                 iterations="100" animation="easeInOutCubic"
-                                label="{{performanceMetricsData.release.actual.length / performanceMetricsData.release.total.length * 100|limitTo:3}}%">
+                                label="{{activityInvPerfData.release / performanceMetricsData.total.release * 100|limitTo:3}}%">
                             </circular-progress>
                           </div>
-                          <div class="col-md-4" ng-if="performanceMetricsData.release.actual.length / performanceMetricsData.release.total.length * 100|limitTo:3==0">
+                          <div class="col-md-4" ng-if="performanceMetricsData.total.release != 0">
                             <table class="table table-responsive table-bordered pieChart-table">
                               <tbody>
                                 <tr>
-                                  <td>Released / Total</td>
+                                  <td>Rel / Total</td>
                                 </tr>
                                 <tr>
-                                  <td>{{performanceMetricsData.release.actual.length}} / {{performanceMetricsData.release.total.length}}</td>
+                                  <td>{{activityInvPerfData.release}} / {{performanceMetricsData.total.release}}</td>
                                 </tr>
                               </tbody>
                             </table>
                           </div>
-                          <div class="row notassigned" ng-if="!performanceMetricsData.release.actual.length / performanceMetricsData.release.total.length * 100|limitTo:3==0">
+                          <div class="row notassigned" ng-if="performanceMetricsData.total.release == 0">
                             <h1>NOT ASSIGNED !!</h1>
                           </div>
                         </div>
@@ -789,27 +789,27 @@
                               <h4> On Time for Release Inventory </h4>
                             </div>
                           </div>
-                          <div class="col-md-8" ng-if="performanceMetricsData.release.ontime / performanceMetricsData.release.actual.length * 100|limitTo:3==0">
-                            <circular-progress value="performanceMetricsData.release.ontime" max="performanceMetricsData.release.actual.length"
+                          <div class="col-md-8" ng-if="activityInvPerfData.release != 0">
+                            <circular-progress value="performanceMetricsData.actual.release.ontime" max="activityInvPerfData.release"
                              orientation="1" radius="80"
                                 stroke="20" base-color="#ffff00" progress-color="#00ff00"
                                 iterations="100" animation="easeInOutCubic"
-                                label="{{performanceMetricsData.release.ontime / performanceMetricsData.release.actual.length * 100|limitTo:3}}%">
+                                label="{{performanceMetricsData.actual.release.ontime / activityInvPerfData.release * 100|limitTo:3}}%">
                             </circular-progress>
                           </div>
-                          <div class="col-md-4" ng-if="performanceMetricsData.release.ontime / performanceMetricsData.release.actual.length * 100|limitTo:3==0">
+                          <div class="col-md-4" ng-if="activityInvPerfData.release != 0">
                             <table class="table table-responsive table-bordered pieChart-table">
                               <tbody>
                                 <tr>
                                   <td>OnTime / Released</td>
                                 </tr>
                                 <tr>
-                                  <td>{{performanceMetricsData.release.ontime}} / {{performanceMetricsData.release.actual.length}}</td>
+                                  <td>{{performanceMetricsData.actual.release.ontime}} / {{activityInvPerfData.release}}</td>
                                 </tr>
                               </tbody>
                             </table>
                           </div>
-                          <div class="row notassigned" ng-if="!performanceMetricsData.release.ontime / performanceMetricsData.release.actual.length * 100|limitTo:3==0">
+                          <div class="row notassigned" ng-if="activityInvPerfData.release == 0">
                             <h1>NOT ASSIGNED !!</h1>
                           </div>
                         </div>
@@ -853,27 +853,27 @@
                             <h4> Audit Inventory  </h4>
                           </div>
                         </div>
-                        <div class="col-md-8" ng-if="performanceMetricsData.audit.actual.length / performanceMetricsData.audit.total.length * 100|limitTo:3==0">
-                          <circular-progress value="performanceMetricsData.audit.actual.length" max="performanceMetricsData.audit.total.length"
+                        <div class="col-md-8" ng-if="performanceMetricsData.total.audit != 0">
+                          <circular-progress value="activityInvPerfData.audit" max="performanceMetricsData.total.audit"
                            orientation="1" radius="80"
                               stroke="20" base-color="#ffff00" progress-color="#00ff00"
                               iterations="100" animation="easeInOutCubic"
-                              label="{{performanceMetricsData.audit.actual.length / performanceMetricsData.audit.total.length * 100|limitTo:3}}%">
+                              label="{{activityInvPerfData.audit / performanceMetricsData.total.audit * 100|limitTo:3}}%">
                           </circular-progress>
                         </div>
-                        <div class="col-md-4" ng-if="performanceMetricsData.audit.actual.length / performanceMetricsData.audit.total.length * 100|limitTo:3==0">
+                        <div class="col-md-4" ng-if="performanceMetricsData.total.audit != 0">
                           <table class="table table-responsive table-bordered pieChart-table">
                             <tbody>
                               <tr>
                                 <td>Audited / Total</td>
                               </tr>
                               <tr>
-                                <td>{{performanceMetricsData.audit.actual.length}} / {{performanceMetricsData.audit.total.length}}</td>
+                                <td>{{activityInvPerfData.audit}} / {{performanceMetricsData.total.audit}}</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
-                        <div class="row notassigned" ng-if="!performanceMetricsData.audit.actual.length / performanceMetricsData.audit.total.length * 100|limitTo:3==0">
+                        <div class="row notassigned" ng-if="performanceMetricsData.total.audit == 0">
                           <h1>NOT ASSIGNED !!</h1>
                         </div>
                       </div>
@@ -883,27 +883,27 @@
                             <h4> Closure Inventory  </h4>
                           </div>
                         </div>
-                        <div class="col-md-8" ng-if="performanceMetricsData.closure.actual.length / performanceMetricsData.closure.total.length * 100|limitTo:3==0">
-                          <circular-progress value="performanceMetricsData.closure.actual.length" max="performanceMetricsData.closure.total.length"
+                        <div class="col-md-8" ng-if="performanceMetricsData.total.closure != 0">
+                          <circular-progress value="activityInvPerfData.closure" max="performanceMetricsData.total.closure"
                            orientation="1" radius="80"
                               stroke="20" base-color="#ffff00" progress-color="#00ff00"
                               iterations="100" animation="easeInOutCubic"
-                              label="{{performanceMetricsData.closure.actual.length / performanceMetricsData.closure.total.length * 100|limitTo:3}}%">
+                              label="{{activityInvPerfData.closure / performanceMetricsData.total.closure * 100|limitTo:3}}%">
                           </circular-progress>
                         </div>
-                        <div class="col-md-4" ng-if="performanceMetricsData.closure.actual.length / performanceMetricsData.closure.total.length * 100|limitTo:3==0">
+                        <div class="col-md-4" ng-if="performanceMetricsData.total.closure != 0">
                           <table class="table table-responsive table-bordered pieChart-table">
                             <tbody>
                               <tr>
-                                <td>Closure / Total</td>
+                                <td>Closed / Total</td>
                               </tr>
                               <tr>
-                                <td>{{performanceMetricsData.closure.actual.length}} / {{performanceMetricsData.closure.total.length}}</td>
+                                <td>{{activityInvPerfData.closure}} / {{performanceMetricsData.total.closure}}</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
-                        <div class="row notassigned" ng-if="!performanceMetricsData.closure.actual.length / performanceMetricsData.closure.total.length * 100|limitTo:3==0">
+                        <div class="row notassigned" ng-if="performanceMetricsData.total.closure == 0">
                           <h1>NOT ASSIGNED !!</h1>
                         </div>
                       </div>
@@ -914,27 +914,27 @@
                             <h4> On Time for Audit Inventory  </h4>
                           </div>
                         </div>
-                        <div class="col-md-8" ng-if="performanceMetricsData.audit.ontime / performanceMetricsData.audit.actual.length * 100|limitTo:3==0">
-                          <circular-progress value="performanceMetricsData.audit.ontime" max="performanceMetricsData.audit.actual.length"
+                        <div class="col-md-8" ng-if="activityInvPerfData.audit != 0">
+                          <circular-progress value="performanceMetricsData.actual.audit.ontime" max="activityInvPerfData.audit"
                            orientation="1" radius="80"
                               stroke="20" base-color="#ffff00" progress-color="#00ff00"
                               iterations="100" animation="easeInOutCubic"
-                              label="{{performanceMetricsData.audit.ontime / performanceMetricsData.audit.actual.length * 100|limitTo:3}}%">
+                              label="{{performanceMetricsData.actual.audit.ontime / activityInvPerfData.audit * 100|limitTo:3}}%">
                           </circular-progress>
                         </div>
-                        <div class="col-md-4" ng-if="performanceMetricsData.audit.ontime / performanceMetricsData.audit.actual.length * 100|limitTo:3==0">
+                        <div class="col-md-4" ng-if="activityInvPerfData.audit != 0">
                           <table class="table table-responsive table-bordered pieChart-table">
                             <tbody>
                               <tr>
-                                <td>OnTime / Audited</td>
+                                <td>OnTime / Released</td>
                               </tr>
                               <tr>
-                                <td>{{performanceMetricsData.audit.ontime}} / {{performanceMetricsData.audit.actual.length}}</td>
+                                <td>{{performanceMetricsData.actual.audit.ontime}} / {{activityInvPerfData.audit}}</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
-                        <div class="row notassigned" ng-if="!performanceMetricsData.audit.ontime / performanceMetricsData.audit.actual.length * 100|limitTo:3==0">
+                        <div class="row notassigned" ng-if="activityInvPerfData.audit == 0">
                           <h1>NOT ASSIGNED !!</h1>
                         </div>
                       </div>
@@ -944,27 +944,27 @@
                             <h4> On Time for Closure Inventory  </h4>
                           </div>
                         </div>
-                        <div class="col-md-8" ng-if="performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3==0">
-                          <circular-progress value="performanceMetricsData.closure.ontime" max="performanceMetricsData.closure.actual.length"
+                        <div class="col-md-8" ng-if="activityInvPerfData.closure != 0">
+                          <circular-progress value="performanceMetricsData.actual.closure.ontime" max="activityInvPerfData.closure"
                            orientation="1" radius="80"
                               stroke="20" base-color="#ffff00" progress-color="#00ff00"
                               iterations="100" animation="easeInOutCubic"
-                              label="{{performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3}}%">
+                              label="{{performanceMetricsData.actual.closure.ontime / activityInvPerfData.closure * 100|limitTo:3}}%">
                           </circular-progress>
                         </div>
-                        <div class="col-md-4" ng-if="performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3==0">
+                        <div class="col-md-4" ng-if="activityInvPerfData.closure != 0">
                           <table class="table table-responsive table-bordered pieChart-table">
                             <tbody>
                               <tr>
-                                <td>OnTime / Closure</td>
+                                <td>OnTime / Released</td>
                               </tr>
                               <tr>
-                                <td>{{performanceMetricsData.closure.ontime}} / {{performanceMetricsData.closure.actual.length}}</td>
+                                <td>{{performanceMetricsData.actual.closure.ontime}} / {{activityInvPerfData.closure}}</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
-                        <div class="row notassigned" ng-if="!performanceMetricsData.closure.ontime / performanceMetricsData.closure.actual.length * 100|limitTo:3==0">
+                        <div class="row notassigned" ng-if="activityInvPerfData.closure == 0">
                           <h1>NOT ASSIGNED !!</h1>
                         </div>
                       </div>
