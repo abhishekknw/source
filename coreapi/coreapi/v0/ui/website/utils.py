@@ -6102,7 +6102,9 @@ def get_campaigns_with_status(category,user):
             'upcoming_campaigns'    : [],
             'completed_campaigns'   : []
         }
-        campaign_query = get_query_by_organisation_category(category,v0_constants.category_query_status['campaign_query'],user)
+        campaign_query = Q()
+        if not user.is_superuser:
+            campaign_query = get_query_by_organisation_category(category,v0_constants.category_query_status['campaign_query'],user)
         campaign_data['completed_campaigns'] = models.CampaignAssignment.objects. \
             filter(campaign_query,campaign__tentative_end_date__lt=current_date). \
             annotate(name=F('campaign__name')).values('campaign','name')
@@ -6724,5 +6726,126 @@ def get_query_by_organisation_category(category,campaign_query,user):
         if category.upper() == v0_constants.category['supplier_agency']:
             query = Q(**{v0_constants.sup_agency_campaign_query[campaign_query] : user})
         return query
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_performance_metrics_data_for_inventory(campaign_id, request):
+    """
+    This fun will return total assignment vs actual activity completed data for inv, ontime and onlocation
+    :param campaign_id:
+    :param request:
+    :return:
+    """
+    function_name = get_performance_metrics_data_for_inventory.__name__
+    try:
+        inv_code = request.query_params.get('inv_code',None)
+        content_type = ui_utils.fetch_content_type(inv_code)
+        content_type_id = content_type.id
+        perf_param = request.query_params.get('perf_param', None)
+        result = {}
+
+        if not perf_param or perf_param == v0_constants.perf_metrics_param['on_time']:
+            result['total'] = {}
+            result['total']['release'] = get_total_assigned_inv_act_data(campaign_id,content_type_id,v0_constants.activity_type['RELEASE'])
+            result['total']['audit'] = get_total_assigned_inv_act_data(campaign_id, content_type_id,v0_constants.activity_type['AUDIT'])
+            result['total']['closure'] = get_total_assigned_inv_act_data(campaign_id, content_type_id,v0_constants.activity_type['CLOSURE'])
+            result['actual'] = {}
+            result['actual']['release'] = get_assigned_inv_performance_data(campaign_id,content_type_id,v0_constants.activity_type['RELEASE'])
+            result['actual']['audit'] = get_assigned_inv_performance_data(campaign_id, content_type_id,v0_constants.activity_type['AUDIT'])
+            result['actual']['closure'] = get_assigned_inv_performance_data(campaign_id, content_type_id,v0_constants.activity_type['CLOSURE'])
+
+        if perf_param == v0_constants.perf_metrics_param['on_location']:
+            result['actual'] = {}
+            result['actual']['release'] = get_assigned_inv_location_data(campaign_id,content_type_id,v0_constants.activity_type['RELEASE'])
+            result['actual']['audit'] = get_assigned_inv_location_data(campaign_id, content_type_id,v0_constants.activity_type['AUDIT'])
+            result['actual']['closure'] = get_assigned_inv_location_data(campaign_id, content_type_id,v0_constants.activity_type['CLOSURE'])
+
+        return result
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_assigned_inv_performance_data(campaign_id,content_type_id,act_type):
+    """
+
+    :param campaign_id:
+    :param inv:
+    :return:
+    """
+    function_name = get_assigned_inv_performance_data.__name__
+    try:
+        image_data = models.InventoryActivityImage.objects. \
+            filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id=campaign_id,
+                   inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id,
+                   inventory_activity_assignment__inventory_activity__activity_type=act_type). \
+            annotate(activity_date=F('inventory_activity_assignment__activity_date'),
+                     inventory_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__id')). \
+            values('activity_date','inventory_id','image_path','created_at')
+        result = arrange_assignment_data_by_inventory_id(image_data)
+
+        return result
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def arrange_assignment_data_by_inventory_id(data):
+    """
+
+    :param data:
+    :return:
+    """
+    function_name = arrange_assignment_data_by_inventory_id.__name__
+    try:
+        result = {}
+        for id in data:
+            if id['inventory_id'] not in result:
+                result[id['inventory_id']] = []
+            result[id['inventory_id']].append(id)
+        return result
+
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_assigned_inv_location_data(campaign_id,content_type_id,act_type):
+    """
+
+    :param campaign_id:
+    :param content_type_id:
+    :return:
+    """
+    function_name = get_assigned_inv_location_data.__name__
+    try:
+        inv_act_image_objects = models.InventoryActivityImage.objects. \
+            filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id=campaign_id,
+                   inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id,
+                   inventory_activity_assignment__inventory_activity__activity_type=act_type). \
+            annotate(inventory_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__id'),
+                     object_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
+            values('inventory_id','object_id','image_path','latitude','longitude')
+
+        supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
+        supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
+        serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects, many=True)
+        suppliers = serializer.data
+        inv_act_image_objects_with_distance = calculate_location_difference_between_inventory_and_supplier(inv_act_image_objects, suppliers)
+        result = arrange_assignment_data_by_inventory_id(inv_act_image_objects_with_distance)
+        return result
+
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+def get_total_assigned_inv_act_data(campaign_id,content_type_id,act_type):
+    """
+
+    :param campaign_id:
+    :param content_type_id:
+    :param act_type:
+    :return:
+    """
+    function_name = get_total_assigned_inv_act_data.__name__
+    try:
+        result = models.InventoryActivityAssignment.objects. \
+            filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id=campaign_id,
+                inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id,
+                inventory_activity__activity_type=act_type). \
+            values('inventory_activity__shortlisted_inventory_details__id').distinct().count()
+        return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
