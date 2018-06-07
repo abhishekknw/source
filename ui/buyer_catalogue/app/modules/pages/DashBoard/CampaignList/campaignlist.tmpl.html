@@ -2,9 +2,12 @@
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 
 <body>
+  <div ng-loading="loading"></div> <!--For displaying loading icon-->
+
+  <main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading">
+
 <!-- <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" /> -->
 <div><nav-bar></nav-bar></div>
-<div ng-loading="loading"></div> <!--For displaying loading icon-->
 <br><br><br>
 <div class="panel1">
   <!-- <div class="col2"> -->
@@ -75,4 +78,5 @@
 
   </div>
   </div>
+</main>
 </body>

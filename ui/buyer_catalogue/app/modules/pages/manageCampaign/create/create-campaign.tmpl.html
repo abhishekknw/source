@@ -1,11 +1,12 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/create/create-campaign.tmpl.css" />
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <link href="css/sidePanel.css" rel="stylesheet" media="screen">
+<div ng-loading="loading"></div> <!--For displaying loading icon-->
+
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading">
 
 <div style="margin-top:-50px;"><nav-bar></nav-bar></div>
-<div ng-loading="loading"></div> <!--For displaying loading icon-->
 <div ng-show="isEmpty" style="text-align:center;"><h2>{{msg}}</h2></div>
-<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }">
 <br/><br/><br/>
 
 <div class="panel-panel-default">

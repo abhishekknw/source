@@ -24,11 +24,12 @@ angular.module('catalogueApp')
           campaignListService.getAllCampaignDetails(fetch_all)
           .then(function onSuccess(response){
             $scope.campaignData = response.data.data;
+            $scope.loading = response.data.data;
             if($scope.campaignData.length == 0){
               $scope.isEmpty = true;
               $scope.msg = constants.emptyCampaignList;
             }
-            $scope.loading = response.data;
+            // $scope.loading = response.data;
           })
           .catch(function onError(response){
             $scope.isEmpty = true;
@@ -47,12 +48,14 @@ angular.module('catalogueApp')
               console.log(response);
               $scope.campaignData = response.data.data;
               $scope.Data = $scope.campaignData;
+              $scope.loading = response.data.data;
+
               console.log($scope.Data);
               if($scope.campaignData.length == 0){
                 $scope.isEmpty = true;
                 $scope.msg = constants.emptyCampaignList;
               }
-              $scope.loading = response.data;
+              // $scope.loading = response.data;
             })
             .catch(function onError(response){
               $scope.isEmpty = true;

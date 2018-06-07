@@ -5,6 +5,10 @@ body.blur-theme::before {
   background: #ffff;
 }
 
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
+}
+
 body a {
   color: #c70202;
 }
@@ -278,12 +282,21 @@ ul.animate-show li.selected {
   background: #c3452f;
 }
 .menu-content{
-  max-height: 700px;
-  overflow-x: auto;
-  background: #ffffff;
-  color : #000;
-  
+  max-height: 700px !important;
+  overflow-x: auto !important;
+  background: #ffffff !important;
+  color : #000 !important;
+
 }
+
+.camp-menu-content{
+  /* max-height: 700px !important; */
+  overflow-x: auto !important;
+  background: #ffffff !important;
+  color : #000 !important;
+
+}
+
 .panel-title{
   background: #bf321b;
   color: #ffffff;

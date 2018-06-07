@@ -24,6 +24,12 @@
   <!-- CSS Files -->
 	<link href="assets/css/bootstrap.min.css" rel="stylesheet" />
 	<link href="assets/css/material-bootstrap-wizard.css" rel="stylesheet" />
+	<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
+
+
+	<div ng-loading="loading"></div> <!--For displaying loading icon-->
+
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading">
 
 <div><nav-bar></nav-bar></div>
 
@@ -1381,3 +1387,4 @@
   </div>
 </div>
 <!--end : create new organisation mapping modal  -->
+</main>

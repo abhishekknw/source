@@ -1,12 +1,17 @@
 <link rel="stylesheet" href="modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
-<div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
-</br></br></br>
+
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading">
+
+  <div><nav-bar></nav-bar></div>
+  </br></br></br>
 <!-- <back-Button></back-Button> -->
 <div class="row">
   <div class="col-md-6 pull-left">
-    <div class="breadcrumb" ncy-breadcrumb></div>
+    <div class="" permission = "[]">
+      <div class="breadcrumb" ncy-breadcrumb></div>
+    </div>
   </div>
   <div class="col-md-2 pull-right">
     <div><button class="btn btn-primary active notify" style="text-align:right;" ng-click="goToCampaignList()">List Campaigns</button>
@@ -136,3 +141,4 @@
 </div>
 <!-- End: Code for assgining campaign -->
 <!-- <footer-bar></footer-bar> -->
+</main>
