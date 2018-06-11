@@ -6849,3 +6849,21 @@ def get_total_assigned_inv_act_data(campaign_id,content_type_id,act_type):
         return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_leads_count_by_campaign(data):
+    """
+    This function will return leads of every campaign if available
+    :param data:
+    :return:
+    """
+    function_name = get_leads_count_by_campaign.__name__
+    try:
+        proposal_id_list = [proposal['proposal_id'] for proposal in data]
+        leads = models.Leads.objects.filter(campaign__in=proposal_id_list).values('campaign').annotate(total=Count('id'))
+        leads_id_objects = {lead['campaign']: lead for lead in leads}
+        for proposal in data:
+            if proposal['proposal_id'] in leads_id_objects:
+                proposal['leads'] = leads_id_objects[proposal['proposal_id']]
+        return data
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
