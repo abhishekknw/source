@@ -9,6 +9,7 @@
       .controller('DashboardCtrl',function($scope, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants,$location,$anchorScroll) {
  $scope.itemsByPage=15;
  $scope.query = "";
+ $scope.oneAtATime = true;
 
  $scope.rowCollection = [];
         $scope.invKeys = [
@@ -118,6 +119,7 @@
             $scope.inventoryActivityCountData = response.data.data;
             console.log($scope.inventoryActivityCountData);
             angular.forEach(response.data.data, function(data,key){
+              $scope.isPanelOpen = !$scope.isPanelOpen;
               $scope.inventoryActivityCountData[key] = sortObject(data);
               console.log($scope.inventoryActivityCountData[key]);
               $scope.invActDateList = $scope.invActDateList.concat(Object.keys($scope.inventoryActivityCountData[key]));
@@ -152,6 +154,7 @@
         $scope.pre = -1;
         $scope.next = 1;
         $scope.getDate = function(day){
+
           $scope.showAssignedInvTable = false;
           $scope.OntimeOnlocation.ontime.value = false;
           $scope.OntimeOnlocation.onlocation.value = false;
@@ -163,6 +166,7 @@
         }
         $scope.getRecentActivity = function(day){
           console.log(day);
+          $scope.isPanelOpen =!$scope.isPanelOpen;
           $scope.showAssignedInvTable = false;
           $scope.OntimeOnlocation.ontime.value = false;
           $scope.OntimeOnlocation.onlocation.value = false;
@@ -181,7 +185,7 @@
               alert("No Activity");
               break;
             }
-            console.log("ji",date,counter);
+            // console.log("ji",date,counter);
           }
           if(counter < 0)
             $scope.date = initialDate;
@@ -344,6 +348,8 @@
             $scope.mergedarray = [];
             // $scope.mergedarray.push.apply($scope.campaignData.ongoing_campaigns,$scope.campaignData.completed_campaigns,$scope.campaignData.upcoming_campaigns);
             angular.forEach($scope.campaignData, function(data){
+              console.log($scope.campaignData);
+
               console.log(data);
               angular.forEach(data,function(campaign){
                   $scope.mergedarray.push(campaign);
@@ -351,6 +357,7 @@
 
           })
             $scope.campaigns = [$scope.campaignData.ongoing_campaigns.length,$scope.campaignData.completed_campaigns.length,$scope.campaignData.upcoming_campaigns.length];
+            console.log($scope.campaignData);
             $scope.campaignChartdata = [
               { label : $scope.campaignStatus.ongoing.campaignLabel, value : $scope.campaignData.ongoing_campaigns.length },
               { label : $scope.campaignStatus.completed.campaignLabel, value : $scope.campaignData.completed_campaigns.length },
@@ -582,6 +589,7 @@
          $scope.getCampaignFilters(campaignId);
          DashboardService.getSuppliersOfCampaignWithStatus(campaignId)
          .then(function onSuccess(response){
+           console.log(response);
            $scope.showLeadsDetails = false;
            $scope.showLeadsDetailsDataTable = false;
              $scope.showSupplierTypeCountChart = false;
@@ -622,6 +630,7 @@
            $scope.campaignStatusData['totalSuppliers'] = 0;
            angular.forEach($scope.campaignStatusData, function(data,key){
               if($scope.campaignStatusData[key].length){
+                console.log($scope.campaignStatusData[key].length);
                 $scope.campaignStatusData[key]['totalFlats'] = 0;
                 $scope.campaignStatusData[key]['totalLeads'] = 0;
                 $scope.campaignStatusData[key]['hotLeads'] = 0;
@@ -826,6 +835,7 @@
 //        }
 
        $scope.getCampaignInvTableData = function(campaigns){
+         console.log($scope.campaigns);
          $scope.campaignInvData = campaigns.campaigns;
          console.log($scope.campaignInvData);
          $scope.showCampaignInvTable = true;
@@ -881,6 +891,10 @@
 
 
 
+
+     $scope.onLocationDetails = false;
+       $scope.onTimeDetails = false;
+
    $scope.OntimeOnlocation = {
      ontime : {
        status : 'ontime', value : false
@@ -891,6 +905,7 @@
    };
 
    $scope.showOntimeOnlocation = function(status){
+     $scope.showOnClickDetails = true;
      $scope.OntimeOnlocation.ontime.value = false;
      $scope.OntimeOnlocation.onlocation.value = false;
 

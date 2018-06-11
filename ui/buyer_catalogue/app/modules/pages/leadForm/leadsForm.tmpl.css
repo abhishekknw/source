@@ -13,3 +13,7 @@ table{
 
   overflow-y: scroll;
 }
+
+.labels{
+	margin-left: 55px;
+}
