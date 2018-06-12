@@ -6867,3 +6867,25 @@ def get_leads_count_by_campaign(data):
         return data
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_campaign_inv_data(campaign_id):
+    """
+    This function will return inv and inv count data
+    :param campaign_id:
+    :return:
+    """
+    function_name = get_campaign_inv_data.__name__
+    try:
+        data = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal=campaign_id). \
+            annotate(inv_name=F('ad_inventory_type__adinventory_name'),object_id=F('shortlisted_spaces__object_id')). \
+             values('object_id','inv_name').annotate(total=Count('id'))
+        result = {}
+        for inv in data:
+            if inv['object_id'] not in result:
+                result[inv['object_id']] = {}
+            if inv['inv_name'] not in result[inv['object_id']]:
+                result[inv['object_id']][inv['inv_name']] = {}
+            result[inv['object_id']][inv['inv_name']] = inv
+        return result
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
