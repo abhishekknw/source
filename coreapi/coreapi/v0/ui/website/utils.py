@@ -6849,3 +6849,43 @@ def get_total_assigned_inv_act_data(campaign_id,content_type_id,act_type):
         return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_leads_count_by_campaign(data):
+    """
+    This function will return leads of every campaign if available
+    :param data:
+    :return:
+    """
+    function_name = get_leads_count_by_campaign.__name__
+    try:
+        proposal_id_list = [proposal['proposal_id'] for proposal in data]
+        leads = models.Leads.objects.filter(campaign__in=proposal_id_list).values('campaign').annotate(total=Count('id'))
+        leads_id_objects = {lead['campaign']: lead for lead in leads}
+        for proposal in data:
+            if proposal['proposal_id'] in leads_id_objects:
+                proposal['leads'] = leads_id_objects[proposal['proposal_id']]
+        return data
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_campaign_inv_data(campaign_id):
+    """
+    This function will return inv and inv count data
+    :param campaign_id:
+    :return:
+    """
+    function_name = get_campaign_inv_data.__name__
+    try:
+        data = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal=campaign_id). \
+            annotate(inv_name=F('ad_inventory_type__adinventory_name'),object_id=F('shortlisted_spaces__object_id')). \
+             values('object_id','inv_name').annotate(total=Count('id'))
+        result = {}
+        for inv in data:
+            if inv['object_id'] not in result:
+                result[inv['object_id']] = {}
+            if inv['inv_name'] not in result[inv['object_id']]:
+                result[inv['object_id']][inv['inv_name']] = {}
+            result[inv['object_id']][inv['inv_name']] = inv
+        return result
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))

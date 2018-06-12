@@ -379,7 +379,7 @@
       $scope.pieChartClick = function(label){
 
         $anchorScroll('bottom');
-
+        console.log("hi");
 
         $scope.campaignStatusName = label;
         var campaignStatus = _.findKey($scope.campaignStatus, {'campaignLabel' : label});
@@ -391,7 +391,6 @@
          .then(function onSuccess(response){
            console.log(response);
            if(response.data.data){
-
               $scope.supplierCodeCountData = formatCountData(response.data.data);
               console.log($scope.supplierCodeCountData );
 
@@ -592,10 +591,10 @@
            console.log(response);
            $scope.showLeadsDetails = false;
            $scope.showLeadsDetailsDataTable = false;
-             $scope.showSupplierTypeCountChart = false;
-             $scope.showCampaignInvTable = false;
-             $scope.showSupplierInvTable = false;
-
+           $scope.showSupplierTypeCountChart = false;
+           $scope.showCampaignInvTable = false;
+           $scope.showSupplierInvTable = false;
+           $scope.showSingleCampaignChart = true;
 
            for(var i=0;i<$scope.campaignInventories.length;i++){
               if($scope.campaignInventories[i].filter_code=='SL'){
@@ -603,23 +602,12 @@
                    $scope.showLeadsDetailsDataTable = true;
                   }
          }
-           console.log($scope.showLeadsDetails);
-           console.log(response);
+
            $scope.campaignStatusData = response.data.data;
-           console.log($scope.campaignStatusData);
+           $scope.campaignSupplierAndInvData = response.data.data;
            $scope.showSupplierSocietywiseInvTable = false;
            $scope.showSupplierInvdDataTable = function(invData){
              $scope.SocietyInvTable = $scope.campaignStatusData;
-             console.log($scope.SocietyInvTable);
-             // angular.forEach($scope.SocietyInvTable,function(data){
-             //
-             //   console.log(data);
-             // })
-             // $scope.SocietyInvTable = [
-             //   { SocietyTitle : $scope.campaignStatus.ongoing.campaignLabel},
-             //   { SocietyTitle : $scope.campaignStatus.completed.campaignLabel},
-             //   { SocietyTitle : $scope.campaignStatus.upcoming.campaignLabel}
-             // ];
              $scope.showSupplierSocietywiseInvTable = true;
            };
            $scope.countallsupplier = $scope.campaignStatusData.completed.length+$scope.campaignStatusData.ongoing.length+$scope.campaignStatusData.upcoming.length;
@@ -663,9 +651,9 @@
              { label : $scope.campaignStatus.completed.supplierLabel, value : $scope.campaignStatusData.completed.length, status : $scope.campaignStatus.completed.status },
              { label : $scope.campaignStatus.upcoming.supplierLabel, value : $scope.campaignStatusData.upcoming.length, status : $scope.campaignStatus.upcoming.status }
            ];
-           $scope.options = angular.copy(doughnutChartOptions);
-
-
+           $scope.options1 = angular.copy(doughnutChartOptions);
+           console.log("hello");
+           $scope.options1.chart.pie.dispatch['elementClick'] = function(e){ $scope.getSupplierAndInvData(e.data); };
          }).catch(function onError(response){
            console.log(response);
          })
@@ -1193,6 +1181,12 @@
   $scope.openMenu = function($mdMenu, ev) {
       $mdMenu.open(ev);
     };
+    $scope.getSupplierAndInvData = function(data){
+      console.log($scope.campaignSupplierAndInvData);
+      $scope.supplierAndInvData = $scope.campaignSupplierAndInvData[data.status];
+      console.log($scope.supplierAndInvData);
+
+    }
 
     })//END
   })();

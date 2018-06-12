@@ -5746,23 +5746,27 @@ class DashBoardViewSet(viewsets.ViewSet):
                 if category.upper() == v0_constants.category['supplier_agency']:
                     perm_query = Q(proposal__campaignassignemnt__assigned_to=user)
             current_date = timezone.now()
+
             if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
                 query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
 
                 proposal_data = models.ShortlistedSpaces.objects.filter(perm_query,query).values('supplier_code', 'proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
+                proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
                 query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
 
                 proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
+                proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
                 query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
 
                 proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
+                proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             data = {}
             for proposal in proposal_data:
@@ -5799,6 +5803,8 @@ class DashBoardViewSet(viewsets.ViewSet):
             supplier_objects_id_list = {supplier['supplier_id']:supplier for supplier in suppliers}
 
             leads = website_utils.get_campaign_leads(campaign_id)
+            inv_data_objects_list = website_utils.get_campaign_inv_data(campaign_id)
+            # inv_data_objects_list = {inv['object_id']:inv for inv in inv_data}
             ongoing_suppliers = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                     'inventory_activity_assignment__inventory_activity','inventory_activity_assignment__inventory_activity',
                                     'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
@@ -5817,7 +5823,6 @@ class DashBoardViewSet(viewsets.ViewSet):
             upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(ongoing_supplier_id_list + completed_supplier_id_list)
 
             ongoing_suppliers_list = []
-
             for id in ongoing_supplier_id_list:
                 data = {
                     'supplier' : supplier_objects_id_list[id],
@@ -5825,6 +5830,9 @@ class DashBoardViewSet(viewsets.ViewSet):
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
+                if id in inv_data_objects_list:
+                    data['supplier']['inv_data'] = inv_data_objects_list[id]
+
                 ongoing_suppliers_list.append(data)
 
 
@@ -5836,6 +5844,8 @@ class DashBoardViewSet(viewsets.ViewSet):
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
+                if id in inv_data_objects_list:
+                    data['supplier']['inv_data'] = inv_data_objects_list[id]
                 completed_suppliers_list.append(data)
 
             upcoming_suppliers_list = []
@@ -5846,6 +5856,8 @@ class DashBoardViewSet(viewsets.ViewSet):
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
+                if id in inv_data_objects_list:
+                    data['supplier']['inv_data'] = inv_data_objects_list[id]
                 upcoming_suppliers_list.append(data)
 
 
@@ -5893,33 +5905,6 @@ class DashBoardViewSet(viewsets.ViewSet):
             result = {}
             if type == v0_constants.perf_metrics_types['inv_type']:
                 result = website_utils.get_performance_metrics_data_for_inventory(campaign_id,request)
-            # content_type = ui_utils.fetch_content_type(inv_code)
-            # content_type_id = content_type.id
-
-            # total_release = website_utils.get_total_activity_data('RELEASE',campaign_id, content_type_id)
-            # actual_release = website_utils.get_actual_activity_data('RELEASE',campaign_id, content_type_id)
-            #
-            # total_audit = website_utils.get_total_activity_data('AUDIT', campaign_id, content_type_id)
-            # actual_audit = website_utils.get_actual_activity_data('AUDIT', campaign_id, content_type_id)
-            #
-            # total_closure = website_utils.get_total_activity_data('CLOSURE', campaign_id, content_type_id)
-            # actual_closure = website_utils.get_actual_activity_data('CLOSURE', campaign_id, content_type_id)
-            #
-            # data = {
-            #     'release' : {
-            #         'total' : total_release,
-            #         'actual': actual_release
-            #     },
-            #     'audit': {
-            #         'total': total_audit,
-            #         'actual': actual_audit
-            #     },
-            #     'closure': {
-            #         'total': total_closure,
-            #         'actual': actual_closure
-            #     }
-            # }
-
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
@@ -6084,8 +6069,6 @@ class DashBoardViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-
 
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
