@@ -602,6 +602,7 @@
            $scope.showSupplierInvTable = false;
            $scope.showSingleCampaignChart = true;
 
+
            for(var i=0;i<$scope.campaignInventories.length;i++){
               if($scope.campaignInventories[i].filter_code=='SL'){
                   $scope.showLeadsDetails = true;
@@ -661,6 +662,7 @@
            $scope.options1 = angular.copy(doughnutChartOptions);
            console.log("hello");
            $scope.options1.chart.pie.dispatch['elementClick'] = function(e){ $scope.getSupplierAndInvData(e.data); };
+
 
          }).catch(function onError(response){
            console.log(response);
