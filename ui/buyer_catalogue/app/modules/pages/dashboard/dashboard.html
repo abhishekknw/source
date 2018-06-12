@@ -352,10 +352,10 @@
                             <div class="col-md-5">
                               <div class="panel-heading content-title">
 
-                                  <h4 style="text-align:left">Details Of All Campaigns
+                                  <h4 style="text-align:left">Details Of {{ALLCampaignTitles}}</h4>
 
                                 <uib-tab-heading uib-dropdown>
-                                    <button class="btn btn-warning btn-sm pull-right" style="background-color:#fcfc5f;color:black;margin-top:-6px;" uib-dropdown-toggle ng-click="$event.stopPropagation()">
+                                    <button class="btn btn-warning btn-sm pull-right" style="background-color:#fcfc5f;color:black;margin-top:-36px;" uib-dropdown-toggle ng-click="$event.stopPropagation()">
                                         Select Chart <i class="caret"></i>
                                     </button>
                                     <ul class="dropdown-menu" uib-dropdown-menu>
@@ -434,6 +434,33 @@
                                 </table>
                               </div>
 
+                              <div class="col-md-5 LeadsTable" ng-if="showDisplayDetailsTable">
+                                <div class="panel-heading content-title">
+                                  <h5 style="background:'red'">Display Table</h5>
+
+                                </div>
+                              <table class="table-responsive table table-bordered">
+                                <thead>
+                                  <tr>
+                                    <td>INDEX</td>
+                                    <td>Society Name</td>
+                                    <td>STALL</td>
+                                    <td>POSTER</td>
+                                    <td>STANDEE</td>
+                                  </tr>
+                                </thead>
+                                    <tbody>
+                                    <tr ng-repeat="supplier in SupplierData">
+                                      <td>{{$index + 1}}</td>
+                                        <td>{{supplier.society_name}}</td>
+                                        <!-- <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].AUDIT||0}} ({{countallsupplier}})</td>
+                                        <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].CLOSURE||0}} ({{countallsupplier}})</td> -->
+                                     </tr>
+
+                                  </tbody>
+                                  </table>
+                                </div>
+
                                 <div class="col-md-7 LeadsTable" ng-show="showSupplierSocietywiseInvTable" >
                                   <div class="panel-heading content-title">
                                     <h5 style="background:'red'">SOCEITY DETAILS</h5>
@@ -461,7 +488,6 @@
                           </div>
 
 
-
                         <div class="panel panel-default" >
                             <div class="col-md-12">
                               <!-- <div class="col-md-2">
@@ -481,13 +507,16 @@
                                 <table class="table-responsive table table-bordered">
                                   <thead>
                                     <th>Proposal Name</th>
-                                    <th>Count</th>
+                                    <th>Society Count</th>
+                                    <th>Leads Count</th>
                                     <th>Go to Inventory</th>
                                   </thead>
                                   <tbody>
                                     <tr ng-repeat="campaign in campaignInvData">
                                       <td>{{campaign.proposal__name}}</td>
                                      <td>{{campaign.total}}</td>
+                                     <td ng-if="campaign.leads" class="blinking">{{campaign.leads.total}}</td>
+                                     <td ng-if="!campaign.leads">NA</td>
                                      <td><a ng-click="getCampaignInvTypesData(campaign)" class="btn btn-danger">Go To Inventory</a>
                                      </td>
                                     </tr>

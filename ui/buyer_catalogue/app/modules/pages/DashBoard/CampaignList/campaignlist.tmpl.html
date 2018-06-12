@@ -31,6 +31,8 @@
   <div class="panel-body" >
   <div class="table-responsive">
     <div class="" ng-show="!isEmpty">
+  <!-- <input class="form-control input-size" type="text" ng-model="search" class="form-control spacing col-width"> -->
+
       <!-- <div class=""> -->
           <div class="row campaignTable">
             <table st-table="campaignData" st-safe-src="Data" class="table table-striped">
@@ -41,13 +43,13 @@
 
               </thead>
               <tbody>
-                <tr style="text-align: center;" ng-repeat="proposal in campaignData">
+                <tr style="text-align: center;" ng-repeat="proposal in campaignData | orderBy : '-updated_at'">
                   <!-- <td class="col-md-1">{{proposal.campaign.proposal_id}}</td> -->
                   <td class="col-md-2">{{$index + 1}}</td>
                   <td class="col-md-2">{{proposal.campaign.name}}</td>
                   <td class="col-md-2">{{proposal.assigned_to.first_name||proposal.assigned_to.username}}</td>
                   <td class="col-md-2">{{proposal.assigned_by.first_name||proposal.assigned_by.username}}</td>
-                  <td class="col-md-2">{{proposal.updated_at|limitTo:10}}</td>
+                  <td class="col-md-2">{{proposal.updated_at|limitTo:10 }}</td>
                   <td class="col-md-2">{{proposal.campaign.tentative_start_date|limitTo:10}}</td>
                   <td class="col-md-2">{{proposal.campaign.tentative_end_date|limitTo:10}}</td>
                   <td class="col-md-2">

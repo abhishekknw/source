@@ -221,6 +221,7 @@
               console.log(data);
               $scope.campaignData = [];
               var campaignData = {};
+              console.log(campaignData);
               campaignData['name'] = campaignName;
               campaignData['images'] = [];
               campaignData['inv_count'] = 0;
@@ -293,6 +294,7 @@
               campaignReleaseData.push(campaignData);
             })
             $scope.campaignReleaseData = campaignReleaseData;
+            console.log($scope.campaignReleaseData);
             if($scope.campaignReleaseData.length){
                 $scope.showAssignedInvTable = true;
             }else{
@@ -358,7 +360,8 @@
           })
             $scope.campaigns = [$scope.campaignData.ongoing_campaigns.length,$scope.campaignData.completed_campaigns.length,$scope.campaignData.upcoming_campaigns.length];
             console.log($scope.campaignData);
-            $scope.campaignChartdata = [
+
+              $scope.campaignChartdata = [
               { label : $scope.campaignStatus.ongoing.campaignLabel, value : $scope.campaignData.ongoing_campaigns.length },
               { label : $scope.campaignStatus.completed.campaignLabel, value : $scope.campaignData.completed_campaigns.length },
               { label : $scope.campaignStatus.upcoming.campaignLabel, value : $scope.campaignData.upcoming_campaigns.length }
@@ -366,6 +369,7 @@
             console.log(  $scope.campaignChartdata );
             $scope.options = angular.copy(doughnutChartOptions);
             $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.pieChartClick(e.data.label); };
+            $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.getDisplayDetailsTable(e.data); };
 
             // $scope.getCampaignsByStatus($scope.campaignStatus.all_campaigns.value);
             console.log($scope.campaignLength);
@@ -396,6 +400,7 @@
 
               // $scope.supplierCodeLabelData = formatLabelData(response.data.data.supplier_code_data,'supplier_type_code');
               $scope.supplierCodeCountOptions = angular.copy(doughnutChartOptions);
+
               // $scope.supplierCodeCountOptions.chart.tooltip['contentGenerator'] = function(e){ return getTooltipData(e); };
               $scope.supplierCodeCountOptions.chart.pie.dispatch['elementClick'] = function(e){ $scope.getCampaignInvTableData(e.data); };
 
@@ -588,6 +593,7 @@
          $scope.getCampaignFilters(campaignId);
          DashboardService.getSuppliersOfCampaignWithStatus(campaignId)
          .then(function onSuccess(response){
+
            console.log(response);
            $scope.showLeadsDetails = false;
            $scope.showLeadsDetailsDataTable = false;
@@ -614,6 +620,7 @@
            // console.log($scope.countallsupplier);
            var totalFlats=0,totalLeads=0,totalSuppliers=0,hotLeads=0;
            console.log($scope.campaignStatusData);
+
            // $scope.totalLeadsCount = response.data.data.supplier_data.length;
            $scope.campaignStatusData['totalSuppliers'] = 0;
            angular.forEach($scope.campaignStatusData, function(data,key){
@@ -654,12 +661,32 @@
            $scope.options1 = angular.copy(doughnutChartOptions);
            console.log("hello");
            $scope.options1.chart.pie.dispatch['elementClick'] = function(e){ $scope.getSupplierAndInvData(e.data); };
+
          }).catch(function onError(response){
            console.log(response);
          })
        }
        // END : service call to get suppliers as campaign status
 
+       $scope.getDisplayDetailsTable = function(campaign){
+         $scope.data = $scope.campaignStatusData;
+         angular.forEach($scope.campaignStatusData, function(data,key){
+           console.log(data);
+            if($scope.campaignStatusData[key].length){
+              console.log($scope.campaignStatusData[key].length);
+              // $scope.data[key]['InvCount'] = 0;
+              angular.forEach($scope.campaignStatusData, function(supplierData){
+                // $scope.SupplierData = supplierData.supplier;
+              console.log(supplierData);
+              })
+
+            }
+       })
+
+       $scope.showDisplayDetailsTable = true;
+         $scope.$apply();
+         // console.log($scope.campaignInvData);
+      }
        // START : get campaign filters
        $scope.getCampaignFilters = function(campaignId){
          $scope.showTimeLocBtn = false;
@@ -832,6 +859,8 @@
 
      }
 
+
+
      $scope.getCampaignInvTypesData = function(campaign){
        $scope.proposal_id = campaign.proposal_id;
        $scope.campaignName = campaign.proposal__name;
@@ -871,7 +900,7 @@
       .then(function onSuccess(response){
         console.log(response);
         $scope.campaignInventoryActivityData = response.data.data;
-        // console.log($scope.campaignInventoryActivityData);
+        console.log($scope.campaignInventoryActivityData);
         }).catch(function onError(response){
       console.log(response);
     })
