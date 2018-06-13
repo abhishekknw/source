@@ -6,7 +6,7 @@
     'use strict';
 
   angular.module('catalogueApp')
-      .controller('DashboardCtrl',function($scope, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants,$location,$anchorScroll) {
+      .controller('DashboardCtrl',function($scope,NgMap, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants,$location,$anchorScroll) {
  $scope.itemsByPage=15;
  $scope.query = "";
  $scope.oneAtATime = true;
@@ -607,7 +607,7 @@
            for(var i=0;i<$scope.campaignInventories.length;i++){
               if($scope.campaignInventories[i].filter_code=='SL'){
                   $scope.showLeadsDetails = true;
-                   $scope.showDisplayDetailsTable = true;
+                   $scope.showDisplayDetailsTable = false;
                   }
          }
 
@@ -1219,16 +1219,14 @@
       $scope.supplierAndInvData = $scope.campaignSupplierAndInvData[data.status];
       $scope.invStatusKeys = angular.copy(invStatusKeys);
       angular.forEach($scope.supplierAndInvData, function(supplier){
-      $scope.latitude = supplier.supplier.society_latitude;
-      $scope.longitude = supplier.supplier.society_longitude;
-      angular.forEach(supplier.supplier.inv_data, function(inv,key){
-      $scope.invStatusKeys[key].status = true;
+        $scope.latitude = supplier.supplier.society_latitude;
+        $scope.longitude = supplier.supplier.society_longitude;
+        angular.forEach(supplier.supplier.inv_data, function(inv,key){
+        $scope.invStatusKeys[key].status = true;
 
-        })
+          })
       })
       console.log($scope.supplierAndInvData);
-      $scope.length = $scope.supplierAndInvData.length;
-      console.log($scope.length);
       $scope.showDisplayDetailsTable = true;
       $scope.$apply();
 
@@ -1240,6 +1238,13 @@
       if(value)
         $scope.invStatusKeys[invKey].total += value;
     }
-
+var map;
+NgMap.getMap().then(function(evtMap) {
+    map = evtMap;
+  });
+    $scope.showDetail = function(evt, supplierData){
+    $scope.windowDisplay = supplierData;
+    map.showInfoWindow('myWindow', this);
+  };
     })//END
   })();

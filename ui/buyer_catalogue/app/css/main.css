@@ -565,6 +565,13 @@ text-align: center;
 #map_div {
         height: 480px;
 }
+
+.windowDisplayTable{
+  height: 40px;
+  width: 150px;
+  margin-left: 14px;
+
+}
 .blinking{
     animation:blinkingText 0.8s infinite;
 }
