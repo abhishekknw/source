@@ -1225,6 +1225,14 @@
         $scope.invStatusKeys[key].status = true;
 
           })
+       angular.forEach(supplier.leads_data, function(inv,key){
+      $scope.leads_data = inv;
+      if($scope.leads_data.is_interested){
+        $scope.showLeads = true;
+        $scope.countLeads += 1;
+      }
+    console.log($scope.leads_data.is_interested);
+      })
       })
       console.log($scope.supplierAndInvData);
       $scope.showDisplayDetailsTable = true;

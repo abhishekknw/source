@@ -416,6 +416,7 @@
                                     <td ng-if="invStatusKeys.FLIER.status">FLIER(Frequency)</td>
                                     <td ng-if="invStatusKeys.STANDEE.status">STANDEE</td>
                                     <td ng-if="invStatusKeys['GATEWAY ARCH'].status">GATEWAY ARCH</td>
+                                    <td ng-if="showLeads">Leads</td>
                                   </tr>
                                 </thead>
                                     <tbody>
@@ -427,6 +428,7 @@
                                         <td ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total)" ng-show="invStatusKeys.FLIER.status">{{supplier.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total}})</td>
                                         <td ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total)" ng-show="invStatusKeys.STANDEE.status">{{supplier.supplier.inv_data.STANDEE.total}}</td>
                                         <td ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">{{supplier.supplier.inv_data['GATEWAY ARCH'].total}}</td>
+                                        <td ng-if="showLeads">{{supplier.leads_data.length}}</td>
                                       </tr>
                                       <tr>
                                         <td>TOTAL</td>
@@ -436,6 +438,7 @@
                                           <td  ng-show="invStatusKeys.FLIER.status">{{invStatusKeys.FLIER.total}}</td>
                                           <td  ng-show="invStatusKeys.STANDEE.status">{{invStatusKeys.STANDEE.total}}</td>
                                           <td  ng-show="invStatusKeys['GATEWAY ARCH'].status">{{invStatusKeys['GATEWAY ARCH'].total}}</td>
+                                          <td ng-if="showLeads">{{supplier.totalLeads}}</td>
                                       </tr>
                                   </tbody>
                                   </table>
