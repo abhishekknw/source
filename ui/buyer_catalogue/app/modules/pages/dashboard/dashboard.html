@@ -33,10 +33,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="assets/img/favicon-96x96.png">
-    <link href='https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900italic,900&subset=latin,greek,greek-ext,vietnamese,cyrillic-ext,latin-ext,cyrillic' rel='stylesheet' type='text/css'>
+    <!-- <link href='https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900italic,900&subset=latin,greek,greek-ext,vietnamese,cyrillic-ext,latin-ext,cyrillic' rel='stylesheet' type='text/css'> -->
     <link rel="stylesheet" type="text/css" href="modules/pages/DashBoard/adminDashboard/percentage-circular-bar.css">
-
-
+    <script src="https://rawgit.com/allenhwkim/angularjs-google-maps/master/build/scripts/ng-map.js"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js"></script>
 
     <!-- <link href="css/auth1.css" rel="stylesheet" media="screen"> -->
     <!-- <link href="css/auth.css" rel="stylesheet" media="screen"> -->
@@ -298,7 +298,7 @@
                                         <div class="panel-bodyDashboard camp-menu-content">
                                             <table class="table">
                                                 <tr ng-repeat="campaign in campaignData.completed_campaigns">
-                                                  <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign)">
+                                                  <td ng-click="getSuppliersOfCampaignWithStatus(campaign)">
                                                     {{campaign.name}}
                                                   </td>
                                                 </tr>
@@ -316,7 +316,7 @@
                                           <div class="panel-bodyDashboard camp-menu-content">
                                               <table class="table">
                                                   <tr ng-repeat="campaign in campaignData.ongoing_campaigns">
-                                                    <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign)">
+                                                    <td ng-click="getSuppliersOfCampaignWithStatus(campaign)">
                                                       {{campaign.name}}
                                                     </td>
                                                   </tr>
@@ -335,7 +335,7 @@
                                           <div class="panel-bodyDashboard camp-menu-content">
                                               <table class="table">
                                                   <tr ng-repeat="campaign in campaignData.upcoming_campaigns">
-                                                    <td ng-click="getSuppliersOfCampaignWithStatus(campaign.campaign)">
+                                                    <td ng-click="getSuppliersOfCampaignWithStatus(campaign)">
                                                       {{campaign.name}}
                                                     </td>
                                                   </tr>
@@ -350,21 +350,21 @@
                             </div>
 
                             <div class="col-md-5">
-                              <div class="panel-heading content-title">
+                              <div class="panel-heading content-title CampaignDetails">
 
-                                  <h4 style="text-align:left">Details Of {{ALLCampaignTitles}}</h4>
+                                  <h4 style="text-align:left;">Details Of {{campaignTabPropsalName}}</h4>
 
-                                <uib-tab-heading uib-dropdown>
-                                    <button class="btn btn-warning btn-sm pull-right" style="background-color:#fcfc5f;color:black;margin-top:-36px;" uib-dropdown-toggle ng-click="$event.stopPropagation()">
-                                        Select Chart <i class="caret"></i>
-                                    </button>
-                                    <ul class="dropdown-menu" uib-dropdown-menu>
-                                        <li ng-repeat="(key,chart) in charts">
-                                          <a ng-click="$dropdownTabActive = $index+1; $tabLeftSetStatus.activeTab = 0;getChart(chart.value)">{{chart.name}}</a>
-                                        </li>
-                                    </ul>
-                                </uib-tab-heading></h4>
                               </div>
+                              <uib-tab-heading uib-dropdown>
+                                  <button class="btn btn-warning btn-sm pull-right" style="background-color:#fcfc5f;color:black;margin-top:36px;" uib-dropdown-toggle ng-click="$event.stopPropagation()">
+                                      Select Chart <i class="caret"></i>
+                                  </button>
+                                  <ul class="dropdown-menu" uib-dropdown-menu>
+                                      <li ng-repeat="(key,chart) in charts">
+                                        <a ng-click="$dropdownTabActive = $index+1; $tabLeftSetStatus.activeTab = 0;getChart(chart.value)">{{chart.name}}</a>
+                                      </li>
+                                  </ul>
+                              </uib-tab-heading>
                               <nvd3 options="options" data="campaignChartdata" ng-if="!showSingleCampaignChart"></nvd3>
                               <nvd3 options="options1" data="campaignChartdata" ng-if="showSingleCampaignChart"></nvd3>
 
@@ -407,33 +407,7 @@
                           <div class="col-md-12">
                             <br><br><br><br>
 
-                            <div class="col-md-5 LeadsTable" ng-if="showLeadsDetailsDataTable">
-                              <div class="panel-heading content-title">
-                                <h5 style="background:'red'">INVENTORY DETAILS</h5>
-
-                              </div>
-                            <table class="table-responsive table table-bordered">
-                              <thead>
-                                <tr>
-                                  <td>Inventory Type</td>
-                                  <td>RELEASE</td>
-                                  <td>AUDIT</td>
-                                  <td>CLOSURE</td>
-                                </tr>
-                              </thead>
-                                  <tbody>
-                                  <tr ng-repeat="inv in campaignInventories">
-                                    <td>{{inventories[inv.filter_code] | uppercase}}</td>
-                                      <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].RELEASE||0}} <a ng-click="showSupplierInvdDataTable()">({{countallsupplier}})</a></td>
-                                      <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].AUDIT||0}} ({{countallsupplier}})</td>
-                                      <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].CLOSURE||0}} ({{countallsupplier}})</td>
-                                   </tr>
-
-                                </tbody>
-                                </table>
-                              </div>
-
-                              <div class="col-md-5 LeadsTable" ng-if="showDisplayDetailsTable">
+                              <div class="col-md-5 showDisplayDetailsTable" ng-if="showDisplayDetailsTable">
                                 <div class="panel-heading content-title">
                                   <h5 style="background:'red'">Display Table</h5>
 
@@ -443,22 +417,41 @@
                                   <tr>
                                     <td>INDEX</td>
                                     <td>Society Name</td>
-                                    <td>STALL</td>
-                                    <td>POSTER</td>
-                                    <td>STANDEE</td>
+                                    <td ng-if="invStatusKeys.STALL.status">STALL</td>
+                                    <td ng-if="invStatusKeys.POSTER.status">POSTER</td>
+                                    <td ng-if="invStatusKeys.FLIER.status">FLIER(Frequency)</td>
+                                    <td ng-if="invStatusKeys.STANDEE.status">STANDEE</td>
+                                    <td ng-if="invStatusKeys['GATEWAY ARCH'].status">GATEWAY ARCH</td>
                                   </tr>
                                 </thead>
                                     <tbody>
-                                    <tr ng-repeat="supplier in SupplierData">
+                                    <tr ng-repeat="supplier in supplierAndInvData">
                                       <td>{{$index + 1}}</td>
-                                        <td>{{supplier.society_name}}</td>
-                                        <!-- <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].AUDIT||0}} ({{countallsupplier}})</td>
-                                        <td>{{campaignInventoryActivityData[inventories[inv.filter_code]].CLOSURE||0}} ({{countallsupplier}})</td> -->
-                                     </tr>
-
+                                        <td>{{supplier.supplier.society_name}}</td>
+                                        <td ng-init="calculateTotalCount('STALL',supplier.supplier.inv_data.STALL.total)" ng-show="invStatusKeys.STALL.status">{{supplier.supplier.inv_data.STALL.total}}</td>
+                                        <td ng-init="calculateTotalCount('POSTER',supplier.supplier.inv_data.POSTER.total)" ng-show="invStatusKeys.POSTER.status">{{supplier.supplier.inv_data.POSTER.total}}</td>
+                                        <td ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total)" ng-show="invStatusKeys.FLIER.status">{{supplier.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total}})</td>
+                                        <td ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total)" ng-show="invStatusKeys.STANDEE.status">{{supplier.supplier.inv_data.STANDEE.total}}</td>
+                                        <td ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">{{supplier.supplier.inv_data['GATEWAY ARCH'].total}}</td>
+                                      </tr>
+                                      <tr>
+                                        <td>TOTAL</td>
+                                          <td>{{length}}</td>
+                                          <td ng-show="invStatusKeys.STALL.status">{{invStatusKeys.STALL.total}}</td>
+                                          <td  ng-show="invStatusKeys.POSTER.status">{{invStatusKeys.POSTER.total}}</td>
+                                          <td  ng-show="invStatusKeys.FLIER.status">{{invStatusKeys.FLIER.total}}</td>
+                                          <td  ng-show="invStatusKeys.STANDEE.status">{{invStatusKeys.STANDEE.total}}</td>
+                                          <td  ng-show="invStatusKeys['GATEWAY ARCH'].status">{{invStatusKeys['GATEWAY ARCH'].total}}</td>
+                                      </tr>
                                   </tbody>
                                   </table>
                                 </div>
+
+                                <div class="col-md-5" ng-if="showDisplayDetailsTable">
+                                  <div class="panel-heading content-title">
+                                    <h5 style="background:'red'">Map View</h5></div>
+                                    <ng-map center="[latitude,longitude]"></ng-map>
+                                  </div>
 
                                 <div class="col-md-7 LeadsTable" ng-show="showSupplierSocietywiseInvTable" >
                                   <div class="panel-heading content-title">

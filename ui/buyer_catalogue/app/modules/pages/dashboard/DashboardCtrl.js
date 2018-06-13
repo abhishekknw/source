@@ -331,7 +331,7 @@
           date = date + ' 00:00:00';
           $scope.showCampaignGraph = true;
           $scope.showLeadsDetails = false;
-          $scope.showLeadsDetailsDataTable = false;
+          $scope.showDisplayDetailsTable = false;
 
           console.log(date);
           DashboardService.getCampaigns(orgId, category, date)
@@ -369,7 +369,6 @@
             console.log(  $scope.campaignChartdata );
             $scope.options = angular.copy(doughnutChartOptions);
             $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.pieChartClick(e.data.label); };
-            $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.getDisplayDetailsTable(e.data); };
 
             // $scope.getCampaignsByStatus($scope.campaignStatus.all_campaigns.value);
             console.log($scope.campaignLength);
@@ -476,6 +475,7 @@
             chart: {
                 type: 'pieChart',
                 height: 350,
+                top: -30,
                 donut: true,
                 x: function(d){return d.label;},
                 y: function(d){return d.value;},
@@ -588,15 +588,16 @@
 
 
        // START : service call to get suppliers as campaign status
-       $scope.getSuppliersOfCampaignWithStatus = function(campaignId){
-         getCampaignInventoryActivitydetails(campaignId);
-         $scope.getCampaignFilters(campaignId);
-         DashboardService.getSuppliersOfCampaignWithStatus(campaignId)
+       $scope.getSuppliersOfCampaignWithStatus = function(campaign){
+         getCampaignInventoryActivitydetails(campaign.campaign);
+         $scope.campaignTabPropsalName = campaign.name;
+         $scope.getCampaignFilters(campaign.campaign);
+         DashboardService.getSuppliersOfCampaignWithStatus(campaign.campaign)
          .then(function onSuccess(response){
 
            console.log(response);
            $scope.showLeadsDetails = false;
-           $scope.showLeadsDetailsDataTable = false;
+           $scope.showDisplayDetailsTable = false;
            $scope.showSupplierTypeCountChart = false;
            $scope.showCampaignInvTable = false;
            $scope.showSupplierInvTable = false;
@@ -606,7 +607,7 @@
            for(var i=0;i<$scope.campaignInventories.length;i++){
               if($scope.campaignInventories[i].filter_code=='SL'){
                   $scope.showLeadsDetails = true;
-                   $scope.showLeadsDetailsDataTable = true;
+                   $scope.showDisplayDetailsTable = true;
                   }
          }
 
@@ -664,31 +665,14 @@
            $scope.options1.chart.pie.dispatch['elementClick'] = function(e){ $scope.getSupplierAndInvData(e.data); };
 
 
+
          }).catch(function onError(response){
            console.log(response);
          })
        }
        // END : service call to get suppliers as campaign status
 
-       $scope.getDisplayDetailsTable = function(campaign){
-         $scope.data = $scope.campaignStatusData;
-         angular.forEach($scope.campaignStatusData, function(data,key){
-           console.log(data);
-            if($scope.campaignStatusData[key].length){
-              console.log($scope.campaignStatusData[key].length);
-              // $scope.data[key]['InvCount'] = 0;
-              angular.forEach($scope.campaignStatusData, function(supplierData){
-                // $scope.SupplierData = supplierData.supplier;
-              console.log(supplierData);
-              })
 
-            }
-       })
-
-       $scope.showDisplayDetailsTable = true;
-         $scope.$apply();
-         // console.log($scope.campaignInvData);
-      }
        // START : get campaign filters
        $scope.getCampaignFilters = function(campaignId){
          $scope.showTimeLocBtn = false;
@@ -1212,11 +1196,49 @@
   $scope.openMenu = function($mdMenu, ev) {
       $mdMenu.open(ev);
     };
+    var invStatusKeys = {
+      'STALL' : {
+        status : false, total : 0
+      },
+      'POSTER' : {
+        status : false, total : 0
+      },
+      'FLIER' : {
+        status : false, total : 0
+      },
+      'STANDEE' : {
+        status : false, total : 0
+      },
+      'GATEWAY ARCH' : {
+        status : false, total : 0
+      },
+
+    }
     $scope.getSupplierAndInvData = function(data){
       console.log($scope.campaignSupplierAndInvData);
       $scope.supplierAndInvData = $scope.campaignSupplierAndInvData[data.status];
-      console.log($scope.supplierAndInvData);
+      $scope.invStatusKeys = angular.copy(invStatusKeys);
+      angular.forEach($scope.supplierAndInvData, function(supplier){
+      $scope.latitude = supplier.supplier.society_latitude;
+      $scope.longitude = supplier.supplier.society_longitude;
+      angular.forEach(supplier.supplier.inv_data, function(inv,key){
+      $scope.invStatusKeys[key].status = true;
 
+        })
+      })
+      console.log($scope.supplierAndInvData);
+      $scope.length = $scope.supplierAndInvData.length;
+      console.log($scope.length);
+      $scope.showDisplayDetailsTable = true;
+      $scope.$apply();
+
+      console.log($scope.latitude);
+      console.log($scope.longitude);
+
+    }
+    $scope.calculateTotalCount = function(invKey, value){
+      if(value)
+        $scope.invStatusKeys[invKey].total += value;
     }
 
     })//END

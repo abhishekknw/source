@@ -536,6 +536,35 @@ text-align: center;
   padding-left : 30%;
   margin-top: 30px;
 }
+
+.showDisplayDetailsTable{
+  max-height:250px !important;
+  opacity: 1;
+  overflow:auto;
+  color: white;
+
+}
+
+
+.showDisplayDetailsTable  thead {
+  background-color: #cb1925 ;
+  color: white;
+  }
+
+
+.showDisplayDetailsTable  tbody {
+  background-color: #fcfc5f;
+  color: black;
+
+  }
+.CampaignDetails{
+  height: 60px !important;
+}
+
+
+#map_div {
+        height: 480px;
+}
 .blinking{
     animation:blinkingText 0.8s infinite;
 }
