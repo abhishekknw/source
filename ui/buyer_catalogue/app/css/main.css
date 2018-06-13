@@ -538,7 +538,7 @@ text-align: center;
 }
 
 .showDisplayDetailsTable{
-  max-height:250px !important;
+  height:350px !important;
   opacity: 1;
   overflow:auto;
   color: white;
