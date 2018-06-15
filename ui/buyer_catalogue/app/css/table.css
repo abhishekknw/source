@@ -206,7 +206,7 @@ input.search-input {
 .table-bordered > thead > tr > td,
 .table-bordered > tbody > tr > td,
 .table-bordered > tfoot > tr > td {
-  border: 1px solid #cb1925;
+  border: 1px solid #000000;
 }
 
 .table-striped > tbody > tr:nth-of-type(odd) {

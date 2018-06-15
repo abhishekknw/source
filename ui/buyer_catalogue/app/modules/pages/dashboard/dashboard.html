@@ -51,8 +51,9 @@
 
     <div class="al-main" >
         <div class="al-content">
-          <uib-tabset class="dashboard-tab" active="$tabSetStatus.activeTab">
-              <uib-tab>
+
+          <uib-tabset class="dashboard-tab" active="selectTabIndex.value" >
+              <uib-tab index="0">
                 <uib-tab-heading>
                   <h3>
                <span style="color:#ffffff;" class="glyphicon glyphicon-backward" ng-click="getRecentActivity(pre)" data-toggle="tooltip" title="Go To Previous Activity!"></span>
@@ -235,9 +236,9 @@
                                 <tr class="sortable" >
                                     <th class="table-id" st-sort="id" st-sort-default="true" >Sr No</th>
                                     <th ng-repeat="header in supHeaders" st-sort="{{header.key}}">{{header.header}}</th>
+                                  </thead>
                                     </tr>
 
-                                  </thead>
                                   <tbody>
                                     <tr ng-repeat="item in campaignReleaseData  |filter:query" >
                                       <td class="table-id">{{$index + 1}}</td>
@@ -258,11 +259,12 @@
 
 
               </uib-tab>
-              <uib-tab ng-click="getCampaigns()">
+              <uib-tab ng-click="getCampaigns()" index="1">
                   <uib-tab-heading>
                     <h3> Campaigns</h3>
                 </uib-tab-heading>
                   <div class="container-fluid">
+
                     <div class="row">
                       <div class="panel panel-default" style="color:'0000ff'">
                         <div class="col-md-12">
@@ -280,6 +282,7 @@
                                         <h4 class="panel-title">
                                             All Campaigns
                                         </h4>
+
                                     </div>
                                 </div>
                                 <div class="panel panel-default" ng-click="getCampaignsMenu(campaignStatus.completed.status)">
@@ -345,8 +348,8 @@
 
                             <div class="col-md-5">
                               <div class="panel-heading content-title CampaignDetails">
-
-                                  <h4 style="text-align:left;">Details Of {{campaignTabPropsalName}}</h4>
+                                  <h4 ng-if="!campaignLabel" style="text-align:left;">All Campaigns Details</h4>
+                                  <h4 ng-if="campaignLabel" style="text-align:left;">Details Of {{campaignTabPropsalName}} </h4>
 
                               </div>
                               <uib-tab-heading uib-dropdown>
@@ -402,11 +405,11 @@
                             <br><br><br><br>
 
                               <div class="col-md-6 showDisplayDetailsTable" ng-if="showDisplayDetailsTable">
-                                <div class="panel-heading">
-                                  <h5 style="background:'red';">Society Details</h5>
+                                <div style="background-color: #cb1925" class="panel-heading">
+                                  <h5>Society Details</h5>
 
                                 </div>
-                              <table class="table-responsive table table-bordered">
+                              <table class="table-responsive table table-bordered showDisplayDetailsTable">
                                 <thead>
                                   <tr>
                                     <td>INDEX</td>
@@ -429,18 +432,21 @@
                                         <td ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total)" ng-show="invStatusKeys.STANDEE.status">{{supplier.supplier.inv_data.STANDEE.total}}</td>
                                         <td ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">{{supplier.supplier.inv_data['GATEWAY ARCH'].total}}</td>
                                         <td ng-if="showLeads">{{supplier.leads_data.length}}</td>
+
                                       </tr>
-                                      <tr>
-                                        <td>TOTAL</td>
-                                          <td>{{length}}</td>
-                                          <td ng-show="invStatusKeys.STALL.status">{{invStatusKeys.STALL.total}}</td>
-                                          <td  ng-show="invStatusKeys.POSTER.status">{{invStatusKeys.POSTER.total}}</td>
-                                          <td  ng-show="invStatusKeys.FLIER.status">{{invStatusKeys.FLIER.total}}</td>
-                                          <td  ng-show="invStatusKeys.STANDEE.status">{{invStatusKeys.STANDEE.total}}</td>
-                                          <td  ng-show="invStatusKeys['GATEWAY ARCH'].status">{{invStatusKeys['GATEWAY ARCH'].total}}</td>
-                                          <td ng-if="showLeads">{{supplier.totalLeads}}</td>
-                                      </tr>
-                                  </tbody>
+                                      </tbody>
+                                      <tfoot>
+                                        <tr>
+                                          <td>TOTAL</td>
+                                            <td>{{length}}</td>
+                                            <td ng-show="invStatusKeys.STALL.status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('SL')" style="width:100%;color:black">{{invStatusKeys.STALL.total}}</button></td>
+                                            <td  ng-show="invStatusKeys.POSTER.status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('PO')" style="width:100%;color:black">{{invStatusKeys.POSTER.total}}</button></td>
+                                            <td  ng-show="invStatusKeys.FLIER.status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('FL')" style="width:100%;color:black">{{invStatusKeys.FLIER.total}}</button></td>
+                                            <td  ng-show="invStatusKeys.STANDEE.status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('ST')" style="width:100%;color:black">{{invStatusKeys.STANDEE.total}}</button></td>
+                                            <td  ng-show="invStatusKeys['GATEWAY ARCH'].status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('GA')" style="width:100%;color:black">{{invStatusKeys['GATEWAY ARCH'].total}}</button></td>
+                                            <td ng-if="showLeads"><button type="button" name="button" class="btn btn-primary" ng-click="switchToLeads() style="width:100%;color:black">{{supplierAndInvData.totalLeads}}</button></td>
+                                        </tr>
+                                      </tfoot>
                                   </table>
                                 </div>
 
@@ -569,7 +575,7 @@
               </uib-tab>
 
               <!--START : Performance Metrics -->
-              <uib-tab ng-click="getCampaigns()">
+              <uib-tab ng-click="getCampaigns()" index="2">
                   <uib-tab-heading>
                     <h3> Performance Metrics</h3>
                   </uib-tab-heading>
@@ -739,7 +745,7 @@
                            </tr>
                              <tr ng-if="showTimeLocBtn">
                               <td id="ontimeonlocFocus">
-                                <md-button class="md-raised md-warn"  style="width:100%" ng-click="getOnTimeData()">
+                                <md-button class="md-raised md-warn"  style="width:100%" ng-click="getOnTimeData('on_time')">
                                   On Time
                                   </md-button>
                               </td>
@@ -747,7 +753,7 @@
 
                             <tr  ng-if="showTimeLocBtn">
                               <td id="ontimeonlocFocus">
-                                <md-button class="md-raised md-warn" style="width:100%" ng-click="getLocationData()">
+                                <md-button class="md-raised md-warn" style="width:100%" ng-click="getLocationData('on_location')">
                                   On Location
                                   </md-button>
                               </td>
@@ -778,7 +784,7 @@
 
 
 
-                            <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv">
+                            <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv" style="margin-left: 8px;margin-right:-12px;">
                               <div class="panel-heading content-title">
                                 <div class="col-md-7">
                                   <h4> Release Inventory </h4>
@@ -846,27 +852,27 @@
                                   <h4> On Location for Release Inventory  </h4>
                                 </div>
                               </div>
-                              <div class="col-md-8" ng-if="onLocationData.RELEASE.actual.length / onLocationData.RELEASE.total * 100|limitTo:3==0">
-                                <circular-progress value="onLocationData.RELEASE.actual.length" max="onLocationData.RELEASE.total"
+                              <div class="col-md-8" ng-if="activityInvPerfData.release != 0">
+                                <circular-progress value="performanceMetricsData.actual.release.onLocation" max="activityInvPerfData.release"
                                  orientation="1" radius="80"
                                     stroke="20" base-color="#ffff00" progress-color="#00ff00"
                                     iterations="100" animation="easeInOutCubic"
-                                    label="{{onLocationData.RELEASE.actual.length / onLocationData.RELEASE.total * 100|limitTo:3}}%">
+                                    label="{{performanceMetricsData.actual.release.onLocation / activityInvPerfData.release * 100|limitTo:5}}">
                                 </circular-progress>
                               </div>
-                              <div class="col-md-4" ng-if="onLocationData.RELEASE.actual.length / onLocationData.RELEASE.total * 100|limitTo:3==0">
+                              <div class="col-md-4" ng-if="activityInvPerfData.release != 0">
                                 <table class="table table-responsive table-bordered pieChart-table">
                                   <tbody>
                                     <tr>
                                       <td>OnLocation / Released</td>
                                     </tr>
                                     <tr>
-                                      <td>{{onLocationData.RELEASE.actual.length}} / {{onLocationData.RELEASE.total}}</td>
+                                      <td>{{performanceMetricsData.actual.release.onLocation}} / {{activityInvPerfData.release}}</td>
                                     </tr>
                                   </tbody>
                                 </table>
                               </div>
-                              <div class="row notassigned" ng-if="!onLocationData.RELEASE.actual.length / onLocationData.RELEASE.total * 100|limitTo:3==0">
+                              <div class="row notassigned" ng-if="activityInvPerfData.release == 0">
                                 <h1>NOT ASSIGNED !!</h1>
                               </div>
                             </div>
@@ -1003,58 +1009,57 @@
                                 <h4> On Location for Audit Inventory  </h4>
                               </div>
                             </div>
-                            <div class="col-md-8" ng-if="onLocationData.AUDIT.actual.length / onLocationData.AUDIT.total * 100|limitTo:3==0">
-                              <circular-progress value="onLocationData.AUDIT.actual.length" max="onLocationData.AUDIT.total"
+                            <div class="col-md-8" ng-if="activityInvPerfData.audit != 0">
+                              <circular-progress value="performanceMetricsData.actual.audit.onLocation" max="activityInvPerfData.audit"
                                orientation="1" radius="80"
                                   stroke="20" base-color="#ffff00" progress-color="#00ff00"
                                   iterations="100" animation="easeInOutCubic"
-                                  label="{{onLocationData.AUDIT.actual.length / onLocationData.AUDIT.total * 100|limitTo:3}}%">
+                                  label="{{performanceMetricsData.actual.audit.onLocation / activityInvPerfData.audit * 100|limitTo:5}}">
                               </circular-progress>
                             </div>
-                            <div class="col-md-4" ng-if="onLocationData.AUDIT.actual.length / onLocationData.AUDIT.total * 100|limitTo:3==0">
+                            <div class="col-md-4" ng-if="activityInvPerfData.audit != 0">
                               <table class="table table-responsive table-bordered pieChart-table">
                                 <tbody>
                                   <tr>
                                     <td>OnLocation / Audit</td>
                                   </tr>
                                   <tr>
-                                    <td>{{onLocationData.AUDIT.actual.length}} / {{onLocationData.AUDIT.total}}</td>
+                                    <td>{{performanceMetricsData.actual.audit.onLocation}} / {{activityInvPerfData.audit}}</td>
                                   </tr>
                                 </tbody>
                               </table>
                             </div>
-                            <div class="row notassigned" ng-if="!onLocationData.AUDIT.actual.length / onLocationData.AUDIT.total * 100|limitTo:3==0">
+                            <div class="row notassigned" ng-if="activityInvPerfData.audit == 0">
                               <h1>NOT ASSIGNED !!</h1>
                             </div>
                           </div>
-
                           <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.onlocation">
                             <div class="panel-heading content-title">
                               <div class="col-md-10">
                                 <h4> On Location for Closure Inventory  </h4>
                               </div>
                             </div>
-                            <div class="col-md-8" ng-if="onLocationData.CLOSURE.actual.length / onLocationData.CLOSURE.total * 100|limitTo:3==0">
-                              <circular-progress value="onLocationData.CLOSURE.actual.length" max="onLocationData.CLOSURE.total"
+                            <div class="col-md-8" ng-if="activityInvPerfData.closure != 0">
+                              <circular-progress value="performanceMetricsData.actual.closure.onLocation" max="activityInvPerfData.closure"
                                orientation="1" radius="80"
                                   stroke="20" base-color="#ffff00" progress-color="#00ff00"
                                   iterations="100" animation="easeInOutCubic"
-                                  label="{{onLocationData.CLOSURE.actual.length / onLocationData.CLOSURE.total * 100|limitTo:3}}%">
+                                  label="{{performanceMetricsData.actual.closure.onLocation / activityInvPerfData.closure * 100|limitTo:5}}">
                               </circular-progress>
                             </div>
-                            <div class="col-md-4" ng-if="onLocationData.CLOSURE.actual.length / onLocationData.CLOSURE.total * 100|limitTo:3==0">
+                            <div class="col-md-4" ng-if="activityInvPerfData.closure != 0">
                               <table class="table table-responsive table-bordered pieChart-table">
                                 <tbody>
                                   <tr>
-                                    <td>OnLocation / Closure</td>
+                                    <td>OnLocation / Closed</td>
                                   </tr>
                                   <tr>
-                                    <td>{{onLocationData.CLOSURE.actual.length}} / {{onLocationData.CLOSURE.total}}</td>
+                                    <td>{{performanceMetricsData.actual.closure.onLocation}} / {{activityInvPerfData.closure}}</td>
                                   </tr>
                                 </tbody>
                               </table>
                             </div>
-                            <div class="row notassigned" ng-if="!onLocationData.CLOSURE.actual.length / onLocationData.CLOSURE.total * 100|limitTo:3==0">
+                            <div class="row notassigned" ng-if="activityInvPerfData.closure == 0">
                               <h1>NOT ASSIGNED !!</h1>
                             </div>
                           </div>

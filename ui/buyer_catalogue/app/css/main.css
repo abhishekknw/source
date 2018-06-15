@@ -548,15 +548,24 @@ text-align: center;
 
 .showDisplayDetailsTable  thead {
   background-color: #cb1925 ;
-  color: white;
+  color: #ffffff !important;
   }
 
 
 .showDisplayDetailsTable  tbody {
-  background-color: #fcfc5f;
-  color: black;
+background-color: #fcfc5f;
+color: black;
+}
 
-  }
+.showDisplayDetailsTable  tfoot {
+background-color: #cb1925 ;
+color: #ffffff !important;
+}
+
+.showDisplayDetailsTable tfoot td {
+  color: #ffffff !important;
+  text-align: center;
+}
 .CampaignDetails{
   height: 60px !important;
 }
@@ -572,9 +581,16 @@ text-align: center;
   margin-left: 14px;
 
 }
+
+.table > thead:first-child > tr:first-child > td {
+    border-top: 0;
+    color: #ffffff !important;
+  }
+
 .blinking{
     animation:blinkingText 0.8s infinite;
 }
+
 @keyframes blinkingText{
     0%{     color: #000;    }
     49%{    color: transparent; }
