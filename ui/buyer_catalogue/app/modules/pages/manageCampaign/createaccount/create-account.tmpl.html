@@ -1,17 +1,26 @@
 <link rel="stylesheet" href="modules/pages/manageCampaign/createaccount/create-account.tmpl.css" />
+
+<div ><nav-bar></nav-bar></div>
+<br /><br />
+<br />
+<br />
+
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" >
+
 <div class="panel-panel-default">
   <div class=""><div class="breadcrumb" ncy-breadcrumb></div></div>
 </div>
   <div>
     <span style="color:red;margin-left:25%;font-size:18px;">{{errorMsg}}</span>
   </div>
+  <h3 class = "pageTitle" ng-if = "!editAccountField">Create Account <small style="color:#ffffff;">(* Fields are Mandatory)</small></h3>
+  <h3 class = "pageTitle" ng-if = "editAccountField">Edit Account <small style="color:#ffffff;">(* Fields are Mandatory)</small></h3>
+
 <!-- <back-Button></back-Button> -->
 <form name = "form" class="panel-body">
   <!-- <div class="breadcrumb" ncy-breadcrumb></div> -->
   <div class = "panel panel-default business-panel">
-    <h3 class = "pageTitle" ng-if = "!editAccountField">Create Account (* Fields are Mandatory)</h3>
-    <h3 class = "pageTitle" ng-if = "editAccountField">Edit Account (* Fields are Mandatory)</h3>
-     <div class = "table">
+       <div class = "table">
        <div class="form-group">
          <!-- <div class = "row">
            <div class ="col-md-3 "><input type="checkbox"  ng-model="setAccount" ng-click="setCreate_Account()" />
@@ -72,8 +81,13 @@
      </div>
    </div>
 
+</form>
+
+<br />
+
+<h3 class ="pageTitle">Account Contact <small style="color:#ffffff;">(* Fields are Mandatory)</small></h3>
+<form name = "form" class="panel-body">
  <div class="panel panel-default business-panel">
-   <h3 class = "pageTitle">Account Contact (* Fields are Mandatory)</h3>
       <!--<div ng-repeat="contact in business.contacts track by $index">-->
 
       <div ng-repeat="contact in model.account.contacts track by $index">
@@ -137,3 +151,4 @@
     <br ><br />
     <button  class="btn btn-danger" ng-disabled="form.$invalid" ng-click="editAccount()" ng-if="editAccountField">Update</button>
   </form>
+</main>

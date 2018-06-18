@@ -79,6 +79,7 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.model.accounts = response.data.data;
+            console.log($scope.model.accounts);
             $scope.display = true;
             $scope.loading = response.data.data;
             if(savedState){
@@ -285,6 +286,7 @@
             console.log($scope.account_proposals);
             console.log("proposal",response);
               $scope.account_proposals = response.data.data;
+                console.log($scope.account_proposals);
               // $scope.loading = response.data.data;
 
               $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);

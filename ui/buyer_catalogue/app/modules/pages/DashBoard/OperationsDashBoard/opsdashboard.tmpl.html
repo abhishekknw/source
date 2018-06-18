@@ -47,13 +47,13 @@
               <td class="cellWidth">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
               <td class="cellWidth">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
               <td class="cellWidth" style="text-align:left">
-                <div class="radio">
+                <div class="radio-button">
                        <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)"  data-toggle="modal" ng-loading="loadSpinner" permission = "[permissions.acceptProposal]">Accept</label>
                 </div>
-                <div class="radio">
+                <div class="radio-button">
                        <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PNC" ng-click="convertCampaignToProposal(proposal)" data-toggle="modal" permission = "[permissions.declineProposal]">Decline</label>
                 </div>
-                <div class="radio">
+                <div class="radio-button">
                        <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#onHoldModal" data-toggle="modal" permission = "[permissions.onHoldPrposal]">OnHold</label>
                 </div>
               </td>
@@ -133,7 +133,7 @@
             <option ng-repeat = "user in userList" value = "{{user.id}}">{{user.username}}</option>
           </select>
         </div>
-          <button class="btn btn-danger active notify" ng-click="saveAssignment()">Assign</button>
+          <button class="btn btn-danger active notify" ng-click="saveAssignment(userId)">Assign</button>
         </div>
       </div>
     </div>

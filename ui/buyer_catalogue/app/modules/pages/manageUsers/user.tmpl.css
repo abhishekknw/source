@@ -39,8 +39,9 @@ hr{
   color: #fff;
 }
 
-.form-group{
+.managementPageform-group{
   margin-bottom: 15px;
+  margin-left:-120px;
 }
 
 label{
@@ -126,7 +127,7 @@ span.input-group-addon i {
 /*css manually added for items*/
 .createUser{
   text-align: center;
-  color: #009edf;
+  color: #ffffff;
   font-weight: bold;
 }
 /*css for permssion drop down*/
@@ -162,11 +163,33 @@ th{
 td{
     text-align: center;
 }
-table{
-  /*width: 200px;*/
 
+.managementTable{
+width: 100%;
+max-width: 100%;
+margin-left: 130px !important;
 }
-/*for edit user form*/
+
+
+.displayTable{
+width: 80%;
+max-width: 100%;
+/* margin-left: 130px !important; */
+}
+
+.roleTable{
+width: 80%;
+max-width: 100%;
+margin-left: -25px;
+}
+
+.onboardTable{
+  width: 80%;
+  max-width: 100%;
+  margin-left: -25px;
+  margin-top: -120px;
+}
+
 .form-user{
   width: 30%;
   margin-right:  230px;
@@ -212,6 +235,8 @@ h3{
 .organisation-view-tab-content{
   overflow: auto;
   max-height: 70vh;
+  width:710px;
+  margin-left:-30px;
 }
 .row + .row {
    border-top:0;
@@ -221,4 +246,11 @@ h3{
 }
 label,a{
   word-wrap: break-word;
+}
+
+.menuvisble{
+  margin-top:-152px;
+}
+.maincontainer{
+  margin-top: 215px;
 }

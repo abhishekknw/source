@@ -536,3 +536,65 @@ text-align: center;
   padding-left : 30%;
   margin-top: 30px;
 }
+
+.showDisplayDetailsTable{
+  height:350px !important;
+  opacity: 1;
+  overflow:auto;
+  color: white;
+
+}
+
+
+.showDisplayDetailsTable  thead {
+  background-color: #cb1925 ;
+  color: #ffffff !important;
+  }
+
+
+.showDisplayDetailsTable  tbody {
+background-color: #fcfc5f;
+color: black;
+}
+
+.showDisplayDetailsTable  tfoot {
+background-color: #cb1925 ;
+color: #ffffff !important;
+}
+
+.showDisplayDetailsTable tfoot td {
+  color: #ffffff !important;
+  text-align: center;
+}
+.CampaignDetails{
+  height: 60px !important;
+}
+
+
+#map_div {
+        height: 480px;
+}
+
+.windowDisplayTable{
+  height: 40px;
+  width: 150px;
+  margin-left: 14px;
+
+}
+
+.table > thead:first-child > tr:first-child > td {
+    border-top: 0;
+    color: #ffffff !important;
+  }
+
+.blinking{
+    animation:blinkingText 0.8s infinite;
+}
+
+@keyframes blinkingText{
+    0%{     color: #000;    }
+    49%{    color: transparent; }
+    50%{    color: transparent; }
+    99%{    color:transparent;  }
+    100%{   color: #123456;    }
+}

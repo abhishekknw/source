@@ -80,7 +80,7 @@ body{
 .box-spacing{
 	margin-bottom: 5px;
 	margin-top: 5px;
-	width: 40%;
+	width: 100% !important;
 }
 .map-width{
 	width: 50% !important;

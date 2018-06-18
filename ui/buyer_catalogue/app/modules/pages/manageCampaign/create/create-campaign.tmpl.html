@@ -140,7 +140,7 @@
     <form name="existingAccount"permission = "[permList.accountListView]" >
         <div class="panel panel-default business-panel">
           <h4 class="panel-heading">
-             <button type="button" name="button" class="btn btn-primary businessButton"><a ng-click="getAccounts()">Click Here To View Existing Accounts</a></button>
+             <button type="button" name="button" class="btn btn-primary businessButton"  style="background-color:#8e1921;border : solid #8e1921"><a ng-click="getAccounts()">Click Here To View Existing Accounts</a></button>
 
             <span ng-if="showAccountsMessage">No Accounts Found!!</span>
           </h4>
@@ -157,7 +157,7 @@
               </thead>
 
               <tbody>
-                <tr ng-repeat="account in model.accounts track by $index">
+                <tr ng-repeat="account in model.accounts | orderBy : 'created_at'">
                   <td><input type="radio" id="sel_account_id" name="sel_account_id" value="{{account.account_id}}" ng-checked="sel_account_id" ng-model="sel_account_id" ng-click = "getProposals(sel_account_id,$index)"></td>
                   <td>{{account.name}}</td>
                   <!-- <td>{{account.business.type_name.business_type}}</td> -->
@@ -193,10 +193,10 @@
                 </tr>
               </thead>
               <tbody>
-                <tr ng-repeat="proposal in account_proposals">
+                <tr ng-repeat="proposal in account_proposals |orderBy : '-created_at'">
                   <td>{{proposal.name}}</td>
                   <td>Vidhi</td><!-- {{proposal.created_by}} -->
-                  <td>{{proposal.created_on | limitTo:10}}</td>
+                  <td>{{proposal.created_on | limitTo:10 }}</td>
                   <td>Vidhi</td><!-- {{proposal.updated_by}} -->
                   <td>{{proposal.updated_on | limitTo:10}}</td>
                   <td ng-if="proposal.campaign_state == null"></td>

@@ -58,9 +58,9 @@ color:#000000;
 .head{
 	text-align: center;
 }
-.table-align{
+/* .table-align{
 	margin-left: 20px;
-}
+} */
 .modal-open {
   overflow-y: scroll;
 }
@@ -92,12 +92,16 @@ color:#000000;
 .align-right{
 	text-align: right;
 }
-.tableBodyList{
+/* .tableBodyList{
   max-height : 400px;
 	overflow : auto
-}
+} */
 .panel-default > .panel-heading {
 	color : white !important;
 	background-color: #d9534f !important;
 	border-color: #ddd !important;
+}
+
+tr{
+  text-align: center;
 }

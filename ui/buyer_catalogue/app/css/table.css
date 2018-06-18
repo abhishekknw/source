@@ -206,7 +206,7 @@ input.search-input {
 .table-bordered > thead > tr > td,
 .table-bordered > tbody > tr > td,
 .table-bordered > tfoot > tr > td {
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid #000000;
 }
 
 .table-striped > tbody > tr:nth-of-type(odd) {
@@ -337,4 +337,3 @@ th {
 .table-responsive {
   margin-top: 10px;
 }
-

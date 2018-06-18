@@ -176,10 +176,10 @@ angular.module('catalogueApp')
       $location.path('/' + proposal_id + '/showcurrentproposal');
     }
 
-    $scope.saveAssignment = function(){
-      var userId = $scope.userId;
+    $scope.saveAssignment = function(id){
+      // var userId = $scope.userId;
       var data = {
-        to:userId,
+        to:id,
         campaign_id:$scope.currentProposal.proposal.proposal_id
       };
       opsDashBoardService.saveAssignment(data)
