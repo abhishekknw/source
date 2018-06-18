@@ -109,7 +109,7 @@ DATABASES = {
             'ENGINE': 'django.db.backends.mysql',
             'HOST': 'localhost',
             'USER': 'root',
-            'PASSWORD': 'vyomamac',
+            'PASSWORD': 'yo@123',
         }
 }
 
@@ -240,7 +240,7 @@ JWT_AUTH = {
       }
 
 # BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
-BASE_URL = 'http://192.168.1.117:8000/'
+BASE_URL = 'http://localhost:8000/'
 
 
 # EMAIL SETTINGS
