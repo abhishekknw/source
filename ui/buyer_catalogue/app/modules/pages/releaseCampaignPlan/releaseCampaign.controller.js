@@ -17,6 +17,7 @@ angular.module('catalogueApp')
         {header : 'Supplier Name'},
         {header : 'Area,(Sub Area)'},
         {header : 'Address'},
+        {header : 'RelationShip Data'},
         {header : 'Flat Count'},
         {header : 'Tower Count'},
         // {header : 'Status'},
@@ -424,6 +425,18 @@ $scope.multiSelect =
          };
 
         $scope.selected_customTexts = {buttonDefaultText: 'Stall Location'};
+        $scope.getRelationShipData = function(supplierId){
+          $scope.relationshipData = {};
+          var supplierCode = 'RS';
+          var campaignId = $scope.releaseDetails.campaign.proposal_id;
+          releaseCampaignService.getRelationShipData(supplierId,supplierCode,campaignId)
+          .then(function onSuccess(response){
+            $scope.relationshipData = response.data.data;
+            console.log(response);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
 
 
 }]);//Controller function ends here

@@ -40,10 +40,14 @@
         <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers | orderBy:orderProperty">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
             <td rowspan="{{key.length}}" ng-show="$first">{{$parent.$index + 1}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.quality_rating}})</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">
             <a href="https://www.google.com/maps/?q=+{{supplier.latitude}}+{{supplier.longitude}}" target="_blank" style="text-decoration: underline; cursor: pointer;color:blue;">{{supplier.area}}, ({{supplier.subarea}}) {{supplier.address2}}</a></td>
             <td class="" rowspan="{{key.length}}" ng-show="$first" width="200">{{supplier.address1}}</td>
+            <!-- <td class="" rowspan="{{key.length}}" ng-show="$first" width="200">Inventory Owner :<b> Machadalo</b>, Feedback:{{supplier.feedback}}</td> -->
+            <td class="" rowspan="{{key.length}}" ng-show="$first" width="200">
+              <button type="button" name="button" ng-click="getRelationShipData(supplier.supplier_id)" data-target="#relationshipModal" data-toggle="modal">View Data</button>
+            </td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.flat_count}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.tower_count}}</td>
             <!-- <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
@@ -349,3 +353,67 @@
   </div>
 </div>
 <!-- End: code for add more societies-->
+<!--Start: Code for RelationShip Data Modal Window -->
+<div id="relationshipModal" class="modal fade">
+  <div class="modal-dialog" style="width:600px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Supplier Details</h4>
+        <hr/>
+        <div class = "modal-body">
+          <div class="modal-body table-responsive">
+              <table class="table table-bordered">
+
+                <tbody>
+                  <tr>
+                    <th>Inventory Owner</th>
+                    <td>{{relationshipData.supplier_data[0].representative__name}}</td>
+                  </tr>
+                  <tr>
+                    <th><b>Feedback About Society</b></th>
+                    <td ng-if="relationshipData.supplier_data[0].feedback">{{relationshipData.supplier_data[0].feedback}}</td>
+                    <td ng-if="!relationshipData.supplier_data[0].feedback">Not Given</td>
+                  </tr>
+                  <tr>
+                    <th>Last Campaign Price With Name</th>
+                    <td ng-if="relationshipData.campaign_data.last_campaign_price.total_negotiated_price">
+                      ₹ {{relationshipData.campaign_data.last_campaign_price.total_negotiated_price}}
+                     ({{relationshipData.campaign_data.last_campaign_price.proposal__name}})
+                    </td>
+                    <td ng-if="!relationshipData.campaign_data.last_campaign_price.total_negotiated_price">
+                      NA
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Count Of Previous Campaigns</th>
+                    <td>{{relationshipData.campaign_data.past_campaigns}}</td>
+                  </tr>
+
+
+                </tbody>
+              </table>
+              <h3>Recently Held Campaigns</h3>
+              <table class="table table-bordered table-responsive">
+                <thead>
+                  <tr>
+                    <th>Index</th>
+                    <th>Campaign Name</th>
+                    <th>Organisation Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="campaign in relationshipData.campaign_data.campaigns">
+                    <td>{{$index+1}}</td>
+                    <td>{{campaign.name}}</td>
+                    <td>{{campaign.organisation_name}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End: Code for RelationShip Data Modal Window -->
