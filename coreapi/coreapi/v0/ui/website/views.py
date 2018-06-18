@@ -6440,3 +6440,27 @@ class LeadsViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class GetRelationshipAndPastCampaignsData(APIView):
+    def get(self, request):
+        """
+        This api will return supplier relationship data as wll as past campaign related data
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_type_code = request.query_params.get('supplier_code',None)
+            supplier_id = request.query_params.get('supplier_id',None)
+            campaign_id = request.query_params.get('campaign_id', None)
+            supplier_model = ui_utils.get_model(supplier_type_code)
+            supplier_data = supplier_model.objects.filter(supplier_id=supplier_id).values('feedback','representative__name')
+            campaign_data = website_utils.get_past_campaigns_data(supplier_id,campaign_id)
+            result = {
+                'campaign_data' : campaign_data,
+                'supplier_data' : supplier_data
+            }
+            return ui_utils.handle_response(class_name, data=result, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)

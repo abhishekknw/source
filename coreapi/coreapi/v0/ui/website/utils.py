@@ -6743,8 +6743,7 @@ def get_performance_metrics_data_for_inventory(campaign_id, request):
         content_type_id = content_type.id
         perf_param = request.query_params.get('perf_param', None)
         result = {}
-
-        if not perf_param or perf_param == v0_constants.perf_metrics_param['on_time']:
+        if perf_param == v0_constants.perf_metrics_param['inv'] or perf_param == v0_constants.perf_metrics_param['on_time']:
             result['total'] = {}
             result['total']['release'] = get_total_assigned_inv_act_data(campaign_id,content_type_id,v0_constants.activity_type['RELEASE'])
             result['total']['audit'] = get_total_assigned_inv_act_data(campaign_id, content_type_id,v0_constants.activity_type['AUDIT'])
@@ -6886,6 +6885,31 @@ def get_campaign_inv_data(campaign_id):
             if inv['inv_name'] not in result[inv['object_id']]:
                 result[inv['object_id']][inv['inv_name']] = {}
             result[inv['object_id']][inv['inv_name']] = inv
+        return result
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def get_past_campaigns_data(supplier_id,campaign_id):
+    """
+    This function returns past campaigns data like last campaign price, last 5 campaigns etc
+    :param supplier_id:
+    :return:
+    """
+    function_name = get_past_campaigns_data.__name__
+    try:
+        last_campaign_data = models.ShortlistedSpaces.objects.filter(~Q(proposal=campaign_id),object_id=supplier_id,total_negotiated_price__isnull=False). \
+            values('total_negotiated_price','proposal__name').order_by('-proposal__tentative_start_date')
+        if last_campaign_data:
+            last_campaign_data = last_campaign_data[0]
+        past_campaigns_count = models.ShortlistedSpaces.objects.filter(~Q(proposal=campaign_id),object_id=supplier_id).distinct().count()
+        campaign_list = models.ShortlistedSpaces.objects.filter(~Q(proposal=campaign_id),object_id=supplier_id). \
+            annotate(name=F('proposal__name'),organisation_name=F('proposal__account__organisation__name')). \
+            order_by('-proposal__tentative_start_date').values('name','organisation_name').distinct()[:5]
+        result = {
+            'last_campaign_price' : last_campaign_data,
+            'past_campaigns' : past_campaigns_count,
+            'campaigns' : campaign_list
+        }
         return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))

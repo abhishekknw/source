@@ -1283,5 +1283,6 @@ perf_metrics_types = {
 }
 perf_metrics_param = {
     'on_time' : 'on_time',
-    'on_location' : 'on_location'
+    'on_location' : 'on_location',
+    'inv' : 'inv'
 }
