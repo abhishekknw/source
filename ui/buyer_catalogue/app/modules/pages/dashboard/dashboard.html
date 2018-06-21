@@ -107,7 +107,7 @@
 
               </uib-tab-heading>
 
-                  <div  class="row panel-hide"  ng-init="myVar = '/#/dashboard'">
+                  <div  class="row panel-hide">
                       <div class="row">
                           <div class="col-xlg-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 dashboard-side-label">
                           </div>
@@ -247,7 +247,7 @@
                                       <td>{{item.inv_count}}</td>
                                       <td>{{item.offTimeDays/item.inv_count*100|limitTo:4||0}} </td>
                                       <td>{{item.offLocationDistance/item.inv_count|limitTo:5||0}}</td>
-                                      <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="goToExecutionPage(item.images)">View Image</a></td>
+                                      <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Images</a></td>
                                     <td ng-if="item.images.length == 0"><label>No Image<label></td>
                                           </tr>
                                   </tbody>
@@ -444,7 +444,7 @@
                                             <td  ng-show="invStatusKeys.FLIER.status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('FL')" style="width:100%;color:black">{{invStatusKeys.FLIER.total}}</button></td>
                                             <td  ng-show="invStatusKeys.STANDEE.status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('ST')" style="width:100%;color:black">{{invStatusKeys.STANDEE.total}}</button></td>
                                             <td  ng-show="invStatusKeys['GATEWAY ARCH'].status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('GA')" style="width:100%;color:black">{{invStatusKeys['GATEWAY ARCH'].total}}</button></td>
-                                            <td ng-if="showLeads"><button type="button" name="button" class="btn btn-primary" ng-click="switchToLeads() style="width:100%;color:black">{{supplierAndInvData.totalLeads}}</button></td>
+                                            <td ng-if="showLeads"><button type="button" name="button" class="btn btn-primary" ng-click="switchToLeads()" style="width:100%;color:black">{{supplierAndInvData.totalLeads}}</button></td>
                                         </tr>
                                       </tfoot>
                                   </table>
@@ -513,23 +513,25 @@
                                 </div>
                                 <nvd3 options="supplierCodeCountOptions" data="supplierCodeCountData"></nvd3>
                               </div>
-                              <div class="col-md-6" ng-if="showCampaignInvTable">
+                              <div class="col-md-6" ng-if="showSupplierTypeCountChart">
                                 <div class="panel-heading content-title">
                                   <h5 style="background:'red'">{{campaignStatusName}}</h5>
                                 </div>
                                 <div class="campaignInvTable">
                                 <table class="table-responsive table table-bordered">
                                   <thead>
+                                    <th>Index</th>
                                     <th>Proposal Name</th>
-                                    <th>Society Count</th>
+                                    <th class="countDisplay">Supplier Count</th>
                                     <th>Leads Count</th>
                                     <th>Go to Inventory</th>
                                   </thead>
-                                  <tbody>
-                                    <tr ng-repeat="campaign in campaignInvData">
+                                  <tbody ng-repeat="(key,data) in supplierTypesData">
+                                    <tr ng-repeat="campaign in data">
+                                      <td>{{$index + 1}}</td>
                                       <td>{{campaign.proposal__name}}</td>
                                      <td>{{campaign.total}}</td>
-                                     <td ng-if="campaign.leads" class="blinking">{{campaign.leads.total}}</td>
+                                     <td ng-if="campaign.leads">{{campaign.leads.total}}</td>
                                      <td ng-if="!campaign.leads">NA</td>
                                      <td><a ng-click="getCampaignInvTypesData(campaign)" class="btn btn-danger">Go To Inventory</a>
                                      </td>
@@ -538,6 +540,32 @@
                                 </table>
                               </div>
                               </div>
+
+                              <div class="col-md-12" ng-if="showSupplierTypeCountChart">
+                                <div class="panel-heading content-title">
+                                  <h5 style="background:'red'">Map View</h5></div>
+                                  <ng-map center="[{{latitude}} , {{longitude}}]" position="[{{latitude}},{{longitude}}]">
+                                    <marker ng-repeat="supplier in supplierAndInvData" position="[{{supplier.supplier.society_latitude}}, {{supplier.supplier.society_longitude}}]" title="{{supplier.supplier.society_name}}" id="{{supplier.supplier.supplier_id}}" on-click="showDetail(event, supplier)">
+                                    <info-window id="myWindow">
+                                      <div ng-non-bindable="" style="color:black;height:170px;width:170px;">
+                                        <div class="">
+                                          <h3>{{windowDisplay.supplier.society_name}}</h3>
+                                        </div>
+                                        <table class="table-responsive table windowDisplayTable">
+                                          <tbody>
+                                              <tr><td ng-if="invStatusKeys.STALL.status">STALL</td> <td ng-show="invStatusKeys.STALL.status"><small>{{windowDisplay.supplier.inv_data.STALL.total}}</small></td></tr>
+                                              <tr><td ng-if="invStatusKeys.POSTER.status">POSTER</td><td ng-show="invStatusKeys.POSTER.status"><small>{{windowDisplay.supplier.inv_data.POSTER.total}}</small></td></tr>
+                                              <tr><td ng-if="invStatusKeys.FLIER.status">FLIER(Frequency)</td><td ng-show="invStatusKeys.FLIER.status"><small>{{windowDisplay.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total}})</small></td></tr>
+                                              <tr><td ng-if="invStatusKeys.STANDEE.status">STANDEE</td><td ng-show="invStatusKeys.STANDEE.status"><small>{{windowDisplay.supplier.inv_data.STANDEE.total}}</small></td></tr>
+                                              <tr><td ng-if="invStatusKeys['GATEWAY ARCH'].status">GATEWAY ARCH</td><td ng-show="invStatusKeys['GATEWAY ARCH'].status"><small>{{windowDisplay.supplier.inv_data['GATEWAY ARCH'].total}}</small></td></tr>
+                                          </tbody>
+                                      </table>
+                                      </div>
+                                    </info-window>
+                                    </marker>
+                                  </ng-map>
+                                </div>
+
                             </div>
                             <div class="panel panel-default" >
 
