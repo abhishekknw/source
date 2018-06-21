@@ -5750,21 +5750,21 @@ class DashBoardViewSet(viewsets.ViewSet):
             if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
                 query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(perm_query,query).values('supplier_code', 'proposal__name','proposal_id'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(perm_query,query).values('supplier_code', 'proposal__name','proposal_id','center__latitude','center__longitude'). \
                     annotate(total=Count('object_id'))
                 proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
                 query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id','center__latitude','center__longitude'). \
                     annotate(total=Count('object_id'))
                 proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
                 query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id','center__latitude','center__longitude'). \
                     annotate(total=Count('object_id'))
                 proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
