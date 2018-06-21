@@ -109,7 +109,7 @@ DATABASES = {
             'ENGINE': 'django.db.backends.mysql',
             'HOST': 'localhost',
             'USER': 'root',
-            'PASSWORD': 'yo@123',   
+            'PASSWORD': 'wikasta123',   
         }
 }
 
@@ -127,20 +127,20 @@ DATABASES = {
 #     }
 # else:
 
-DATABASES = {
-    'sqlite': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    },
-    'default': {
-        'NAME': 'mdtestnew',
-        'ENGINE': 'django.db.backends.mysql',
-        'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-        'USER': 'mdtest',
-        'PASSWORD': 'mdtestmachadalo',
-        'PORT': 3306
-    }
-}
+# DATABASES = {
+#     'sqlite': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     },
+#     'default': {
+#         'NAME': 'mdtestnew',
+#         'ENGINE': 'django.db.backends.mysql',
+#         'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
+#         'USER': 'mdtest',
+#         'PASSWORD': 'mdtestmachadalo',
+#         'PORT': 3306
+#     }
+# }
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
