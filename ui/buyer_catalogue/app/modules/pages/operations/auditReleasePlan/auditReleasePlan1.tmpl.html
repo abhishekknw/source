@@ -11,26 +11,29 @@
       <back-Button></back-Button>
     </div>
 </div>
-<div class="panel panel-default">
-  <div class="panel-heading">
+  <div class="pageTitle">
     <h3>Audit Release Plan Page</h3>
   </div>
-  <div class = "panel-body">
-    <div class="panel-heading">
-      <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
-      <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
-      <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
-      <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{getCampaignState(releaseDetails.campaign.campaign_state)}}</span>
+  <div class = "panel-body" style="text-align:center;margin-top:-20px">
+    <div class="row">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <Label>Campaign Id:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.proposal_id}}</span>
+          <Label class = "labels">Campaign Name:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.name}}</span>
+          <Label class = "labels">BD Owner:&nbsp;</Label><span class = "proposal-details">{{releaseDetails.campaign.created_by}}</span>
+          <Label class = "labels">Campaign State:&nbsp;</Label><span class = "proposal-details">{{getCampaignState(releaseDetails.campaign.campaign_state)}}</span>
+          </div>
+      </div>
     </div>
-  </div>
-  <div class="assign-date">
+    </div>
+  <div style="color:#000000;" class="assign-date">
     <input type="checkbox" ng-model="dateChecked" permission = "[permissions.assignDates]">
     <label><h4>Assign Dates<h4></label>
   </div>
 
   <form name = "form" ng-if="dateChecked">
     <!-- <div class="breadcrumb" ncy-breadcrumb></div> -->
-    <div class = "panel panel-default date-panel">
+    <div style="color:#000000;" class = "panel panel-default date-panel">
       <h3 class = "panel-heading">Assign Dates</h3>
        <div class = "table">
          <div class="form-group">
@@ -94,7 +97,7 @@
    <!--End: assign dates form  -->
 
    <div class="panel-body panel-table">
-         <table class="table table-responsive table-bordered">
+         <table st-table="releaseDetails.shortlisted_suppliers" st-safe-src="Data" class="table table-bordered">
            <thead>
              <tr>
                <th ng-repeat="header in headings" >{{header.header}}</th>
@@ -127,13 +130,20 @@
                  <textarea rows="4" cols="50" name="comments"  ng-model="filter.detail.comments" ng-change="addComments(filter.detail,filter.detail.comments)"class="form-control spacing"  permission = "[permissions.addComments]"></textarea></td>
              </tr>
            </tbody>
+           <tfoot>
+             <tr>
+               <td colspan="10" class="text-center">
+                 <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="3"></div>
+               </td>
+             </tr>
+           </tfoot>
          </table>
        </br>
      </div>
-     <div class="button-style">
+     <div class="panel-body button-style">
        <button class="btn btn-danger active notify" ng-click="updateData()"  permission = "[permissions.updateData]">Update</button>
      </div>
-
+<br /><br />
      <!--Start: Code for Audit Date Modal Window -->
      <div id="auditDateModal" class="modal fade">
        <div class="modal-dialog" style="width:400px">
@@ -339,5 +349,3 @@
        </div>
      </div>
      <!--End: Code for show dates Modal Window -->
-
-</div>

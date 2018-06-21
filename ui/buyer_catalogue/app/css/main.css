@@ -1,5 +1,12 @@
+html{
+  background-color: #ffffff !important;
+}
 body.blur-theme::before {
   background: #ffff;
+}
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
 }
 
 body a {
@@ -275,11 +282,21 @@ ul.animate-show li.selected {
   background: #c3452f;
 }
 .menu-content{
-  max-height: 200px;
-  overflow-x: auto;
-  background: #ffffff;
-  color : #000;
+  max-height: 700px !important;
+  overflow-x: auto !important;
+  background: #ffffff !important;
+  color : #000 !important;
+
 }
+
+.camp-menu-content{
+  /* max-height: 700px !important; */
+  overflow-x: auto !important;
+  background: #ffffff !important;
+  color : #000 !important;
+
+}
+
 .panel-title{
   background: #bf321b;
   color: #ffffff;
@@ -418,6 +435,9 @@ text-align: center;
   .RELEASETable {
     background-color: #fcfc5f;
     color: black;
+  margin-left:-50px;
+  margin-right:-50px;
+  margin-top: 15px;
     }
 
 
@@ -425,14 +445,20 @@ text-align: center;
     background-color: #cb1925 ;
     color: white;
     width: 100%;
+    margin-left:-50px;
+    margin-right:-50px;
+    margin-top: 15px;
     }
 
     .RELEASETable  tbody > td{
     font:bold 12px/30px Georgia, serif;
+    margin-left:-50px;
+    margin-right:-50px;
+    margin-top: 15px;
     }
 
     .sidePanelTable {
-      background-color: #FFC300;
+      background-color: white;
       color: black;
       font-size: 15px;
       }
@@ -442,10 +468,11 @@ text-align: center;
       background-color: #8e1921;
       color: white;
       width: 100%;
+      border:1px solid black !important;
       }
 
       .sidePanelTable  tbody > tr > td{
-        border:3px solid rgba(255, 255, 255, 0.2) !important;
+        border:1px solid black !important;
       }
 
 .zeroCampAct{
@@ -508,4 +535,66 @@ text-align: center;
   color: rgb(195, 69, 47);
   padding-left : 30%;
   margin-top: 30px;
+}
+
+.showDisplayDetailsTable{
+  height:350px !important;
+  opacity: 1;
+  overflow:auto;
+  color: white;
+
+}
+
+
+.showDisplayDetailsTable  thead {
+  background-color: #cb1925 ;
+  color: #ffffff !important;
+  }
+
+
+.showDisplayDetailsTable  tbody {
+background-color: #fcfc5f;
+color: black;
+}
+
+.showDisplayDetailsTable  tfoot {
+background-color: #cb1925 ;
+color: #ffffff !important;
+}
+
+.showDisplayDetailsTable tfoot td {
+  color: #ffffff !important;
+  text-align: center;
+}
+.CampaignDetails{
+  height: 60px !important;
+}
+
+
+#map_div {
+        height: 480px;
+}
+
+.windowDisplayTable{
+  height: 40px;
+  width: 150px;
+  margin-left: 14px;
+
+}
+
+.table > thead:first-child > tr:first-child > td {
+    border-top: 0;
+    color: #ffffff !important;
+  }
+
+.blinking{
+    animation:blinkingText 0.8s infinite;
+}
+
+@keyframes blinkingText{
+    0%{     color: #000;    }
+    49%{    color: transparent; }
+    50%{    color: transparent; }
+    99%{    color:transparent;  }
+    100%{   color: #123456;    }
 }

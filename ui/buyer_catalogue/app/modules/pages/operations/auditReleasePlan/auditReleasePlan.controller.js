@@ -75,10 +75,13 @@ angular.module('catalogueApp')
 
       //initial call to get release Data
       function getCampaignReleaseDetails(){
+        $scope.Data = [];
       auditReleasePlanService.getCampaignReleaseDetails($scope.campaign_id)
       	.then(function onSuccess(response){
           console.log("get values",response);
       		$scope.releaseDetails = response.data.data;
+          $scope.Data = $scope.releaseDetails.shortlisted_suppliers;
+          console.log(  $scope.Data);
           setDataToModel($scope.releaseDetails.shortlisted_suppliers);
 
           $scope.filteredAssignDatesList = angular.copy($scope.releaseDetails);

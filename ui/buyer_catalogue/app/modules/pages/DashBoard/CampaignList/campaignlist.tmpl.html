@@ -1,8 +1,13 @@
 <link rel="stylesheet" href="modules/pages/DashBoard/CampaignList/campaignlist.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
+
+<body>
+  <div ng-loading="loading"></div> <!--For displaying loading icon-->
+
+  <main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading">
+
 <!-- <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" /> -->
 <div><nav-bar></nav-bar></div>
-<div ng-loading="loading"></div> <!--For displaying loading icon-->
 <br><br><br>
 <div class="panel1">
   <!-- <div class="col2"> -->
@@ -13,57 +18,67 @@
 </div>
 
 
-<body>
-  <div class="panel">
-
-
-  <!-- <div class=""> -->
-
-
-<div ng-show="isEmpty" style="text-align:center;"><h2>{{msg}}</h2></div>
-<!-- Start: Displaying table of converted campaigns -->
-<div class="panel-heading">
-    <h3 ng-show="!isEmpty">Campaign List</h3>
-</div>
-
-<div class="panel-body">
-<div class="table-responsive">
-  <div class="" ng-show="!isEmpty">
+  <div class="row">
+    <div class="panel" ng-controller="CampaignListCtrl">
     <!-- <div class=""> -->
-      <div class="panel-table">
-        <table class="table table-fixed table-bordered" style="text-align: center;">
-          <thead>
-            <tr>
-              <th ng-repeat="header in campaignHeadings" class="" style="text-align: center;">{{header.header}}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr ng-repeat="proposal in campaignData">
-              <td class="col-md-1">{{proposal.campaign.proposal_id}}</td>
-              <td class="col-md-2">{{proposal.campaign.name}}</td>
-              <td class="col-md-2">{{proposal.assigned_to.first_name||proposal.assigned_to.username}}</td>
-              <td class="col-md-2">{{proposal.assigned_by.first_name||proposal.assigned_by.username}}</td>
-              <td class="col-md-2">{{proposal.updated_at|limitTo:10}}</td>
-              <td class="col-md-2">{{proposal.campaign.tentative_start_date|limitTo:10}}</td>
-              <td class="col-md-2">{{proposal.campaign.tentative_end_date|limitTo:10}}</td>
-              <td class="col-md-2">
-                <a ng-click="getDetails(proposal.campaign.proposal_id)"> Details </a>
-              </td>
-              <td class="col-md-2">
-                <a ng-click="getExecutionDetails(proposal.campaign)"> Image Details </a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    <!-- </div> -->
+
+  <div ng-show="isEmpty" style="text-align:center;"><h2>{{msg}}</h2></div>
+  <!-- Start: Displaying table of converted campaigns -->
+  <div class="pageTitle" style="margin-top:-15px">
+      <h3 ng-show="!isEmpty">Campaign List</h3>
   </div>
-</div>
-<!--End: Displaying table of converted campaigns -->
-<!-- <footer-bar></footer-bar> -->
-<!-- </div> -->
+
+  <div class="panel-body" >
+  <div class="table-responsive">
+    <div class="" ng-show="!isEmpty">
+  <!-- <input class="form-control input-size" type="text" ng-model="search" class="form-control spacing col-width"> -->
+
+      <!-- <div class=""> -->
+          <div class="row campaignTable">
+            <table st-table="campaignData" st-safe-src="Data" class="table table-striped">
+              <thead>
+                <tr>
+                  <th ng-repeat="header in campaignHeadings" class="" style="text-align: center;">{{header.header}}</th>
+                </tr>
+
+              </thead>
+              <tbody>
+                <tr style="text-align: center;" ng-repeat="proposal in campaignData | orderBy : '-updated_at'">
+                  <!-- <td class="col-md-1">{{proposal.campaign.proposal_id}}</td> -->
+                  <td class="col-md-2">{{$index + 1}}</td>
+                  <td class="col-md-2">{{proposal.campaign.name}}</td>
+                  <td class="col-md-2">{{proposal.assigned_to.first_name||proposal.assigned_to.username}}</td>
+                  <td class="col-md-2">{{proposal.assigned_by.first_name||proposal.assigned_by.username}}</td>
+                  <td class="col-md-2">{{proposal.updated_at|limitTo:10 }}</td>
+                  <td class="col-md-2">{{proposal.campaign.tentative_start_date|limitTo:10}}</td>
+                  <td class="col-md-2">{{proposal.campaign.tentative_end_date|limitTo:10}}</td>
+                  <td class="col-md-2">
+                    <a ng-click="getDetails(proposal.campaign.proposal_id)"> Details </a>
+                  </td>
+                  <td class="col-md-2">
+                    <a ng-click="getExecutionDetails(proposal.campaign)"> Image Details </a>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="10" class="text-center">
+                    <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="3"></div>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+      <!-- </div> -->
+    </div>
+  </div>
 
 
-</div>
-</div>
+   <!-- <footer-bar></footer-bar>   -->
+   </div>
+
+
+  </div>
+  </div>
+</main>
 </body>

@@ -105,11 +105,11 @@ DATABASES = {
             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         },
         'default': {
-            'NAME': 'machadalotech',
+            'NAME': 'test',
             'ENGINE': 'django.db.backends.mysql',
             'HOST': 'localhost',
             'USER': 'root',
-            'PASSWORD': 'wikasta123',   
+            'PASSWORD': 'wikasta123',
         }
 }
 
@@ -236,17 +236,16 @@ JWT_AUTH = {
       'JWT_VERIFY_EXPIRATION': False,
       }
 
-BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
-# BASE_URL = 'http://localhost:8000/'
+
+# BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
+BASE_URL = 'http://localhost:8000/'
 
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-
 EMAIL_HOST_USER = 'businessdevelopment@machadalo.com'
 EMAIL_HOST_PASSWORD = 'career1231@'
-
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER

@@ -1264,3 +1264,25 @@ society_payment_headers = {
     'Bank Name' : True,
     'Account Number' : True
 }
+business_category_campaign_query = {
+    'campaign' : 'campaign__account__organisation'
+}
+bus_agency_campaign_query = {
+    'campaign' : 'campaign__user'
+}
+sup_agency_campaign_query = {
+    'campaign' : 'campaign__assigned_to'
+}
+category_query_status = {
+    'campaign_query' : 'campaign'
+}
+
+perf_metrics_types = {
+    'inv_type' : 'inv',
+    'lead_type' : 'lead'
+}
+perf_metrics_param = {
+    'on_time' : 'on_time',
+    'on_location' : 'on_location',
+    'inv' : 'inv'
+}

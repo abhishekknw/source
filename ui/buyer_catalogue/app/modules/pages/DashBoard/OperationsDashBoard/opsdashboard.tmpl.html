@@ -1,18 +1,26 @@
 <link rel="stylesheet" href="modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
-<div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div> <!--For displaying loading icon-->
-</br></br></br>
+
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading">
+
+  <div><nav-bar></nav-bar></div>
+  </br></br></br>
 <!-- <back-Button></back-Button> -->
-<div class="">
-  <div class="breadcrumb" ncy-breadcrumb></div>
+<div class="row">
+  <div class="col-md-6 pull-left">
+    <div class="" permission = "[]">
+      <div class="breadcrumb" ncy-breadcrumb></div>
+    </div>
+  </div>
+  <div class="col-md-2 pull-right">
+    <div><button class="btn btn-primary active notify" style="text-align:right;" ng-click="goToCampaignList()">List Campaigns</button>
+    </div>
+  </div>
 </div>
 
-<div style="margin-left:auto;margin-right:100px;width:7%;">
-  <button class="btn btn-primary active notify" style="text-align:right" ng-click="goToCampaignList()">List Campaigns</button>
-</div>
 <div ng-show="isEmpty" class="panel panel-default" style="font-size:24px;text-align:center;"><span>{{msg}}</span></div>
-<div class="panel-heading">
+<div class="pageTitle" style="margin-top:3px;">
     <h2 ng-hide="hideData || isEmpty" style = "text-align:center;">Machadalo Operations Dashboard</h2>
 </div>
 
@@ -20,8 +28,7 @@
   <div class="" ng-hide="hideData || isEmpty">
     <div class="row">
       <div class="table-responsive panel panel-default">
-        <scrollable-table watch="proposals">
-        <table class="table table-hover  table-bordered">
+        <table st-table="proposals" st-safe-src="Data" class="table table-striped">
           <thead>
             <tr>
               <th  ng-repeat="header in headings">{{header.header}}</th>
@@ -40,13 +47,13 @@
               <td class="cellWidth">{{proposal.proposal.tentative_start_date|limitTo:10}}</td>
               <td class="cellWidth">{{proposal.proposal.tentative_end_date|limitTo:10}}</td>
               <td class="cellWidth" style="text-align:left">
-                <div class="radio">
+                <div class="radio-button">
                        <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PTC" ng-click="convertProposalToCampaign(proposal)"  data-toggle="modal" ng-loading="loadSpinner" permission = "[permissions.acceptProposal]">Accept</label>
                 </div>
-                <div class="radio">
+                <div class="radio-button">
                        <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="PNC" ng-click="convertCampaignToProposal(proposal)" data-toggle="modal" permission = "[permissions.declineProposal]">Decline</label>
                 </div>
-                <div class="radio">
+                <div class="radio-button">
                        <label><input type="radio" ng-model="proposal.proposal.campaign_state" value="POH" ng-click="updateCampaign(proposal)" data-target="#onHoldModal" data-toggle="modal" permission = "[permissions.onHoldPrposal]">OnHold</label>
                 </div>
               </td>
@@ -61,8 +68,14 @@
               </td>
             </tr>
           </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="13" class="text-center">
+                <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="3"></div>
+              </td>
+            </tr>
+          </tfoot>
         </table>
-        </scrollable-table>
       </div>
     </div>
   </div>
@@ -120,7 +133,7 @@
             <option ng-repeat = "user in userList" value = "{{user.id}}">{{user.username}}</option>
           </select>
         </div>
-          <button class="btn btn-danger active notify" ng-click="saveAssignment()">Assign</button>
+          <button class="btn btn-danger active notify" ng-click="saveAssignment(userId)">Assign</button>
         </div>
       </div>
     </div>
@@ -128,3 +141,4 @@
 </div>
 <!-- End: Code for assgining campaign -->
 <!-- <footer-bar></footer-bar> -->
+</main>
