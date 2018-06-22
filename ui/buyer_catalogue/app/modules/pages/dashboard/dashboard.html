@@ -544,24 +544,8 @@
                               <div class="col-md-12" ng-if="showSupplierTypeCountChart">
                                 <div class="panel-heading content-title">
                                   <h5 style="background:'red'">Map View</h5></div>
-                                  <ng-map center="[{{latitude}} , {{longitude}}]" position="[{{latitude}},{{longitude}}]">
-                                    <marker ng-repeat="supplier in supplierAndInvData" position="[{{supplier.supplier.society_latitude}}, {{supplier.supplier.society_longitude}}]" title="{{supplier.supplier.society_name}}" id="{{supplier.supplier.supplier_id}}" on-click="showDetail(event, supplier)">
-                                    <info-window id="myWindow">
-                                      <div ng-non-bindable="" style="color:black;height:170px;width:170px;">
-                                        <div class="">
-                                          <h3>{{windowDisplay.supplier.society_name}}</h3>
-                                        </div>
-                                        <table class="table-responsive table windowDisplayTable">
-                                          <tbody>
-                                              <tr><td ng-if="invStatusKeys.STALL.status">STALL</td> <td ng-show="invStatusKeys.STALL.status"><small>{{windowDisplay.supplier.inv_data.STALL.total}}</small></td></tr>
-                                              <tr><td ng-if="invStatusKeys.POSTER.status">POSTER</td><td ng-show="invStatusKeys.POSTER.status"><small>{{windowDisplay.supplier.inv_data.POSTER.total}}</small></td></tr>
-                                              <tr><td ng-if="invStatusKeys.FLIER.status">FLIER(Frequency)</td><td ng-show="invStatusKeys.FLIER.status"><small>{{windowDisplay.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total}})</small></td></tr>
-                                              <tr><td ng-if="invStatusKeys.STANDEE.status">STANDEE</td><td ng-show="invStatusKeys.STANDEE.status"><small>{{windowDisplay.supplier.inv_data.STANDEE.total}}</small></td></tr>
-                                              <tr><td ng-if="invStatusKeys['GATEWAY ARCH'].status">GATEWAY ARCH</td><td ng-show="invStatusKeys['GATEWAY ARCH'].status"><small>{{windowDisplay.supplier.inv_data['GATEWAY ARCH'].total}}</small></td></tr>
-                                          </tbody>
-                                      </table>
-                                      </div>
-                                    </info-window>
+                                  <ng-map center="[{{supplierTypesDataList[0].center__latitude}} , {{supplierTypesDataList[0].center__longitude}}]" position="[{{latitude}},{{longitude}}]">
+                                    <marker ng-repeat="campaign in supplierTypesDataList" position="[{{campaign.center__latitude}}, {{campaign.center__longitude}}]" title="{{campaign.proposal__name}}" id="{{campaign.proposal_id}}">
                                     </marker>
                                   </ng-map>
                                 </div>

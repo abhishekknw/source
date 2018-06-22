@@ -336,7 +336,6 @@
           DashboardService.getCampaigns(orgId, category, date)
           .then(function onSuccess(response){
             console.log(response);
-            $scope.loading = response.data.data;
             $scope.searchSelectAllModel = [];
             $scope.showSingleCampaignChart = false;
             $scope.campaignData = response.data.data;
@@ -378,6 +377,11 @@
               $scope.supplierCodeCountData = formatCountData(response.data.data);
               console.log($scope.supplierCodeCountData);
               $scope.supplierTypesData = response.data.data;
+              $scope.supplierTypesDataList = [];
+              angular.forEach($scope.supplierTypesData, function(data){
+                $scope.supplierTypesDataList = $scope.supplierTypesDataList.concat(data);
+              })
+              console.log($scope.supplierTypesDataList);
               $scope.supplierCodeCountOptions = angular.copy(doughnutChartOptions);
               // $scope.getCampaignInvTableData();
               // $scope.supplierCodeCountOptions.chart.pie.dispatch['elementClick'] = function(e){ $scope.getCampaignInvTableData(e.data); };
