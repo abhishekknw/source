@@ -721,7 +721,7 @@ mime = {
 email = {
     'subject': 'Test subject',
     'body': 'This a system generated mail. Please find the file named $file attached',
-    'to': ['nikhil.singh@machadalo.com']
+    'to': ['yogesh.mhetre@machadalo.com']
 }
 
 # filter types
@@ -776,7 +776,7 @@ emails = {
     'bd_head': 'bd@machadalo.com',
     'bd_user': 'anmol.prabhu@machadalo.com',
     'root_user': 'anupam@machadalo.com',
-    'developer': 'nikhil.singh@machadalo.com'
+    'developer': 'yogesh.mhetre@machadalo.com'
 }
 
 # default status of each inventory is defined here. The reason i didn't chose a boolean value is because may be in
@@ -1223,7 +1223,7 @@ permission_type_update = 'update'
 permission_type_delete = 'delete'
 
 
-api_error_mail_to = 'nikhil.singh@machadalo.com'
+api_error_mail_to = 'yogesh.mhetre@machadalo.com'
 # default prices
 default_actual_supplier_price = 0
 default_suggested_supplier_price = 0
