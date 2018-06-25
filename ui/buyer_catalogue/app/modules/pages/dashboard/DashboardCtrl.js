@@ -587,14 +587,6 @@
            $scope.showSupplierInvTable = false;
            $scope.showSingleCampaignChart = true;
 
-
-         //   for(var i=0;i<$scope.campaignInventories.length;i++){
-         //      if($scope.campaignInventories[i].filter_code=='SL'){
-         //          $scope.showLeadsDetails = true;
-         //           $scope.showDisplayDetailsTable = false;
-         //          }
-         // }
-
            $scope.campaignStatusData = response.data.data;
            $scope.campaignSupplierAndInvData = response.data.data;
            $scope.showSupplierSocietywiseInvTable = false;
@@ -610,16 +602,17 @@
            // $scope.totalLeadsCount = response.data.data.supplier_data.length;
            $scope.campaignStatusData['totalSuppliers'] = 0;
            angular.forEach($scope.campaignStatusData, function(data,key){
-              if($scope.campaignStatusData[key].length){
+              if($scope.campaignStatusData[key].length && key != 'upcoming'){
+                $scope.campaignStatusData['totalSuppliers'] += $scope.campaignStatusData[key].length;
                 console.log($scope.campaignStatusData[key].length);
                 $scope.campaignStatusData[key]['totalFlats'] = 0;
                 $scope.campaignStatusData[key]['totalLeads'] = 0;
                 $scope.campaignStatusData[key]['hotLeads'] = 0;
-                $scope.campaignStatusData['totalSuppliers'] += $scope.campaignStatusData[key].length;
                 angular.forEach(data, function(supplierData){
                   $scope.campaignStatusData[key]['totalFlats'] += supplierData.supplier.flat_count;
                   $scope.campaignStatusData[key]['totalLeads'] += supplierData.leads_data.length;
                   if(supplierData.leads_data.length){
+                    $scope.showLeadsDetails = true;
                     angular.forEach(supplierData.leads_data, function(lead) {
                       if(lead.is_interested){
                         $scope.campaignStatusData[key]['hotLeads'] += 1;
