@@ -265,8 +265,11 @@ angular.module('catalogueApp')
     }
       //End: code added to search & show all suppliers on add societies tab
     $scope.addSuppliersToList = function(supplier){
-      if(!(supplier.supplier_id in $scope.shortlistedSuppliersIdList || supplier.supplier_id in $scope.supplierSummaryData))
+      if(!(supplier.supplier_id in $scope.shortlistedSuppliersIdList || supplier.supplier_id in $scope.supplierSummaryData)){
         $scope.supplierSummaryData[supplier.supplier_id] = supplier;
+        $scope.showAddSupplierMsg = 'Added Successfully';
+        alert($scope.showAddSupplierMsg);
+      }
       else
         alert("supplier Already Present");
       console.log($scope.supplierSummaryData);
