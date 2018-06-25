@@ -112,16 +112,13 @@
         var getAllCampaignsData = function(){
           DashboardService.getAllCampaignsData(orgId, category)
           .then(function onSuccess(response){
-            $scope.loading = response.data.data;
             console.log(response);
             $scope.count = 0;
             $scope.invActDateList = [];
             $scope.inventoryActivityCountData = response.data.data;
-            console.log($scope.inventoryActivityCountData);
             angular.forEach(response.data.data, function(data,key){
               $scope.isPanelOpen = !$scope.isPanelOpen;
               $scope.inventoryActivityCountData[key] = sortObject(data);
-              console.log($scope.inventoryActivityCountData[key]);
               $scope.invActDateList = $scope.invActDateList.concat(Object.keys($scope.inventoryActivityCountData[key]));
             })
             $scope.invActDateList = Array.from(new Set($scope.invActDateList));
@@ -131,7 +128,9 @@
               $scope.dateListKeys[date] = date;
             })
             getHistory(response.data.data);
-
+            console.log($scope.dateListKeys);
+            console.log($scope.date);
+            $scope.loading = response.data.data;
           }).catch(function onError(response){
             console.log(response);
           })
@@ -151,6 +150,7 @@
 
         $scope.count = 0;
         $scope.date = new Date();
+        $scope.date = commonDataShare.formatDate($scope.date);
         $scope.pre = -1;
         $scope.next = 1;
         $scope.getDate = function(day){
@@ -336,9 +336,7 @@
           DashboardService.getCampaigns(orgId, category, date)
           .then(function onSuccess(response){
             console.log(response);
-            $scope.loading = response.data.data;
             $scope.searchSelectAllModel = [];
-            console.log($scope.showSingleCampaignChart);
             $scope.showSingleCampaignChart = false;
             $scope.campaignData = response.data.data;
             $scope.mergedarray = [];
@@ -355,7 +353,6 @@
               { label : $scope.campaignStatus.upcoming.campaignLabel, value : $scope.campaignData.upcoming_campaigns.length }
             ];
             $scope.options = angular.copy(doughnutChartOptions);
-            console.log("hello12");
             $scope.options.chart.pie.dispatch['elementClick'] = function(e){ $scope.pieChartClick(e.data.label); };
             $scope.showPerfPanel = $scope.perfPanel.all;
           }).catch(function onError(response){
@@ -367,8 +364,6 @@
       $scope.pieChartClick = function(label){
 
         $anchorScroll('bottom');
-        console.log("hi");
-
         $scope.campaignStatusName = label;
         var campaignStatus = _.findKey($scope.campaignStatus, {'campaignLabel' : label});
         console.log(campaignStatus);
@@ -380,23 +375,22 @@
            console.log(response);
            if(response.data.data){
               $scope.supplierCodeCountData = formatCountData(response.data.data);
-              console.log($scope.supplierCodeCountData );
-
-              // $scope.supplierCodeLabelData = formatLabelData(response.data.data.supplier_code_data,'supplier_type_code');
+              console.log($scope.supplierCodeCountData);
+              $scope.supplierTypesData = response.data.data;
+              $scope.supplierTypesDataList = [];
+              angular.forEach($scope.supplierTypesData, function(data){
+                $scope.supplierTypesDataList = $scope.supplierTypesDataList.concat(data);
+              })
+              console.log($scope.supplierTypesDataList);
               $scope.supplierCodeCountOptions = angular.copy(doughnutChartOptions);
-
-              // $scope.supplierCodeCountOptions.chart.tooltip['contentGenerator'] = function(e){ return getTooltipData(e); };
-              $scope.supplierCodeCountOptions.chart.pie.dispatch['elementClick'] = function(e){ $scope.getCampaignInvTableData(e.data); };
-
+              // $scope.getCampaignInvTableData();
+              // $scope.supplierCodeCountOptions.chart.pie.dispatch['elementClick'] = function(e){ $scope.getCampaignInvTableData(e.data); };
               $scope.showSupplierTypeCountChart = true;
-
            }
-
          }).catch(function onError(response){
            console.log(response);
          })
        }
-
 
           $scope.doughnutChartOptions = function(){
                $anchorScroll('bottom');
@@ -822,15 +816,13 @@
 //
 //        }
 
-       $scope.getCampaignInvTableData = function(campaigns){
-         console.log($scope.campaigns);
-         $scope.campaignInvData = campaigns.campaigns;
-         console.log($scope.campaignInvData);
-         $scope.showCampaignInvTable = true;
-         $scope.$apply();
-         // console.log($scope.campaignInvData);
-
-     }
+     //   $scope.getCampaignInvTableData = function(campaigns){
+     //     $scope.campaignInvData = campaigns.campaigns;
+     //     $scope.showCampaignInvTable = true;
+     //     $scope.$apply();
+     //     // console.log($scope.campaignInvData);
+     //
+     // }
 
 
 
@@ -1232,14 +1224,14 @@
       if(value)
         $scope.invStatusKeys[invKey].total += value;
     }
-var map;
-NgMap.getMap().then(function(evtMap) {
-    map = evtMap;
-  });
+    var map;
+    NgMap.getMap().then(function(evtMap) {
+        map = evtMap;
+    });
     $scope.showDetail = function(evt, supplierData){
-    $scope.windowDisplay = supplierData;
-    map.showInfoWindow('myWindow', this);
-  };
+      $scope.windowDisplay = supplierData;
+      map.showInfoWindow('myWindow', this);
+    };
 
   // $scope.active = 0;
   $scope.selectTabIndex = {
@@ -1256,14 +1248,27 @@ $scope.switchToLeads = function(){
 
 
 $scope.switchToInventory = function(inv){
-$scope.selectTabIndex.value = 2;
-console.log("hi");
-console.log(inv);
-var perf_param = null;
-$scope.getPerformanceMetricsData(inv,perf_param);
+  $scope.selectTabIndex.value = 2;
+  console.log("hi");
+  console.log(inv);
+  var perf_param = null;
+  $scope.getPerformanceMetricsData(inv,perf_param);
+}
+$scope.setImageUrl = function(images){
+  console.log(images);
+  $scope.imageUrlList = [];
+  angular.forEach(images, function(data){
+    for(var i=0; i<data.length; i++){
+      var imageData = {
+        image_url : 'http://androidtokyo.s3.amazonaws.com/' + data[i].image_path,
+        comment : data[i].comment,
+      };
+      $scope.imageUrlList.push(imageData);
+    }
+  })
 
 }
 
 
-    })//END
-  })();
+  })//END
+})();

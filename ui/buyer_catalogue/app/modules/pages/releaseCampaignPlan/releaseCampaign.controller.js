@@ -40,7 +40,7 @@ angular.module('catalogueApp')
     {name:'Tentative Booking', code : 'NB'},
     {name:'Phone Booked' , code : 'PB'},
     {name:'Visit Booked', code : 'VB'},
-    {name:'Rejected', code : 'R'},
+    {name:'Rejected', code : 'SR'},
     {name:'Send Email', code : 'SE'},
     {name:'Visit Required', code : 'VR'},
     {name:'Call Required', code : 'CR'},
@@ -48,11 +48,11 @@ angular.module('catalogueApp')
   ];
 
   $scope.payment_status = [
-    {name:'Not Initiated', code : 'NI'},
-    {name:'Pending', code : 'P'},
-    {name:'Cheque Released' , code : 'CR'},
+    {name:'Not Initiated', code : 'PNI'},
+    {name:'Pending', code : 'PP'},
+    {name:'Cheque Released' , code : 'PCR'},
     {name:'Paid', code : 'PD'},
-    {name:'Rejected', code : 'R'},
+    {name:'Rejected', code : 'PR'},
 
   ];
 
