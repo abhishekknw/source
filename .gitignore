@@ -11,13 +11,9 @@ db.sqlite3
 *.pyc
 *.csv#
 *.xlsx#
-*/*.pyc
-*/*/*.pyc
-*/*/*/*.pyc
-*/*/*/*/*.pyc
-*/*/*/*/*/*.pyc
-
-
+*.pyc
+.idea
+coreapi/coreapi/coreapi/config.py
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
