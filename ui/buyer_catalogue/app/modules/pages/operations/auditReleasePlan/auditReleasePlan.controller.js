@@ -65,6 +65,11 @@ angular.module('catalogueApp')
         commonDataShare.getUsersList()
           .then(function onSuccess(response){
             $scope.userList = response.data.data;
+            $scope.usersMapListWithObjects = {};
+            angular.forEach($scope.userList, function(data){
+              $scope.usersMapListWithObjects[data.id] = data;
+            })
+            console.log($scope.usersMapListWithObjects);
           })
           .catch(function onError(response){
             console.log("error occured", response.status);
