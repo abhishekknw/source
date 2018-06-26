@@ -403,10 +403,10 @@
                           </div>
                           </div>
 
-                          <div class="col-md-12">
+                          <div class="">
                             <br><br><br><br>
 
-                              <div class="col-md-6 showDisplayDetailsTable" ng-if="showDisplayDetailsTable">
+                              <div class="col-md-12 showDisplayDetailsTable" ng-if="showDisplayDetailsTable">
                                 <div style="background-color: #cb1925" class="panel-heading">
                                   <h5>Society Details</h5>
 
@@ -452,11 +452,12 @@
                                   </table>
                                 </div>
 
-                                <div class="col-md-6" ng-if="showDisplayDetailsTable">
+                                <div class="col-md-12" ng-show="showDisplayDetailsTable">
                                   <div class="panel-heading content-title">
                                     <h5 style="background:'red'">Map View</h5></div>
-                                    <ng-map center="[{{latitude}} , {{longitude}}]" position="[{{latitude}},{{longitude}}]">
-                                      <marker ng-repeat="supplier in supplierAndInvData" position="[{{supplier.supplier.society_latitude}}, {{supplier.supplier.society_longitude}}]" title="{{supplier.supplier.society_name}}" id="{{supplier.supplier.supplier_id}}" on-click="showDetail(event, supplier)">
+                                    <!-- <ng-map center="[{{latitude}} , {{longitude}}]" position="[{{latitude}},{{longitude}}]">
+                                      <marker ng-repeat="supplier in supplierAndInvData" position="[{{supplier.supplier.society_latitude}}, {{supplier.supplier.society_longitude}}]" title="{{supplier.supplier.society_name}}"
+                                       id="{{supplier.supplier.supplier_id}}" on-click="showDetail(event, supplier)">
                                       <info-window id="myWindow">
                                         <div ng-non-bindable="" style="color:black;height:170px;width:170px;">
                                           <div class="">
@@ -474,7 +475,25 @@
                                         </div>
                                       </info-window>
                                       </marker>
-                                    </ng-map>
+                                    </ng-map> -->
+                                    <!-- <div ng-app="dogMap" ng-controller="MapCtrl"> -->
+                                    <style type="text/css">
+                                        .angular-google-map-container { height: 550px; width: 740px;}
+                                    </style>
+                                      <ui-gmap-google-map center="map.center" zoom="map.zoom" draggable="false"
+                                                          options="options" bounds="map.bounds" control="googlemap">
+                                          <ui-gmap-window show="show" coords='windowCoords' closeClick="closeClick()">
+                                                <div>
+                                                  <div class="">
+                                                    <h3>{{space.name}}</h3>
+                                                  </div>                                                  
+                                                </div>
+                                          </ui-gmap-window>
+                                          <ui-gmap-markers models="supplierMarkers" coords="'self'" icon="'icon'"
+                                                           options="'options'" doRebuildAll="true" click="onClick">
+                                          </ui-gmap-markers>
+                                      </ui-gmap-google-map>
+                                    <!-- </div> -->
                                   </div>
 
                                 <div class="col-md-7 LeadsTable" ng-show="showSupplierSocietywiseInvTable" >

@@ -6,7 +6,7 @@
     'use strict';
 
   angular.module('catalogueApp')
-      .controller('DashboardCtrl',function($scope,NgMap, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants,$location,$anchorScroll) {
+      .controller('DashboardCtrl',function($scope,NgMap, $rootScope, baConfig, colorHelper,DashboardService, commonDataShare, constants,$location,$anchorScroll,uiGmapGoogleMapApi,uiGmapIsReady) {
  $scope.itemsByPage=15;
  $scope.query = "";
  $scope.oneAtATime = true;
@@ -1189,7 +1189,8 @@
 
     }
     $scope.getSupplierAndInvData = function(data){
-      console.log($scope.campaignSupplierAndInvData);
+      console.log($scope.campaignSupplierAndInvData,data.status);
+      $scope.supplierStatus = data.status;
       $scope.supplierAndInvData = $scope.campaignSupplierAndInvData[data.status];
       $scope.invStatusKeys = angular.copy(invStatusKeys);
       angular.forEach($scope.supplierAndInvData, function(supplier){
@@ -1208,22 +1209,95 @@
           })
       })
       $scope.showDisplayDetailsTable = true;
+      console.log($scope.supplierAndInvData);
+      $scope.map = { zoom: 10,bounds: {},center: {latitude: $scope.latitude,longitude: $scope.longitude,}};
+      $scope.supplierMarkers = assignMarkersToMap($scope.supplierAndInvData);
+      uiGmapIsReady.promise()
+        .then(function(instances) {
+          uiGmapGoogleMapApi.then(function(maps) {
+
+          });
+        });
+
+
+
       $scope.$apply();
 
-
-
     }
+    $scope.windowCoords = {};
+    $scope.onClick = function(marker, eventName, model) {
+      console.log('hello',model);
+      $scope.space = model.title;
+      $scope.windowCoords.latitude = model.latitude;
+      $scope.windowCoords.longitude = model.longitude;
+      $scope.show = true;
+    }
+    function assignMarkersToMap(suppliers) {
+        // assigns spaces(society, corporate) markers on the map
+        // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
+        var markers = [];
+        var icon;
+        angular.forEach(suppliers, function(supplier){
+          console.log(supplier);
+
+              markers.push({
+                  latitude: supplier.supplier.society_latitude,
+                  longitude: supplier.supplier.society_longitude,
+                  id: supplier.supplier.supplier_id,
+                  icon: 'http://www.googlemapsmarkers.com/v1/009900/',
+                  options : {draggable : false},
+                  title : {
+                      name : supplier.supplier.society_name,
+                      address1 : supplier.supplier.address1,
+                      subarea : supplier.supplier.subarea,
+                      location_type : supplier.supplier.location_type,
+                  },
+              });
+
+        });
+        console.log(markers);
+        return markers;
+
+    };
+    $scope.supplierMarkers = [];
+    $scope.map = { zoom: 14,bounds: {},center: {latitude: 19.119,longitude: 73.48,}};
+    $scope.options = { scrollwheel: false, mapTypeControl: true,
+        mapTypeControlOptions: {
+          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+          position: google.maps.ControlPosition.TOP_LEFT
+        },
+        zoomControl: true,
+        zoomControlOptions: {
+          style: google.maps.ZoomControlStyle.HORIZONTAL_BAR,
+          position: google.maps.ControlPosition.TOP_RIGHT
+        },
+        streetViewControl: true,
+        streetViewControlOptions: {
+          position: google.maps.ControlPosition.TOP_RIGHT
+        },
+      };
+
+
+
     $scope.calculateTotalCount = function(invKey, value){
       if(value)
         $scope.invStatusKeys[invKey].total += value;
     }
-    var map;
-    NgMap.getMap().then(function(evtMap) {
-        map = evtMap;
-    });
+    // $scope.map;
+    // NgMap.getMap().then(function(evtMap) {
+    //     $scope.map = evtMap;
+    // });
     $scope.showDetail = function(evt, supplierData){
+      $scope.map;
+      NgMap.getMap().then(function(evtMap) {
+          $scope.map = evtMap;
+      });
+      $scope.showInfoWindowId = $scope.supplierStatus + 'myWindow';
+      console.log($scope.showInfoWindowId);
+      console.log(supplierData);
+      console.log($scope.windowDisplay);
       $scope.windowDisplay = supplierData;
-      map.showInfoWindow('myWindow', this);
+      $scope.map.showInfoWindow.apply(this, [evt, 'myWindow']);
     };
 
   // $scope.active = 0;
@@ -1259,8 +1333,8 @@ $scope.setImageUrl = function(images){
       $scope.imageUrlList.push(imageData);
     }
   })
-
 }
+// map
 
 
   })//END
