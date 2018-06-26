@@ -17,7 +17,7 @@ from datetime import date
 import managers
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Permission
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes import fields
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -191,7 +191,7 @@ class ImageMapping(BaseModel):
     name = models.CharField(db_column='NAME', max_length=50, blank=True, null=True)
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     class Meta:
@@ -260,7 +260,7 @@ class PriceMappingDefault(BaseModel):
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(db_index=True, max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     class Meta:
@@ -421,7 +421,7 @@ class PosterInventory(BaseModel):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
     tower = models.ForeignKey('SocietyTower', null=True, blank=True)
 
@@ -454,7 +454,7 @@ class FlatType(BaseModel):
     average_rent_per_sqft = models.FloatField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
     content_type = models.ForeignKey(ContentType,default=None, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     class Meta:
@@ -474,7 +474,7 @@ class StandeeInventory(BaseModel):
     tower = models.ForeignKey('SocietyTower', db_column='TOWER_ID', related_name='standees', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     def get_tower_name1(self):
@@ -537,7 +537,7 @@ class WallInventory(BaseModel):
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='walls', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     class Meta:
@@ -592,7 +592,7 @@ class ContactDetails(BaseModel):
     comments = models.TextField(max_length=255, null=True, blank=True)
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     class Meta:
@@ -604,7 +604,7 @@ class ContactDetailsGeneric(models.Model):
     id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
     content_type = models.ForeignKey(ContentType, related_name='contacts')
     object_id = models.CharField(max_length=12)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     contact_type = models.CharField(db_column='CONTACT_TYPE',  max_length=30, blank=True, null=True)  # Field name made lowercase.
     name = models.CharField(db_column='CONTACT_NAME',  max_length=50, blank=True, null=True)  # Field name made lowercase.
     salutation = models.CharField(db_column='SALUTATION',  max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -654,7 +654,7 @@ class Events(models.Model):
     event_status = models.CharField(db_column='EVENT_STATUS', max_length=10, blank=True, null=True)  # Field name made lowercase.
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     class Meta:
@@ -801,7 +801,7 @@ class StallInventory(BaseModel):
     stall_timing = models.CharField(db_column='STALL_TIMINGS', max_length=20, blank=True, null=True)  # Field name made lowercase.
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     class Meta:
@@ -819,7 +819,7 @@ class FlyerInventory(BaseModel):
     lobbytolobby_allowed = models.BooleanField(db_column='LOBBYTOLOBBY_ALLOWED', default=False)
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     class Meta:
@@ -1069,7 +1069,7 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     parkingspace = models.FloatField(blank=True, null=True, default=0.0)
     openspace = models.FloatField(blank=True, null=True, default=0.0)
     averagerent = models.FloatField(blank=True, null=True, default=0.0)
-    generic.GenericRelation(ContactDetailsGeneric)
+    fields.GenericRelation(ContactDetailsGeneric)
     is_common_cafeteria_available = models.BooleanField(default=False)
 
     def get_buildings(self):
@@ -1083,7 +1083,7 @@ class SupplierTypeCorporate(BasicSupplierDetails):
 
 class CorporateParkCompanyList(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    name = models.CharField(db_column='COMPANY_NAME',max_length='50', blank=True, null=True)
+    name = models.CharField(db_column='COMPANY_NAME',max_length=50, blank=True, null=True)
     supplier_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_ID', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
 
     def get_company_details(self):
@@ -1120,7 +1120,7 @@ class SupplierTypeSalon(BasicSupplierDetails):
     poster_places = models.IntegerField(db_column='PO_PLACES', blank=True, null=True)
     mirrorstrip_price_week = models.IntegerField(db_column='MS_PRICE_WEEK', blank=True, null=True)
     mirrorstrip_price_month = models.IntegerField(db_column='MS_PRICE_MONTH', blank=True, null=True)
-    generic.GenericRelation(ContactDetailsGeneric)
+    fields.GenericRelation(ContactDetailsGeneric)
 
     class Meta:
         db_table = 'supplier_salon'
@@ -1161,7 +1161,7 @@ class SupplierTypeGym(BasicSupplierDetails):
     locker_price_month = models.IntegerField(blank=True, null=True)
     wall_price_month = models.IntegerField(blank=True, null=True)
     wall_price_three_month = models.IntegerField(blank=True, null=True)
-    generic.GenericRelation(ContactDetailsGeneric)
+    fields.GenericRelation(ContactDetailsGeneric)
 
     class Meta:
         db_table = 'supplier_gym'
@@ -1186,7 +1186,7 @@ class SocietyTower(models.Model):
     average_rent_per_sqft = models.IntegerField(db_column='AVERAGE_RENT_PER_SQFT', blank=True, null=True)  # Field name made lowercase.
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     def get_notice_board_list(self):
@@ -1227,7 +1227,7 @@ class BusinessAccountContact(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     content_type = models.ForeignKey(ContentType)
     object_id = models.CharField(max_length=20)
-    business_account_id = generic.GenericForeignKey('content_type','object_id')
+    business_account_id = fields.GenericForeignKey('content_type','object_id')
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
     designation = models.CharField(db_column='DESIGNATION', max_length=20, blank=True)
     department = models.CharField(db_column='DEPARTMENT', max_length=20, blank=True)
@@ -1530,7 +1530,7 @@ class InventoryType(models.Model):
 #     supplier_code   = models.CharField(max_length=4)
 #     content_type    = models.ForeignKey(ContentType, related_name='spaces')
 #     object_id       = models.CharField(max_length=12)
-#     content_object  = generic.GenericForeignKey('content_type', 'object_id')
+#     content_object  = fields.GenericForeignKey('content_type', 'object_id')
 #     buffer_status   = models.BooleanField(default=False)
 #
 #     class Meta:
@@ -1617,7 +1617,7 @@ class ShortlistedSpacesVersion(models.Model):
     supplier_code   = models.CharField(max_length=4)
     content_type    = models.ForeignKey(ContentType, related_name='spaces_version')
     object_id       = models.CharField(max_length=12)
-    content_object  = generic.GenericForeignKey('content_type', 'object_id')
+    content_object  = fields.GenericForeignKey('content_type', 'object_id')
     buffer_status   = models.BooleanField(default=False)
 
     class Meta:
@@ -1721,7 +1721,7 @@ class SocietyInventoryBooking(models.Model):
     audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=12, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     def get_type(self):
@@ -1959,7 +1959,7 @@ class InventorySummary(BaseModel):
     standee_count_per_tower = models.IntegerField(db_column='STANDEE_COUNT_PER_TOWER', null=True)
     content_type = models.ForeignKey(ContentType,default=None, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
     gateway_arch_allowed = models.BooleanField(default=False)
     lit = models.BooleanField(default=False)
@@ -2085,7 +2085,7 @@ class ShortlistedInventoryPricingDetails(BaseModel):
     closure_date = models.DateTimeField(null=True, blank=True)
     shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True)
     objects = managers.GeneralManager()
-    inventory_object = generic.GenericForeignKey('inventory_content_type', 'inventory_id')
+    inventory_object = fields.GenericForeignKey('inventory_content_type', 'inventory_id')
     comment = models.CharField(max_length=1000, null=True, blank=True)
 
 
@@ -2283,7 +2283,7 @@ class ShortlistedSpaces(BaseModel):
     supplier_code = models.CharField(max_length=4, null=True, blank=True)
     content_type = models.ForeignKey(ContentType, related_name='spaces')
     object_id = models.CharField(max_length=supplier_id_max_length)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     buffer_status = models.BooleanField(default=False)
     status = models.CharField(max_length=10, null=True, blank=True)
     objects = managers.GeneralManager()
@@ -2450,7 +2450,7 @@ class SupplierAmenitiesMap(BaseModel):
 
     content_type = models.ForeignKey(ContentType)
     object_id = models.CharField(max_length=1000)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     amenity = models.ForeignKey(Amenity, null=True, blank=True)
 
     class Meta:
@@ -2601,7 +2601,7 @@ class Leads(BaseModel):
     campaign = models.ForeignKey('ProposalInfo', null=False, blank=False)
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
     firstname1 = models.CharField(max_length=20, blank=True, null=True)
     lastname1 = models.CharField(max_length=20, blank=True, null=True)
@@ -2651,7 +2651,7 @@ class GatewayArchInventory(BaseModel):
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
 
     class Meta:

@@ -19,7 +19,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Q, F, Sum, Count
-from django.db.models import get_model
+# from django.db.models import get_model
+from django.apps import apps
 from django.forms.models import model_to_dict
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
@@ -3754,6 +3755,7 @@ class CampaignInventory(APIView):
             # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
             # cache_value = cache.get(cache_key)
             # cache_value = None
+
             response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
             if not response.data['status']:
                 return response
@@ -4179,7 +4181,7 @@ class SupplierDetails(APIView):
             content_type = ui_utils.fetch_content_type(supplier_type_code)
 
             supplier_model = ContentType.objects.get(pk=content_type.id).model
-            model = get_model(settings.APP_NAME,supplier_model)
+            model = apps.get_model(settings.APP_NAME,supplier_model)
 
             supplier_object = model.objects.get(supplier_id=supplier_id)
 
@@ -4215,7 +4217,7 @@ class SupplierDetails(APIView):
             content_type = response.data['data']
             supplier_model = content_type.model
 
-            model = get_model(settings.APP_NAME, supplier_model)
+            model = apps.get_model(settings.APP_NAME, supplier_model)
 
             model.objects.filter(supplier_id=supplier_id).update(**data)
 

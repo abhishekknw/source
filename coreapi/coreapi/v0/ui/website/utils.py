@@ -3934,6 +3934,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
 
         # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
         response = get_objects_per_content_type(shortlisted_spaces.values())
+
         if not response.data['status']:
             return response
         content_type_supplier_id_map, content_type_id_set, supplier_id_set = response.data['data']
@@ -3944,6 +3945,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         response = map_objects_ids_to_objects(content_type_supplier_id_map)
         if not response.data['status']:
             return response
+
         # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
         # information for that supplier
         supplier_specific_info = response.data['data']
@@ -3957,7 +3959,6 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         if not response.data['status']:
             return response
         supplier_price_per_content_type_per_supplier = response.data['data']
-
         shortlisted_suppliers_serializer = serializers.ShortlistedSpacesSerializerReadOnly(shortlisted_spaces, many=True)
         shortlisted_suppliers_list = shortlisted_suppliers_serializer.data
         result['shortlisted_suppliers'] = shortlisted_suppliers_list
@@ -3980,6 +3981,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
                 pmd_objects_per_supplier = supplier_price_per_content_type_per_supplier[supplier_tuple]
             except KeyError:
                 pmd_objects_per_supplier = []
+
             shortlisted_inventories = supplier['shortlisted_inventories']
             response = add_total_price_per_inventory_per_supplier(pmd_objects_per_supplier, shortlisted_inventories)
             if not response.data['status']:

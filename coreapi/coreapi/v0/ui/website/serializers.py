@@ -18,46 +18,54 @@ class InventoryActivitySerializer(ModelSerializer):
 
     class Meta:
         model = models.InventoryActivity
+        fields = '__all__'
 
 
 class LeadSerializer(ModelSerializer):
     class Meta:
         model = models.Lead
+        fields = '__all__'
 
 
 class FiltersSerializer(ModelSerializer):
     class Meta:
         model = models.Filters
+        fields = '__all__'
 
 
 class ProposalInfoVersionSerializer(ModelSerializer):
 
     class Meta:
         model = ProposalInfoVersion
+        fields = '__all__'
 
 
 class ProposalCenterMappingVersionSerializer(ModelSerializer):
 
     class Meta:
         model = ProposalCenterMappingVersion
+        fields = '__all__'
 
 
 class SpaceMappingVersionSerializer(ModelSerializer):
 
     class Meta:
         model = SpaceMappingVersion
+        fields = '__all__'
 
 
 class InventoryTypeVersionSerializer(ModelSerializer):
 
     class Meta:
         model = InventoryTypeVersion
+        fields = '__all__'
 
 
 class ShortlistedSpacesVersionSerializer(ModelSerializer):
 
     class Meta:
         model = ShortlistedSpacesVersion
+        fields = '__all__'
 
 
 class ProposalCenterMappingVersionSpaceSerializer(ModelSerializer):
@@ -67,12 +75,14 @@ class ProposalCenterMappingVersionSpaceSerializer(ModelSerializer):
 
     class Meta:
         model = ProposalCenterMappingVersion
+        fields = '__all__'
 
 
 class ProposalInfoSerializer(BaseModelPermissionSerializer):
 
     class Meta:
         model = ProposalInfo
+        fields = '__all__'
 
 
 class GuestUserSerializer(ModelSerializer):
@@ -93,18 +103,21 @@ class GenericExportFileSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.GenericExportFileName
+        fields = '__all__'
 
 
 class InventoryTypeSerializer(ModelSerializer):
 
     class Meta:
         model = InventoryType
+        fields = '__all__'
 
 
 class SpaceMappingSerializer(ModelSerializer):
 
     class Meta:
         model = SpaceMapping
+        fields = '__all__'
 
 
 class ProposalCenterMappingSpaceSerializer(ModelSerializer):
@@ -114,12 +127,14 @@ class ProposalCenterMappingSpaceSerializer(ModelSerializer):
 
     class Meta:
         model = ProposalCenterMapping
+        fields = '__all__'
 
 
 class ProposalCenterMappingSerializer(ModelSerializer):
     # using this serializer to save the center object
     class Meta:
         model = ProposalCenterMapping
+        fields = '__all__'
         # fields = ('proposal', 'center_name', 'id')
 
 
@@ -194,6 +209,7 @@ class UISocietyInventorySerializer(ModelSerializer):
     class Meta:
 
         model = SocietyInventoryBooking
+        fields = '__all__'
         read_only_fields = (
         'inventory_price',
         'type'
@@ -205,11 +221,15 @@ class BusinessTypeSerializer(ModelSerializer):
 
     class Meta:
         model = models.BusinessTypes
+        fields = '__all__'
+
 
 class BusinessSubTypeSerializer(ModelSerializer):
 
     class Meta:
         model = models.BusinessSubTypes
+        fields = '__all__'
+
 
 
 class UIBusinessInfoSerializer(ModelSerializer):
@@ -220,6 +240,8 @@ class UIBusinessInfoSerializer(ModelSerializer):
 
     class Meta:
         model = Organisation
+        fields = '__all__'
+
         # depth = 2
 
 
@@ -228,6 +250,8 @@ class UIAccountInfoSerializer(ModelSerializer):
 
     class Meta:
         model = AccountInfo
+        fields = '__all__'
+
         # depth = 2
 
 
@@ -239,6 +263,7 @@ class CampaignListSerializer(ModelSerializer):
     class Meta:
         model = Campaign
         depth=1
+        fields = '__all__'
         read_only_fields = (
         'types',
         'society_count',
@@ -252,6 +277,7 @@ class CampaignInventorySerializer(ModelSerializer):
 
     class Meta:
         model = CampaignSocietyMapping
+        fields = '__all__'
         read_only_fields = (
         'campaign',
         'society',
@@ -268,17 +294,20 @@ class CampaignAssignmentSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.CampaignAssignment
+        fields = '__all__'
 
 
 class AuditDateSerializer(ModelSerializer):
 
     class Meta:
         model = models.AuditDate
+        fields = '__all__'
 
 
 class InventoryActivityImageSerializer(ModelSerializer):
     class Meta:
         model = models.InventoryActivityImage
+        fields = '__all__'
 
 
 class InventoryActivityAssignmentSerializerWithImages(ModelSerializer):
@@ -287,6 +316,7 @@ class InventoryActivityAssignmentSerializerWithImages(ModelSerializer):
 
     class Meta:
         model = models.InventoryActivityAssignment
+        fields = '__all__'
 
 
 class InventoryActivitySerializerWithInventoryAssignmentsAndImages(ModelSerializer):
@@ -325,6 +355,7 @@ class PriceMappingDefaultSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.PriceMappingDefault
+        fields = '__all__'
 
 
 class ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(ModelSerializer):
@@ -337,18 +368,21 @@ class ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(ModelSe
 
     class Meta:
         model = models.ShortlistedInventoryPricingDetails
+        fields = '__all__'
 
 
 class AmenitySerializer(ModelSerializer):
 
     class Meta:
         model = models.Amenity
+        fields = '__all__'
 
 
 class SupplierAmenitiesMapSerializer(ModelSerializer):
 
     class Meta:
         model = models.SupplierAmenitiesMap
+        fields = '__all__'
         depth = 1
 
 
@@ -358,6 +392,7 @@ class InventoryActivityAssignmentWithShortlistedSpaceReadOnly(ModelSerializer):
 
     class Meta:
         model = models.InventoryActivityAssignment
+        fields = '__all__'
 
 
 class InventoryActivityImageSerializerReadOnly(ModelSerializer):
@@ -366,6 +401,7 @@ class InventoryActivityImageSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.InventoryActivityImage
+        fields = '__all__'
 
 
 class InventoryActivityAssignmentSerializerReadOnly(ModelSerializer):
@@ -378,6 +414,7 @@ class InventoryActivityAssignmentSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = models.InventoryActivityAssignment
+        fields = '__all__'
 
 
 class InventoryActivityAssignmentSerializer(ModelSerializer):
@@ -386,6 +423,7 @@ class InventoryActivityAssignmentSerializer(ModelSerializer):
     """
     class Meta:
         model = models.InventoryActivityAssignment
+        fields = '__all__'
 
 
 class ObjectLevelPermissionSerializer(ModelSerializer):
@@ -394,6 +432,7 @@ class ObjectLevelPermissionSerializer(ModelSerializer):
     """
     class Meta:
         model = models.ObjectLevelPermission
+        fields = '__all__'
 
 
 class GeneralUserPermissionSerializer(ModelSerializer):
@@ -402,12 +441,14 @@ class GeneralUserPermissionSerializer(ModelSerializer):
     """
     class Meta:
         model = models.GeneralUserPermission
+        fields = '__all__'
 
 
 class OrganisationSerializer(ModelSerializer):
 
     class Meta:
         model = models.Organisation
+        fields = '__all__'
 
 
 class ProfileNestedSerializer(ModelSerializer):
@@ -420,6 +461,7 @@ class ProfileNestedSerializer(ModelSerializer):
 
     class Meta:
         model = models.Profile
+        fields = '__all__'
 
 
 class ProfileSimpleSerializer(ModelSerializer):
@@ -428,6 +470,7 @@ class ProfileSimpleSerializer(ModelSerializer):
     """
     class Meta:
         model = models.Profile
+        fields = '__all__'
 
 
 
@@ -435,6 +478,7 @@ class ContentTypeSerializer(ModelSerializer):
 
     class Meta:
         model =  ContentType
+        fields = '__all__'
 
 
 class ObjectLevelPermissionViewSet(ModelSerializer):
@@ -443,6 +487,7 @@ class ObjectLevelPermissionViewSet(ModelSerializer):
     """
     class Meta:
         model = models.ObjectLevelPermission
+        fields = '__all__'
 
 
 class OrganisationMapNestedSerializer(ModelSerializer):
@@ -454,6 +499,7 @@ class OrganisationMapNestedSerializer(ModelSerializer):
 
     class Meta:
         model = models.OrganisationMap
+        fields = '__all__'
 
 class RoleSerializer(ModelSerializer):
     """
@@ -461,6 +507,7 @@ class RoleSerializer(ModelSerializer):
     """
     class Meta:
         model = models.Role
+        fields = '__all__'
 
 class RoleHierarchySerializer(ModelSerializer):
     """
@@ -468,6 +515,7 @@ class RoleHierarchySerializer(ModelSerializer):
     """
     class Meta:
         model = models.RoleHierarchy
+        fields = '__all__'
 
 class GenericExportFileSerializer(ModelSerializer):
     """
@@ -476,6 +524,7 @@ class GenericExportFileSerializer(ModelSerializer):
 
     class Meta:
         model = models.GenericExportFileName
+        fields = '__all__'
 
 class LeadAliasSerializer(ModelSerializer):
     """
@@ -484,6 +533,7 @@ class LeadAliasSerializer(ModelSerializer):
 
     class Meta:
         model = models.LeadAlias
+        fields = '__all__'
 
 class LeadsSerializer(ModelSerializer):
     """
@@ -492,3 +542,4 @@ class LeadsSerializer(ModelSerializer):
 
     class Meta:
         model = models.Leads
+        fields = '__all__'

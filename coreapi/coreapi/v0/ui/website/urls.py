@@ -1,4 +1,4 @@
-from django.conf.urls import include, url, patterns
+from django.conf.urls import include, url
 
 from rest_framework.routers import DefaultRouter
 

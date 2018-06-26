@@ -1,11 +1,11 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 
 from rest_framework.routers import DefaultRouter
 
 from v0 import views
 
 
-urlpatterns = patterns('',
+urlpatterns = [
     url(r'^ui/', include('v0.ui.urls')),
     url(r'^android/', include('v0.android.urls')),
     url(r'^bannerinventory/(?P<id>[0-9]+)$', views.BannerInventoryAPIView.as_view()),
@@ -87,9 +87,8 @@ urlpatterns = patterns('',
     url(r'^populate-amenities/$', views.PopulateAmenities.as_view()),
     url(r'^guest-user/$', views.GuestUser.as_view()),
     url(r'^set-params/$', views.SetParams.as_view()),
-    url(r'^copy-organisations/$', views.CopyOrganisation.as_view()),
-
-    )
+    url(r'^copy-organisations/$', views.CopyOrganisation.as_view())
+    ]
 
 # adding urls for Permission View Set
 router = DefaultRouter()

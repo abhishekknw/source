@@ -44,17 +44,20 @@ class AccountInfoSerializer(BaseModelPermissionSerializer):
 
     class Meta:
         model = AccountInfo
+        fields = '__all__'
 
 
 class UserSerializer(ModelSerializer):
     class Meta:
         model = models.BaseUser
+        fields = '__all__'
 
 
 class UserProfileSerializer(ModelSerializer):
     # user1 = UserSerializer(source='get_user')
     class Meta:
         model = UserProfile
+        fields = '__all__'
         # read_only_fields = (
     #    'user1'
     # )
@@ -63,16 +66,19 @@ class UserProfileSerializer(ModelSerializer):
 class ImageMappingSerializer(ModelSerializer):
     class Meta:
         model = ImageMapping
+        fields = '__all__'
 
 
 class InventoryLocationSerializer(ModelSerializer):
     class Meta:
         model = InventoryLocation
+        fields = '__all__'
 
 
 class AdInventoryLocationMappingSerializer(ModelSerializer):
     class Meta:
         model = AdInventoryLocationMapping
+        fields = '__all__'
 
 
 class AdInventoryTypeSerializer(ModelSerializer):
@@ -91,11 +97,13 @@ class PriceMappingSerializer(ModelSerializer):
     class Meta:
         model = PriceMapping
         depth = 2
+        fields = '__all__'
 
 
 class BannerInventorySerializer(ModelSerializer):
     class Meta:
         model = BannerInventory
+        fields = '__all__'
 
 
 '''class CarDisplayInventorySerializer(ModelSerializer):
@@ -107,11 +115,13 @@ class BannerInventorySerializer(ModelSerializer):
 class CommunityHallInfoSerializer(ModelSerializer):
     class Meta:
         model = CommunityHallInfo
+        fields = '__all__'
 
 
 class DoorToDoorInfoSerializer(ModelSerializer):
     class Meta:
         model = DoorToDoorInfo
+        fields = '__all__'
 
 
 class LiftDetailsSerializer(ModelSerializer):
@@ -119,6 +129,7 @@ class LiftDetailsSerializer(ModelSerializer):
 
     class Meta:
         model = LiftDetails
+        fields = '__all__'
         read_only_fields = (
             'tower_name'
         )
@@ -129,6 +140,7 @@ class NoticeBoardDetailsSerializer(ModelSerializer):
 
     class Meta:
         model = NoticeBoardDetails
+        fields = '__all__'
         read_only_fields = (
             'tower_name'
         )
@@ -137,112 +149,134 @@ class NoticeBoardDetailsSerializer(ModelSerializer):
 class PosterInventorySerializer(ModelSerializer):
     class Meta:
         model = PosterInventory
+        fields = '__all__'
 
 
 class SocietyFlatSerializer(ModelSerializer):
     class Meta:
         model = SocietyFlat
+        fields = '__all__'
 
 
 class StandeeInventorySerializer(ModelSerializer):
     class Meta:
         model = StandeeInventory
+        fields = '__all__'
 
 
 class SwimmingPoolInfoSerializer(ModelSerializer):
     class Meta:
         model = SwimmingPoolInfo
+        fields = '__all__'
 
 
 class WallInventorySerializer(ModelSerializer):
     class Meta:
         model = WallInventory
+        fields = '__all__'
 
 
 class UserInquirySerializer(ModelSerializer):
     class Meta:
         model = UserInquiry
+        fields = '__all__'
 
 
 class CommonAreaDetailsSerializer(ModelSerializer):
     class Meta:
         model = CommonAreaDetails
+        fields = '__all__'
 
 
 class ContactDetailsSerializer(ModelSerializer):
     class Meta:
         model = ContactDetails
+        fields = '__all__'
 
 
 class ContactDetailsGenericSerializer(ModelSerializer):
     class Meta:
         model = ContactDetailsGeneric
+        fields = '__all__'
         depth = 2
 
 
 class EventsSerializer(ModelSerializer):
     class Meta:
         model = Events
+        fields = '__all__'
 
 
 class InventoryInfoSerializer(ModelSerializer):
     class Meta:
         model = InventoryInfo
+        fields = '__all__'
 
 
 class MailboxInfoSerializer(ModelSerializer):
     class Meta:
         model = MailboxInfo
+        fields = '__all__'
 
 
 class OperationsInfoSerializer(ModelSerializer):
     class Meta:
         model = OperationsInfo
+        fields = '__all__'
 
 
 class PoleInventorySerializer(ModelSerializer):
     class Meta:
         model = PoleInventory
+        fields = '__all__'
 
 
 class PosterInventoryMappingSerializer(ModelSerializer):
     class Meta:
         model = PosterInventoryMapping
+        fields = '__all__'
 
 
 class RatioDetailsSerializer(ModelSerializer):
     class Meta:
         model = RatioDetails
+        fields = '__all__'
 
 
 class SignupSerializer(ModelSerializer):
     class Meta:
         model = Signup
+        fields = '__all__'
 
 
 class StallInventorySerializer(ModelSerializer):
     class Meta:
         model = StallInventory
+        fields = '__all__'
 
 
 class FlyerInventorySerializer(ModelSerializer):
     class Meta:
         model = FlyerInventory
+        fields = '__all__'
 
 
 class StreetFurnitureSerializer(ModelSerializer):
     class Meta:
         model = StreetFurniture
+        fields = '__all__'
 
 
 class SupplierInfoSerializer(ModelSerializer):
     class Meta:
         model = SupplierInfo
+        fields = '__all__'
 
 
 class SportsInfraSerializer(ModelSerializer):
     class Meta:
         model = SportsInfra
+        fields = '__all__'
 
 
 class SupplierTypeSocietySerializer(ModelSerializer):
@@ -259,52 +293,62 @@ class SupplierTypeSocietySerializer(ModelSerializer):
 class SupplierTypeCorporateSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeCorporate
+        fields = '__all__'
 
 
 class SupplierTypeSalonSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeSalon
+        fields = '__all__'
 
 
 class SupplierTypeGymSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeGym
+        fields = '__all__'
 
 
 class CorporateParkCompanyListSerializer(ModelSerializer):
     class Meta:
         model = CorporateParkCompanyList
+        fields = '__all__'
 
 
 class SocietyTowerSerializer(ModelSerializer):
     class Meta:
         model = SocietyTower
+        fields = '__all__'
 
 
 class FlatTypeSerializer(ModelSerializer):
     class Meta:
         model = FlatType
+        fields = '__all__'
 
 
 class InventorySummarySerializer(ModelSerializer):
     class Meta:
         model = InventorySummary
+        fields = '__all__'
 
 
 class PriceMappingDefaultSerializer(ModelSerializer):
     class Meta:
         model = PriceMappingDefault
+        fields = '__all__'
         depth = 1
 
 
 class CampaignSupplierTypesSerializer(ModelSerializer):
     class Meta:
         model = CampaignSupplierTypes
+        fields = '__all__'
 
 
 class CampaignTypeMappingSerializer(ModelSerializer):
     class Meta:
         model = CampaignTypeMapping
+        fields = '__all__'
 
 
 class SocietyInventoryBookingSerializer(ModelSerializer):
@@ -312,6 +356,7 @@ class SocietyInventoryBookingSerializer(ModelSerializer):
 
     class Meta:
         model = SocietyInventoryBooking
+        fields = '__all__'
         read_only_fields = (
             'type'
         )
@@ -320,22 +365,26 @@ class SocietyInventoryBookingSerializer(ModelSerializer):
 class CampaignSerializer(ModelSerializer):
     class Meta:
         model = Campaign
+        fields = '__all__'
 
 
 class CampaignSocietyMappingSerializer(ModelSerializer):
     class Meta:
         model = CampaignSocietyMapping
+        fields = '__all__'
         depth = 1
 
 
 class BusinessSubTypesSerializer(ModelSerializer):
     class Meta:
         model = BusinessSubTypes
+        fields = '__all__'
 
 
 class BusinessTypesSerializer(ModelSerializer):
     class Meta:
         model = BusinessTypes
+        fields = '__all__'
 
 #
 # class BusinessInfoSerializer(ModelSerializer):
@@ -352,6 +401,7 @@ class BusinessTypesSerializer(ModelSerializer):
 class BusinessAccountContactSerializer(ModelSerializer):
     class Meta:
         model = BusinessAccountContact
+        fields = '__all__'
 
 #
 # class BusinessTypesSerializer(ModelSerializer):
@@ -365,6 +415,7 @@ class BusinessInfoSerializer(ModelSerializer):
     # type = BusinessTypesSerializer()
     class Meta:
         model = Organisation
+        fields = '__all__'
         # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
         # 'reference_phone', 'reference_email', 'comments')
 
@@ -378,6 +429,7 @@ class BusinessInfoSerializer(ModelSerializer):
 class AccountSerializer(ModelSerializer):
     class Meta:
         model = AccountInfo
+        fields = '__all__'
 
 # class AccountContactSerializer(ModelSerializer):
 
@@ -388,26 +440,31 @@ class AccountSerializer(ModelSerializer):
 class CitySubAreaSerializer(ModelSerializer):
     class Meta:
         model = CitySubArea
+        fields = '__all__'
 
 
 class CityAreaSerializer(ModelSerializer):
     class Meta:
         model = CityArea
+        fields = '__all__'
 
 
 class CitySerializer(ModelSerializer):
     class Meta:
         model = City
+        fields = '__all__'
 
 
 class SupplierTypeCodeSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeCode
+        fields = '__all__'
 
 
 class SocietyMajorEventsSerializer(ModelSerializer):
     class Meta:
         model = SocietyMajorEvents
+        fields = '__all__'
 
 
 # CorporateBuilding, CorporateBuildingWing, CorporateCompany, CorporateCompanyDetails, CompanyFloor
@@ -416,11 +473,13 @@ class SocietyMajorEventsSerializer(ModelSerializer):
 class CorporateBuildingSerializer(ModelSerializer):
     class Meta:
         model = CorporateBuilding
+        fields = '__all__'
 
 
 class CorporateBuildingWingSerializer(ModelSerializer):
     class Meta:
         model = CorporateBuildingWing
+        fields = '__all__'
 
 
 class CorporateBuildingGetSerializer(ModelSerializer):
@@ -428,11 +487,13 @@ class CorporateBuildingGetSerializer(ModelSerializer):
 
     class Meta:
         model = CorporateBuilding
+        fields = '__all__'
 
 
 class CompanyFloorSerializer(ModelSerializer):
     class Meta:
         model = CompanyFloor
+        fields = '__all__'
 
 
 class CorporateCompanySerializer(ModelSerializer):
@@ -441,6 +502,7 @@ class CorporateCompanySerializer(ModelSerializer):
 
     class Meta:
         model = CorporateCompanyDetails
+        fields = '__all__'
 
 
 class CorporateParkCompanySerializer(ModelSerializer):
@@ -449,61 +511,73 @@ class CorporateParkCompanySerializer(ModelSerializer):
 
     class Meta:
         model = CorporateParkCompanyList
+        fields = '__all__'
 
 
 class CorporateCompanyDetailsSerializer(ModelSerializer):
     class Meta:
         model = CorporateCompanyDetails
+        fields = '__all__'
 
 
 class SupplierTypeBusShelterSerializer(ModelSerializer):
     class Meta:
         model = models.SupplierTypeBusShelter
+        fields = '__all__'
 
 
 class ProposalMasterCostSerializer(ModelSerializer):
     class Meta:
         model = models.ProposalMasterCost
+        fields = '__all__'
 
 
 class PrintingCostSerializer(ModelSerializer):
     class Meta:
         model = models.PrintingCost
+        fields = '__all__'
 
 
 class LogisticOperationsCostSerializer(ModelSerializer):
     class Meta:
         model = models.LogisticOperationsCost
+        fields = '__all__'
 
 
 class IdeationDesignCostSerializer(ModelSerializer):
     class Meta:
         model = models.IdeationDesignCost
+        fields = '__all__'
 
 
 class SpaceBookingCostSerializer(ModelSerializer):
     class Meta:
         model = models.SpaceBookingCost
+        fields = '__all__'
 
 
 class EventStaffingCostSerializer(ModelSerializer):
     class Meta:
         model = models.EventStaffingCost
+        fields = '__all__'
 
 
 class DataSciencesCostSerializer(ModelSerializer):
     class Meta:
         model = models.DataSciencesCost
+        fields = '__all__'
 
 
 class ProposalMetricsSerializer(ModelSerializer):
     class Meta:
         model = models.ProposalMetrics
+        fields = '__all__'
 
 
 class PermissionSerializer(ModelSerializer):
     class Meta:
         model = Permission
+        fields = '__all__'
 
 
 class BusinessTypeSubTypeReadOnlySerializer(ModelSerializer):
@@ -511,15 +585,18 @@ class BusinessTypeSubTypeReadOnlySerializer(ModelSerializer):
 
     class Meta:
         model = BusinessTypes
+        fields = '__all__'
 
 class GroupSerializer(ModelSerializer):
     class Meta:
         model = Group
+        fields = '__all__'
 
 
 class PermissionsSerializer(ModelSerializer):
     class Meta:
         model = Permission
+        fields = '__all__'
 
 
 class GeneralUserPermissionSerializer(ModelSerializer):
@@ -528,12 +605,14 @@ class GeneralUserPermissionSerializer(ModelSerializer):
     """
     class Meta:
         model = models.GeneralUserPermission
+        fields = '__all__'
 
 
 class OrganisationSerializer(BaseModelPermissionSerializer):
 
     class Meta:
         model = models.Organisation
+        fields = '__all__'
 
 
 class ObjectLevelPermissionSerializer(ModelSerializer):
@@ -542,6 +621,7 @@ class ObjectLevelPermissionSerializer(ModelSerializer):
     """
     class Meta:
         model = models.ObjectLevelPermission
+        fields = '__all__'
 
 
 class ProfileNestedSerializer(ModelSerializer):
@@ -554,6 +634,7 @@ class ProfileNestedSerializer(ModelSerializer):
 
     class Meta:
         model = models.Profile
+        fields = '__all__'
 
 
 class BaseUserCreateSerializer(ModelSerializer):
@@ -665,7 +746,9 @@ class SupplierTypeRetailShopSerializer(ModelSerializer):
 
     class Meta:
         model = models.SupplierTypeRetailShop
+        fields = '__all__'
 
 class GatewatArchInventorySerializer(ModelSerializer):
     class Meta:
         model = models.GatewayArchInventory
+        fields = '__all__'
