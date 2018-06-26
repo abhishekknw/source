@@ -5818,7 +5818,8 @@ class DashBoardViewSet(viewsets.ViewSet):
             ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
 
             completed_suppliers = models.ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,is_completed=True).values('object_id')
-            completed_supplier_id_list = [supplier.object_id for supplier in completed_suppliers]
+
+            completed_supplier_id_list = [supplier['object_id'] for supplier in completed_suppliers]
 
             upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(ongoing_supplier_id_list + completed_supplier_id_list)
 
@@ -5837,7 +5838,7 @@ class DashBoardViewSet(viewsets.ViewSet):
 
 
             completed_suppliers_list = []
-            for id in completed_suppliers_list:
+            for id in completed_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
                     'leads_data': []
