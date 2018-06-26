@@ -575,12 +575,7 @@ color: #ffffff !important;
         height: 480px;
 }
 
-.windowDisplayTable{
-  height: 40px;
-  width: 150px;
-  margin-left: 14px;
 
-}
 
 .table > thead:first-child > tr:first-child > td {
     border-top: 0;

@@ -1210,7 +1210,7 @@
       })
       $scope.showDisplayDetailsTable = true;
       console.log($scope.supplierAndInvData);
-      $scope.map = { zoom: 10,bounds: {},center: {latitude: $scope.latitude,longitude: $scope.longitude,}};
+      $scope.map = { zoom: 7,bounds: {},center: {latitude: $scope.latitude,longitude: $scope.longitude}};
       $scope.supplierMarkers = assignMarkersToMap($scope.supplierAndInvData);
       uiGmapIsReady.promise()
         .then(function(instances) {
@@ -1227,7 +1227,8 @@
     $scope.windowCoords = {};
     $scope.onClick = function(marker, eventName, model) {
       console.log('hello',model);
-      $scope.space = model.title;
+      $scope.space = model;
+      $scope.campaignInventory = model;
       $scope.windowCoords.latitude = model.latitude;
       $scope.windowCoords.longitude = model.longitude;
       $scope.show = true;
@@ -1237,7 +1238,8 @@
         // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
         var markers = [];
         var icon;
-        angular.forEach(suppliers, function(supplier){
+        var checkInv = true;
+        angular.forEach(suppliers, function(supplier,$index){
           console.log(supplier);
 
               markers.push({
@@ -1246,13 +1248,34 @@
                   id: supplier.supplier.supplier_id,
                   icon: 'http://www.googlemapsmarkers.com/v1/009900/',
                   options : {draggable : false},
+                  dataofSupplierAndInvData : supplier.supplier,
                   title : {
                       name : supplier.supplier.society_name,
-                      address1 : supplier.supplier.address1,
-                      subarea : supplier.supplier.subarea,
-                      location_type : supplier.supplier.location_type,
+                      flat_count : supplier.supplier.flat_count,
                   },
               });
+              if(checkInv){
+                // markers[$index].title['inv_data'] = {};
+                  angular.forEach($scope.invStatusKeys, function(inv,key){
+                    if($scope.invStatusKeys[key].status){
+                      if('inv_data' in supplier.supplier){
+
+                        markers[$index].title[key] = {
+                            'key' : key,
+                            'total' : supplier.supplier.inv_data[key].total
+                        }
+                      }else {
+                          markers[$index].title[key] = {
+                              'key' : key,
+                              'total' : 0
+                          }
+                        }
+
+                      // markers[$index].title['inv_data'].push(data);
+                    }
+                  })
+              }
+
 
         });
         console.log(markers);
