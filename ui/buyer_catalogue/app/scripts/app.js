@@ -275,7 +275,7 @@ angular
       .state('auditReleasePlan',{
             url : '/:proposal_id/auditReleasePlan',
             controller : 'AuditReleasePlanCtrl',
-            templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan1.tmpl.html',
+            templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.html',
             ncyBreadcrumb: {
               label:'AuditReleasePlan',
               parent : 'releasePlan'

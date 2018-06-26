@@ -19,7 +19,7 @@
 
 
   <div class="row">
-    <div class="panel" ng-controller="CampaignListCtrl">
+    <div class="panel">
     <!-- <div class=""> -->
 
   <div ng-show="isEmpty" style="text-align:center;"><h2>{{msg}}</h2></div>
@@ -56,8 +56,12 @@
                     <a ng-click="getDetails(proposal.campaign.proposal_id)"> Details </a>
                   </td>
                   <td class="col-md-2">
+                    <a ng-click="goToAssignDatesPage(proposal.campaign.proposal_id)"> Assign Dates</a>
+                  </td>
+                  <td class="col-md-2">
                     <a ng-click="getExecutionDetails(proposal.campaign)"> Image Details </a>
                   </td>
+
                 </tr>
               </tbody>
               <tfoot>

@@ -107,7 +107,7 @@
 
               </uib-tab-heading>
 
-                  <div  class="row panel-hide"  ng-init="myVar = '/#/dashboard'">
+                  <div  class="row panel-hide">
                       <div class="row">
                           <div class="col-xlg-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 dashboard-side-label">
                           </div>
@@ -247,7 +247,7 @@
                                       <td>{{item.inv_count}}</td>
                                       <td>{{item.offTimeDays/item.inv_count*100|limitTo:4||0}} </td>
                                       <td>{{item.offLocationDistance/item.inv_count|limitTo:5||0}}</td>
-                                      <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="goToExecutionPage(item.images)">View Image</a></td>
+                                      <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Images</a></td>
                                     <td ng-if="item.images.length == 0"><label>No Image<label></td>
                                           </tr>
                                   </tbody>
@@ -369,14 +369,15 @@
                             <div class="col-md-4 LeadsTable">
                               <div class="panel-heading content-title">
 
-                                <h5 style="background:'red';color:white;">Inventory / Leads Details</h5>
+                                <h5 style="background:'red';color:white;" ng-if="!showSingleCampaignChart">Supplier Details</h5>
+                                <h5 style="background:'red';color:white;" ng-if="showSingleCampaignChart">Supplier / Leads Details</h5>
 
                               </div>
                             <table class="table-responsive table table-bordered">
                               <thead>
                                 <tr>
-                                  <td>Status</td>
-                                  <td>Count</td>
+                                  <td>Campaign Status</td>
+                                  <td>Supplier Count</td>
                                   <td ng-if="showLeadsDetails">Total Leads <br><small>(High Quality Leads)</small></td>
                                 </tr>
                               </thead>
@@ -384,7 +385,8 @@
                                   <tr ng-repeat="item in campaignChartdata">
                                     <td style="text-align:left;">{{item.label}}</td>
                                     <td> {{item.value}}</td>
-                                    <td ng-if="showLeadsDetails">{{campaignStatusData[item.status].totalLeads||0}}({{campaignStatusData[item.status].hotLeads}})</td>
+                                    <td ng-if="showLeadsDetails && item.status != 'upcoming'">{{campaignStatusData[item.status].totalLeads||0}}({{campaignStatusData[item.status].hotLeads}})</td>
+                                    <td ng-if="showLeadsDetails && item.status == 'upcoming'">NA</td>
                                   </tr>
 
                                 </tbody>
@@ -392,8 +394,8 @@
                                     <table class="table-responsive table table-bordered AvgLeadsTable" >
                                     <tbody>
                                       <tr ng-if="showLeadsDetails">
-                                        <td>Avg Leads Per Flat (High Quality): {{avgLeadsPerFlat| limitTo:3 || NA }} % ({{avgHotLeadsPerFlat|limitTo:3 || NA}} %)</td>
-                                        <td>Avg Leads Per Supplier (High Quality): {{avgLeadsPerSupplier|limitTo:3 || NA}} % ({{avgHotLeadsPerSupplier|limitTo:3 || NA }} %)</td>
+                                        <td>Avg Leads Per Flat (High Quality): {{avgLeadsPerFlat| limitTo:4 || NA }} % ({{avgHotLeadsPerFlat|limitTo:4 || NA}} %)</td>
+                                        <td>Avg Leads Per Supplier (High Quality): {{avgLeadsPerSupplier|limitTo:4 || NA}} % ({{avgHotLeadsPerSupplier|limitTo:4 || NA }} %)</td>
                                       </tr>
                                     </tbody>
                                   </table>
@@ -401,10 +403,10 @@
                           </div>
                           </div>
 
-                          <div class="col-md-12">
+                          <div class="">
                             <br><br><br><br>
 
-                              <div class="col-md-6 showDisplayDetailsTable" ng-if="showDisplayDetailsTable">
+                              <div class="col-md-12 showDisplayDetailsTable" ng-if="showDisplayDetailsTable">
                                 <div style="background-color: #cb1925" class="panel-heading">
                                   <h5>Society Details</h5>
 
@@ -444,17 +446,18 @@
                                             <td  ng-show="invStatusKeys.FLIER.status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('FL')" style="width:100%;color:black">{{invStatusKeys.FLIER.total}}</button></td>
                                             <td  ng-show="invStatusKeys.STANDEE.status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('ST')" style="width:100%;color:black">{{invStatusKeys.STANDEE.total}}</button></td>
                                             <td  ng-show="invStatusKeys['GATEWAY ARCH'].status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('GA')" style="width:100%;color:black">{{invStatusKeys['GATEWAY ARCH'].total}}</button></td>
-                                            <td ng-if="showLeads"><button type="button" name="button" class="btn btn-primary" ng-click="switchToLeads() style="width:100%;color:black">{{supplierAndInvData.totalLeads}}</button></td>
+                                            <td ng-if="showLeads"><button type="button" name="button" class="btn btn-primary" ng-click="switchToLeads()" style="width:100%;color:black">{{supplierAndInvData.totalLeads}}</button></td>
                                         </tr>
                                       </tfoot>
                                   </table>
                                 </div>
 
-                                <div class="col-md-6" ng-if="showDisplayDetailsTable">
+                                <div class="col-md-12" ng-show="showDisplayDetailsTable">
                                   <div class="panel-heading content-title">
                                     <h5 style="background:'red'">Map View</h5></div>
-                                    <ng-map center="[{{latitude}} , {{longitude}}]" position="[{{latitude}},{{longitude}}]">
-                                      <marker ng-repeat="supplier in supplierAndInvData" position="[{{supplier.supplier.society_latitude}}, {{supplier.supplier.society_longitude}}]" title="{{supplier.supplier.society_name}}" id="{{supplier.supplier.supplier_id}}" on-click="showDetail(event, supplier)">
+                                    <!-- <ng-map center="[{{latitude}} , {{longitude}}]" position="[{{latitude}},{{longitude}}]">
+                                      <marker ng-repeat="supplier in supplierAndInvData" position="[{{supplier.supplier.society_latitude}}, {{supplier.supplier.society_longitude}}]" title="{{supplier.supplier.society_name}}"
+                                       id="{{supplier.supplier.supplier_id}}" on-click="showDetail(event, supplier)">
                                       <info-window id="myWindow">
                                         <div ng-non-bindable="" style="color:black;height:170px;width:170px;">
                                           <div class="">
@@ -472,7 +475,25 @@
                                         </div>
                                       </info-window>
                                       </marker>
-                                    </ng-map>
+                                    </ng-map> -->
+                                    <!-- <div ng-app="dogMap" ng-controller="MapCtrl"> -->
+                                    <style type="text/css">
+                                        .angular-google-map-container { height: 550px; width: 740px;}
+                                    </style>
+                                      <ui-gmap-google-map center="map.center" zoom="map.zoom" draggable="false"
+                                                          options="options" bounds="map.bounds" control="googlemap">
+                                          <ui-gmap-window show="show" coords='windowCoords' closeClick="closeClick()">
+                                                <div>
+                                                  <div class="">
+                                                    <h3>{{space.name}}</h3>
+                                                  </div>                                                  
+                                                </div>
+                                          </ui-gmap-window>
+                                          <ui-gmap-markers models="supplierMarkers" coords="'self'" icon="'icon'"
+                                                           options="'options'" doRebuildAll="true" click="onClick">
+                                          </ui-gmap-markers>
+                                      </ui-gmap-google-map>
+                                    <!-- </div> -->
                                   </div>
 
                                 <div class="col-md-7 LeadsTable" ng-show="showSupplierSocietywiseInvTable" >
@@ -513,23 +534,25 @@
                                 </div>
                                 <nvd3 options="supplierCodeCountOptions" data="supplierCodeCountData"></nvd3>
                               </div>
-                              <div class="col-md-6" ng-if="showCampaignInvTable">
+                              <div class="col-md-6" ng-if="showSupplierTypeCountChart">
                                 <div class="panel-heading content-title">
                                   <h5 style="background:'red'">{{campaignStatusName}}</h5>
                                 </div>
                                 <div class="campaignInvTable">
                                 <table class="table-responsive table table-bordered">
                                   <thead>
+                                    <th>Index</th>
                                     <th>Proposal Name</th>
-                                    <th>Society Count</th>
+                                    <th class="countDisplay">Supplier Count</th>
                                     <th>Leads Count</th>
                                     <th>Go to Inventory</th>
                                   </thead>
-                                  <tbody>
-                                    <tr ng-repeat="campaign in campaignInvData">
+                                  <tbody ng-repeat="(key,data) in supplierTypesData">
+                                    <tr ng-repeat="campaign in data">
+                                      <td>{{$index + 1}}</td>
                                       <td>{{campaign.proposal__name}}</td>
                                      <td>{{campaign.total}}</td>
-                                     <td ng-if="campaign.leads" class="blinking">{{campaign.leads.total}}</td>
+                                     <td ng-if="campaign.leads">{{campaign.leads.total}}</td>
                                      <td ng-if="!campaign.leads">NA</td>
                                      <td><a ng-click="getCampaignInvTypesData(campaign)" class="btn btn-danger">Go To Inventory</a>
                                      </td>
@@ -538,6 +561,16 @@
                                 </table>
                               </div>
                               </div>
+
+                              <div class="col-md-12" ng-if="showSupplierTypeCountChart">
+                                <div class="panel-heading content-title">
+                                  <h5 style="background:'red'">Map View</h5></div>
+                                  <ng-map center="[{{supplierTypesDataList[0].center__latitude}} , {{supplierTypesDataList[0].center__longitude}}]" position="[{{latitude}},{{longitude}}]">
+                                    <marker ng-repeat="campaign in supplierTypesDataList" position="[{{campaign.center__latitude}}, {{campaign.center__longitude}}]" title="{{campaign.proposal__name}}" id="{{campaign.proposal_id}}">
+                                    </marker>
+                                  </ng-map>
+                                </div>
+
                             </div>
                             <div class="panel panel-default" >
 

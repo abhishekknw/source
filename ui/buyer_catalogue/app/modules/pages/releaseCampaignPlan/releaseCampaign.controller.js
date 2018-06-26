@@ -40,7 +40,7 @@ angular.module('catalogueApp')
     {name:'Tentative Booking', code : 'NB'},
     {name:'Phone Booked' , code : 'PB'},
     {name:'Visit Booked', code : 'VB'},
-    {name:'Rejected', code : 'R'},
+    {name:'Rejected', code : 'SR'},
     {name:'Send Email', code : 'SE'},
     {name:'Visit Required', code : 'VR'},
     {name:'Call Required', code : 'CR'},
@@ -48,11 +48,11 @@ angular.module('catalogueApp')
   ];
 
   $scope.payment_status = [
-    {name:'Not Initiated', code : 'NI'},
-    {name:'Pending', code : 'P'},
-    {name:'Cheque Released' , code : 'CR'},
+    {name:'Not Initiated', code : 'PNI'},
+    {name:'Pending', code : 'PP'},
+    {name:'Cheque Released' , code : 'PCR'},
     {name:'Paid', code : 'PD'},
-    {name:'Rejected', code : 'R'},
+    {name:'Rejected', code : 'PR'},
 
   ];
 
@@ -265,8 +265,11 @@ angular.module('catalogueApp')
     }
       //End: code added to search & show all suppliers on add societies tab
     $scope.addSuppliersToList = function(supplier){
-      if(!(supplier.supplier_id in $scope.shortlistedSuppliersIdList || supplier.supplier_id in $scope.supplierSummaryData))
+      if(!(supplier.supplier_id in $scope.shortlistedSuppliersIdList || supplier.supplier_id in $scope.supplierSummaryData)){
         $scope.supplierSummaryData[supplier.supplier_id] = supplier;
+        $scope.showAddSupplierMsg = 'Added Successfully';
+        alert($scope.showAddSupplierMsg);
+      }
       else
         alert("supplier Already Present");
       console.log($scope.supplierSummaryData);

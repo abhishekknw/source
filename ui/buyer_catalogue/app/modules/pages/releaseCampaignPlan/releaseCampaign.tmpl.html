@@ -278,8 +278,7 @@
                   <option value="">Select Supplier</option>
                   <option  ng-repeat="supplier in supplier_names" value="{{supplier.code}}" required>{{supplier.name}}</option>
                 </select>
-                <br />  <br />  <br />
-                    <label style="margin-left: 20px;margin-right: 20px;">Enter Search Text<label>
+                    <label style="margin-left: 20px;margin-right: 20px;">Enter Text</label>
                       <input class="form-control input-size" type="text" ng-model="search" class="form-control spacing col-width" style="margin-left:10px">
                 <button data-target = "" class="btn btn-danger active" data-toggle="modal" ng-click="searchSuppliers()">Search</button>
               </div>

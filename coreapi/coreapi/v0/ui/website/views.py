@@ -5752,21 +5752,21 @@ class DashBoardViewSet(viewsets.ViewSet):
             if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
                 query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(perm_query,query).values('supplier_code', 'proposal__name','proposal_id'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(perm_query,query).values('supplier_code', 'proposal__name','proposal_id','center__latitude','center__longitude'). \
                     annotate(total=Count('object_id'))
                 proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
                 query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id','center__latitude','center__longitude'). \
                     annotate(total=Count('object_id'))
                 proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
                 query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id','center__latitude','center__longitude'). \
                     annotate(total=Count('object_id'))
                 proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
@@ -5820,7 +5820,8 @@ class DashBoardViewSet(viewsets.ViewSet):
             ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
 
             completed_suppliers = models.ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,is_completed=True).values('object_id')
-            completed_supplier_id_list = [supplier.object_id for supplier in completed_suppliers]
+
+            completed_supplier_id_list = [supplier['object_id'] for supplier in completed_suppliers]
 
             upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(ongoing_supplier_id_list + completed_supplier_id_list)
 
@@ -5839,7 +5840,7 @@ class DashBoardViewSet(viewsets.ViewSet):
 
 
             completed_suppliers_list = []
-            for id in completed_suppliers_list:
+            for id in completed_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
                     'leads_data': []

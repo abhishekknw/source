@@ -12,6 +12,7 @@ angular.module('catalogueApp')
         {header : 'Start Date'},
         {header : 'End Date'},
         {header : 'View Booking Details'},
+        {header : 'Assign Dates'},
         {header : 'View Execution Image'}
       ];
 
@@ -89,6 +90,9 @@ angular.module('catalogueApp')
 
         $scope.getDetails = function(proposal_id){
           $location.path('/' + proposal_id + '/releasePlan');
+        }
+        $scope.goToAssignDatesPage = function(proposal_id){
+          $location.path('/' + proposal_id + '/auditReleasePlan');
         }
         $scope.getExecutionDetails = function(proposal){
           $window.localStorage.campaignState = constants[proposal.campaign_state];
