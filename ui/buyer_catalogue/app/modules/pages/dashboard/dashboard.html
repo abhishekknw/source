@@ -416,7 +416,7 @@
                                   <tr>
                                     <td>INDEX</td>
                                     <td>Society Name</td>
-                                    <td ng-if="invStatusKeys.STALL.status">STALL</td>
+                                      <td ng-if="invStatusKeys.STALL.status">STALL</td>
                                     <td ng-if="invStatusKeys.POSTER.status">POSTER</td>
                                     <td ng-if="invStatusKeys.FLIER.status">FLIER(Frequency)</td>
                                     <td ng-if="invStatusKeys.STANDEE.status">STANDEE</td>
@@ -446,47 +446,56 @@
                                             <td  ng-show="invStatusKeys.FLIER.status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('FL')" style="width:100%;color:black">{{invStatusKeys.FLIER.total}}</button></td>
                                             <td  ng-show="invStatusKeys.STANDEE.status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('ST')" style="width:100%;color:black">{{invStatusKeys.STANDEE.total}}</button></td>
                                             <td  ng-show="invStatusKeys['GATEWAY ARCH'].status"><button type="button" name="button" class="btn btn-primary" ng-click="switchToInventory('GA')" style="width:100%;color:black">{{invStatusKeys['GATEWAY ARCH'].total}}</button></td>
-                                            <td ng-if="showLeads"><button type="button" name="button" class="btn btn-primary" ng-click="switchToLeads()" style="width:100%;color:black">{{supplierAndInvData.totalLeads}}</button></td>
+                                            <td ng-if="showLeads"><button type="button" name="button" class="btn btn-primary" ng-click="switchToLeads()" style="width:100%;color:black">{{supplier.leads_data.length}}</button></td>
                                         </tr>
                                       </tfoot>
                                   </table>
                                 </div>
 
-                                <div class="col-md-12" ng-show="showDisplayDetailsTable">
+                                <div class="col-md-12" ng-show="showDisplayDetailsTable" style="margin-top:60px;">
                                   <div class="panel-heading content-title">
                                     <h5 style="background:'red'">Map View</h5></div>
-                                    <!-- <ng-map center="[{{latitude}} , {{longitude}}]" position="[{{latitude}},{{longitude}}]">
-                                      <marker ng-repeat="supplier in supplierAndInvData" position="[{{supplier.supplier.society_latitude}}, {{supplier.supplier.society_longitude}}]" title="{{supplier.supplier.society_name}}"
-                                       id="{{supplier.supplier.supplier_id}}" on-click="showDetail(event, supplier)">
-                                      <info-window id="myWindow">
-                                        <div ng-non-bindable="" style="color:black;height:170px;width:170px;">
-                                          <div class="">
-                                            <h3>{{windowDisplay.supplier.society_name}}</h3>
-                                          </div>
-                                          <table class="table-responsive table windowDisplayTable">
-                                            <tbody>
-                                                <tr><td ng-if="invStatusKeys.STALL.status">STALL</td> <td ng-show="invStatusKeys.STALL.status"><small>{{windowDisplay.supplier.inv_data.STALL.total}}</small></td></tr>
-                                                <tr><td ng-if="invStatusKeys.POSTER.status">POSTER</td><td ng-show="invStatusKeys.POSTER.status"><small>{{windowDisplay.supplier.inv_data.POSTER.total}}</small></td></tr>
-                                                <tr><td ng-if="invStatusKeys.FLIER.status">FLIER(Frequency)</td><td ng-show="invStatusKeys.FLIER.status"><small>{{windowDisplay.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total}})</small></td></tr>
-                                                <tr><td ng-if="invStatusKeys.STANDEE.status">STANDEE</td><td ng-show="invStatusKeys.STANDEE.status"><small>{{windowDisplay.supplier.inv_data.STANDEE.total}}</small></td></tr>
-                                                <tr><td ng-if="invStatusKeys['GATEWAY ARCH'].status">GATEWAY ARCH</td><td ng-show="invStatusKeys['GATEWAY ARCH'].status"><small>{{windowDisplay.supplier.inv_data['GATEWAY ARCH'].total}}</small></td></tr>
-                                            </tbody>
-                                        </table>
-                                        </div>
-                                      </info-window>
-                                      </marker>
-                                    </ng-map> -->
-                                    <!-- <div ng-app="dogMap" ng-controller="MapCtrl"> -->
-                                    <style type="text/css">
-                                        .angular-google-map-container { height: 550px; width: 740px;}
+                                  <style type="text/css">
+                                        .angular-google-map-container { height: 550px;color: black;}
                                     </style>
                                       <ui-gmap-google-map center="map.center" zoom="map.zoom" draggable="false"
                                                           options="options" bounds="map.bounds" control="googlemap">
                                           <ui-gmap-window show="show" coords='windowCoords' closeClick="closeClick()">
-                                                <div>
-                                                  <div class="">
-                                                    <h3>{{space.name}}</h3>
-                                                  </div>                                                  
+                                                <div >
+
+                                                    <!-- <div>INVENTORY : &nbsp;&nbsp;COUNT</div> -->
+                                                    <!-- <div>{{space.title.STALL.key}} {{space.title.STALL.total}}</div>
+                                                    <div>{{space.title.POSTER.key}}{{space.title.POSTER.total}}</div>
+                                                    <div>{{space.title.STANDEE.key}}{{space.title.STANDEE.total}}</div>
+                                                    <div>{{space.title.FLIER.key}}{{space.title.FLIER.total}}</div>
+                                                    <div>{{space.title['GATEWAY ARCH'].key}}{{space.title['GATEWAY ARCH'].total}}</div> -->
+
+                                                    <table class="table-responsive table">
+                                                      <div class="">
+                                                        <h3>{{space.title.name}}</h3>
+                                                        </div>
+
+                                                              <tr><td>{{space.title.STALL.key}}</td><td><small>{{space.title.STALL.total}}</small></td></tr>
+                                                              <tr><td>{{space.title.POSTER.key}}</td><td><small>{{space.title.POSTER.total}}</small></td></tr>
+                                                              <tr><td>{{space.title.STANDEE.key}}</td><td><small>{{space.title.STANDEE.total}}</small></td></tr>
+                                                              <tr><td>{{space.title.FLIER.key}}</td><td><small>{{space.title.FLIER.total}}</small></td></tr>
+                                                              <tr><td>{{space.title['GATEWAY ARCH'].key}}</td><td><small>{{space.title['GATEWAY ARCH'].total}}</small></td></tr>
+
+                                                      </table>
+
+
+                                                    <!-- <tr><td show="invStatusKeys.STALL.status">STALL</td> <td show="invStatusKeys.STALL.status"><small>{{space.dataofSupplierAndInvData.inv_data.STALL.total}}</small></td></tr>
+                                                    <tr><td ng-if="invStatusKeys.POSTER.status">POSTER</td><td ng-show="invStatusKeys.POSTER.status"><small>{{space.dataofSupplierAndInvData.inv_data.POSTER.total}}</small></td></tr>
+                                                    <tr><td ng-if="invStatusKeys.FLIER.status">FLIER(Frequency)</td><td ng-show="invStatusKeys.FLIER.status"><small>{{space.dataofSupplierAndInvData.flat_count}}({{space.dataofSupplierAndInvData.inv_data.FLIER.total}})</small></td></tr>
+                                                    <tr><td ng-if="invStatusKeys.STANDEE.status">STANDEE</td><td ng-show="invStatusKeys.STANDEE.status"><small>{{space.dataofSupplierAndInvData.inv_data.STANDEE.total}}</small></td></tr>
+                                                    <tr><td ng-if="invStatusKeys['GATEWAY ARCH'].status">GATEWAY ARCH</td><td ng-show="invStatusKeys['GATEWAY ARCH'].status"><small>{{space.dataofSupplierAndInvData.inv_data['GATEWAY ARCH'].total}}</small></td></tr> -->
+
+
+                                                  <!-- <table class="table-responsive table windowDisplayTable">
+                                                    <tbody>
+                                                        </tbody>
+                                        </table> -->
+
                                                 </div>
                                           </ui-gmap-window>
                                           <ui-gmap-markers models="supplierMarkers" coords="'self'" icon="'icon'"

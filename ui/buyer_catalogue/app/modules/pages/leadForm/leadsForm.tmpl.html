@@ -5,12 +5,13 @@
   <div><nav-bar></nav-bar></div></br></br> <br /> <br /> <br />
   <div class="pageTitle">
     <h3 ng-if="!showLeads">Lead Form</h3>
+    <h3 ng-if="showLeads">Leads Data Of Campaign </h3>
   </div>
     <div class="panel-body" style="text-align:center;margin-top:-20px"  >
   <div class="row" >
     <div class="panel panel-default">
       <div class="panel-heading">
-          <Label  ng-if="showLeads">Leads Data Of Campaign :</Label><span class = "proposal-details">{{campaignName}}</span>
+        <span class = "proposal-details">{{campaignName}}</span>
         <Label>Campaign Name:</Label><span class = "proposal-details">{{proposalInfo.name}}</span>
         <Label class = "labels">Society Name:</Label><span class = "proposal-details">{{supplierInfo.society_name}}</span>
         </div>
