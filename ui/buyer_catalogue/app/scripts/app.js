@@ -253,7 +253,7 @@ angular
            controller : 'OpsDashCtrl',
            templateUrl : 'modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.html',
            ncyBreadcrumb: {
-             label:'DashBoard',
+             label:'OpsDashBoard',
              parent : 'manageCampaign.create'
            }
        })
