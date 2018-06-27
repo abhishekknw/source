@@ -841,13 +841,22 @@ payment_method = {
 payment_status = {
     'payment_done': 'PD',
     'payment_not_initiated': 'PNI',
-    'payment_pending': 'PP'
+    'payment_pending': 'PP',
+    'check_released' : 'PCR',
+    'payment_rejected' : 'PR'
 }
 
 # supplier booking status
 booking_status = {
     'booked': 'BK',
-    'not_booked': 'NB'
+    'not_booked': 'NB',
+    'phone_booked' : 'PB',
+    'visit_booked' : 'VB',
+    'rejected' : 'SR',
+    'send_email' : 'SE',
+    'visit_required' : 'VR',
+    'call_required' : 'CR',
+    'decision_pending' : 'DP'
 }
 
 # different campaign states
@@ -1263,4 +1272,26 @@ society_payment_headers = {
     'IFSC Code' : True,
     'Bank Name' : True,
     'Account Number' : True
+}
+business_category_campaign_query = {
+    'campaign' : 'campaign__account__organisation'
+}
+bus_agency_campaign_query = {
+    'campaign' : 'campaign__user'
+}
+sup_agency_campaign_query = {
+    'campaign' : 'campaign__assigned_to'
+}
+category_query_status = {
+    'campaign_query' : 'campaign'
+}
+
+perf_metrics_types = {
+    'inv_type' : 'inv',
+    'lead_type' : 'lead'
+}
+perf_metrics_param = {
+    'on_time' : 'on_time',
+    'on_location' : 'on_location',
+    'inv' : 'inv'
 }

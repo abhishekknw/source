@@ -1,3 +1,4 @@
+
 .page-container{
 	padding: 5px;
 	position: relative;
@@ -36,9 +37,9 @@
 .btn-space{
 	margin-bottom: 10px;
 }
-.modal-open {
+/* .modal-open {
   overflow-y: scroll;
-}
+} */
 .breadcrumb{
 	/*width:200%;*/
 	margin-left: auto;

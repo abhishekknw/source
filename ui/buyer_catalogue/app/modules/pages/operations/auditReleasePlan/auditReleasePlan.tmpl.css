@@ -1,11 +1,14 @@
+html{
+	background-color: #ffffff !important;
+}
 .commentBox{
-	margin-top: 10px;
-	margin-bottom: 10px;
+	/* margin-top: 10px;
+	margin-bottom: 10px; */
 }
 
 .updateButton{
 	text-align:right;
-	padding-right:100px
+	/* padding-right:100px */
 }
 th{
   	background: #808080;
@@ -13,56 +16,57 @@ th{
   	color: #fff;
 }
 body{
-	background: #f2f2f2;
-	font-family: Source Sans Pro;
+	background-color: #ffffff !important;
+		font-family: Source Sans Pro;
 	color: #707070;
   /*text-align: center;*/
 }
 .checkboxes-btn{
   text-align: left;
 }
-.breadcrumb{
-	background-color: transparent;
-  /*width: 82%;*/
-  margin-left: auto;
-  margin-right: auto;
-  font-size : x-large;
-}
 .labels{
-	margin-left: 55px;
+	/* margin-left: 55px; */
 }
 .panel-breadcrumb{
   margin-left: 5%;
   margin-right: 5%;
 }
-.panel-heading{
-  text-align: center;
-  background-color: #808080 !important;
-	color: white !important;
+
+td{
+	padding: 5px;
 }
+th {
+  background-color: #8e1921;
+  color: white;
+
+  }
 .panel{
-  margin-left: 5%;
-  margin-right: 5%;
+  /* margin-left: 5%;
+  margin-right: 5%; */
 }
 .panel-table{
-  height:60vh;
-  overflow: auto;
+	/* height:60vh;
+	overflow: auto; */
 }
 .button-style{
   text-align: right;
-  padding-top: 20px;
-  margin-right: 2%;
-	margin-bottom: 2%;
+  /* padding-top: 20px; */
+  /* margin-right: 2%;
+	margin-bottom: 2%; */
 	/*margin-left: 10%;*/
 }
 .assign-date{
 	margin-left: 5%;
 }
 .form-inline{
-	margin: 2%;
+	/* margin: 2%; */
 }
 .date-panel{
 	padding: 10px;
-	margin-left: 5%;
-	margin-right: 5%;
+	margin-left: 3%;
+	margin-right: 3%;
+}
+.panel-body{
+	overflow-x: visible !important;
+	padding: 15px 0px 0px 0px;
 }

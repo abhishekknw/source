@@ -2,15 +2,24 @@
 <html>
 <link rel="stylesheet" href="/modules/pages/leadForm/leadsForm.tmpl.css">
 <body class="container">
-  <div><nav-bar></nav-bar></div></br></br>
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h3 ng-if="!showLeads">Lead Form</h3><br />
-      <h3 ng-if="showLeads">Leads Data Of Campaign {{campaignName}} </h3>
-      <h5>Campaign Name : {{proposalInfo.name}}</h5>
-      <h5>Society Name : {{supplierInfo.society_name}}</h5>
+  <div><nav-bar></nav-bar></div></br></br> <br /> <br /> <br />
+  <div class="pageTitle">
+    <h3 ng-if="!showLeads">Lead Form</h3>
+    <h3 ng-if="showLeads">Leads Data Of Campaign </h3>
+  </div>
+    <div class="panel-body" style="text-align:center;margin-top:-20px"  >
+  <div class="row" >
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <span class = "proposal-details">{{campaignName}}</span>
+        <Label>Campaign Name:</Label><span class = "proposal-details">{{proposalInfo.name}}</span>
+        <Label class = "labels">Society Name:</Label><span class = "proposal-details">{{supplierInfo.society_name}}</span>
+        </div>
     </div>
+  </div>
+</div>
 
+<br /><br />
     <div class="panel-body">
 
     </div>
@@ -116,6 +125,6 @@
         <button ng-click="" class="btn btn-danger" style="margin:10px;">Cancel</button>
 
     </form> -->
-    </div></div>
+    </div>
 </body>
 </html>

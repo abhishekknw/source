@@ -9,8 +9,8 @@
  * Main module of the application.
  */
 
-var APIBaseUrl = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/';
-// var APIBaseUrl = 'http://localhost:8000/';
+// var APIBaseUrl = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/';
+var APIBaseUrl = 'http://localhost:8000/';
 
 angular.module('Authentication', []);
 
@@ -57,6 +57,7 @@ angular
     'catalogueApp.theme.inputs',
     'catalogueApp.theme',
     'angular-circular-progress',
+    'ngMap',
 
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
@@ -274,7 +275,7 @@ angular
       .state('auditReleasePlan',{
             url : '/:proposal_id/auditReleasePlan',
             controller : 'AuditReleasePlanCtrl',
-            templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan1.tmpl.html',
+            templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.html',
             ncyBreadcrumb: {
               label:'AuditReleasePlan',
               parent : 'releasePlan'

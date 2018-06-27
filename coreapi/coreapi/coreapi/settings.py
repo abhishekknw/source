@@ -13,11 +13,10 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import datetime
+from django.utils import timezone
+from config import Config
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'ewis(omy!u-rgpf%9hp1^3@8ivz!upuwc&tp!0trx%#vjqs!&2'
@@ -81,81 +80,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'coreapi.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-#
-# DATABASES = {
-#         'sqlite': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#         },
-#         'default': {
-#             'NAME': 'mdtestnew',
-#             'ENGINE': 'django.db.backends.mysql',
-#             'HOST': 'localhost',
-#             'USER': 'root',
-#             'PASSWORD': 'root',
-#         }
-# }
-
-
 DATABASES = {
         'sqlite': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         },
         'default': {
-            'NAME': 'machadalotech',
-            'ENGINE': 'django.db.backends.mysql',
-            'HOST': 'localhost',
-            'USER': 'root',
-            'PASSWORD': 'yo@123',   
+            'NAME': Config.DATABASE['NAME'],
+            'ENGINE': Config.DATABASE['ENGINE'],
+            'HOST': Config.DATABASE['HOST'],
+            'USER': Config.DATABASE['USER'],
+            'PASSWORD': Config.DATABASE['PASSWORD'],
         }
 }
 
-
-# if 'RDS_HOSTNAME' in os.environ:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.mysql',
-#             'NAME': os.environ['RDS_DB_NAME'],
-#             'USER': os.environ['RDS_USERNAME'],
-#             'PASSWORD': os.environ['RDS_PASSWORD'],
-#             'HOST': os.environ['RDS_HOSTNAME'],
-#             'PORT': os.environ['RDS_PORT'],
-#         }
-#     }
-# else:
-
-DATABASES = {
-    'sqlite': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    },
-    'default': {
-        'NAME': 'mdtestnew',
-        'ENGINE': 'django.db.backends.mysql',
-        'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-        'USER': 'mdtest',
-        'PASSWORD': 'mdtestmachadalo',
-        'PORT': 3306
-    }
-}
-# Internationalization
-# https://docs.djangoproject.com/en/1.8/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = '/static/'
@@ -164,15 +107,6 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # URL that makes the static media accessible over HTTP
 MEDIA_URL = '/'
-
-# settings for Django Rest Framework
-
-# REST_FRAMEWORK = {
-#     # other settings...
-#     'DEFAULT_AUTHENTICATION_CLASSES': [],
-#     'DEFAULT_PERMISSION_CLASSES': [],
-# }
-
 
 
 REST_FRAMEWORK = {
@@ -236,17 +170,15 @@ JWT_AUTH = {
       'JWT_VERIFY_EXPIRATION': False,
       }
 
-BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
-# BASE_URL = 'http://localhost:8000/'
+
+BASE_URL = Config.BASE_URL
 
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-
 EMAIL_HOST_USER = 'businessdevelopment@machadalo.com'
 EMAIL_HOST_PASSWORD = 'career1231@'
-
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER
@@ -260,8 +192,7 @@ AUTH_USER_MODEL = 'v0.BaseUser'  # refer all references to User model by this na
 # This is default datetime which populates on existing rows of the tables when migrated. it acts as a NULL
 # datetime because when the Model instance is saved, this value is checked. if found, that means it was NULL
 # and hence the
-import datetime
-from django.utils import timezone
+
 date_string = '2016-12-1'
 format = '%Y-%m-%d'
 DEFAULT_DATE = timezone.make_aware(datetime.datetime.strptime(date_string, format), timezone.get_default_timezone())
