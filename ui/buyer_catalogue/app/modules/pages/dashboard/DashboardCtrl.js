@@ -629,8 +629,8 @@
             $scope.avgLeadsPerFlat = totalLeads/totalFlats * 100;
             $scope.avgLeadsPerSupplier = totalLeads/$scope.campaignStatusData.totalSuppliers;
             $scope.avgHotLeadsPerFlat = hotLeads/totalFlats * 100;
-              $scope.avgHotLeadsPerSupplier = hotLeads/$scope.campaignStatusData.totalSuppliers;
-           // console.log($scope.campaignStatusData);
+            $scope.avgHotLeadsPerSupplier = hotLeads/$scope.campaignStatusData.totalSuppliers;
+           console.log($scope.campaignStatusData);
 
            $scope.campaignChartdata = [
              { label : $scope.campaignStatus.ongoing.supplierLabel, value : $scope.campaignStatusData.ongoing.length, status : $scope.campaignStatus.ongoing.status },
@@ -1202,9 +1202,11 @@
           })
           angular.forEach(supplier.leads_data, function(inv,key){
             $scope.leads_data = inv;
+
             if($scope.leads_data.is_interested){
               $scope.showLeads = true;
               $scope.countLeads += 1;
+              console.log($scope.countLeads);
             }
           })
       })
@@ -1237,7 +1239,7 @@
         // assigns spaces(society, corporate) markers on the map
         // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
         var markers = [];
-        var icon;
+        // var icon;
         var checkInv = true;
         angular.forEach(suppliers, function(supplier,$index){
           console.log(supplier);
@@ -1246,7 +1248,7 @@
                   latitude: supplier.supplier.society_latitude,
                   longitude: supplier.supplier.society_longitude,
                   id: supplier.supplier.supplier_id,
-                  icon: 'http://www.googlemapsmarkers.com/v1/009900/',
+                  // icon: 'http://www.googlemapsmarkers.com/v1/009900/',
                   options : {draggable : false},
                   dataofSupplierAndInvData : supplier.supplier,
                   title : {
