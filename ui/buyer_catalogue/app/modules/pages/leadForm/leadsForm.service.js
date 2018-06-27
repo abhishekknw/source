@@ -36,7 +36,7 @@
     }
 
     LeadFormService.getLeads = function(campaignId , supplierId){
-      var url = url_base + "leads/?campaign_id=" + campaignId + "&supplierId=" + supplierId;
+      var url = url_base + "leads/?campaign_id=" + campaignId + "&supplier_id=" + supplierId;
       return machadaloHttp.get(url);
     }
 

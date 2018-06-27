@@ -1,22 +1,32 @@
 <link rel="stylesheet" href="/modules/pages/leads/campaignLeads.tmpl.css">
-<div><nav-bar></nav-bar></div><br/><br/><br/>
+<link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
+<div ng-loading="loading"></div> <!--For displaying loading icon-->
+
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading">
+
+<div><nav-bar></nav-bar></div>
+<div ng-show="isEmpty" style="text-align:center;"><h2>{{msg}}</h2></div>
+<br/><br/><br/>
+<br/><br/>
+
 <div class="" ng-show="!views.campaigns">
-  <button type="button" class="btn btn-primary" ng-click="changeView('campaigns',campaign)">Back To Campaign Details Page</button>
+  <button type="button" class="btn btn-primary" style="margin-left:23px;" ng-click="changeView('campaigns',campaign)">Back To Campaign Details Page</button>
 </div>
-<div class="panel panel-default" ng-if="views.campaigns">
-  <div class="panel-heading">
+<br/><br/>
+<div class="panel" ng-if="views.campaigns">
+  <div class="pageTitle">
     <h3>List Of All Campaign Details</h3>
   </div>
-  <div class="panel-body">
+  <div class="panel-body" style="margin-top:10px;">
     <div >
-      <table class="table table-bordered table-responsive">
+      <table st-table="campaigns" st-safe-src="Data" class="table table-striped">
         <thead>
           <tr>
             <th ng-repeat="header in campaignHeaders">{{header.header}}</th>
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="campaign in campaigns">
+          <tr style="text-align:center" ng-repeat="campaign in campaigns">
             <td>{{campaign.campaign.name}}</td>
             <td>{{campaign.campaign.tentative_start_date|limitTo:10}}</td>
             <td>{{campaign.campaign.tentative_end_date|limitTo:10}}</td>
@@ -34,13 +44,20 @@
             </td>
           </tr>
         </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="10" class="text-center">
+              <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="3"></div>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   </div>
 </div>
 <!--start: leads  -->
-<div class="panel panel-default" ng-if="views.viewLeads">
-  <div class="panel-heading">
+<div class="panel" ng-if="views.viewLeads">
+  <div class="pageTitle">
     <h3>Leads Data Of Campaign {{campaignName}} </h3>
   </div>
   <div class="panel-body">
@@ -73,8 +90,8 @@
 </div>
 <!--end: leads  -->
 <!--start: create form  -->
-<div class="panel panel-default" ng-if="views.createForm">
-  <div class="panel-heading">
+<div class="panel " ng-if="views.createForm">
+  <div class="pageTitle">
     <h3>Create/Edit Form</h3>
   </div>
   <div class="panel-body">
@@ -105,8 +122,8 @@
 </div>
 <!--end: create form  -->
 <!--start: enter leads data -->
-<div class="panel panel-default" ng-if="views.selectSuppliers">
-  <div class="panel-heading">
+<div class="panel " ng-if="views.selectSuppliers">
+  <div class="pageTitle">
     <h3>List Of All Suppliers Of Campaign {{campaignName}}</h3>
   </div>
   <div class="panel-body">
@@ -140,10 +157,10 @@
 </div>
 <!--end: enter leads data  -->
 <!--start : import leads  -->
-<div class="panel panel-default" ng-show="views.importLeads">
-  <div class="panel-heading">
-    Import Leads for {{campaignName}} Campaign
-  </div>
+<div class="panel" ng-show="views.importLeads">
+  <div class="pageTitle">
+      <h3>  Import Leads for {{campaignName}} Campaign</h3>
+      </div>
   <div class="panel-body">
     <label>Select Lead Sheet</label>
     <js-xls onread="read" onerror="error"></js-xls></br>
@@ -166,6 +183,7 @@
         </tr>
       </tbody>
     </table>
+    <br />
     <div class="">
       <button ng-click="importLeadsThroughSheet()" class="btn btn-danger">Submit</button>
     </div>

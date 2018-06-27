@@ -21,5 +21,11 @@
       var url = url_base + 'add-suppliers-direct-to-campaign/';
       return machadaloHttp.post(url,data);
     }
+
+    releaseCampaignService.getRelationShipData = function(supplierId,supplierCode,campaignId){
+      var url = url_base + "get-relationship-and-past-campaigns-data/?supplier_id=" + supplierId + "&supplier_code=" + supplierCode
+                + "&campaign_id=" + campaignId;
+      return machadaloHttp.get(url);
+    }
     return releaseCampaignService;
 }]);

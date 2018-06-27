@@ -48,8 +48,8 @@
       return machadaloHttp.get(url);
     }
 
-    DashboardService.getPerformanceMetricsData = function(campaignId,inv){
-      var url = url_base + "dashboard/get_performance_metrics_data/?campaign_id=" + campaignId + "&inv=" + inv;
+    DashboardService.getPerformanceMetricsData = function(campaignId,type,inv,perf_param){
+      var url = url_base + "dashboard/get_performance_metrics_data/?campaign_id=" + campaignId + "&type=" + type + "&inv_code=" + inv + "&perf_param="+perf_param;
       return machadaloHttp.get(url);
     }
 

@@ -1,0 +1,119 @@
+html{
+  background-color: #ffffff;
+  overflow-x: visible !important;
+  color: #000000 !important;
+}
+
+
+th{
+  	background: #8e1921;
+    text-align: center;
+  	color: #fff;
+}
+
+
+body{
+	background-color: #ffffff !important;
+  overflow-x: visible !important;
+	font-family: Roboto, "Helvetica Neue", sans-serif !important;
+	color: #000000 !important;
+}
+
+.breadcrumb{
+	background-color: transparent;
+  margin-left: auto;
+  margin-right: auto;
+  font-size : x-large;
+}
+
+.pageTitle{
+  margin: 2%;
+  margin-top: -15px;
+  text-align: center;
+  background-color: #d9534f !important;
+	color: white !important;
+  padding: 10px 15px;
+  border-bottom: 1px solid transparent;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+
+.managementPageTitle{
+  margin: 2%;
+  margin-top: -25px;
+  margin-left: -40px;
+  text-align: center;
+  background-color: #d9534f !important;
+  color: white !important;
+  padding: 10px 15px;
+  border-bottom: 1px solid transparent;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  width: 700px;
+}
+
+
+.createNewUserTitle{
+margin-left: -40px;
+margin-top: -10px;
+  text-align: center;
+  background-color: #d9534f !important;
+  color: white !important;
+  padding: 10px 15px;
+  border-bottom: 1px solid transparent;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  width: 400px;
+}
+.panel-body{
+  margin-left:50px;
+  margin-right:50px;
+  margin-top: -15px;
+	overflow-x: visible !important;
+	padding: 15px 0px 0px 0px;
+}
+/*
+.panel-bodyUser{
+	overflow-x: visible !important;
+} */
+
+.panel-bodyDashboard{
+
+	overflow: auto ;
+
+}
+
+tr, td {
+  color: #000000 !important;
+}
+
+
+h3 {
+  text-align: center;
+}
+
+.panel-heading{
+  text-align: center;
+  background-color: #d9534f;
+  color: white;
+}
+
+.radio-button label{
+  color: #000000 !important;
+  font-family: Roboto, "Helvetica Neue", sans-serif !important;
+
+
+}
+input[type="radio"]{
+  margin: 0 10px 0 10px;
+}
+
+.radio-button:after {
+   display:none;
+    border-color: #e91e63;
+    background-color: #e91e63;
+}
+
+.labels{
+	margin-left: 55px;
+}
