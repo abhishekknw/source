@@ -68,9 +68,9 @@
                      <tr>
                        <td style="color:#ffffff !important;">DATE</td>
                        <td>
-                         <button type="button" name="button" class="col-xs-3" style="margin: 0px 9px 0px -1px;width:60px;height:45px;">R (%)</button>
-                         <button type="button" name="button" class="col-xs-3" style="margin: 0px 9px 0px -1px;width:60px;height:45px;">A (%)</button>
-                         <button type="button" name="button" class="col-xs-3" style="margin: 0px 9px 0px -1px;width:60px;height:45px;">C (%)</button>
+                         <button type="button" name="button" class="col-xs-3" style="margin: 0px 9px 0px -1px;width:60px;height:45px;color:black;background-color:#ffe000;">R (%)</button>
+                         <button type="button" name="button" class="col-xs-3" style="margin: 0px 9px 0px -1px;width:60px;height:45px;color:black;background-color:#ffe000;">A (%)</button>
+                         <button type="button" name="button" class="col-xs-3" style="margin: 0px 9px 0px -1px;width:60px;height:45px;color:black;background-color:#ffe000;">C (%)</button>
                         </td>
 
                      </tr>
@@ -460,7 +460,7 @@
 
                                 <div class="col-md-12" ng-show="showDisplayDetailsTable" style="margin-top:60px;">
                                   <div class="panel-heading content-title">
-                                    <h5 style="background:'red'">Map View</h5></div>
+                                    <h5 style="background:'red'">Map View for {{campaignTabPropsalName}}</h5></div>
                                   <style type="text/css">
                                         .angular-google-map-container { height: 550px;color: black;}
                                     </style>
@@ -580,7 +580,7 @@
 
                               <div class="col-md-12" ng-if="showSupplierTypeCountChart">
                                 <div class="panel-heading content-title">
-                                  <h5 style="background:'red'">Map View</h5></div>
+                                  <h5 style="background:'red'">Map View for All Campaigns</h5></div>
                                   <ng-map center="[{{supplierTypesDataList[0].center__latitude}} , {{supplierTypesDataList[0].center__longitude}}]" position="[{{latitude}},{{longitude}}]">
                                     <marker ng-repeat="campaign in supplierTypesDataList" position="[{{campaign.center__latitude}}, {{campaign.center__longitude}}]" title="{{campaign.proposal__name}}" id="{{campaign.proposal_id}}">
                                     </marker>
