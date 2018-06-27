@@ -394,8 +394,8 @@
                                     <table class="table-responsive table table-bordered AvgLeadsTable" >
                                     <tbody>
                                       <tr ng-if="showLeadsDetails">
-                                        <td>Avg Leads Per Flat (High Quality): {{avgLeadsPerFlat| limitTo:4 || NA }} % ({{avgHotLeadsPerFlat|limitTo:4 || NA}} %)</td>
-                                        <td>Avg Leads Per Supplier (High Quality): {{avgLeadsPerSupplier|limitTo:4 || NA}} % ({{avgHotLeadsPerSupplier|limitTo:4 || NA }} %)</td>
+                                        <td>Avg Leads Per Flat (HQ): {{avgLeadsPerFlat| limitTo:4 || NA }} % ({{avgHotLeadsPerFlat|limitTo:4 || NA}} %)</td>
+                                        <td>Avg Leads Per Supplier (HQ): {{avgLeadsPerSupplier|limitTo:4 || NA}}  ({{avgHotLeadsPerSupplier|limitTo:4 || NA }} )</td>
                                       </tr>
                                     </tbody>
                                   </table>
@@ -429,15 +429,16 @@
                                       <td>{{$index + 1}}</td>
                                         <td>{{supplier.supplier.society_name}}</td>
                                         <td ng-init="calculateTotalCount('STALL',supplier.supplier.inv_data.STALL.total)" ng-show="invStatusKeys.STALL.status">{{supplier.supplier.inv_data.STALL.total}}
-                                        <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a></td>
+                                        <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                      </td>
                                         <td ng-init="calculateTotalCount('POSTER',supplier.supplier.inv_data.POSTER.total)" ng-show="invStatusKeys.POSTER.status">{{supplier.supplier.inv_data.POSTER.total}}
-                                        <a ng-click="" >View Details</a></td>
+                                        </td>
                                         <td ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total)" ng-show="invStatusKeys.FLIER.status">{{supplier.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total}})
-                                        <a ng-click="" >View Details</a></td>
+                                        </td>
                                         <td ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total)" ng-show="invStatusKeys.STANDEE.status">{{supplier.supplier.inv_data.STANDEE.total}}
-                                        <a ng-click="" >View Details</a></td>
+                                        </td>
                                         <td ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">{{supplier.supplier.inv_data['GATEWAY ARCH'].total}}
-                                        <a ng-click="" >View Details</a></td>
+                                        </td>
                                         <td ng-if="showLeads">{{supplier.leads_data.length}}</td>
 
                                       </tr>

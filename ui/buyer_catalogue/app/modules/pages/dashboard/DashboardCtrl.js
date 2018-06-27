@@ -627,9 +627,9 @@
               }
          })
             $scope.avgLeadsPerFlat = totalLeads/totalFlats * 100;
-            $scope.avgLeadsPerSupplier = totalLeads/$scope.campaignStatusData.totalSuppliers * 100;
+            $scope.avgLeadsPerSupplier = totalLeads/$scope.campaignStatusData.totalSuppliers;
             $scope.avgHotLeadsPerFlat = hotLeads/totalFlats * 100;
-              $scope.avgHotLeadsPerSupplier = hotLeads/$scope.campaignStatusData.totalSuppliers * 100;
+              $scope.avgHotLeadsPerSupplier = hotLeads/$scope.campaignStatusData.totalSuppliers;
            // console.log($scope.campaignStatusData);
 
            $scope.campaignChartdata = [
@@ -1210,7 +1210,7 @@
       })
       $scope.showDisplayDetailsTable = true;
       console.log($scope.supplierAndInvData);
-      $scope.map = { zoom: 7,bounds: {},center: {latitude: $scope.latitude,longitude: $scope.longitude}};
+      $scope.map = { zoom: 13,bounds: {},center: {latitude: $scope.latitude,longitude: $scope.longitude}};
       $scope.supplierMarkers = assignMarkersToMap($scope.supplierAndInvData);
       uiGmapIsReady.promise()
         .then(function(instances) {
@@ -1258,8 +1258,8 @@
                 // markers[$index].title['inv_data'] = {};
                   angular.forEach($scope.invStatusKeys, function(inv,key){
                     if($scope.invStatusKeys[key].status){
-                      if('inv_data' in supplier.supplier){
-
+                      if('inv_data' in supplier.supplier && key in supplier.supplier.inv_data){
+                        console.log(supplier.supplier,key);
                         markers[$index].title[key] = {
                             'key' : key,
                             'total' : supplier.supplier.inv_data[key].total
@@ -1283,7 +1283,7 @@
 
     };
     $scope.supplierMarkers = [];
-    $scope.map = { zoom: 14,bounds: {},center: {latitude: 19.119,longitude: 73.48,}};
+    $scope.map = { zoom: 5,bounds: {},center: {latitude: 19.119,longitude: 73.48,}};
     $scope.options = { scrollwheel: false, mapTypeControl: true,
         mapTypeControlOptions: {
           style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
