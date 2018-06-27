@@ -14,6 +14,22 @@
 	     -o-transform: translate3d(0%, 0, 0);
 	        transform: translate3d(0%, 0, 0);
 }
+.menutoggle {
+background: white;
+border-radius: 60%;
+color: #4e0303 !important;
+cursor: pointer;
+font-size: 16px;
+height: 40px;
+line-height: 44px;
+margin: -2px 20px 0 -57px;
+text-align: center;
+width: 43px;
+}
+
+.fa.fa-tasks {
+    font-size: 20px;
+}
 
 .modal.right.fade .modal-dialog {
 	right: -320px;

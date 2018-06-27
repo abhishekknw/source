@@ -990,7 +990,6 @@ class SupplierTypeSociety(BaseModel):
     total_tenant_flat_count = models.IntegerField(null=True, blank=True)
     landmark = models.CharField(max_length=255, null=True, blank=True)
     feedback = models.CharField(max_length=255, null=True, blank=True)
-    representative = models.ForeignKey('Organisation', null=True, blank=True)
 
     def get_society_image(self):
         try:

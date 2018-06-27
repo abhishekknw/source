@@ -1,10 +1,6 @@
-html{
-  background-color: #ffffff;
-}
 body{
 	width: 100%;
 	background: #f2f2f2;
-  background-color: #ffffff;
 	font-family: Source Sans Pro;
 	color: #707070;
 	padding-bottom: 10px;
@@ -65,8 +61,12 @@ td{
  .error{
 	 color: #c9302c;
  }
+ .breadcrumb{
+	 font-size: x-large;
+ }
  .table-style{
-	 overflow-y: auto;
+	 height: 60vh;
+	 overflow: auto;
  }
 .input-width{
 	min-width: 120px !important;
@@ -74,8 +74,8 @@ td{
 .input-width-phase{
 	min-width: 60px !important;
 }
-th {
-  background-color: #8e1921;
-  color: white;
-
-  }
+.panel-heading{
+	text-align: center;
+	background-color: #808080 !important;
+	color: white !important;
+}

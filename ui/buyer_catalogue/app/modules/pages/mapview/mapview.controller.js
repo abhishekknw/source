@@ -790,7 +790,6 @@ $scope.gridViewSummary = {};
               .then(function onSuccess(response, status) {
                 console.log(response);
                 $scope.amenities = response.data.data;
-                $scope.loading = response.data.data;
               })
               .catch(function onError(response){
                 console.log(response);
@@ -972,7 +971,6 @@ $scope.gridViewSummary = {};
               .then(function onSuccess(response, status){
                 try{
                   console.log(response);
-                  $scope.loading = response.data.data;
                   $scope.business_name = response.data.business_name;
                   createInitialFilterData();
                     // $scope.business_name = response.data.business_name;
@@ -1976,7 +1974,6 @@ $scope.gridViewSummary = {};
          saveSelectedFilters();
        };
      $scope.exportData = function(){
-
        try{
          $scope.hideSpinner = false;
          $scope.requestProposal = false;
@@ -2013,8 +2010,6 @@ $scope.gridViewSummary = {};
                   $window.localStorage.isSavedProposal = 'true';
                   swal(constants.name,constants.request_proposal_success,constants.success);
                   $scope.checkFileExport = false;
-                  $location.path('/' + $scope.campaign_id + '/manageCampaign/create');
-
            }).catch(function onError(response){
               console.log("Error occurred in fetching response");
               console.log(response);
@@ -2258,8 +2253,6 @@ $scope.gridViewSummary = {};
       }
     }
   });
-
-
   //start : code added for societyDetails
 $scope.getSocietyDetails = function(supplier,center,index){
   $scope.temp_index = index;
@@ -2275,9 +2268,7 @@ $scope.getSocietyDetails = function(supplier,center,index){
   mapViewService.getSociety(supplier_id,$scope.supplier_type_code)
    .then(function onSuccess(response) {
      console.log(response);
-     $scope.loading = response;
      setSocietyLocationOnMap(response.data.data.supplier_data);
-      $scope.loading = response.data.data.supplier_data;
      $scope.myInterval=300;
      $scope.society_images = response.data.data.supplier_images;
      $scope.amenities = response.data.data.amenities;

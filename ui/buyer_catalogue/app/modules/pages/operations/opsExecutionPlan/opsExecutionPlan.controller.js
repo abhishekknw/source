@@ -100,8 +100,6 @@ angular.module('catalogueApp')
         reAssign_date : '',
       };
       $scope.campaignDataList = [];
-      $scope.Data = [];
-
       function createList(){
         angular.forEach($scope.campaignData.shortlisted_suppliers,function(suppliers,spaceId){
           angular.forEach($scope.campaignData.shortlisted_inventories,function(inventories,invId){
@@ -127,18 +125,14 @@ angular.module('catalogueApp')
                       });
                       // data.reAssigner_user = $scope.campaignData.inventory_activity_assignment[assignId].assigned_to;
                       $scope.campaignDataList.push(data);
-                  }
-
+                    }
                   });
                 }
               });
             }
           });
         });
-        $scope.Data = $scope.campaignDataList;
-        console.log($scope.campaignDataList);
       }
-
 
       $scope.setImageUrl = function(images){
         $scope.imageUrlList = [];
@@ -199,11 +193,9 @@ angular.module('catalogueApp')
       }
       $scope.saveReAssignedActivities = function(){
         reAssignActivityData();
-        $scope.Data = [];
         opsExecutionPlanService.saveReAssignedActivities($scope.reAssignActivityList)
         .then(function onSuccess(response){
           $scope.campaignDataList = [];
-
           getOpsExecutionImageDetails();
           $('#reAssignModal').modal('hide');
           $scope.reAssign = false;

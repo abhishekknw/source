@@ -85,8 +85,7 @@ urlpatterns = [
     url(r'^campaigns-assigned-inventory-counts/(?P<organisation_id>[A-Z_a-z0-9-]+)/$', views.CampaignsAssignedInventoryCountApiView.as_view()),
     url(r'^campaigns-assigned-inventory-ids-and-images/(?P<organisation_id>[A-Z_a-z0-9-]+)/$', views.GetAssignedIdImagesListApiView.as_view()),
     url(r'^convert-direct-proposal-to-campaign/$', views.convertDirectProposalToCampaign.as_view()),
-    url(r'^add-suppliers-direct-to-campaign/$', views.addSupplierDirectToCampaign.as_view()),
-    url(r'^get-relationship-and-past-campaigns-data/$', views.GetRelationshipAndPastCampaignsData.as_view())
+    url(r'^add-suppliers-direct-to-campaign/$', views.addSupplierDirectToCampaign.as_view())
 
 ]
 

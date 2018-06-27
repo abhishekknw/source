@@ -8,7 +8,6 @@
       $scope.bd_manager = constants.bd_manager;
       $scope.campaign_manager = constants.campaign_manager;
       $scope.userInfo = $rootScope.globals.userInfo;
-      $scope.display = false;
 
       //End:code added to show or hide details based on user permissions
       $scope.uploadfile = true; // added for loading spinner active/deactive
@@ -79,9 +78,6 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.model.accounts = response.data.data;
-            console.log($scope.model.accounts);
-            $scope.display = true;
-            $scope.loading = response.data.data;
             if(savedState){
               $scope.sel_account_id = $scope.model.accounts[$window.localStorage.sel_account_index].account_id;
               $scope.getProposals($scope.sel_account_id,$window.localStorage.sel_account_index);
@@ -208,9 +204,7 @@
 	    	pagesService.getOrganisations(orgId)
 	    	.then(function (response) {
 	            $scope.organisations = response.data.data;
-              $scope.loading = response.data.data;
-
-              // console.log($scope.model.organisation);
+              console.log($scope.model.organisation);
 	            if($scope.model.organisation.hasOwnProperty('organisation_id')){
 	              $scope.bsSelect = $scope.model.organisation.organisation_id;
 	            }
@@ -286,9 +280,6 @@
             console.log($scope.account_proposals);
             console.log("proposal",response);
               $scope.account_proposals = response.data.data;
-                console.log($scope.account_proposals);
-              // $scope.loading = response.data.data;
-
               $window.localStorage.account_proposals = JSON.stringify($scope.account_proposals);
               console.log($scope.account_proposals);
           })
@@ -336,7 +327,6 @@
         $scope.model['category'] = 'Business';
         pagesService.createBusinessCampaign($scope.model)
           .then(function (response) {
-            $scope.loading = response.data.data;
             var sub_type_id = $scope.model.business.sub_type_id;
             var type_id = $scope.model.business.business_type_id;
             // response = JSON.parse(response);
@@ -462,7 +452,6 @@
           .then(function onSuccess(response){
             console.log(response);
             $scope.model.organisation = response.data.data;
-            // $scope.loading = response.data.data;
             $scope.model.accounts = [];
             $scope.account_proposals = [];
             $window.localStorage['organisationData'] = angular.toJson($scope.model.organisation);

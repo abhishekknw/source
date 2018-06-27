@@ -1,9 +1,5 @@
-html{
-  background-color: #ffffff;
-}
 .campaignTabs{
 	margin:50px 0px 10px 0px;
-	background-color: #ffffff;
 }
 .nav-tabs > li {
 	border-radius: 10px;
@@ -65,7 +61,6 @@ width:75%;//Changed by vidhi
 }
 body{
   position: relative;
-
 }
 .overlay{
   position: absolute;

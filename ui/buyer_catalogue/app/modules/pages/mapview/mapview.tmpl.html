@@ -5,20 +5,19 @@
 <div class="loading" ng-if="!hideSpinner" ng-loading="loadIcon1 || loadIcon2"></div> <!--For displaying loading icon-->
 <html>
 <body>
-  <br /><br />
 <!-- Start: Center and Radius Detail Section -->
-<div class="navbar nav-subtab space">
+<div class="navbar-default nav-subtab space">
   <div class="table">
     <div class="breadcrumb" ncy-breadcrumb></div>
     <div class="row">
       <div class="col-md-2 aligndropdown">Select Advertising Location
-        <select style="width:100px" class="drop-width box-spacing" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
+        <select class="drop-width box-spacing" ng-model="current_center_id" ng-change="changeCurrentCenter(current_center_id)">
           <option ng-repeat="center_var in center_data" value="{{center_var.center.id}}" ng-selected="$first">{{center_var.center.center_name}}</option>
         </select>
       </div>
-      <div class="col-md-2">Center Latitude & Longitude : {{current_center.center.latitude | limitTo:8 }}/{{current_center.center.longitude | limitTo:8}}
+      <div class="col-md-2">Center Latitude & Longitude:{{current_center.center.latitude | limitTo:8 }}/{{current_center.center.longitude | limitTo:8}}
       </div>
-      <div class="col-md-2">Radius in KM:
+      <div class="col-md-2">Radius:
         <input class="box-spacing-radius" type="number" step="0.5" ng-model="current_center.center.radius" min="0" ng-disabled="isRequested" permission = "[permissions.changeRadius]">
       </div>
       <!-- <div class="col-md-2">Business Name : {{business_name}}</div> -->
@@ -46,11 +45,11 @@
   </div>
 </div>
 <!-- End: Center and Radius Detail Section -->
-<div class = "container page-panel" style="margin-left:-10px">
-  <div class = "row" >
-   <div class="col-md-2 search-bin" id="searchBinHolder" >
+<div class = "container page-panel">
+  <div class = "row">
+   <div class="col-md-2 search-bin" id="searchBinHolder">
     <div class="panel panel-info filterscroll ">
-     <div class="panel-bodyMapView" id="searchBody" style="margin-left:10px;margin-right:10px;">
+     <div class="panel-body" id="searchBody">
       <span><h4> Organisation Name : {{organisationName}}</h4></span>
       <span ng-if="proposalState"><h4> Proposal State : {{proposalState}}</h4></span>
       <div class="filterPanel" permission = "[permissions.viewFilters]">
@@ -300,12 +299,10 @@
 
           <h2>Grid View  </h2>
           <div class="col-md-12">
-            <div class="col-md-6 pull-left">
                 <select class="drop-width box-spacing form-control" ng-model="supplierListCode" ng-click="selectSupplierList(supplier)">
                 <option ng-repeat="supplier in unique_suppliersCode" value="{{supplier}}" ng-selected="$last">{{supplier}}</option>
               </select>
-          </div>
-        <div style="margin-top:6px;" class="col-md-6 pull-right">
+        <div style="margin-top:-40px;" class="col-md-6 pull-right">
           <input type="text" class="form-control" ng-model="query" placeholder="Search"><br />
 
         </div>
@@ -323,6 +320,7 @@
             <!-- <th class = "col-md-4">Average Rent</th> -->
             <!-- <th class = "col-md-4">Society Type</th> -->
             <!-- <th class = "col-md-4">Locality Rating</th> -->
+            <th class = "col-md-4">Machadalo Index</th>
             <th class = "col-md-4"><a ng-click="sortByPriorityIndex(supplierCode.society)">Priority Index</a></th>
             <th class="center-align" ng-if="inventoryHeaders.poster">Poster Count</th>
             <th class="center-align" ng-if="inventoryHeaders.standee">Standee Count</th>
@@ -346,7 +344,7 @@
             <!-- <td>{{supplier.average_rent}}</td> -->
             <!-- <td>{{society.society_type_quality}}</td> -->
             <!-- <td>{{society.society_location_type}}</td> -->
-            <!-- <td>{{supplier.machadalo_index}}</td> -->
+            <td>{{supplier.machadalo_index}}</td>
             <td>{{supplier.priority_index}}</td>
             <td ng-if="center.filters_meta['RS'].inv_poster">{{supplier.tower_count}}</td>
             <td ng-if="!center.filters_meta['RS'].inv_poster && inventoryHeaders.poster">NA</td>
@@ -609,9 +607,9 @@
   </div>
   <!-- End: grid view -->
   <!-- Start: Summary Section - mapview-->
-    <div class="col-md-2"  ng-if = "!show_societies"  style="margin-left:-10px" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
+    <div class="col-md-2"  ng-if = "!show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
       <div class="panel panel-info">
-        <div class="panel-bodyMapView filterscroll" id="searchBody" style="margin-left:10px;">
+        <div class="panel-body filterscroll" id="searchBody">
           <div class="filterPanel">
             <span class="filterHeader"> Summary for {{center_data[current_center_index].center.center_name}}</span></div>
             <hr>
@@ -688,12 +686,11 @@
          <!-- <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button> -->
          <button class="btn btn-danger active" style="width:100%;"  ng-show="!show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button>
        </div>
-       <br /><br />
       </div>
       <!-- Start: Summary Section of Gridview-->
-      <div class="col-md-2 Comprehensive" style="margin-left:-10px" ng-if = "show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
+      <div class="col-md-2 Comprehensive"  ng-if = "show_societies" ng-class = "{summaryGrid: show_societies, summarypanel: !show_societies }">
         <div class="panel panel-info">
-          <div class="panel-bodyMapView filterscroll" id="searchBody" style="margin-left:10px;">
+          <div class="panel-body filterscroll" id="searchBody">
             <div class="filterPanel">
               <span class="filterHeader">Comprehensive Summary </span></div>
               <hr>
@@ -772,9 +769,9 @@
             <!-- <button class="btn btn-danger active" ng-show="show_societies" ng-click="showSocieties()">Map View</button> -->
             <!-- <button class="btn btn-danger active" ng-show="!show_societies" ng-click="showSocieties()">Grid View</button><br> -->
             <button id="spacing" style="width:100%;" data-target = "#addNewSocities" class="btn btn-danger active" data-toggle="modal" ng-show="show_societies"ng-click="clearSearchData()" ng-disabled="isRequested" permission="[permissions.addSuppliers]">Add Suppliers</button>&nbsp;<br>
-            <button id="spacing" style="width:100%;" class="btn btn-danger active"  ng-show="show_societies && !isRequested" ng-click = "exportData()" ng-loading="hideSpinner" ng-disabled = "checkFileExport" permission="[permissions.requestProposal]">Request Proposal</button>
+            <button id="spacing" style="width:100%;" class="btn btn-danger active"  ng-show="show_societies && !isRequested" ng-click = "exportData()"ng-loading="hideSpinner" ng-disabled = "checkFileExport" permission="[permissions.requestProposal]">Request Proposal</button>
             <button id="spacing" style="width:100%;" class="btn btn-success" name="button" ng-disabled="isRequested" ng-if="isRequested">Requested</button>&nbsp;<br>
-            <button id="spacing" style="width:100%;" class="btn btn-danger active"  ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button><br /><br />
+            <button id="spacing" style="width:100%;" class="btn btn-danger active"  ng-show="show_societies" ng-click = "saveData()" ng-disabled="isRequested" permission="[permissions.saveData]">Save</button><br>
             <!-- <button id="spacing" ng-hide="hideData || isGuestUser" class="btn btn-danger active" ngf-select="upload($file)" ng-disabled="isRequested" permission="[permissions.uploadProposal]">Upload</button> -->
         </div>
         </div>

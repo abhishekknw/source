@@ -1,11 +1,8 @@
 <link rel="stylesheet" href="modules/pages/createProposal/createproposal.tmpl.css" />
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <div><nav-bar></nav-bar></div>
-<div class="panel-default">
-  <br /><br />
-  <br /><br />
-
-  <div class="breadcrumb" ncy-breadcrumb></div>
+<div class="panel-default breadcrumbStyle">
+  <div class=""><div class="breadcrumb" ncy-breadcrumb></div></div>
 </div>
 <div ng-if="errormsg"><h3>{{errormsg}}</h3></div>
 <div>
@@ -14,7 +11,8 @@
 </div>
 
     <div ng-loading="loading"></div> <!--For displaying loading icon-->
-    <h3 class="pageTitle alignment">Initial Requirement Gathering</h3>
+  <div class="panel panel-default">
+    <h3 class="panel-heading alignment">Initial Requirement Gathering</h3>
   	<form name="proposal">
   		<div class="panel-body business-panel">
   			<div class="table">
@@ -87,5 +85,6 @@
     		</table>
     		<button class="btn btn-danger spacing" ng-click="submit()" ng-disabled="proposal.$invalid || centerDetail.$invalid" ng-loading="loadingSpinner">Submit</button>
     </form>
+  </div>
 
 <!-- <div><footer-bar></footer-bar></div> -->
