@@ -1358,6 +1358,9 @@ $scope.setImageUrl = function(images){
   })
 }
 // map
+$scope.setInventoryInfoModalDetails = function(supplier,inv){
+console.log(inv);
+}
 
 
   })//END
