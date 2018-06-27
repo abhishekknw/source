@@ -6582,9 +6582,9 @@ def get_filters_by_campaign(campaign_id):
     """
     function_name = get_filters_by_campaign.__name__
     try:
-        filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id)
-        serializer = serializers.FiltersSerializer(filters, many=True)
-        return serializer.data
+        filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id).values('filter_code').distinct()
+        # serializer = serializers.FiltersSerializer(filters, many=True)
+        return filters
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
 

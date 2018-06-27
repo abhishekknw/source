@@ -1193,6 +1193,7 @@
       $scope.supplierStatus = data.status;
       $scope.supplierAndInvData = $scope.campaignSupplierAndInvData[data.status];
       $scope.invStatusKeys = angular.copy(invStatusKeys);
+      $scope.countLeads = 0;
       angular.forEach($scope.supplierAndInvData, function(supplier){
         $scope.latitude = supplier.supplier.society_latitude;
         $scope.longitude = supplier.supplier.society_longitude;
@@ -1203,10 +1204,10 @@
           angular.forEach(supplier.leads_data, function(inv,key){
             $scope.leads_data = inv;
 
+            $scope.showLeads = true;
+            $scope.countLeads += 1;
             if($scope.leads_data.is_interested){
-              $scope.showLeads = true;
-              $scope.countLeads += 1;
-              console.log($scope.countLeads);
+              $scope.supplierHotLeads += 1;
             }
           })
       })
@@ -1220,9 +1221,6 @@
 
           });
         });
-
-
-
       $scope.$apply();
 
     }
