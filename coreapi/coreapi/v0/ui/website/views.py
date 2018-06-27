@@ -3899,21 +3899,21 @@ class ProposalToCampaign(APIView):
             #     return ui_utils.handle_response(class_name, data=errors.ALREADY_A_CAMPAIGN_ERROR.format(proposal.proposal_id), request=request)
 
             # these are the current inventories assigned. These are inventories assigned to this proposal when sheet was imported.
-            # current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
+            current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=proposal_id)
 
             # assign default dates when you have some inventories assigned
-            # if current_assigned_inventories:
-            #     current_assigned_inventories_map = {}
-            #
-            #     for inv in current_assigned_inventories:
-            #         inv_tuple = (inv.inventory_content_type, inv.inventory_id)
-            #         current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
-            #
-            #     # currently set the R.D and C.D of all inventories to proposal's start and end date.
-            #     inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
-            #     response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
-            #     if not response.data['status']:
-            #         return response
+            if current_assigned_inventories:
+                current_assigned_inventories_map = {}
+
+                for inv in current_assigned_inventories:
+                    inv_tuple = (inv.inventory_content_type, inv.inventory_id)
+                    current_assigned_inventories_map[inv_tuple] = (proposal_start_date, proposal_end_date, inv)
+
+                # currently set the R.D and C.D of all inventories to proposal's start and end date.
+                inventory_release_closure_list = [(inv, proposal_start_date, proposal_end_date) for inv in current_assigned_inventories]
+                response = website_utils.insert_release_closure_dates(inventory_release_closure_list)
+                if not response.data['status']:
+                    return response
 
             # convert to campaign and return
             proposal.campaign_state = v0_constants.proposal_converted_to_campaign
@@ -5682,13 +5682,22 @@ class campaignListAPIVIew(APIView):
         try:
             user = request.user
             date = request.query_params['date']
-            result = []
-            category = request.query_params['category']
             if user.is_superuser:
-                result = website_utils.get_campaigns_with_status(category, user)
+                assigned_objects = models.CampaignAssignment.objects.all()
             else:
-                result = website_utils.get_campaigns_with_status(category,user)
-            return ui_utils.handle_response(class_name, data=result, success=True)
+                category = request.query_params['category']
+                if category.upper() == v0_constants.category['business']:
+                    assigned_objects = models.CampaignAssignment.objects.select_related('campaign__account','campaign__account__organisation'). \
+                        filter(campaign__account__organisation__organisation_id=organisation_id)
+                if category.upper() == v0_constants.category['business_agency']:
+                    assigned_objects = models.CampaignAssignment.objects.filter(campaign__user=user)
+                if category.upper() == v0_constants.category['supplier_agency']:
+                    assigned_objects = models.CampaignAssignment.objects.filter(assigned_to=user)
+            serializer = website_serializers.CampaignAssignmentSerializerReadOnly(assigned_objects, many=True)
+            response = website_utils.get_campaigns_by_status(serializer.data, date)
+            if not response:
+                return response
+            return ui_utils.handle_response(class_name, data=response, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -5746,27 +5755,23 @@ class DashBoardViewSet(viewsets.ViewSet):
                 if category.upper() == v0_constants.category['supplier_agency']:
                     perm_query = Q(proposal__campaignassignemnt__assigned_to=user)
             current_date = timezone.now()
-
             if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
                 query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(perm_query,query).values('supplier_code', 'proposal__name','proposal_id','center__latitude','center__longitude'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code', 'proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
-                proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
                 query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id','center__latitude','center__longitude'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
-                proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
                 query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id','center__latitude','center__longitude'). \
+                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id'). \
                     annotate(total=Count('object_id'))
-                proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             data = {}
             for proposal in proposal_data:
@@ -5803,8 +5808,6 @@ class DashBoardViewSet(viewsets.ViewSet):
             supplier_objects_id_list = {supplier['supplier_id']:supplier for supplier in suppliers}
 
             leads = website_utils.get_campaign_leads(campaign_id)
-            inv_data_objects_list = website_utils.get_campaign_inv_data(campaign_id)
-            # inv_data_objects_list = {inv['object_id']:inv for inv in inv_data}
             ongoing_suppliers = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                     'inventory_activity_assignment__inventory_activity','inventory_activity_assignment__inventory_activity',
                                     'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
@@ -5818,12 +5821,12 @@ class DashBoardViewSet(viewsets.ViewSet):
             ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
 
             completed_suppliers = models.ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,is_completed=True).values('object_id')
-
-            completed_supplier_id_list = [supplier['object_id'] for supplier in completed_suppliers]
+            completed_supplier_id_list = [supplier.object_id for supplier in completed_suppliers]
 
             upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(ongoing_supplier_id_list + completed_supplier_id_list)
 
             ongoing_suppliers_list = []
+
             for id in ongoing_supplier_id_list:
                 data = {
                     'supplier' : supplier_objects_id_list[id],
@@ -5831,22 +5834,17 @@ class DashBoardViewSet(viewsets.ViewSet):
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
-                if id in inv_data_objects_list:
-                    data['supplier']['inv_data'] = inv_data_objects_list[id]
-
                 ongoing_suppliers_list.append(data)
 
 
             completed_suppliers_list = []
-            for id in completed_supplier_id_list:
+            for id in completed_suppliers_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
                     'leads_data': []
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
-                if id in inv_data_objects_list:
-                    data['supplier']['inv_data'] = inv_data_objects_list[id]
                 completed_suppliers_list.append(data)
 
             upcoming_suppliers_list = []
@@ -5857,8 +5855,6 @@ class DashBoardViewSet(viewsets.ViewSet):
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
-                if id in inv_data_objects_list:
-                    data['supplier']['inv_data'] = inv_data_objects_list[id]
                 upcoming_suppliers_list.append(data)
 
 
@@ -5900,13 +5896,35 @@ class DashBoardViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id', None)
-            if not campaign_id:
-                return Response("Campaign Id is Not Provided", status=status.HTTP_200_OK)
-            type = request.query_params.get('type', None)
-            result = {}
-            if type == v0_constants.perf_metrics_types['inv_type']:
-                result = website_utils.get_performance_metrics_data_for_inventory(campaign_id,request)
-            return ui_utils.handle_response(class_name, data=result, success=True)
+            inv_code = request.query_params.get('inv', None)
+            content_type = ui_utils.fetch_content_type(inv_code)
+            content_type_id = content_type.id
+
+            total_release = website_utils.get_total_activity_data('RELEASE',campaign_id, content_type_id)
+            actual_release = website_utils.get_actual_activity_data('RELEASE',campaign_id, content_type_id)
+
+            total_audit = website_utils.get_total_activity_data('AUDIT', campaign_id, content_type_id)
+            actual_audit = website_utils.get_actual_activity_data('AUDIT', campaign_id, content_type_id)
+
+            total_closure = website_utils.get_total_activity_data('CLOSURE', campaign_id, content_type_id)
+            actual_closure = website_utils.get_actual_activity_data('CLOSURE', campaign_id, content_type_id)
+
+            data = {
+                'release' : {
+                    'total' : total_release,
+                    'actual': actual_release
+                },
+                'audit': {
+                    'total': total_audit,
+                    'actual': actual_audit
+                },
+                'closure': {
+                    'total': total_closure,
+                    'actual': actual_closure
+                }
+            }
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -6018,8 +6036,6 @@ class DashBoardViewSet(viewsets.ViewSet):
                     supplier_data[supplier['object_id']] = supplier
                     supplier_data[supplier['object_id']]['interested'] = 0
                     supplier_data[supplier['object_id']]['data'] = supplier_id_object_list[supplier['object_id']]
-                else:
-                    supplier_data[supplier['object_id']]['total'] += supplier['total']
 
                 if supplier['is_interested']:
                     supplier_data[supplier['object_id']]['interested'] += supplier['total']
@@ -6070,6 +6086,8 @@ class DashBoardViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
 
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
@@ -6439,29 +6457,5 @@ class LeadsViewSet(viewsets.ViewSet):
             now_time = timezone.now()
             models.Leads.objects.filter(campaign=campaign_id).update(created_at=now_time,updated_at=now_time)
             return ui_utils.handle_response(class_name, data={}, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-class GetRelationshipAndPastCampaignsData(APIView):
-    def get(self, request):
-        """
-        This api will return supplier relationship data as wll as past campaign related data
-        :param request:
-        :return:
-        """
-        class_name = self.__class__.__name__
-        try:
-            supplier_type_code = request.query_params.get('supplier_code',None)
-            supplier_id = request.query_params.get('supplier_id',None)
-            campaign_id = request.query_params.get('campaign_id', None)
-            supplier_model = ui_utils.get_model(supplier_type_code)
-            supplier_data = supplier_model.objects.filter(supplier_id=supplier_id).values('feedback','representative__name')
-            campaign_data = website_utils.get_past_campaigns_data(supplier_id,campaign_id)
-            result = {
-                'campaign_data' : campaign_data,
-                'supplier_data' : supplier_data
-            }
-            return ui_utils.handle_response(class_name, data=result, success=True)
-
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

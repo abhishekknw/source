@@ -6087,33 +6087,34 @@ def create_entry_in_role_hierarchy(role):
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))
 
-def get_campaigns_with_status(category,user):
+def get_campaigns_by_status(campaigns, current_date):
     """
     return campaigns list by arranging in ongoing, upcoming and completed keys
 
     :param data:
     :return:
     """
-    function = get_campaigns_with_status.__name__
+    function = get_campaigns_by_status.__name__
     try:
-        current_date = timezone.now()
+        if not current_date:
+            current_date = timezone.now()
+        current_date = parse_datetime(current_date).date()
         campaign_data = {
             'ongoing_campaigns'     : [],
             'upcoming_campaigns'    : [],
             'completed_campaigns'   : []
         }
-        campaign_query = Q()
-        if not user.is_superuser:
-            campaign_query = get_query_by_organisation_category(category,v0_constants.category_query_status['campaign_query'],user)
-        campaign_data['completed_campaigns'] = models.CampaignAssignment.objects. \
-            filter(campaign_query,campaign__tentative_end_date__lt=current_date). \
-            annotate(name=F('campaign__name')).values('campaign','name')
-        campaign_data['upcoming_campaigns'] = models.CampaignAssignment.objects. \
-            filter(campaign_query, campaign__tentative_start_date__gt=current_date). \
-            annotate(name=F('campaign__name')).values('campaign','name')
-        campaign_data['ongoing_campaigns'] = models.CampaignAssignment.objects. \
-            filter(campaign_query,Q(campaign__tentative_start_date__lte=current_date) & Q(campaign__tentative_end_date__gte=current_date)). \
-            annotate(name=F('campaign__name')).values('campaign', 'name')
+        for data in campaigns:
+            campaign_start_date = parse_datetime(data['campaign']['tentative_start_date']).date()
+            campaign_end_date = parse_datetime(data['campaign']['tentative_end_date']).date()
+            if not campaign_start_date or not campaign_end_date:
+                continue
+            if campaign_end_date < current_date:
+                campaign_data['completed_campaigns'].append(data)
+            if campaign_start_date > current_date:
+                campaign_data['upcoming_campaigns'].append(data)
+            if campaign_end_date >= current_date and campaign_start_date <= current_date:
+                campaign_data['ongoing_campaigns'].append(data)
         return campaign_data
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))
@@ -6541,12 +6542,9 @@ def get_actual_activity_data(activity, campaign_id, content_type_id):
                'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'). \
             filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
             inventory_activity_assignment__inventory_activity__activity_type=activity,
-            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
-            annotate(activity_date=F('inventory_activity_assignment__inventory_activity__activity_date'),
-                     assignment_id=F('inventory_activity_assignemnt__id')). \
-            values('activity_date','created_at','image_path','assignment_id')
-        # serializer = serializers.InventoryActivityImageSerializer(result, many=True)
-        return result;
+            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id)
+        serializer = serializers.InventoryActivityImageSerializer(result, many=True)
+        return serializer.data;
 
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
@@ -6706,210 +6704,5 @@ def update_contact_details(account_id,contacts):
             else:
                 return ui_utils.handle_response(function_name, data=serializer.errors)
         return ui_utils.handle_response(function_name, data={}, success=True)
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-def get_query_by_organisation_category(category,campaign_query,user):
-    """
-    THis fun will return the query based on category provided
-    :param category:
-    :return:
-    """
-    function_name = get_query_by_organisation_category.__name__
-    try:
-        query = Q()
-        organisation_id = user.profile.organisation.organisation_id
-        if category.upper() == v0_constants.category['business']:
-            query = Q(**{v0_constants.business_category_campaign_query[campaign_query] : organisation_id})
-        if category.upper() == v0_constants.category['business_agency']:
-            query = Q(**{v0_constants.bus_agency_campaign_query[campaign_query] : user})
-        if category.upper() == v0_constants.category['supplier_agency']:
-            query = Q(**{v0_constants.sup_agency_campaign_query[campaign_query] : user})
-        return query
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-def get_performance_metrics_data_for_inventory(campaign_id, request):
-    """
-    This fun will return total assignment vs actual activity completed data for inv, ontime and onlocation
-    :param campaign_id:
-    :param request:
-    :return:
-    """
-    function_name = get_performance_metrics_data_for_inventory.__name__
-    try:
-        inv_code = request.query_params.get('inv_code',None)
-        content_type = ui_utils.fetch_content_type(inv_code)
-        content_type_id = content_type.id
-        perf_param = request.query_params.get('perf_param', None)
-        result = {}
-        if perf_param == v0_constants.perf_metrics_param['inv'] or perf_param == v0_constants.perf_metrics_param['on_time']:
-            result['total'] = {}
-            result['total']['release'] = get_total_assigned_inv_act_data(campaign_id,content_type_id,v0_constants.activity_type['RELEASE'])
-            result['total']['audit'] = get_total_assigned_inv_act_data(campaign_id, content_type_id,v0_constants.activity_type['AUDIT'])
-            result['total']['closure'] = get_total_assigned_inv_act_data(campaign_id, content_type_id,v0_constants.activity_type['CLOSURE'])
-            result['actual'] = {}
-            result['actual']['release'] = get_assigned_inv_performance_data(campaign_id,content_type_id,v0_constants.activity_type['RELEASE'])
-            result['actual']['audit'] = get_assigned_inv_performance_data(campaign_id, content_type_id,v0_constants.activity_type['AUDIT'])
-            result['actual']['closure'] = get_assigned_inv_performance_data(campaign_id, content_type_id,v0_constants.activity_type['CLOSURE'])
-
-        if perf_param == v0_constants.perf_metrics_param['on_location']:
-            result['actual'] = {}
-            result['actual']['release'] = get_assigned_inv_location_data(campaign_id,content_type_id,v0_constants.activity_type['RELEASE'])
-            result['actual']['audit'] = get_assigned_inv_location_data(campaign_id, content_type_id,v0_constants.activity_type['AUDIT'])
-            result['actual']['closure'] = get_assigned_inv_location_data(campaign_id, content_type_id,v0_constants.activity_type['CLOSURE'])
-
-        return result
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-def get_assigned_inv_performance_data(campaign_id,content_type_id,act_type):
-    """
-
-    :param campaign_id:
-    :param inv:
-    :return:
-    """
-    function_name = get_assigned_inv_performance_data.__name__
-    try:
-        image_data = models.InventoryActivityImage.objects. \
-            filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id=campaign_id,
-                   inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id,
-                   inventory_activity_assignment__inventory_activity__activity_type=act_type). \
-            annotate(activity_date=F('inventory_activity_assignment__activity_date'),
-                     inventory_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__id')). \
-            values('activity_date','inventory_id','image_path','created_at')
-        result = arrange_assignment_data_by_inventory_id(image_data)
-
-        return result
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-def arrange_assignment_data_by_inventory_id(data):
-    """
-
-    :param data:
-    :return:
-    """
-    function_name = arrange_assignment_data_by_inventory_id.__name__
-    try:
-        result = {}
-        for id in data:
-            if id['inventory_id'] not in result:
-                result[id['inventory_id']] = []
-            result[id['inventory_id']].append(id)
-        return result
-
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-def get_assigned_inv_location_data(campaign_id,content_type_id,act_type):
-    """
-
-    :param campaign_id:
-    :param content_type_id:
-    :return:
-    """
-    function_name = get_assigned_inv_location_data.__name__
-    try:
-        inv_act_image_objects = models.InventoryActivityImage.objects. \
-            filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id=campaign_id,
-                   inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id,
-                   inventory_activity_assignment__inventory_activity__activity_type=act_type). \
-            annotate(inventory_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__id'),
-                     object_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
-            values('inventory_id','object_id','image_path','latitude','longitude')
-
-        supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
-        supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-        serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects, many=True)
-        suppliers = serializer.data
-        inv_act_image_objects_with_distance = calculate_location_difference_between_inventory_and_supplier(inv_act_image_objects, suppliers)
-        result = arrange_assignment_data_by_inventory_id(inv_act_image_objects_with_distance)
-        return result
-
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-def get_total_assigned_inv_act_data(campaign_id,content_type_id,act_type):
-    """
-
-    :param campaign_id:
-    :param content_type_id:
-    :param act_type:
-    :return:
-    """
-    function_name = get_total_assigned_inv_act_data.__name__
-    try:
-        result = models.InventoryActivityAssignment.objects. \
-            filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id=campaign_id,
-                inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id,
-                inventory_activity__activity_type=act_type). \
-            values('inventory_activity__shortlisted_inventory_details__id').distinct().count()
-        return result
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-def get_leads_count_by_campaign(data):
-    """
-    This function will return leads of every campaign if available
-    :param data:
-    :return:
-    """
-    function_name = get_leads_count_by_campaign.__name__
-    try:
-        proposal_id_list = [proposal['proposal_id'] for proposal in data]
-        leads = models.Leads.objects.filter(campaign__in=proposal_id_list).values('campaign').annotate(total=Count('id'))
-        leads_id_objects = {lead['campaign']: lead for lead in leads}
-        for proposal in data:
-            if proposal['proposal_id'] in leads_id_objects:
-                proposal['leads'] = leads_id_objects[proposal['proposal_id']]
-        return data
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-def get_campaign_inv_data(campaign_id):
-    """
-    This function will return inv and inv count data
-    :param campaign_id:
-    :return:
-    """
-    function_name = get_campaign_inv_data.__name__
-    try:
-        data = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal=campaign_id). \
-            annotate(inv_name=F('ad_inventory_type__adinventory_name'),object_id=F('shortlisted_spaces__object_id')). \
-             values('object_id','inv_name').annotate(total=Count('id'))
-        result = {}
-        for inv in data:
-            if inv['object_id'] not in result:
-                result[inv['object_id']] = {}
-            if inv['inv_name'] not in result[inv['object_id']]:
-                result[inv['object_id']][inv['inv_name']] = {}
-            result[inv['object_id']][inv['inv_name']] = inv
-        return result
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-def get_past_campaigns_data(supplier_id,campaign_id):
-    """
-    This function returns past campaigns data like last campaign price, last 5 campaigns etc
-    :param supplier_id:
-    :return:
-    """
-    function_name = get_past_campaigns_data.__name__
-    try:
-        last_campaign_data = models.ShortlistedSpaces.objects.filter(~Q(proposal=campaign_id),object_id=supplier_id,total_negotiated_price__isnull=False). \
-            values('total_negotiated_price','proposal__name').order_by('-proposal__tentative_start_date')
-        if last_campaign_data:
-            last_campaign_data = last_campaign_data[0]
-        past_campaigns_count = models.ShortlistedSpaces.objects.filter(~Q(proposal=campaign_id),object_id=supplier_id).distinct().count()
-        campaign_list = models.ShortlistedSpaces.objects.filter(~Q(proposal=campaign_id),object_id=supplier_id). \
-            annotate(name=F('proposal__name'),organisation_name=F('proposal__account__organisation__name')). \
-            order_by('-proposal__tentative_start_date').values('name','organisation_name').distinct()[:5]
-        result = {
-            'last_campaign_price' : last_campaign_data,
-            'past_campaigns' : past_campaigns_count,
-            'campaigns' : campaign_list
-        }
-        return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))

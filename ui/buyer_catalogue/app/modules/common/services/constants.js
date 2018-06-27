@@ -160,7 +160,7 @@ angular
       SL : 'STALL',
       FL : 'FLYER'
     },
-    distanceLimit : 50,
+    distanceLimit : 80,
     release : 'RELEASE',
     closure : 'CLOSURE',
     audit : 'AUDIT',

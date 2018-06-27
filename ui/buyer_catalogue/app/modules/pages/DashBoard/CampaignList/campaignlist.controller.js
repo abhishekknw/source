@@ -4,7 +4,7 @@ angular.module('catalogueApp')
     function ($scope, $rootScope, $window, $location , commonDataShare,constants,campaignListService) {
 
       $scope.campaignHeadings = [
-        {header : 'Sr No'},
+        {header : 'Campaign Id'},
         {header : 'Campaign Name'},
         {header : 'Assgined To'},
         {header : 'Assgined By'},
@@ -12,25 +12,21 @@ angular.module('catalogueApp')
         {header : 'Start Date'},
         {header : 'End Date'},
         {header : 'View Booking Details'},
-        {header : 'Assign Dates'},
         {header : 'View Execution Image'}
       ];
 
       $scope.is_Superuser = $window.localStorage.isSuperUser;
-      // var vm = this;
-
       var getCampaignDetails = function(){
         if($scope.is_Superuser == 'true'){
           var fetch_all = '1';
           campaignListService.getAllCampaignDetails(fetch_all)
           .then(function onSuccess(response){
             $scope.campaignData = response.data.data;
-            $scope.loading = response.data.data;
             if($scope.campaignData.length == 0){
               $scope.isEmpty = true;
               $scope.msg = constants.emptyCampaignList;
             }
-            // $scope.loading = response.data;
+            $scope.loading = response.data;
           })
           .catch(function onError(response){
             $scope.isEmpty = true;
@@ -43,20 +39,15 @@ angular.module('catalogueApp')
           var assigned_by = '0';
           var fetch_all = '0';
           var userId = $rootScope.globals.currentUser.user_id;
-          $scope.Data = [];
           campaignListService.getCampaignDetails(assigned_by,userId,fetch_all)
             .then(function onSuccess(response){
               console.log(response);
               $scope.campaignData = response.data.data;
-              $scope.Data = $scope.campaignData;
-              $scope.loading = response.data.data;
-
-              console.log($scope.Data);
               if($scope.campaignData.length == 0){
                 $scope.isEmpty = true;
                 $scope.msg = constants.emptyCampaignList;
               }
-              // $scope.loading = response.data;
+              $scope.loading = response.data;
             })
             .catch(function onError(response){
               $scope.isEmpty = true;
@@ -91,9 +82,6 @@ angular.module('catalogueApp')
         $scope.getDetails = function(proposal_id){
           $location.path('/' + proposal_id + '/releasePlan');
         }
-        $scope.goToAssignDatesPage = function(proposal_id){
-          $location.path('/' + proposal_id + '/auditReleasePlan');
-        }
         $scope.getExecutionDetails = function(proposal){
           $window.localStorage.campaignState = constants[proposal.campaign_state];
           $window.localStorage.campaignId = proposal.proposal_id;
@@ -102,6 +90,5 @@ angular.module('catalogueApp')
 
           $location.path('/' + proposal.proposal_id + '/opsExecutionPlan');
         }
-
 
     }]);

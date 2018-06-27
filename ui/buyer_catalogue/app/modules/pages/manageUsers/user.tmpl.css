@@ -1,8 +1,8 @@
-body{
-  background: #ffffff;
+/*body{
+  background: #f2f2f2;
   font-family: Source Sans Pro;
   color: #707070;
-}
+}*/
 
 #playground-container {
     height: 500px;
@@ -39,9 +39,8 @@ hr{
   color: #fff;
 }
 
-.managementPageform-group{
+.form-group{
   margin-bottom: 15px;
-  margin-left:-120px;
 }
 
 label{
@@ -127,7 +126,7 @@ span.input-group-addon i {
 /*css manually added for items*/
 .createUser{
   text-align: center;
-  color: #ffffff;
+  color: #009edf;
   font-weight: bold;
 }
 /*css for permssion drop down*/
@@ -163,33 +162,11 @@ th{
 td{
     text-align: center;
 }
+table{
+  /*width: 200px;*/
 
-.managementTable{
-width: 100%;
-max-width: 100%;
-margin-left: 130px !important;
 }
-
-
-.displayTable{
-width: 80%;
-max-width: 100%;
-/* margin-left: 130px !important; */
-}
-
-.roleTable{
-width: 80%;
-max-width: 100%;
-margin-left: -25px;
-}
-
-.onboardTable{
-  width: 80%;
-  max-width: 100%;
-  margin-left: -25px;
-  margin-top: -120px;
-}
-
+/*for edit user form*/
 .form-user{
   width: 30%;
   margin-right:  230px;
@@ -235,8 +212,6 @@ h3{
 .organisation-view-tab-content{
   overflow: auto;
   max-height: 70vh;
-  width:710px;
-  margin-left:-30px;
 }
 .row + .row {
    border-top:0;
@@ -246,11 +221,4 @@ h3{
 }
 label,a{
   word-wrap: break-word;
-}
-
-.menuvisble{
-  margin-top:-152px;
-}
-.maincontainer{
-  margin-top: 215px;
 }

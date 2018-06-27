@@ -91,8 +91,6 @@ angular.module('machadaloPages')
       .then(function onSuccess(response){
           console.log(response);
           $scope.permissions = response.data.data;
-          $scope.loading = response.data.data;
-
           addMoreFieldsToPermission();
           angular.forEach($scope.permissions, function(permission){
             $scope.permissionsDict[permission.id] = permission;

@@ -30,13 +30,10 @@ angular.module('catalogueApp')
       ];
 
   var getProposalDetails = function(){
-    $scope.Data = [];
     opsDashBoardService.getProposalDetails()
     	.then(function onSuccess(response){
         console.log(response);
     		$scope.proposals = response.data.data;
-        $scope.Data = $scope.proposals;
-        console.log($scope.Data);
         if($scope.proposals.length == 0){
           $scope.isEmpty = true;
           $scope.msg = constants.emptyProposalMsg;
@@ -176,10 +173,10 @@ angular.module('catalogueApp')
       $location.path('/' + proposal_id + '/showcurrentproposal');
     }
 
-    $scope.saveAssignment = function(id){
-      // var userId = $scope.userId;
+    $scope.saveAssignment = function(){
+      var userId = $scope.userId;
       var data = {
-        to:id,
+        to:userId,
         campaign_id:$scope.currentProposal.proposal.proposal_id
       };
       opsDashBoardService.saveAssignment(data)

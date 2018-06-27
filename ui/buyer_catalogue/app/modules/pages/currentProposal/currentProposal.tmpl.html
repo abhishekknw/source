@@ -6,11 +6,11 @@
   <div ng-loading="loading"></div> <!--For displaying loading icon-->
   <div class = "container">
     <div class="breadcrumb" ncy-breadcrumb></div>
-    <div class="pageTitle" style="text-align:center">
-      <h3 style="color:#ffffff;">{{proposalState}} Proposal for {{clientName}}</h3>
+    <div class="page-header" style="text-align:center">
+      <h3 style="color:#337ab7;">{{proposalState}} Proposal for {{clientName}}</h3>
     </div>
       <div class="row">
-        <div class="panel-body panel-default">
+        <div class="panel panel-default">
           <div class="panel-heading">
             <Label>Proposal Id:</Label><span class = "proposal-details">{{proposal.proposal_id}}</span>
             <Label class = "labels">Name of Proposal:</Label><span class = "proposal-details">{{proposal.name}}</span>
@@ -41,7 +41,7 @@
           </div>
          </div>
       </div>
-      <div class="panel-body" style="text-align:right">
+      <div class="" style="text-align:right">
         <div>
           <button class="btn btn-danger"  ng-click="editInitialProposal(proposal.proposal_id)">View On Map/Grid</button>
         </div>
@@ -55,7 +55,7 @@
       <!-- <div class="col-md-6">
       </div> -->
       <div style="text-align:right">
-        <div class="panel-body">
+        <div>
           <button ng-hide="hideData" class="btn btn-danger" ng-disabled="!invoiceStatus" data-target="#invoiceModal" data-toggle="modal" permission = "[permissions.addInvoiceDetails]">
             <b>Enter Invoice Details</b>
           </button>

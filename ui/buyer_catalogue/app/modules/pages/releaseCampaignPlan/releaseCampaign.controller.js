@@ -17,7 +17,6 @@ angular.module('catalogueApp')
         {header : 'Supplier Name'},
         {header : 'Area,(Sub Area)'},
         {header : 'Address'},
-        {header : 'RelationShip Data'},
         {header : 'Flat Count'},
         {header : 'Tower Count'},
         // {header : 'Status'},
@@ -40,7 +39,7 @@ angular.module('catalogueApp')
     {name:'Tentative Booking', code : 'NB'},
     {name:'Phone Booked' , code : 'PB'},
     {name:'Visit Booked', code : 'VB'},
-    {name:'Rejected', code : 'SR'},
+    {name:'Rejected', code : 'R'},
     {name:'Send Email', code : 'SE'},
     {name:'Visit Required', code : 'VR'},
     {name:'Call Required', code : 'CR'},
@@ -48,11 +47,11 @@ angular.module('catalogueApp')
   ];
 
   $scope.payment_status = [
-    {name:'Not Initiated', code : 'PNI'},
-    {name:'Pending', code : 'PP'},
-    {name:'Cheque Released' , code : 'PCR'},
+    {name:'Not Initiated', code : 'NI'},
+    {name:'Pending', code : 'P'},
+    {name:'Cheque Released' , code : 'CR'},
     {name:'Paid', code : 'PD'},
-    {name:'Rejected', code : 'PR'},
+    {name:'Rejected', code : 'R'},
 
   ];
 
@@ -116,14 +115,11 @@ angular.module('catalogueApp')
     $scope.saveDetails = function(){
       // alert("vidhi");
     };
-      $scope.Data = [];
+
     releaseCampaignService.getCampaignReleaseDetails($scope.campaign_id)
     	.then(function onSuccess(response){
         console.log(response);
-
     		$scope.releaseDetails = response.data.data;
-        $scope.Data = $scope.releaseDetails.shortlisted_suppliers;
-        console.log($scope.Data);
         console.log($scope.releaseDetails);
 
         angular.forEach($scope.releaseDetails.shortlisted_suppliers, function(supplier){
@@ -265,11 +261,8 @@ angular.module('catalogueApp')
     }
       //End: code added to search & show all suppliers on add societies tab
     $scope.addSuppliersToList = function(supplier){
-      if(!(supplier.supplier_id in $scope.shortlistedSuppliersIdList || supplier.supplier_id in $scope.supplierSummaryData)){
+      if(!(supplier.supplier_id in $scope.shortlistedSuppliersIdList || supplier.supplier_id in $scope.supplierSummaryData))
         $scope.supplierSummaryData[supplier.supplier_id] = supplier;
-        $scope.showAddSupplierMsg = 'Added Successfully';
-        alert($scope.showAddSupplierMsg);
-      }
       else
         alert("supplier Already Present");
       console.log($scope.supplierSummaryData);
@@ -428,18 +421,6 @@ $scope.multiSelect =
          };
 
         $scope.selected_customTexts = {buttonDefaultText: 'Stall Location'};
-        $scope.getRelationShipData = function(supplierId){
-          $scope.relationshipData = {};
-          var supplierCode = 'RS';
-          var campaignId = $scope.releaseDetails.campaign.proposal_id;
-          releaseCampaignService.getRelationShipData(supplierId,supplierCode,campaignId)
-          .then(function onSuccess(response){
-            $scope.relationshipData = response.data.data;
-            console.log(response);
-          }).catch(function onError(response){
-            console.log(response);
-          })
-        }
 
 
 }]);//Controller function ends here

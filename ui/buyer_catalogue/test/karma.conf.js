@@ -109,7 +109,6 @@ module.exports = function(config) {
       'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
       'bower_components/aws-sdk/dist/aws-sdk.js',
       'bower_components/angular-circular-progress/dist/circularProgress.min.js',
-      'bower_components/ngmap/build/scripts/ng-map.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       "app/scripts/**/*.js",
