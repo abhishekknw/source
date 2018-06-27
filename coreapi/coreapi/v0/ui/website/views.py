@@ -6071,21 +6071,24 @@ class DashBoardViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-    @list_route()
-    def get_all_inventory_details_of_supplier(self, request):
-        """
-        This function returns the total, assigned, completed inv and image details for Release, Audit & Closure of supplier
-        :param request:
-        :return:
-        """
-        class_name = self.__class__.__name__
-        try:
-            supplier_id = request.query_params.get('supplier_id',None)
-            inv_code = request.query_params.get('inv_code', None)
-            if not supplier_id or not inv_code:
-                return Response(data={'status': False, 'error': 'No Supplier Id or Inv Code provided'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            
+    # @list_route()
+    # def get_all_inventory_details_of_supplier(self, request):
+    #     """
+    #     This function returns the total, assigned, completed inv and image details for Release, Audit & Closure of supplier
+    #     :param request:
+    #     :return:
+    #     """
+    #     class_name = self.__class__.__name__
+    #     try:
+    #         pass
+    #         supplier_id = request.query_params.get('supplier_id',None)
+    #         inv_code = request.query_params.get('inv_code', None)
+    #         if not supplier_id or not inv_code:
+    #             return Response(data={'status': False, 'error': 'No Supplier Id or Inv Code provided'},
+    #                             status=status.HTTP_400_BAD_REQUEST)
+    #     except Exception as e:
+    #         return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
         """
