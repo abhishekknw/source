@@ -347,7 +347,7 @@
 
                               </div>
                               <uib-tab-heading uib-dropdown>
-                                  <button class="btn btn-warning btn-sm pull-right" style="background-color:#fcfc5f;color:black;margin-top:36px;" uib-dropdown-toggle ng-click="$event.stopPropagation()">
+                                  <button class="btn btn-warning btn-sm pull-right" style="background-color:#fcfc5f;color:black;margin-top:10px;" uib-dropdown-toggle ng-click="$event.stopPropagation()">
                                       Select Chart <i class="caret"></i>
                                   </button>
                                   <ul class="dropdown-menu" uib-dropdown-menu>
@@ -547,7 +547,19 @@
                                 <div class="panel-heading content-title">
                                   <h5 style="background:'red'">Map View for All Campaigns</h5></div>
                                   <ng-map center="[{{supplierTypesDataList[0].center__latitude}} , {{supplierTypesDataList[0].center__longitude}}]" position="[{{latitude}},{{longitude}}]">
-                                    <marker ng-repeat="campaign in supplierTypesDataList" position="[{{campaign.center__latitude}}, {{campaign.center__longitude}}]" title="{{campaign.proposal__name}}" id="{{campaign.proposal_id}}">
+                                    <marker ng-repeat="campaign in supplierTypesDataList" position="[{{campaign.center__latitude}}, {{campaign.center__longitude}}]" title="{{campaign.proposal__name}}" id="{{campaign.proposal_id}}" on-click="showDetail(event, campaign)">
+                                      <info-window id="myWindow">
+                                        <div ng-non-bindable="" style="color:black;height:120px;width:170px;">
+                                          <div class="">
+                                            <h3>{{windowDisplay.proposal__name}}</h3>
+                                          </div>
+                                          <table class="table-responsive table windowDisplayTable">
+                                            <tbody>
+                                                <tr><td>Total Suppliers</td> <td><small>{{windowDisplay.total}}</small></td></tr>
+                                            </tbody>
+                                        </table>
+                                        </div>
+                                      </info-window>
                                     </marker>
                                   </ng-map>
                                   </div>
@@ -741,7 +753,7 @@
                           <table class="table table-responsive table-bordered">
                             <md-input-container ng-if="campaignInventories.length">
                               <label>Select Inventory</label>
-                              <md-select ng-model="select.campaignInventories" style="width:155px;">
+                              <md-select ng-model="select.campaignInventories" style="width:140px;">
                                 <md-option ng-repeat="inv in campaignInventories" ng-value="inventories[inv.filter_code]"  ng-click="getPerformanceMetricsData(inv.filter_code)">
                                   <md-button class="md-raised">
                                      {{inventories[inv.filter_code]}}
@@ -798,7 +810,7 @@
 
 
 
-                            <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv">
+                            <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv" style="margin-left:5px;margin-right:-7px;">
                               <div class="panel-heading content-title">
                                 <div class="col-md-7">
                                   <h4> Release Inventory </h4>

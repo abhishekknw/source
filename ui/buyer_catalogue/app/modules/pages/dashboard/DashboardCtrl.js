@@ -1211,5 +1211,21 @@ $scope.setInventoryInfoModalDetails = function(supplier,inv){
 }
 
 
+$scope.map;
+   NgMap.getMap().then(function(evtMap) {
+       $scope.map = evtMap;
+   });
+   $scope.showDetail = function(evt, supplierData){
+     $scope.map;
+     NgMap.getMap().then(function(evtMap) {
+         $scope.map = evtMap;
+     });
+     console.log(supplierData);
+     $scope.windowDisplay = supplierData;
+     console.log($scope.windowDisplay);
+     $scope.map.showInfoWindow('myWindow', this);
+   };
+
+
   })//END
 })();
