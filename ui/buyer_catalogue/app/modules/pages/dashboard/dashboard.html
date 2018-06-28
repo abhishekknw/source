@@ -25,10 +25,8 @@
     <link href="css/dashboard-theme.css" rel="stylesheet" media="screen">
     <link href="css/sass-app.css" rel="stylesheet" media="screen">
     <link href="css/sass-app-map.css" rel="stylesheet" media="screen">
-    <!-- <link href="css/customstyle.css" rel="stylesheet" media="screen"> -->
     <link href="css/sidePanel.css" rel="stylesheet" media="screen">
     <link href="css/custom.css" rel="stylesheet" media="screen">
-    <!-- <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/> -->
 
     <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
@@ -112,7 +110,6 @@
                           <div class="col-xlg-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 dashboard-side-label">
                           </div>
                           <div class="col-xlg-10 col-lg-10 col-md-10 col-sm-10 col-xs-10">
-                              <!--<dashboard-pie-chart></dashboard-pie-chart>-->
                               <div class="row" ng-if="dateListKeys[date]">
                                   <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
                                       <h4 class="date-tab-heading" style="color:rgb(53, 9, 6)">Release</h4>
@@ -134,7 +131,6 @@
                               <h4>{{inv.header}}</h4>
                           </div>
                           <div class="col-xlg-10 col-lg-10 col-md-10 col-sm-10 col-xs-10" ng-if="inventoryActivityCountData[inv.header][date]">
-                              <!--<dashboard-pie-chart></dashboard-pie-chart>-->
                               <div class="row">
                                   <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center" ng-repeat="act in actKeys">
                                       <div class="form-group has-success">
@@ -166,7 +162,6 @@
                                                                   </div>
                                                               </div>
                                                           </div>
-                                                          <!-- This is just some content to illustrate fancy headings. -->
 
                                                           <div class="panel-group RELEASETable" id="accordion">
                                                                   <div class="panel panel-default" style="border-radius:0!important;" ng-click="onTimeDetails = !onTimeDetails">
@@ -176,7 +171,6 @@
                                                                       </h4>
                                                                   </div>
                                                                   </div>
-                                                                  <!-- <button class="panel panel-default" type="button" style="background-color:#8e1921!important;width:100%;border-radius:0!important;" name="button" ng-click="showOntimeOnlocation(OntimeOnlocation.ontime.status)">Time Details</button> -->
 
                                                                   <table class="table-responsive table table-bordered" ng-show="onTimeDetails">
 
@@ -404,7 +398,6 @@
                           </div>
 
                           <div class="">
-                            <br><br><br><br>
 
                               <div class="col-md-12 showDisplayDetailsTable" ng-if="showDisplayDetailsTable">
                                 <div style="background-color: #cb1925" class="panel-heading">
@@ -484,8 +477,7 @@
                                                            options="'options'" doRebuildAll="true" click="onClick">
                                           </ui-gmap-markers>
                                       </ui-gmap-google-map>
-                                    <!-- </div> -->
-                                  </div>
+                                </div>
 
                                 <div class="col-md-7 LeadsTable" ng-show="showSupplierSocietywiseInvTable" >
                                   <div class="panel-heading content-title">
@@ -516,9 +508,7 @@
 
                         <div class="panel panel-default" >
                             <div class="col-md-12">
-                              <!-- <div class="col-md-2">
 
-                              </div> -->
                               <div class="col-md-6" id="bottom" ng-if="showSupplierTypeCountChart">
                                 <div class="panel-heading content-title">
                                   <h5 style="background:'red'">Graphical Representation of {{campaignStatusName}}</h5>
@@ -560,7 +550,7 @@
                                     <marker ng-repeat="campaign in supplierTypesDataList" position="[{{campaign.center__latitude}}, {{campaign.center__longitude}}]" title="{{campaign.proposal__name}}" id="{{campaign.proposal_id}}">
                                     </marker>
                                   </ng-map>
-                                </div>
+                                  </div>
 
                             </div>
                             <div class="panel panel-default" >
@@ -808,7 +798,7 @@
 
 
 
-                            <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv" style="margin-left: 8px;margin-right:-12px;">
+                            <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv">
                               <div class="panel-heading content-title">
                                 <div class="col-md-7">
                                   <h4> Release Inventory </h4>
@@ -1126,7 +1116,6 @@
                               </div>
                             </div>
                             <div class="col-md-12">
-                              <!-- <nvd3 options="stackedBarChartOptions" data="stackedBarChartcampaignsData"></nvd3> -->
                               <canvas id="line" height="220" class="chart chart-line" chart-data="lineChartValues"
                                 chart-labels="lineChartLabels" chart-colors="lineChartOptions.colors" chart-series="lineChartOptions.series" chart-options="lineChartOptions"
                                 chart-dataset-override="datasetOverride" chart-click="onClick">
