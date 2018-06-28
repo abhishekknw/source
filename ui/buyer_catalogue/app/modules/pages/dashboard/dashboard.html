@@ -791,7 +791,7 @@
                             <h1 ng-if="showinv"> No Inventory Found</h1>
                           </div>
 
-                        <div class="row zeroInventory" ng-if="!campaignInventories">
+                        <div class="row zeroInventory" ng-if="!campaignInventories && !showSelection">
                           <h1>Please Select Campaign</h1>
                         </div>
                         <div class="row" ng-if="showPerfMetrics == perfMetrics.blank">
@@ -828,7 +828,7 @@
                                 <table class="table table-responsive table-bordered pieChart-table">
                                   <tbody>
                                     <tr>
-                                      <td>Rel / Total</td>
+                                      <td>Release / Total</td>
                                     </tr>
                                     <tr>
                                       <td>{{activityInvPerfData.release}} / {{performanceMetricsData.total.release}}</td>

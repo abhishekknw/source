@@ -807,6 +807,7 @@
    $scope.getLeadsByCampaign = function(campaignId){
      $scope.showTimeLocBtn = false;
      $scope.showinv = false;
+     $scope.showSelection = true;
      $scope.showPerfMetrics = $scope.perfMetrics.blank;
      DashboardService.getLeadsByCampaign(campaignId)
      .then(function onSuccess(response){
