@@ -31,13 +31,33 @@
       <table st-table="releaseDetails.shortlisted_suppliers" st-safe-src="Data" class="table table-striped">
         <thead>
           <tr>
-            <th ng-click="setOrderProperty('flat_count')" ng-repeat="header in headings | orderBy:orderProperty">
-              {{header.header}}
+            <th colspan='999' style="background-color:#ffffff;">
+              <input st-search="" placeholder="Search ..." class="form-control"  type="search"/>
             </th>
+          </tr>
+          <tr>
+            <th>Sr No</th>
+            <th>Supplier Name</th>
+            <th>Area,(Sub Area)</th>
+            <th>Address</th>
+            <th>RelationShip Data</th>
+            <th st-sort="flat_count" st-skip-natural="true">Flat Count</th>
+            <th st-sort="tower_count" st-skip-natural="true">Tower Count</th>
+            <th>Inventory Type</th>
+            <th>Inventory Count</th>
+            <th>Inventory Supplier Price</th>
+            <th>Total Supplier Price   (Per Flat)  </th>
+            <th>Negotiated Price</th>
+            <th>Freebies</th>
+            <th>Booking Status</th>
+            <th>Phase</th>
+            <th>Mode Of Payment</th>
+            <th>Contacts</th>
+            <th>Payment Status</th>
 
           </tr>
         </thead>
-        <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers | orderBy:orderProperty">
+        <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
             <td rowspan="{{key.length}}" ng-show="$first">{{$parent.$index + 1}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.quality_rating}})</td>
