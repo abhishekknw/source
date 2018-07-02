@@ -6875,16 +6875,44 @@ def get_campaign_inv_data(campaign_id):
     """
     function_name = get_campaign_inv_data.__name__
     try:
-        data = models.ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal=campaign_id). \
-            annotate(inv_name=F('ad_inventory_type__adinventory_name'),object_id=F('shortlisted_spaces__object_id')). \
-             values('object_id','inv_name').annotate(total=Count('id'))
         result = {}
-        for inv in data:
-            if inv['object_id'] not in result:
-                result[inv['object_id']] = {}
-            if inv['inv_name'] not in result[inv['object_id']]:
-                result[inv['object_id']][inv['inv_name']] = {}
-            result[inv['object_id']][inv['inv_name']] = inv
+        inv_act_image_data = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                                                                                  'inventory_activity_assignment__inventory_activity',
+                                                                                  'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                                                                  'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                                                                                  'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal'). \
+            filter(
+            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id). \
+            annotate(activity_type=F('inventory_activity_assignment__inventory_activity__activity_type'), inventory=F(
+            'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
+            object_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
+            values('activity_type', 'inventory','object_id'). \
+            annotate(total=Count('inventory_activity_assignment', distinct=True))
+        inv_act_image_data_map = organise_data_by_activity_and_inventory_type(inv_act_image_data)
+        # inv_act_image_data_map = {supplier['object_id']:supplier for supplier in inv_act_image_data}
+        total_inv_act_data = models.ShortlistedInventoryPricingDetails.objects. \
+            filter(shortlisted_spaces__proposal=campaign_id). \
+            annotate(object_id=F('shortlisted_spaces__object_id'), inventory=F('ad_inventory_type__adinventory_name')). \
+            values('object_id', 'inventory'). \
+            annotate(total=Count('id'))
+        total_inv_act_data_map = {supplier['object_id']:supplier for supplier in total_inv_act_data}
+        inv_act_assigned_data = models.InventoryActivityAssignment.objects. \
+            filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id). \
+            annotate(activity_type=F('inventory_activity__activity_type'), inventory=F(
+            'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
+                object_id=F('inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
+            values('activity_type', 'inventory','object_id'). \
+            annotate(total=Count('id', distinct=True))
+        inv_act_assigned_data_map = organise_data_by_activity_and_inventory_type(inv_act_assigned_data)
+
+        for key,supplier in total_inv_act_data_map.items():
+            if supplier['object_id'] not in result:
+                result[supplier['object_id']] = {}
+                result[supplier['object_id']]['total'] = supplier
+            if supplier['object_id'] in inv_act_assigned_data_map:
+                result[supplier['object_id']]['assigned'] = inv_act_assigned_data_map[supplier['object_id']]
+            if supplier['object_id'] in inv_act_image_data_map:
+                result[supplier['object_id']]['image_data'] = inv_act_image_data_map[supplier['object_id']]
         return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
@@ -6910,6 +6938,26 @@ def get_past_campaigns_data(supplier_id,campaign_id):
             'past_campaigns' : past_campaigns_count,
             'campaigns' : campaign_list
         }
+        return result
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def organise_data_by_activity_and_inventory_type(data):
+    """
+    THis function takes data which should contain activity_type, inventory_type and object_id which will return data by orgaised way
+    :param data:
+    :return:
+    """
+    function_name = organise_data_by_activity_and_inventory_type.__name__
+    try:
+        result = {}
+        for supplier in data:
+            if supplier['object_id'] not in result:
+                result[supplier['object_id']] = {}
+            if supplier['inventory'] not in result[supplier['object_id']]:
+                result[supplier['object_id']][supplier['inventory']] = {}
+            if supplier['activity_type'] not in result[supplier['object_id']][supplier['inventory']]:
+                result[supplier['object_id']][supplier['inventory']][supplier['activity_type']] = supplier
         return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
