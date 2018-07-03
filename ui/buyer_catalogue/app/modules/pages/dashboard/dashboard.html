@@ -421,16 +421,16 @@
                                     <tr ng-repeat="supplier in supplierAndInvData">
                                       <td>{{$index + 1}}</td>
                                         <td>{{supplier.supplier.society_name}}</td>
-                                        <td ng-init="calculateTotalCount('STALL',supplier.supplier.inv_data.STALL.total)" ng-show="invStatusKeys.STALL.status">{{supplier.supplier.inv_data.STALL.total}}
+                                        <td ng-init="calculateTotalCount('STALL',supplier.supplier.inv_data.STALL.total.total)" ng-show="invStatusKeys.STALL.status">{{supplier.supplier.inv_data.STALL.total.total}}
                                         <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
                                       </td>
-                                        <td ng-init="calculateTotalCount('POSTER',supplier.supplier.inv_data.POSTER.total)" ng-show="invStatusKeys.POSTER.status">{{supplier.supplier.inv_data.POSTER.total}}
+                                        <td ng-init="calculateTotalCount('POSTER',supplier.supplier.inv_data.POSTER.total.total)" ng-show="invStatusKeys.POSTER.status">{{supplier.supplier.inv_data.POSTER.total.total}}
                                         </td>
-                                        <td ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total)" ng-show="invStatusKeys.FLIER.status">{{supplier.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total}})
+                                        <td ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total.total)" ng-show="invStatusKeys.FLIER.status">{{supplier.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total.total}})
                                         </td>
-                                        <td ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total)" ng-show="invStatusKeys.STANDEE.status">{{supplier.supplier.inv_data.STANDEE.total}}
+                                        <td ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total.total)" ng-show="invStatusKeys.STANDEE.status">{{supplier.supplier.inv_data.STANDEE.total.total}}
                                         </td>
-                                        <td ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">{{supplier.supplier.inv_data['GATEWAY ARCH'].total}}
+                                        <td ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total.total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">{{supplier.supplier.inv_data['GATEWAY ARCH'].total.total}}
                                         </td>
                                         <td ng-if="showLeads">{{supplier.leads_data.length}}</td>
 
