@@ -1227,6 +1227,22 @@ $scope.map;
      $scope.map.showInfoWindow('myWindow', this);
    };
 
+$scope.viewSupplierImages = function(supplierId, invType, activityType){
+    $scope.imageUrlList = [];
+  DashboardService.getSupplierImages(supplierId, invType, activityType)
+  .then(function onSuccess(response){
+    console.log(response);
 
+    angular.forEach(response.data.data, function(data){
+      var imageData = {
+        image_url : 'http://androidtokyo.s3.amazonaws.com/' + data.image_path,
+        comment : data.comment,
+      };
+      $scope.imageUrlList.push(imageData);
+    })
+  }).catch(function onError(response){
+    console.log(response);
+  })
+}
   })//END
 })();
