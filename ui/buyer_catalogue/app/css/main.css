@@ -318,6 +318,8 @@ ul.animate-show li.selected {
 .pieChart-table{
   background: #c3452f !important;
 }
+
+
 .table > tbody > tr > td {
   border-top: 1px solid #ddd !important;
   }
@@ -555,6 +557,7 @@ text-align: center;
 .showDisplayDetailsTable  tbody {
 background-color: #fcfc5f;
 color: black;
+
 }
 
 .showDisplayDetailsTable  tfoot {
