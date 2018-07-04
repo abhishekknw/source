@@ -404,37 +404,329 @@
                                   <h5>Society Details For {{campaignTabPropsalName}}</h5>
 
                                 </div>
+
                               <table class="table-responsive table table-bordered showDisplayDetailsTable">
                                 <thead>
                                   <tr>
                                     <td>INDEX</td>
                                     <td>Society Name</td>
-                                      <td ng-if="invStatusKeys.STALL.status">STALL</td>
+                                    <td ng-if="invStatusKeys.STALL.status">STALL</td>
                                     <td ng-if="invStatusKeys.POSTER.status">POSTER</td>
                                     <td ng-if="invStatusKeys.FLIER.status">FLIER(Frequency)</td>
                                     <td ng-if="invStatusKeys.STANDEE.status">STANDEE</td>
                                     <td ng-if="invStatusKeys['GATEWAY ARCH'].status">GATEWAY ARCH</td>
                                     <td ng-if="showLeads">Leads</td>
                                   </tr>
+
                                 </thead>
                                     <tbody>
                                     <tr ng-repeat="supplier in supplierAndInvData">
                                       <td>{{$index + 1}}</td>
                                         <td>{{supplier.supplier.society_name}}</td>
-                                        <td ng-init="calculateTotalCount('STALL',supplier.supplier.inv_data.STALL.total.total)" ng-show="invStatusKeys.STALL.status">{{supplier.supplier.inv_data.STALL.total.total}}
+                                        <!-- stall -->
+                                        <td ng-show="invStatusKeys.STALL.status">
                                         <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                        <table class="table-responsive table table-bordered ">
+                                          <thead>
+                                            <tr>
+                                              <th>Total</th>
+                                              <th>Assigned</th>
+                                              <th>Completed</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr>
+                                              <td valign="middle" ng-init="calculateTotalCount('STALL',supplier.supplier.inv_data.STALL.total.total)" ng-show="invStatusKeys.STALL.status">
+                                                {{supplier.supplier.inv_data.STALL.total.total}}
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STALL.assigned.RELEASE.total">{{supplier.supplier.inv_data.STALL.assigned.RELEASE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STALL.assigned.RELEASE.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STALL.assigned.AUDIT.total">{{supplier.supplier.inv_data.STALL.assigned.AUDIT.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STALL.assigned.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STALL.assigned.CLOSURE.total">{{supplier.supplier.inv_data.STALL.assigned.CLOSURE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STALL.assigned.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STALL.completed.RELEASE.total">{{supplier.supplier.inv_data.STALL.completed.RELEASE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STALL.completed.RELEASE.total">0</td>
+                                                    </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STALL.completed.AUDIT.total">{{supplier.supplier.inv_data.STALL.completed.AUDIT.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STALL.completed.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STALL.completed.CLOSURE.total">{{supplier.supplier.inv_data.STALL.completed.CLOSURE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STALL.completed.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+
+                                            </tr>
+                                          </tbody>
+                                        </table>
                                       </td>
-                                        <td ng-init="calculateTotalCount('POSTER',supplier.supplier.inv_data.POSTER.total.total)" ng-show="invStatusKeys.POSTER.status">{{supplier.supplier.inv_data.POSTER.total.total}}
-                                        </td>
-                                        <td ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total.total)" ng-show="invStatusKeys.FLIER.status">{{supplier.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total.total}})
-                                        </td>
-                                        <td ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total.total)" ng-show="invStatusKeys.STANDEE.status">{{supplier.supplier.inv_data.STANDEE.total.total}}
-                                        </td>
-                                        <td ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total.total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">{{supplier.supplier.inv_data['GATEWAY ARCH'].total.total}}
-                                        </td>
-                                        <td ng-if="showLeads">{{supplier.leads_data.length}}</td>
+                                      <!-- poster -->
+                                      <td ng-show="invStatusKeys.POSTER.status">
+                                      <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                      <table class="table-responsive table table-bordered ">
+                                        <thead>
+                                          <tr>
+                                            <th>Total</th>
+                                            <th>Assigned</th>
+                                            <th>Completed</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          <tr>
+                                            <td valign="middle" ng-init="calculateTotalCount('POSTER',supplier.supplier.inv_data.POSTER.total.total)" ng-show="invStatusKeys.POSTER.status">
+                                              {{supplier.supplier.inv_data.POSTER.total.total}}
+                                            </td>
+                                            <td>
+                                              <table class="table-responsive table table-bordered">
+                                                <tr>
+                                                  <td style="background-color:#cb1925">R</td>
+                                                  <td ng-if="supplier.supplier.inv_data.POSTER.assigned.RELEASE.total">{{supplier.supplier.inv_data.POSTER.assigned.RELEASE.total}}</td>
+                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.assigned.RELEASE.total">0</td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="background-color:#cb1925">A</td>
+                                                  <td ng-if="supplier.supplier.inv_data.POSTER.assigned.AUDIT.total">{{supplier.supplier.inv_data.POSTER.assigned.AUDIT.total}}</td>
+                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.assigned.AUDIT.total">0</td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="background-color:#cb1925">C</td>
+                                                  <td ng-if="supplier.supplier.inv_data.POSTER.assigned.CLOSURE.total">{{supplier.supplier.inv_data.POSTER.assigned.CLOSURE.total}}</td>
+                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.assigned.CLOSURE.total">0</td>
+                                                </tr>
+                                              </table>
+                                            </td>
+                                            <td>
+                                              <table class="table-responsive table table-bordered ">
+                                                <tr>
+                                                  <td style="background-color:#cb1925">R</td>
+                                                  <td ng-if="supplier.supplier.inv_data.POSTER.completed.RELEASE.total">{{supplier.supplier.inv_data.POSTER.completed.RELEASE.total}}</td>
+                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.completed.RELEASE.total">0</td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="background-color:#cb1925">A</td>
+                                                  <td ng-if="supplier.supplier.inv_data.POSTER.completed.AUDIT.total">{{supplier.supplier.inv_data.POSTER.completed.AUDIT.total}}</td>
+                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.completed.AUDIT.total">0</td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="background-color:#cb1925">C</td>
+                                                  <td ng-if="supplier.supplier.inv_data.POSTER.completed.CLOSURE.total">{{supplier.supplier.inv_data.POSTER.completed.CLOSURE.total}}</td>
+                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.completed.CLOSURE.total">0</td>
+                                                </tr>
+                                              </table>
+                                            </td>
+
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                    </td>
+                                        <!-- <td ng-init="calculateTotalCount('POSTER',supplier.supplier.inv_data.POSTER.total.total)" ng-show="invStatusKeys.POSTER.status">{{supplier.supplier.inv_data.POSTER.total.total}}
+                                        </td> -->
+                                        <!-- FLIER -->
+                                        <td ng-show="invStatusKeys.FLIER.status">
+                                        <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                        <table class="table-responsive table table-bordered ">
+                                          <thead>
+                                            <tr>
+                                              <th>Total</th>
+                                              <th>Assigned</th>
+                                              <th>Completed</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr>
+                                              <td valign="middle" ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total.total)" ng-show="invStatusKeys.FLIER.status">
+                                                {{supplier.supplier.inv_data.FLIER.total.total}}
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data.FLIER.assigned.RELEASE.total">{{supplier.supplier.inv_data.FLIER.assigned.RELEASE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.assigned.RELEASE.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data.FLIER.assigned.AUDIT.total">{{supplier.supplier.inv_data.FLIER.assigned.AUDIT.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.assigned.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data.FLIER.assigned.CLOSURE.total">{{supplier.supplier.inv_data.FLIER.assigned.CLOSURE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.assigned.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data.FLIER.completed.RELEASE.total">{{supplier.supplier.inv_data.FLIER.completed.RELEASE.total}}</td>
+                                                    <td ng-if-"!supplier.supplier.inv_data.FLIER.completed.RELEASE.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data.FLIER.completed.AUDIT.total">{{supplier.supplier.inv_data.FLIER.completed.AUDIT.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.completed.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data.FLIER.completed.CLOSURE.total">{{supplier.supplier.inv_data.FLIER.completed.CLOSURE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.completed.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                        <!-- <td ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total.total)" ng-show="invStatusKeys.FLIER.status">{{supplier.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total.total}})
+                                        </td> -->
+                                        <!-- STANDEE -->
+                                        <td ng-show="invStatusKeys.STANDEE.status">
+                                        <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                        <table class="table-responsive table table-bordered ">
+                                          <thead>
+                                            <tr>
+                                              <th>Total</th>
+                                              <th>Assigned</th>
+                                              <th>Completed</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr>
+                                              <td valign="middle" ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total.total)" ng-show="invStatusKeys.STANDEE.status">
+                                                {{supplier.supplier.inv_data.STANDEE.total.total}}
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.assigned.RELEASE.total">{{supplier.supplier.inv_data.STANDEE.assigned.RELEASE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.assigned.RELEASE.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.assigned.AUDIT.total">{{supplier.supplier.inv_data.STANDEE.assigned.AUDIT.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.assigned.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.assigned.CLOSURE.total">{{supplier.supplier.inv_data.STANDEE.assigned.CLOSURE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.assigned.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.completed.RELEASE.total">{{supplier.supplier.inv_data.STANDEE.completed.RELEASE.total}}</td>
+                                                    <td ng-if-"!supplier.supplier.inv_data.STANDEE.completed.RELEASE.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.completed.AUDIT.total">{{supplier.supplier.inv_data.STANDEE.completed.AUDIT.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.completed.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total">{{supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                        <!-- <td ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total.total)" ng-show="invStatusKeys.STANDEE.status">{{supplier.supplier.inv_data.STANDEE.total.total}}
+                                        </td> -->
+                                        <!-- gateway ARCH -->
+                                        <td ng-show="invStatusKeys['GATEWAY ARCH'].status">
+                                        <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                        <table class="table-responsive table table-bordered ">
+                                          <thead>
+                                            <tr>
+                                              <th>Total</th>
+                                              <th>Assigned</th>
+                                              <th>Completed</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr>
+                                              <td valign="middle" ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total.total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">
+                                                {{supplier.supplier.inv_data['GATEWAY ARCH'].total.total}}
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].assigned.RELEASE.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.RELEASE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].assigned.RELEASE.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].assigned.AUDIT.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.AUDIT.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].assigned.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].assigned.CLOSURE.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.CLOSURE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].assigned.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total}}</td>
+                                                    <td ng-if-"!supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total}}</td>
+                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                        <!-- <td ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total.total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">{{supplier.supplier.inv_data['GATEWAY ARCH'].total.total}}
+                                        </td> -->
+                                        <td valign="middle" ng-if="showLeads">{{supplier.leads_data.length}}</td>
 
                                       </tr>
+
                                       </tbody>
                                       <tfoot>
                                         <tr>
