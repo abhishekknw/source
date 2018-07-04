@@ -443,15 +443,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                   <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STALL.assigned.RELEASE.total || 0}}</a></td>
+                                                   <td>{{supplier.supplier.inv_data.STALL.assigned.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STALL.assigned.AUDIT.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data.STALL.assigned.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STALL.assigned.CLOSURE.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data.STALL.assigned.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -459,15 +459,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STALL.completed.RELEASE.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.STALL.completed.RELEASE.total || 0}}</a></td>
                                                     </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STALL.completed.AUDIT.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.STALL.completed.AUDIT.total || 0}}</a></td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STALL.completed.CLOSURE.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.STALL.completed.CLOSURE.total || 0}}</a></td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -496,15 +496,15 @@
                                               <table class="table-responsive table table-bordered">
                                                 <tr>
                                                   <td style="background-color:#cb1925">R</td>
-                                                  <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.POSTER.assigned.RELEASE.total || 0}}</a></td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.assigned.RELEASE.total || 0}}</td>
                                                 </tr>
                                                 <tr>
                                                   <td style="background-color:#cb1925">A</td>
-                                                  <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.POSTER.assigned.AUDIT.total || 0}}</a></td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.assigned.AUDIT.total || 0}}</td>
                                                 </tr>
                                                 <tr>
                                                   <td style="background-color:#cb1925">C</td>
-                                                  <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.POSTER.assigned.CLOSURE.total || 0}}</a></td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.assigned.CLOSURE.total || 0}}</td>
                                                 </tr>
                                               </table>
                                             </td>
@@ -512,15 +512,15 @@
                                               <table class="table-responsive table table-bordered ">
                                                 <tr>
                                                   <td style="background-color:#cb1925">R</td>
-                                                  <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.POSTER.completed.RELEASE.total || 0}}</a></td>
+                                                  <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.POSTER.completed.RELEASE.total || 0}}</a></td>
                                                 </tr>
                                                 <tr>
                                                   <td style="background-color:#cb1925">A</td>
-                                                  <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.POSTER.completed.AUDIT.total || 0}}</a></td>
+                                                  <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.POSTER.completed.AUDIT.total || 0}}</a></td>
                                                 </tr>
                                                 <tr>
                                                   <td style="background-color:#cb1925">C</td>
-                                                  <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.POSTER.completed.CLOSURE.total || 0}}</a></td>
+                                                  <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.POSTER.completed.CLOSURE.total || 0}}</a></td>
                                                 </tr>
                                               </table>
                                             </td>
@@ -551,15 +551,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.FLIER.assigned.RELEASE.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.assigned.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.FLIER.assigned.AUDIT.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.assigned.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.FLIER.assigned.CLOSURE.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.assigned.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -567,15 +567,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.FLIER.completed.RELEASE.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.FLIER.completed.RELEASE.total || 0}}</a></td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.FLIER.completed.AUDIT.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.FLIER.completed.AUDIT.total || 0}}</a></td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.FLIER.completed.CLOSURE.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.FLIER.completed.CLOSURE.total || 0}}</a></td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -605,15 +605,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STANDEE.assigned.RELEASE.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.assigned.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STANDEE.assigned.AUDIT.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.assigned.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STANDEE.assigned.CLOSURE.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.assigned.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -621,15 +621,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STANDEE.completed.RELEASE.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.STANDEE.completed.RELEASE.total || 0}}</a></td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STANDEE.completed.AUDIT.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.STANDEE.completed.AUDIT.total || 0}}</a></td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total || 0}}</a></td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -659,15 +659,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.RELEASE.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.AUDIT.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.CLOSURE.total || 0}}</a></td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -675,15 +675,15 @@
                                                 <table class="table-responsive table table-bordered">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total || 0}}</a></td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total || 0}}</a></td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage()">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total || 0}}</a></td>
+                                                    <td><a data-target="#imageModal" data-toggle="modal" ng-click="viewImage(item.images)">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total || 0}}</a></td>
                                                   </tr>
                                                 </table>
                                               </td>
