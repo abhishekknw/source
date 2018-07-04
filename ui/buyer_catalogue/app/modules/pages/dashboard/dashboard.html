@@ -443,18 +443,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STALL.assigned.RELEASE.total">{{supplier.supplier.inv_data.STALL.assigned.RELEASE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STALL.assigned.RELEASE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STALL.assigned.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STALL.assigned.AUDIT.total">{{supplier.supplier.inv_data.STALL.assigned.AUDIT.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STALL.assigned.AUDIT.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STALL.assigned.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STALL.assigned.CLOSURE.total">{{supplier.supplier.inv_data.STALL.assigned.CLOSURE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STALL.assigned.CLOSURE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STALL.assigned.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -462,18 +459,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STALL.completed.RELEASE.total">{{supplier.supplier.inv_data.STALL.completed.RELEASE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STALL.completed.RELEASE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STALL.completed.RELEASE.total || 0}}</td>
                                                     </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STALL.completed.AUDIT.total">{{supplier.supplier.inv_data.STALL.completed.AUDIT.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STALL.completed.AUDIT.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STALL.completed.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STALL.completed.CLOSURE.total">{{supplier.supplier.inv_data.STALL.completed.CLOSURE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STALL.completed.CLOSURE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STALL.completed.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -502,18 +496,15 @@
                                               <table class="table-responsive table table-bordered">
                                                 <tr>
                                                   <td style="background-color:#cb1925">R</td>
-                                                  <td ng-if="supplier.supplier.inv_data.POSTER.assigned.RELEASE.total">{{supplier.supplier.inv_data.POSTER.assigned.RELEASE.total}}</td>
-                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.assigned.RELEASE.total">0</td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.assigned.RELEASE.total || 0}}</td>
                                                 </tr>
                                                 <tr>
                                                   <td style="background-color:#cb1925">A</td>
-                                                  <td ng-if="supplier.supplier.inv_data.POSTER.assigned.AUDIT.total">{{supplier.supplier.inv_data.POSTER.assigned.AUDIT.total}}</td>
-                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.assigned.AUDIT.total">0</td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.assigned.AUDIT.total || 0}}</td>
                                                 </tr>
                                                 <tr>
                                                   <td style="background-color:#cb1925">C</td>
-                                                  <td ng-if="supplier.supplier.inv_data.POSTER.assigned.CLOSURE.total">{{supplier.supplier.inv_data.POSTER.assigned.CLOSURE.total}}</td>
-                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.assigned.CLOSURE.total">0</td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.assigned.CLOSURE.total || 0}}</td>
                                                 </tr>
                                               </table>
                                             </td>
@@ -521,18 +512,15 @@
                                               <table class="table-responsive table table-bordered ">
                                                 <tr>
                                                   <td style="background-color:#cb1925">R</td>
-                                                  <td ng-if="supplier.supplier.inv_data.POSTER.completed.RELEASE.total">{{supplier.supplier.inv_data.POSTER.completed.RELEASE.total}}</td>
-                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.completed.RELEASE.total">0</td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.completed.RELEASE.total || 0}}</td>
                                                 </tr>
                                                 <tr>
                                                   <td style="background-color:#cb1925">A</td>
-                                                  <td ng-if="supplier.supplier.inv_data.POSTER.completed.AUDIT.total">{{supplier.supplier.inv_data.POSTER.completed.AUDIT.total}}</td>
-                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.completed.AUDIT.total">0</td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.completed.AUDIT.total || 0}}</td>
                                                 </tr>
                                                 <tr>
                                                   <td style="background-color:#cb1925">C</td>
-                                                  <td ng-if="supplier.supplier.inv_data.POSTER.completed.CLOSURE.total">{{supplier.supplier.inv_data.POSTER.completed.CLOSURE.total}}</td>
-                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.completed.CLOSURE.total">0</td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.completed.CLOSURE.total || 0}}</td>
                                                 </tr>
                                               </table>
                                             </td>
@@ -563,18 +551,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td ng-if="supplier.supplier.inv_data.FLIER.assigned.RELEASE.total">{{supplier.supplier.inv_data.FLIER.assigned.RELEASE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.assigned.RELEASE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.assigned.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td ng-if="supplier.supplier.inv_data.FLIER.assigned.AUDIT.total">{{supplier.supplier.inv_data.FLIER.assigned.AUDIT.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.assigned.AUDIT.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.assigned.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td ng-if="supplier.supplier.inv_data.FLIER.assigned.CLOSURE.total">{{supplier.supplier.inv_data.FLIER.assigned.CLOSURE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.assigned.CLOSURE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.assigned.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -582,18 +567,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td ng-if="supplier.supplier.inv_data.FLIER.completed.RELEASE.total">{{supplier.supplier.inv_data.FLIER.completed.RELEASE.total}}</td>
-                                                    <td ng-if-"!supplier.supplier.inv_data.FLIER.completed.RELEASE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.completed.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td ng-if="supplier.supplier.inv_data.FLIER.completed.AUDIT.total">{{supplier.supplier.inv_data.FLIER.completed.AUDIT.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.completed.AUDIT.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.completed.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td ng-if="supplier.supplier.inv_data.FLIER.completed.CLOSURE.total">{{supplier.supplier.inv_data.FLIER.completed.CLOSURE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.completed.CLOSURE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.completed.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -623,18 +605,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.assigned.RELEASE.total">{{supplier.supplier.inv_data.STANDEE.assigned.RELEASE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.assigned.RELEASE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.assigned.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.assigned.AUDIT.total">{{supplier.supplier.inv_data.STANDEE.assigned.AUDIT.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.assigned.AUDIT.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.assigned.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.assigned.CLOSURE.total">{{supplier.supplier.inv_data.STANDEE.assigned.CLOSURE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.assigned.CLOSURE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.assigned.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -642,18 +621,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.completed.RELEASE.total">{{supplier.supplier.inv_data.STANDEE.completed.RELEASE.total}}</td>
-                                                    <td ng-if-"!supplier.supplier.inv_data.STANDEE.completed.RELEASE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.completed.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.completed.AUDIT.total">{{supplier.supplier.inv_data.STANDEE.completed.AUDIT.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.completed.AUDIT.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.completed.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total">{{supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -683,18 +659,15 @@
                                                 <table class="table-responsive table table-bordered ">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].assigned.RELEASE.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.RELEASE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].assigned.RELEASE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].assigned.AUDIT.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.AUDIT.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].assigned.AUDIT.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].assigned.CLOSURE.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.CLOSURE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].assigned.CLOSURE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
@@ -702,18 +675,15 @@
                                                 <table class="table-responsive table table-bordered">
                                                   <tr>
                                                     <td style="background-color:#cb1925">R</td>
-                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total}}</td>
-                                                    <td ng-if-"!supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">A</td>
-                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total || 0}}</td>
                                                   </tr>
                                                   <tr>
                                                     <td style="background-color:#cb1925">C</td>
-                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total}}</td>
-                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total">0</td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total || 0}}</td>
                                                   </tr>
                                                 </table>
                                               </td>
