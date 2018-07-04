@@ -559,7 +559,7 @@
            $scope.showSupplierInvdDataTable = function(invData){
              $scope.SocietyInvTable = $scope.campaignStatusData;
              $scope.showSupplierSocietywiseInvTable = true;
-           };
+          };
            $scope.countallsupplier = $scope.campaignStatusData.completed.length+$scope.campaignStatusData.ongoing.length+$scope.campaignStatusData.upcoming.length;
            var totalFlats=0,totalLeads=0,totalSuppliers=0,hotLeads=0;
 
@@ -1136,7 +1136,7 @@
                       if('inv_data' in supplier.supplier && key in supplier.supplier.inv_data){
                         markers[$index].title[key] = {
                             'key' : key,
-                            'total' : supplier.supplier.inv_data[key].total
+                            'total' : supplier.supplier.inv_data[key].total.total
                         }
                       }else {
                           markers[$index].title[key] = {

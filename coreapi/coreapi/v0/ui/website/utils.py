@@ -6895,7 +6895,14 @@ def get_campaign_inv_data(campaign_id):
             annotate(object_id=F('shortlisted_spaces__object_id'), inventory=F('ad_inventory_type__adinventory_name')). \
             values('object_id', 'inventory'). \
             annotate(total=Count('id'))
-        total_inv_act_data_map = {supplier['object_id']:supplier for supplier in total_inv_act_data}
+        total_inv_act_data_map = {}
+
+        for supplier in total_inv_act_data:
+            if supplier['object_id'] not in total_inv_act_data_map:
+                total_inv_act_data_map[supplier['object_id']] = {}
+            if supplier['inventory'] not in total_inv_act_data_map[supplier['object_id']]:
+                total_inv_act_data_map[supplier['object_id']][supplier['inventory']] = {}
+            total_inv_act_data_map[supplier['object_id']][supplier['inventory']] = supplier
         inv_act_assigned_data = models.InventoryActivityAssignment.objects. \
             filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id). \
             annotate(activity_type=F('inventory_activity__activity_type'), inventory=F(
@@ -6906,13 +6913,16 @@ def get_campaign_inv_data(campaign_id):
         inv_act_assigned_data_map = organise_data_by_activity_and_inventory_type(inv_act_assigned_data)
 
         for key,supplier in total_inv_act_data_map.items():
-            if supplier['object_id'] not in result:
-                result[supplier['object_id']] = {}
-                result[supplier['object_id']]['total'] = supplier
-            if supplier['object_id'] in inv_act_assigned_data_map:
-                result[supplier['object_id']]['assigned'] = inv_act_assigned_data_map[supplier['object_id']]
-            if supplier['object_id'] in inv_act_image_data_map:
-                result[supplier['object_id']]['image_data'] = inv_act_image_data_map[supplier['object_id']]
+            if key not in result:
+                result[key] = {}
+            for inv_key,inv_data in supplier.items():
+                if inv_key not in result[key]:
+                    result[key][inv_key] = {}
+                    result[key][inv_key]['total'] = inv_data
+                if key in inv_act_assigned_data_map:
+                    result[key][inv_key]['assigned'] = inv_act_assigned_data_map[key][inv_key]
+                if key in inv_act_image_data_map:
+                    result[key][inv_key]['completed'] = inv_act_image_data_map[key][inv_key]
         return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
