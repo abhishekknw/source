@@ -16,7 +16,7 @@ from datetime import date
 
 import managers
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, Permission
+# from django.contrib.auth.models import AbstractUser, Permission
 from django.contrib.contenttypes import fields
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -25,6 +25,7 @@ from django.db import models
 from django.utils import timezone
 
 from v0.constants import supplier_id_max_length
+from v0.ui.user.models import BaseUser
 
 AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
@@ -67,19 +68,6 @@ ORGANIZATION_CATEGORY = (
     ('SUPPLIER_AGENCY', 'SUPPLIER_AGENCY'),
     ('SUPPLIER', 'SUPPLIER')
 )
-
-
-class BaseUser(AbstractUser):
-    """
-    This is base user class that inherits AbstractBaseUser and adds an additional field.
-    """
-    user_code = models.CharField(max_length=255, default=settings.DEFAULT_USER_CODE)
-    mobile = models.CharField(max_length=20, null=True, blank=True)
-    profile = models.ForeignKey('Profile', null=True, blank=True)  # remove null=true once every user has been attached one profile
-    role = models.ForeignKey('Role', null=True, blank=True)
-
-    class Meta:
-        db_table = 'base_user'
 
 
 class BaseModel(models.Model):
@@ -1829,54 +1817,6 @@ class AuditorSocietyMapping(models.Model):
         db_table = 'auditor_society_mapping'
 
 
-class State(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
-    state_name = models.CharField(db_column='STATE_NAME', max_length=50, null=True)
-    state_code = models.CharField(db_column='STATE_CODE', max_length=5, null=True)
-
-    class Meta:
-
-        db_table = 'state'
-
-
-class City(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
-    city_name = models.CharField(db_column='CITY_NAME', max_length=100, null=True)
-    city_code = models.CharField(db_column='CITY_CODE', max_length=5, null=True)
-    state_code = models.ForeignKey(State, related_name='statecode', db_column='STATE_CODE', null=True, on_delete=models.CASCADE)
-
-    class Meta:
-
-        db_table = 'city'
-        # a city can only contain unique state_codes
-        unique_together = (('state_code','city_code'),)
-
-
-class CityArea(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
-    label = models.CharField(db_column='AREA_NAME', max_length=100, null=True)
-    area_code = models.CharField(db_column='AREA_CODE', max_length=5, null=True)
-    city_code = models.ForeignKey(City, related_name='citycode', db_column='CITY_CODE', null=True, on_delete=models.CASCADE)
-
-    class Meta:
-
-        db_table = 'city_area'
-        unique_together = (('area_code','city_code'),)
-
-
-class CitySubArea(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)
-    subarea_name = models.CharField(db_column='SUBAREA_NAME', max_length=100, null=True)
-    subarea_code = models.CharField(db_column='SUBAREA_CODE', max_length=5, null=True)
-    locality_rating = models.CharField(db_column='LOCALITY_RATING', max_length=100, null=True)
-    area_code = models.ForeignKey(CityArea, related_name='areacode', db_column='AREA_CODE', null=True,on_delete=models.CASCADE)
-
-    class Meta:
-
-        db_table = 'city_area_subarea'
-        unique_together = (('area_code','subarea_code'),)
-
-
 class SupplierTypeCode(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=20, null=True)
@@ -1970,39 +1910,6 @@ class InventorySummary(BaseModel):
     class Meta:
 
         db_table = 'inventory_summary'
-
-
-class UserProfile(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID,  unique=True, editable=True, null=False, related_name='user_profile', db_column='user_id', on_delete=models.CASCADE)
-    is_city_manager = models.BooleanField(db_column='is_city_manager', default=False)
-    is_cluster_manager = models.BooleanField(db_column='is_cluster_manager', default=False)
-    is_normal_user =  models.BooleanField(db_column='is_normal_user', default=False)
-    society_form_access = models.BooleanField(db_column='society_form_access', default=False)
-    corporate_form_access = models.BooleanField(db_column='corporate_form_access', default=False)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_column='created_by', null=True)
-    objects = managers.GeneralManager()
-
-    def get_user(self):
-        return self.user
-
-    class Meta:
-        db_table = 'user_profile'
-
-
-class UserCities(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID,  related_name='cities', db_column='user_id', null=False, on_delete=models.CASCADE)
-    city = models.ForeignKey(City, db_column='city_id', null=True, on_delete=models.CASCADE)
-
-    class Meta:
-        db_table = 'user_cities'
-
-
-class UserAreas(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, related_name='clusters', db_column='user_id', null=False, on_delete=models.CASCADE)
-    area = models.ForeignKey(CityArea, db_column='area_id', on_delete=models.CASCADE)
-
-    class Meta:
-        db_table = 'user_areas'
 
 
 class CorporateBuilding(models.Model):

@@ -27,16 +27,20 @@ from v0.serializers import ImageMappingSerializer, PriceMappingDefaultSerializer
                     SupplierTypeSalonSerializer, SupplierTypeGymSerializer, FlyerInventorySerializer, SupplierTypeBusShelterSerializer
 
 from v0.models import ImageMapping, PriceMappingDefault, PriceMapping, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, ContactDetails, Events, MailboxInfo, PoleInventory, StallInventory, StreetFurniture, SportsInfra, SupplierTypeSociety, SocietyTower, FlatType, SupplierTypeCorporate, ContactDetailsGeneric, CorporateParkCompanyList,FlyerInventory,SupplierAmenitiesMap
-from v0.models import SupplierTypeCode, InventorySummary, SocietyMajorEvents, UserProfile, CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
-from v0.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, UserSerializer, UserProfileSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
-from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer, StateSerializer, BusDepotSerializer
+from v0.models import SupplierTypeCode, InventorySummary, SocietyMajorEvents, CorporateBuildingWing, CorporateBuilding, CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
+from v0.ui.user.models import UserProfile
+from v0.ui.location.models import City, CityArea, CitySubArea
+from v0.serializers import SupplierTypeCodeSerializer, InventorySummarySerializer, SocietyMajorEventsSerializer, ContactDetailsGenericSerializer, CorporateParkCompanyListSerializer
+from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer, BusDepotSerializer
+from v0.ui.user.serializers import UserSerializer, UserProfileSerializer
+from v0.ui.location.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, StateSerializer
 from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
 
 # project imports
 import utils as ui_utils
 import website.utils as website_utils
 from coreapi.settings import BASE_DIR
-from v0.models import City, CityArea, CitySubArea, UserCities, UserAreas
+from v0.ui.user.models import UserAreas, UserCities
 from v0.constants import keys, decision
 from website.utils import save_price_mapping_default
 import v0.models as models
