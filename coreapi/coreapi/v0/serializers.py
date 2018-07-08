@@ -1,50 +1,23 @@
 from django.contrib.auth.models import User, Permission, Group
-from django.core.exceptions import PermissionDenied
 
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import CampaignSupplierTypes, SocietyInventoryBooking, CampaignSocietyMapping, CampaignTypeMapping, \
-    Campaign, Organisation, BusinessAccountContact, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, \
-    AdInventoryLocationMapping, AdInventoryType, DurationType, PriceMappingDefault, PriceMapping, BannerInventory, \
+from v0.models import Campaign, Organisation, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, \
+    AdInventoryLocationMapping, AdInventoryType, DurationType, BannerInventory, \
     CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, \
-    SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, \
+    SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, Events, InventoryInfo, MailboxInfo, \
     OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, FlyerInventory, \
-    StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeSociety, SupplierTypeCorporate, SocietyTower, FlatType, \
-    AccountInfo, ContactDetailsGeneric, SupplierTypeSalon, SupplierTypeGym
+    StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeCorporate, SocietyTower, FlatType, \
+    ContactDetailsGeneric, SupplierTypeSalon, SupplierTypeGym
+from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
+from v0.ui.organisation.serializers import OrganisationSerializer
 from v0.models import SupplierTypeCode, InventorySummary, SocietyMajorEvents, \
     CorporateParkCompanyList, CorporateBuilding, CorporateBuildingWing, CorporateCompanyDetails, \
     CompanyFloor
 import models
-import v0.constants as v0_constants
-from managers import check_object_permission
 
-
-class BaseModelPermissionSerializer(ModelSerializer):
-      """
-
-      Inherit this serializer if you want permission checking in creation of  a model instance through serializer.
-      Not sure weather to do this in .save() method or here. Going with serializer.
-
-      """
-      def create(self, validated_data):
-          """
-          called in creating instance. Here we only check fo 'CREATE' permission for the given user.
-          :param validated_data:
-          :return:
-          """
-          class_name = self.__class__.__name__
-          is_permission, error = check_object_permission(validated_data['user'], self.Meta.model, v0_constants.permission_contants['CREATE'])
-          if not is_permission:
-              raise PermissionDenied(class_name, error)
-          return self.Meta.model.objects.create(**validated_data)
-
-
-class AccountInfoSerializer(BaseModelPermissionSerializer):
-
-    class Meta:
-        model = AccountInfo
-        fields = '__all__'
+from v0.ui.base.serializers import BaseModelPermissionSerializer
 
 
 class ImageMappingSerializer(ModelSerializer):
@@ -75,13 +48,6 @@ class DurationTypeSerializer(ModelSerializer):
     class Meta:
         model = DurationType
         exclude = ('created_at', 'updated_at')
-
-
-class PriceMappingSerializer(ModelSerializer):
-    class Meta:
-        model = PriceMapping
-        depth = 2
-        fields = '__all__'
 
 
 class BannerInventorySerializer(ModelSerializer):
@@ -172,19 +138,6 @@ class CommonAreaDetailsSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class ContactDetailsSerializer(ModelSerializer):
-    class Meta:
-        model = ContactDetails
-        fields = '__all__'
-
-
-class ContactDetailsGenericSerializer(ModelSerializer):
-    class Meta:
-        model = ContactDetailsGeneric
-        fields = '__all__'
-        depth = 2
-
-
 class EventsSerializer(ModelSerializer):
     class Meta:
         model = Events
@@ -263,17 +216,6 @@ class SportsInfraSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class SupplierTypeSocietySerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeSociety
-        fields = ('supplier_id', 'society_name', 'society_address1', 'society_address2', 'society_zip', 'society_city',
-                  'society_state', 'society_longitude', 'society_locality', 'society_subarea', 'society_latitude', 'society_location_type',
-                  'society_type_quality', 'society_type_quantity', 'flat_count', 'flat_avg_rental_persqft', 'flat_sale_cost_persqft',
-                  'tower_count', 'payment_details_available', 'age_of_society','total_tenant_flat_count','landmark','feedback',
-                  )
-
-
-
 class SupplierTypeCorporateSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeCorporate
@@ -316,48 +258,6 @@ class InventorySummarySerializer(ModelSerializer):
         fields = '__all__'
 
 
-class PriceMappingDefaultSerializer(ModelSerializer):
-    class Meta:
-        model = PriceMappingDefault
-        fields = '__all__'
-        depth = 1
-
-
-class CampaignSupplierTypesSerializer(ModelSerializer):
-    class Meta:
-        model = CampaignSupplierTypes
-        fields = '__all__'
-
-
-class CampaignTypeMappingSerializer(ModelSerializer):
-    class Meta:
-        model = CampaignTypeMapping
-        fields = '__all__'
-
-
-class SocietyInventoryBookingSerializer(ModelSerializer):
-    type = CampaignTypeMappingSerializer(source='get_type')
-
-    class Meta:
-        model = SocietyInventoryBooking
-        fields = '__all__'
-        read_only_fields = (
-            'type'
-        )
-
-
-class CampaignSerializer(ModelSerializer):
-    class Meta:
-        model = Campaign
-        fields = '__all__'
-
-
-class CampaignSocietyMappingSerializer(ModelSerializer):
-    class Meta:
-        model = CampaignSocietyMapping
-        fields = '__all__'
-        depth = 1
-
 
 class BusinessSubTypesSerializer(ModelSerializer):
     class Meta:
@@ -382,11 +282,6 @@ class BusinessTypesSerializer(ModelSerializer):
         # 'reference_phone', 'reference_email', 'comments')
 
 
-class BusinessAccountContactSerializer(ModelSerializer):
-    class Meta:
-        model = BusinessAccountContact
-        fields = '__all__'
-
 #
 # class BusinessTypesSerializer(ModelSerializer):
 #     class Meta:
@@ -394,26 +289,10 @@ class BusinessAccountContactSerializer(ModelSerializer):
 #
 
 
-class BusinessInfoSerializer(ModelSerializer):
-    # sub_type = BusinessSubTypesSerializer()
-    # type = BusinessTypesSerializer()
-    class Meta:
-        model = Organisation
-        fields = '__all__'
-        # fields = ('id','name','type','sub_type','phone','email','address','reference_name',
-        # 'reference_phone', 'reference_email', 'comments')
-
-
 # class BusinessAccountContactSerializer(ModelSerializer):
 #     class Meta:
 #         model = BusinessAccountContact
 
-
-
-class AccountSerializer(ModelSerializer):
-    class Meta:
-        model = AccountInfo
-        fields = '__all__'
 
 # class AccountContactSerializer(ModelSerializer):
 
@@ -571,13 +450,6 @@ class GeneralUserPermissionSerializer(ModelSerializer):
     """
     class Meta:
         model = models.GeneralUserPermission
-        fields = '__all__'
-
-
-class OrganisationSerializer(BaseModelPermissionSerializer):
-
-    class Meta:
-        model = models.Organisation
         fields = '__all__'
 
 

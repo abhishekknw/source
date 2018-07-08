@@ -4,13 +4,17 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 import v0.models as models
-from v0.models import Organisation, Campaign, CampaignSocietyMapping, SocietyInventoryBooking, AccountInfo
-from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces, SupplierTypeSociety,\
+from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces,\
                     ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, BaseUser
-from v0.serializers import BusinessAccountContactSerializer, CampaignTypeMappingSerializer, AdInventoryTypeSerializer, DurationTypeSerializer, BaseModelPermissionSerializer
+from v0.serializers import AdInventoryTypeSerializer, DurationTypeSerializer, BaseModelPermissionSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
-
+from v0.ui.account.models import AccountInfo, PriceMappingDefault
+from v0.ui.account.serializers import BusinessAccountContactSerializer
+from v0.ui.campaign.models import Campaign, CampaignSocietyMapping
+from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
+from v0.ui.organisation.models import Organisation
+from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety
 
 class InventoryActivitySerializer(ModelSerializer):
     """
@@ -355,7 +359,7 @@ class PriceMappingDefaultSerializerReadOnly(ModelSerializer):
     inventory_duration = DurationTypeSerializer(source='duration_type')
 
     class Meta:
-        model = models.PriceMappingDefault
+        model = PriceMappingDefault
         fields = '__all__'
 
 
@@ -490,17 +494,6 @@ class ObjectLevelPermissionViewSet(ModelSerializer):
         model = models.ObjectLevelPermission
         fields = '__all__'
 
-
-class OrganisationMapNestedSerializer(ModelSerializer):
-    """
-
-    """
-    first_organisation = OrganisationSerializer()
-    second_organisation = OrganisationSerializer()
-
-    class Meta:
-        model = models.OrganisationMap
-        fields = '__all__'
 
 class RoleSerializer(ModelSerializer):
     """

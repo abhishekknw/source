@@ -36,11 +36,9 @@ from rest_framework.views import APIView
 # from import_export import resources
 import tasks
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
-from v0.serializers import SocietyInventoryBookingSerializer, CampaignSerializer, CampaignSocietyMappingSerializer, BusinessInfoSerializer, BusinessAccountContactSerializer, BusinessTypesSerializer, BusinessSubTypesSerializer, AccountInfoSerializer
-from v0.models import SocietyInventoryBooking, Campaign, CampaignSocietyMapping, Organisation, \
-                    BusinessAccountContact, AdInventoryType, DurationType, PriceMappingDefault, \
-    ContactDetails, SupplierTypeSociety, SocietyTower, BusinessTypes, \
-                    BusinessSubTypes, AccountInfo, InventorySummary, FlatType, ProposalCenterMappingVersion, \
+from v0.serializers import BusinessTypesSerializer, BusinessSubTypesSerializer
+from v0.models import AdInventoryType, DurationType, SocietyTower, BusinessTypes, \
+                    BusinessSubTypes, InventorySummary, FlatType, ProposalCenterMappingVersion, \
                     SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping,SpaceMapping , InventoryType, ShortlistedSpaces
 from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer, SpaceMappingSerializer , \
@@ -59,7 +57,14 @@ import v0.permissions as v0_permissions
 import v0.utils as v0_utils
 from v0 import errors
 import v0.constants as v0_constants
-
+from v0.ui.campaign.models import Campaign, CampaignSocietyMapping
+from v0.ui.campaign.serializers import CampaignSerializer, CampaignSocietyMappingSerializer
+from v0.ui.account.serializers import BusinessInfoSerializer, BusinessAccountContactSerializer, AccountInfoSerializer
+from v0.ui.account.models import BusinessAccountContact, PriceMappingDefault, ContactDetails, AccountInfo
+from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety
+from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer
+from v0.ui.organisation.models import Organisation, OrganisationMap
+from v0.ui.organisation.serializers import OrganisationMapNestedSerializer
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 class GetBusinessTypesAPIView(APIView):
@@ -3755,7 +3760,6 @@ class CampaignInventory(APIView):
             # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
             # cache_value = cache.get(cache_key)
             # cache_value = None
-
             response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
             if not response.data['status']:
                 return response
@@ -5486,13 +5490,13 @@ class OrganisationMapViewSet(viewsets.ViewSet):
             source_organisation_id = request.query_params.get('source_organisation_id')
             instance = models.Organisation.objects.get(pk=source_organisation_id)
             if source_organisation_id:
-                instances = models.OrganisationMap.objects.filter(Q(first_organisation=instance) or Q(second_organisation=instance))
+                instances = OrganisationMap.objects.filter(Q(first_organisation=instance) or Q(second_organisation=instance))
             else:
-                instances = models.OrganisationMap.objects.all()
-            serializer = website_serializers.OrganisationMapNestedSerializer(instances, many=True)
+                instances = OrganisationMap.objects.all()
+            serializer = OrganisationMapNestedSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-
+            print e
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def create(self, request):
@@ -5506,7 +5510,7 @@ class OrganisationMapViewSet(viewsets.ViewSet):
             first_organisation = models.Organisation.objects.get(organisation_id=request.data['first_organisation_id'])
             second_organisation = models.Organisation.objects.get(organisation_id=request.data['second_organisation_id'])
             instance, is_created = models.OrganisationMap.objects.get_or_create(first_organisation=first_organisation,second_organisation=second_organisation)
-            serializer = website_serializers.OrganisationMapNestedSerializer(instance=instance)
+            serializer = OrganisationMapNestedSerializer(instance=instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import filters
 from serializers import AssignedAuditSerializer,AuditSerializer, AssignedAuditsTempSerializer
-from v0.models import SocietyInventoryBooking, AssignedAudits, Audits
-from v0.serializers import SocietyInventoryBookingSerializer
+from v0.models import AssignedAudits, Audits
+from v0.ui.inventory.models import SocietyInventoryBooking
 from datetime import date
 from django.db.models import Q
 

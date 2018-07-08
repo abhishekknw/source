@@ -3,18 +3,19 @@ from rest_framework import serializers
 
 from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
     PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, \
-    ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, \
-    RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, \
+    Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, \
+    RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SocietyTower, \
     SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, SupplierTypeRetailShop, \
     SupplierTypeBusDepot
 from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
     LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, \
     StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, \
-    CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, \
+    CommonAreaDetailsSerializer, EventsSerializer, InventoryInfoSerializer, \
     MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, \
     RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, \
-    SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, ImageMappingSerializer
-
+    SupplierInfoSerializer, SocietyTowerSerializer, ImageMappingSerializer
+from inventory.models import SupplierTypeSociety
+from account.serializers import ContactDetailsSerializer
 
 class UISocietySerializer(ModelSerializer):
     basic_contact_available = serializers.BooleanField(source='is_contact_available')

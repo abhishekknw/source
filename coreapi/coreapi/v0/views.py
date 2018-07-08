@@ -10,19 +10,35 @@ from django.forms import model_to_dict
 from django.conf import settings
 from bulk_update.helper import bulk_update
 
-
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
-from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, CommonAreaDetailsSerializer, ContactDetailsSerializer, EventsSerializer, InventoryInfoSerializer, MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, SupplierInfoSerializer, SupplierTypeSocietySerializer, SocietyTowerSerializer, ContactDetailsGenericSerializer, FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, BaseUserCreateSerializer
+from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
+    LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, \
+    StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, \
+    CommonAreaDetailsSerializer, EventsSerializer, InventoryInfoSerializer, \
+    MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, \
+    RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, \
+    SupplierInfoSerializer, SocietyTowerSerializer, \
+    FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, \
+    BaseUserCreateSerializer
 from v0.ui.user.serializers import BaseUserSerializer, BaseUserUpdateSerializer
 from v0.ui.location.models import CityArea
 from v0.ui.location.serializers import CityAreaSerializer
+from v0.ui.account.serializers import ContactDetailsSerializer, ContactDetailsGenericSerializer
+from v0.ui.account.models import ContactDetails, ContactDetailsGeneric
+from v0.ui.inventory.models import SupplierTypeSociety
+from v0.ui.inventory.serializers import SupplierTypeSocietySerializer
 from rest_framework.decorators import detail_route, list_route
-from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, ContactDetails, Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SupplierTypeSociety, SocietyTower, ContactDetailsGeneric, SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, BusinessSubTypes, AdInventoryType, DurationType, \
+from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
+    PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, \
+    Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, \
+    RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SocietyTower, \
+    SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, \
+    BusinessSubTypes, AdInventoryType, DurationType, \
     Amenity, SupplierAmenitiesMap
 from v0.models import AD_INVENTORY_CHOICES
 import utils as v0_utils
@@ -77,7 +93,8 @@ class SetUserToMasterUser(APIView):
     Careful before using it because it will update user field of all the rows to master 
     user which may not be what you want everytime. 
     """
-    permission_classes = (permissions.IsAuthenticated, )
+    permission_classes = (permissions.IsAuthenticated,)
+
     def post(self, request):
         class_name = self.__class__.__name__
         try:
@@ -90,11 +107,14 @@ class SetUserToMasterUser(APIView):
             for model in all_models.values():
                 if hasattr(model, 'user') and model not in models_to_exclude:
                     model.objects.all().update(user=master_user)
-            return ui_utils.handle_response(class_name, data='succesfully updated all users of all modes to master user', success=True)        
+            return ui_utils.handle_response(class_name,
+                                            data='succesfully updated all users of all modes to master user',
+                                            success=True)
         except ObjectDoesNotExist as e:
-          return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except Exception as e:
-          return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class BannerInventoryAPIView(APIView):
 
@@ -1371,6 +1391,7 @@ class SocietyTowerAPIListView(APIView):
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
+
 class FlatTypeAPIView(APIView):
 
     def get(self, request, id, format=None):
@@ -1420,7 +1441,7 @@ class FlatTypeAPIListView(APIView):
 
 class SocietyAPIFiltersView(APIView):
 
-     def get(self, request, format=None):
+    def get(self, request, format=None):
         try:
             item = CityArea.objects.all()
             serializer = CityAreaSerializer(item)
@@ -1521,7 +1542,7 @@ class PermissionsViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             Permission.objects.get(pk=pk).delete()
-            return ui_utils.handle_response(class_name, data='successfully deleted {0}'.format(pk),  success=True)
+            return ui_utils.handle_response(class_name, data='successfully deleted {0}'.format(pk), success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -1641,11 +1662,13 @@ class CreateSocietyTestData(APIView):
             society_list = []
 
             if default_database_name != v0_constants.database_name:
-                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+                return ui_utils.handle_response(class_name,
+                                                data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name,
+                                                                                                 v0_constants.database_name))
             # make the list of addresses by combining city name with center names
             addresses = [city_name + ',' + center_name for center_name in centers]
             SupplierTypeSociety.objects.all().delete()  # delete all societies before proceeding
-            society_count = total_society_count/len(addresses)  # societies per address
+            society_count = total_society_count / len(addresses)  # societies per address
             coordinates = []
             for address in addresses:
                 geo_code_instance = v0_utils.get_geo_code_instance(address)
@@ -1654,14 +1677,24 @@ class CreateSocietyTestData(APIView):
                 location_lat, location_long = geo_code_instance.latlng
                 # location_lat, location_long are coordinates of origin.
                 if society_count < 4:
-                    coordinates = v0_utils.generate_coordinates_in_quadrant(society_count, location_lat, location_long, radius)
+                    coordinates = v0_utils.generate_coordinates_in_quadrant(society_count, location_lat, location_long,
+                                                                            radius)
                 else:
-                    society_per_quadrant = society_count/4
+                    society_per_quadrant = society_count / 4
                     remainder = society_count % 4
-                    coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, location_lat, location_long, radius, v0_constants.first_quadrant_code))
-                    coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, location_lat, location_long, radius, v0_constants.second_quadrant_code))
-                    coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, location_lat, location_long, radius, v0_constants.third_quadrant_code))
-                    coordinates.extend(v0_utils.generate_coordinates_in_quadrant(society_per_quadrant + remainder, location_lat, location_long, radius, v0_constants.fourth_quadrant_code))
+                    coordinates.extend(
+                        v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, location_lat, location_long,
+                                                                  radius, v0_constants.first_quadrant_code))
+                    coordinates.extend(
+                        v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, location_lat, location_long,
+                                                                  radius, v0_constants.second_quadrant_code))
+                    coordinates.extend(
+                        v0_utils.generate_coordinates_in_quadrant(society_per_quadrant, location_lat, location_long,
+                                                                  radius, v0_constants.third_quadrant_code))
+                    coordinates.extend(
+                        v0_utils.generate_coordinates_in_quadrant(society_per_quadrant + remainder, location_lat,
+                                                                  location_long, radius,
+                                                                  v0_constants.fourth_quadrant_code))
                 result[address] = society_count
 
             suppliers_dict = v0_utils.assign_supplier_ids(city_code, v0_constants.society, coordinates)
@@ -1720,10 +1753,12 @@ class CreateBusinessTypeSubType(APIView):
 
                 else:
                     # we create this business first. it's not present in the system
-                    business_type_instance = BusinessTypes.objects.create(business_type_code=business_type_code, business_type=business_type)
+                    business_type_instance = BusinessTypes.objects.create(business_type_code=business_type_code,
+                                                                          business_type=business_type)
 
                 # fetch already present business sub types
-                already_present_business_sub_type_codes_instances = BusinessSubTypes.objects.filter(business_type=business_type_instance)
+                already_present_business_sub_type_codes_instances = BusinessSubTypes.objects.filter(
+                    business_type=business_type_instance)
 
                 # iterate through subtypes
                 for sub_type_dict in detail['subtypes']:
@@ -1757,6 +1792,7 @@ class CreateAdInventoryTypeDurationType(APIView):
     """
     Creates AdInventory and Duration objects if not present in the database.
     """
+
     def post(self, request):
         """
         Args:
@@ -1770,14 +1806,17 @@ class CreateAdInventoryTypeDurationType(APIView):
             default_database_name = settings.DATABASES['default']['NAME']
 
             if default_database_name != v0_constants.database_name:
-                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+                return ui_utils.handle_response(class_name,
+                                                data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name,
+                                                                                                 v0_constants.database_name))
 
             # for simplicity i have every combination
             for duration_code, duration_value in v0_constants.duration_dict.iteritems():
                 DurationType.objects.get_or_create(duration_name=duration_value)
             for inventory_tuple in AD_INVENTORY_CHOICES:
                 for ad_inventory_type_code, ad_inventory_type_value in v0_constants.type_dict.iteritems():
-                    AdInventoryType.objects.get_or_create(adinventory_name=inventory_tuple[0], adinventory_type=ad_inventory_type_value)
+                    AdInventoryType.objects.get_or_create(adinventory_name=inventory_tuple[0],
+                                                          adinventory_type=ad_inventory_type_value)
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -1788,6 +1827,7 @@ class AssignInventories(APIView):
     Assigns inventories to all societies in the table. If already assigned, deletes them first and then re-assigns.
     Must be run after societies are created
     """
+
     def post(self, request):
         """
 
@@ -1802,7 +1842,9 @@ class AssignInventories(APIView):
             default_database_name = settings.DATABASES['default']['NAME']
 
             if default_database_name != v0_constants.database_name:
-                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+                return ui_utils.handle_response(class_name,
+                                                data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name,
+                                                                                                 v0_constants.database_name))
 
             inventory_detail = request.data['inventory_detail']
             suppliers = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
@@ -1837,7 +1879,9 @@ class SetInventoryPricing(APIView):
             default_database_name = settings.DATABASES['default']['NAME']
 
             if default_database_name != v0_constants.database_name:
-                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+                return ui_utils.handle_response(class_name,
+                                                data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name,
+                                                                                                 v0_constants.database_name))
 
             supplier_ids = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
             response = ui_utils.get_content_type(v0_constants.society)
@@ -1854,6 +1898,7 @@ class PopulateAmenities(APIView):
     """
     randomly assigns amenities to random suppliers
     """
+
     def post(self, request):
         """
         Args:
@@ -1866,7 +1911,9 @@ class PopulateAmenities(APIView):
             default_database_name = settings.DATABASES['default']['NAME']
 
             if default_database_name != v0_constants.database_name:
-                return ui_utils.handle_response(class_name, data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name, v0_constants.database_name))
+                return ui_utils.handle_response(class_name,
+                                                data=errors.INCORRECT_DATABASE_NAME_ERROR.format(default_database_name,
+                                                                                                 v0_constants.database_name))
 
             supplier_type_code = request.data['supplier_type_code']
             content_type = ui_utils.fetch_content_type(supplier_type_code)
@@ -1890,10 +1937,12 @@ class PopulateAmenities(APIView):
             supplier_amenity_instances = []
 
             for supplier_id in supplier_ids:
-                count_of_amenity_to_be_assigned = random.randint(0, amenity_instance_count) # assign anywhere between zero to max amenity count
+                count_of_amenity_to_be_assigned = random.randint(0,
+                                                                 amenity_instance_count)  # assign anywhere between zero to max amenity count
                 for sub_index in range(count_of_amenity_to_be_assigned):
                     amenity = amenity_instances[sub_index]
-                    supplier_amenity_instances.append(SupplierAmenitiesMap(content_type=content_type, amenity=amenity, object_id=supplier_id))
+                    supplier_amenity_instances.append(
+                        SupplierAmenitiesMap(content_type=content_type, amenity=amenity, object_id=supplier_id))
 
             SupplierAmenitiesMap.objects.all().delete()
             SupplierAmenitiesMap.objects.bulk_create(supplier_amenity_instances)
@@ -1942,7 +1991,7 @@ class UserViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            user = BaseUser.objects.get(pk=pk)            
+            user = BaseUser.objects.get(pk=pk)
             serializer = BaseUserUpdateSerializer(user, data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
@@ -2034,6 +2083,7 @@ class GroupViewSet(viewsets.ViewSet):
     """
     View set around groups
     """
+
     def list(self, request):
         """
         Lists all the groups
@@ -2232,10 +2282,12 @@ class SetParams(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+
 class CopyOrganisation(APIView):
     """
 
     """
+
     def get(self, request):
         """
 
@@ -2268,6 +2320,3 @@ class CopyOrganisation(APIView):
             except Exception as e:
                 print e
         return ui_utils.handle_response(class_name, data='success', success=True)
-
-
-
