@@ -9,7 +9,7 @@ import openpyxl
 import os
 import requests
 import gpxpy.geo
-
+from requests.exceptions import ConnectionError
 from bulk_update.helper import bulk_update
 from celery.result import GroupResult, AsyncResult
 from django.conf import settings
@@ -41,33 +41,40 @@ from v0.models import AdInventoryType, DurationType, SocietyTower, BusinessTypes
                     BusinessSubTypes, InventorySummary, FlatType, \
                     SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, GenericExportFileName, \
                     BaseUser, InventoryActivityAssignment, ShortlistedInventoryPricingDetails, InventoryActivityImage, \
-                    SupplierAmenitiesMap, Amenity, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, INVENTORY_ACTIVITY_TYPES
-from v0.models import SupplierTypeCorporate,SpaceMapping , InventoryType, ShortlistedSpaces
-from v0.ui.website.serializers import ProposalInfoSerializer, SpaceMappingSerializer , \
-        InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
-        SpaceMappingVersionSerializer, InventoryTypeVersionSerializer, \
-    ProposalCenterMappingVersionSpaceSerializer
+                    SupplierAmenitiesMap, Amenity, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, INVENTORY_ACTIVITY_TYPES,\
+                    GeneralUserPermission, Profile, InventoryActivity
+from v0.models import SupplierTypeCorporate, SpaceMapping , InventoryType, ShortlistedSpaces
+from v0.ui.website.serializers import (SpaceMappingSerializer ,InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,
+        SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,
+    ProposalCenterMappingVersionSpaceSerializer, GeneralUserPermissionSerializer, AmenitySerializer, SupplierAmenitiesMapSerializer,
+    InventoryActivityAssignmentSerializerReadOnly, ProfileNestedSerializer, ProfileSimpleSerializer, ContentTypeSerializer,
+                                       ObjectLevelPermissionSerializer, RoleSerializer, LeadsSerializer, LeadAliasSerializer,
+                                       CampaignAssignmentSerializerReadOnly, InventoryActivityAssignmentSerializer,
+                                       GenericExportFileSerializerReadOnly)
 
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
 import utils as website_utils
 import v0.ui.utils as ui_utils
 import v0.models as models
-import serializers as website_serializers
+# import serializers as website_serializers
 import v0.serializers as v0_serializers
 import v0.permissions as v0_permissions
 import v0.utils as v0_utils
 from v0 import errors
 import v0.constants as v0_constants
+from v0.constants import flat_type_dict
 from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignSerializer, CampaignSocietyMappingSerializer
 from v0.ui.account.serializers import BusinessInfoSerializer, BusinessAccountContactSerializer, AccountInfoSerializer
 from v0.ui.account.models import BusinessAccountContact, PriceMappingDefault, ContactDetails, AccountInfo
 from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety
 from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer
-from v0.ui.organisation.models import Organisation, OrganisationMap
-from v0.ui.organisation.serializers import OrganisationMapNestedSerializer
+
+from v0.ui.organisation.models import Organisation, OrganisationMap, ORGANIZATION_CATEGORY
+from v0.ui.organisation.serializers import OrganisationMapNestedSerializer, OrganisationSerializer
 from v0.ui.location.models import State, City, CityArea, CitySubArea
+
 from v0.ui.location.serializers import CitySubAreaSerializer, CityAreaSerializer, CitySerializer, StateSerializer
 from v0.ui.user.models import BaseUser, UserProfile, UserCities, UserAreas
 from v0.ui.user.serializers import UserProfileSerializer, UserSerializer, BaseUserSerializer, BaseUserUpdateSerializer
@@ -1748,7 +1755,7 @@ class FinalProposalAPIView(APIView):
                                 if space.get('shortlisted'):
                                     object_id = space['supplier_id']
                                     shortlisted_space = ShortlistedSpaces(space_mapping=space_mapping_object,
-                                                                          content_type=content_type, \
+                                                                          content_type=content_type,
                                                                           supplier_code=supplier_code, object_id=object_id,
                                                                           buffer_status=space['buffer_status'])
 
@@ -1756,7 +1763,7 @@ class FinalProposalAPIView(APIView):
 
                                     # version save
                                     shortlisted_version_space = ShortlistedSpacesVersion(
-                                        space_mapping_version=space_mapping_version_object, \
+                                        space_mapping_version=space_mapping_version_object,
                                         content_type=content_type, supplier_code=supplier_code, object_id=object_id,
                                         buffer_status=space['buffer_status'])
                                     shortlisted_space_version_list.append(shortlisted_version_space)
@@ -2920,7 +2927,7 @@ class ProposalViewSet(viewsets.ViewSet):
                     seen.add(proposal_id)
                     final_file_objects.append(file_object)
 
-            file_serializer = website_serializers.GenericExportFileSerializerReadOnly(final_file_objects, many=True)
+            file_serializer = GenericExportFileSerializerReadOnly(final_file_objects, many=True)
             return ui_utils.handle_response(class_name, data=file_serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -3726,7 +3733,7 @@ class AssignCampaign(APIView):
                     campaigns.append(assign_object)
                     # assign statuses to each of the campaigns.
 
-            serializer = website_serializers.CampaignAssignmentSerializerReadOnly(campaigns, many=True)
+            serializer = CampaignAssignmentSerializerReadOnly(campaigns, many=True)
 
             for data in serializer.data:
                 proposal_start_date = parse_datetime(data['campaign']['tentative_start_date'])
@@ -4326,7 +4333,7 @@ class GetAllAmenities(APIView):
         class_name = self.__class__.__name__
         try:
             amenities = Amenity.objects.all()
-            serializer = website_serializers.AmenitySerializer(amenities, many=True)
+            serializer = AmenitySerializer(amenities, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -4353,7 +4360,7 @@ class SupplierAmenity(APIView):
             content_type = response.data['data']
 
             amenities = SupplierAmenitiesMap.objects.filter(object_id=request.query_params['supplier_id'], content_type=content_type)
-            serializer = website_serializers.SupplierAmenitiesMapSerializer(amenities, many=True)
+            serializer = SupplierAmenitiesMapSerializer(amenities, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -4542,7 +4549,7 @@ class InventoryActivityAssignment(APIView):
                 instance.save()
                 inv_assignment_objects.append(instance)
 
-            serializer = website_serializers.InventoryActivityAssignmentSerializer(inv_assignment_objects, many=True)
+            serializer = InventoryActivityAssignmentSerializer(inv_assignment_objects, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -4576,7 +4583,7 @@ class InventoryActivityAssignment(APIView):
         try:
             inv_act_assignment_id = request.query_params['inventory_activity_assignment_id']
             inventory_activity_assignment_object = InventoryActivityAssignment.objects.get(id=inv_act_assignment_id)
-            serializer = website_serializers.InventoryActivityAssignmentSerializerReadOnly(inventory_activity_assignment_object)
+            serializer = InventoryActivityAssignmentSerializerReadOnly(inventory_activity_assignment_object)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -4706,7 +4713,7 @@ class UserList(APIView):
         class_name = self.__class__.__name__
         try:
             users = BaseUser.objects.all()
-            user_serializer = website_serializers.BaseUserSerializer(users, many=True)
+            user_serializer = BaseUserSerializer(users, many=True)
             return ui_utils.handle_response(class_name, data=user_serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5104,7 +5111,7 @@ class ProfileViewSet(viewsets.ViewSet):
                 instances = Profile.objects.filter(organisation=org)
             else:
                 instances = Profile.objects.all()
-            serializer = website_serializers.ProfileNestedSerializer(instances, many=True)
+            serializer = ProfileNestedSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5117,7 +5124,7 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            serializer = website_serializers.ProfileSimpleSerializer(data=request.data)
+            serializer = ProfileSimpleSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5135,7 +5142,7 @@ class ProfileViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = Profile.objects.get(pk=pk)
-            serializer = website_serializers.ProfileNestedSerializer(instance)
+            serializer = ProfileNestedSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5163,7 +5170,7 @@ class ProfileViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = Profile.objects.get(pk=pk)
-            serializer = website_serializers.ProfileSimpleSerializer(data=request.data,instance=instance)
+            serializer = ProfileSimpleSerializer(data=request.data,instance=instance)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5182,7 +5189,7 @@ class ProfileViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instances = Profile.objects.filter(is_standard=True, organisation__category=ORGANIZATION_CATEGORY[0][0])
-            serializer = website_serializers.ProfileSimpleSerializer(instances, many=True)
+            serializer = ProfileSimpleSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5207,7 +5214,7 @@ class OrganisationViewSet(viewsets.ViewSet):
                 instances = Organisation.objects.filter_permission(user=request.user, category=category)
             else:
                 instances = Organisation.objects.filter_permission(user=request.user)
-            serializer = website_serializers.OrganisationSerializer(instances, many=True)
+            serializer = OrganisationSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5220,7 +5227,7 @@ class OrganisationViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = Organisation.objects.get_permission(user=request.user, pk=pk)
-            serializer = website_serializers.OrganisationSerializer(instance)
+            serializer = OrganisationSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name,exception_object=e, request=request)
@@ -5236,7 +5243,7 @@ class OrganisationViewSet(viewsets.ViewSet):
             data = request.data.copy()
             data['user'] = request.user.pk
             data['organisation_id'] = website_utils.get_generic_id([data['category'], data['name']])
-            serializer = website_serializers.OrganisationSerializer(data=data)
+            serializer = OrganisationSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5254,7 +5261,7 @@ class OrganisationViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = Organisation.objects.get_permission(user=request.user, check_update_permissions=True, pk=pk)
-            serializer = website_serializers.OrganisationSerializer(data=request.data, instance=instance)
+            serializer = OrganisationSerializer(data=request.data, instance=instance)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5277,7 +5284,7 @@ class ContentTypeViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             valid_models = [Organisation, BaseUser, Profile, AccountInfo, ProposalInfo]
-            serializer = website_serializers.ContentTypeSerializer(ContentType.objects.get_for_models(*valid_models).values(), many=True)
+            serializer = ContentTypeSerializer(ContentType.objects.get_for_models(*valid_models).values(), many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5292,7 +5299,7 @@ class ContentTypeViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = ContentType.objects.get_for_id(id=pk)
-            serializer = website_serializers.ContentTypeSerializer(instance)
+            serializer = ContentTypeSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5313,7 +5320,7 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
             # change this list if you want more models
             valid_models = [Organisation, BaseUser, Profile, AccountInfo, ProposalInfo]
             instances = ObjectLevelPermission.objects.filter(content_type__in= ContentType.objects.get_for_models(*valid_models).values())
-            serializer = website_serializers.ObjectLevelPermissionSerializer(instances, many=True)
+            serializer = ObjectLevelPermissionSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5325,7 +5332,7 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = ObjectLevelPermission.objects.get(pk=pk)
-            serializer = website_serializers.ObjectLevelPermissionSerializer(instance)
+            serializer = ObjectLevelPermissionSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5340,7 +5347,7 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
         try:
             data = request.data.copy()
             data['codename'] = ''.join(data['name'].split(' '))
-            serializer = website_serializers.ObjectLevelPermissionSerializer(data=data)
+            serializer = ObjectLevelPermissionSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5358,7 +5365,7 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = ObjectLevelPermission.objects.get(pk=pk)
-            serializer = website_serializers.ObjectLevelPermissionSerializer(data=request.data, instance=instance)
+            serializer = ObjectLevelPermissionSerializer(data=request.data, instance=instance)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5381,7 +5388,7 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instances = GeneralUserPermission.objects.all()
-            serializer = website_serializers.GeneralUserPermissionSerializer(instances, many=True)
+            serializer = GeneralUserPermissionSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5396,7 +5403,7 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = GeneralUserPermission.objects.get(pk=pk)
-            serializer = website_serializers.GeneralUserPermissionSerializer(instance)
+            serializer = GeneralUserPermissionSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5411,7 +5418,7 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
             data = request.data.copy()
             data['codename'] = "".join(data['name'].split()[:2]).upper()
             data['name'] = "_".join(data['name'].split(" "))
-            serializer = website_serializers.GeneralUserPermissionSerializer(data=data)
+            serializer = GeneralUserPermissionSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5428,7 +5435,7 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = GeneralUserPermission.objects.get(pk=pk)
-            serializer = website_serializers.GeneralUserPermissionSerializer(data=request.data, instance=instance)
+            serializer = GeneralUserPermissionSerializer(data=request.data, instance=instance)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5458,7 +5465,7 @@ class CloneProfile(APIView):
                 'organisation': new_organisation_id,
                 'is_standard': False
             }
-            serializer = website_serializers.ProfileSimpleSerializer(data=data)
+            serializer = ProfileSimpleSerializer(data=data)
 
             if serializer.is_valid():
                 new_profile_instance = serializer.save()
@@ -5625,7 +5632,7 @@ class RoleViewSet(viewsets.ViewSet):
         try:
             data = request.data.copy()
             data['codename'] = "".join(data['name'].split()[:2]).upper()
-            serializer = website_serializers.RoleSerializer(data=data)
+            serializer = RoleSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 website_utils.create_entry_in_role_hierarchy(serializer.data)
@@ -5644,7 +5651,7 @@ class RoleViewSet(viewsets.ViewSet):
         try:
             organisation_id = request.query_params['organisation_id']
             roles = Role.objects.filter(organisation=Organisation.objects.get(pk=organisation_id))
-            serializer = website_serializers.RoleSerializer(roles, many=True)
+            serializer = RoleSerializer(roles, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -6282,7 +6289,7 @@ class proposalCenterMappingViewSet(viewsets.ViewSet):
         try:
             proposal_id = request.query_params['proposal_id']
             proposal_centers = ProposalCenterMapping.objects.filter(proposal=proposal_id)
-            serializer = website_serializers.ProposalCenterMappingSerializer(proposal_centers, many=True)
+            serializer = ProposalCenterMappingSerializer(proposal_centers, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -6353,7 +6360,7 @@ class LeadAliasViewSet(viewsets.ViewSet):
             campaign_id = request.query_params.get('campaign_id')
             campaign_instance = ProposalInfo.objects.get(proposal_id=campaign_id)
             data = LeadAlias.objects.filter(campaign=campaign_instance)
-            serializer = website_serializers.LeadAliasSerializer(data, many=True)
+            serializer = LeadAliasSerializer(data, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -6372,9 +6379,9 @@ class LeadsViewSet(viewsets.ViewSet):
             else:
                 q = Q(campaign__proposal_id=campaign_id)
             lead_alias = LeadAlias.objects.filter(campaign__proposal_id=campaign_id)
-            serializer_lead_alias = website_serializers.LeadAliasSerializer(lead_alias, many=True)
+            serializer_lead_alias = LeadAliasSerializer(lead_alias, many=True)
             leads = Leads.objects.filter(q)
-            serializer_leads = website_serializers.LeadsSerializer(leads, many=True)
+            serializer_leads = LeadsSerializer(leads, many=True)
             data = {
                 'alias_data' : serializer_lead_alias.data,
                 'leads' : serializer_leads.data
@@ -6398,7 +6405,7 @@ class LeadsViewSet(viewsets.ViewSet):
                 return response
             content_type = response.data.get('data')
             data['content_type'] = content_type.id
-            serializer = website_serializers.LeadsSerializer(data=data)
+            serializer = LeadsSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -6418,7 +6425,7 @@ class LeadsViewSet(viewsets.ViewSet):
             data= request.data
             pk = data['id']
             lead = Leads.objects.get(pk=pk)
-            serializer = website_serializers.LeadsSerializer(lead,data=data)
+            serializer = LeadsSerializer(lead,data=data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
