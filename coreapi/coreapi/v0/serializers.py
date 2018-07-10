@@ -370,13 +370,6 @@ class SupplierTypeBusShelterSerializer(ModelSerializer):
         model = models.SupplierTypeBusShelter
         fields = '__all__'
 
-
-class ProposalMasterCostSerializer(ModelSerializer):
-    class Meta:
-        model = models.ProposalMasterCost
-        fields = '__all__'
-
-
 class PrintingCostSerializer(ModelSerializer):
     class Meta:
         model = models.PrintingCost
@@ -411,13 +404,6 @@ class DataSciencesCostSerializer(ModelSerializer):
     class Meta:
         model = models.DataSciencesCost
         fields = '__all__'
-
-
-class ProposalMetricsSerializer(ModelSerializer):
-    class Meta:
-        model = models.ProposalMetrics
-        fields = '__all__'
-
 
 class PermissionSerializer(ModelSerializer):
     class Meta:

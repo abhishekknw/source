@@ -38,14 +38,14 @@ import tasks
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import BusinessTypesSerializer, BusinessSubTypesSerializer
 from v0.models import AdInventoryType, DurationType, SocietyTower, BusinessTypes, \
-                    BusinessSubTypes, InventorySummary, FlatType, ProposalCenterMappingVersion, \
+                    BusinessSubTypes, InventorySummary, FlatType, \
                     SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, GenericExportFileName, \
                     BaseUser, InventoryActivityAssignment, ShortlistedInventoryPricingDetails, InventoryActivityImage, \
                     SupplierAmenitiesMap, Amenity, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, INVENTORY_ACTIVITY_TYPES
-from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping,SpaceMapping , InventoryType, ShortlistedSpaces
-from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer, SpaceMappingSerializer , \
+from v0.models import SupplierTypeCorporate,SpaceMapping , InventoryType, ShortlistedSpaces
+from v0.ui.website.serializers import ProposalInfoSerializer, SpaceMappingSerializer , \
         InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
-        ProposalInfoVersionSerializer, ProposalCenterMappingVersionSerializer, SpaceMappingVersionSerializer, InventoryTypeVersionSerializer, \
+        SpaceMappingVersionSerializer, InventoryTypeVersionSerializer, \
     ProposalCenterMappingVersionSpaceSerializer
 
 from coreapi.settings import BASE_URL, BASE_DIR
@@ -67,10 +67,13 @@ from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety
 from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer
 from v0.ui.organisation.models import Organisation, OrganisationMap
 from v0.ui.organisation.serializers import OrganisationMapNestedSerializer
-from v0.ui.location.models import State, City, CityArea, CitySubArea,
+from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.location.serializers import CitySubAreaSerializer, CityAreaSerializer, CitySerializer, StateSerializer
 from v0.ui.user.models import BaseUser, UserProfile, UserCities, UserAreas
 from v0.ui.user.serializers import UserProfileSerializer, UserSerializer, BaseUserSerializer, BaseUserUpdateSerializer
+from v0.ui.proposal.models import ProposalInfo, ProposalCenterMapping,ProposalCenterMappingVersion
+from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingVersionSerializer,
+    ProposalInfoVersionSerializer, ProposalMasterCostSerializer, ProposalMetricsSerializer)
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
