@@ -39,7 +39,9 @@ from serializers import UIBusinessInfoSerializer, CampaignListSerializer, Campai
 from v0.serializers import BusinessTypesSerializer, BusinessSubTypesSerializer
 from v0.models import AdInventoryType, DurationType, SocietyTower, BusinessTypes, \
                     BusinessSubTypes, InventorySummary, FlatType, ProposalCenterMappingVersion, \
-                    SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion
+                    SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, GenericExportFileName, \
+                    BaseUser, InventoryActivityAssignment, ShortlistedInventoryPricingDetails, InventoryActivityImage, \
+                    SupplierAmenitiesMap, Amenity, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, INVENTORY_ACTIVITY_TYPES
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping,SpaceMapping , InventoryType, ShortlistedSpaces
 from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer, SpaceMappingSerializer , \
         InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
@@ -57,7 +59,7 @@ import v0.permissions as v0_permissions
 import v0.utils as v0_utils
 from v0 import errors
 import v0.constants as v0_constants
-from v0.ui.campaign.models import Campaign, CampaignSocietyMapping
+from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignSerializer, CampaignSocietyMappingSerializer
 from v0.ui.account.serializers import BusinessInfoSerializer, BusinessAccountContactSerializer, AccountInfoSerializer
 from v0.ui.account.models import BusinessAccountContact, PriceMappingDefault, ContactDetails, AccountInfo
@@ -65,6 +67,11 @@ from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety
 from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer
 from v0.ui.organisation.models import Organisation, OrganisationMap
 from v0.ui.organisation.serializers import OrganisationMapNestedSerializer
+from v0.ui.location.models import State, City, CityArea, CitySubArea,
+from v0.ui.location.serializers import CitySubAreaSerializer, CityAreaSerializer, CitySerializer, StateSerializer
+from v0.ui.user.models import BaseUser, UserProfile, UserCities, UserAreas
+from v0.ui.user.serializers import UserProfileSerializer, UserSerializer, BaseUserSerializer, BaseUserUpdateSerializer
+
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 class GetBusinessTypesAPIView(APIView):
@@ -4088,10 +4095,10 @@ class ImportCorporateData(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-class InventoryActivityImage(APIView):
+class InventoryActivityImageAPIView(APIView):
     """
      @Android API. used to insert image paths from Android.
-     makes an entry into InventoryActivityImage table.
+     makes an entry into InventoryActivityImageAPIView table.
     """
     def post(self, request):
         """
@@ -4270,7 +4277,7 @@ class GenerateInventoryActivitySummary(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-class Amenity(APIView):
+class AmenityAPIView(APIView):
     """
     API to create an Amenity
     """

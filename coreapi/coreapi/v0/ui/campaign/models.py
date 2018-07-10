@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db import models
+from v0.ui.base.models import BaseModel
 from v0.ui.account.models import AccountInfo
 from v0.ui.inventory.models import SupplierTypeSociety, SocietyInventoryBooking
 
@@ -120,3 +122,15 @@ class CampaignSocietyMapping(models.Model):
     class Meta:
 
         db_table = 'campaign_society_mapping'
+
+class CampaignAssignment(BaseModel):
+    """
+    The model to store a particular campaign being assigned to a user
+    """
+    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_by')
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_to')
+    campaign = models.OneToOneField(ProposalInfo, unique=True)
+    # possible primary key should be campaign_id
+
+    class Meta:
+        db_table = 'campaign_assignment'
