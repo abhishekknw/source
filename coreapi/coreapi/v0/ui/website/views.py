@@ -39,7 +39,9 @@ from serializers import UIBusinessInfoSerializer, CampaignListSerializer, Campai
 from v0.serializers import BusinessTypesSerializer, BusinessSubTypesSerializer
 from v0.models import AdInventoryType, DurationType, SocietyTower, BusinessTypes, \
                     BusinessSubTypes, InventorySummary, FlatType, ProposalCenterMappingVersion, \
-                    SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion
+                    SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, GenericExportFileName, \
+                    BaseUser, InventoryActivityAssignment, ShortlistedInventoryPricingDetails, InventoryActivityImage, \
+                    SupplierAmenitiesMap, Amenity, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, INVENTORY_ACTIVITY_TYPES
 from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping,SpaceMapping , InventoryType, ShortlistedSpaces
 from v0.ui.website.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer, SpaceMappingSerializer , \
         InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,\
@@ -57,7 +59,7 @@ import v0.permissions as v0_permissions
 import v0.utils as v0_utils
 from v0 import errors
 import v0.constants as v0_constants
-from v0.ui.campaign.models import Campaign, CampaignSocietyMapping
+from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignSerializer, CampaignSocietyMappingSerializer
 from v0.ui.account.serializers import BusinessInfoSerializer, BusinessAccountContactSerializer, AccountInfoSerializer
 from v0.ui.account.models import BusinessAccountContact, PriceMappingDefault, ContactDetails, AccountInfo
@@ -65,6 +67,11 @@ from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety
 from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer
 from v0.ui.organisation.models import Organisation, OrganisationMap
 from v0.ui.organisation.serializers import OrganisationMapNestedSerializer
+from v0.ui.location.models import State, City, CityArea, CitySubArea,
+from v0.ui.location.serializers import CitySubAreaSerializer, CityAreaSerializer, CitySerializer, StateSerializer
+from v0.ui.user.models import BaseUser, UserProfile, UserCities, UserAreas
+from v0.ui.user.serializers import UserProfileSerializer, UserSerializer, BaseUserSerializer, BaseUserUpdateSerializer
+
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 class GetBusinessTypesAPIView(APIView):
@@ -1165,7 +1172,7 @@ class FilteredSuppliers(APIView):
 
             # cannot be handled  under specific society filters because it involves operation of two columns in database which cannot be generalized to a query.
             # To get business name
-            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
             organisation_name = proposal.account.organisation.name
 
             # get the right model and content_type
@@ -1212,7 +1219,7 @@ class FilteredSuppliers(APIView):
                 #     inventory_type_query_suppliers = cache.get(cache_key)
                 # else:
                 #
-                inventory_type_query_suppliers = set(list(models.InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
+                inventory_type_query_suppliers = set(list(InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
                 # cache.set(cache_key, inventory_type_query_suppliers)
 
             # if inventory query was non zero in length, set final_suppliers_id_list to inventory_type_query_suppliers.
@@ -2177,10 +2184,10 @@ class ImportSocietyData(APIView):
 
                         state_name = v0_constants.state_name
                         state_code = v0_constants.state_code
-                        state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
-                        city_object = models.City.objects.get(city_code=data['city_code'], state_code=state_object)
-                        area_object = models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
-                        subarea_object = models.CitySubArea.objects.get(subarea_code=data['subarea_code'],area_code=area_object)
+                        state_object = State.objects.get(state_name=state_name, state_code=state_code)
+                        city_object = City.objects.get(city_code=data['city_code'], state_code=state_object)
+                        area_object = CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
+                        subarea_object = CitySubArea.objects.get(subarea_code=data['subarea_code'],area_code=area_object)
                         # make the data needed to make supplier_id
                         supplier_id_data = {
                             'city_code': data['city_code'],
@@ -2273,7 +2280,7 @@ class ImportSupplierDataFromSheet(APIView):
             # will store all the info of society
             result = {}
             supplier_id_per_row = {}
-            state_instance = models.State.objects.get(state_code=state_code)
+            state_instance = State.objects.get(state_code=state_code)
 
             # put debugging information here
             invalid_rows_detail['detail'] = {}
@@ -2304,21 +2311,21 @@ class ImportSupplierDataFromSheet(APIView):
                     continue
 
                 city_code = row_dict['city_code'].strip()
-                city_instance, is_created = models.City.objects.get_or_create(city_code=city_code, state_code=state_instance)
+                city_instance, is_created = City.objects.get_or_create(city_code=city_code, state_code=state_instance)
                 city_instance.city_name = row_dict['city']
                 city_instance.save()
                 if is_created:
                     new_cities_created.append((city_code, city_instance.city_name))
 
                 area_code = row_dict['area_code'].strip()
-                area_instance,  is_created = models.CityArea.objects.get_or_create(area_code=area_code, city_code=city_instance)
+                area_instance,  is_created = CityArea.objects.get_or_create(area_code=area_code, city_code=city_instance)
                 area_instance.label = row_dict['area']
                 area_instance.save()
                 if is_created:
                     new_areas_created.append((area_code, area_instance.label))
 
                 subarea_code = str(row_dict['sub_area_code']).strip()
-                sub_area_instance, is_created = models.CitySubArea.objects.get_or_create(subarea_code=subarea_code, area_code=area_instance)
+                sub_area_instance, is_created = CitySubArea.objects.get_or_create(subarea_code=subarea_code, area_code=area_instance)
                 sub_area_instance.subarea_name = row_dict['sub_area']
                 sub_area_instance.save()
                 if is_created:
@@ -2555,7 +2562,7 @@ class ImportSupplierData(APIView):
             website_utils.upload_to_amazon(file_name, my_file)
 
             # fetch proposal instance and change it's status to 'finalized'.
-            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
             proposal.campaign_state = v0_constants.proposal_finalized
             proposal.save()
 
@@ -2649,7 +2656,7 @@ class CreateInitialProposal(APIView):
                 account_id = account_id
 
                 # create a unique proposal id
-                proposal_data['proposal_id'] = website_utils.get_generic_id([models.Organisation.objects.get(pk=organisation_id).name, models.AccountInfo.objects.get(pk=account_id).name])
+                proposal_data['proposal_id'] = website_utils.get_generic_id([Organisation.objects.get(pk=organisation_id).name, AccountInfo.objects.get(pk=account_id).name])
 
                 # get the account object. required for creating the proposal
                 account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
@@ -2748,7 +2755,7 @@ class CreateFinalProposal(APIView):
                 'supplier_code': supplier_type_code
             }
             status = request.data['status']
-            obj, is_created = models.ShortlistedSpaces.objects.get_or_create(**data)
+            obj, is_created = ShortlistedSpaces.objects.get_or_create(**data)
             obj.status = status
             obj.save()
             return ui_utils.handle_response(class_name, data='success', success=True)
@@ -2899,7 +2906,7 @@ class ProposalViewSet(viewsets.ViewSet):
         try:
             # can't use distinct() to return only unique proposal_id's because .distinct('proposal') is not supported
             # for MySql
-            file_objects = models.GenericExportFileName.objects.select_related('proposal', 'user').filter(proposal__invoice_number__isnull=False, is_exported=False).order_by('-proposal__created_on')
+            file_objects = GenericExportFileName.objects.select_related('proposal', 'user').filter(proposal__invoice_number__isnull=False, is_exported=False).order_by('-proposal__created_on')
 
             # we need to make a unique list where proposal_id do not repeat.
             seen = set()
@@ -2970,7 +2977,7 @@ class ProposalViewSet(viewsets.ViewSet):
 
             # update center's radius here. This is being updated so that when next time get_spaces is called, radius is reflected in front end
             if center_id:
-                instance = models.ProposalCenterMapping.objects.get(id=int(center_id))
+                instance = ProposalCenterMapping.objects.get(id=int(center_id))
                 instance.radius = float(radius)
                 instance.save()
 
@@ -3476,7 +3483,7 @@ class Business(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         try:
-            master_user = models.BaseUser.objects.get(id=8)
+            master_user = BaseUser.objects.get(id=8)
             result = AccountInfo.objects.get_permission(user=master_user)
             # result = AccountInfo.objects.filter_permission(user=master_user)
             serializer = v0_serializers.AccountSerializer(result)
@@ -3522,9 +3529,9 @@ class ProposalVersion(APIView):
         class_name = self.__class__.__name__
         try:
             user = request.user
-            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
-            account = models.AccountInfo.objects.get(account_id=proposal.account.account_id)
-            business = models.Organisation.objects.get(organisation_id=account.organisation.organisation_id)
+            proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
+            account = AccountInfo.objects.get(account_id=proposal.account.account_id)
+            business = Organisation.objects.get(organisation_id=account.organisation.organisation_id)
 
             # if you don't provide this value, No proposal version is created.
             is_proposal_version_created = request.data['is_proposal_version_created'] if request.data.get('is_proposal_version_created') else False
@@ -3639,7 +3646,7 @@ class AssignCampaign(APIView):
                 return ui_utils.handle_response(class_name, data='You must provide a user to which this campaign will be assigned')
 
             # fetch BaseUser object.
-            assigned_to = models.BaseUser.objects.get(id=request.data['to'])
+            assigned_to = BaseUser.objects.get(id=request.data['to'])
 
             # fetch ProposalInfo object.
             proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
@@ -3651,7 +3658,7 @@ class AssignCampaign(APIView):
             # todo: check for dates also. you should not assign a past campaign to any user. left for later
 
             # create the object.
-            instance, is_created = models.CampaignAssignment.objects.get_or_create(campaign=proposal)
+            instance, is_created = CampaignAssignment.objects.get_or_create(campaign=proposal)
             instance.assigned_by = assigned_by
             instance.assigned_to = assigned_to
             instance.save()
@@ -3704,9 +3711,9 @@ class AssignCampaign(APIView):
             user = request.user
 
             if user.is_superuser:
-                assigned_objects = models.CampaignAssignment.objects.all()
+                assigned_objects = CampaignAssignment.objects.all()
             else:
-                assigned_objects = models.CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
+                assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
             campaigns = []
             # check each one of them weather they are campaign or not
             for assign_object in assigned_objects:
@@ -3751,7 +3758,7 @@ class CampaignInventory(APIView):
         class_name = self.__class__.__name__
         # todo: reduce the time taken for this API. currently it takes 15ms to fetch data which is too much.
         try:
-            proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
+            proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
 
             response = website_utils.is_campaign(proposal)
             if not response.data['status']:
@@ -3781,7 +3788,7 @@ class CampaignInventory(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
+            proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
 
             response = website_utils.is_campaign(proposal)
             if not response.data['status']:
@@ -3824,7 +3831,7 @@ class CampaignSuppliersInventoryList(APIView):
             assigned_to = request.query_params.get('assigned_to')
             proposal_id = request.query_params.get('proposal_id')
             do_not_query_by_date = request.query_params.get('do_not_query_by_date')
-            all_users = models.BaseUser.objects.all().values('id', 'username')
+            all_users = BaseUser.objects.all().values('id', 'username')
             user_map = {detail['id']: detail['username'] for detail in all_users}
             shortlisted_supplier_id_set = set()
 
@@ -3844,7 +3851,7 @@ class CampaignSuppliersInventoryList(APIView):
             # cache_key = v0_utils.create_cache_key(class_name, assigned_date_range_query, proposal_query, assigned_to_query)
 
             # we do a huge query to fetch everything we need at once.
-            inv_act_assignment_objects = models.InventoryActivityAssignment.objects.\
+            inv_act_assignment_objects = InventoryActivityAssignment.objects.\
                 select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces').\
                 filter(assigned_date_range_query, proposal_query, assigned_to_query).values(
@@ -3887,7 +3894,7 @@ class ProposalToCampaign(APIView):
         class_name = self.__class__.__name__
         try:
 
-            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
 
             if not proposal.invoice_number:
                 return ui_utils.handle_response(class_name, data=errors.CAMPAIGN_NO_INVOICE_ERROR, request=request)
@@ -3997,7 +4004,7 @@ class CampaignToProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            proposal = models.ProposalInfo.objects.get(proposal_id=campaign_id)
+            proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
 
             response = website_utils.is_campaign(proposal)
             if not response.data['status']:
@@ -4006,8 +4013,8 @@ class CampaignToProposal(APIView):
             proposal.campaign_state = v0_constants.proposal_not_converted_to_campaign
             proposal.save()
 
-            current_assigned_inventories = models.ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=campaign_id)
-            models.InventoryActivityAssignment.objects.filter(inventory_activity__shortlisted_inventory_details__in=current_assigned_inventories).delete()
+            current_assigned_inventories = ShortlistedInventoryPricingDetails.objects.select_related('shortlisted_spaces').filter(shortlisted_spaces__proposal_id=campaign_id)
+            InventoryActivityAssignment.objects.filter(inventory_activity__shortlisted_inventory_details__in=current_assigned_inventories).delete()
 
             return ui_utils.handle_response(class_name, data=errors.REVERT_CAMPAIGN_TO_PROPOSAL.format(campaign_id, v0_constants.proposal_not_converted_to_campaign), success=True)
         except Exception as e:
@@ -4045,10 +4052,10 @@ class ImportCorporateData(APIView):
                                 data[key] = row[index]
                         state_name = v0_constants.state_name
                         state_code = v0_constants.state_code
-                        state_object = models.State.objects.get(state_name=state_name, state_code=state_code)
-                        city_object = models.City.objects.get(city_code=data['city_code'], state_code=state_object)
-                        area_object = models.CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
-                        subarea_object = models.CitySubArea.objects.get(subarea_code=data['subarea_code'],area_code=area_object)
+                        state_object = State.objects.get(state_name=state_name, state_code=state_code)
+                        city_object = City.objects.get(city_code=data['city_code'], state_code=state_object)
+                        area_object = CityArea.objects.get(area_code=data['area_code'], city_code=city_object)
+                        subarea_object = CitySubArea.objects.get(subarea_code=data['subarea_code'],area_code=area_object)
                         # make the data needed to make supplier_id
                         supplier_id_data = {
                             'city_code': data['city_code'],
@@ -4088,10 +4095,10 @@ class ImportCorporateData(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-class InventoryActivityImage(APIView):
+class InventoryActivityImageAPIView(APIView):
     """
      @Android API. used to insert image paths from Android.
-     makes an entry into InventoryActivityImage table.
+     makes an entry into InventoryActivityImageAPIView table.
     """
     def post(self, request):
         """
@@ -4103,7 +4110,7 @@ class InventoryActivityImage(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            shortlisted_inventory_detail_instance = models.ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_detail_id'])
+            shortlisted_inventory_detail_instance = ShortlistedInventoryPricingDetails.objects.get(id=request.data['shortlisted_inventory_detail_id'])
             activity_date = request.data['activity_date']
             activity_type = request.data['activity_type']
             activity_by = long(request.data['activity_by'])
@@ -4116,27 +4123,27 @@ class InventoryActivityImage(APIView):
             else:
                 date_query = Q(reassigned_activity_date=ui_utils.get_aware_datetime_from_string(activity_date))
 
-            user = models.BaseUser.objects.get(id=activity_by)
+            user = BaseUser.objects.get(id=activity_by)
 
             # they can send all the garbage in activity_type. we need to check if it's valid.
-            valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
+            valid_activity_types = [ac_type[0] for ac_type in INVENTORY_ACTIVITY_TYPES]
 
             if activity_type not in valid_activity_types:
                 return ui_utils.handle_response(class_name, data=errors.INVALID_ACTIVITY_TYPE_ERROR.format(activity_type))
 
             # get the required inventory activity assignment instance.
-            inventory_activity_assignment_instance = models.InventoryActivityAssignment.objects.get(activity_date=activity_date, inventory_activity__shortlisted_inventory_details=shortlisted_inventory_detail_instance, inventory_activity__activity_type=activity_type, assigned_to=assigned_to)
+            inventory_activity_assignment_instance = InventoryActivityAssignment.objects.get(activity_date=activity_date, inventory_activity__shortlisted_inventory_details=shortlisted_inventory_detail_instance, inventory_activity__activity_type=activity_type, assigned_to=assigned_to)
 
             # if it's not superuser and it's not assigned to take the image
             if (not user.is_superuser) and (not inventory_activity_assignment_instance.assigned_to_id == activity_by):
                 return ui_utils.handle_response(class_name, data=errors.NO_INVENTORY_ACTIVITY_ASSIGNMENT_ERROR)
 
             # image path shall be unique
-            instance, is_created = models.InventoryActivityImage.objects.get_or_create(image_path=request.data['image_path'])
+            instance, is_created = InventoryActivityImage.objects.get_or_create(image_path=request.data['image_path'])
             instance.inventory_activity_assignment = inventory_activity_assignment_instance
             instance.comment = request.data['comment']
             instance.actual_activity_date = actual_activity_date
-            instance.activity_by = models.BaseUser.objects.get(id=activity_by)
+            instance.activity_by = BaseUser.objects.get(id=activity_by)
             instance.latitude = request.data['latitude']
             instance.longitude = request.data['longitude']
             instance.save()
@@ -4159,7 +4166,7 @@ class InventoryActivityImage(APIView):
         class_name = self.__class__.__name__
         try:
             pk = request.data['id']
-            models.InventoryActivityImage.objects.get(pk=pk).delete()
+            InventoryActivityImage.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data=pk, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -4247,7 +4254,7 @@ class GenerateInventoryActivitySummary(APIView):
         class_name = self.__class__.__name__
         try:
             proposal_id = request.query_params['proposal_id']
-            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
 
             data = {}
 
@@ -4270,7 +4277,7 @@ class GenerateInventoryActivitySummary(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-class Amenity(APIView):
+class AmenityAPIView(APIView):
     """
     API to create an Amenity
     """
@@ -4291,7 +4298,7 @@ class Amenity(APIView):
             if code not in v0_constants.valid_amenities.keys():
                 return ui_utils.handle_response(class_name, data=errors.INVALID_AMENITY_CODE_ERROR.format(code))
 
-            amenity, is_created = models.Amenity.objects.get_or_create(code=code)
+            amenity, is_created = Amenity.objects.get_or_create(code=code)
             amenity.name = name
             amenity.save()
 
@@ -4315,7 +4322,7 @@ class GetAllAmenities(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            amenities = models.Amenity.objects.all()
+            amenities = Amenity.objects.all()
             serializer = website_serializers.AmenitySerializer(amenities, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -4342,7 +4349,7 @@ class SupplierAmenity(APIView):
                 return response
             content_type = response.data['data']
 
-            amenities = models.SupplierAmenitiesMap.objects.filter(object_id=request.query_params['supplier_id'], content_type=content_type)
+            amenities = SupplierAmenitiesMap.objects.filter(object_id=request.query_params['supplier_id'], content_type=content_type)
             serializer = website_serializers.SupplierAmenitiesMapSerializer(amenities, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -4396,7 +4403,7 @@ class BulkInsertInventoryActivityImage(APIView):
             inv_image_objects = []  # inv act image objects will be stored here for bulk create
 
             # they can send all the garbage in activity_type. we need to check if it's valid.
-            valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
+            valid_activity_types = [ac_type[0] for ac_type in INVENTORY_ACTIVITY_TYPES]
 
             # this loop makes inv_act_assignment_to_image_data_map which maps a tuple of sid, act_date, act_type to
             # image data this is required later for creation of inv act image objects.
@@ -4404,7 +4411,7 @@ class BulkInsertInventoryActivityImage(APIView):
             inv_image_data = request.data
 
             # pull out all image paths for these assignment objects
-            database_image_paths = models.InventoryActivityImage.objects.all().values_list('image_path', flat=True)
+            database_image_paths = InventoryActivityImage.objects.all().values_list('image_path', flat=True)
 
             # to reduce checking of certain image_path in the list above, instead create a dict and map image_paths to some
             # value like True. it's faster to check for this image_path in the dict rather in the list
@@ -4451,7 +4458,7 @@ class BulkInsertInventoryActivityImage(APIView):
                 return  ui_utils.handle_response(class_name, data=errors.ALL_IMAGES_SYNCED_UP_MESSAGE, success=True)
 
             # fetch only those objects which have these fields in the list and assigned to the incoming user
-            inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
+            inv_act_assignment_objects = InventoryActivityAssignment.objects. \
                 filter(
                 inventory_activity__shortlisted_inventory_details__id__in=shortlisted_inv_ids,
                 inventory_activity__activity_type__in=act_types,
@@ -4475,9 +4482,9 @@ class BulkInsertInventoryActivityImage(APIView):
                     # add two more fields to complete image_data dict
                     image_data['inventory_activity_assignment'] = inv_act_assign
                     image_data['activity_by'] = image_taken_by
-                    inv_image_objects.append(models.InventoryActivityImage(**image_data))
+                    inv_image_objects.append(InventoryActivityImage(**image_data))
 
-            models.InventoryActivityImage.objects.bulk_create(inv_image_objects)
+            InventoryActivityImage.objects.bulk_create(inv_image_objects)
             return ui_utils.handle_response(class_name, data='success. {0} objects created'.format(len(inv_image_objects)), success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -4511,8 +4518,8 @@ class InventoryActivityAssignment(APIView):
                 assigned_to_users_ids.append(int(data['assigned_to']))
 
             # form a map from id --> object. it's helps in fetching objects on basis of ids.
-            shortlisted_inv_objects_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(shortlisted_inv_ids)
-            assigned_to_users_objects_map = models.BaseUser.objects.in_bulk(assigned_to_users_ids)
+            shortlisted_inv_objects_map = ShortlistedInventoryPricingDetails.objects.in_bulk(shortlisted_inv_ids)
+            assigned_to_users_objects_map = BaseUser.objects.in_bulk(assigned_to_users_ids)
 
             # inv_act_assign objects container
             inv_assignment_objects = []
@@ -4521,7 +4528,7 @@ class InventoryActivityAssignment(APIView):
                 shortlisted_inv_id = int(data['shortlisted_inventory_id'])
                 assigned_to_user_id = int(data['assigned_to'])
 
-                instance, is_created = models.InventoryActivityAssignment.objects.get_or_create(
+                instance, is_created = InventoryActivityAssignment.objects.get_or_create(
                     shortlisted_inventory_details=shortlisted_inv_objects_map[shortlisted_inv_id],
                     activity_type=data['activity_type'],
                     activity_date=data['activity_date']
@@ -4550,8 +4557,8 @@ class InventoryActivityAssignment(APIView):
             inv_act_assignment_id = request.data['inventory_activity_assignment_id']
             data = request.data.copy()
             data.pop('inventory_activity_assignment_id')
-            models.InventoryActivityAssignment.objects.filter(id=inv_act_assignment_id).update(**data)
-            instance = models.InventoryActivityAssignment.objects.get(id=inv_act_assignment_id)
+            InventoryActivityAssignment.objects.filter(id=inv_act_assignment_id).update(**data)
+            instance = InventoryActivityAssignment.objects.get(id=inv_act_assignment_id)
             return ui_utils.handle_response(class_name, data=model_to_dict(instance), success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -4565,7 +4572,7 @@ class InventoryActivityAssignment(APIView):
         class_name = self.__class__.__name__
         try:
             inv_act_assignment_id = request.query_params['inventory_activity_assignment_id']
-            inventory_activity_assignment_object = models.InventoryActivityAssignment.objects.get(id=inv_act_assignment_id)
+            inventory_activity_assignment_object = InventoryActivityAssignment.objects.get(id=inv_act_assignment_id)
             serializer = website_serializers.InventoryActivityAssignmentSerializerReadOnly(inventory_activity_assignment_object)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -4592,11 +4599,11 @@ class AssignInventoryActivityDateUsers(APIView):
             shortlisted_inventory_detail_ids = [long(sipd) for sipd in request.data['shortlisted_inventory_id_detail']]
             assignment_detail = request.data['assignment_detail']
 
-            shortlisted_inventory_detail_map = models.ShortlistedInventoryPricingDetails.objects.in_bulk(shortlisted_inventory_detail_ids)
+            shortlisted_inventory_detail_map = ShortlistedInventoryPricingDetails.objects.in_bulk(shortlisted_inventory_detail_ids)
             # they can send all the garbage in activity_type. we need to check if it's valid.
-            valid_activity_types = [ac_type[0] for ac_type in models.INVENTORY_ACTIVITY_TYPES]
+            valid_activity_types = [ac_type[0] for ac_type in INVENTORY_ACTIVITY_TYPES]
 
-            inventory_activity_objects = models.InventoryActivity.objects.filter(shortlisted_inventory_details__id__in=shortlisted_inventory_detail_ids)
+            inventory_activity_objects = InventoryActivity.objects.filter(shortlisted_inventory_details__id__in=shortlisted_inventory_detail_ids)
             # to reduce db hits, a map is created for InventoryActivity model where (shortlisted_inventory_detail_id, activity_type)
             # is keyed for inventoryActivity instance
             inventory_activity_objects_map = {}
@@ -4611,7 +4618,7 @@ class AssignInventoryActivityDateUsers(APIView):
             for assignment_data in assignment_detail:
                 for date, user in assignment_data['date_user_assignments'].iteritems():
                     users.add(long(user))
-            user_map = models.BaseUser.objects.in_bulk(users)
+            user_map = BaseUser.objects.in_bulk(users)
             inventory_activity_assignment_objects = []
 
             # now assign for each shortlisted inventory detail id
@@ -4626,17 +4633,17 @@ class AssignInventoryActivityDateUsers(APIView):
                         inventory_activity_instance = inventory_activity_objects_map[shortlisted_inv_detail_id, activity_type]
                     except KeyError:
                         # only create when above combo is not found
-                        inventory_activity_instance, is_created = models.InventoryActivity.objects.get_or_create(
+                        inventory_activity_instance, is_created = InventoryActivity.objects.get_or_create(
                             shortlisted_inventory_details = shortlisted_inventory_detail_map[shortlisted_inv_detail_id],
                             activity_type=activity_type
                         )
                     for date, user in assignment_data['date_user_assignments'].iteritems():
                         # if it's AUDIT, you keep on creating objects
-                        if inventory_activity_instance.activity_type == models.INVENTORY_ACTIVITY_TYPES[2][0]:
-                            inv_act_assignment, is_created = models.InventoryActivityAssignment.objects.get_or_create(inventory_activity=inventory_activity_instance, activity_date=ui_utils.get_aware_datetime_from_string(date))
+                        if inventory_activity_instance.activity_type == INVENTORY_ACTIVITY_TYPES[2][0]:
+                            inv_act_assignment, is_created = InventoryActivityAssignment.objects.get_or_create(inventory_activity=inventory_activity_instance, activity_date=ui_utils.get_aware_datetime_from_string(date))
                         else:
                             # if it's Release/Closure, you only create once instance against release.
-                            inv_act_assignment, is_created = models.InventoryActivityAssignment.objects.get_or_create(inventory_activity=inventory_activity_instance)
+                            inv_act_assignment, is_created = InventoryActivityAssignment.objects.get_or_create(inventory_activity=inventory_activity_instance)
                             inv_act_assignment.activity_date = ui_utils.get_aware_datetime_from_string(date)
 
                         inv_act_assignment.assigned_to = user_map[long(user)]
@@ -4668,8 +4675,8 @@ class ReassignInventoryActivityDateUsers(APIView):
             data = request.data.copy()
             inventory_activity_assignment_ids = [long(obj_id) for obj_id in data.keys()]
             user_ids = [long(detail['assigned_to']) for detail in data.values()]
-            inventory_activity_assignment_map = models.InventoryActivityAssignment.objects.in_bulk(inventory_activity_assignment_ids)
-            user_map = models.BaseUser.objects.in_bulk(user_ids)
+            inventory_activity_assignment_map = InventoryActivityAssignment.objects.in_bulk(inventory_activity_assignment_ids)
+            user_map = BaseUser.objects.in_bulk(user_ids)
             inventory_activity_assignment_objects = []
             for inventory_activity_assignment_id, detail in data.iteritems():
                 instance = inventory_activity_assignment_map[long(inventory_activity_assignment_id)]
@@ -4695,7 +4702,7 @@ class UserList(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            users = models.BaseUser.objects.all()
+            users = BaseUser.objects.all()
             user_serializer = website_serializers.BaseUserSerializer(users, many=True)
             return ui_utils.handle_response(class_name, data=user_serializer.data, success=True)
         except Exception as e:
@@ -4717,12 +4724,12 @@ class BulkDownloadImagesAmazon(APIView):
         class_name = self.__class__.__name__
         try:
             proposal_id = request.query_params['proposal_id']
-            proposal = models.ProposalInfo.objects.get(proposal_id=proposal_id)
+            proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
             response = website_utils.is_campaign(proposal)
             if not response.data['status']:
                 return response
             # fetch all images for this proposal_id
-            inventory_images = models.InventoryActivityImage.objects.filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id).values(
+            inventory_images = InventoryActivityImage.objects.filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_id).values(
                 'image_path', 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id',
                 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type'
             )
@@ -4862,9 +4869,9 @@ class ExportAllSupplierData(APIView):
                 supplier_ids.add(supplier_id)
                 instance_dict['supplier_id_breakup'] = supplier_id_breakup
 
-            city_instances = models.City.objects.filter(city_code__in=city_codes)
-            area_instances = models.CityArea.objects.filter(area_code__in=area_codes)
-            subarea_instances = models.CitySubArea.objects.filter(subarea_code__in=subarea_codes)
+            city_instances = City.objects.filter(city_code__in=city_codes)
+            area_instances = CityArea.objects.filter(area_code__in=area_codes)
+            subarea_instances = CitySubArea.objects.filter(subarea_code__in=subarea_codes)
 
             city_instance_map = {city.city_code: city for city in city_instances}
             area_instance_map = {area.area_code: area for area in area_instances}
@@ -5001,13 +5008,13 @@ class UploadInventoryActivityImageAmazon(APIView):
             inventory_name = request.data['inventory_name']
             inventory_activity_assignment_id = request.data['inventory_activity_assignment_id']
 
-            inventory_activity_assignment_instance = models.InventoryActivityAssignment.objects.get(pk=inventory_activity_assignment_id)
+            inventory_activity_assignment_instance = InventoryActivityAssignment.objects.get(pk=inventory_activity_assignment_id)
 
             file_name = supplier_name + '_' + inventory_name + '_' + activity_name + '_' + activity_date.replace('-', '_') + '_' + str(time.time()).replace('.', '_') + '.' + extension
             website_utils.upload_to_amazon(file_name, file_content=file, bucket_name=settings.ANDROID_BUCKET_NAME)
 
             # Now save the path
-            instance, is_created = models.InventoryActivityImage.objects.get_or_create(image_path=file_name)
+            instance, is_created = InventoryActivityImage.objects.get_or_create(image_path=file_name)
             instance.inventory_activity_assignment = inventory_activity_assignment_instance
             instance.actual_activity_date = activity_date
             instance.save()
@@ -5032,9 +5039,9 @@ class ContactViewSet(viewsets.ViewSet):
         try:
             object_id = request.query_params.get('object_id')
             if object_id:
-                instances = models.ContactDetails.objects.filter(object_id=object_id)
+                instances = ContactDetails.objects.filter(object_id=object_id)
             else:
-                instances = models.ContactDetails.objects.all()
+                instances = ContactDetails.objects.all()
             serializer = v0_serializers.ContactDetailsSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5065,7 +5072,7 @@ class ContactViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instance = models.ContactDetails.objects.get(pk=pk)
+            instance = ContactDetails.objects.get(pk=pk)
             serializer = v0_serializers.ContactDetailsSerializer(data=request.data, instance=instance)
             if serializer.is_valid():
                 serializer.save()
@@ -5090,10 +5097,10 @@ class ProfileViewSet(viewsets.ViewSet):
         try:
             organisation_id = request.query_params.get('organisation_id')
             if organisation_id:
-                org = models.Organisation.objects.get(organisation_id=organisation_id)
-                instances = models.Profile.objects.filter(organisation=org)
+                org = Organisation.objects.get(organisation_id=organisation_id)
+                instances = Profile.objects.filter(organisation=org)
             else:
-                instances = models.Profile.objects.all()
+                instances = Profile.objects.all()
             serializer = website_serializers.ProfileNestedSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5124,7 +5131,7 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instance = models.Profile.objects.get(pk=pk)
+            instance = Profile.objects.get(pk=pk)
             serializer = website_serializers.ProfileNestedSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5139,7 +5146,7 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            models.Profile.objects.get(pk=pk).delete()
+            Profile.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data=True, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5152,7 +5159,7 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instance = models.Profile.objects.get(pk=pk)
+            instance = Profile.objects.get(pk=pk)
             serializer = website_serializers.ProfileSimpleSerializer(data=request.data,instance=instance)
             if serializer.is_valid():
                 serializer.save()
@@ -5171,7 +5178,7 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instances = models.Profile.objects.filter(is_standard=True, organisation__category=models.ORGANIZATION_CATEGORY[0][0])
+            instances = Profile.objects.filter(is_standard=True, organisation__category=ORGANIZATION_CATEGORY[0][0])
             serializer = website_serializers.ProfileSimpleSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5194,9 +5201,9 @@ class OrganisationViewSet(viewsets.ViewSet):
         try:
             category = request.query_params.get('category')
             if category:
-                instances = models.Organisation.objects.filter_permission(user=request.user, category=category)
+                instances = Organisation.objects.filter_permission(user=request.user, category=category)
             else:
-                instances = models.Organisation.objects.filter_permission(user=request.user)
+                instances = Organisation.objects.filter_permission(user=request.user)
             serializer = website_serializers.OrganisationSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5209,7 +5216,7 @@ class OrganisationViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instance = models.Organisation.objects.get_permission(user=request.user, pk=pk)
+            instance = Organisation.objects.get_permission(user=request.user, pk=pk)
             serializer = website_serializers.OrganisationSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5243,7 +5250,7 @@ class OrganisationViewSet(viewsets.ViewSet):
 
         class_name = self.__class__.__name__
         try:
-            instance = models.Organisation.objects.get_permission(user=request.user, check_update_permissions=True, pk=pk)
+            instance = Organisation.objects.get_permission(user=request.user, check_update_permissions=True, pk=pk)
             serializer = website_serializers.OrganisationSerializer(data=request.data, instance=instance)
             if serializer.is_valid():
                 serializer.save()
@@ -5266,7 +5273,7 @@ class ContentTypeViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            valid_models = [models.Organisation, models.BaseUser, models.Profile, models.AccountInfo, models.ProposalInfo]
+            valid_models = [Organisation, BaseUser, Profile, AccountInfo, ProposalInfo]
             serializer = website_serializers.ContentTypeSerializer(ContentType.objects.get_for_models(*valid_models).values(), many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5301,8 +5308,8 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             # change this list if you want more models
-            valid_models = [models.Organisation, models.BaseUser, models.Profile, models.AccountInfo, models.ProposalInfo]
-            instances = models.ObjectLevelPermission.objects.filter(content_type__in= ContentType.objects.get_for_models(*valid_models).values())
+            valid_models = [Organisation, BaseUser, Profile, AccountInfo, ProposalInfo]
+            instances = ObjectLevelPermission.objects.filter(content_type__in= ContentType.objects.get_for_models(*valid_models).values())
             serializer = website_serializers.ObjectLevelPermissionSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5314,7 +5321,7 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instance = models.ObjectLevelPermission.objects.get(pk=pk)
+            instance = ObjectLevelPermission.objects.get(pk=pk)
             serializer = website_serializers.ObjectLevelPermissionSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5347,7 +5354,7 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instance = models.ObjectLevelPermission.objects.get(pk=pk)
+            instance = ObjectLevelPermission.objects.get(pk=pk)
             serializer = website_serializers.ObjectLevelPermissionSerializer(data=request.data, instance=instance)
             if serializer.is_valid():
                 serializer.save()
@@ -5370,7 +5377,7 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instances = models.GeneralUserPermission.objects.all()
+            instances = GeneralUserPermission.objects.all()
             serializer = website_serializers.GeneralUserPermissionSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5385,7 +5392,7 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instance = models.GeneralUserPermission.objects.get(pk=pk)
+            instance = GeneralUserPermission.objects.get(pk=pk)
             serializer = website_serializers.GeneralUserPermissionSerializer(instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5417,7 +5424,7 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instance = models.GeneralUserPermission.objects.get(pk=pk)
+            instance = GeneralUserPermission.objects.get(pk=pk)
             serializer = website_serializers.GeneralUserPermissionSerializer(data=request.data, instance=instance)
             if serializer.is_valid():
                 serializer.save()
@@ -5439,7 +5446,7 @@ class CloneProfile(APIView):
         class_name = self.__class__.__name__
         try:
             profile_pk = request.data['clone_from_profile_id']
-            profile_instance = models.Profile.objects.get(pk=profile_pk)
+            profile_instance = Profile.objects.get(pk=profile_pk)
             new_organisation_id = request.data['new_organisation_id']
             new_profile_name = request.data['new_name']
 
@@ -5454,13 +5461,13 @@ class CloneProfile(APIView):
                 new_profile_instance = serializer.save()
                 # copy all object level permissions to new profile. Running .save() call in a loop is okay here
                 # as there won't be much objects per profile in our system
-                for object_level_permission in models.ObjectLevelPermission.objects.filter(profile=profile_instance):
+                for object_level_permission in ObjectLevelPermission.objects.filter(profile=profile_instance):
                     object_level_permission.pk = None
                     object_level_permission.profile = new_profile_instance
                     object_level_permission.save()
                 # copy all general user permissions to new profile. Running .save() call in a loop is okay here
                 # as there won't be much objects per profile in our system here.
-                for general_user_permission in models.GeneralUserPermission.objects.filter(profile=profile_instance):
+                for general_user_permission in GeneralUserPermission.objects.filter(profile=profile_instance):
                     general_user_permission.pk = None
                     general_user_permission.profile = new_profile_instance
                     general_user_permission.save()
@@ -5488,7 +5495,7 @@ class OrganisationMapViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             source_organisation_id = request.query_params.get('source_organisation_id')
-            instance = models.Organisation.objects.get(pk=source_organisation_id)
+            instance = Organisation.objects.get(pk=source_organisation_id)
             if source_organisation_id:
                 instances = OrganisationMap.objects.filter(Q(first_organisation=instance) or Q(second_organisation=instance))
             else:
@@ -5507,9 +5514,9 @@ class OrganisationMapViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            first_organisation = models.Organisation.objects.get(organisation_id=request.data['first_organisation_id'])
-            second_organisation = models.Organisation.objects.get(organisation_id=request.data['second_organisation_id'])
-            instance, is_created = models.OrganisationMap.objects.get_or_create(first_organisation=first_organisation,second_organisation=second_organisation)
+            first_organisation = Organisation.objects.get(organisation_id=request.data['first_organisation_id'])
+            second_organisation = Organisation.objects.get(organisation_id=request.data['second_organisation_id'])
+            instance, is_created = OrganisationMap.objects.get_or_create(first_organisation=first_organisation,second_organisation=second_organisation)
             serializer = OrganisationMapNestedSerializer(instance=instance)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5529,7 +5536,7 @@ class AccountViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             organisation_id = request.query_params['organisation_id']
-            accounts = models.AccountInfo.objects.filter_permission(user=request.user, organisation=models.Organisation.objects.get(pk=organisation_id))
+            accounts = AccountInfo.objects.filter_permission(user=request.user, organisation=Organisation.objects.get(pk=organisation_id))
             serializer = AccountInfoSerializer(accounts, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5544,9 +5551,9 @@ class AccountViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            account = models.AccountInfo.objects.get_permission(user=request.user, pk=pk)
+            account = AccountInfo.objects.get_permission(user=request.user, pk=pk)
             account_serializer = AccountInfoSerializer(account)
-            contacts = models.ContactDetails.objects.filter(object_id=pk)
+            contacts = ContactDetails.objects.filter(object_id=pk)
             contact_serializer = v0_serializers.ContactDetailsSerializer(contacts, many=True)
             data = {
                 'account' : account_serializer.data,
@@ -5566,7 +5573,7 @@ class AccountViewSet(viewsets.ViewSet):
         try:
             data = request.data.copy()
             data['user'] = request.user.pk
-            organisation_name = models.Organisation.objects.get(pk=data['organisation']).name
+            organisation_name = Organisation.objects.get(pk=data['organisation']).name
             data['account_id'] = website_utils.get_generic_id([organisation_name, data['name']])
             serializer = AccountInfoSerializer(data=data)
             if serializer.is_valid():
@@ -5589,7 +5596,7 @@ class AccountViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             data = request.data.copy()
-            account = models.AccountInfo.objects.get_permission(user=request.user, check_update_permissions=True, pk=pk)
+            account = AccountInfo.objects.get_permission(user=request.user, check_update_permissions=True, pk=pk)
             serializer = AccountInfoSerializer(data=data, instance=account)
             if serializer.is_valid():
                 serializer.save()
@@ -5633,7 +5640,7 @@ class RoleViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             organisation_id = request.query_params['organisation_id']
-            roles = models.Role.objects.filter(organisation=models.Organisation.objects.get(pk=organisation_id))
+            roles = Role.objects.filter(organisation=Organisation.objects.get(pk=organisation_id))
             serializer = website_serializers.RoleSerializer(roles, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -5652,10 +5659,10 @@ class RoleHierarchyViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             data = request.data.copy()
-            child_instance = models.Role.objects.get(pk=data['child'])
-            old_role_hierarchy_objects = models.RoleHierarchy.objects.filter(child=data['child'])
+            child_instance = Role.objects.get(pk=data['child'])
+            old_role_hierarchy_objects = RoleHierarchy.objects.filter(child=data['child'])
             old_role_hierarchy_objects.delete()
-            new_role_hierachy_objects = models.RoleHierarchy.objects.filter(child=data['parent'])
+            new_role_hierachy_objects = RoleHierarchy.objects.filter(child=data['parent'])
             role_objects = []
             for instance in new_role_hierachy_objects:
                 role_data = {
@@ -5663,13 +5670,13 @@ class RoleHierarchyViewSet(viewsets.ViewSet):
                     'child' : child_instance,
                     'depth' : instance.depth + 1
                 }
-                role_objects.append(models.RoleHierarchy(**role_data))
+                role_objects.append(RoleHierarchy(**role_data))
             role_data = {
             'parent' : child_instance,
             'child'  : child_instance,
             }
-            role_objects.append(models.RoleHierarchy(**role_data))
-            models.RoleHierarchy.objects.bulk_create(role_objects)
+            role_objects.append(RoleHierarchy(**role_data))
+            RoleHierarchy.objects.bulk_create(role_objects)
             return Response(status=200)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5717,13 +5724,13 @@ class DashBoardViewSet(viewsets.ViewSet):
             campaign_id = request.query_params.get('campaign_id',None)
             query_value = request.query_params.get('query',None)
             if v0_constants.query_status['supplier_code'] == query_value:
-                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+                result = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
                     values('supplier_code').annotate(total=Count('object_id'))
             if v0_constants.query_status['booking_status'] == query_value:
-                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+                result = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
                     values('booking_status').annotate(total=Count('object_id'))
             if v0_constants.query_status['phase'] == query_value:
-                result = models.ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+                result = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
                     values('supplier_code','phase','booking_status').annotate(total=Count('object_id'))
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
@@ -5756,21 +5763,21 @@ class DashBoardViewSet(viewsets.ViewSet):
             if campaign_status == v0_constants.campaign_status['ongoing_campaigns']:
                 query = Q(proposal__tentative_start_date__lte=current_date) & Q(proposal__tentative_end_date__gte=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(perm_query,query).values('supplier_code', 'proposal__name','proposal_id','center__latitude','center__longitude'). \
+                proposal_data = ShortlistedSpaces.objects.filter(perm_query,query).values('supplier_code', 'proposal__name','proposal_id','center__latitude','center__longitude'). \
                     annotate(total=Count('object_id'))
                 proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
                 query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id','center__latitude','center__longitude'). \
+                proposal_data = ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id','center__latitude','center__longitude'). \
                     annotate(total=Count('object_id'))
                 proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
                 query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
 
-                proposal_data = models.ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id','center__latitude','center__longitude'). \
+                proposal_data = ShortlistedSpaces.objects.filter(query,perm_query).values('supplier_code','proposal__name','proposal_id','center__latitude','center__longitude'). \
                     annotate(total=Count('object_id'))
                 proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
@@ -5799,10 +5806,10 @@ class DashBoardViewSet(viewsets.ViewSet):
             current_date = timezone.now()
             object_id_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
 
-            shortlisted_suppliers = models.ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id)
+            shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id)
             shortlisted_suppliers_id_list = [supplier.object_id for supplier in shortlisted_suppliers]
 
-            suppliers_instances = models.SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
+            suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
             supplier_serializer = v0_serializers.SupplierTypeSocietySerializer(suppliers_instances,many=True)
             suppliers = supplier_serializer.data
 
@@ -5811,7 +5818,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             leads = website_utils.get_campaign_leads(campaign_id)
             inv_data_objects_list = website_utils.get_campaign_inv_data(campaign_id)
             # inv_data_objects_list = {inv['object_id']:inv for inv in inv_data}
-            ongoing_suppliers = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+            ongoing_suppliers = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                     'inventory_activity_assignment__inventory_activity','inventory_activity_assignment__inventory_activity',
                                     'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
                                     'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
@@ -5823,7 +5830,7 @@ class DashBoardViewSet(viewsets.ViewSet):
 
             ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
 
-            completed_suppliers = models.ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,is_completed=True).values('object_id')
+            completed_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,is_completed=True).values('object_id')
 
             completed_supplier_id_list = [supplier['object_id'] for supplier in completed_suppliers]
 
@@ -5934,7 +5941,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             result = website_utils.get_activity_data_by_values(campaign_id, content_type_id)
 
             supplier_ids = {supplier['object_id'] for supplier in result}
-            supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+            supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
             serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects,many=True)
             suppliers = serializer.data
             supplier_objects_id_map = {supplier['supplier_id']:supplier for supplier in suppliers}
@@ -5970,8 +5977,8 @@ class DashBoardViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id',None)
-            supplier_id_list = models.ShortlistedSpaces.objects.filter(proposal=campaign_id).values_list('object_id')
-            suppliers = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
+            supplier_id_list = ShortlistedSpaces.objects.filter(proposal=campaign_id).values_list('object_id')
+            suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
             serializer = v0_serializers.SupplierTypeSocietySerializer(suppliers, many=True)
             filters = website_utils.get_filters_by_campaign(campaign_id)
             data = {
@@ -6008,14 +6015,14 @@ class DashBoardViewSet(viewsets.ViewSet):
         try:
             campaign_id = request.query_params.get('campaign_id', None)
 
-            leads = models.Leads.objects.filter(campaign__proposal_id=campaign_id). \
+            leads = Leads.objects.filter(campaign__proposal_id=campaign_id). \
                     values('object_id','campaign','is_interested'). \
                     annotate(total=Count('object_id'))
-            leads_by_date = models.Leads.objects.filter(campaign__proposal_id=campaign_id). \
+            leads_by_date = Leads.objects.filter(campaign__proposal_id=campaign_id). \
                 values('is_interested','created_at'). \
                 annotate(total=Count('created_at'))
-            supplier_ids_list = models.Leads.objects.filter(campaign__proposal_id=campaign_id).values('object_id').distinct()
-            supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids_list).values()
+            supplier_ids_list = Leads.objects.filter(campaign__proposal_id=campaign_id).values('object_id').distinct()
+            supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids_list).values()
 
             supplier_id_object_list = { supplier['supplier_id']:supplier for supplier in supplier_objects }
             supplier_data = {}
@@ -6059,10 +6066,10 @@ class DashBoardViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_list = request.data
-            leads = models.Leads.objects.filter(campaign__proposal_id__in=campaign_list). \
+            leads = Leads.objects.filter(campaign__proposal_id__in=campaign_list). \
                     values('campaign','is_interested'). \
                     annotate(total=Count('campaign'))
-            campaign_objects = models.ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
+            campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
             campaign_objects_list = { campaign['proposal_id']:campaign for campaign in campaign_objects }
             data = {}
             for campaign in leads:
@@ -6105,7 +6112,7 @@ class CampaignsAssignedInventoryCountApiView(APIView):
                     q1 = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignemnt__assigned_to=user)
                     q2 = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignemnt__assigned_to=user)
 
-            inv_act_assignment_objects = models.InventoryActivityAssignment.objects. \
+            inv_act_assignment_objects = InventoryActivityAssignment.objects. \
                 select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
                        'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal',
@@ -6117,7 +6124,7 @@ class CampaignsAssignedInventoryCountApiView(APIView):
                 values('activity_type', 'inventory', 'activity_date'). \
                 annotate(total=Count('id')). \
                 order_by('-activity_date')
-            inv_act_assignment_objects2 = models.InventoryActivityImage.objects. \
+            inv_act_assignment_objects2 = InventoryActivityImage.objects. \
                 select_related('inventory_activity_assignment', 'inventory_activity', 'inventory_activity__shortlisted_inventory_details',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal',
@@ -6174,7 +6181,7 @@ class GetAssignedIdImagesListApiView(APIView):
 
             inventory = request.query_params.get('inventory', None)
             inv_query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name = inventory)
-            all_users = models.BaseUser.objects.all().values('id', 'username')
+            all_users = BaseUser.objects.all().values('id', 'username')
             user_map = {detail['id']: detail['username'] for detail in all_users}
 
             query = Q()
@@ -6192,7 +6199,7 @@ class GetAssignedIdImagesListApiView(APIView):
             shortlisted_inv_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'
             supplier_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
 
-            inv_act_image_objects = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+            inv_act_image_objects = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                                                      'inventory_activity_assignment__inventory_activity',
                                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
                                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
@@ -6202,7 +6209,7 @@ class GetAssignedIdImagesListApiView(APIView):
 
 
             supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
-            supplier_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
+            supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
             serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects, many=True)
             suppliers = serializer.data
 
@@ -6233,8 +6240,8 @@ class convertDirectProposalToCampaign(APIView):
         try:
             proposal_data = request.data
             center_id = proposal_data['center_id']
-            proposal = models.ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
-            center = models.ProposalCenterMapping.objects.get(pk=center_id)
+            proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
+            center = ProposalCenterMapping.objects.get(pk=center_id)
 
             for supplier_code in proposal_data['center_data']:
                 response = website_utils.save_filters(center, supplier_code, proposal_data, proposal)
@@ -6271,7 +6278,7 @@ class proposalCenterMappingViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             proposal_id = request.query_params['proposal_id']
-            proposal_centers = models.ProposalCenterMapping.objects.filter(proposal=proposal_id)
+            proposal_centers = ProposalCenterMapping.objects.filter(proposal=proposal_id)
             serializer = website_serializers.ProposalCenterMappingSerializer(proposal_centers, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -6290,8 +6297,8 @@ class addSupplierDirectToCampaign(APIView):
         class_name = self.__class__.__name__
         try:
             campaign_data = request.data
-            center = models.ProposalCenterMapping.objects.filter(proposal=campaign_data['campaign_id'])[0]
-            campaign = models.ProposalInfo.objects.get(pk=campaign_data['campaign_id'])
+            center = ProposalCenterMapping.objects.filter(proposal=campaign_data['campaign_id'])[0]
+            campaign = ProposalInfo.objects.get(pk=campaign_data['campaign_id'])
 
             for supplier_code in campaign_data['center_data']:
                 response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, campaign_data, campaign)
@@ -6317,16 +6324,16 @@ class LeadAliasViewSet(viewsets.ViewSet):
         try:
             data = request.data
             alias_list = []
-            campaign_instance = models.ProposalInfo.objects.get(proposal_id=data['campaign'])
+            campaign_instance = ProposalInfo.objects.get(proposal_id=data['campaign'])
             for item in data['alias_data']:
                 alias_data = {
                     'campaign' : campaign_instance,
                     'original_name' : item['original_name'],
                     'alias' : item['alias']
                 }
-                alias_list.append(models.LeadAlias(**alias_data))
-            models.LeadAlias.objects.filter(campaign=campaign_instance).delete()
-            models.LeadAlias.objects.bulk_create(alias_list)
+                alias_list.append(LeadAlias(**alias_data))
+            LeadAlias.objects.filter(campaign=campaign_instance).delete()
+            LeadAlias.objects.bulk_create(alias_list)
             return ui_utils.handle_response(class_name, data={}, success=True)
 
         except Exception as e:
@@ -6341,8 +6348,8 @@ class LeadAliasViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
-            campaign_instance = models.ProposalInfo.objects.get(proposal_id=campaign_id)
-            data = models.LeadAlias.objects.filter(campaign=campaign_instance)
+            campaign_instance = ProposalInfo.objects.get(proposal_id=campaign_id)
+            data = LeadAlias.objects.filter(campaign=campaign_instance)
             serializer = website_serializers.LeadAliasSerializer(data, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -6361,9 +6368,9 @@ class LeadsViewSet(viewsets.ViewSet):
                 q = Q(campaign__proposal_id=campaign_id) & Q(object_id=supplier_id)
             else:
                 q = Q(campaign__proposal_id=campaign_id)
-            lead_alias = models.LeadAlias.objects.filter(campaign__proposal_id=campaign_id)
+            lead_alias = LeadAlias.objects.filter(campaign__proposal_id=campaign_id)
             serializer_lead_alias = website_serializers.LeadAliasSerializer(lead_alias, many=True)
-            leads = models.Leads.objects.filter(q)
+            leads = Leads.objects.filter(q)
             serializer_leads = website_serializers.LeadsSerializer(leads, many=True)
             data = {
                 'alias_data' : serializer_lead_alias.data,
@@ -6407,7 +6414,7 @@ class LeadsViewSet(viewsets.ViewSet):
         try:
             data= request.data
             pk = data['id']
-            lead = models.Leads.objects.get(pk=pk)
+            lead = Leads.objects.get(pk=pk)
             serializer = website_serializers.LeadsSerializer(lead,data=data)
             if serializer.is_valid():
                 serializer.save()
@@ -6438,12 +6445,12 @@ class LeadsViewSet(viewsets.ViewSet):
             for lead_instance in data:
                 lead_instance['content_type'] = content_type
                 lead_instance['is_from_sheet'] = True
-                lead_data = models.Leads(**lead_instance)
+                lead_data = Leads(**lead_instance)
                 leads.append(lead_data)
-            models.Leads.objects.filter(campaign=campaign_id, is_from_sheet=True).delete()
-            models.Leads.objects.bulk_create(leads)
+            Leads.objects.filter(campaign=campaign_id, is_from_sheet=True).delete()
+            Leads.objects.bulk_create(leads)
             now_time = timezone.now()
-            models.Leads.objects.filter(campaign=campaign_id).update(created_at=now_time,updated_at=now_time)
+            Leads.objects.filter(campaign=campaign_id).update(created_at=now_time,updated_at=now_time)
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

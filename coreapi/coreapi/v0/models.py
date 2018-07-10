@@ -1731,17 +1731,6 @@ class GenericExportFileName(BaseModel):
         db_table = 'generic_export_file_name'
 
 
-class CampaignAssignment(BaseModel):
-    """
-    The model to store a particular campaign being assigned to a user
-    """
-    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_by')
-    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_to')
-    campaign = models.OneToOneField(ProposalInfo, unique=True)
-    # possible primary key should be campaign_id
-
-    class Meta:
-        db_table = 'campaign_assignment'
 
 # class ShortlistedInventoryDetails(BaseModel):
 #     """
