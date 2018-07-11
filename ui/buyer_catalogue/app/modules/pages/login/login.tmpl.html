@@ -3,17 +3,19 @@
 <script src='https://www.google.com/recaptcha/api.js' async defer></script>
 
 <body>
-  <div ng-loading="!loadingSpinner">
-
+  <div class="container">
+    <a class="navbar-brand aligntop"><img src="images/logo.png" alt="Machadalo" class="logo"/></a>
   </div>
-  <div class="container1" style="background-image:url(img/background.png);">
+  <div ng-loading="!loadingSpinner">
+  </div>
+  <div class="container1" style="background-image:url(img/background.png);height:550px;">
       <div class="col-sm-6 text-right" >
         <p class="font-r, quote">"Every great achievement was first  considered impossible"</h1><br>
       </div>
       <div class="col-sm-2"></div>
       <div class="col-sm-4"> <div>
     <div id="login-panel" class="panel panel-default">
-        <div style="height:450px" class="panel-heading"> <strong><div style="letter-spacing: 0.7px; margin-left: 17px;" class="login-panel-header-text font"><center>HELLO! LOGIN TO MACHADALO</center></div></strong><br />
+        <div style="height:450px;width:330px;" class="panel-heading"> <strong><div style="letter-spacing: 0.7px; margin-left: 17px;" class="login-panel-header-text font"><center>HELLO! LOGIN TO MACHADALO</center></div></strong><br />
         <form class="form-horizontal" role="form" ng-submit="login()">
           <div class="errorMessages">
               <div ng-show="error" class="error">{{error}}</div>
@@ -30,8 +32,9 @@
             </div>
             <div class="g-recaptcha" data-sitekey="6Lccdl8UAAAAAHkDxfKsWe11QvCbenBnpFM9gIhT" data-callback="login"></div>
              <div class="form-group" ng-model="disabled">
+               <br />
                 <div class="col-sm-9">
-                  <button ng-disabled="disabled"  class="font, submit-btn" type="submit" class="btn  btn-sm">LOGIN</button>
+                  <button style="text-align:center" ng-disabled="disabled"  class="font, submit-btn" type="submit" class="btn  btn-sm">LOGIN</button>
                 </div></br>
               </div>
               <div class="form-group">
@@ -56,6 +59,7 @@
         </form>
       </div>
   </div>
+</div>
   <!--Start: Code for guestDetails Modal Window -->
   <div id="guestModal" class="modal fade">
     <div class="modal-dialog" style="width:400px">
@@ -103,6 +107,6 @@
     </div>
   </div>
   <!--End: Code for guestDetails Modal Window -->
-
+</div>
 </body>
 <!-- <nav-bar></nav-bar> -->

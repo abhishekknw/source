@@ -66,7 +66,7 @@
             <td class="" rowspan="{{key.length}}" ng-show="$first" width="200">{{supplier.address1}}</td>
             <!-- <td class="" rowspan="{{key.length}}" ng-show="$first" width="200">Inventory Owner :<b> Machadalo</b>, Feedback:{{supplier.feedback}}</td> -->
             <td class="" rowspan="{{key.length}}" ng-show="$first" width="200">
-              <button type="button" name="button" ng-click="getRelationShipData(supplier.supplier_id)" data-target="#relationshipModal" data-toggle="modal">View Data</button>
+              <button type="button" name="button" style="background-color:#d9534f;" ng-click="getRelationShipData(supplier)" data-target="#relationshipModal" data-toggle="modal">View Data</button>
             </td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.flat_count}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.tower_count}}</td>
@@ -87,11 +87,11 @@
             <td class="" ng-if="key=='FLIER'">{{supplier.flat_count}}</td>
             <td class="" ng-if="key!='FLIER'">{{filter.total_count}}</td>
             <td class="">{{getInventoryPrice(filter.actual_supplier_price,key)| currency : "₹"}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first">{{getTotalSupplierPrice(supplier)| currency : "₹"}} ({{getTotalSupplierPrice(supplier)/supplier.flat_count|limitTo:4| currency : "₹"}})</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{getTotalSupplierPrice(supplier)| currency : "₹"}} ({{getTotalSupplierPrice(supplier)/supplier.flat_count|limitTo:8| currency : "₹"}})</td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="priceform">
               <span class="error" ng-show="priceform.price.$error.min">{{positiveNoError}}</span>
               <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing input-width" min="0" permission = "[permissions.addNegotiatedPrice,permissions.viewNegotiatedPrice]">
-          <br>{{getTotalSupplierPrice(supplier)/supplier.flat_count|limitTo:4}}  </td>
+          <br>{{supplier.total_negotiated_price / supplier.flat_count|| 0 | limitTo:8}}  </td>
             <td style="text-align:left;" rowspan="{{key.length}}" ng-show="$first">
               <span ng-dropdown-multiselect="" options="multiSelect"  extra-settings="selected_baseline_settings"
               selected-model="searchSelectAllModel"   translation-texts="selected_baselines_customTexts"></span>
@@ -403,7 +403,14 @@
                     <td ng-if="!relationshipData.campaign_data.last_campaign_price.total_negotiated_price">
                       NA
                     </td>
-                  </tr>
+                    </tr>
+                    <tr>
+                    <th>Last Campaign Price Per Flat Price</th>
+                    <td ng-if="relationshipData.campaign_data.last_campaign_price.total_negotiated_price">
+                      ₹ {{relationshipData.campaign_data.last_campaign_price.total_negotiated_price / supplierFlatCount | limitTo : 8}}
+
+                    </td>
+                    </tr>
                   <tr>
                     <th>Count Of Previous Campaigns</th>
                     <td>{{relationshipData.campaign_data.past_campaigns}}</td>
