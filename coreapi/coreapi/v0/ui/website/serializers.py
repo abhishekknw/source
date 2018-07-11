@@ -4,8 +4,8 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 import v0.models as models
-from v0.models import SupplierTypeCorporate, ProposalInfo, ProposalCenterMapping, SpaceMapping, InventoryType, ShortlistedSpaces,\
-                    ProposalInfoVersion, ProposalCenterMappingVersion, SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, BaseUser
+from v0.models import SupplierTypeCorporate, SpaceMapping, InventoryType, ShortlistedSpaces,\
+                    SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, BaseUser
 from v0.serializers import AdInventoryTypeSerializer, DurationTypeSerializer, BaseModelPermissionSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
@@ -15,6 +15,8 @@ from v0.ui.campaign.models import Campaign, CampaignSocietyMapping
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
 from v0.ui.organisation.models import Organisation
 from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety
+from v0.ui.proposal.models import ProposalCenterMapping, ProposalCenterMappingVersion
+from v0.ui.proposal.serializers import ProposalInfoSerializer
 
 class InventoryActivitySerializer(ModelSerializer):
     """
@@ -37,23 +39,7 @@ class FiltersSerializer(ModelSerializer):
         model = models.Filters
         fields = '__all__'
 
-
-class ProposalInfoVersionSerializer(ModelSerializer):
-
-    class Meta:
-        model = ProposalInfoVersion
-        fields = '__all__'
-
-
-class ProposalCenterMappingVersionSerializer(ModelSerializer):
-
-    class Meta:
-        model = ProposalCenterMappingVersion
-        fields = '__all__'
-
-
 class SpaceMappingVersionSerializer(ModelSerializer):
-
     class Meta:
         model = SpaceMappingVersion
         fields = '__all__'
@@ -80,13 +66,6 @@ class ProposalCenterMappingVersionSpaceSerializer(ModelSerializer):
 
     class Meta:
         model = ProposalCenterMappingVersion
-        fields = '__all__'
-
-
-class ProposalInfoSerializer(BaseModelPermissionSerializer):
-
-    class Meta:
-        model = ProposalInfo
         fields = '__all__'
 
 
@@ -133,14 +112,6 @@ class ProposalCenterMappingSpaceSerializer(ModelSerializer):
     class Meta:
         model = ProposalCenterMapping
         fields = '__all__'
-
-
-class ProposalCenterMappingSerializer(ModelSerializer):
-    # using this serializer to save the center object
-    class Meta:
-        model = ProposalCenterMapping
-        fields = '__all__'
-        # fields = ('proposal', 'center_name', 'id')
 
 
 class ShortlistedSpacesSerializer(ModelSerializer):

@@ -42,16 +42,20 @@ from collections import namedtuple
 import gpxpy.geo
 
 import v0.models as models
-from v0.models import  (ShortlistedInventoryPricingDetails, ProposalCenterMapping, ProposalInfoVersion,
-                        ProposalCenterMapping, ProposalInfo, ProposalMetrics, PrintingCost, DataSciencesCost,
+from v0.models import  (ShortlistedInventoryPricingDetails,
+                        PrintingCost, DataSciencesCost,
                         EventStaffingCost, SpaceBookingCost, IdeationDesignCost, LogisticOperationsCost, ShortlistedSpaces,
-                        Filters, AdInventoryType, DurationType, ProposalMasterCost, ProposalCenterSuppliers, InventorySummary,
+                        Filters, AdInventoryType, DurationType, InventorySummary,
                         GenericExportFileName, InventoryActivityAssignment, SupplierAmenitiesMap, InventoryActivityImage,
                         Amenity, InventoryActivity, INVENTORY_ACTIVITY_TYPES, Events, FlatType, SocietyTower, Role, Lead,
-                        CampaignAssignment, CampaignLeads)
+                        CampaignLeads)
 from v0.ui.account.models import PriceMappingDefault, ContactDetails, AccountInfo
 from v0.ui.inventory.models import SupplierTypeSociety
 from v0.ui.location.models import State, City, CityArea, CitySubArea
+from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
+    ProposalInfoVersion, ProposalMasterCost)
+from v0.ui.proposal.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer
+from v0.ui.campaign.models import CampaignAssignment
 import v0.ui.utils as ui_utils
 import serializers
 from v0 import errors
@@ -1173,7 +1177,7 @@ def create_basic_proposal(data):
     """
     function_name = create_basic_proposal.__name__
     try:
-        proposal_serializer = serializers.ProposalInfoSerializer(data=data)
+        proposal_serializer = ProposalInfoSerializer(data=data)
         if proposal_serializer.is_valid():
             proposal_serializer.save()
         else:
@@ -1322,10 +1326,10 @@ def save_center_data(proposal_data, user):
                 if 'id' in center_info:
                     # means an existing center was updated
                     center_instance = ProposalCenterMapping.objects.get_permission(user=user, id=center_info['id'])
-                    center_serializer = serializers.ProposalCenterMappingSerializer(center_instance, data=center)
+                    center_serializer = ProposalCenterMappingSerializer(center_instance, data=center)
                 else:
                     # means we need to create new center
-                    center_serializer = serializers.ProposalCenterMappingSerializer(data=center)
+                    center_serializer = ProposalCenterMappingSerializer(data=center)
 
                 # save center info
                 if center_serializer.is_valid():
@@ -1775,7 +1779,7 @@ def suppliers_within_radius(data):
                 return ui_utils.handle_response(function_name, data='if giving center_id, give radius, lat, long too!')
 
             centers = ProposalCenterMapping.objects.filter(id=center_id)
-            serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
+            serializer = ProposalCenterMappingSerializer(centers, many=True)
 
             serializer.data[0]['radius'] = data['radius']
             serializer.data[0]['latitude'] = data['latitude']
@@ -1798,7 +1802,7 @@ def suppliers_within_radius(data):
             # query the center objects
             centers = ProposalCenterMapping.objects.filter(proposal_id=proposal_id, id__in=center_id_list)
             # centers = ProposalCenterMapping.objects.filter(proposal_id=proposal_id, id__in=center_id_list)
-            serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
+            serializer = ProposalCenterMappingSerializer(centers, many=True)
 
         # if not center_id, then fetch all the centers. centers can be a list
         # we add an extra attribute for each center object we get. Thats called codes. codes contain a list
@@ -1862,7 +1866,7 @@ def child_proposals(data):
         if account_id:
             proposal_children = proposal_children.filter(account_id=account_id)
         proposal_children = proposal_children.filter(parent=parent).order_by('-created_on')
-        serializer = serializers.ProposalInfoSerializer(proposal_children, many=True)
+        serializer = ProposalInfoSerializer(proposal_children, many=True)
         return serializer.data
     except Exception as e:
         raise Exception(function_name, ui_utils.get_system_error(e))
@@ -1886,7 +1890,7 @@ def construct_proposal_response(proposal_id):
 
         # query the center objects
         centers = ProposalCenterMapping.objects.filter(proposal_id=proposal_id, id__in=center_id_list)
-        serializer = serializers.ProposalCenterMappingSerializer(centers, many=True)
+        serializer = ProposalCenterMappingSerializer(centers, many=True)
         supplier_codes_dict = {center['id']: [] for center in serializer.data}
         for data in supplier_type_codes_list:
             center_id = data['center']
@@ -4037,7 +4041,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id)
 
         # set the campaign data
-        proposal_serializer = serializers.ProposalInfoSerializer(proposal)
+        proposal_serializer = ProposalInfoSerializer(proposal)
         result['campaign'] = proposal_serializer.data
 
         # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
