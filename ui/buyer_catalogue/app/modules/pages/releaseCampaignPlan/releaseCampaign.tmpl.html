@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
-
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading" >
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div>
 </br></br></br>
@@ -70,20 +70,13 @@
             </td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.flat_count}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.tower_count}}</td>
-            <!-- <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.buffered">{{buffered}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.removed">{{removed}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.finalized">{{finalized}}</td> -->
 
-            <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
-            <td class="" ng-if="key=='NA'">{{key}}</td>
-            <!-- <td class="" ng-if="key=='STALL'">{{key}}
-              <span ng-dropdown-multiselect="" options="stallLoc"  extra-settings="selected_baseline"
-              selected-model="selectAllLocation"   translation-texts="selected_customTexts"></span>
-            </td> -->
+            <td class="" ng-if="key=='NA'">{{key}} </td>
             <td class="" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)" permission = "[permissions.viewInventoryIds]"><b>{{key}}</b></a>
-
+            <span ng-if="key=='STALL'" ng-dropdown-multiselect="" options="stallLoc"  extra-settings="selected_baseline"
+            selected-model="selectAllLocation"   translation-texts="selected_customTexts"></span>
             </td>
+
             <td class="" ng-if="key=='FLIER'">{{supplier.flat_count}}</td>
             <td class="" ng-if="key!='FLIER'">{{filter.total_count}}</td>
             <td class="">{{getInventoryPrice(filter.actual_supplier_price,key)| currency : "₹"}}</td>
@@ -443,3 +436,4 @@
   </div>
 </div>
 <!--End: Code for RelationShip Data Modal Window -->
+</main>
