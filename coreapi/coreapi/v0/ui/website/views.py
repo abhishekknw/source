@@ -4500,7 +4500,7 @@ class BulkInsertInventoryActivityImage(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-class InventoryActivityAssignment(APIView):
+class InventoryActivityAssignmentAPIView(APIView):
     """
     Handles assignment of inventory activities to a user
     """
@@ -6121,7 +6121,6 @@ class CampaignsAssignedInventoryCountApiView(APIView):
                 if category.upper() == v0_constants.category['supplier_agency']:
                     q1 = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignemnt__assigned_to=user)
                     q2 = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignemnt__assigned_to=user)
-
             inv_act_assignment_objects = InventoryActivityAssignment.objects. \
                 select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',

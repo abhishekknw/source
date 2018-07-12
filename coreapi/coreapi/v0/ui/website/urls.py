@@ -67,7 +67,7 @@ urlpatterns = [
     url(r'^supplier-amenity/$', views.SupplierAmenity.as_view()),
     url(r'^bulk-update-inventory-activity-image/$', views.BulkInsertInventoryActivityImage.as_view()),
     url(r'^generate-inventory-activity-summary/$', views.GenerateInventoryActivitySummary.as_view()),
-    url(r'^inventory-activity-assignment/$', views.InventoryActivityAssignment.as_view()),
+    url(r'^inventory-activity-assignment/$', views.InventoryActivityAssignmentAPIView.as_view()),
     url(r'^inventory-activity-date-user-assignment/$', views.AssignInventoryActivityDateUsers.as_view()),
     url(r'^inventory-activity-date-user-reassignment/$', views.ReassignInventoryActivityDateUsers.as_view()),
     url(r'^get-users-list/$', views.UserList.as_view()),
