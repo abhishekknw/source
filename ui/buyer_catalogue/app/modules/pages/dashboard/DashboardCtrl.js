@@ -91,7 +91,6 @@
           $scope.campaignStatus.completed.value = false;
           $scope.campaignStatus.upcoming.value = false;
           $scope.campaignStatus[status].value = !$scope.campaignStatus[status].value;
-          console.log($scope.campaignStatus[status].value);
         }
 
         var campaignDataStruct = {
@@ -128,8 +127,6 @@
               $scope.dateListKeys[date] = date;
             })
             getHistory(response.data.data);
-            console.log($scope.dateListKeys);
-            console.log($scope.date);
             $scope.loading = response.data.data;
           }).catch(function onError(response){
             console.log(response);
@@ -161,11 +158,8 @@
           $scope.date = new Date($scope.date);
           $scope.date.setDate($scope.date.getDate() + day);
           $scope.date = commonDataShare.formatDate($scope.date);
-          console.log($scope.dateListKeys);
-          // $scope.date =  $scope.invActDateList[count];
         }
         $scope.getRecentActivity = function(day){
-          console.log(day);
           $scope.isPanelOpen =!$scope.isPanelOpen;
           $scope.showAssignedInvTable = false;
           $scope.OntimeOnlocation.ontime.value = false;
@@ -185,7 +179,6 @@
               alert("No Activity");
               break;
             }
-            // console.log("ji",date,counter);
           }
           if(counter < 0)
             $scope.date = initialDate;
@@ -200,7 +193,6 @@
 
         $scope.getAssignedIdsAndImages = function(date,type,inventory){
 
-          console.log(date,type,inventory);
           $scope.invName = inventory;
           $scope.actType = type;
           DashboardService.getAssignedIdsAndImages(orgId, category, type, date, inventory)
@@ -218,10 +210,8 @@
             campaignReleaseData['totalInvCount'] = 0;
 
             angular.forEach(response.data.data, function(data,campaignName){
-              console.log(data);
               $scope.campaignData = [];
               var campaignData = {};
-              console.log(campaignData);
               campaignData['name'] = campaignName;
               campaignData['images'] = [];
               campaignData['inv_count'] = 0;
@@ -234,7 +224,6 @@
               angular.forEach(data, function(items,inv){
                 campaignData.inv_count += 1;
                 campaignData[inv] = {};
-                console.log(items);
                 campaignData[inv]['onLocation'] = false;
                 campaignData[inv]['onTime'] = false;
                 campaignData[inv]['minDistance'] = 100;
@@ -253,9 +242,7 @@
                       }
                     }
                   }
-                  //onTime
                   for(var i=0; i<items.length; i++){
-                    console.log(items);
                     var days = Math.floor((new Date(items[i].created_at) - new Date(items[i].actual_activity_date)) / (1000 * 60 * 60 * 24));
                     if(days == 0){
                       campaignData[inv]['onTime'] = true;
@@ -294,16 +281,12 @@
               campaignReleaseData.push(campaignData);
             })
             $scope.campaignReleaseData = campaignReleaseData;
-            console.log($scope.campaignReleaseData);
             if($scope.campaignReleaseData.length){
                 $scope.showAssignedInvTable = true;
             }else{
                 $scope.showAssignedInvTable = false;
             }
             $scope.campaignDataList = [];
-            // createList();
-            console.log(  $scope.campaignDataList);
-            console.log($scope.campaignReleaseData);
           }).catch(function onError(response){
             console.log(response);
           })
@@ -366,7 +349,6 @@
         $anchorScroll('bottom');
         $scope.campaignStatusName = label;
         var campaignStatus = _.findKey($scope.campaignStatus, {'campaignLabel' : label});
-        console.log(campaignStatus);
         getCountOfSupplierTypesByCampaignStatus(campaignStatus);
       }
        var getCountOfSupplierTypesByCampaignStatus = function(campaignStatus){
@@ -375,16 +357,13 @@
            console.log(response);
            if(response.data.data){
               $scope.supplierCodeCountData = formatCountData(response.data.data);
-              console.log($scope.supplierCodeCountData);
               $scope.supplierTypesData = response.data.data;
               $scope.supplierTypesDataList = [];
               angular.forEach($scope.supplierTypesData, function(data){
                 $scope.supplierTypesDataList = $scope.supplierTypesDataList.concat(data);
+
               })
-              console.log($scope.supplierTypesDataList);
               $scope.supplierCodeCountOptions = angular.copy(doughnutChartOptions);
-              // $scope.getCampaignInvTableData();
-              // $scope.supplierCodeCountOptions.chart.pie.dispatch['elementClick'] = function(e){ $scope.getCampaignInvTableData(e.data); };
               $scope.showSupplierTypeCountChart = true;
            }
          }).catch(function onError(response){
@@ -432,7 +411,6 @@
        $scope.series = ["Campaigns"];
        $scope.getChart = function(chartType){
          $scope.data = [$scope.campaigns];
-         console.log(chartType);
          if(chartType == 'doughnut'){
            $scope.options = angular.copy(doughnutChartOptions);
            $scope.options.chart.pie.dispatch['elementClick'] = function(e){
@@ -470,12 +448,7 @@
                 duration: 500,
                 legend: {
                   rightAlign:false,
-                    // margin: {
-                    //     top: 5,
-                    //     right: 100,
-                    //     bottom: 5,
-                    //     left: 0
-                    // },
+
                 },
                 legendPosition : 'bottom',
                 tooltip: {
@@ -497,12 +470,7 @@
                labelSunbeamLayout: true,
                legend: {
                  rightAlign:false,
-                   // margin: {
-                   //     top: 5,
-                   //     right: 35,
-                   //     bottom: 5,
-                   //     left: 0
-                   // }
+
                },
                legendPosition : 'bottom',
            }
@@ -555,7 +523,6 @@
             "xAxis": {
               "axisLabel": "Campaigns",
               tickFormat: function(d) {
-                console.log(d);
                 return d.y;
               }
             },
@@ -574,7 +541,6 @@
          $scope.getCampaignFilters(campaign.campaign);
          $scope.campaignId = campaign.campaign;
          $scope.inv = campaign;
-         console.log($scope.inv);
 
          DashboardService.getSuppliersOfCampaignWithStatus(campaign.campaign)
          .then(function onSuccess(response){
@@ -593,18 +559,15 @@
            $scope.showSupplierInvdDataTable = function(invData){
              $scope.SocietyInvTable = $scope.campaignStatusData;
              $scope.showSupplierSocietywiseInvTable = true;
-           };
+          };
            $scope.countallsupplier = $scope.campaignStatusData.completed.length+$scope.campaignStatusData.ongoing.length+$scope.campaignStatusData.upcoming.length;
-           // console.log($scope.countallsupplier);
            var totalFlats=0,totalLeads=0,totalSuppliers=0,hotLeads=0;
-           console.log($scope.campaignStatusData);
 
            // $scope.totalLeadsCount = response.data.data.supplier_data.length;
            $scope.campaignStatusData['totalSuppliers'] = 0;
            angular.forEach($scope.campaignStatusData, function(data,key){
               if($scope.campaignStatusData[key].length && key != 'upcoming'){
                 $scope.campaignStatusData['totalSuppliers'] += $scope.campaignStatusData[key].length;
-                console.log($scope.campaignStatusData[key].length);
                 $scope.campaignStatusData[key]['totalFlats'] = 0;
                 $scope.campaignStatusData[key]['totalLeads'] = 0;
                 $scope.campaignStatusData[key]['hotLeads'] = 0;
@@ -623,14 +586,12 @@
                 })
                 totalLeads += $scope.campaignStatusData[key].totalLeads;
                 totalFlats += $scope.campaignStatusData[key].totalFlats;
-                // totalSuppliers += $scope.campaignStatusData.totalSuppliers;
               }
          })
             $scope.avgLeadsPerFlat = totalLeads/totalFlats * 100;
             $scope.avgLeadsPerSupplier = totalLeads/$scope.campaignStatusData.totalSuppliers;
             $scope.avgHotLeadsPerFlat = hotLeads/totalFlats * 100;
-              $scope.avgHotLeadsPerSupplier = hotLeads/$scope.campaignStatusData.totalSuppliers;
-           // console.log($scope.campaignStatusData);
+            $scope.avgHotLeadsPerSupplier = hotLeads/$scope.campaignStatusData.totalSuppliers;
 
            $scope.campaignChartdata = [
              { label : $scope.campaignStatus.ongoing.supplierLabel, value : $scope.campaignStatusData.ongoing.length, status : $scope.campaignStatus.ongoing.status },
@@ -638,7 +599,6 @@
              { label : $scope.campaignStatus.upcoming.supplierLabel, value : $scope.campaignStatusData.upcoming.length, status : $scope.campaignStatus.upcoming.status }
            ];
            $scope.options1 = angular.copy(doughnutChartOptions);
-           console.log("hello");
            $scope.options1.chart.pie.dispatch['elementClick'] = function(e){ $scope.getSupplierAndInvData(e.data); };
 
 
@@ -658,7 +618,6 @@
          DashboardService.getCampaignFilters(campaignId)
          .then(function onSuccess(response){
            console.log(response);
-           // $scope.loading = response.data.data;
 
            $scope.campaignInventories = [];
            $scope.showinv = true;
@@ -671,11 +630,6 @@
              }
            })
            $scope.performanceMetricsData = [];
-           // if($scope.campaignInventories.length){
-           //   // $scope.showPerfMetrics = $scope.perfMetrics.inv;
-           // }
-           // $scope.campaignInventories = response.data.data;
-           console.log($scope.campaignInventories);
 
          }).catch(function onError(response){
            console.log(response);
@@ -686,15 +640,12 @@
        // START : get Performance metrics data
         $scope.getPerformanceMetricsData = {};
        $scope.getPerformanceMetricsData = function(inv,perf_param){
-         console.log(inv);
          $scope.inv = inv;
          var type = 'inv';
          if(!perf_param)
             perf_param = 'inv';
-          console.log(perf_param);
          $scope.select.campaignInventories = "";
 
-         // console.log($scope.getPerformanceMetricsData.size);
          DashboardService.getPerformanceMetricsData($scope.campaignId,type,inv,perf_param )
          .then(function onSuccess(response){
            console.log(response);
@@ -704,7 +655,6 @@
              audit : Object.keys($scope.performanceMetricsData.actual.audit).length,
              closure : Object.keys($scope.performanceMetricsData.actual.closure).length
            }
-           console.log($scope.releaseInvPerfData);
            $scope.showPerfMetrics = $scope.perfMetrics.inv;
             $scope.showTimeLocBtn = true;
            if(perf_param == 'on_time'){
@@ -725,7 +675,6 @@
        // START : create on time data on activities
         var setOntimeData = function(data){
           angular.forEach(data, function(activity,key){
-            console.log(activity,key);
             activity['ontime'] = 0;
             angular.forEach(activity, function(imageData){
               for(var i=0;i<imageData.length;i++){
@@ -734,12 +683,10 @@
                   activity['ontime'] += 1;
                   break;
                 }
-                console.log(days);
               }
             })
 
           })
-          console.log(data);
         }
        // END : create on time data on activities
        $scope.getOnTimeData = function(perf_param){
@@ -753,10 +700,8 @@
        var getOnLocationData = function(data){
              angular.forEach(data, function(activity,key){
                data[key]['onLocation'] = 0;
-               console.log(activity);
                angular.forEach(activity, function(imageData){
                  for(var i=0; i<imageData.length; i++){
-                   console.log(imageData[i].inventory_id);
                    if(imageData[i].hasOwnProperty('distance') && imageData[i].distance <= constants.distanceLimit){
                      data[key].onLocation += 1;
                      break;
@@ -767,57 +712,10 @@
              })
 
 
-         console.log(data);
        }
        $scope.initializePerfMetrix = function(){
          $scope.showSupplierTypeCountChart = false;
        }
-//        var getTooltipData = function(e){
-//          var rows = [];
-//          var count = 0;
-//           angular.forEach(e.data.campaigns, function(campaign){
-//             count++;
-//             rows= rows +
-//             "<tr>" +
-//               "<td class='key'>" + count  + "</td>" +
-//               "<td class='key'>" + campaign.proposal__name + "</td>" +
-//               "<td class='x-value'>" + constants[campaign.supplier_code] + "</td>" +
-//               "<td class='x-value'>" + campaign.total + "</td>" +
-// "</tr>"
-//           })
-//
-//                  var header =
-//                    "<thead>" +
-//                    "<tr>" +
-//                        "<td class='legend-color-guide'><div style='background-color: " + e.color + ";'></div></td>" +
-//                        "<td class='key'><strong>" + e.data.label + "</strong></td>" +
-//                      "</tr>" +
-//                      "<tr>" +
-//                        "<td class='key'><strong>" + 'Index' + "</strong></td>" +
-//                        "<td class='key'><strong>" + 'Campaign Name' + "</strong></td>" +
-//                        "<td class='key'><strong>" + 'Supplier Name' + "</strong></td>" +
-//                        "<td class='key'><strong>" + 'Total Count' + "</strong></td>" +
-//                      "</tr>" +
-//                    "</thead>";
-//
-//                  return "<table>" +
-//                      header +
-//                      "<tbody>" +
-//                        rows +
-//                      "</tbody>" +
-//                    "</table>";
-//
-//        }
-
-     //   $scope.getCampaignInvTableData = function(campaigns){
-     //     $scope.campaignInvData = campaigns.campaigns;
-     //     $scope.showCampaignInvTable = true;
-     //     $scope.$apply();
-     //     // console.log($scope.campaignInvData);
-     //
-     // }
-
-
 
      $scope.getCampaignInvTypesData = function(campaign){
        $scope.proposal_id = campaign.proposal_id;
@@ -827,10 +725,8 @@
          console.log(response);
         $scope.campaignInventoryTypesData = response.data.data;
         $scope.loading = response.data.data;
-        // console.log($scope.campaignInventoryTypesData.supplier_data);
         $scope.getSupplierInvTableData($scope.campaignInventoryTypesData);
         $scope.campaignInventoryData = response.data.data;
-        console.log($scope.campaignInventoryData);
         $scope.totalTowerCount = 0;
         $scope.totalFlatCount = 0;
         $scope.totalSupplierCount = response.data.data.supplier_data.length;
@@ -848,7 +744,6 @@
 
     $scope.getSupplierInvTableData = function(supplier){
       $scope.supplierInvData = supplier;
-      // console.log(  $scope.supplierInvData );
       $scope.showSupplierInvTable = true;
 
     }
@@ -858,7 +753,6 @@
       .then(function onSuccess(response){
         console.log(response);
         $scope.campaignInventoryActivityData = response.data.data;
-        console.log($scope.campaignInventoryActivityData);
         }).catch(function onError(response){
       console.log(response);
     })
@@ -891,7 +785,6 @@
    var getHistory = function(data){
      $scope.historyData = {};
      angular.forEach(data, function(dates,invKey){
-       console.log(dates);
        angular.forEach(dates, function(activities,dateKey){
          if(!$scope.historyData.hasOwnProperty(dateKey)){
            $scope.historyData[dateKey] = {};
@@ -907,21 +800,19 @@
          })
        })
      })
-     console.log($scope.historyData);
    }
    $scope.goToExecutionPage = function(proposalId){
-     console.log(proposalId);
      $location.path('/' + proposalId + '/opsExecutionPlan');
    }
    $scope.getLeadsByCampaign = function(campaignId){
      $scope.showTimeLocBtn = false;
      $scope.showinv = false;
+     $scope.showSelection = true;
      $scope.showPerfMetrics = $scope.perfMetrics.blank;
      DashboardService.getLeadsByCampaign(campaignId)
      .then(function onSuccess(response){
        console.log(response);
        $scope.LeadsByCampaign = response.data.data;
-       console.log($scope.LeadsByCampaign);
        $scope.stackedBarChartOptions = angular.copy(stackedBarChart);
        $scope.stackedBarChartSupplierData = formatMultiBarChartDataForSuppliers(response.data.data.supplier_data);
        $scope.stackedBarChartDateData = formatMultiBarChartDataByDate(response.data.data.date_data);
@@ -935,7 +826,6 @@
      var values1 = [];
      var values2 = [];
      angular.forEach(data, function(supplier){
-       console.log(supplier);
         var value1 =
            { x : supplier.data.society_name, y : supplier.total - supplier.interested};
         var value2 =
@@ -955,7 +845,6 @@
          values : values2
        }
      ];
-     console.log(temp_data);
      return temp_data;
    }
    var formatMultiBarChartDataByDate = function(data){
@@ -982,7 +871,6 @@
          values : values2
        }
      ];
-     console.log(temp_data);
      return temp_data;
    }
 
@@ -1020,7 +908,6 @@
 
    $scope.events = {
    onItemSelect : function(item){
-       console.log(item);
    }
  }
 
@@ -1050,7 +937,6 @@
 
 
     $scope.getCompareCampaignChartData = function(campaignChartData){
-      console.log(campaignChartData);
       var proposalIdData = [];
       var proposalIdDataNames = {};
       angular.forEach($scope.searchSelectAllModel,function(data){
@@ -1058,7 +944,6 @@
         proposalIdDataNames[data.id.proposal_id] = {
           name : data.id.name,
         };
-        console.log(data);
       })
       DashboardService.getCompareCampaignChartData(proposalIdData)
       .then(function onSuccess(response){
@@ -1106,7 +991,6 @@
           values : values2
         }
       ];
-      console.log(temp_data);
       return temp_data;
     };
     var formatLineChartData = function(data){
@@ -1116,7 +1000,6 @@
       var values2 = [];
 
       var count = Object.keys(data).length;
-      console.log(data,count);
       angular.forEach(data, function(campaign){
         $scope.lineChartLabels.push(campaign.data.name);
         values1.push(campaign.total/count);
@@ -1124,7 +1007,6 @@
       });
       $scope.lineChartValues.push(values1);
       $scope.lineChartValues.push(values2);
-      console.log($scope.lineChartLabels,$scope.lineChartValues);
     }
     $scope.lineChartOptions = {
     scales: {
@@ -1189,7 +1071,6 @@
 
     }
     $scope.getSupplierAndInvData = function(data){
-      console.log($scope.campaignSupplierAndInvData,data.status);
       $scope.supplierStatus = data.status;
       $scope.supplierAndInvData = $scope.campaignSupplierAndInvData[data.status];
       $scope.invStatusKeys = angular.copy(invStatusKeys);
@@ -1203,6 +1084,7 @@
           })
           angular.forEach(supplier.leads_data, function(inv,key){
             $scope.leads_data = inv;
+
             $scope.showLeads = true;
             $scope.countLeads += 1;
             if($scope.leads_data.is_interested){
@@ -1211,7 +1093,6 @@
           })
       })
       $scope.showDisplayDetailsTable = true;
-      console.log($scope.supplierAndInvData);
       $scope.map = { zoom: 13,bounds: {},center: {latitude: $scope.latitude,longitude: $scope.longitude}};
       $scope.supplierMarkers = assignMarkersToMap($scope.supplierAndInvData);
       uiGmapIsReady.promise()
@@ -1225,7 +1106,6 @@
     }
     $scope.windowCoords = {};
     $scope.onClick = function(marker, eventName, model) {
-      console.log('hello',model);
       $scope.space = model;
       $scope.campaignInventory = model;
       $scope.windowCoords.latitude = model.latitude;
@@ -1233,19 +1113,16 @@
       $scope.show = true;
     }
     function assignMarkersToMap(suppliers) {
-        // assigns spaces(society, corporate) markers on the map
-        // ADDNEW --> this function needs to have "if" condition for society as its variables have society_ in every variable while other doesn't
         var markers = [];
-        var icon;
+        // var icon;
         var checkInv = true;
         angular.forEach(suppliers, function(supplier,$index){
-          console.log(supplier);
 
               markers.push({
                   latitude: supplier.supplier.society_latitude,
                   longitude: supplier.supplier.society_longitude,
                   id: supplier.supplier.supplier_id,
-                  icon: 'http://www.googlemapsmarkers.com/v1/009900/',
+                  // icon: 'http://www.googlemapsmarkers.com/v1/009900/',
                   options : {draggable : false},
                   dataofSupplierAndInvData : supplier.supplier,
                   title : {
@@ -1254,14 +1131,12 @@
                   },
               });
               if(checkInv){
-                // markers[$index].title['inv_data'] = {};
                   angular.forEach($scope.invStatusKeys, function(inv,key){
                     if($scope.invStatusKeys[key].status){
                       if('inv_data' in supplier.supplier && key in supplier.supplier.inv_data){
-                        console.log(supplier.supplier,key);
                         markers[$index].title[key] = {
                             'key' : key,
-                            'total' : supplier.supplier.inv_data[key].total
+                            'total' : supplier.supplier.inv_data[key].total.total
                         }
                       }else {
                           markers[$index].title[key] = {
@@ -1270,14 +1145,12 @@
                           }
                         }
 
-                      // markers[$index].title['inv_data'].push(data);
                     }
                   })
               }
 
 
         });
-        console.log(markers);
         return markers;
 
     };
@@ -1305,46 +1178,24 @@
       if(value)
         $scope.invStatusKeys[invKey].total += value;
     }
-    // $scope.map;
-    // NgMap.getMap().then(function(evtMap) {
-    //     $scope.map = evtMap;
-    // });
-    $scope.showDetail = function(evt, supplierData){
-      $scope.map;
-      NgMap.getMap().then(function(evtMap) {
-          $scope.map = evtMap;
-      });
-      $scope.showInfoWindowId = $scope.supplierStatus + 'myWindow';
-      console.log($scope.showInfoWindowId);
-      console.log(supplierData);
-      console.log($scope.windowDisplay);
-      $scope.windowDisplay = supplierData;
-      $scope.map.showInfoWindow.apply(this, [evt, 'myWindow']);
-    };
 
-  // $scope.active = 0;
+
   $scope.selectTabIndex = {
     value : 0
   }
 
 $scope.switchToLeads = function(){
   $scope.selectTabIndex.value = 2;
-  console.log("hi");
   $scope.getLeadsByCampaign($scope.campaignId);
-// $scope.leadsData = $scope.LeadsByCampaign;
-// $scope.stackedBarChartOptions = angular.copy(stackedBarChart);
 }
 
 
 $scope.switchToInventory = function(inv){
   $scope.selectTabIndex.value = 2;
-  console.log("hi");
-  console.log(inv);
   var perf_param = null;
   $scope.getPerformanceMetricsData(inv,perf_param);
 }
 $scope.setImageUrl = function(images){
-  console.log(images);
   $scope.imageUrlList = [];
   angular.forEach(images, function(data){
     for(var i=0; i<data.length; i++){
@@ -1358,9 +1209,40 @@ $scope.setImageUrl = function(images){
 }
 // map
 $scope.setInventoryInfoModalDetails = function(supplier,inv){
-console.log(inv);
 }
 
 
+$scope.map;
+   NgMap.getMap().then(function(evtMap) {
+       $scope.map = evtMap;
+   });
+   $scope.showDetail = function(evt, supplierData){
+     $scope.map;
+     NgMap.getMap().then(function(evtMap) {
+         $scope.map = evtMap;
+     });
+     console.log(supplierData);
+     $scope.windowDisplay = supplierData;
+     console.log($scope.windowDisplay);
+     $scope.map.showInfoWindow('myWindow', this);
+   };
+
+$scope.viewSupplierImages = function(supplierId, invType, activityType){
+    $scope.imageUrlList = [];
+  DashboardService.getSupplierImages(supplierId, invType, activityType)
+  .then(function onSuccess(response){
+    console.log(response);
+
+    angular.forEach(response.data.data, function(data){
+      var imageData = {
+        image_url : 'http://androidtokyo.s3.amazonaws.com/' + data.image_path,
+        comment : data.comment,
+      };
+      $scope.imageUrlList.push(imageData);
+    })
+  }).catch(function onError(response){
+    console.log(response);
+  })
+}
   })//END
 })();

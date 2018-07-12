@@ -6071,6 +6071,32 @@ class DashBoardViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    @list_route()
+    def get_activity_images_by_suppliers(self,request):
+        """
+        It will retrieve the images of suppliers
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_id = request.query_params.get('supplier_id',None)
+            inv_code = request.query_params.get('inv_code',None)
+            act_type = request.query_params.get('act_type',None)
+
+            content_type = ui_utils.fetch_content_type(inv_code)
+            content_type_id = content_type.id
+
+            result = models.InventoryActivityImage.objects. \
+                filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id=supplier_id,
+                       inventory_activity_assignment__inventory_activity__activity_type=act_type,
+                       inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
+                values()
+            return ui_utils.handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
     # @list_route()
     # def get_all_inventory_details_of_supplier(self, request):
     #     """

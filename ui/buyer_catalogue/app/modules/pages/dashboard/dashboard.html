@@ -25,10 +25,9 @@
     <link href="css/dashboard-theme.css" rel="stylesheet" media="screen">
     <link href="css/sass-app.css" rel="stylesheet" media="screen">
     <link href="css/sass-app-map.css" rel="stylesheet" media="screen">
-    <!-- <link href="css/customstyle.css" rel="stylesheet" media="screen"> -->
     <link href="css/sidePanel.css" rel="stylesheet" media="screen">
     <link href="css/custom.css" rel="stylesheet" media="screen">
-    <!-- <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/> -->
+    <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 
     <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
@@ -112,7 +111,6 @@
                           <div class="col-xlg-2 col-lg-2 col-md-2 col-sm-2 col-xs-2 dashboard-side-label">
                           </div>
                           <div class="col-xlg-10 col-lg-10 col-md-10 col-sm-10 col-xs-10">
-                              <!--<dashboard-pie-chart></dashboard-pie-chart>-->
                               <div class="row" ng-if="dateListKeys[date]">
                                   <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
                                       <h4 class="date-tab-heading" style="color:rgb(53, 9, 6)">Release</h4>
@@ -134,7 +132,6 @@
                               <h4>{{inv.header}}</h4>
                           </div>
                           <div class="col-xlg-10 col-lg-10 col-md-10 col-sm-10 col-xs-10" ng-if="inventoryActivityCountData[inv.header][date]">
-                              <!--<dashboard-pie-chart></dashboard-pie-chart>-->
                               <div class="row">
                                   <div class="col-xlg-4 col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center" ng-repeat="act in actKeys">
                                       <div class="form-group has-success">
@@ -166,7 +163,6 @@
                                                                   </div>
                                                               </div>
                                                           </div>
-                                                          <!-- This is just some content to illustrate fancy headings. -->
 
                                                           <div class="panel-group RELEASETable" id="accordion">
                                                                   <div class="panel panel-default" style="border-radius:0!important;" ng-click="onTimeDetails = !onTimeDetails">
@@ -176,7 +172,6 @@
                                                                       </h4>
                                                                   </div>
                                                                   </div>
-                                                                  <!-- <button class="panel panel-default" type="button" style="background-color:#8e1921!important;width:100%;border-radius:0!important;" name="button" ng-click="showOntimeOnlocation(OntimeOnlocation.ontime.status)">Time Details</button> -->
 
                                                                   <table class="table-responsive table table-bordered" ng-show="onTimeDetails">
 
@@ -353,7 +348,7 @@
 
                               </div>
                               <uib-tab-heading uib-dropdown>
-                                  <button class="btn btn-warning btn-sm pull-right" style="background-color:#fcfc5f;color:black;margin-top:36px;" uib-dropdown-toggle ng-click="$event.stopPropagation()">
+                                  <button class="btn btn-warning btn-sm pull-right" style="background-color:#fcfc5f;color:black;margin-top:10px;" uib-dropdown-toggle ng-click="$event.stopPropagation()">
                                       Select Chart <i class="caret"></i>
                                   </button>
                                   <ul class="dropdown-menu" uib-dropdown-menu>
@@ -378,7 +373,7 @@
                                 <tr>
                                   <td>Campaign Status</td>
                                   <td>Supplier Count</td>
-                                  <td ng-if="showLeadsDetails">Total Leads <br><small>(High Quality Leads)</small></td>
+                                  <td ng-if="showLeadsDetails" class="blinking">Total Leads <br><small>(High Quality Leads)</small></td>
                                 </tr>
                               </thead>
                                   <tbody>
@@ -404,44 +399,320 @@
                           </div>
 
                           <div class="">
-                            <br><br><br><br>
 
-                              <div class="col-md-12 showDisplayDetailsTable" ng-if="showDisplayDetailsTable">
+                              <div class="col-md-12 showDisplayDetailsTable" ng-if="showDisplayDetailsTable" style="margin-top:5px;">
                                 <div style="background-color: #cb1925" class="panel-heading">
                                   <h5>Society Details For {{campaignTabPropsalName}}</h5>
 
                                 </div>
+
                               <table class="table-responsive table table-bordered showDisplayDetailsTable">
                                 <thead>
                                   <tr>
                                     <td>INDEX</td>
                                     <td>Society Name</td>
-                                      <td ng-if="invStatusKeys.STALL.status">STALL</td>
+                                    <td ng-if="invStatusKeys.STALL.status">STALL</td>
                                     <td ng-if="invStatusKeys.POSTER.status">POSTER</td>
                                     <td ng-if="invStatusKeys.FLIER.status">FLIER(Frequency)</td>
                                     <td ng-if="invStatusKeys.STANDEE.status">STANDEE</td>
                                     <td ng-if="invStatusKeys['GATEWAY ARCH'].status">GATEWAY ARCH</td>
                                     <td ng-if="showLeads">Leads</td>
                                   </tr>
+
                                 </thead>
                                     <tbody>
                                     <tr ng-repeat="supplier in supplierAndInvData">
                                       <td>{{$index + 1}}</td>
                                         <td>{{supplier.supplier.society_name}}</td>
-                                        <td ng-init="calculateTotalCount('STALL',supplier.supplier.inv_data.STALL.total)" ng-show="invStatusKeys.STALL.status">{{supplier.supplier.inv_data.STALL.total}}
+                                        <!-- stall -->
+                                        <td ng-show="invStatusKeys.STALL.status">
                                         <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                        <table class="table-responsive table table-bordered ">
+                                          <thead>
+                                            <tr>
+                                              <th>Total</th>
+                                              <th>Assigned</th>
+                                              <th>Completed</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr>
+                                              <td style="vertical-align:middle" ng-init="calculateTotalCount('STALL',supplier.supplier.inv_data.STALL.total.total)" ng-show="invStatusKeys.STALL.status">
+                                                {{supplier.supplier.inv_data.STALL.total.total}}
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                   <td>{{supplier.supplier.inv_data.STALL.assigned.RELEASE.total || 0}}</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td>{{supplier.supplier.inv_data.STALL.assigned.AUDIT.total || 0}}</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td>{{supplier.supplier.inv_data.STALL.assigned.CLOSURE.total || 0}}</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STALL.completed.RELEASE.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'SL','RELEASE')">{{supplier.supplier.inv_data.STALL.completed.RELEASE.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STALL.completed.RELEASE.total">0</td>
+                                                    </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STALL.completed.AUDIT.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'SL','AUDIT')">{{supplier.supplier.inv_data.STALL.completed.AUDIT.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STALL.completed.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STALL.completed.CLOSURE.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'SL','CLOSURE')">{{supplier.supplier.inv_data.STALL.completed.CLOSURE.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STALL.completed.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+
+                                            </tr>
+                                          </tbody>
+                                        </table>
                                       </td>
-                                        <td ng-init="calculateTotalCount('POSTER',supplier.supplier.inv_data.POSTER.total)" ng-show="invStatusKeys.POSTER.status">{{supplier.supplier.inv_data.POSTER.total}}
-                                        </td>
-                                        <td ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total)" ng-show="invStatusKeys.FLIER.status">{{supplier.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total}})
-                                        </td>
-                                        <td ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total)" ng-show="invStatusKeys.STANDEE.status">{{supplier.supplier.inv_data.STANDEE.total}}
-                                        </td>
-                                        <td ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">{{supplier.supplier.inv_data['GATEWAY ARCH'].total}}
-                                        </td>
-                                        <td ng-if="showLeads">{{supplier.leads_data.length}}</td>
+                                      <!-- poster -->
+                                      <td ng-show="invStatusKeys.POSTER.status">
+                                      <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                      <table class="table-responsive table table-bordered ">
+                                        <thead>
+                                          <tr>
+                                            <th>Total</th>
+                                            <th>Assigned</th>
+                                            <th>Completed</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          <tr>
+                                            <td style="vertical-align:middle" ng-init="calculateTotalCount('POSTER',supplier.supplier.inv_data.POSTER.total.total)" ng-show="invStatusKeys.POSTER.status">
+                                              {{supplier.supplier.inv_data.POSTER.total.total}}
+                                            </td>
+                                            <td>
+                                              <table class="table-responsive table table-bordered">
+                                                <tr>
+                                                  <td style="background-color:#cb1925">R</td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.assigned.RELEASE.total || 0}}</td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="background-color:#cb1925">A</td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.assigned.AUDIT.total || 0}}</td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="background-color:#cb1925">C</td>
+                                                  <td>{{supplier.supplier.inv_data.POSTER.assigned.CLOSURE.total || 0}}</td>
+                                                </tr>
+                                              </table>
+                                            </td>
+                                            <td>
+                                              <table class="table-responsive table table-bordered ">
+                                                <tr>
+                                                  <td style="background-color:#cb1925">R</td>
+                                                  <td ng-if="supplier.supplier.inv_data.POSTER.completed.RELEASE.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'PO','RELEASE')">{{supplier.supplier.inv_data.POSTER.completed.RELEASE.total}}</a></td>
+                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.completed.RELEASE.total">0</td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="background-color:#cb1925">A</td>
+                                                  <td ng-if="supplier.supplier.inv_data.POSTER.completed.AUDIT.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'PO','AUDIT')">{{supplier.supplier.inv_data.POSTER.completed.AUDIT.total}}</a></td>
+                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.completed.AUDIT.total">0</td>
+                                                </tr>
+                                                <tr>
+                                                  <td style="background-color:#cb1925">C</td>
+                                                  <td ng-if="supplier.supplier.inv_data.POSTER.completed.CLOSURE.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'PO','CLOSURE')">{{supplier.supplier.inv_data.POSTER.completed.CLOSURE.total}}</a></td>
+                                                  <td ng-if="!supplier.supplier.inv_data.POSTER.completed.CLOSURE.total">0</td>
+                                                </tr>
+                                              </table>
+                                            </td>
+
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                    </td>
+                                        <!-- <td ng-init="calculateTotalCount('POSTER',supplier.supplier.inv_data.POSTER.total.total)" ng-show="invStatusKeys.POSTER.status">{{supplier.supplier.inv_data.POSTER.total.total}}
+                                        </td> -->
+                                        <!-- FLIER -->
+                                        <td ng-show="invStatusKeys.FLIER.status">
+                                        <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                        <table class="table-responsive table table-bordered ">
+                                          <thead>
+                                            <tr>
+                                              <th>Total</th>
+                                              <th>Assigned</th>
+                                              <th>Completed</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr>
+                                              <td style="vertical-align:middle" ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total.total)" ng-show="invStatusKeys.FLIER.status">
+                                                {{supplier.supplier.inv_data.FLIER.total.total}}
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.assigned.RELEASE.total || 0}}</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.assigned.AUDIT.total || 0}}</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td>{{supplier.supplier.inv_data.FLIER.assigned.CLOSURE.total || 0}}</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data.FLIER.completed.RELEASE.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'FL','RELEASE')">{{supplier.supplier.inv_data.FLIER.completed.RELEASE.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.completed.RELEASE.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data.FLIER.completed.AUDIT.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'FL','AUDIT')">{{supplier.supplier.inv_data.FLIER.completed.AUDIT.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.completed.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data.FLIER.completed.CLOSURE.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'FL','CLOSURE')">{{supplier.supplier.inv_data.FLIER.completed.CLOSURE.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data.FLIER.completed.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                        <!-- <td ng-init="calculateTotalCount('FLIER',supplier.supplier.inv_data.FLIER.total.total)" ng-show="invStatusKeys.FLIER.status">{{supplier.supplier.flat_count}}({{supplier.supplier.inv_data.FLIER.total.total}})
+                                        </td> -->
+                                        <!-- STANDEE -->
+                                        <td ng-show="invStatusKeys.STANDEE.status">
+                                        <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                        <table class="table-responsive table table-bordered ">
+                                          <thead>
+                                            <tr>
+                                              <th>Total</th>
+                                              <th>Assigned</th>
+                                              <th>Completed</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr>
+                                              <td style="vertical-align:middle" ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total.total)" ng-show="invStatusKeys.STANDEE.status">
+                                                {{supplier.supplier.inv_data.STANDEE.total.total}}
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.assigned.RELEASE.total || 0}}</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.assigned.AUDIT.total || 0}}</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td>{{supplier.supplier.inv_data.STANDEE.assigned.CLOSURE.total || 0}}</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.completed.RELEASE.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'ST','RELEASE')">{{supplier.supplier.inv_data.STANDEE.completed.RELEASE.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.completed.RELEASE.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.completed.AUDIT.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'ST','AUDIT')">{{supplier.supplier.inv_data.STANDEE.completed.AUDIT.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.completed.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'ST','CLOSURE')">{{supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data.STANDEE.completed.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                        <!-- <td ng-init="calculateTotalCount('STANDEE',supplier.supplier.inv_data.STANDEE.total.total)" ng-show="invStatusKeys.STANDEE.status">{{supplier.supplier.inv_data.STANDEE.total.total}}
+                                        </td> -->
+                                        <!-- gateway ARCH -->
+                                        <td ng-show="invStatusKeys['GATEWAY ARCH'].status">
+                                        <!-- <a ng-click="setInventoryInfoModalDetails(supplier.supplier,invCodes.ST)" data-toggle="modal" data-target="#inventoryInfoModal">View Details</a> -->
+                                        <table class="table-responsive table table-bordered ">
+                                          <thead>
+                                            <tr>
+                                              <th>Total</th>
+                                              <th>Assigned</th>
+                                              <th>Completed</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            <tr>
+                                              <td style="vertical-align:middle" ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total.total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">
+                                                {{supplier.supplier.inv_data['GATEWAY ARCH'].total.total}}
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered ">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.RELEASE.total || 0}}</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.AUDIT.total || 0}}</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td>{{supplier.supplier.inv_data['GATEWAY ARCH'].assigned.CLOSURE.total || 0}}</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                              <td>
+                                                <table class="table-responsive table table-bordered">
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">R</td>
+                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'GA','RELEASE')">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].completed.RELEASE.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">A</td>
+                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'GA','AUDIT')">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].completed.AUDIT.total">0</td>
+                                                  </tr>
+                                                  <tr>
+                                                    <td style="background-color:#cb1925">C</td>
+                                                    <td ng-if="supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total"><a data-target="#imageModal" data-toggle="modal" ng-click="viewSupplierImages(supplier.supplier.supplier_id,'GA','CLOSURE')">{{supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total}}</a></td>
+                                                    <td ng-if="!supplier.supplier.inv_data['GATEWAY ARCH'].completed.CLOSURE.total">0</td>
+                                                  </tr>
+                                                </table>
+                                              </td>
+                                            </tr>
+                                          </tbody>
+                                        </table>
+                                      </td>
+                                        <!-- <td ng-init="calculateTotalCount('GATEWAY ARCH',supplier.supplier.inv_data['GATEWAY ARCH'].total.total)" ng-show="invStatusKeys['GATEWAY ARCH'].status">{{supplier.supplier.inv_data['GATEWAY ARCH'].total.total}}
+                                        </td> -->
+                                        <td style="vertical-align:middle" ng-if="showLeads">{{supplier.leads_data.length}}</td>
 
                                       </tr>
+
                                       </tbody>
                                       <tfoot>
                                         <tr>
@@ -484,8 +755,7 @@
                                                            options="'options'" doRebuildAll="true" click="onClick">
                                           </ui-gmap-markers>
                                       </ui-gmap-google-map>
-                                    <!-- </div> -->
-                                  </div>
+                                </div>
 
                                 <div class="col-md-7 LeadsTable" ng-show="showSupplierSocietywiseInvTable" >
                                   <div class="panel-heading content-title">
@@ -516,9 +786,7 @@
 
                         <div class="panel panel-default" >
                             <div class="col-md-12">
-                              <!-- <div class="col-md-2">
 
-                              </div> -->
                               <div class="col-md-6" id="bottom" ng-if="showSupplierTypeCountChart">
                                 <div class="panel-heading content-title">
                                   <h5 style="background:'red'">Graphical Representation of {{campaignStatusName}}</h5>
@@ -557,10 +825,22 @@
                                 <div class="panel-heading content-title">
                                   <h5 style="background:'red'">Map View for All Campaigns</h5></div>
                                   <ng-map center="[{{supplierTypesDataList[0].center__latitude}} , {{supplierTypesDataList[0].center__longitude}}]" position="[{{latitude}},{{longitude}}]">
-                                    <marker ng-repeat="campaign in supplierTypesDataList" position="[{{campaign.center__latitude}}, {{campaign.center__longitude}}]" title="{{campaign.proposal__name}}" id="{{campaign.proposal_id}}">
+                                    <marker ng-repeat="campaign in supplierTypesDataList" position="[{{campaign.center__latitude}}, {{campaign.center__longitude}}]" title="{{campaign.proposal__name}}" id="{{campaign.proposal_id}}" on-click="showDetail(event, campaign)">
+                                      <info-window id="myWindow">
+                                        <div ng-non-bindable="" style="color:black;height:120px;width:170px;">
+                                          <div class="">
+                                            <h3>{{windowDisplay.proposal__name}}</h3>
+                                          </div>
+                                          <table class="table-responsive table windowDisplayTable">
+                                            <tbody>
+                                                <tr><td>Total Suppliers</td> <td><small>{{windowDisplay.total}}</small></td></tr>
+                                            </tbody>
+                                        </table>
+                                        </div>
+                                      </info-window>
                                     </marker>
                                   </ng-map>
-                                </div>
+                                  </div>
 
                             </div>
                             <div class="panel panel-default" >
@@ -751,7 +1031,7 @@
                           <table class="table table-responsive table-bordered">
                             <md-input-container ng-if="campaignInventories.length">
                               <label>Select Inventory</label>
-                              <md-select ng-model="select.campaignInventories" style="width:155px;">
+                              <md-select ng-model="select.campaignInventories" style="width:140px;">
                                 <md-option ng-repeat="inv in campaignInventories" ng-value="inventories[inv.filter_code]"  ng-click="getPerformanceMetricsData(inv.filter_code)">
                                   <md-button class="md-raised">
                                      {{inventories[inv.filter_code]}}
@@ -789,7 +1069,7 @@
                             <h1 ng-if="showinv"> No Inventory Found</h1>
                           </div>
 
-                        <div class="row zeroInventory" ng-if="!campaignInventories">
+                        <div class="row zeroInventory" ng-if="!campaignInventories && !showSelection">
                           <h1>Please Select Campaign</h1>
                         </div>
                         <div class="row" ng-if="showPerfMetrics == perfMetrics.blank">
@@ -808,7 +1088,7 @@
 
 
 
-                            <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv" style="margin-left: 8px;margin-right:-12px;">
+                            <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.inv" style="margin-left:5px;margin-right:-7px;">
                               <div class="panel-heading content-title">
                                 <div class="col-md-7">
                                   <h4> Release Inventory </h4>
@@ -826,7 +1106,7 @@
                                 <table class="table table-responsive table-bordered pieChart-table">
                                   <tbody>
                                     <tr>
-                                      <td>Rel / Total</td>
+                                      <td>Release / Total</td>
                                     </tr>
                                     <tr>
                                       <td>{{activityInvPerfData.release}} / {{performanceMetricsData.total.release}}</td>
@@ -982,7 +1262,7 @@
                               <table class="table table-responsive table-bordered pieChart-table">
                                 <tbody>
                                   <tr>
-                                    <td>OnTime / Released</td>
+                                    <td>OnTime / Audit</td>
                                   </tr>
                                   <tr>
                                     <td>{{performanceMetricsData.actual.audit.ontime}} / {{activityInvPerfData.audit}}</td>
@@ -1012,7 +1292,7 @@
                               <table class="table table-responsive table-bordered pieChart-table">
                                 <tbody>
                                   <tr>
-                                    <td>OnTime / Released</td>
+                                    <td>OnTime / Closed</td>
                                   </tr>
                                   <tr>
                                     <td>{{performanceMetricsData.actual.closure.ontime}} / {{activityInvPerfData.closure}}</td>
@@ -1126,7 +1406,6 @@
                               </div>
                             </div>
                             <div class="col-md-12">
-                              <!-- <nvd3 options="stackedBarChartOptions" data="stackedBarChartcampaignsData"></nvd3> -->
                               <canvas id="line" height="220" class="chart chart-line" chart-data="lineChartValues"
                                 chart-labels="lineChartLabels" chart-colors="lineChartOptions.colors" chart-series="lineChartOptions.series" chart-options="lineChartOptions"
                                 chart-dataset-override="datasetOverride" chart-click="onClick">
