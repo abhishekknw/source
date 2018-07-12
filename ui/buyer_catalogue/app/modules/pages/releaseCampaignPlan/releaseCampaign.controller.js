@@ -428,11 +428,12 @@ $scope.multiSelect =
          };
 
         $scope.selected_customTexts = {buttonDefaultText: 'Stall Location'};
-        $scope.getRelationShipData = function(supplierId){
+        $scope.getRelationShipData = function(supplier){
           $scope.relationshipData = {};
           var supplierCode = 'RS';
           var campaignId = $scope.releaseDetails.campaign.proposal_id;
-          releaseCampaignService.getRelationShipData(supplierId,supplierCode,campaignId)
+          $scope.supplierFlatCount = supplier.flat_count;
+          releaseCampaignService.getRelationShipData(supplier.supplier_id,supplierCode,campaignId)
           .then(function onSuccess(response){
             $scope.relationshipData = response.data.data;
             console.log(response);
