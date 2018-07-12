@@ -28,6 +28,7 @@ from v0.ui.base.models import BaseModel
 from v0.ui.campaign.models import Campaign, CampaignTypeMapping
 from v0.ui.organisation.models import Organisation
 from v0.ui.account.models import ContactDetailsGeneric
+from v0.ui.proposal.models import SpaceMapping, SpaceMappingVersion
 
 
 AD_INVENTORY_CHOICES = (
@@ -1017,58 +1018,7 @@ class BusinessSubTypes(BaseModel):
 
 #         db_table = 'account_contact'
 
-class SpaceMapping(models.Model):
-    """
-    This model talks about what spaces or suppliers are allowed or not at a center for a given proposal.
-    """
-    center              = models.OneToOneField(ProposalCenterMapping,db_index=True, related_name='space_mappings', on_delete=models.CASCADE)
-    proposal            = models.ForeignKey('ProposalInfo', related_name='space_mapping', on_delete=models.CASCADE)
-    society_allowed     = models.BooleanField(default=False)
-    society_count       = models.IntegerField(default=0)
-    society_buffer_count = models.IntegerField(default=0)
-    corporate_allowed   = models.BooleanField(default=False)
-    corporate_count     = models.IntegerField(default=0)
-    corporate_buffer_count = models.IntegerField(default=0)
-    gym_allowed         = models.BooleanField(default=False)
-    gym_count           = models.IntegerField(default=0)
-    gym_buffer_count    = models.IntegerField(default=0)
-    salon_allowed      = models.BooleanField(default=False)
-    salon_count        = models.IntegerField(default=0)
-    salon_buffer_count = models.IntegerField(default=0)
 
-    def get_all_inventories(self):
-        return self.inventory_types.all()
-
-    def get_society_inventories(self):
-        return self.inventory_types.get(supplier_code='RS')
-
-    def get_corporate_inventories(self):
-        return self.inventory_types.get(supplier_code='CP')
-
-    def get_gym_inventories(self):
-        return self.inventory_types.get(supplier_code='GY')
-
-    def get_salon_inventories(self):
-        return self.inventory_types.get(supplier_code='SA')
-
-    def get_all_spaces(self):
-        return self.spaces.all()
-
-    def get_societies(self):
-        return self.spaces.filter(supplier_code='RS')
-
-    def get_corporates(self):
-        return self.spaces.filter(supplier_code='CP')
-
-    def get_gyms(self):
-        return self.spaces.filter(supplier_code='GY')
-
-    def get_salons(self):
-        return self.spaces.filter(supplier_code='SA')
-
-    class Meta:
-        #db_table = 'SPACE_MAPPING'
-        db_table = 'space_mapping'
 
 class InventoryType(models.Model):
     supplier_code   = models.CharField(db_index=True, max_length=4)
@@ -1102,24 +1052,7 @@ class InventoryType(models.Model):
 #         db_table = 'shortlisted_spaces'
 
 
-class SpaceMappingVersion(models.Model):
-    center_version      = models.OneToOneField(ProposalCenterMappingVersion,db_index=True, related_name='space_mappings_version', on_delete=models.CASCADE)
-    proposal_version    = models.ForeignKey(ProposalInfoVersion, related_name='space_mapping_version', on_delete=models.CASCADE)
-    society_allowed     = models.BooleanField(default=False)
-    society_count       = models.IntegerField(default=0)
-    society_buffer_count = models.IntegerField(default=0)
-    corporate_allowed   = models.BooleanField(default=False)
-    corporate_count     = models.IntegerField(default=0)
-    corporate_buffer_count = models.IntegerField(default=0)
-    gym_allowed         = models.BooleanField(default=False)
-    gym_count           = models.IntegerField(default=0)
-    gym_buffer_count    = models.IntegerField(default=0)
-    salon_allowed      = models.BooleanField(default=False)
-    salon_count        = models.IntegerField(default=0)
-    salon_buffer_count = models.IntegerField(default=0)
 
-    class Meta:
-        db_table = 'space_mapping_version'
 
 class InventoryTypeVersion(models.Model):
     supplier_code   = models.CharField(db_index=True, max_length=4)
@@ -1392,7 +1325,7 @@ class AbstractGeneralCost(BaseModel):
     also one mastercost sheet will only have one "cost", doesn't matter what type ( ofcourse different types of costs, but all are actualy
     a cost ! ).
     """
-    proposal_master_cost = models.ForeignKey(ProposalMasterCost, null=True, blank=True)
+    proposal_master_cost = models.ForeignKey('ProposalMasterCost', null=True, blank=True)
     total_cost = models.FloatField(null=True, blank=True)
     comment = models.CharField(max_length=1000, null=True, blank=True)
 
@@ -1461,7 +1394,7 @@ class Filters(BaseModel):
     and are populated from there.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    center = models.ForeignKey(ProposalCenterMapping, null=True, blank=True)
+    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
     supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
     filter_name = models.CharField(max_length=255, null=True, blank=True)

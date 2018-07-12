@@ -3,6 +3,7 @@ from django.db import models
 from v0.ui.base.models import BaseModel
 from v0.ui.account.models import AccountInfo
 from v0.ui.inventory.models import SupplierTypeSociety, SocietyInventoryBooking
+from v0.ui.proposal.models import ProposalInfo
 
 
 class CampaignTypes(models.Model):

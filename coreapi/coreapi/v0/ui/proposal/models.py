@@ -3,7 +3,122 @@ from django.db import models
 from v0 import managers
 from django.contrib.contenttypes.models import ContentType
 from v0.ui.base.models import BaseModel
-from v0.models import SpaceMapping, SpaceMappingVersion
+#from v0.models import SpaceMapping, SpaceMappingVersion
+
+class ProposalCenterMapping(BaseModel):
+    """
+    for a given proposal, stores lat, long, radius, city, pincode etc.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    proposal    = models.ForeignKey('ProposalInfo', db_index=True, related_name='centers', on_delete=models.CASCADE)
+    center_name = models.CharField(max_length=50)
+    address     = models.CharField(max_length=150,null=True, blank=True)
+    latitude    = models.FloatField(default=0.0)
+    longitude   = models.FloatField(default=0.0)
+    radius      = models.FloatField(default=0.0)
+    subarea     = models.CharField(max_length=35)
+    area        = models.CharField(max_length=35)
+    city        = models.CharField(max_length=35)
+    pincode     = models.IntegerField()
+    objects = managers.GeneralManager()
+
+    def get_space_mappings(self):
+        return SpaceMapping.objects.get(center=self)
+
+    class Meta:
+        db_table = 'proposal_center_mapping'
+        unique_together = (('proposal','center_name'),)
+
+class ProposalCenterMappingVersion(models.Model):
+    proposal_version    = models.ForeignKey("ProposalInfoVersion", db_index=True, related_name='centers_version', on_delete=models.CASCADE)
+    center_name = models.CharField(max_length=50)
+    address     = models.CharField(max_length=150, null=True, blank=True)
+    latitude    = models.FloatField()
+    longitude   = models.FloatField()
+    radius      = models.FloatField()
+    subarea     = models.CharField(max_length=35, default='')
+    area        = models.CharField(max_length=35, default='')
+    city        = models.CharField(max_length=35, default='')
+    pincode     = models.IntegerField(default=0)
+
+    def get_space_mappings_versions(self):
+        return SpaceMappingVersion.objects.get(center_version=self)
+
+    class Meta:
+        db_table = 'proposal_center_mapping_version'
+        unique_together = (('proposal_version','center_name'),)
+
+class SpaceMapping(models.Model):
+    """
+    This model talks about what spaces or suppliers are allowed or not at a center for a given proposal.
+    """
+    center              = models.OneToOneField(ProposalCenterMapping,db_index=True, related_name='space_mappings', on_delete=models.CASCADE)
+    proposal            = models.ForeignKey('ProposalInfo', related_name='space_mapping', on_delete=models.CASCADE)
+    society_allowed     = models.BooleanField(default=False)
+    society_count       = models.IntegerField(default=0)
+    society_buffer_count = models.IntegerField(default=0)
+    corporate_allowed   = models.BooleanField(default=False)
+    corporate_count     = models.IntegerField(default=0)
+    corporate_buffer_count = models.IntegerField(default=0)
+    gym_allowed         = models.BooleanField(default=False)
+    gym_count           = models.IntegerField(default=0)
+    gym_buffer_count    = models.IntegerField(default=0)
+    salon_allowed      = models.BooleanField(default=False)
+    salon_count        = models.IntegerField(default=0)
+    salon_buffer_count = models.IntegerField(default=0)
+
+    def get_all_inventories(self):
+        return self.inventory_types.all()
+
+    def get_society_inventories(self):
+        return self.inventory_types.get(supplier_code='RS')
+
+    def get_corporate_inventories(self):
+        return self.inventory_types.get(supplier_code='CP')
+
+    def get_gym_inventories(self):
+        return self.inventory_types.get(supplier_code='GY')
+
+    def get_salon_inventories(self):
+        return self.inventory_types.get(supplier_code='SA')
+
+    def get_all_spaces(self):
+        return self.spaces.all()
+
+    def get_societies(self):
+        return self.spaces.filter(supplier_code='RS')
+
+    def get_corporates(self):
+        return self.spaces.filter(supplier_code='CP')
+
+    def get_gyms(self):
+        return self.spaces.filter(supplier_code='GY')
+
+    def get_salons(self):
+        return self.spaces.filter(supplier_code='SA')
+
+    class Meta:
+        #db_table = 'SPACE_MAPPING'
+        db_table = 'space_mapping'
+
+class SpaceMappingVersion(models.Model):
+    center_version      = models.OneToOneField(ProposalCenterMappingVersion,db_index=True, related_name='space_mappings_version', on_delete=models.CASCADE)
+    proposal_version    = models.ForeignKey('ProposalInfoVersion', related_name='space_mapping_version', on_delete=models.CASCADE)
+    society_allowed     = models.BooleanField(default=False)
+    society_count       = models.IntegerField(default=0)
+    society_buffer_count = models.IntegerField(default=0)
+    corporate_allowed   = models.BooleanField(default=False)
+    corporate_count     = models.IntegerField(default=0)
+    corporate_buffer_count = models.IntegerField(default=0)
+    gym_allowed         = models.BooleanField(default=False)
+    gym_count           = models.IntegerField(default=0)
+    gym_buffer_count    = models.IntegerField(default=0)
+    salon_allowed      = models.BooleanField(default=False)
+    salon_count        = models.IntegerField(default=0)
+    salon_buffer_count = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = 'space_mapping_version'
 
 class ProposalInfo(BaseModel):
     """
@@ -39,49 +154,6 @@ class ProposalInfo(BaseModel):
     class Meta:
 
         db_table = 'proposal_info'
-
-class ProposalCenterMapping(BaseModel):
-    """
-    for a given proposal, stores lat, long, radius, city, pincode etc.
-    """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    proposal    = models.ForeignKey('ProposalInfo', db_index=True, related_name='centers', on_delete=models.CASCADE)
-    center_name = models.CharField(max_length=50)
-    address     = models.CharField(max_length=150,null=True, blank=True)
-    latitude    = models.FloatField(default=0.0)
-    longitude   = models.FloatField(default=0.0)
-    radius      = models.FloatField(default=0.0)
-    subarea     = models.CharField(max_length=35)
-    area        = models.CharField(max_length=35)
-    city        = models.CharField(max_length=35)
-    pincode     = models.IntegerField()
-    objects = managers.GeneralManager()
-
-    def get_space_mappings(self):
-        return SpaceMapping.objects.get(center=self)
-
-    class Meta:
-        db_table = 'proposal_center_mapping'
-        unique_together = (('proposal','center_name'),)
-
-class ProposalCenterMappingVersion(models.Model):
-    proposal_version    = models.ForeignKey(ProposalInfoVersion, db_index=True, related_name='centers_version', on_delete=models.CASCADE)
-    center_name = models.CharField(max_length=50)
-    address     = models.CharField(max_length=150, null=True, blank=True)
-    latitude    = models.FloatField()
-    longitude   = models.FloatField()
-    radius      = models.FloatField()
-    subarea     = models.CharField(max_length=35, default='')
-    area        = models.CharField(max_length=35, default='')
-    city        = models.CharField(max_length=35, default='')
-    pincode     = models.IntegerField(default=0)
-
-    def get_space_mappings_versions(self):
-        return SpaceMappingVersion.objects.get(center_version=self)
-
-    class Meta:
-        db_table = 'proposal_center_mapping_version'
-        unique_together = (('proposal_version','center_name'),)
 
 class ProposalInfoVersion(models.Model):
     # proposal_id         = models.CharField(db_column = 'PROPOSAL ID',max_length=15,primary_key=True)

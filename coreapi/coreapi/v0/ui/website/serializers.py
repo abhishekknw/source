@@ -11,7 +11,7 @@ from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
 from v0.ui.account.models import AccountInfo, PriceMappingDefault
 from v0.ui.account.serializers import BusinessAccountContactSerializer
-from v0.ui.campaign.models import Campaign, CampaignSocietyMapping
+from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
 from v0.ui.organisation.models import Organisation
 from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety
@@ -269,7 +269,7 @@ class CampaignAssignmentSerializerReadOnly(ModelSerializer):
     campaign = ProposalInfoSerializer()
 
     class Meta:
-        model = models.CampaignAssignment
+        model = CampaignAssignment
         fields = '__all__'
 
 
