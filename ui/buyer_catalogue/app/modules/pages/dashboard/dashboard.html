@@ -201,7 +201,8 @@
                                                                     <td>{{campaignReleaseData.totalOnLocationCount}} : {{campaignReleaseData.totalOffLocationCount}}</td>
                                                                   </tr>
                                                                   <tr><td style="font:bold 12px/30px Georgia, serif;">Avg Off Loc. (Mts)</td>
-                                                                    <td>{{campaignReleaseData.totalOffLocationDistance / campaignReleaseData.totalInvCount |limitTo:5}} </td>
+                                                                    <td>{{campaignReleaseData.totalOffLocationDistance / campaignReleaseData.totalInvCount |limitTo:10}}
+                                                                    ({{(campaignReleaseData.totalOffLocationDistance / campaignReleaseData.totalInvCount)/1000|limitTo:10}}Km) </td>
                                                                   </tr>
 
 
@@ -241,7 +242,8 @@
                                       <td>{{invName}}</td>
                                       <td>{{item.inv_count}}</td>
                                       <td>{{item.offTimeDays/item.inv_count*100|limitTo:4||0}} </td>
-                                      <td>{{item.offLocationDistance/item.inv_count|limitTo:5||0}}</td>
+                                      <td>{{item.offLocationDistance/item.inv_count|limitTo:10||0}}
+                                         ({{(item.offLocationDistance/item.inv_count)/1000|limitTo:10||0}}km)</td>
                                       <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item.images)">View Images</a></td>
                                     <td ng-if="item.images.length == 0"><label>No Image<label></td>
                                           </tr>
@@ -1075,16 +1077,18 @@
                         <div class="row" ng-if="showPerfMetrics == perfMetrics.blank">
 
                         </div>
-                            <div class="col-md-12" ng-show="compCampaigns.campaigns.value">
-                              <div class="col-md-2">
-                                <span style="color:red;width:100%;margin-left:-20px;" ng-dropdown-multiselect="" options="mergedarray" class="col-md-6"  extra-settings="searchSelectAllSettings"
-                                selected-model="searchSelectAllModel" translation-texts="selected_baselines_customTexts" events="events"></span>
+                        <!--START : COMPARE CAMPAIGNS LIST  -->
+                          <div class="col-md-12" ng-show="compCampaigns.campaigns.value">
+                            <div class="col-md-2">
+                              <span style="color:red;width:100%;margin-left:-20px;" ng-dropdown-multiselect="" options="mergedarray" class="col-md-6"  extra-settings="searchSelectAllSettings"
+                              selected-model="searchSelectAllModel" translation-texts="selected_baselines_customTexts" events="events"></span>
 
-                              </div>
-                                <div class="col-md-2">
-                                <button class="btn btn-primary" style="margin-left:20px" ng-click="getCompareCampaignChartData()">COMPARE</button>
-                              </div>
+                            </div>
+                              <div class="col-md-2">
+                              <button class="btn btn-primary" style="margin-left:20px" ng-click="getCompareCampaignChartData()">COMPARE</button>
+                            </div>
                           </div>
+                          <!--END : COMPARE CAMPAIGNS LIST  -->
 
 
 

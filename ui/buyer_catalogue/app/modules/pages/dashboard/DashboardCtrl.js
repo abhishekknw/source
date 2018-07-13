@@ -226,7 +226,7 @@
                 campaignData[inv] = {};
                 campaignData[inv]['onLocation'] = false;
                 campaignData[inv]['onTime'] = false;
-                campaignData[inv]['minDistance'] = 100;
+                // campaignData[inv]['minDistance'] = 100;
                 campaignData[inv]['dayCount'] = 100;
 
                   for(var i=0; i<items.length; i++){
@@ -237,7 +237,7 @@
                       break;
                     }
                     else if(items[i].hasOwnProperty('distance')){
-                      if(items[i].distance < campaignData[inv]['minDistance']){
+                      if(!campaignData[inv].hasOwnProperty('minDistance') || items[i].distance < campaignData[inv]['minDistance']){
                         campaignData[inv]['minDistance'] = items[i].distance;
                       }
                     }
@@ -329,6 +329,7 @@
                   $scope.mergedarray.push(campaign);
               })
             })
+            console.log($scope.mergedarray);
             $scope.campaigns = [$scope.campaignData.ongoing_campaigns.length,$scope.campaignData.completed_campaigns.length,$scope.campaignData.upcoming_campaigns.length];
               $scope.campaignChartdata = [
               { label : $scope.campaignStatus.ongoing.campaignLabel, value : $scope.campaignData.ongoing_campaigns.length },
@@ -899,7 +900,7 @@
 
    $scope.searchSelectAllSettings = { enableSearch: true,
        keyboardControls: true ,idProp : "campaign",
-       template: '{{option.campaign.name}}', smartButtonTextConverter(skip, option) { return option; },
+       template: '{{option.name}}', smartButtonTextConverter(skip, option) { return option; },
        selectionLimit: 4,
        showCheckAll : true,
        scrollableHeight: '300px', scrollable: true};
@@ -907,6 +908,7 @@
  $scope.selected_baselines_customTexts = {buttonDefaultText: 'Select Campaigns'};
 
    $scope.events = {
+
    onItemSelect : function(item){
    }
  }
@@ -939,9 +941,10 @@
     $scope.getCompareCampaignChartData = function(campaignChartData){
       var proposalIdData = [];
       var proposalIdDataNames = {};
+      console.log($scope.searchSelectAllModel);
       angular.forEach($scope.searchSelectAllModel,function(data){
-        proposalIdData.push(data.id.proposal_id);
-        proposalIdDataNames[data.id.proposal_id] = {
+        proposalIdData.push(data.id);
+        proposalIdDataNames[data.id] = {
           name : data.id.name,
         };
       })
