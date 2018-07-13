@@ -30,23 +30,23 @@ from v0.ui.location.models import CityArea
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.serializers import ContactDetailsSerializer, ContactDetailsGenericSerializer
 from v0.ui.account.models import ContactDetails, ContactDetailsGeneric
-from v0.ui.inventory.models import SupplierTypeSociety
+from v0.ui.inventory.models import SupplierTypeSociety, StallInventory
 from v0.ui.inventory.serializers import SupplierTypeSocietySerializer
 from rest_framework.decorators import detail_route, list_route
-from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
-    PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, \
+from v0.models import CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
+    SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, \
     Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, \
-    RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SocietyTower, \
+    RatioDetails, Signup, SupplierInfo, SocietyTower, \
     SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, \
-    BusinessSubTypes, AdInventoryType, DurationType, \
+    BusinessSubTypes, DurationType, AD_INVENTORY_CHOICES, \
     Amenity, SupplierAmenitiesMap
-from v0.models import AD_INVENTORY_CHOICES
 import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils
 import errors
 import constants as v0_constants
 import v0.ui.website.utils as website_utils
+from v0.ui.inventory.models import BannerInventory, AdInventoryType, PosterInventory, StreetFurniture
 
 
 class PopulateContentTypeFields(APIView):

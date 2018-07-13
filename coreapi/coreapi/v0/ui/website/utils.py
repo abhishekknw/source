@@ -45,12 +45,13 @@ import v0.models as models
 from v0.models import  (ShortlistedInventoryPricingDetails,
                         PrintingCost, DataSciencesCost,
                         EventStaffingCost, SpaceBookingCost, IdeationDesignCost, LogisticOperationsCost, ShortlistedSpaces,
-                        Filters, AdInventoryType, DurationType, InventorySummary,
-                        GenericExportFileName, InventoryActivityAssignment, SupplierAmenitiesMap, InventoryActivityImage,
+                        Filters, DurationType,
+                        GenericExportFileName, SupplierAmenitiesMap,
                         Amenity, InventoryActivity, INVENTORY_ACTIVITY_TYPES, Events, FlatType, SocietyTower, Role, Lead,
                         CampaignLeads)
 from v0.ui.account.models import PriceMappingDefault, ContactDetails, AccountInfo
-from v0.ui.inventory.models import SupplierTypeSociety
+from v0.ui.inventory.models import SupplierTypeSociety, AdInventoryType, InventoryActivityAssignment, \
+    InventoryActivityImage, InventorySummary
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
     ProposalInfoVersion, ProposalMasterCost)

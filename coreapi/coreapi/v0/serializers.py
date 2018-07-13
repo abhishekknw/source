@@ -3,19 +3,20 @@ from django.contrib.auth.models import User, Permission, Group
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import Campaign, Organisation, BusinessTypes, BusinessSubTypes, ImageMapping, InventoryLocation, \
-    AdInventoryLocationMapping, AdInventoryType, DurationType, BannerInventory, \
-    CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, SocietyFlat, StandeeInventory, \
+from v0.models import Campaign, Organisation, BusinessTypes, BusinessSubTypes, ImageMapping, DurationType, \
+    CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, StandeeInventory, \
     SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, Events, InventoryInfo, MailboxInfo, \
-    OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, StallInventory, FlyerInventory, \
-    StreetFurniture, SportsInfra, SupplierInfo, SupplierTypeCorporate, SocietyTower, FlatType, \
+    OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, \
+    SportsInfra, SupplierInfo, SupplierTypeCorporate, SocietyTower, FlatType, \
     ContactDetailsGeneric, SupplierTypeSalon, SupplierTypeGym
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
 from v0.ui.organisation.serializers import OrganisationSerializer
-from v0.models import SupplierTypeCode, InventorySummary, SocietyMajorEvents, \
+from v0.models import SupplierTypeCode, SocietyMajorEvents, \
     CorporateParkCompanyList, CorporateBuilding, CorporateBuildingWing, CorporateCompanyDetails, \
     CompanyFloor
 import models
+from v0.ui.inventory.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, BannerInventory, \
+    PosterInventory, InventorySummary, StreetFurniture, StallInventory, FlyerInventory
 
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 

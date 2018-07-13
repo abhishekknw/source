@@ -31,11 +31,11 @@ from v0.serializers import ImageMappingSerializer, CommunityHallInfoSerializer, 
     CorporateParkCompanySerializer, \
     SupplierTypeSalonSerializer, SupplierTypeGymSerializer, FlyerInventorySerializer, SupplierTypeBusShelterSerializer
 
-from v0.models import ImageMapping, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, PosterInventory, \
+from v0.models import ImageMapping, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
     SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory,  Events, MailboxInfo, PoleInventory, \
-    StallInventory, StreetFurniture, SportsInfra, SocietyTower, FlatType, SupplierTypeCorporate, \
-    CorporateParkCompanyList, FlyerInventory, SupplierAmenitiesMap
-from v0.models import SupplierTypeCode, InventorySummary, SocietyMajorEvents, CorporateBuildingWing, CorporateBuilding, \
+    SportsInfra, SocietyTower, FlatType, SupplierTypeCorporate, \
+    CorporateParkCompanyList, SupplierAmenitiesMap
+from v0.models import SupplierTypeCode, SocietyMajorEvents, CorporateBuildingWing, CorporateBuilding, \
     CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 from v0.ui.user.models import UserProfile
 from v0.ui.location.models import City, CityArea, CitySubArea
@@ -47,8 +47,9 @@ from v0.ui.location.serializers import CitySerializer, CityAreaSerializer, CityS
 from v0.ui.account.models import PriceMappingDefault, PriceMapping, ContactDetails, ContactDetailsGeneric
 from v0.ui.account.serializers import (PriceMappingDefaultSerializer, PriceMappingSerializer,
                                        ContactDetailsSerializer, ContactDetailsGenericSerializer)
-from v0.ui.inventory.models import SupplierTypeSociety
-from v0.ui.inventory.serializers import SupplierTypeSocietySerializer
+from v0.ui.inventory.models import SupplierTypeSociety, PosterInventory, InventorySummary, StreetFurniture, \
+    StallInventory, FlyerInventory
+from inventory.serializers import SupplierTypeSocietySerializer
 from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
 
 # project imports

@@ -4,8 +4,8 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 import v0.models as models
-from v0.models import SupplierTypeCorporate, SpaceMapping, InventoryType, ShortlistedSpaces,\
-                    SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, BaseUser
+from v0.models import SupplierTypeCorporate, SpaceMapping, ShortlistedSpaces,\
+                    SpaceMappingVersion, ShortlistedSpacesVersion, BaseUser
 from v0.serializers import AdInventoryTypeSerializer, DurationTypeSerializer, BaseModelPermissionSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
@@ -14,7 +14,8 @@ from v0.ui.account.serializers import BusinessAccountContactSerializer
 from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
 from v0.ui.organisation.models import Organisation
-from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety
+from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety, InventoryActivityImage, \
+    InventoryActivityAssignment, InventoryTypeVersion, InventoryType
 from v0.ui.proposal.models import ProposalCenterMapping, ProposalCenterMappingVersion
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 
@@ -282,7 +283,7 @@ class AuditDateSerializer(ModelSerializer):
 
 class InventoryActivityImageSerializer(ModelSerializer):
     class Meta:
-        model = models.InventoryActivityImage
+        model = InventoryActivityImage
         fields = '__all__'
 
 
@@ -291,7 +292,7 @@ class InventoryActivityAssignmentSerializerWithImages(ModelSerializer):
     images = InventoryActivityImageSerializer(many=True, source='inventoryactivityimage_set')
 
     class Meta:
-        model = models.InventoryActivityAssignment
+        model = InventoryActivityAssignment
         fields = '__all__'
 
 
@@ -367,7 +368,7 @@ class InventoryActivityAssignmentWithShortlistedSpaceReadOnly(ModelSerializer):
         source='shortlisted_inventory_details')
 
     class Meta:
-        model = models.InventoryActivityAssignment
+        model = InventoryActivityAssignment
         fields = '__all__'
 
 
@@ -376,7 +377,7 @@ class InventoryActivityImageSerializerReadOnly(ModelSerializer):
     inventory_assignment_details = InventoryActivityAssignmentWithShortlistedSpaceReadOnly(source='inventory_activity_assignment')
 
     class Meta:
-        model = models.InventoryActivityImage
+        model = InventoryActivityImage
         fields = '__all__'
 
 
@@ -389,7 +390,7 @@ class InventoryActivityAssignmentSerializerReadOnly(ModelSerializer):
     shortlisted_inventory_details = ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly()
 
     class Meta:
-        model = models.InventoryActivityAssignment
+        model = InventoryActivityAssignment
         fields = '__all__'
 
 
@@ -398,7 +399,7 @@ class InventoryActivityAssignmentSerializer(ModelSerializer):
     General serializer for inv act assignment
     """
     class Meta:
-        model = models.InventoryActivityAssignment
+        model = InventoryActivityAssignment
         fields = '__all__'
 
 

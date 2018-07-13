@@ -1,10 +1,10 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import BannerInventory, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
-    PosterInventory, SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, \
+from v0.models import CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
+    SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, \
     Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, \
-    RatioDetails, Signup, StallInventory, StreetFurniture, SupplierInfo, SocietyTower, \
+    RatioDetails, Signup, SupplierInfo, SocietyTower, \
     SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, SupplierTypeRetailShop, \
     SupplierTypeBusDepot
 from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
@@ -14,7 +14,8 @@ from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerialize
     MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, \
     RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, \
     SupplierInfoSerializer, SocietyTowerSerializer, ImageMappingSerializer
-from inventory.models import SupplierTypeSociety
+from inventory.models import BannerInventory, PosterInventory, StreetFurniture, SupplierTypeSociety, \
+    StallInventory
 from account.serializers import ContactDetailsSerializer
 
 class UISocietySerializer(ModelSerializer):

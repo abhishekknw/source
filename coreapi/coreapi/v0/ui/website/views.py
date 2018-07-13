@@ -37,13 +37,13 @@ from rest_framework.views import APIView
 import tasks
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import BusinessTypesSerializer, BusinessSubTypesSerializer
-from v0.models import AdInventoryType, DurationType, SocietyTower, BusinessTypes, \
-                    BusinessSubTypes, InventorySummary, FlatType, \
-                    SpaceMappingVersion, InventoryTypeVersion, ShortlistedSpacesVersion, GenericExportFileName, \
-                    BaseUser, InventoryActivityAssignment, ShortlistedInventoryPricingDetails, InventoryActivityImage, \
+from v0.models import DurationType, SocietyTower, BusinessTypes, \
+                    BusinessSubTypes, FlatType, \
+                    SpaceMappingVersion, ShortlistedSpacesVersion, GenericExportFileName, \
+                    BaseUser, ShortlistedInventoryPricingDetails, \
                     SupplierAmenitiesMap, Amenity, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, INVENTORY_ACTIVITY_TYPES,\
                     GeneralUserPermission, Profile, InventoryActivity
-from v0.models import SupplierTypeCorporate, SpaceMapping , InventoryType, ShortlistedSpaces
+from v0.models import SupplierTypeCorporate, SpaceMapping , ShortlistedSpaces
 from v0.ui.website.serializers import (SpaceMappingSerializer ,InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,
         SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,
     ProposalCenterMappingVersionSpaceSerializer, GeneralUserPermissionSerializer, AmenitySerializer, SupplierAmenitiesMapSerializer,
@@ -68,7 +68,8 @@ from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssi
 from v0.ui.campaign.serializers import CampaignSerializer, CampaignSocietyMappingSerializer
 from v0.ui.account.serializers import BusinessInfoSerializer, BusinessAccountContactSerializer, AccountInfoSerializer
 from v0.ui.account.models import BusinessAccountContact, PriceMappingDefault, ContactDetails, AccountInfo
-from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety
+from v0.ui.inventory.models import AdInventoryType, SocietyInventoryBooking, SupplierTypeSociety, \
+    InventoryActivityAssignment, InventoryActivityImage, InventorySummary, InventoryTypeVersion, InventoryType
 from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer
 
 from v0.ui.organisation.models import Organisation, OrganisationMap, ORGANIZATION_CATEGORY
