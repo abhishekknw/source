@@ -287,12 +287,12 @@
             </br></br>
               <div class="row form-inline">
                 <!-- <span style="float:left"> -->
-                <select class="form-control input-size"  ng-model="supplier_type_code">
+                <select class="form-control input-size"  ng-model="supplier_type_code.code">
                   <option value="">Select Supplier</option>
                   <option  ng-repeat="supplier in supplier_names" value="{{supplier.code}}" required>{{supplier.name}}</option>
                 </select>
                     <label style="margin-left: 20px;margin-right: 20px;">Enter Text</label>
-                      <input class="form-control input-size" type="text" ng-model="search" class="form-control spacing col-width" style="margin-left:10px">
+                      <input class="form-control input-size" type="text" ng-model="search.query" class="form-control spacing col-width" style="margin-left:10px">
                 <button data-target = "" class="btn btn-danger active" data-toggle="modal" ng-click="searchSuppliers()">Search</button>
               </div>
           </br>
