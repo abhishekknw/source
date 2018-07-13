@@ -6919,9 +6919,9 @@ def get_campaign_inv_data(campaign_id):
                 if inv_key not in result[key]:
                     result[key][inv_key] = {}
                     result[key][inv_key]['total'] = inv_data
-                if key in inv_act_assigned_data_map:
+                if key in inv_act_assigned_data_map and inv_key in inv_act_assigned_data_map[key]:
                     result[key][inv_key]['assigned'] = inv_act_assigned_data_map[key][inv_key]
-                if key in inv_act_image_data_map:
+                if key in inv_act_image_data_map and inv_key in inv_act_image_data_map[key]:
                     result[key][inv_key]['completed'] = inv_act_image_data_map[key][inv_key]
         return result
     except Exception as e:
