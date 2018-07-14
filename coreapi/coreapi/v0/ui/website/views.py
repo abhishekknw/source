@@ -6092,7 +6092,15 @@ class DashBoardViewSet(viewsets.ViewSet):
                        inventory_activity_assignment__inventory_activity__activity_type=act_type,
                        inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
                 values()
-            return ui_utils.handle_response(class_name, data=result, success=True)
+
+            for imageInstance in result:
+                imageInstance['object_id'] = supplier_id
+                
+            supplier = models.SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values()
+
+            inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
+                result, supplier)
+            return ui_utils.handle_response(class_name, data=inv_act_image_objects_with_distance, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
