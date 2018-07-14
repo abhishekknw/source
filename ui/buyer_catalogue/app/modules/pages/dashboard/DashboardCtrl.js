@@ -1198,17 +1198,21 @@ $scope.switchToInventory = function(inv){
   var perf_param = null;
   $scope.getPerformanceMetricsData(inv,perf_param);
 }
-$scope.setImageUrl = function(images){
+$scope.setImageUrl = function(item,images){
+  console.log(item);
+  $scope.campaignNameOnImageModal = item.name;
   $scope.imageUrlList = [];
   angular.forEach(images, function(data){
     for(var i=0; i<data.length; i++){
       var imageData = {
         image_url : 'http://androidtokyo.s3.amazonaws.com/' + data[i].image_path,
         comment : data[i].comment,
+        distance : data[i].distance,
       };
       $scope.imageUrlList.push(imageData);
     }
   })
+  console.log($scope.imageUrlList);
 }
 // map
 $scope.setInventoryInfoModalDetails = function(supplier,inv){
