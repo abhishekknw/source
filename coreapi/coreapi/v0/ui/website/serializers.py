@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 import v0.models as models
-from v0.models import SupplierTypeCorporate, SpaceMapping, ShortlistedSpaces,\
+from v0.models import SpaceMapping, ShortlistedSpaces,\
                     SpaceMappingVersion, ShortlistedSpacesVersion, BaseUser
 from v0.ui.finances.models import AuditDate
 from v0.serializers import AdInventoryTypeSerializer, DurationTypeSerializer, BaseModelPermissionSerializer
@@ -19,6 +19,7 @@ from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety,
     InventoryActivityAssignment, InventoryTypeVersion, InventoryType, InventoryActivity
 from v0.ui.proposal.models import ProposalCenterMapping, ProposalCenterMappingVersion
 from v0.ui.proposal.serializers import ProposalInfoSerializer
+from v0.ui.supplier.models import SupplierTypeCorporate, SupplierAmenitiesMap
 
 class InventoryActivitySerializer(ModelSerializer):
     """
@@ -359,7 +360,7 @@ class AmenitySerializer(ModelSerializer):
 class SupplierAmenitiesMapSerializer(ModelSerializer):
 
     class Meta:
-        model = models.SupplierAmenitiesMap
+        model = SupplierAmenitiesMap
         fields = '__all__'
         depth = 1
 

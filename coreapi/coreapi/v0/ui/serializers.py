@@ -4,9 +4,8 @@ from rest_framework import serializers
 from v0.models import CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
     SocietyFlat, SwimmingPoolInfo, UserInquiry, CommonAreaDetails, \
     Events, MailboxInfo, OperationsInfo, \
-    Signup, SupplierInfo, SocietyTower, \
-    SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, SupplierTypeRetailShop, \
-    SupplierTypeBusDepot
+    Signup, SocietyTower
+
 from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
     LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, \
     StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, \
@@ -18,6 +17,8 @@ from inventory.models import BannerInventory, PosterInventory, StreetFurniture, 
     PoleInventory, PosterInventoryMapping
 from account.serializers import ContactDetailsSerializer
 from v0.ui.finances.models import RatioDetails
+from supplier.models import SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, \
+    SupplierTypeRetailShop, SupplierTypeBusDepot, SupplierInfo
 
 class UISocietySerializer(ModelSerializer):
     basic_contact_available = serializers.BooleanField(source='is_contact_available')

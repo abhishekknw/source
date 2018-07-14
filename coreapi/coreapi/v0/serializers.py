@@ -7,10 +7,9 @@ from v0.models import Campaign, Organisation, BusinessTypes, BusinessSubTypes, I
     CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, \
     SwimmingPoolInfo, UserInquiry, CommonAreaDetails, Events, MailboxInfo, \
     OperationsInfo, Signup, \
-    SportsInfra, SupplierInfo, SupplierTypeCorporate, SocietyTower, FlatType, \
-    ContactDetailsGeneric, SupplierTypeSalon, SupplierTypeGym
+    SportsInfra, SocietyTower, FlatType
 from v0.ui.organisation.serializers import OrganisationSerializer
-from v0.models import SupplierTypeCode, SocietyMajorEvents, \
+from v0.models import SocietyMajorEvents, \
     CorporateParkCompanyList, CorporateBuilding, CorporateBuildingWing, CorporateCompanyDetails, \
     CompanyFloor
 import models
@@ -19,6 +18,8 @@ from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperations
 from v0.ui.inventory.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, BannerInventory, \
     PosterInventory, InventorySummary, StreetFurniture, StallInventory, FlyerInventory, StandeeInventory, \
     WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping, GatewayArchInventory
+from v0.ui.supplier.models import SupplierInfo, SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, \
+    ContactDetailsGeneric, SupplierTypeBusShelter, SupplierTypeRetailShop, SupplierTypeCode
 
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 
@@ -370,7 +371,7 @@ class CorporateCompanyDetailsSerializer(ModelSerializer):
 
 class SupplierTypeBusShelterSerializer(ModelSerializer):
     class Meta:
-        model = models.SupplierTypeBusShelter
+        model = SupplierTypeBusShelter
         fields = '__all__'
 
 class PrintingCostSerializer(ModelSerializer):
@@ -503,7 +504,7 @@ class BaseUserCreateSerializer(ModelSerializer):
 class SupplierTypeRetailShopSerializer(ModelSerializer):
 
     class Meta:
-        model = models.SupplierTypeRetailShop
+        model = SupplierTypeRetailShop
         fields = '__all__'
 
 class GatewatArchInventorySerializer(ModelSerializer):

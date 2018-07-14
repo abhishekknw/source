@@ -33,10 +33,10 @@ from v0.serializers import ImageMappingSerializer, CommunityHallInfoSerializer, 
 
 from v0.models import ImageMapping, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
     SocietyFlat, SwimmingPoolInfo,  Events, MailboxInfo, \
-    SportsInfra, SocietyTower, FlatType, SupplierTypeCorporate, \
-    CorporateParkCompanyList, SupplierAmenitiesMap
-from v0.models import SupplierTypeCode, SocietyMajorEvents, CorporateBuildingWing, CorporateBuilding, \
-    CorporateCompanyDetails, CompanyFloor, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
+    SportsInfra, SocietyTower, FlatType, \
+    CorporateParkCompanyList
+from v0.models import SocietyMajorEvents, CorporateBuildingWing, CorporateBuilding, \
+    CorporateCompanyDetails, CompanyFloor
 from v0.ui.user.models import UserProfile
 from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.serializers import (SupplierTypeCodeSerializer, InventorySummarySerializer,
@@ -51,6 +51,8 @@ from inventory.models import SupplierTypeSociety, PosterInventory, InventorySumm
     StallInventory, FlyerInventory, StandeeInventory, PoleInventory
 from inventory.serializers import SupplierTypeSocietySerializer
 from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
+from v0.ui.supplier.models import SupplierTypeCorporate, SupplierAmenitiesMap, SupplierTypeCode, \
+    SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 
 # project imports
 import utils as ui_utils

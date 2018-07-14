@@ -36,10 +36,10 @@ from rest_framework.decorators import detail_route, list_route
 from v0.models import CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
     SocietyFlat, SwimmingPoolInfo, UserInquiry, CommonAreaDetails, \
     Events, MailboxInfo, OperationsInfo, \
-    Signup, SupplierInfo, SocietyTower, \
-    SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, \
+    Signup, SocietyTower, \
+    FlatType, BaseUser, CustomPermissions, BusinessTypes, \
     BusinessSubTypes, DurationType, AD_INVENTORY_CHOICES, \
-    Amenity, SupplierAmenitiesMap
+    Amenity
 from v0.ui.finances.models import RatioDetails
 import utils as v0_utils
 from constants import model_names
@@ -49,6 +49,7 @@ import constants as v0_constants
 import v0.ui.website.utils as website_utils
 from v0.ui.inventory.models import BannerInventory, AdInventoryType, PosterInventory, StreetFurniture, \
     StandeeInventory, WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping
+from v0.ui.supplier.models import SupplierInfo, SupplierTypeCorporate, SupplierAmenitiesMap
 
 class PopulateContentTypeFields(APIView):
     """

@@ -41,9 +41,9 @@ from v0.models import DurationType, SocietyTower, BusinessTypes, \
                     BusinessSubTypes, FlatType, \
                     SpaceMappingVersion, ShortlistedSpacesVersion, GenericExportFileName, \
                     BaseUser, ShortlistedInventoryPricingDetails, \
-                    SupplierAmenitiesMap, Amenity, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, \
+                    Amenity, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, \
                     GeneralUserPermission, Profile
-from v0.models import SupplierTypeCorporate, SpaceMapping , ShortlistedSpaces
+from v0.models import SpaceMapping , ShortlistedSpaces
 from v0.ui.website.serializers import (SpaceMappingSerializer ,InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,
         SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,
     ProposalCenterMappingVersionSpaceSerializer, GeneralUserPermissionSerializer, AmenitySerializer, SupplierAmenitiesMapSerializer,
@@ -83,6 +83,7 @@ from v0.ui.user.serializers import UserProfileSerializer, UserSerializer, BaseUs
 from v0.ui.proposal.models import ProposalInfo, ProposalCenterMapping,ProposalCenterMappingVersion
 from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingVersionSerializer,
     ProposalInfoVersionSerializer, ProposalMasterCostSerializer, ProposalMetricsSerializer)
+from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
