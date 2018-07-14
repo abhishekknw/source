@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import AssignedAudits, Audits
+from v0.ui.finances.models import AssignedAudits, Audits
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.campaign.serializers import CampaignSerializer, CampaignTypeMappingSerializer
 from v0.ui.inventory.models import SocietyInventoryBooking

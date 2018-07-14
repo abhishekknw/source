@@ -14,7 +14,8 @@ from v0.models import SupplierTypeCode, SocietyMajorEvents, \
     CorporateParkCompanyList, CorporateBuilding, CorporateBuildingWing, CorporateCompanyDetails, \
     CompanyFloor
 import models
-from v0.ui.finances.models import RatioDetails
+from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
+    SpaceBookingCost, EventStaffingCost, DataSciencesCost
 from v0.ui.inventory.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, BannerInventory, \
     PosterInventory, InventorySummary, StreetFurniture, StallInventory, FlyerInventory, StandeeInventory, \
     WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping, GatewayArchInventory
@@ -374,37 +375,37 @@ class SupplierTypeBusShelterSerializer(ModelSerializer):
 
 class PrintingCostSerializer(ModelSerializer):
     class Meta:
-        model = models.PrintingCost
+        model = PrintingCost
         fields = '__all__'
 
 
 class LogisticOperationsCostSerializer(ModelSerializer):
     class Meta:
-        model = models.LogisticOperationsCost
+        model = LogisticOperationsCost
         fields = '__all__'
 
 
 class IdeationDesignCostSerializer(ModelSerializer):
     class Meta:
-        model = models.IdeationDesignCost
+        model = IdeationDesignCost
         fields = '__all__'
 
 
 class SpaceBookingCostSerializer(ModelSerializer):
     class Meta:
-        model = models.SpaceBookingCost
+        model = SpaceBookingCost
         fields = '__all__'
 
 
 class EventStaffingCostSerializer(ModelSerializer):
     class Meta:
-        model = models.EventStaffingCost
+        model = EventStaffingCost
         fields = '__all__'
 
 
 class DataSciencesCostSerializer(ModelSerializer):
     class Meta:
-        model = models.DataSciencesCost
+        model = DataSciencesCost
         fields = '__all__'
 
 class PermissionSerializer(ModelSerializer):

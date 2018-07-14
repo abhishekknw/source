@@ -42,8 +42,7 @@ from collections import namedtuple
 import gpxpy.geo
 
 import v0.models as models
-from v0.models import  (ShortlistedInventoryPricingDetails, PrintingCost, DataSciencesCost,
-                        EventStaffingCost, SpaceBookingCost, IdeationDesignCost, LogisticOperationsCost, ShortlistedSpaces,
+from v0.models import  (ShortlistedInventoryPricingDetails, ShortlistedSpaces,
                         Filters, DurationType,
                         GenericExportFileName, SupplierAmenitiesMap,
                         Amenity, Events, FlatType, SocietyTower, Role, Lead,
@@ -62,6 +61,8 @@ from v0 import errors
 import tasks
 import v0.constants as v0_constants
 import v0.serializers as v0_serializers
+from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
+    SpaceBookingCost, EventStaffingCost, DataSciencesCost
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):

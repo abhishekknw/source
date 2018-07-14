@@ -6,6 +6,7 @@ from rest_framework.serializers import ModelSerializer
 import v0.models as models
 from v0.models import SupplierTypeCorporate, SpaceMapping, ShortlistedSpaces,\
                     SpaceMappingVersion, ShortlistedSpacesVersion, BaseUser
+from v0.ui.finances.models import AuditDate
 from v0.serializers import AdInventoryTypeSerializer, DurationTypeSerializer, BaseModelPermissionSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
@@ -277,7 +278,7 @@ class CampaignAssignmentSerializerReadOnly(ModelSerializer):
 class AuditDateSerializer(ModelSerializer):
 
     class Meta:
-        model = models.AuditDate
+        model = AuditDate
         fields = '__all__'
 
 
