@@ -1244,6 +1244,7 @@ $scope.viewSupplierImages = function(supplierId, invType, activityType){
       var imageData = {
         image_url : 'http://androidtokyo.s3.amazonaws.com/' + data.image_path,
         comment : data.comment,
+        distance : data.distance
       };
       $scope.imageUrlList.push(imageData);
     })
