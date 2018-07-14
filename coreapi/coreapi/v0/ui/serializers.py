@@ -2,21 +2,22 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from v0.models import CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
-    SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, \
-    Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, \
-    RatioDetails, Signup, SupplierInfo, SocietyTower, \
+    SocietyFlat, SwimmingPoolInfo, UserInquiry, CommonAreaDetails, \
+    Events, MailboxInfo, OperationsInfo, \
+    Signup, SupplierInfo, SocietyTower, \
     SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, SupplierTypeRetailShop, \
     SupplierTypeBusDepot
 from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
     LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, \
     StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, \
     CommonAreaDetailsSerializer, EventsSerializer, InventoryInfoSerializer, \
-    MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, \
+    MailboxInfoSerializer, OperationsInfoSerializer, \
     RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, \
     SupplierInfoSerializer, SocietyTowerSerializer, ImageMappingSerializer
-from inventory.models import BannerInventory, PosterInventory, StreetFurniture, SupplierTypeSociety, \
-    StallInventory
+from inventory.models import BannerInventory, PosterInventory, StreetFurniture, SupplierTypeSociety, WallInventory, \
+    PoleInventory, PosterInventoryMapping
 from account.serializers import ContactDetailsSerializer
+from v0.ui.finances.models import RatioDetails
 
 class UISocietySerializer(ModelSerializer):
     basic_contact_available = serializers.BooleanField(source='is_contact_available')

@@ -34,20 +34,21 @@ from v0.ui.inventory.models import SupplierTypeSociety, StallInventory
 from v0.ui.inventory.serializers import SupplierTypeSocietySerializer
 from rest_framework.decorators import detail_route, list_route
 from v0.models import CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
-    SocietyFlat, StandeeInventory, SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, \
-    Events, InventoryInfo, MailboxInfo, OperationsInfo, PoleInventory, PosterInventoryMapping, \
-    RatioDetails, Signup, SupplierInfo, SocietyTower, \
+    SocietyFlat, SwimmingPoolInfo, UserInquiry, CommonAreaDetails, \
+    Events, MailboxInfo, OperationsInfo, \
+    Signup, SupplierInfo, SocietyTower, \
     SupplierTypeCorporate, FlatType, BaseUser, CustomPermissions, BusinessTypes, \
     BusinessSubTypes, DurationType, AD_INVENTORY_CHOICES, \
     Amenity, SupplierAmenitiesMap
+from v0.ui.finances.models import RatioDetails
 import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils
 import errors
 import constants as v0_constants
 import v0.ui.website.utils as website_utils
-from v0.ui.inventory.models import BannerInventory, AdInventoryType, PosterInventory, StreetFurniture
-
+from v0.ui.inventory.models import BannerInventory, AdInventoryType, PosterInventory, StreetFurniture, \
+    StandeeInventory, WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping
 
 class PopulateContentTypeFields(APIView):
     """

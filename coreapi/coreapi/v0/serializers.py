@@ -4,19 +4,20 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from v0.models import Campaign, Organisation, BusinessTypes, BusinessSubTypes, ImageMapping, DurationType, \
-    CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, StandeeInventory, \
-    SwimmingPoolInfo, WallInventory, UserInquiry, CommonAreaDetails, Events, InventoryInfo, MailboxInfo, \
-    OperationsInfo, PoleInventory, PosterInventoryMapping, RatioDetails, Signup, \
+    CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, \
+    SwimmingPoolInfo, UserInquiry, CommonAreaDetails, Events, MailboxInfo, \
+    OperationsInfo, Signup, \
     SportsInfra, SupplierInfo, SupplierTypeCorporate, SocietyTower, FlatType, \
     ContactDetailsGeneric, SupplierTypeSalon, SupplierTypeGym
-from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
 from v0.ui.organisation.serializers import OrganisationSerializer
 from v0.models import SupplierTypeCode, SocietyMajorEvents, \
     CorporateParkCompanyList, CorporateBuilding, CorporateBuildingWing, CorporateCompanyDetails, \
     CompanyFloor
 import models
+from v0.ui.finances.models import RatioDetails
 from v0.ui.inventory.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, BannerInventory, \
-    PosterInventory, InventorySummary, StreetFurniture, StallInventory, FlyerInventory
+    PosterInventory, InventorySummary, StreetFurniture, StallInventory, FlyerInventory, StandeeInventory, \
+    WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping, GatewayArchInventory
 
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 
@@ -506,5 +507,5 @@ class SupplierTypeRetailShopSerializer(ModelSerializer):
 
 class GatewatArchInventorySerializer(ModelSerializer):
     class Meta:
-        model = models.GatewayArchInventory
+        model = GatewayArchInventory
         fields = '__all__'

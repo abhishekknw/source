@@ -28,6 +28,61 @@ AD_INVENTORY_CHOICES = (
     ('GATEWAY ARCH', 'GATEWAY ARCH')
 )
 
+INVENTORY_ACTIVITY_TYPES = (
+    ('RELEASE', 'RELEASE'),
+    ('CLOSURE', 'CLOSURE'),
+    ('AUDIT', 'AUDIT')
+)
+
+class GatewayArchInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'gateway_arch_inventory'
+
+class InventoryActivity(BaseModel):
+    """
+    Stores activities like Release, Closure, Audits against each inventory
+    """
+    shortlisted_inventory_details = models.ForeignKey('ShortlistedInventoryPricingDetails')
+    activity_type = models.CharField(max_length=255, null=True,  choices=INVENTORY_ACTIVITY_TYPES)
+
+    class Meta:
+        db_table = 'inventory_activity'
+
+class StandeeInventory(BaseModel):
+
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
+    inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    inventory_status = models.CharField(db_column='INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase.
+    standee_location = models.CharField(db_column='STANDEE_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    type = models.CharField(db_column='STANDEE_TYPE', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    standee_size = models.CharField(db_column='STANDEE_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    standee_sides = models.CharField(db_column='STANDEE_SIDES', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    tower = models.ForeignKey('SocietyTower', db_column='TOWER_ID', related_name='standees', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    def get_tower_name1(self):
+        try:
+            return self.tower.tower_name
+        except:
+            return None
+
+    class Meta:
+        db_table = 'standee_inventory'
+
 class StreetFurniture(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
@@ -43,6 +98,33 @@ class StreetFurniture(models.Model):
     class Meta:
 
         db_table = 'street_furniture'
+
+class WallInventory(BaseModel):
+    inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True)  # Field name made lowercase.
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22)  # Field name made lowercase.
+    wall_size = models.CharField(db_column='WALL_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    wall_frame_size = models.CharField(db_column='WALL_FRAME_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    wall_area = models.CharField(db_column='WALL_AREA', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    wall_type = models.CharField(db_column='WALL_TYPE', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    wall_internal_external = models.CharField(db_column='WALL_INTERNAL_EXTERNAL', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    wall_sides = models.CharField(db_column='WALL_SIDES', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    wall_monthly_price_society = models.FloatField(db_column='WALL_MONTHLY_PRICE_SOCIETY', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    wall_quarterly_price_society = models.FloatField(db_column='WALL_QUARTERLY_PRICE_SOCIETY', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    wall_monthly_price_business = models.FloatField(db_column='WALL_MONTHLY_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    wall_quarterly_price_business = models.FloatField(db_column='WALL_QUARTERLY_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    wall_location = models.CharField(db_column='WALL_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    wall_paint_allowed = models.CharField(db_column='WALL_PAINT_ALLOWED', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    wall_frame_status = models.CharField(db_column='WALL_FRAME_STATUS', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    wall_inventory_status = models.CharField(db_column='WALL_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase.
+    supplier = models.ForeignKey('SupplierTypeSociety', related_name='walls', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+
+        db_table = 'wall_inventory'
 
 class StallInventory(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -92,6 +174,54 @@ class FlyerInventory(BaseModel):
 
         db_table = 'flyer_inventory'
 
+class PoleInventory(BaseModel):
+    inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
+    supplier = models.ForeignKey('SupplierTypeSociety', related_name='poles', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
+    pole_hoarding_size = models.CharField(db_column='POLE_HOARDING_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    pole_area = models.CharField(db_column='POLE_AREA', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    pole_hoarding_type = models.CharField(db_column='POLE_HOARDING_TYPE', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    pole_lit_status = models.CharField(db_column='POLE_LIT_STATUS',  max_length=5, blank=True)  # Field name made lowercase. This field type is a guess.
+    pole_sides = models.CharField(db_column='POLE_SIDES', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    pole_monthly_price_society = models.FloatField(db_column='POLE_MONTHLY_PRICE_SOCIETY', null=True)  # Field name made lowercase.
+    pole_quarterly_price_society = models.FloatField(db_column='POLE_QUARTERLY_PRICE_SOCIETY', null=True)  # Field name made lowercase.
+    pole_monthly_price_business = models.FloatField(db_column='POLE_MONTHLY_PRICE_BUSINESS', null=True)  # Field name made lowercase.
+    pole_quarterly_price_business = models.FloatField(db_column='POLE_QUARTERLY_PRICE_BUSINESS', null=True)  # Field name made lowercase.
+    pole_location = models.CharField(db_column='POLE_LOCATION', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    pole_inventory_status = models.CharField(db_column='POLE_INVENTORY_STATUS', max_length=20, blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+
+        db_table = 'pole_inventory'
+
+class PosterInventoryMapping(models.Model):
+    inventory_mapping_id = models.AutoField(db_column='INVENTORY_MAPPING_ID', primary_key=True)  # Field name made lowercase.
+    inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=20, blank=True, null=True)  # Field name made lowercase.
+    poster_adinventory_id = models.CharField(db_column='POSTER_ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
+    standee_adinventory_id = models.CharField(db_column='STANDEE_ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
+    banner_adinventory_id = models.CharField(db_column='BANNER_ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
+    stall_adinventory_id = models.CharField(db_column='STALL_ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+
+
+        db_table = 'poster_inventory_mapping'
+
+class InventoryInfo(models.Model):
+    inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', primary_key=True, max_length=20)  # Field name made lowercase.
+    inventory_length = models.CharField(db_column='INVENTORY_LENGTH', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    inventory_breadth = models.CharField(db_column='INVENTORY_BREADTH', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    inventory_height = models.CharField(db_column='INVENTORY_HEIGHT', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    inventory_area = models.CharField(db_column='INVENTORY_AREA', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    inventory_size = models.CharField(db_column='INVENTORY_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
+    inventory_name = models.CharField(db_column='INVENTORY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
+    comments1 = models.CharField(db_column='COMMENTS1', max_length=500, blank=True, null=True)  # Field name made lowercase.
+    comments2 = models.CharField(db_column='COMMENTS2', max_length=500, blank=True, null=True)  # Field name made lowercase.
+    material_type = models.CharField(db_column='MATERIAL_TYPE', max_length=70, blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+
+        db_table = 'inventory_info'
 
 class InventoryType(models.Model):
     supplier_code   = models.CharField(db_index=True, max_length=4)

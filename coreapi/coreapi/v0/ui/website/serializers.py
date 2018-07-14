@@ -15,7 +15,7 @@ from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssi
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
 from v0.ui.organisation.models import Organisation
 from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety, InventoryActivityImage, \
-    InventoryActivityAssignment, InventoryTypeVersion, InventoryType
+    InventoryActivityAssignment, InventoryTypeVersion, InventoryType, InventoryActivity
 from v0.ui.proposal.models import ProposalCenterMapping, ProposalCenterMappingVersion
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 
@@ -25,7 +25,7 @@ class InventoryActivitySerializer(ModelSerializer):
     """
 
     class Meta:
-        model = models.InventoryActivity
+        model = InventoryActivity
         fields = '__all__'
 
 
@@ -301,7 +301,7 @@ class InventoryActivitySerializerWithInventoryAssignmentsAndImages(ModelSerializ
     inventory_activity_assignment = InventoryActivityAssignmentSerializerWithImages(many=True, source='inventoryactivityassignment_set')
 
     class Meta:
-        model = models.InventoryActivity
+        model = InventoryActivity
         exclude = ('created_at', 'updated_at')
 
 

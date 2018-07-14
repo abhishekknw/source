@@ -41,8 +41,8 @@ from v0.models import DurationType, SocietyTower, BusinessTypes, \
                     BusinessSubTypes, FlatType, \
                     SpaceMappingVersion, ShortlistedSpacesVersion, GenericExportFileName, \
                     BaseUser, ShortlistedInventoryPricingDetails, \
-                    SupplierAmenitiesMap, Amenity, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, INVENTORY_ACTIVITY_TYPES,\
-                    GeneralUserPermission, Profile, InventoryActivity
+                    SupplierAmenitiesMap, Amenity, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, \
+                    GeneralUserPermission, Profile
 from v0.models import SupplierTypeCorporate, SpaceMapping , ShortlistedSpaces
 from v0.ui.website.serializers import (SpaceMappingSerializer ,InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,
         SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,
@@ -69,7 +69,8 @@ from v0.ui.campaign.serializers import CampaignSerializer, CampaignSocietyMappin
 from v0.ui.account.serializers import BusinessInfoSerializer, BusinessAccountContactSerializer, AccountInfoSerializer
 from v0.ui.account.models import BusinessAccountContact, PriceMappingDefault, ContactDetails, AccountInfo
 from v0.ui.inventory.models import AdInventoryType, SocietyInventoryBooking, SupplierTypeSociety, \
-    InventoryActivityAssignment, InventoryActivityImage, InventorySummary, InventoryTypeVersion, InventoryType
+    InventoryActivityAssignment, InventoryActivityImage, InventorySummary, InventoryTypeVersion, InventoryType, \
+    InventoryActivity
 from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer
 
 from v0.ui.organisation.models import Organisation, OrganisationMap, ORGANIZATION_CATEGORY
