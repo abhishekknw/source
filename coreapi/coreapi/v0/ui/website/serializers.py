@@ -8,7 +8,7 @@ from v0.models import SpaceMapping, ShortlistedSpaces,\
                     SpaceMappingVersion, ShortlistedSpacesVersion, BaseUser
 from v0.ui.finances.models import AuditDate
 from v0.ui.base.serializers import BaseModelPermissionSerializer
-from v0.serializers import AdInventoryTypeSerializer, DurationTypeSerializer
+from v0.serializers import DurationTypeSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
 from v0.ui.account.models import AccountInfo, PriceMappingDefault
@@ -18,6 +18,7 @@ from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
 from v0.ui.organisation.models import Organisation
 from v0.ui.inventory.models import SocietyInventoryBooking, SupplierTypeSociety, InventoryActivityImage, \
     InventoryActivityAssignment, InventoryTypeVersion, InventoryType, InventoryActivity
+from v0.ui.inventory.serializers import AdInventoryTypeSerializer
 from v0.ui.proposal.models import ProposalCenterMapping, ProposalCenterMappingVersion
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from v0.ui.supplier.models import SupplierTypeCorporate, SupplierAmenitiesMap

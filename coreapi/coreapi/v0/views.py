@@ -16,12 +16,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
-from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
-    LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, \
-    StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, \
-    CommonAreaDetailsSerializer, EventsSerializer, InventoryInfoSerializer, \
-    MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, \
-    RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, \
+from v0.serializers import CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
+    LiftDetailsSerializer, NoticeBoardDetailsSerializer, SocietyFlatSerializer, \
+    SwimmingPoolInfoSerializer, UserInquirySerializer, \
+    CommonAreaDetailsSerializer, EventsSerializer, \
+    MailboxInfoSerializer, OperationsInfoSerializer, \
+    RatioDetailsSerializer, SignupSerializer, \
     SocietyTowerSerializer, \
     FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, \
     BaseUserCreateSerializer
@@ -42,6 +42,10 @@ from v0.models import CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoar
     Amenity
 from v0.ui.finances.models import RatioDetails
 from v0.ui.supplier.serializers import SupplierInfoSerializer, SupplierTypeSocietySerializer
+from v0.ui.inventory.serializers import (BannerInventorySerializer, PosterInventorySerializer,
+                                         StandeeInventorySerializer, WallInventorySerializer, InventoryInfoSerializer,
+                                         PoleInventorySerializer, PosterInventoryMappingSerializer,
+                                         StallInventorySerializer, StreetFurnitureSerializer)
 import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils

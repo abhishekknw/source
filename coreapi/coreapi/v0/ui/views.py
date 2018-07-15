@@ -22,14 +22,12 @@ from serializers import UISocietySerializer, UITowerSerializer, UICorporateSeria
     BusShelterSerializer
 from v0.serializers import ImageMappingSerializer, CommunityHallInfoSerializer, LiftDetailsSerializer, \
     NoticeBoardDetailsSerializer, \
-    PosterInventorySerializer, SocietyFlatSerializer, StandeeInventorySerializer, SwimmingPoolInfoSerializer, \
-    WallInventorySerializer, \
-    EventsSerializer, PoleInventorySerializer, StallInventorySerializer, StreetFurnitureSerializer, \
+    SocietyFlatSerializer, SwimmingPoolInfoSerializer, \
+    EventsSerializer, \
     SportsInfraSerializer, \
     SocietyTowerSerializer, FlatTypeSerializer, \
     CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateBuildingGetSerializer, \
-    CorporateParkCompanySerializer, \
-    FlyerInventorySerializer
+    CorporateParkCompanySerializer
 
 from v0.models import ImageMapping, CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
     SocietyFlat, SwimmingPoolInfo,  Events, MailboxInfo, \
@@ -39,22 +37,25 @@ from v0.models import SocietyMajorEvents, CorporateBuildingWing, CorporateBuildi
     CorporateCompanyDetails, CompanyFloor
 from v0.ui.user.models import UserProfile
 from v0.ui.location.models import City, CityArea, CitySubArea
-from v0.serializers import (InventorySummarySerializer,
-                            SocietyMajorEventsSerializer, CorporateParkCompanyListSerializer)
+from v0.serializers import (SocietyMajorEventsSerializer, CorporateParkCompanyListSerializer)
 from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer, BusDepotSerializer
 from v0.ui.user.serializers import UserSerializer, UserProfileSerializer
 from v0.ui.location.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, StateSerializer
 from v0.ui.account.models import PriceMappingDefault, PriceMapping, ContactDetails, ContactDetailsGeneric
 from v0.ui.account.serializers import (PriceMappingDefaultSerializer, PriceMappingSerializer,
                                        ContactDetailsSerializer, ContactDetailsGenericSerializer)
-from inventory.models import SupplierTypeSociety, PosterInventory, InventorySummary, StreetFurniture, \
+from inventory.models import PosterInventory, InventorySummary, StreetFurniture, \
     StallInventory, FlyerInventory, StandeeInventory, PoleInventory
+from inventory.serializers import PosterInventorySerializer
 from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
-from v0.ui.supplier.models import SupplierTypeCorporate, SupplierAmenitiesMap, SupplierTypeCode, \
+from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate, SupplierAmenitiesMap, SupplierTypeCode, \
     SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter
 from v0.ui.supplier.serializers import (SupplierTypeCorporateSerializer, SupplierTypeSalonSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeBusShelterSerializer,
                                         SupplierTypeCodeSerializer, SupplierTypeSocietySerializer)
+from inventory.serializers import (StandeeInventorySerializer, WallInventorySerializer, PoleInventorySerializer,
+                                   StallInventorySerializer, StreetFurnitureSerializer, FlyerInventorySerializer,
+                                   InventorySummarySerializer)
 
 # project imports
 import utils as ui_utils

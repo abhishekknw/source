@@ -15,9 +15,6 @@ from v0.models import SocietyMajorEvents, \
 import models
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
     SpaceBookingCost, EventStaffingCost, DataSciencesCost
-from v0.ui.inventory.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, BannerInventory, \
-    PosterInventory, InventorySummary, StreetFurniture, StallInventory, FlyerInventory, StandeeInventory, \
-    WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping, GatewayArchInventory
 
 
 class ImageMappingSerializer(ModelSerializer):
@@ -26,34 +23,10 @@ class ImageMappingSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class InventoryLocationSerializer(ModelSerializer):
-    class Meta:
-        model = InventoryLocation
-        fields = '__all__'
-
-
-class AdInventoryLocationMappingSerializer(ModelSerializer):
-    class Meta:
-        model = AdInventoryLocationMapping
-        fields = '__all__'
-
-
-class AdInventoryTypeSerializer(ModelSerializer):
-    class Meta:
-        model = AdInventoryType
-        exclude = ('created_at', 'updated_at')
-
-
 class DurationTypeSerializer(ModelSerializer):
     class Meta:
         model = DurationType
         exclude = ('created_at', 'updated_at')
-
-
-class BannerInventorySerializer(ModelSerializer):
-    class Meta:
-        model = BannerInventory
-        fields = '__all__'
 
 
 '''class CarDisplayInventorySerializer(ModelSerializer):
@@ -96,21 +69,9 @@ class NoticeBoardDetailsSerializer(ModelSerializer):
         )
 
 
-class PosterInventorySerializer(ModelSerializer):
-    class Meta:
-        model = PosterInventory
-        fields = '__all__'
-
-
 class SocietyFlatSerializer(ModelSerializer):
     class Meta:
         model = SocietyFlat
-        fields = '__all__'
-
-
-class StandeeInventorySerializer(ModelSerializer):
-    class Meta:
-        model = StandeeInventory
         fields = '__all__'
 
 
@@ -118,13 +79,6 @@ class SwimmingPoolInfoSerializer(ModelSerializer):
     class Meta:
         model = SwimmingPoolInfo
         fields = '__all__'
-
-
-class WallInventorySerializer(ModelSerializer):
-    class Meta:
-        model = WallInventory
-        fields = '__all__'
-
 
 class UserInquirySerializer(ModelSerializer):
     class Meta:
@@ -143,13 +97,6 @@ class EventsSerializer(ModelSerializer):
         model = Events
         fields = '__all__'
 
-
-class InventoryInfoSerializer(ModelSerializer):
-    class Meta:
-        model = InventoryInfo
-        fields = '__all__'
-
-
 class MailboxInfoSerializer(ModelSerializer):
     class Meta:
         model = MailboxInfo
@@ -161,19 +108,6 @@ class OperationsInfoSerializer(ModelSerializer):
         model = OperationsInfo
         fields = '__all__'
 
-
-class PoleInventorySerializer(ModelSerializer):
-    class Meta:
-        model = PoleInventory
-        fields = '__all__'
-
-
-class PosterInventoryMappingSerializer(ModelSerializer):
-    class Meta:
-        model = PosterInventoryMapping
-        fields = '__all__'
-
-
 class RatioDetailsSerializer(ModelSerializer):
     class Meta:
         model = RatioDetails
@@ -184,25 +118,6 @@ class SignupSerializer(ModelSerializer):
     class Meta:
         model = Signup
         fields = '__all__'
-
-
-class StallInventorySerializer(ModelSerializer):
-    class Meta:
-        model = StallInventory
-        fields = '__all__'
-
-
-class FlyerInventorySerializer(ModelSerializer):
-    class Meta:
-        model = FlyerInventory
-        fields = '__all__'
-
-
-class StreetFurnitureSerializer(ModelSerializer):
-    class Meta:
-        model = StreetFurniture
-        fields = '__all__'
-
 
 class SportsInfraSerializer(ModelSerializer):
     class Meta:
@@ -226,13 +141,6 @@ class FlatTypeSerializer(ModelSerializer):
     class Meta:
         model = FlatType
         fields = '__all__'
-
-
-class InventorySummarySerializer(ModelSerializer):
-    class Meta:
-        model = InventorySummary
-        fields = '__all__'
-
 
 
 class BusinessSubTypesSerializer(ModelSerializer):
@@ -459,8 +367,3 @@ class BaseUserCreateSerializer(ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True}
         }
-
-class GatewatArchInventorySerializer(ModelSerializer):
-    class Meta:
-        model = GatewayArchInventory
-        fields = '__all__'

@@ -6,15 +6,15 @@ from v0.models import CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoar
     Events, MailboxInfo, OperationsInfo, \
     Signup, SocietyTower
 
-from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
-    LiftDetailsSerializer, NoticeBoardDetailsSerializer, PosterInventorySerializer, SocietyFlatSerializer, \
-    StandeeInventorySerializer, SwimmingPoolInfoSerializer, WallInventorySerializer, UserInquirySerializer, \
-    CommonAreaDetailsSerializer, EventsSerializer, InventoryInfoSerializer, \
+from v0.serializers import CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
+    LiftDetailsSerializer, NoticeBoardDetailsSerializer, SocietyFlatSerializer, \
+    SwimmingPoolInfoSerializer, UserInquirySerializer, \
+    CommonAreaDetailsSerializer, EventsSerializer, \
     MailboxInfoSerializer, OperationsInfoSerializer, \
-    RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, \
+    RatioDetailsSerializer, SignupSerializer, \
     SocietyTowerSerializer, ImageMappingSerializer
-from inventory.models import BannerInventory, PosterInventory, StreetFurniture, SupplierTypeSociety, WallInventory, \
-    PoleInventory, PosterInventoryMapping
+from inventory.models import SupplierTypeSociety
+from inventory.serializers import  StandeeInventorySerializer
 from account.serializers import ContactDetailsSerializer
 from v0.ui.finances.models import RatioDetails
 from supplier.models import SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, \
