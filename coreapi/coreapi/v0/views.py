@@ -22,7 +22,7 @@ from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerialize
     CommonAreaDetailsSerializer, EventsSerializer, InventoryInfoSerializer, \
     MailboxInfoSerializer, OperationsInfoSerializer, PoleInventorySerializer, PosterInventoryMappingSerializer, \
     RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, \
-    SupplierInfoSerializer, SocietyTowerSerializer, \
+    SocietyTowerSerializer, \
     FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, \
     BaseUserCreateSerializer
 from v0.ui.user.serializers import BaseUserSerializer, BaseUserUpdateSerializer
@@ -31,24 +31,25 @@ from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.serializers import ContactDetailsSerializer, ContactDetailsGenericSerializer
 from v0.ui.account.models import ContactDetails, ContactDetailsGeneric
 from v0.ui.inventory.models import SupplierTypeSociety, StallInventory
-from v0.ui.inventory.serializers import SupplierTypeSocietySerializer
+# from v0.ui.inventory.serializers import SupplierTypeSocietySerializer
 from rest_framework.decorators import detail_route, list_route
 from v0.models import CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
     SocietyFlat, SwimmingPoolInfo, UserInquiry, CommonAreaDetails, \
     Events, MailboxInfo, OperationsInfo, \
     Signup, SocietyTower, \
     FlatType, BaseUser, CustomPermissions, BusinessTypes, \
-    BusinessSubTypes, DurationType, AD_INVENTORY_CHOICES, \
+    BusinessSubTypes, DurationType, \
     Amenity
 from v0.ui.finances.models import RatioDetails
+from v0.ui.supplier.serializers import SupplierInfoSerializer, SupplierTypeSocietySerializer
 import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils
 import errors
 import constants as v0_constants
 import v0.ui.website.utils as website_utils
-from v0.ui.inventory.models import BannerInventory, AdInventoryType, PosterInventory, StreetFurniture, \
-    StandeeInventory, WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping
+from v0.ui.inventory.models import (BannerInventory, AdInventoryType, PosterInventory, StreetFurniture,
+    StandeeInventory, WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping, AD_INVENTORY_CHOICES)
 from v0.ui.supplier.models import SupplierInfo, SupplierTypeCorporate, SupplierAmenitiesMap
 
 class PopulateContentTypeFields(APIView):

@@ -12,7 +12,7 @@ from v0.serializers import BannerInventorySerializer, CommunityHallInfoSerialize
     CommonAreaDetailsSerializer, EventsSerializer, InventoryInfoSerializer, \
     MailboxInfoSerializer, OperationsInfoSerializer, \
     RatioDetailsSerializer, SignupSerializer, StallInventorySerializer, StreetFurnitureSerializer, \
-    SupplierInfoSerializer, SocietyTowerSerializer, ImageMappingSerializer
+    SocietyTowerSerializer, ImageMappingSerializer
 from inventory.models import BannerInventory, PosterInventory, StreetFurniture, SupplierTypeSociety, WallInventory, \
     PoleInventory, PosterInventoryMapping
 from account.serializers import ContactDetailsSerializer

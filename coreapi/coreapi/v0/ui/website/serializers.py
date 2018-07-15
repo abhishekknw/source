@@ -7,7 +7,8 @@ import v0.models as models
 from v0.models import SpaceMapping, ShortlistedSpaces,\
                     SpaceMappingVersion, ShortlistedSpacesVersion, BaseUser
 from v0.ui.finances.models import AuditDate
-from v0.serializers import AdInventoryTypeSerializer, DurationTypeSerializer, BaseModelPermissionSerializer
+from v0.ui.base.serializers import BaseModelPermissionSerializer
+from v0.serializers import AdInventoryTypeSerializer, DurationTypeSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
 from v0.ui.account.models import AccountInfo, PriceMappingDefault

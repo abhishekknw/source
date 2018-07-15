@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 from models import BusinessAccountContact, AccountInfo, PriceMappingDefault, PriceMapping, ContactDetails, ContactDetailsGeneric
 from v0.ui.organisation.models import Organisation
-from v0.serializers import BaseModelPermissionSerializer
+from v0.ui.base.serializers import BaseModelPermissionSerializer
 
 
 class BusinessAccountContactSerializer(ModelSerializer):

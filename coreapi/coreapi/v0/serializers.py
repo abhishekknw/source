@@ -3,7 +3,7 @@ from django.contrib.auth.models import User, Permission, Group
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import Campaign, Organisation, BusinessTypes, BusinessSubTypes, ImageMapping, DurationType, \
+from v0.models import BusinessTypes, BusinessSubTypes, ImageMapping, DurationType, \
     CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, \
     SwimmingPoolInfo, UserInquiry, CommonAreaDetails, Events, MailboxInfo, \
     OperationsInfo, Signup, \
@@ -18,10 +18,6 @@ from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperations
 from v0.ui.inventory.models import InventoryLocation, AdInventoryLocationMapping, AdInventoryType, BannerInventory, \
     PosterInventory, InventorySummary, StreetFurniture, StallInventory, FlyerInventory, StandeeInventory, \
     WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping, GatewayArchInventory
-from v0.ui.supplier.models import SupplierInfo, SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, \
-    ContactDetailsGeneric, SupplierTypeBusShelter, SupplierTypeRetailShop, SupplierTypeCode
-
-from v0.ui.base.serializers import BaseModelPermissionSerializer
 
 
 class ImageMappingSerializer(ModelSerializer):
@@ -208,33 +204,9 @@ class StreetFurnitureSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class SupplierInfoSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierInfo
-        fields = '__all__'
-
-
 class SportsInfraSerializer(ModelSerializer):
     class Meta:
         model = SportsInfra
-        fields = '__all__'
-
-
-class SupplierTypeCorporateSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeCorporate
-        fields = '__all__'
-
-
-class SupplierTypeSalonSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeSalon
-        fields = '__all__'
-
-
-class SupplierTypeGymSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeGym
         fields = '__all__'
 
 
@@ -303,13 +275,6 @@ class BusinessTypesSerializer(ModelSerializer):
 #     class Meta:
 #         model = AccountContact
 
-
-class SupplierTypeCodeSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeCode
-        fields = '__all__'
-
-
 class SocietyMajorEventsSerializer(ModelSerializer):
     class Meta:
         model = SocietyMajorEvents
@@ -368,11 +333,6 @@ class CorporateCompanyDetailsSerializer(ModelSerializer):
         model = CorporateCompanyDetails
         fields = '__all__'
 
-
-class SupplierTypeBusShelterSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeBusShelter
-        fields = '__all__'
 
 class PrintingCostSerializer(ModelSerializer):
     class Meta:
@@ -499,13 +459,6 @@ class BaseUserCreateSerializer(ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True}
         }
-
-
-class SupplierTypeRetailShopSerializer(ModelSerializer):
-
-    class Meta:
-        model = SupplierTypeRetailShop
-        fields = '__all__'
 
 class GatewatArchInventorySerializer(ModelSerializer):
     class Meta:
