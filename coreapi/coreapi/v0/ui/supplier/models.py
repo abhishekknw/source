@@ -1,7 +1,10 @@
 from django.db import models
 from django.conf import settings
-from v0.models import BaseModel, managers, fields
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import fields
+from v0.ui.base.models import BaseModel
 from v0.ui.account.models import ContactDetailsGeneric
+from v0 import managers
 
 RETAIL_SHOP_TYPE = (
     ('GROCERY_STORE', 'GROCERY_STORE'),
@@ -201,7 +204,7 @@ class SupplierAmenitiesMap(BaseModel):
     This table represents the idea that each supplier can have multiple amenities
     """
 
-    content_type = models.ForeignKey('ContentType')
+    content_type = models.ForeignKey(ContentType)
     object_id = models.CharField(max_length=1000)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     amenity = models.ForeignKey('Amenity', null=True, blank=True)

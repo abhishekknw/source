@@ -28,7 +28,7 @@ from v0.ui.base.models import BaseModel
 from v0.ui.campaign.models import Campaign, CampaignTypeMapping
 from v0.ui.organisation.models import Organisation
 from v0.ui.proposal.models import SpaceMapping, SpaceMappingVersion
-
+from v0.ui.supplier.models import SupplierTypeCorporate
 
 AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
@@ -407,7 +407,7 @@ class SportsInfra(models.Model):
 class CorporateParkCompanyList(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='COMPANY_NAME',max_length=50, blank=True, null=True)
-    supplier_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_ID', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
+    supplier_id = models.ForeignKey(SupplierTypeCorporate, db_column='CORPORATEPARK_ID', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
 
     def get_company_details(self):
         return self.companydetails.all()
@@ -591,7 +591,7 @@ class CorporateBuilding(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     building_name = models.CharField(db_column='BUILDING_NAME', max_length=50, null=True, blank=True)
     number_of_wings = models.IntegerField(db_column='NUMBER_OF_WINGS', null=True, blank=True)
-    corporatepark_id = models.ForeignKey('SupplierTypeCorporate',db_index=True, db_column='CORPORATE_ID',related_name='corporatebuilding', blank=True, null=True, on_delete=models.CASCADE)
+    corporatepark_id = models.ForeignKey(SupplierTypeCorporate,db_index=True, db_column='CORPORATE_ID',related_name='corporatebuilding', blank=True, null=True, on_delete=models.CASCADE)
 
     def get_wings(self):
         return self.buildingwing.all()
@@ -612,7 +612,7 @@ class CorporateBuildingWing(models.Model):
 # class CorporateCompany(models.Model):
 #     id = models.AutoField(db_column='ID', primary_key=True)
 #     company_name = models.CharField(db_column='COMPANY_NAME',max_length=50,blank=True,null=True)
-#     corporatepark_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_NAME', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
+#     corporatepark_id = models.ForeignKey(SupplierTypeCorporate, db_column='CORPORATEPARK_NAME', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
 
 #     class Meta:
 #         db_table='corporate_company'
