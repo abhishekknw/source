@@ -241,6 +241,18 @@ class SupplierTypeSalon(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_salon'
 
+class CorporateBuilding(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    building_name = models.CharField(db_column='BUILDING_NAME', max_length=50, null=True, blank=True)
+    number_of_wings = models.IntegerField(db_column='NUMBER_OF_WINGS', null=True, blank=True)
+    corporatepark_id = models.ForeignKey('SupplierTypeCorporate',db_index=True, db_column='CORPORATE_ID',related_name='corporatebuilding', blank=True, null=True, on_delete=models.CASCADE)
+
+    def get_wings(self):
+        return self.buildingwing.all()
+
+    class Meta:
+        db_table='corporate_building'
+
 class SupplierTypeGym(BasicSupplierDetails):
 
     gym_type = models.CharField(max_length=30, blank=True, null=True)

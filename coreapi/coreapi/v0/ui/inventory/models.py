@@ -8,6 +8,8 @@ from v0.ui.account.models import ContactDetails, PriceMappingDefault
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.constants import supplier_id_max_length
 from v0 import managers
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails
+from v0.ui.components.models import SocietyTower
 
 AD_INVENTORY_CHOICES = (
     ('POSTER', 'Poster'),
@@ -53,7 +55,7 @@ class InventoryActivity(BaseModel):
     """
     Stores activities like Release, Closure, Audits against each inventory
     """
-    shortlisted_inventory_details = models.ForeignKey('ShortlistedInventoryPricingDetails')
+    shortlisted_inventory_details = models.ForeignKey(ShortlistedInventoryPricingDetails)
     activity_type = models.CharField(max_length=255, null=True,  choices=INVENTORY_ACTIVITY_TYPES)
 
     class Meta:
@@ -391,7 +393,7 @@ class PosterInventory(BaseModel):
     object_id = models.CharField(max_length= supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
-    tower = models.ForeignKey('SocietyTower', null=True, blank=True)
+    tower = models.ForeignKey(SocietyTower, null=True, blank=True)
 
     class Meta:
         db_table = 'poster_inventory'

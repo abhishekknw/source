@@ -6,7 +6,7 @@ from rest_framework.serializers import ModelSerializer
 import v0.models as models
 from v0.models import SpaceMapping, ShortlistedSpaces,\
                     SpaceMappingVersion, ShortlistedSpacesVersion, BaseUser
-from v0.ui.finances.models import AuditDate
+from v0.ui.finances.models import AuditDate, ShortlistedInventoryPricingDetails
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.serializers import DurationTypeSerializer
 from v0.ui.serializers import UISocietySerializer
@@ -316,7 +316,7 @@ class ShortlistedInventoryPricingSerializerReadOnly(ModelSerializer):
     inventory_duration = DurationTypeSerializer(source='ad_inventory_duration')
 
     class Meta:
-        model = models.ShortlistedInventoryPricingDetails
+        model = ShortlistedInventoryPricingDetails
         exclude = ('created_at', 'updated_at', 'ad_inventory_type', 'ad_inventory_duration')
 
 
@@ -348,7 +348,7 @@ class ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(ModelSe
     shortlisted_supplier = ShortlistedSpacesSerializer(source='shortlisted_spaces')
 
     class Meta:
-        model = models.ShortlistedInventoryPricingDetails
+        model = ShortlistedInventoryPricingDetails
         fields = '__all__'
 
 

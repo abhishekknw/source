@@ -1,6 +1,49 @@
 from django.db import models
 from django.conf import settings
 from v0.models import BaseModel, managers, fields
+from django.contrib.contenttypes.models import ContentType
+
+class DoorToDoorInfo(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    supplier = models.ForeignKey('SupplierTypeSociety', related_name='door_to_doors', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)
+    flier_distribution_frequency_door = models.CharField(db_column='FLIER_DISTRIBUTION_FREQUENCY_DOOR', max_length=20, blank=True, null=True)
+    door_to_door_inventory_status = models.CharField(db_column='DOOR_TO_DOOR_INVENTORY_STATUS', max_length=15, blank=True, null=True)
+    door_to_door_price_society = models.FloatField(db_column='DOOR_TO_DOOR_PRICE_SOCIETY', default=0.0, blank=True, null=True)
+    door_to_door_price_business = models.FloatField(db_column='DOOR_TO_DOOR_PRICE_BUSINESS', default=0.0, blank=True, null=True)
+    master_door_to_door_flyer_price_society = models.FloatField(db_column='MASTER_DOOR_TO_DOOR_FLYER_PRICE_SOCIETY', default=0.0, blank=True, null=True)
+    master_door_to_door_flyer_price_business = models.FloatField(db_column='MASTER_DOOR_TO_DOOR_FLYER_PRICE_BUSINESS', default=0.0, blank=True, null=True)
+    leaflet_handover = models.CharField(db_column='LEAFLET_HANDOVER', max_length=50, blank=True, null=True)
+    activities = models.CharField(db_column='ACTIVITIES', max_length=255, blank=True, null=True)
+    banner_spaces_count = models.IntegerField(db_column='BANNER_SPACES_COUNT', blank=True, null=True)
+
+    class Meta:
+
+        db_table = 'door_to_door_info'
+
+class ShortlistedInventoryPricingDetails(BaseModel):
+    """
+    Model for storing calculated price and count of an inventory for a given supplier.
+    A particular inventory type is identified by it's content_type_id.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    inventory_content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    inventory_id = models.CharField(max_length=255, null=True, blank=True)
+    inventory_price = models.FloatField(default=0.0, null=True)
+    inventory_count = models.IntegerField(default=0, null=True)
+    factor = models.IntegerField(default=0.0, null=True)
+    ad_inventory_type = models.ForeignKey('AdInventoryType', null=True)
+    ad_inventory_duration = models.ForeignKey('DurationType', null=True)
+    release_date = models.DateTimeField(null=True, blank=True)
+    closure_date = models.DateTimeField(null=True, blank=True)
+    shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True)
+    objects = managers.GeneralManager()
+    inventory_object = fields.GenericForeignKey('inventory_content_type', 'inventory_id')
+    comment = models.CharField(max_length=1000, null=True, blank=True)
+
+
+    class Meta:
+        db_table = 'shortlisted_inventory_pricing_details'
 
 class RatioDetails(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', max_length=20)  # Field name made lowercase.
@@ -63,7 +106,7 @@ class SpaceBookingCost(AbstractGeneralCost):
     """
     SpaceBookingCost  is broken down into various costs. Hence a model is made to store it's pieces.
     """
-    supplier_type = models.ForeignKey('ContentType', null=True, blank=True)
+    supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
 
     class Meta:
         db_table = 'space_booking_cost'
@@ -135,7 +178,7 @@ class AuditDate(BaseModel):
     """
     A particular inventory can have multiple audit dates
     """
-    shortlisted_inventory = models.ForeignKey('ShortlistedInventoryPricingDetails', null=True, blank=True)
+    shortlisted_inventory = models.ForeignKey(ShortlistedInventoryPricingDetails, null=True, blank=True)
     audit_date = models.DateTimeField(null=True, blank=True)
     audited_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
 

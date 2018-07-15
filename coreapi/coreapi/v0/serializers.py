@@ -4,17 +4,18 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from v0.models import BusinessTypes, BusinessSubTypes, ImageMapping, DurationType, \
-    CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, \
-    SwimmingPoolInfo, UserInquiry, CommonAreaDetails, Events, MailboxInfo, \
-    OperationsInfo, Signup, \
-    SportsInfra, SocietyTower, FlatType
+    UserInquiry, Events, \
+    OperationsInfo, Signup
 from v0.ui.organisation.serializers import OrganisationSerializer
 from v0.models import SocietyMajorEvents, \
-    CorporateParkCompanyList, CorporateBuilding, CorporateBuildingWing, CorporateCompanyDetails, \
+    CorporateParkCompanyList, CorporateBuildingWing, CorporateCompanyDetails, \
     CompanyFloor
 import models
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
-    SpaceBookingCost, EventStaffingCost, DataSciencesCost
+    SpaceBookingCost, EventStaffingCost, DataSciencesCost, DoorToDoorInfo
+from v0.ui.supplier.models import CorporateBuilding
+from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SwimmingPoolInfo, \
+    SocietyFlat, FlatType, SocietyTower, SportsInfra, MailboxInfo, CommonAreaDetails
 
 
 class ImageMappingSerializer(ModelSerializer):

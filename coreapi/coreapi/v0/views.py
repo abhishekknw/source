@@ -33,19 +33,19 @@ from v0.ui.account.models import ContactDetails, ContactDetailsGeneric
 from v0.ui.inventory.models import SupplierTypeSociety, StallInventory
 # from v0.ui.inventory.serializers import SupplierTypeSocietySerializer
 from rest_framework.decorators import detail_route, list_route
-from v0.models import CommunityHallInfo, DoorToDoorInfo, LiftDetails, NoticeBoardDetails, \
-    SocietyFlat, SwimmingPoolInfo, UserInquiry, CommonAreaDetails, \
-    Events, MailboxInfo, OperationsInfo, \
-    Signup, SocietyTower, \
-    FlatType, BaseUser, CustomPermissions, BusinessTypes, \
+from v0.models import UserInquiry, \
+    Events, OperationsInfo, \
+    Signup, BaseUser, CustomPermissions, BusinessTypes, \
     BusinessSubTypes, DurationType, \
     Amenity
-from v0.ui.finances.models import RatioDetails
+from v0.ui.finances.models import RatioDetails, DoorToDoorInfo
 from v0.ui.supplier.serializers import SupplierInfoSerializer, SupplierTypeSocietySerializer
 from v0.ui.inventory.serializers import (BannerInventorySerializer, PosterInventorySerializer,
                                          StandeeInventorySerializer, WallInventorySerializer, InventoryInfoSerializer,
                                          PoleInventorySerializer, PosterInventoryMappingSerializer,
                                          StallInventorySerializer, StreetFurnitureSerializer)
+from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, SwimmingPoolInfo, \
+    FlatType, MailboxInfo, SocietyTower, CommonAreaDetails
 import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils

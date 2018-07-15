@@ -42,12 +42,13 @@ from collections import namedtuple
 import gpxpy.geo
 
 import v0.models as models
-from v0.models import  (ShortlistedInventoryPricingDetails, ShortlistedSpaces,
+from v0.models import  (ShortlistedSpaces,
                         Filters, DurationType,
                         GenericExportFileName,
-                        Amenity, Events, FlatType, SocietyTower, Role, Lead,
+                        Amenity, Events, Role, Lead,
                         CampaignLeads)
 from v0.ui.account.models import PriceMappingDefault, ContactDetails, AccountInfo
+from v0.ui.components.models import FlatType, SocietyTower
 from v0.ui.inventory.models import SupplierTypeSociety, AdInventoryType, InventoryActivityAssignment, \
     InventoryActivityImage, InventorySummary, InventoryActivity
 from v0.ui.location.models import State, City, CityArea, CitySubArea
@@ -62,7 +63,7 @@ import tasks
 import v0.constants as v0_constants
 import v0.serializers as v0_serializers
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
-    SpaceBookingCost, EventStaffingCost, DataSciencesCost
+    SpaceBookingCost, EventStaffingCost, DataSciencesCost, ShortlistedInventoryPricingDetails
 from v0.ui.supplier.models import SupplierAmenitiesMap
 
 
