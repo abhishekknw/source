@@ -4,21 +4,21 @@ from rest_framework import serializers
 from v0.models import UserInquiry, \
     Events, OperationsInfo, \
     Signup
-from v0.serializers import CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
-    LiftDetailsSerializer, NoticeBoardDetailsSerializer, SocietyFlatSerializer, \
-    SwimmingPoolInfoSerializer, UserInquirySerializer, \
-    CommonAreaDetailsSerializer, EventsSerializer, \
-    MailboxInfoSerializer, OperationsInfoSerializer, \
-    RatioDetailsSerializer, SignupSerializer, \
-    SocietyTowerSerializer, ImageMappingSerializer
+from v0.serializers import UserInquirySerializer, EventsSerializer, \
+    OperationsInfoSerializer, \
+    RatioDetailsSerializer, SignupSerializer, ImageMappingSerializer
 from inventory.models import SupplierTypeSociety
 from inventory.serializers import  StandeeInventorySerializer
 from account.serializers import ContactDetailsSerializer
 from v0.ui.finances.models import DoorToDoorInfo
+from v0.ui.finances.serializers import DoorToDoorInfoSerializer
 from supplier.models import SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, \
     SupplierTypeRetailShop, SupplierTypeBusDepot, SupplierInfo
 from v0.ui.components.models import LiftDetails, NoticeBoardDetails, SocietyFlat, SwimmingPoolInfo, MailboxInfo, \
     SocietyTower, CommunityHallInfo
+from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetailsSerializer, \
+    NoticeBoardDetailsSerializer, SocietyFlatSerializer, SocietyTowerSerializer, \
+    SwimmingPoolInfoSerializer, MailboxInfoSerializer
 
 class UISocietySerializer(ModelSerializer):
     basic_contact_available = serializers.BooleanField(source='is_contact_available')

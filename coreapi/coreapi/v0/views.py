@@ -16,14 +16,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
-from v0.serializers import CommunityHallInfoSerializer, DoorToDoorInfoSerializer, \
-    LiftDetailsSerializer, NoticeBoardDetailsSerializer, SocietyFlatSerializer, \
-    SwimmingPoolInfoSerializer, UserInquirySerializer, \
-    CommonAreaDetailsSerializer, EventsSerializer, \
-    MailboxInfoSerializer, OperationsInfoSerializer, \
+from v0.serializers import UserInquirySerializer, EventsSerializer, \
+    OperationsInfoSerializer, \
     RatioDetailsSerializer, SignupSerializer, \
-    SocietyTowerSerializer, \
-    FlatTypeSerializer, PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, \
+    PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, \
     BaseUserCreateSerializer
 from v0.ui.user.serializers import BaseUserSerializer, BaseUserUpdateSerializer
 from v0.ui.location.models import CityArea
@@ -39,6 +35,7 @@ from v0.models import UserInquiry, \
     BusinessSubTypes, DurationType, \
     Amenity
 from v0.ui.finances.models import RatioDetails, DoorToDoorInfo
+from v0.ui.finances.serializers import DoorToDoorInfoSerializer
 from v0.ui.supplier.serializers import SupplierInfoSerializer, SupplierTypeSocietySerializer
 from v0.ui.inventory.serializers import (BannerInventorySerializer, PosterInventorySerializer,
                                          StandeeInventorySerializer, WallInventorySerializer, InventoryInfoSerializer,
@@ -46,6 +43,9 @@ from v0.ui.inventory.serializers import (BannerInventorySerializer, PosterInvent
                                          StallInventorySerializer, StreetFurnitureSerializer)
 from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, SwimmingPoolInfo, \
     FlatType, MailboxInfo, SocietyTower, CommonAreaDetails
+from v0.ui.components.serializers import LiftDetailsSerializer, CommunityHallInfoSerializer, FlatTypeSerializer, \
+    NoticeBoardDetailsSerializer, SocietyFlatSerializer, SwimmingPoolInfoSerializer, MailboxInfoSerializer, \
+    CommonAreaDetailsSerializer, SocietyTowerSerializer
 import utils as v0_utils
 from constants import model_names
 import v0.ui.utils as ui_utils

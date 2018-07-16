@@ -20,12 +20,7 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, \
     BusShelterSerializer
-from v0.serializers import ImageMappingSerializer, CommunityHallInfoSerializer, LiftDetailsSerializer, \
-    NoticeBoardDetailsSerializer, \
-    SocietyFlatSerializer, SwimmingPoolInfoSerializer, \
-    EventsSerializer, \
-    SportsInfraSerializer, \
-    SocietyTowerSerializer, FlatTypeSerializer, \
+from v0.serializers import ImageMappingSerializer, EventsSerializer, \
     CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateBuildingGetSerializer, \
     CorporateParkCompanySerializer
 
@@ -35,6 +30,8 @@ from v0.models import SocietyMajorEvents, CorporateBuildingWing, \
     CorporateCompanyDetails, CompanyFloor
 from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, \
     SwimmingPoolInfo,  SportsInfra, SocietyTower, FlatType, MailboxInfo
+from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, \
+    FlatTypeSerializer, SocietyTowerSerializer, SocietyFlatSerializer, SportsInfraSerializer, SwimmingPoolInfoSerializer
 from v0.ui.finances.models import DoorToDoorInfo
 from v0.ui.user.models import UserProfile
 from v0.ui.location.models import City, CityArea, CitySubArea

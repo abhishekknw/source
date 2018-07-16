@@ -83,7 +83,6 @@ class NoticeBoardDetails(BaseModel):
     class Meta:
         db_table = 'notice_board_details'
 
-
 class SocietyFlat(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     flat_tag = models.CharField(db_column='FLAT_TAG',max_length=20, blank=True, null=True)
@@ -94,7 +93,6 @@ class SocietyFlat(models.Model):
     class Meta:
         db_table = 'society_flat'
         unique_together = (('tower', 'flat_type'),)
-
 
 class FlatType(BaseModel):
 
