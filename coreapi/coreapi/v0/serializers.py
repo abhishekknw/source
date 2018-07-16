@@ -50,12 +50,6 @@ class OperationsInfoSerializer(ModelSerializer):
         model = OperationsInfo
         fields = '__all__'
 
-class RatioDetailsSerializer(ModelSerializer):
-    class Meta:
-        model = RatioDetails
-        fields = '__all__'
-
-
 class SignupSerializer(ModelSerializer):
     class Meta:
         model = Signup
@@ -165,39 +159,10 @@ class CorporateCompanyDetailsSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class PrintingCostSerializer(ModelSerializer):
-    class Meta:
-        model = PrintingCost
-        fields = '__all__'
-
-
-class LogisticOperationsCostSerializer(ModelSerializer):
-    class Meta:
-        model = LogisticOperationsCost
-        fields = '__all__'
-
-
-class IdeationDesignCostSerializer(ModelSerializer):
-    class Meta:
-        model = IdeationDesignCost
-        fields = '__all__'
-
 
 class SpaceBookingCostSerializer(ModelSerializer):
     class Meta:
         model = SpaceBookingCost
-        fields = '__all__'
-
-
-class EventStaffingCostSerializer(ModelSerializer):
-    class Meta:
-        model = EventStaffingCost
-        fields = '__all__'
-
-
-class DataSciencesCostSerializer(ModelSerializer):
-    class Meta:
-        model = DataSciencesCost
         fields = '__all__'
 
 class PermissionSerializer(ModelSerializer):

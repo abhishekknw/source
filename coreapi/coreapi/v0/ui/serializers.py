@@ -5,13 +5,12 @@ from v0.models import UserInquiry, \
     Events, OperationsInfo, \
     Signup
 from v0.serializers import UserInquirySerializer, EventsSerializer, \
-    OperationsInfoSerializer, \
-    RatioDetailsSerializer, SignupSerializer, ImageMappingSerializer
+    OperationsInfoSerializer, SignupSerializer, ImageMappingSerializer
 from inventory.models import SupplierTypeSociety
 from inventory.serializers import  StandeeInventorySerializer
 from account.serializers import ContactDetailsSerializer
 from v0.ui.finances.models import DoorToDoorInfo
-from v0.ui.finances.serializers import DoorToDoorInfoSerializer
+from v0.ui.finances.serializers import DoorToDoorInfoSerializer, RatioDetailsSerializer
 from supplier.models import SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, \
     SupplierTypeRetailShop, SupplierTypeBusDepot, SupplierInfo
 from v0.ui.components.models import LiftDetails, NoticeBoardDetails, SocietyFlat, SwimmingPoolInfo, MailboxInfo, \

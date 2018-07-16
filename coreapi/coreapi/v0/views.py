@@ -17,8 +17,7 @@ from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
 from v0.serializers import UserInquirySerializer, EventsSerializer, \
-    OperationsInfoSerializer, \
-    RatioDetailsSerializer, SignupSerializer, \
+    OperationsInfoSerializer, SignupSerializer, \
     PermissionSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, \
     BaseUserCreateSerializer
 from v0.ui.user.serializers import BaseUserSerializer, BaseUserUpdateSerializer
@@ -35,7 +34,7 @@ from v0.models import UserInquiry, \
     BusinessSubTypes, DurationType, \
     Amenity
 from v0.ui.finances.models import RatioDetails, DoorToDoorInfo
-from v0.ui.finances.serializers import DoorToDoorInfoSerializer
+from v0.ui.finances.serializers import DoorToDoorInfoSerializer, RatioDetailsSerializer
 from v0.ui.supplier.serializers import SupplierInfoSerializer, SupplierTypeSocietySerializer
 from v0.ui.inventory.serializers import (BannerInventorySerializer, PosterInventorySerializer,
                                          StandeeInventorySerializer, WallInventorySerializer, InventoryInfoSerializer,

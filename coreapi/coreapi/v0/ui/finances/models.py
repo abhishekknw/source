@@ -75,14 +75,12 @@ class AbstractGeneralCost(BaseModel):
     class Meta:
         abstract = True
 
-
 class PrintingCost(AbstractGeneralCost):
     """
     Printing cost is broken down into various costs. Hence a model is made to store it's pieces.
     """
     class Meta:
         db_table = 'printing_cost'
-
 
 class LogisticOperationsCost(AbstractGeneralCost):
     """
@@ -92,7 +90,6 @@ class LogisticOperationsCost(AbstractGeneralCost):
     class Meta:
         db_table = 'logistic_operations_cost'
 
-
 class IdeationDesignCost(AbstractGeneralCost):
     """
     IdeationDesignCost  is broken down into various costs. Hence a model is made to store it's pieces.
@@ -100,7 +97,6 @@ class IdeationDesignCost(AbstractGeneralCost):
 
     class Meta:
         db_table = 'ideation_design_cost'
-
 
 class SpaceBookingCost(AbstractGeneralCost):
     """
@@ -111,7 +107,6 @@ class SpaceBookingCost(AbstractGeneralCost):
     class Meta:
         db_table = 'space_booking_cost'
 
-
 class EventStaffingCost(AbstractGeneralCost):
     """
     EventStaffingCost  is broken down into various costs. Hence a model is made to store it's pieces.
@@ -119,7 +114,6 @@ class EventStaffingCost(AbstractGeneralCost):
 
     class Meta:
         db_table = 'event_staffing_cost'
-
 
 class DataSciencesCost(AbstractGeneralCost):
     """
@@ -157,7 +151,6 @@ class AssignedAudits(models.Model):
     audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)
     db_table = 'assigned_audits'
-
 
 class Audits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
