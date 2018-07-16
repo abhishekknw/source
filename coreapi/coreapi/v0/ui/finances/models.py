@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from v0.models import BaseModel, managers, fields
 from django.contrib.contenttypes.models import ContentType
+from v0.constants import supplier_id_max_length
 
 class DoorToDoorInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -20,6 +21,33 @@ class DoorToDoorInfo(models.Model):
     class Meta:
 
         db_table = 'door_to_door_info'
+
+class PriceMapping(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='inv_prices', blank=True, null=True, on_delete=models.CASCADE)
+    adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True, on_delete=models.CASCADE)
+    adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True, on_delete=models.CASCADE)
+    society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
+    business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
+    duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'price_mapping'
+
+class PriceMappingDefault(BaseModel):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True, on_delete=models.CASCADE)
+    adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True, on_delete=models.CASCADE)
+    suggested_supplier_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE', null=True, blank=True)
+    actual_supplier_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE', null=True, blank=True)
+    duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(db_index=True, max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'price_mapping_default'
 
 class ShortlistedInventoryPricingDetails(BaseModel):
     """

@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from models import BusinessAccountContact, AccountInfo, PriceMappingDefault, PriceMapping, ContactDetails, ContactDetailsGeneric
+from models import BusinessAccountContact, AccountInfo, ContactDetails, ContactDetailsGeneric
 from v0.ui.organisation.models import Organisation
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 
@@ -31,21 +31,6 @@ class AccountSerializer(ModelSerializer):
     class Meta:
         model = AccountInfo
         fields = '__all__'
-
-
-class PriceMappingDefaultSerializer(ModelSerializer):
-    class Meta:
-        model = PriceMappingDefault
-        fields = '__all__'
-        depth = 1
-
-
-class PriceMappingSerializer(ModelSerializer):
-    class Meta:
-        model = PriceMapping
-        depth = 2
-        fields = '__all__'
-
 
 class ContactDetailsSerializer(ModelSerializer):
     class Meta:

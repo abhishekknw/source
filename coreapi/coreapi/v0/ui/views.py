@@ -32,16 +32,16 @@ from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardD
     SwimmingPoolInfo,  SportsInfra, SocietyTower, FlatType, MailboxInfo
 from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, \
     FlatTypeSerializer, SocietyTowerSerializer, SocietyFlatSerializer, SportsInfraSerializer, SwimmingPoolInfoSerializer
-from v0.ui.finances.models import DoorToDoorInfo
+from v0.ui.finances.models import DoorToDoorInfo, PriceMapping, PriceMappingDefault
+from v0.ui.finances.serializers import PriceMappingDefaultSerializer, PriceMappingSerializer
 from v0.ui.user.models import UserProfile
 from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.serializers import (SocietyMajorEventsSerializer, CorporateParkCompanyListSerializer)
 from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer, BusDepotSerializer
 from v0.ui.user.serializers import UserSerializer, UserProfileSerializer
 from v0.ui.location.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, StateSerializer
-from v0.ui.account.models import PriceMappingDefault, PriceMapping, ContactDetails, ContactDetailsGeneric
-from v0.ui.account.serializers import (PriceMappingDefaultSerializer, PriceMappingSerializer,
-                                       ContactDetailsSerializer, ContactDetailsGenericSerializer)
+from v0.ui.account.models import ContactDetails, ContactDetailsGeneric
+from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsGenericSerializer)
 from inventory.models import PosterInventory, InventorySummary, StreetFurniture, \
     StallInventory, FlyerInventory, StandeeInventory, PoleInventory
 from inventory.serializers import PosterInventorySerializer

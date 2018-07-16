@@ -4,11 +4,11 @@ from datetime import date
 from django.db import models
 from django.conf import settings
 from v0.ui.base.models import BaseModel
-from v0.ui.account.models import ContactDetails, PriceMappingDefault
+from v0.ui.account.models import ContactDetails
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.constants import supplier_id_max_length
 from v0 import managers
-from v0.ui.finances.models import ShortlistedInventoryPricingDetails
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault
 from v0.ui.components.models import SocietyTower
 
 AD_INVENTORY_CHOICES = (

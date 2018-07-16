@@ -6,12 +6,12 @@ from rest_framework.serializers import ModelSerializer
 import v0.models as models
 from v0.models import SpaceMapping, ShortlistedSpaces,\
                     SpaceMappingVersion, ShortlistedSpacesVersion, BaseUser
-from v0.ui.finances.models import AuditDate, ShortlistedInventoryPricingDetails
+from v0.ui.finances.models import AuditDate, ShortlistedInventoryPricingDetails, PriceMappingDefault
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.serializers import DurationTypeSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
-from v0.ui.account.models import AccountInfo, PriceMappingDefault
+from v0.ui.account.models import AccountInfo
 from v0.ui.account.serializers import BusinessAccountContactSerializer
 from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer

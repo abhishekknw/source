@@ -47,7 +47,7 @@ from v0.models import  (ShortlistedSpaces,
                         GenericExportFileName,
                         Amenity, Events, Role, Lead,
                         CampaignLeads)
-from v0.ui.account.models import PriceMappingDefault, ContactDetails, AccountInfo
+from v0.ui.account.models import ContactDetails, AccountInfo
 from v0.ui.components.models import FlatType, SocietyTower
 from v0.ui.inventory.models import SupplierTypeSociety, AdInventoryType, InventoryActivityAssignment, \
     InventoryActivityImage, InventorySummary, InventoryActivity
@@ -63,7 +63,7 @@ import tasks
 import v0.constants as v0_constants
 import v0.serializers as v0_serializers
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
-    SpaceBookingCost, EventStaffingCost, DataSciencesCost, ShortlistedInventoryPricingDetails
+    SpaceBookingCost, EventStaffingCost, DataSciencesCost, ShortlistedInventoryPricingDetails, PriceMappingDefault
 from v0.ui.supplier.models import SupplierAmenitiesMap
 
 

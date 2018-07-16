@@ -68,7 +68,7 @@ from v0.constants import flat_type_dict
 from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignSerializer, CampaignSocietyMappingSerializer
 from v0.ui.account.serializers import BusinessInfoSerializer, BusinessAccountContactSerializer, AccountInfoSerializer
-from v0.ui.account.models import BusinessAccountContact, PriceMappingDefault, ContactDetails, AccountInfo
+from v0.ui.account.models import BusinessAccountContact, ContactDetails, AccountInfo
 from v0.ui.inventory.models import AdInventoryType, SocietyInventoryBooking, SupplierTypeSociety, \
     InventoryActivityAssignment, InventoryActivityImage, InventorySummary, InventoryTypeVersion, InventoryType, \
     InventoryActivity
@@ -85,7 +85,7 @@ from v0.ui.proposal.models import ProposalInfo, ProposalCenterMapping,ProposalCe
 from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingVersionSerializer,
     ProposalInfoVersionSerializer, ProposalMasterCostSerializer, ProposalMetricsSerializer)
 from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate
-from v0.ui.finances.models import ShortlistedInventoryPricingDetails
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
