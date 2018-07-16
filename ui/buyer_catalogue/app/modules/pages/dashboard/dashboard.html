@@ -401,13 +401,10 @@
                           </div>
 
                           <div class="">
-
                               <div class="col-md-12 showDisplayDetailsTable" ng-if="showDisplayDetailsTable" style="margin-top:5px;">
-                                <div style="background-color: #cb1925" class="panel-heading">
+                                  <div style="background-color: #cb1925" class="col-md-12 panel-heading">
                                   <h5>Society Details For {{campaignTabPropsalName}}</h5>
-
-                                </div>
-
+                                  </div>
                               <table class="table-responsive table table-bordered showDisplayDetailsTable">
                                 <thead>
                                   <tr>
@@ -1443,18 +1440,24 @@
             <h4 class="modal-title">{{campaignNameOnImageModal}} Image Details</h4>
             <hr/>
             <div class = "modal-body">
-              <div class="carousel" id="slider" >
+              <div class="carousel" id="slider">
                  <div class="carousel-inner">
-                     <div class="item" ng-class="{active:!$index}" ng-repeat="image in imageUrlList">
+                   <div class="item" ng-class="{active:!$index}" ng-repeat="image in imageUrlList">
+                     <div class="row">
                         <img ng-src="{{image.image_url}}" style="width:600px; height:400px;" class="img-responsive" alt="No Image Found"/></br>
-                        Comment : {{image.comment}} </br>
-                        Distance : {{image.distance|limitTo:10}}mtrs, ({{image.distance/1000|limitTo:10}} kms)
-                     </div>
+                       </div>
+                       <div class="row" style="margin-left:10px;">
+                         Comment : {{image.comment}} </br>
+                         Distance : {{image.distance|limitTo:10}} mtrs, ({{image.distance/1000|limitTo:10}} kms)
+
+                       </div>
+                   </div>
+
                  </div>
-                  <a class="left carousel-control"  data-toggle="carousel" data-target = "#slider" role="button" data-slide="prev">
+                  <a style="height:400px;" class="left carousel-control"  data-toggle="carousel" data-target = "#slider" role="button" data-slide="prev">
                      <span class="glyphicon glyphicon-chevron-left"></span>
                   </a>
-                 <a class="right carousel-control" data-toggle = "carousel" data-target = "#slider" role="button" data-slide="next">
+                 <a style="height:400px;" class="right carousel-control" data-toggle = "carousel" data-target = "#slider" role="button" data-slide="next">
                    <span class="glyphicon glyphicon-chevron-right"></span>
                  </a>
               </div>
