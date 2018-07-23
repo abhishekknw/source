@@ -9,7 +9,6 @@ from v0.models import DurationType
 from v0.ui.inventory.models import AdInventoryType
 from v0.ui.finances.models import PriceMappingDefault
 
-
 def get_state_map():
     all_city = City.objects.all()
     state_map = {}
@@ -23,9 +22,10 @@ class SocietyDataImport(APIView):
 
     """
 
-    def get(self, request):
+    def post(self, request):
+        source_file = request.data['file']
         path = Path.cwd()
-        wb = load_workbook(str(path) + '/v0/ui/supplier/society_data.xlsx')
+        wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         society_data_list = []
         for index, row in enumerate(ws.iter_rows()):
