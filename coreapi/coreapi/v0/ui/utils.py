@@ -35,7 +35,7 @@ import v0.models as models
 import v0.errors as errors
 import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
-
+from v0.ui.location.models import State, City, CityArea, CitySubArea
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """
@@ -150,7 +150,7 @@ def save_basic_supplier_details(supplier_type_code, data):
         return handle_response(function_name, exception_object=e)
 
 
-def get_supplier_id(request, data, state_name=v0_constants.state_name, state_code=v0_constants.state_code):
+def get_supplier_id(data, state_name=v0_constants.state_name, state_code=v0_constants.state_code):
     """
     :param request: request parameter
     :param data: dict containing valid keys . Note the keys should be 'city', 'area', sub_area', 'supplier_type' ,
@@ -163,15 +163,15 @@ def get_supplier_id(request, data, state_name=v0_constants.state_name, state_cod
     error = 'You might want to double check the state name {0} and state code {1} defined in ui constants'.format(v0_constants.state_name, v0_constants.state_code)
     try:
         try:
-            state_object = v0.models.State.objects.get(state_name=state_name, state_code=state_code)
-            city_object = v0.models.City.objects.get(city_code=data.get('city_code'), state_code=state_object)
-            area_object = v0.models.CityArea.objects.get(area_code=data.get('area_code'), city_code=city_object)
-            subarea_object = v0.models.CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
+            state_object = State.objects.get(state_name=state_name, state_code=state_code)
+            city_object = City.objects.get(city_code=data.get('city_code'), state_code=state_object)
+            area_object = CityArea.objects.get(area_code=data.get('area_code'), city_code=city_object)
+            subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
 
         except ObjectDoesNotExist as e:
-            city_object = v0.models.City.objects.get(id=data['city_id'])
-            area_object = v0.models.CityArea.objects.get(id=data['area_id'])
-            subarea_object = v0.models.CitySubArea.objects.get(id=data['subarea_id'],
+            city_object = City.objects.get(id=data['city_id'])
+            area_object = CityArea.objects.get(id=data['area_id'])
+            subarea_object = CitySubArea.objects.get(id=data['subarea_id'],
                                                      area_code=area_object)
 
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
@@ -641,7 +641,6 @@ def get_content_types(codes):
         ContentType = apps.get_model('contenttypes', 'ContentType')
         content_types = ContentType.objects.get_for_models(*model_classes)
         final_content_types = {}
-
         for model_class, content_type in content_types.iteritems():
             model_code = v0_constants.model_to_codes[model_class.__name__]
             final_content_types[model_code] = content_type

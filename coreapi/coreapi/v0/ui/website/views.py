@@ -85,7 +85,7 @@ from v0.ui.proposal.models import ProposalInfo, ProposalCenterMapping,ProposalCe
 from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingVersionSerializer,
     ProposalInfoVersionSerializer, ProposalMasterCostSerializer, ProposalMetricsSerializer)
 from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate
-from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -664,7 +664,7 @@ class CreateProposalAPIView(APIView):
             allowed = '_allowed'
             total = 'total_'
             count = '_count'
-            price_dict = self.getPriceDict()
+            price_dict = getPriceDict()
             for item in items:
                 society_detail = {}     #List of society-related details required to be displayed
                 society_id = item.society.supplier_id
@@ -710,38 +710,6 @@ class CreateProposalAPIView(APIView):
 
         except :
             return Response(status=404)
-
-    def getPriceDict(self):
-        price_dict = {
-            'Standee' : {
-                            'duration': '1',
-                            'types' : {
-                                            'Small' : '3',
-                                            'Medium' : '4',
-                                            # 'Large'  : '5'
-                                       }
-                        },
-
-            'Flier' : {
-                            'duration' : '5',
-                            'types' : {
-                                        'Door-to-Door' : '12',
-                                        'Mailbox' : '13',
-                                      }
-            },
-
-            'Stall' : {
-                            'duration': '5',
-                            'types' : {
-                                            'Canopy' : '6',
-                                            'Small' : '7',
-                                            'Large'  : '8',
-                                            # 'Customize' : '9'
-                                       }
-            },
-        }
-
-        return price_dict
 
 
 class BookCampaignAPIView(APIView):
@@ -2212,7 +2180,7 @@ class ImportSocietyData(APIView):
                             'supplier_code': data['supplier_code']
                         }
 
-                        data['supplier_id'] = get_supplier_id(request, supplier_id_data)
+                        data['supplier_id'] = get_supplier_id(supplier_id_data)
                         (society_object, value) = SupplierTypeSociety.objects.get_or_create(supplier_id=data['supplier_id'])
                         data['society_location_type'] = subarea_object.locality_rating
                         #data['society_state'] = 'Maharashtra'Uttar Pradesh
@@ -2490,6 +2458,7 @@ class ImportSupplierData(APIView):
                 ws = wb.get_sheet_by_name(sheet)
 
                 # fetch all the center id's
+
                 center_id_list_response = website_utils.get_center_id_list(ws, v0_constants.index_of_center_id)
 
                 if not center_id_list_response.data['status']:
@@ -3245,7 +3214,7 @@ class ImportContactDetails(APIView):
                         data['country_code'] = v0_constants.COUNTRY_CODE
 
                         try:
-                            data['supplier_id'] = get_supplier_id(request, data)
+                            data['supplier_id'] = get_supplier_id(data)
                             society_object = SupplierTypeSociety.objects.get(supplier_id=data['supplier_id'])
                             data['spoc'] = False
                             data['supplier'] = society_object
@@ -4080,7 +4049,7 @@ class ImportCorporateData(APIView):
                             'supplier_code': data['supplier_code']
                         }
 
-                        data['supplier_id'] = get_supplier_id(request, supplier_id_data)
+                        data['supplier_id'] =   get_supplier_id(supplier_id_data)
 
                         (corporate_object, value) = SupplierTypeCorporate.objects.get_or_create(supplier_id=data['supplier_id'])
 
