@@ -9,12 +9,24 @@ from v0.models import DurationType
 from v0.ui.inventory.models import AdInventoryType
 from v0.ui.finances.models import PriceMappingDefault
 
+
 def get_state_map():
     all_city = City.objects.all()
     state_map = {}
     for city in all_city:
         state_map[city.city_code] = {'state_name': city.state_code.state_name, 'state_code': city.state_code.state_code}
     return state_map
+
+
+def create_price_mapping_default(days_count, adinventory_name, adinventory_type, new_society,
+                                 actual_supplier_price, content_type, supplier_id):
+    duration_type = DurationType.objects.get(days_count=days_count)
+    adinventory_type = AdInventoryType.objects.get(adinventory_name=adinventory_name, adinventory_type=adinventory_type)
+    PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=duration_type,
+                                              adinventory_type=adinventory_type,
+                                              actual_supplier_price=actual_supplier_price,
+                                              content_type=content_type,
+                                              object_id=supplier_id)
 
 
 class SocietyDataImport(APIView):
@@ -103,27 +115,12 @@ class SocietyDataImport(APIView):
                 }
                 obj, is_created = ContactDetails.objects.get_or_create(**new_contact_data)
                 obj.save()
-                duration_type = DurationType.objects.get(days_count='1')
-                adinventory_type = AdInventoryType.objects.get(adinventory_name="STALL", adinventory_type="Small")
-                PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=duration_type,
-                                                          adinventory_type=adinventory_type,
-                                                          actual_supplier_price=society['stall_price'],
-                                                          content_type=get_content_type('RS').data['data'],
-                                                          object_id=supplier_id)
-
-                duration_type = DurationType.objects.get(days_count='3')
-                adinventory_type = AdInventoryType.objects.get(adinventory_name="POSTER", adinventory_type="A4")
-                PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=duration_type,
-                                                          adinventory_type=adinventory_type,
-                                                          actual_supplier_price=society['poster_price'],
-                                                          content_type=get_content_type('RS').data['data'],
-                                                          object_id=supplier_id)
+                rs_content_type = get_content_type('RS').data['data']
+                create_price_mapping_default('1', "STALL", "Small", new_society,
+                                             society['stall_price'], rs_content_type, supplier_id)
+                create_price_mapping_default('3', "POSTER", "A4", new_society,
+                                             society['poster_price'], rs_content_type, supplier_id)
                 save_flyer_locations(0, 1, new_society, society['supplier_code'])
-                duration_type = DurationType.objects.get(days_count='1')
-                adinventory_type = AdInventoryType.objects.get(adinventory_name="FLIER", adinventory_type="Door-to-Door")
-                PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=duration_type,
-                                                          adinventory_type=adinventory_type,
-                                                          actual_supplier_price=society['flier_price'],
-                                                          content_type=get_content_type('RS').data['data'],
-                                                          object_id=supplier_id)
+                create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
+                                             society['flier_price'], rs_content_type, supplier_id)
         return handle_response({}, data='success', success=True)
