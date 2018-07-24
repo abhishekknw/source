@@ -4,6 +4,38 @@ from v0.models import BaseModel, managers, fields
 from django.contrib.contenttypes.models import ContentType
 from v0.constants import supplier_id_max_length
 
+
+def getPriceDict():
+    price_dict = {
+        'Standee': {
+            'duration': '1',
+            'types': {
+                'Small': '3',
+                'Medium': '4',
+                # 'Large'  : '5'
+            }
+        },
+
+        'Flier': {
+            'duration': '5',
+            'types': {
+                'Door-to-Door': '12',
+                'Mailbox': '13',
+            }
+        },
+
+        'Stall': {
+            'duration': '5',
+            'types': {
+                'Canopy': '6',
+                'Small': '7',
+                'Large': '8',
+                # 'Customize' : '9'
+            }
+        }
+    }
+
+    return price_dict
 class DoorToDoorInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='door_to_doors', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)

@@ -55,6 +55,7 @@ from v0.ui.inventory.models import (BannerInventory, AdInventoryType, PosterInve
     StandeeInventory, WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping, AD_INVENTORY_CHOICES)
 from v0.ui.supplier.models import SupplierInfo, SupplierTypeCorporate, SupplierAmenitiesMap
 
+
 class PopulateContentTypeFields(APIView):
     """
     This API is written to populate existing content type fields for models who are mapped to

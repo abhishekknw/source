@@ -249,7 +249,7 @@ class GenerateSupplierIdAPIView(APIView):
             city_object = models.City.objects.get(id=data['city_id'])
             city_code = city_object.city_code
 
-            data['supplier_id'] = ui_utils.get_supplier_id(request, data)
+            data['supplier_id'] = ui_utils.get_supplier_id(data)
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
             response = ui_utils.make_supplier_data(data)
