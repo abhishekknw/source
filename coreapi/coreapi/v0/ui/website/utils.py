@@ -65,6 +65,7 @@ import v0.serializers as v0_serializers
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
     SpaceBookingCost, EventStaffingCost, DataSciencesCost, ShortlistedInventoryPricingDetails, PriceMappingDefault
 from v0.ui.supplier.models import SupplierAmenitiesMap
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -7065,7 +7066,7 @@ def get_assigned_inv_location_data(campaign_id, content_type_id, act_type):
 
         supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
         supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-        serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects, many=True)
+        serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
         suppliers = serializer.data
         inv_act_image_objects_with_distance = calculate_location_difference_between_inventory_and_supplier(
             inv_act_image_objects, suppliers)

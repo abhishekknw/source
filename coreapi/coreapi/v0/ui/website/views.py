@@ -2656,7 +2656,7 @@ class CreateInitialProposal(APIView):
                     proposal_data['parent'] = ProposalInfo.objects.get_permission(user=user, proposal_id=parent).proposal_id
 
                 # call the function that saves basic proposal information
-                proposal_data['created_by'] = user
+                proposal_data['created_by'] = user.username
                 response = website_utils.create_basic_proposal(proposal_data)
                 if not response.data['status']:
                     return response

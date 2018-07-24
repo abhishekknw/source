@@ -36,6 +36,12 @@ import v0.errors as errors
 import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
+from v0.ui.supplier.serializers import (SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
+     SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer, SupplierTypeSalonSerializer)
+from v0.ui.finances.serializers import (IdeationDesignCostSerializer, DataSciencesCostSerializer, EventStaffingCostSerializer,
+                                        LogisticOperationsCostSerializer, SpaceBookingCostSerializer, PrintingCostSerializer)
+from v0.ui.proposal.serializers import ProposalMetricsSerializer, ProposalMasterCostSerializer
+
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """
@@ -700,21 +706,21 @@ def get_serializer(query):
     try:
         serializers = {
 
-            v0_constants.society_code: v0.serializers.SupplierTypeSocietySerializer,
-            v0_constants.corporate_code: v0.serializers.SupplierTypeCorporateSerializer,
-            v0_constants.gym: v0.serializers.SupplierTypeGymSerializer,
-            v0_constants.salon: v0.serializers.SupplierTypeSalonSerializer,
-            v0_constants.bus_shelter: v0.serializers.SupplierTypeBusShelterSerializer,
-            v0_constants.retail_shop_code: v0.serializers.SupplierTypeRetailShopSerializer,
+            v0_constants.society_code: SupplierTypeSocietySerializer,
+            v0_constants.corporate_code: SupplierTypeCorporateSerializer,
+            v0_constants.gym: SupplierTypeGymSerializer,
+            v0_constants.salon: SupplierTypeSalonSerializer,
+            v0_constants.bus_shelter: SupplierTypeBusShelterSerializer,
+            v0_constants.retail_shop_code: SupplierTypeRetailShopSerializer,
             v0_constants.bus_depot_code: ui_serializers.BusDepotSerializer,
-            'ideation_design_cost': v0.serializers.IdeationDesignCostSerializer,
-            'logistic_operations_cost': v0.serializers.LogisticOperationsCostSerializer,
-            'space_booking_cost': v0.serializers.SpaceBookingCostSerializer,
-            'event_staffing_cost': v0.serializers.EventStaffingCostSerializer,
-            'data_sciences_cost': v0.serializers.DataSciencesCostSerializer,
-            'printing_cost': v0.serializers.PrintingCostSerializer,
-            'proposal_metrics': v0.serializers.ProposalMetricsSerializer,
-            'proposal_master_cost': v0.serializers.ProposalMasterCostSerializer
+            'ideation_design_cost': IdeationDesignCostSerializer,
+            'logistic_operations_cost': LogisticOperationsCostSerializer,
+            'space_booking_cost': SpaceBookingCostSerializer,
+            'event_staffing_cost': EventStaffingCostSerializer,
+            'data_sciences_cost': DataSciencesCostSerializer,
+            'printing_cost': PrintingCostSerializer,
+            'proposal_metrics': ProposalMetricsSerializer,
+            'proposal_master_cost': ProposalMasterCostSerializer
 
         }
         return serializers[query]
