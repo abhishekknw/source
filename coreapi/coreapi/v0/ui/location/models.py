@@ -4,6 +4,7 @@ from v0.constants import supplier_id_max_length
 from django.contrib.contenttypes import fields
 from v0 import managers
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 class State(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -66,3 +67,40 @@ class ImageMapping(BaseModel):
 
     class Meta:
         db_table = 'image_mapping'
+
+class ShortlistedSpacesVersion(models.Model):
+    space_mapping_version   = models.ForeignKey('SpaceMappingVersion',db_index=True, related_name='spaces_version',on_delete=models.CASCADE)
+    supplier_code   = models.CharField(max_length=4)
+    content_type    = models.ForeignKey(ContentType, related_name='spaces_version')
+    object_id       = models.CharField(max_length=12)
+    content_object  = fields.GenericForeignKey('content_type', 'object_id')
+    buffer_status   = models.BooleanField(default=False)
+
+    class Meta:
+        #db_table = 'SHORTLISTED_SPACES_VERSION'
+        db_table = 'shortlisted_spaces_version'
+
+class ShortlistedSpaces(BaseModel):
+    """
+    This model stores all the shortlisted spaces. One Supplier or space can be under different campaigns.
+    in one campaign it's status can be removed while in the other it's buffered. Hence this model is made
+    for mapping such relations.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    space_mapping = models.ForeignKey('SpaceMapping', db_index=True, related_name='spaces', on_delete=models.CASCADE, null=True, blank=True)
+    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
+    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
+    supplier_code = models.CharField(max_length=4, null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, related_name='spaces')
+    object_id = models.CharField(max_length=supplier_id_max_length)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    buffer_status = models.BooleanField(default=False)
+    status = models.CharField(max_length=10, null=True, blank=True)
+    objects = managers.GeneralManager()
+    campaign_status = models.CharField(max_length=10, default='', null=True, blank=True)
+    phase = models.CharField(max_length=10, default='',  null=True, blank=True)
+    payment_status = models.CharField(max_length=255, null=True, blank=True)
+    payment_method = models.CharField(max_length=255, null=True, blank=True)
+    total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
+    booking_status = models.CharField(max_length=10, null=True, blank=True)
+    is_completed = models.BooleanField(default=False)

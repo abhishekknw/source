@@ -1,7 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import Events, OperationsInfo
 from inventory.models import SupplierTypeSociety
 from inventory.serializers import  StandeeInventorySerializer
 from account.serializers import ContactDetailsSerializer

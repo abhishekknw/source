@@ -16,22 +16,21 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
-from v0.serializers import EventsSerializer, \
-    OperationsInfoSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer, \
-    BaseUserCreateSerializer
-from v0.ui.account.serializers import SignupSerializer
+from v0.serializers import OperationsInfoSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer
 from v0.ui.permissions.serializers import UserInquirySerializer, PermissionSerializer
-from v0.ui.user.serializers import BaseUserSerializer, BaseUserUpdateSerializer
+from v0.ui.user.serializers import BaseUserSerializer, BaseUserUpdateSerializer, BaseUserCreateSerializer
+from v0.ui.user.models import UserInquiry
 from v0.ui.location.models import CityArea
 from v0.ui.location.serializers import CityAreaSerializer
-from v0.ui.account.serializers import ContactDetailsSerializer, ContactDetailsGenericSerializer
+from v0.ui.account.serializers import ContactDetailsSerializer, ContactDetailsGenericSerializer, SignupSerializer
 from v0.ui.account.models import ContactDetails, ContactDetailsGeneric, Signup
 from v0.ui.inventory.models import SupplierTypeSociety, StallInventory
 # from v0.ui.inventory.serializers import SupplierTypeSocietySerializer
 from rest_framework.decorators import detail_route, list_route
-from v0.models import Events, OperationsInfo, BaseUser, BusinessTypes, \
+from v0.ui.account.models import OperationsInfo, BusinessTypes, \
     BusinessSubTypes
-from v0.ui.permissions.models import UserInquiry, CustomPermissions
+from v0.ui.user.models import BaseUser
+from v0.ui.permissions.models import CustomPermissions
 from v0.ui.finances.models import RatioDetails, DoorToDoorInfo, DurationType
 from v0.ui.finances.serializers import DoorToDoorInfoSerializer, RatioDetailsSerializer
 from v0.ui.supplier.serializers import SupplierInfoSerializer, SupplierTypeSocietySerializer
@@ -54,6 +53,8 @@ from v0.ui.inventory.models import (BannerInventory, AdInventoryType, PosterInve
     StandeeInventory, WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping, AD_INVENTORY_CHOICES)
 from v0.ui.supplier.models import SupplierInfo, SupplierTypeCorporate, SupplierAmenitiesMap
 
+from v0.ui.events.models import Events
+from v0.ui.events.serializers import EventsSerializer
 
 class PopulateContentTypeFields(APIView):
     """

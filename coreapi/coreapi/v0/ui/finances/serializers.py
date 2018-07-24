@@ -1,6 +1,11 @@
 from rest_framework.serializers import ModelSerializer
 from models import DoorToDoorInfo, DataSciencesCost, EventStaffingCost, IdeationDesignCost, LogisticOperationsCost, \
-    PriceMapping, PriceMappingDefault, PrintingCost, RatioDetails, SpaceBookingCost, DurationType
+    PriceMapping, PriceMappingDefault, PrintingCost, RatioDetails, SpaceBookingCost, DurationType, SpaceBookingCost
+
+class SpaceBookingCostSerializer(ModelSerializer):
+    class Meta:
+        model = SpaceBookingCost
+        fields = '__all__'
 
 class DataSciencesCostSerializer(ModelSerializer):
     class Meta:

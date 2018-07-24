@@ -13,6 +13,18 @@ RETAIL_SHOP_TYPE = (
     ('STATIONARY_STORE', 'STATIONARY_STORE')
 )
 
+class CorporateCompanyDetails(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    company_id = models.ForeignKey('CorporateParkCompanyList', db_column='COMPANY_ID', related_name='companydetails', blank=True, null=True, on_delete=models.CASCADE)
+    building_name = models.CharField(db_column='BUILDING_NAME', max_length=20, blank=True, null=True)
+    wing_name = models.CharField(db_column='WING_NAME', max_length=20, blank=True, null=True)
+
+    def get_floors(self):
+        return self.wingfloor.all()
+
+    class Meta:
+        db_table='corporate_company_details'
+
 class CorporateParkCompanyList(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='COMPANY_NAME',max_length=50, blank=True, null=True)

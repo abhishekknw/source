@@ -68,14 +68,24 @@ class Filters(BaseModel):
     class Meta:
         db_table = 'filters'
 
-class UserInquiry(models.Model):
-    inquiry_id = models.AutoField(db_column='INQUIRY_ID', primary_key=True)
-    company_name = models.CharField(db_column='COMPANY_NAME', max_length=40)
-    contact_person_name = models.CharField(db_column='CONTACT_PERSON_NAME', max_length=40, blank=True, null=True)
-    email = models.CharField(db_column='EMAIL', max_length=40, blank=True, null=True)
-    phone = models.IntegerField(db_column='PHONE', blank=True, null=True)
-    inquiry_details = models.TextField(db_column='INQUIRY_DETAILS')
+class Role(models.Model):
+    """
+    This model defines roles
+    """
+    name = models.CharField(max_length=255)
+    codename = models.CharField(max_length=255)
+    organisation = models.ForeignKey('Organisation')
 
     class Meta:
+        db_table = 'role'
 
-        db_table = 'user_inquiry'
+class RoleHierarchy(models.Model):
+    """
+    This model defines role hierarchy between roles
+    """
+    parent = models.ForeignKey('Role', related_name='parent')
+    child = models.ForeignKey(Role)
+    depth = models.IntegerField(default=0, null=False, blank=False)
+
+    class Meta:
+        db_table = 'role_hierarchy'

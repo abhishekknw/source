@@ -37,19 +37,16 @@ from rest_framework.views import APIView
 import tasks
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import BusinessTypesSerializer, BusinessSubTypesSerializer
-from v0.models import BusinessTypes, \
-                    BusinessSubTypes, \
-                    SpaceMappingVersion, ShortlistedSpacesVersion, GenericExportFileName, \
-                    BaseUser, Role, RoleHierarchy, Leads, LeadAlias, SpaceMapping , ShortlistedSpaces
 from v0.ui.website.serializers import (SpaceMappingSerializer ,InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,
         SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,
     ProposalCenterMappingVersionSpaceSerializer, AmenitySerializer, SupplierAmenitiesMapSerializer,
     InventoryActivityAssignmentSerializerReadOnly, ProfileNestedSerializer, ProfileSimpleSerializer, ContentTypeSerializer,
-                                       RoleSerializer, LeadsSerializer, LeadAliasSerializer,
+                                       RoleSerializer,
                                        CampaignAssignmentSerializerReadOnly, InventoryActivityAssignmentSerializer,
                                        GenericExportFileSerializerReadOnly)
 
 from v0.ui.components.models import SocietyTower, FlatType, Amenity
+from v0.ui.account.models import BusinessTypes, BusinessSubTypes, GenericExportFileName
 
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0.ui.utils import get_supplier_id
@@ -74,19 +71,23 @@ from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer
 
 from v0.ui.organisation.models import Organisation, OrganisationMap, ORGANIZATION_CATEGORY
 from v0.ui.organisation.serializers import OrganisationMapNestedSerializer, OrganisationSerializer
-from v0.ui.location.models import State, City, CityArea, CitySubArea
+from v0.ui.location.models import State, City, CityArea, CitySubArea, ShortlistedSpacesVersion, ShortlistedSpaces
 
 from v0.ui.location.serializers import CitySubAreaSerializer, CityAreaSerializer, CitySerializer, StateSerializer
-from v0.ui.user.models import BaseUser, UserProfile, UserCities, UserAreas
+from v0.ui.user.models import BaseUser, UserProfile, UserCities, UserAreas, BaseUser
 from v0.ui.user.serializers import UserProfileSerializer, UserSerializer, BaseUserSerializer, BaseUserUpdateSerializer
-from v0.ui.proposal.models import ProposalInfo, ProposalCenterMapping,ProposalCenterMappingVersion
-from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingVersionSerializer,
-    ProposalInfoVersionSerializer, ProposalMasterCostSerializer, ProposalMetricsSerializer)
+from v0.ui.proposal.models import ProposalInfo, ProposalCenterMapping,ProposalCenterMappingVersion, \
+    SpaceMappingVersion, SpaceMapping
+from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer,
+                                        ProposalCenterMappingVersionSerializer, ProposalInfoVersionSerializer,
+                                        ProposalMasterCostSerializer, ProposalMetricsSerializer)
 from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict, DurationType
-from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission
+from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
 from v0.ui.permissions.serializers import ObjectLevelPermissionSerializer, GeneralUserPermissionSerializer
 
+from v0.ui.leads.models import Leads, LeadAlias
+from v0.ui.leads.serializers import LeadsSerializer, LeadAliasSerializer
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 class GetBusinessTypesAPIView(APIView):

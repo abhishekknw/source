@@ -20,21 +20,21 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, \
     BusShelterSerializer
-from v0.serializers import EventsSerializer, \
-    CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateBuildingGetSerializer, \
-    CorporateParkCompanySerializer
+from v0.ui.events.serializers import EventsSerializer
+from v0.ui.supplier.serializers import CorporateBuildingSerializer, CorporateParkCompanySerializer, \
+    CorporateBuildingGetSerializer
 
-from v0.models import Events
-from v0.models import SocietyMajorEvents, CorporateCompanyDetails
+from v0.ui.events.models import Events, SocietyMajorEvents
 from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, \
     SwimmingPoolInfo,  SportsInfra, SocietyTower, FlatType, MailboxInfo, CorporateBuildingWing, CompanyFloor
 from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, \
-    FlatTypeSerializer, SocietyTowerSerializer, SocietyFlatSerializer, SportsInfraSerializer, SwimmingPoolInfoSerializer
+    FlatTypeSerializer, SocietyTowerSerializer, SocietyFlatSerializer, SportsInfraSerializer, \
+    SwimmingPoolInfoSerializer, CorporateBuildingWingSerializer
 from v0.ui.finances.models import DoorToDoorInfo, PriceMapping, PriceMappingDefault
 from v0.ui.finances.serializers import PriceMappingDefaultSerializer, PriceMappingSerializer
 from v0.ui.user.models import UserProfile
 from v0.ui.location.models import City, CityArea, CitySubArea, ImageMapping
-from v0.serializers import (SocietyMajorEventsSerializer, CorporateParkCompanyListSerializer)
+from v0.ui.events.serializers import SocietyMajorEventsSerializer
 from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer, BusDepotSerializer
 from v0.ui.user.serializers import UserSerializer, UserProfileSerializer
 from v0.ui.location.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, StateSerializer, \
@@ -49,7 +49,8 @@ from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate, Su
     SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding, CorporateParkCompanyList
 from v0.ui.supplier.serializers import (SupplierTypeCorporateSerializer, SupplierTypeSalonSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeBusShelterSerializer,
-                                        SupplierTypeCodeSerializer, SupplierTypeSocietySerializer)
+                                        SupplierTypeCodeSerializer, SupplierTypeSocietySerializer, CorporateCompanyDetails,
+                                        CorporateParkCompanyListSerializer)
 from inventory.serializers import (StandeeInventorySerializer, WallInventorySerializer, PoleInventorySerializer,
                                    StallInventorySerializer, StreetFurnitureSerializer, FlyerInventorySerializer,
                                    InventorySummarySerializer)

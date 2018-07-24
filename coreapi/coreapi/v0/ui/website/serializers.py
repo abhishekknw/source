@@ -4,13 +4,13 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 import v0.models as models
-from v0.models import SpaceMapping, ShortlistedSpaces,\
-                    SpaceMappingVersion, ShortlistedSpacesVersion, BaseUser
+from v0.ui.proposal.models import SpaceMapping, SpaceMappingVersion
+from v0.ui.user.models import BaseUser
 from v0.ui.finances.models import AuditDate, ShortlistedInventoryPricingDetails, PriceMappingDefault
 from v0.ui.finances.serializers import DurationTypeSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
-from v0.ui.account.models import AccountInfo, Profile
+from v0.ui.account.models import AccountInfo, Profile, GenericExportFileName, BusinessTypes, BusinessSubTypes
 from v0.ui.account.serializers import BusinessAccountContactSerializer
 from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
@@ -22,7 +22,11 @@ from v0.ui.proposal.models import ProposalCenterMapping, ProposalCenterMappingVe
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from v0.ui.supplier.models import SupplierTypeCorporate, SupplierAmenitiesMap
 from v0.ui.components.models import Amenity
-from v0.ui.permissions.models import Filters, ObjectLevelPermission, GeneralUserPermission
+from v0.ui.permissions.models import Filters, ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
+from v0.ui.location.models import ShortlistedSpaces, ShortlistedSpacesVersion
+
+from v0.ui.leads.models import Lead, LeadAlias, Leads
+from v0.ui.leads.serializers import LeadSerializer
 
 class InventoryActivitySerializer(ModelSerializer):
     """
@@ -31,12 +35,6 @@ class InventoryActivitySerializer(ModelSerializer):
 
     class Meta:
         model = InventoryActivity
-        fields = '__all__'
-
-
-class LeadSerializer(ModelSerializer):
-    class Meta:
-        model = models.Lead
         fields = '__all__'
 
 
@@ -92,7 +90,7 @@ class GenericExportFileSerializerReadOnly(ModelSerializer):
     assignment_detail = serializers.ReadOnlyField(source='calculate_assignment_detail')
 
     class Meta:
-        model = models.GenericExportFileName
+        model = GenericExportFileName
         fields = '__all__'
 
 
@@ -202,14 +200,14 @@ class UISocietyInventorySerializer(ModelSerializer):
 class BusinessTypeSerializer(ModelSerializer):
 
     class Meta:
-        model = models.BusinessTypes
+        model = BusinessTypes
         fields = '__all__'
 
 
 class BusinessSubTypeSerializer(ModelSerializer):
 
     class Meta:
-        model = models.BusinessSubTypes
+        model = BusinessSubTypes
         fields = '__all__'
 
 
@@ -326,7 +324,7 @@ class ShortlistedSpacesSerializerReadOnly(ModelSerializer):
     shortlisted_inventories = ShortlistedInventoryPricingSerializerReadOnly(many=True, source='shortlistedinventorypricingdetails_set')
 
     class Meta:
-        model = models.ShortlistedSpaces
+        model = ShortlistedSpaces
         exclude = ('created_at', 'updated_at', 'space_mapping')
 
 
@@ -477,7 +475,7 @@ class RoleSerializer(ModelSerializer):
     simple serializer for Role
     """
     class Meta:
-        model = models.Role
+        model = Role
         fields = '__all__'
 
 class RoleHierarchySerializer(ModelSerializer):
@@ -485,7 +483,7 @@ class RoleHierarchySerializer(ModelSerializer):
     simple serializer for RoleHierarchy
     """
     class Meta:
-        model = models.RoleHierarchy
+        model = RoleHierarchy
         fields = '__all__'
 
 class GenericExportFileSerializer(ModelSerializer):
@@ -494,23 +492,5 @@ class GenericExportFileSerializer(ModelSerializer):
     """
 
     class Meta:
-        model = models.GenericExportFileName
-        fields = '__all__'
-
-class LeadAliasSerializer(ModelSerializer):
-    """
-    simple serializer for LeadAlias
-    """
-
-    class Meta:
-        model = models.LeadAlias
-        fields = '__all__'
-
-class LeadsSerializer(ModelSerializer):
-    """
-
-    """
-
-    class Meta:
-        model = models.Leads
+        model = GenericExportFileName
         fields = '__all__'

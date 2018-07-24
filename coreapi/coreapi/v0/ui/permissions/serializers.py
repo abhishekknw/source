@@ -1,6 +1,7 @@
 from rest_framework.serializers import ModelSerializer
-from v0.ui.permissions.models import UserInquiry, ObjectLevelPermission, GeneralUserPermission
+from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission
 from django.contrib.auth.models import User, Permission, Group
+from v0.ui.user.models import UserInquiry
 
 class UserInquirySerializer(ModelSerializer):
     class Meta:
@@ -8,6 +9,11 @@ class UserInquirySerializer(ModelSerializer):
         fields = '__all__'
 
 class PermissionSerializer(ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = '__all__'
+
+class PermissionsSerializer(ModelSerializer):
     class Meta:
         model = Permission
         fields = '__all__'
