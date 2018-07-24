@@ -35,7 +35,7 @@ from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetail
 from v0.ui.finances.models import DoorToDoorInfo, PriceMapping, PriceMappingDefault
 from v0.ui.finances.serializers import PriceMappingDefaultSerializer, PriceMappingSerializer
 from v0.ui.user.models import UserProfile
-from v0.ui.location.models import City, CityArea, CitySubArea
+from v0.ui.location.models import City, CityArea, CitySubArea, State
 from v0.serializers import (SocietyMajorEventsSerializer, CorporateParkCompanyListSerializer)
 from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer, BusDepotSerializer
 from v0.ui.user.serializers import UserSerializer, UserProfileSerializer
@@ -47,7 +47,7 @@ from inventory.models import PosterInventory, InventorySummary, StreetFurniture,
 from inventory.serializers import PosterInventorySerializer
 from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate, SupplierAmenitiesMap, SupplierTypeCode, \
-    SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding
+    SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding, RETAIL_SHOP_TYPE
 from v0.ui.supplier.serializers import (SupplierTypeCorporateSerializer, SupplierTypeSalonSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeBusShelterSerializer,
                                         SupplierTypeCodeSerializer, SupplierTypeSocietySerializer)
@@ -3101,7 +3101,7 @@ class SuppliersMeta(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            valid_supplier_type_code_instances = models.SupplierTypeCode.objects.all()
+            valid_supplier_type_code_instances = SupplierTypeCode.objects.all()
             data = {}
 
             for instance in valid_supplier_type_code_instances:
@@ -3120,7 +3120,7 @@ class SuppliersMeta(APIView):
                     'error': error
                 }
                 if supplier_type_code == v0_constants.retail_shop_code:
-                    data[supplier_type_code]['retail_shop_types'] = [tup[0] for tup in models.RETAIL_SHOP_TYPE]
+                    data[supplier_type_code]['retail_shop_types'] = [tup[0] for tup in RETAIL_SHOP_TYPE]
 
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
@@ -3274,7 +3274,7 @@ class StateViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            states = models.State.objects.all()
+            states = State.objects.all()
             serializer = StateSerializer(states, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
