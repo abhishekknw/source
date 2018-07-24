@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
-
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading" >
 <div><nav-bar></nav-bar></div>
 <div ng-loading="loading"></div>
 </br></br></br>
@@ -31,13 +31,33 @@
       <table st-table="releaseDetails.shortlisted_suppliers" st-safe-src="Data" class="table table-striped">
         <thead>
           <tr>
-            <th ng-click="setOrderProperty('flat_count')" ng-repeat="header in headings | orderBy:orderProperty">
-              {{header.header}}
+            <th colspan='999' style="background-color:#ffffff;">
+              <input st-search="" placeholder="Search ..." class="form-control"  type="search"/>
             </th>
+          </tr>
+          <tr>
+            <th>Sr No</th>
+            <th>Supplier Name</th>
+            <th>Area,(Sub Area)</th>
+            <th>Address</th>
+            <th>RelationShip Data</th>
+            <th st-sort="flat_count" st-skip-natural="true">Flat Count</th>
+            <th st-sort="tower_count" st-skip-natural="true">Tower Count</th>
+            <th>Inventory Type</th>
+            <th>Inventory Count</th>
+            <th>Inventory Supplier Price</th>
+            <th>Total Supplier Price   (Per Flat)  </th>
+            <th>Negotiated Price</th>
+            <th>Freebies</th>
+            <th>Booking Status</th>
+            <th>Phase</th>
+            <th>Mode Of Payment</th>
+            <th>Contacts</th>
+            <th>Payment Status</th>
 
           </tr>
         </thead>
-        <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers | orderBy:orderProperty">
+        <tbody ng-repeat="supplier in releaseDetails.shortlisted_suppliers">
           <tr ng-repeat="(key,filter) in getFilters(supplier)">
             <td rowspan="{{key.length}}" ng-show="$first">{{$parent.$index + 1}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.name}}({{supplier.quality_rating}})</td>
@@ -46,32 +66,25 @@
             <td class="" rowspan="{{key.length}}" ng-show="$first" width="200">{{supplier.address1}}</td>
             <!-- <td class="" rowspan="{{key.length}}" ng-show="$first" width="200">Inventory Owner :<b> Machadalo</b>, Feedback:{{supplier.feedback}}</td> -->
             <td class="" rowspan="{{key.length}}" ng-show="$first" width="200">
-              <button type="button" name="button" ng-click="getRelationShipData(supplier.supplier_id)" data-target="#relationshipModal" data-toggle="modal">View Data</button>
+              <button type="button" name="button" style="background-color:#d9534f;" ng-click="getRelationShipData(supplier)" data-target="#relationshipModal" data-toggle="modal">View Data</button>
             </td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.flat_count}}</td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">{{supplier.tower_count}}</td>
-            <!-- <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.shortlisted">{{shortlisted}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.buffered">{{buffered}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.removed">{{removed}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first" ng-if="supplier.status == statusCode.finalized">{{finalized}}</td> -->
 
-            <!-- <td class="col-md-1" rowspan="{{key.length}}" ng-show="$first">{{supplier.object_id}}</td> -->
-            <td class="" ng-if="key=='NA'">{{key}}</td>
-            <!-- <td class="" ng-if="key=='STALL'">{{key}}
-              <span ng-dropdown-multiselect="" options="stallLoc"  extra-settings="selected_baseline"
-              selected-model="selectAllLocation"   translation-texts="selected_customTexts"></span>
-            </td> -->
+            <td class="" ng-if="key=='NA'">{{key}} </td>
             <td class="" ng-if="key!='NA'"><a class="" data-target="#invTypeModal" data-toggle="modal" ng-click="setInventoryIds(filter)" permission = "[permissions.viewInventoryIds]"><b>{{key}}</b></a>
-
+            <span ng-if="key=='STALL'" ng-dropdown-multiselect="" options="stallLoc"  extra-settings="selected_baseline"
+            selected-model="selectAllLocation"   translation-texts="selected_customTexts"></span>
             </td>
+
             <td class="" ng-if="key=='FLIER'">{{supplier.flat_count}}</td>
             <td class="" ng-if="key!='FLIER'">{{filter.total_count}}</td>
             <td class="">{{getInventoryPrice(filter.actual_supplier_price,key)| currency : "₹"}}</td>
-            <td class="" rowspan="{{key.length}}" ng-show="$first">{{getTotalSupplierPrice(supplier)| currency : "₹"}} ({{getTotalSupplierPrice(supplier)/supplier.flat_count|limitTo:4| currency : "₹"}})</td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">{{getTotalSupplierPrice(supplier)| currency : "₹"}} ({{getTotalSupplierPrice(supplier)/supplier.flat_count|limitTo:8| currency : "₹"}})</td>
             <td class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="priceform">
               <span class="error" ng-show="priceform.price.$error.min">{{positiveNoError}}</span>
               <input type="number" name="price" ng-model="supplier.total_negotiated_price" class="form-control spacing input-width" min="0" permission = "[permissions.addNegotiatedPrice,permissions.viewNegotiatedPrice]">
-          <br>{{getTotalSupplierPrice(supplier)/supplier.flat_count|limitTo:4}}  </td>
+          <br>{{supplier.total_negotiated_price / supplier.flat_count|| 0 | limitTo:8}}  </td>
             <td style="text-align:left;" rowspan="{{key.length}}" ng-show="$first">
               <span ng-dropdown-multiselect="" options="multiSelect"  extra-settings="selected_baseline_settings"
               selected-model="searchSelectAllModel"   translation-texts="selected_baselines_customTexts"></span>
@@ -274,12 +287,12 @@
             </br></br>
               <div class="row form-inline">
                 <!-- <span style="float:left"> -->
-                <select class="form-control input-size"  ng-model="supplier_type_code">
+                <select class="form-control input-size"  ng-model="supplier_type_code.code">
                   <option value="">Select Supplier</option>
                   <option  ng-repeat="supplier in supplier_names" value="{{supplier.code}}" required>{{supplier.name}}</option>
                 </select>
                     <label style="margin-left: 20px;margin-right: 20px;">Enter Text</label>
-                      <input class="form-control input-size" type="text" ng-model="search" class="form-control spacing col-width" style="margin-left:10px">
+                      <input class="form-control input-size" type="text" ng-model="search.query" class="form-control spacing col-width" style="margin-left:10px">
                 <button data-target = "" class="btn btn-danger active" data-toggle="modal" ng-click="searchSuppliers()">Search</button>
               </div>
           </br>
@@ -383,7 +396,14 @@
                     <td ng-if="!relationshipData.campaign_data.last_campaign_price.total_negotiated_price">
                       NA
                     </td>
-                  </tr>
+                    </tr>
+                    <tr>
+                    <th>Last Campaign Price Per Flat Price</th>
+                    <td ng-if="relationshipData.campaign_data.last_campaign_price.total_negotiated_price">
+                      ₹ {{relationshipData.campaign_data.last_campaign_price.total_negotiated_price / supplierFlatCount | limitTo : 8}}
+
+                    </td>
+                    </tr>
                   <tr>
                     <th>Count Of Previous Campaigns</th>
                     <td>{{relationshipData.campaign_data.past_campaigns}}</td>
@@ -416,3 +436,4 @@
   </div>
 </div>
 <!--End: Code for RelationShip Data Modal Window -->
+</main>

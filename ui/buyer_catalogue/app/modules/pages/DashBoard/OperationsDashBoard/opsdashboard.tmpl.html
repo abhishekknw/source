@@ -21,17 +21,33 @@
 
 <div ng-show="isEmpty" class="panel panel-default" style="font-size:24px;text-align:center;"><span>{{msg}}</span></div>
 <div class="pageTitle" style="margin-top:3px;">
-    <h2 ng-hide="hideData || isEmpty" style = "text-align:center;">Machadalo Operations Dashboard</h2>
+    <h2 ng-hide="hideData || isEmpty" style = "text-align:center;">Campaign Decision Board</h2>
 </div>
 
 <div class="content panel-body">
   <div class="" ng-hide="hideData || isEmpty">
     <div class="row">
-      <div class="table-responsive panel panel-default">
+      <div class="table-responsive">
         <table st-table="proposals" st-safe-src="Data" class="table table-striped">
           <thead>
             <tr>
-              <th  ng-repeat="header in headings">{{header.header}}</th>
+              <th colspan='999' style="background-color:#ffffff;margin-left:20px;">
+                <input st-search="" placeholder="Search ..." class="form-control"  type="search"/>
+              </th>
+            </tr>
+            <tr>
+              <th>Sr No</th>
+              <th>Proposal Id</th>
+              <th>Proposal Name</th>
+              <th>Proposal For</th>
+              <th>Proposal Created By</th>
+              <th>Invoice Number</th>
+              <th st-sort="proposal.tentative_start_date" st-skip-natural="true">Start Date</th>
+              <th st-sort="proposal.tentative_end_date" st-skip-natural="true">End Date</th>
+              <th>Create Campaign</th>
+              <th>Assigned To</th>
+              <th>Download Proposal</th>
+
             </tr>
           </thead>
           <tbody>
