@@ -5,9 +5,8 @@ from v0.ui.utils import get_supplier_id, handle_response, get_content_type, save
 from models import SupplierTypeSociety
 from v0.ui.location.models import City
 from v0.ui.account.models import ContactDetails
-from v0.models import DurationType
 from v0.ui.inventory.models import AdInventoryType
-from v0.ui.finances.models import PriceMappingDefault
+from v0.ui.finances.models import PriceMappingDefault, DurationType
 
 
 def get_state_map():

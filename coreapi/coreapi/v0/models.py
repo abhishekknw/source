@@ -38,14 +38,6 @@ from v0.ui.supplier.models import SupplierTypeCorporate
 #     class Meta:
 #         abstract = True
 
-class DurationType(BaseModel):
-    id = models.AutoField(db_column='ID', primary_key=True)
-    duration_name = models.CharField(db_column='DURATION_NAME', max_length=20)
-    days_count = models.CharField(db_column='DAYS_COUNT', max_length=10)
-
-    class Meta:
-        db_table = 'duration_type'
-
 class SocietyMajorEvents(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='society_events', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)

@@ -37,16 +37,15 @@ from rest_framework.views import APIView
 import tasks
 from serializers import UIBusinessInfoSerializer, CampaignListSerializer, CampaignInventorySerializer, UIAccountInfoSerializer
 from v0.serializers import BusinessTypesSerializer, BusinessSubTypesSerializer
-from v0.models import DurationType, BusinessTypes, \
+from v0.models import BusinessTypes, \
                     BusinessSubTypes, \
                     SpaceMappingVersion, ShortlistedSpacesVersion, GenericExportFileName, \
-                    BaseUser, ObjectLevelPermission, Role, RoleHierarchy, Leads, LeadAlias, \
-                    GeneralUserPermission, SpaceMapping , ShortlistedSpaces
+                    BaseUser, Role, RoleHierarchy, Leads, LeadAlias, SpaceMapping , ShortlistedSpaces
 from v0.ui.website.serializers import (SpaceMappingSerializer ,InventoryTypeSerializer, ProposalSocietySerializer, ProposalCorporateSerializer, ProposalCenterMappingSpaceSerializer,
         SpaceMappingVersionSerializer, InventoryTypeVersionSerializer,
-    ProposalCenterMappingVersionSpaceSerializer, GeneralUserPermissionSerializer, AmenitySerializer, SupplierAmenitiesMapSerializer,
+    ProposalCenterMappingVersionSpaceSerializer, AmenitySerializer, SupplierAmenitiesMapSerializer,
     InventoryActivityAssignmentSerializerReadOnly, ProfileNestedSerializer, ProfileSimpleSerializer, ContentTypeSerializer,
-                                       ObjectLevelPermissionSerializer, RoleSerializer, LeadsSerializer, LeadAliasSerializer,
+                                       RoleSerializer, LeadsSerializer, LeadAliasSerializer,
                                        CampaignAssignmentSerializerReadOnly, InventoryActivityAssignmentSerializer,
                                        GenericExportFileSerializerReadOnly)
 
@@ -84,7 +83,9 @@ from v0.ui.proposal.models import ProposalInfo, ProposalCenterMapping,ProposalCe
 from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingVersionSerializer,
     ProposalInfoVersionSerializer, ProposalMasterCostSerializer, ProposalMetricsSerializer)
 from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate
-from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict, DurationType
+from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission
+from v0.ui.permissions.serializers import ObjectLevelPermissionSerializer, GeneralUserPermissionSerializer
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA

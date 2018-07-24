@@ -1,6 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 from models import UserProfile, BaseUser
-from v0.serializers import GroupSerializer, PermissionsSerializer, ProfileNestedSerializer
+from v0.serializers import GroupSerializer, PermissionsSerializer
+from v0.ui.account.serializers import ProfileNestedSerializer
 
 class UserProfileSerializer(ModelSerializer):
     # user1 = UserSerializer(source='get_user')

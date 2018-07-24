@@ -14,8 +14,6 @@ from v0.ui.components.models import LiftDetails, NoticeBoardDetails, SocietyFlat
 from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetailsSerializer, \
     NoticeBoardDetailsSerializer, SocietyFlatSerializer, SocietyTowerSerializer, \
     SwimmingPoolInfoSerializer, MailboxInfoSerializer
-from v0.ui.permissions.serializers import UserInquirySerializer
-from v0.ui.account.serializers import SignupSerializer
 from v0.ui.location.serializers import ImageMappingSerializer
 
 class UISocietySerializer(ModelSerializer):

@@ -20,11 +20,11 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, \
     BusShelterSerializer
-from v0.serializers import ImageMappingSerializer, EventsSerializer, \
+from v0.serializers import EventsSerializer, \
     CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateBuildingGetSerializer, \
     CorporateParkCompanySerializer
 
-from v0.models import ImageMapping, Events
+from v0.models import Events
 from v0.models import SocietyMajorEvents, CorporateCompanyDetails
 from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, \
     SwimmingPoolInfo,  SportsInfra, SocietyTower, FlatType, MailboxInfo, CorporateBuildingWing, CompanyFloor
@@ -33,11 +33,12 @@ from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetail
 from v0.ui.finances.models import DoorToDoorInfo, PriceMapping, PriceMappingDefault
 from v0.ui.finances.serializers import PriceMappingDefaultSerializer, PriceMappingSerializer
 from v0.ui.user.models import UserProfile
-from v0.ui.location.models import City, CityArea, CitySubArea
+from v0.ui.location.models import City, CityArea, CitySubArea, ImageMapping
 from v0.serializers import (SocietyMajorEventsSerializer, CorporateParkCompanyListSerializer)
 from v0.ui.serializers import SocietyListSerializer, RetailShopSerializer, BusDepotSerializer
 from v0.ui.user.serializers import UserSerializer, UserProfileSerializer
-from v0.ui.location.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, StateSerializer
+from v0.ui.location.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, StateSerializer, \
+    ImageMappingSerializer
 from v0.ui.account.models import ContactDetails, ContactDetailsGeneric
 from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsGenericSerializer)
 from inventory.models import PosterInventory, InventorySummary, StreetFurniture, \

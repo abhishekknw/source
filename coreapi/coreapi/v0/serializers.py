@@ -1,28 +1,19 @@
 from django.contrib.auth.models import User, Permission, Group
 
 from rest_framework.serializers import ModelSerializer
-from rest_framework import serializers
 
-from v0.models import BusinessTypes, BusinessSubTypes, DurationType, \
+from v0.models import BusinessTypes, BusinessSubTypes, \
     Events, OperationsInfo
 from v0.ui.organisation.serializers import OrganisationSerializer
 from v0.models import SocietyMajorEvents, CorporateCompanyDetails
 import models
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
-    SpaceBookingCost, EventStaffingCost, DataSciencesCost, DoorToDoorInfo
+    SpaceBookingCost, EventStaffingCost, DataSciencesCost, DoorToDoorInfo, DurationType
 from v0.ui.supplier.models import CorporateBuilding, CorporateParkCompanyList
 from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SwimmingPoolInfo, \
     SocietyFlat, FlatType, SocietyTower, SportsInfra, MailboxInfo, CommonAreaDetails, CorporateBuildingWing, \
     CompanyFloor
 from v0.ui.account.models import Profile
-from v0.ui.account.models import Signup
-from v0.permissions import GeneralUserPermission, ObjectLevelPermission, UserInquiry
-
-
-class DurationTypeSerializer(ModelSerializer):
-    class Meta:
-        model = DurationType
-        exclude = ('created_at', 'updated_at')
 
 '''class CarDisplayInventorySerializer(ModelSerializer):
 
@@ -149,12 +140,6 @@ class SpaceBookingCostSerializer(ModelSerializer):
         model = SpaceBookingCost
         fields = '__all__'
 
-class PermissionSerializer(ModelSerializer):
-    class Meta:
-        model = Permission
-        fields = '__all__'
-
-
 class BusinessTypeSubTypeReadOnlySerializer(ModelSerializer):
     subtypes = BusinessSubTypesSerializer(source='business_subtypes', many=True)
 
@@ -171,37 +156,6 @@ class GroupSerializer(ModelSerializer):
 class PermissionsSerializer(ModelSerializer):
     class Meta:
         model = Permission
-        fields = '__all__'
-
-
-class GeneralUserPermissionSerializer(ModelSerializer):
-    """
-    serializer for GeneralUserPermissions
-    """
-    class Meta:
-        model = GeneralUserPermission
-        fields = '__all__'
-
-
-class ObjectLevelPermissionSerializer(ModelSerializer):
-    """
-    serializer for Object Level Permissions
-    """
-    class Meta:
-        model = ObjectLevelPermission
-        fields = '__all__'
-
-
-class ProfileNestedSerializer(ModelSerializer):
-    """
-    Nested serializer for Profile
-    """
-    organisation = OrganisationSerializer()
-    object_level_permission = ObjectLevelPermissionSerializer(many=True, source='objectlevelpermission_set')
-    general_user_permission = GeneralUserPermissionSerializer(many=True, source='generaluserpermission_set')
-
-    class Meta:
-        model = Profile
         fields = '__all__'
 
 

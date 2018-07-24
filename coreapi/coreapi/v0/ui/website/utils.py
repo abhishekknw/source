@@ -43,7 +43,6 @@ import gpxpy.geo
 
 import v0.models as models
 from v0.models import  (ShortlistedSpaces,
-                        DurationType,
                         GenericExportFileName, Events, Role, Lead,
                         CampaignLeads)
 from v0.ui.account.models import ContactDetails, AccountInfo
@@ -62,7 +61,8 @@ import tasks
 import v0.constants as v0_constants
 import v0.serializers as v0_serializers
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
-    SpaceBookingCost, EventStaffingCost, DataSciencesCost, ShortlistedInventoryPricingDetails, PriceMappingDefault
+    SpaceBookingCost, EventStaffingCost, DataSciencesCost, ShortlistedInventoryPricingDetails, PriceMappingDefault, \
+    DurationType
 from v0.ui.supplier.models import SupplierAmenitiesMap
 from v0.ui.permissions.models import Filters
 

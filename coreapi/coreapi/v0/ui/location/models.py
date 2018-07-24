@@ -3,6 +3,7 @@ from v0.ui.base.models import BaseModel
 from v0.constants import supplier_id_max_length
 from django.contrib.contenttypes import fields
 from v0 import managers
+from django.contrib.contenttypes.models import ContentType
 
 class State(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -58,7 +59,7 @@ class ImageMapping(BaseModel):
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
     comments = models.CharField(db_column='COMMENTS', max_length=100, blank=True, null=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True, null=True)
-    content_type = models.ForeignKey('ContentType', null=True)
+    content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()

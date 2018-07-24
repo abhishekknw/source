@@ -7,8 +7,7 @@ import v0.models as models
 from v0.models import SpaceMapping, ShortlistedSpaces,\
                     SpaceMappingVersion, ShortlistedSpacesVersion, BaseUser
 from v0.ui.finances.models import AuditDate, ShortlistedInventoryPricingDetails, PriceMappingDefault
-from v0.ui.base.serializers import BaseModelPermissionSerializer
-from v0.serializers import DurationTypeSerializer
+from v0.ui.finances.serializers import DurationTypeSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
 from v0.ui.account.models import AccountInfo, Profile
@@ -23,6 +22,7 @@ from v0.ui.proposal.models import ProposalCenterMapping, ProposalCenterMappingVe
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from v0.ui.supplier.models import SupplierTypeCorporate, SupplierAmenitiesMap
 from v0.ui.components.models import Amenity
+from v0.ui.permissions.models import Filters, ObjectLevelPermission, GeneralUserPermission
 
 class InventoryActivitySerializer(ModelSerializer):
     """
@@ -42,7 +42,7 @@ class LeadSerializer(ModelSerializer):
 
 class FiltersSerializer(ModelSerializer):
     class Meta:
-        model = models.Filters
+        model = Filters
         fields = '__all__'
 
 class SpaceMappingVersionSerializer(ModelSerializer):
@@ -413,7 +413,7 @@ class ObjectLevelPermissionSerializer(ModelSerializer):
     serializer for Object Level Permissions
     """
     class Meta:
-        model = models.ObjectLevelPermission
+        model = ObjectLevelPermission
         fields = '__all__'
 
 
@@ -422,7 +422,7 @@ class GeneralUserPermissionSerializer(ModelSerializer):
     serializer for GeneralUserPermissions
     """
     class Meta:
-        model = models.GeneralUserPermission
+        model = GeneralUserPermission
         fields = '__all__'
 
 
@@ -468,7 +468,7 @@ class ObjectLevelPermissionViewSet(ModelSerializer):
 
     """
     class Meta:
-        model = models.ObjectLevelPermission
+        model = ObjectLevelPermission
         fields = '__all__'
 
 
